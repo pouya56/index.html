@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pressmark — Print Estimator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1a1714;
+  --paper: #f5f0e8;
+  --cream: #ede7d9;
+  --rule: #c8bfb0;
+  --accent: #c0392b;
+  --accent-dark: #922b21;
+  --muted: #7a6f63;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-sans: 'Instrument Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-sans); font-size: 14px; min-height: 100vh; }
+
+header {
+  background: var(--ink); color: var(--paper);
+  padding: 0 40px; display: flex; align-items: center; justify-content: space-between;
+  height: 60px; position: sticky; top: 0; z-index: 100;
+  border-bottom: 2px solid var(--accent);
+}
+.logo { font-family: var(--font-display); font-size: 22px; color: var(--paper); display: flex; align-items: center; gap: 10px; }
+.logo-rule { width: 2px; height: 20px; background: var(--accent); display: inline-block; }
+.logo-sub { font-family: var(--font-mono); font-size: 10px; color: #a09888; letter-spacing: 0.15em; text-transform: uppercase; }
+.header-meta { display: flex; align-items: center; gap: 20px; }
+.hf { display: flex; align-items: center; gap: 8px; }
+.hf label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #a09888; }
+.hf input {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px;
+  color: var(--paper); padding: 5px 10px; font-family: var(--font-sans); font-size: 13px; width: 160px;
+}
+.hf input[type="date"] { width: 140px; color-scheme: dark; }
+.hf input::placeholder { color: rgba(245,240,232,0.35); }
+
+.hero-band {
+  background: var(--cream); border-bottom: 1px solid var(--rule);
+  padding: 28px 40px; display: flex; align-items: flex-end; gap: 40px;
+}
+.hero-title { font-family: var(--font-display); font-size: 42px; line-height: 1; }
+.hero-title em { color: var(--accent); font-style: italic; }
+.hero-desc { font-size: 13px; color: var(--muted); max-width: 360px; line-height: 1.6; padding-bottom: 4px; }
+.hero-totals { margin-left: auto; display: flex; gap: 24px; align-items: flex-end; }
+.hero-stat { text-align: right; }
+.hero-stat-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.hero-stat-value { font-family: var(--font-display); font-size: 28px; line-height: 1; }
+.hero-stat-value.grand { font-size: 36px; color: var(--accent); }
+
+.nav-tabs { background: var(--ink); display: flex; padding: 0 40px; }
+.nav-tab {
+  padding: 14px 22px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: #a09888; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s; display: flex; align-items: center; gap: 8px;
+}
+.nav-tab:hover { color: var(--paper); }
+.nav-tab.active { color: var(--paper); border-bottom-color: var(--accent); }
+.badge { background: var(--accent); color: white; font-size: 9px; padding: 1px 5px; border-radius: 10px; font-family: var(--font-mono); min-width: 18px; text-align: center; }
+.badge.zero { background: rgba(255,255,255,0.12); }
+
+.panel { display: none; padding: 36px 40px; }
+.panel.active { display: block; }
+
+.sec-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+.sec-head h2 { font-family: var(--font-display); font-size: 26px; font-weight: 400; }
+.sec-hint { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.06em; }
+.sec-sub { font-size: 12px; color: var(--muted); margin-left: auto; font-style: italic; }
+
+.table-wrap { overflow-x: auto; margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 800px; }
+thead tr { background: var(--ink); color: var(--paper); }
+th { padding: 9px 12px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; text-align: left; white-space: nowrap; }
+th.r { text-align: right; }
+td { padding: 8px 10px; border-bottom: 1px solid var(--cream); vertical-align: middle; }
+td.r { text-align: right; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+td.tot { font-family: var(--font-mono); font-size: 13px; font-weight: 500; text-align: right; }
+tbody tr:hover { background: rgba(0,0,0,0.02); }
+tbody tr:last-child td { border-bottom: none; }
+
+td input, td select {
+  width: 100%; padding: 5px 8px; border: 1px solid var(--rule); border-radius: 4px;
+  background: white; color: var(--ink); font-family: var(--font-sans); font-size: 12px;
+  min-width: 0; transition: border-color 0.15s;
+}
+td input:focus, td select:focus { outline: none; border-color: var(--accent); }
+.wxs { max-width: 60px; } .wsm { max-width: 80px; } .wmd { max-width: 120px; } .wlg { max-width: 200px; }
+.nc { font-family: var(--font-mono); font-size: 11px; color: var(--muted); text-align: right; white-space: nowrap; }
+
+.btn-add {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px;
+  background: white; border: 1px solid var(--rule); border-radius: 4px; cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink); transition: all 0.15s;
+}
+.btn-add:hover { background: var(--cream); border-color: var(--accent); }
+.btn-add .pl { color: var(--accent); font-size: 16px; line-height: 1; }
+.btn-rm { padding: 4px 9px; background: none; border: 1px solid var(--rule); border-radius: 4px; cursor: pointer; font-size: 14px; color: var(--muted); line-height: 1; transition: all 0.15s; }
+.btn-rm:hover { background: #fde8e8; border-color: var(--accent); color: var(--accent); }
+
+.sub-bar { display: flex; justify-content: flex-end; align-items: center; gap: 16px; padding: 14px 0; border-top: 1px solid var(--rule); margin-top: 8px; }
+.sub-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.sub-val { font-family: var(--font-display); font-size: 22px; min-width: 120px; text-align: right; }
+
+.inv-layout { display: grid; grid-template-columns: 1fr 380px; gap: 40px; }
+.inv-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.inv-table td { padding: 12px 0; border-bottom: 1px solid var(--cream); }
+.inv-table td:last-child { text-align: right; font-family: var(--font-mono); font-size: 13px; }
+.inv-table tr.div td { border-bottom: 2px solid var(--ink); }
+.inv-table tr.tot td { font-family: var(--font-display); font-size: 20px; border-bottom: none; padding-top: 16px; }
+.inv-table tr.tot td:last-child { color: var(--accent); }
+.inv-aside { background: var(--ink); color: var(--paper); padding: 28px; border-radius: 6px; align-self: start; }
+.aside-title { font-family: var(--font-display); font-size: 20px; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.aside-f { margin-bottom: 16px; }
+.aside-f label { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #a09888; margin-bottom: 6px; }
+.aside-f input:not([type=checkbox]) { width: 100%; padding: 8px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: var(--paper); font-family: var(--font-mono); font-size: 14px; }
+.aside-f input:focus { outline: none; border-color: var(--accent); }
+.aside-f textarea { width: 100%; padding: 8px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: var(--paper); font-family: var(--font-sans); font-size: 13px; resize: vertical; }
+.inv-grand { margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); text-align: center; }
+.inv-grand-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: #a09888; margin-bottom: 8px; }
+.inv-grand-val { font-family: var(--font-display); font-size: 44px; color: var(--accent); line-height: 1; }
+.inv-tax-note { font-size: 11px; color: #a09888; margin-top: 6px; }
+
+.rates-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.rc { background: white; border: 1px solid var(--rule); border-radius: 6px; padding: 20px; }
+.rc-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--cream); }
+.rr { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--cream); }
+.rr:last-child { border-bottom: none; }
+.rv { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+
+.export-bar { background: var(--cream); border-top: 1px solid var(--rule); padding: 12px 40px; display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
+.btn-exp { padding: 8px 20px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; transition: background 0.15s; }
+.btn-exp:hover { background: var(--accent-dark); }
+.btn-exp.sec { background: var(--ink); }
+.btn-exp.sec:hover { background: #333; }
+
+@media print { header, .nav-tabs, .btn-add, .btn-rm, .export-bar { display: none !important; } .panel { display: block !important; padding: 20px; } body { background: white; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    Pressmark <span class="logo-rule"></span>
+    <span class="logo-sub">Print Estimator</span>
+  </div>
+  <div class="header-meta">
+    <div class="hf">
+      <label>Client</label>
+      <input type="text" id="g-client" placeholder="Client name">
+    </div>
+    <div class="hf">
+      <label>Date</label>
+      <input type="date" id="g-date">
+    </div>
+  </div>
+</header>
+
+<div class="hero-band">
+  <div>
+    <div class="hero-title">Print Job <em>Estimate</em></div>
+  </div>
+  <div class="hero-desc">Itemized estimates for print, envelopes, liners &amp; large format. NY sales tax (8.875%) applied on invoice.</div>
+  <div class="hero-totals">
+    <div class="hero-stat">
+      <div class="hero-stat-label">Subtotal</div>
+      <div class="hero-stat-value" id="hero-sub">$0.00</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-label">Total incl. tax</div>
+      <div class="hero-stat-value grand" id="hero-total">$0.00</div>
+    </div>
+  </div>
+</div>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="switchTab('print',this)">Print Items <span class="badge zero" id="bp">0</span></button>
+  <button class="nav-tab" onclick="switchTab('envelopes',this)">Envelopes <span class="badge zero" id="be">0</span></button>
+  <button class="nav-tab" onclick="switchTab('liners',this)">Liners <span class="badge zero" id="bl">0</span></button>
+  <button class="nav-tab" onclick="switchTab('posters',this)">Posters <span class="badge zero" id="bo">0</span></button>
+  <button class="nav-tab" onclick="switchTab('invoice',this)">Invoice</button>
+  <button class="nav-tab" onclick="switchTab('rates',this)">Rate Sheet</button>
+</div>
+
+<!-- PRINT -->
+<div id="panel-print" class="panel active">
+  <div class="sec-head">
+    <h2>Print Items</h2>
+    <span class="sec-hint">Laser &amp; flat printing</span>
+    <span class="sec-sub">$0.45–$4.90/sheet · size, color &amp; sides</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>#</th><th>W × H (in)</th><th>Qty</th><th>Color</th><th>Sides</th><th>Paper</th>
+        <th>Cut?</th><th>Score lines</th><th>Duplex?</th>
+        <th class="r">Paper $</th><th class="r">Print $</th><th class="r">Cut $</th><th class="r">Score $</th><th class="r">Duplex $</th>
+        <th class="r">Total</th><th></th>
+      </tr></thead>
+      <tbody id="print-body"></tbody>
+    </table>
+  </div>
+  <button class="btn-add" onclick="addPrint()"><span class="pl">+</span> Add print item</button>
+  <div class="sub-bar"><span class="sub-label">Print subtotal</span><span class="sub-val" id="print-sub">$0.00</span></div>
+</div>
+
+<!-- ENVELOPES -->
+<div id="panel-envelopes" class="panel">
+  <div class="sec-head">
+    <h2>Envelopes</h2>
+    <span class="sec-hint">CMYK &amp; White Ink printing</span>
+    <span class="sec-sub">CMYK $1.50/ea · White Ink $2.50/ea · Packs of 25</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>#</th><th>Envelope</th><th>Qty</th><th>Ink type</th>
+        <th class="r">Packs</th><th class="r">Print cost</th><th class="r">Total</th><th></th>
+      </tr></thead>
+      <tbody id="env-body"></tbody>
+    </table>
+  </div>
+  <button class="btn-add" onclick="addEnv()"><span class="pl">+</span> Add envelope</button>
+  <div class="sub-bar"><span class="sub-label">Envelope subtotal</span><span class="sub-val" id="env-sub">$0.00</span></div>
+</div>
+
+<!-- LINERS -->
+<div id="panel-liners" class="panel">
+  <div class="sec-head">
+    <h2>Envelope Liners</h2>
+    <span class="sec-hint">Custom interior liners</span>
+    <span class="sec-sub">4 Bar = 2/sheet · Others = 1/sheet · Cut $25/200 sheets</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>#</th><th>Env size</th><th>Paper</th><th>Qty</th><th>Color</th><th>Sides</th><th>Print?</th>
+        <th class="r">Paper $</th><th class="r">Print $</th><th class="r">Cut $</th>
+        <th>Assembly?</th><th class="r">Assembly $</th><th class="r">Total</th><th></th>
+      </tr></thead>
+      <tbody id="lin-body"></tbody>
+    </table>
+  </div>
+  <button class="btn-add" onclick="addLiner()"><span class="pl">+</span> Add liner</button>
+  <div class="sub-bar"><span class="sub-label">Liner subtotal</span><span class="sub-val" id="lin-sub">$0.00</span></div>
+</div>
+
+<!-- POSTERS -->
+<div id="panel-posters" class="panel">
+  <div class="sec-head">
+    <h2>Poster &amp; Large Format</h2>
+    <span class="sec-hint">Wide-format inkjet</span>
+    <span class="sec-sub">Matte/Glossy $13/sqft · Canvas/Vinyl/Banner $20/sqft · $50 minimum</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>#</th><th>Material</th><th>W"</th><th>H"</th><th>Qty</th>
+        <th class="r">Sq ft/pc</th><th class="r">Rate/sqft</th><th class="r">Price/pc</th>
+        <th class="r">Orig total</th><th class="r">Final total</th><th>Note</th><th></th>
+      </tr></thead>
+      <tbody id="pos-body"></tbody>
+    </table>
+  </div>
+  <button class="btn-add" onclick="addPoster()"><span class="pl">+</span> Add poster</button>
+  <div class="sub-bar"><span class="sub-label">Poster subtotal</span><span class="sub-val" id="pos-sub">$0.00</span></div>
+</div>
+
+<!-- INVOICE -->
+<div id="panel-invoice" class="panel">
+  <div class="sec-head"><h2>Invoice Summary</h2><span class="sec-hint">All sections combined</span></div>
+  <div class="inv-layout">
+    <div>
+      <table class="inv-table">
+        <tbody>
+          <tr><td>Print items</td><td id="i-print">$0.00</td></tr>
+          <tr><td>Envelopes</td><td id="i-env">$0.00</td></tr>
+          <tr><td>Envelope liners</td><td id="i-lin">$0.00</td></tr>
+          <tr class="div"><td>Posters &amp; large format</td><td id="i-pos">$0.00</td></tr>
+          <tr><td>Setup fee</td><td id="i-setup">$0.00</td></tr>
+          <tr class="div"><td style="color:var(--muted)">Subtotal</td><td id="i-sub" style="color:var(--muted)">$0.00</td></tr>
+          <tr><td style="color:var(--muted)">NY Sales Tax (8.875%)</td><td id="i-tax" style="color:var(--muted)">$0.00</td></tr>
+          <tr class="tot"><td>Total due</td><td id="i-total">$0.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="inv-aside">
+      <div class="aside-title">Job options</div>
+      <div class="aside-f">
+        <label>Setup fee</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:8px;font-family:var(--font-sans);font-size:13px;text-transform:none;letter-spacing:0;color:var(--paper)">
+          <input type="checkbox" id="setup-check" onchange="toggleSetup()"> Include setup fee
+        </label>
+        <input type="number" id="setup-val" value="0" min="0" placeholder="0.00" oninput="calcInvoice()" style="display:none">
+      </div>
+      <div class="aside-f">
+        <label>Notes</label>
+        <textarea rows="4" placeholder="Rush fees, special instructions, etc."></textarea>
+      </div>
+      <div class="inv-grand">
+        <div class="inv-grand-label">Total incl. tax</div>
+        <div class="inv-grand-val" id="aside-total">$0.00</div>
+        <div class="inv-tax-note">NY Sales Tax 8.875% included</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RATES -->
+<div id="panel-rates" class="panel">
+  <div class="sec-head"><h2>Rate Sheet</h2><span class="sec-hint">Current pricing reference</span></div>
+  <div class="rates-grid">
+    <div class="rc">
+      <div class="rc-title">Print rates per sheet</div>
+      <div class="rr"><span>8.5×11 — Color Single</span><span class="rv">$0.90</span></div>
+      <div class="rr"><span>8.5×11 — Color Double</span><span class="rv">$1.70</span></div>
+      <div class="rr"><span>8.5×11 — B&amp;W Single</span><span class="rv">$0.45</span></div>
+      <div class="rr"><span>8.5×11 — B&amp;W Double</span><span class="rv">$0.90</span></div>
+      <div class="rr"><span>11×17 — Color Single</span><span class="rv">$1.90</span></div>
+      <div class="rr"><span>11×17 — Color Double</span><span class="rv">$3.30</span></div>
+      <div class="rr"><span>11×17 — B&amp;W Single</span><span class="rv">$0.95</span></div>
+      <div class="rr"><span>11×17 — B&amp;W Double</span><span class="rv">$1.90</span></div>
+      <div class="rr"><span>13×19 — Color Single</span><span class="rv">$2.40</span></div>
+      <div class="rr"><span>13×19 — Color Double</span><span class="rv">$4.90</span></div>
+      <div class="rr"><span>13×19 — B&amp;W Single</span><span class="rv">$1.95</span></div>
+      <div class="rr"><span>13×19 — B&amp;W Double</span><span class="rv">$3.30</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="rc">
+        <div class="rc-title">Paper prices per sheet</div>
+        <div class="rr"><span>Standard — 8.5×11</span><span class="rv">$0.99</span></div>
+        <div class="rr"><span>Standard — 11×17</span><span class="rv">$1.95</span></div>
+        <div class="rr"><span>Premium (★) — 8.5×11</span><span class="rv">$1.95</span></div>
+        <div class="rr"><span>Premium (★) — 11×17</span><span class="rv">$3.95</span></div>
+      </div>
+      <div class="rc">
+        <div class="rc-title">Finishing rates</div>
+        <div class="rr"><span>Cut — per cut line / per 200 sheets</span><span class="rv">$2.00</span></div>
+        <div class="rr"><span>Score — per score line / per 250 pcs</span><span class="rv">$20.00</span></div>
+        <div class="rr"><span>Duplexing — flat fee per 250 pcs</span><span class="rv">$100.00</span></div>
+      </div>
+      <div class="rc">
+        <div class="rc-title">Envelope &amp; large format</div>
+        <div class="rr"><span>Envelope CMYK printing</span><span class="rv">$1.50/ea</span></div>
+        <div class="rr"><span>Envelope White Ink printing</span><span class="rv">$2.50/ea</span></div>
+        <div class="rr"><span>Poster — Matte / Glossy</span><span class="rv">$13/sqft</span></div>
+        <div class="rr"><span>Poster — Canvas / Vinyl / Banner</span><span class="rv">$20/sqft</span></div>
+        <div class="rr"><span>Poster minimum per job</span><span class="rv">$50.00</span></div>
+        <div class="rr"><span>NY Sales Tax</span><span class="rv">8.875%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="export-bar">
+  <button class="btn-exp sec" onclick="window.print()">Print / Save PDF</button>
+  <button class="btn-exp" onclick="copySummary()">Copy Summary</button>
+</div>
+
+<script>
+const PR = {
+  '8.5x11':{cs:0.90,cd:1.70,bs:0.45,bd:0.90},
+  '11x17': {cs:1.90,cd:3.30,bs:0.95,bd:1.90},
+  '13x19': {cs:2.40,cd:4.90,bs:1.95,bd:3.30}
+};
+const PP = {std:{'8.5x11':0.99,'11x17':1.95},prem:{'8.5x11':1.95,'11x17':3.95}};
+const ENVS = ['Mini Envelope','4 Bar','A2','A6','A7','Outer #7','A9','6x9','#10'];
+const EMATS = ['Matte','Metallic','Premium'];
+const PMATS = ['Matte','Glossy','Canvas','Vinyl','Banner'];
+const PRATES = {Matte:13,Glossy:13,Canvas:20,Vinyl:20,Banner:20};
+const TAX = 0.08875;
+
+let pid=0,eid=0,lid=0,oid=0;
+let prows=[],erows=[],lrows=[],orows=[];
+
+const $ = id => document.getElementById(id);
+const gv = id => parseFloat($(id)?.value)||0;
+const fmt = n => '$'+(isNaN(n)?0:Math.max(0,n)).toFixed(2);
+const sv = (id,v) => { const el=$(id); if(el) el.textContent=typeof v==='string'?v:fmt(v); };
+const bv = (id,n) => { const el=$(id); if(!el)return; el.textContent=n; el.className='badge'+(n===0?' zero':''); };
+
+function switchTab(name,btn) {
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  $('panel-'+name).classList.add('active');
+  if(name==='invoice') calcInvoice();
+}
+
+function updateHero() {
+  const s=['print-sub','env-sub','lin-sub','pos-sub'].reduce((a,id)=>a+(parseFloat($(id)?.textContent?.replace('$',''))||0),0);
+  sv('hero-sub',s); sv('hero-total',s*(1+TAX));
+}
+
+// ── PRINT ──
+const paperOpts = () =>
+  '<option value="std|8.5x11">Standard 8.5×11 ($0.99)</option>'+
+  '<option value="std|11x17">Standard 11×17 ($1.95)</option>'+
+  '<option value="prem|8.5x11">★ Premium 8.5×11 ($1.95)</option>'+
+  '<option value="prem|11x17">★ Premium 11×17 ($3.95)</option>';
+
+function addPrint() {
+  const id=++pid; prows.push(id);
+  const n=prows.length;
+  const tr=document.createElement('tr'); tr.id='pr'+id;
+  tr.innerHTML=
+    `<td style="color:var(--muted);font-family:var(--font-mono);font-size:11px">${n}</td>`+
+    `<td style="white-space:nowrap"><input type="number" class="wxs" id="pw${id}" placeholder="W" oninput="cP(${id})"><span style="color:var(--muted);padding:0 3px">×</span><input type="number" class="wxs" id="ph${id}" placeholder="H" oninput="cP(${id})"></td>`+
+    `<td><input type="number" class="wxs" id="pq${id}" value="1" min="1" oninput="cP(${id})"></td>`+
+    `<td><select id="pc${id}" class="wsm" oninput="cP(${id})"><option>Color</option><option>B&W</option></select></td>`+
+    `<td><select id="ps${id}" class="wsm" oninput="cP(${id})"><option>Single</option><option>Double</option></select></td>`+
+    `<td><select id="pp${id}" class="wlg" oninput="cP(${id})">${paperOpts()}</select></td>`+
+    `<td><select id="pcut${id}" class="wsm" oninput="cP(${id})"><option>No</option><option>Yes</option></select></td>`+
+    `<td><input type="number" class="wxs" id="psc${id}" value="0" min="0" oninput="cP(${id})"></td>`+
+    `<td><select id="pdup${id}" class="wsm" oninput="cP(${id})"><option>No</option><option>Yes</option></select></td>`+
+    `<td class="nc" id="pp2${id}">—</td><td class="nc" id="ppr${id}">—</td><td class="nc" id="pct${id}">—</td><td class="nc" id="pst${id}">—</td><td class="nc" id="pdt${id}">—</td>`+
+    `<td class="tot" id="ptot${id}">$0.00</td>`+
+    `<td><button class="btn-rm" onclick="remP(${id})">×</button></td>`;
+  $('print-body').appendChild(tr); bv('bp',prows.length);
+}
+
+function remP(id) { prows=prows.filter(r=>r!==id); $('pr'+id)?.remove(); reIdx('print-body'); bv('bp',prows.length); calcP(); }
+function reIdx(tbId) { $$(tbId,'tr').forEach((tr,i)=>{ const td=tr.querySelector('td'); if(td) td.textContent=i+1; }); }
+function $$(tbId,sel) { return Array.from($(tbId).querySelectorAll(sel)); }
+
+function pSize(w,h) {
+  if(!w||!h) return null;
+  const [a,b]=[Math.min(w,h),Math.max(w,h)];
+  if(a<=8.5&&b<=11) return '8.5x11';
+  if(a<=11&&b<=17) return '11x17';
+  if(a<=13&&b<=19) return '13x19';
+  return null;
+}
+
+function cP(id) {
+  const w=gv('pw'+id),h=gv('ph'+id),qty=gv('pq'+id)||1;
+  const color=$('pc'+id)?.value==='Color', dbl=$('ps'+id)?.value==='Double';
+  const [pt,ps]=($('pp'+id)?.value||'std|8.5x11').split('|');
+  const isCut=$('pcut'+id)?.value==='Yes', scL=gv('psc'+id), isDup=$('pdup'+id)?.value==='Yes';
+  const pp=PP[pt]?.[ps]||0.99;
+  const sz=pSize(w,h)||ps||'8.5x11';
+  const r=PR[sz]||PR['8.5x11'];
+  const rate=color?(dbl?r.cd:r.cs):(dbl?r.bd:r.bs);
+  const sheets=qty*(isDup?2:1);
+  const paper=sheets*pp, print=sheets*rate;
+  const cut=isCut?Math.ceil(sheets/200)*2:0;
+  const score=scL>0?Math.ceil(qty/250)*scL*20:0;
+  const dup=isDup?Math.ceil(qty/250)*100:0;
+  const tot=paper+print+cut+score+dup;
+  sv('pp2'+id,paper);sv('ppr'+id,print);sv('pct'+id,cut);sv('pst'+id,score);sv('pdt'+id,dup);sv('ptot'+id,tot);
+  calcP();
+}
+
+function calcP() {
+  const t=prows.reduce((a,id)=>a+(parseFloat($('ptot'+id)?.textContent?.replace('$',''))||0),0);
+  sv('print-sub',t); updateHero();
+}
+
+// ── ENVELOPES ──
+const envOpts = () => ENVS.flatMap(s=>EMATS.map(m=>`<option>${s} — ${m}</option>`)).join('');
+
+function addEnv() {
+  const id=++eid; erows.push(id);
+  const tr=document.createElement('tr'); tr.id='er'+id;
+  tr.innerHTML=
+    `<td style="color:var(--muted);font-family:var(--font-mono);font-size:11px">${erows.length}</td>`+
+    `<td><select id="en${id}" class="wlg" oninput="cE(${id})">${envOpts()}</select></td>`+
+    `<td><input type="number" class="wsm" id="eq${id}" value="25" min="1" oninput="cE(${id})"></td>`+
+    `<td><select id="ei${id}" class="wsm" oninput="cE(${id})"><option>CMYK</option><option>White Ink</option></select></td>`+
+    `<td class="nc" id="epk${id}">1</td><td class="nc" id="epc${id}">$0.00</td>`+
+    `<td class="tot" id="etot${id}">$0.00</td>`+
+    `<td><button class="btn-rm" onclick="remE(${id})">×</button></td>`;
+  $('env-body').appendChild(tr); cE(id); bv('be',erows.length);
+}
+
+function remE(id) { erows=erows.filter(r=>r!==id); $('er'+id)?.remove(); reIdx('env-body'); bv('be',erows.length); calcE(); }
+
+function cE(id) {
+  const qty=gv('eq'+id)||25, rate=$('ei'+id)?.value==='White Ink'?2.50:1.50;
+  const packs=Math.ceil(qty/25), pc=qty*rate;
+  $('epk'+id).textContent=packs; sv('epc'+id,pc); sv('etot'+id,pc); calcE();
+}
+
+function calcE() {
+  const t=erows.reduce((a,id)=>a+(parseFloat($('etot'+id)?.textContent?.replace('$',''))||0),0);
+  sv('env-sub',t); updateHero();
+}
+
+// ── LINERS ──
+const linPOpts = () =>
+  '<option value="std|8.5x11">Std 8.5×11</option><option value="std|11x17">Std 11×17</option>'+
+  '<option value="prem|8.5x11">★ Prem 8.5×11</option><option value="prem|11x17">★ Prem 11×17</option>';
+const linEOpts = ['4 Bar','A2','A6','A7','A9'].map(s=>`<option>${s}</option>`).join('');
+
+function addLiner() {
+  const id=++lid; lrows.push(id);
+  const tr=document.createElement('tr'); tr.id='lr'+id;
+  tr.innerHTML=
+    `<td style="color:var(--muted);font-family:var(--font-mono);font-size:11px">${lrows.length}</td>`+
+    `<td><select id="lenv${id}" class="wsm" oninput="cL(${id})">${linEOpts}</select></td>`+
+    `<td><select id="lpap${id}" class="wmd" oninput="cL(${id})">${linPOpts()}</select></td>`+
+    `<td><input type="number" class="wxs" id="lq${id}" value="1" min="1" oninput="cL(${id})"></td>`+
+    `<td><select id="lc${id}" class="wsm" oninput="cL(${id})"><option>Color</option><option>B&W</option></select></td>`+
+    `<td><select id="ls${id}" class="wsm" oninput="cL(${id})"><option>Single</option><option>Double</option></select></td>`+
+    `<td><select id="lpr${id}" class="wsm" oninput="cL(${id})"><option>No</option><option>Yes</option></select></td>`+
+    `<td class="nc" id="lpp${id}">$0.00</td><td class="nc" id="lprc${id}">$0.00</td><td class="nc" id="lcut${id}">$0.00</td>`+
+    `<td><select id="lass${id}" class="wsm" oninput="cL(${id})"><option>No</option><option>Yes</option></select></td>`+
+    `<td class="nc" id="lasc${id}">$0.00</td>`+
+    `<td class="tot" id="ltot${id}">$0.00</td>`+
+    `<td><button class="btn-rm" onclick="remL(${id})">×</button></td>`;
+  $('lin-body').appendChild(tr); cL(id); bv('bl',lrows.length);
+}
+
+function remL(id) { lrows=lrows.filter(r=>r!==id); $('lr'+id)?.remove(); reIdx('lin-body'); bv('bl',lrows.length); calcL(); }
+
+function cL(id) {
+  const es=$('lenv'+id)?.value, [pt,ps]=($('lpap'+id)?.value||'std|8.5x11').split('|');
+  const qty=gv('lq'+id)||1, color=$('lc'+id)?.value==='Color', dbl=$('ls'+id)?.value==='Double';
+  const doPrint=$('lpr'+id)?.value==='Yes', doAss=$('lass'+id)?.value==='Yes';
+  const pp=PP[pt]?.[ps]||0.99, spl=es==='4 Bar'?0.5:1;
+  const sheets=Math.ceil(qty*spl), paper=sheets*pp;
+  const r=PR[ps]||PR['8.5x11'];
+  const rate=color?(dbl?r.cd:r.cs):(dbl?r.bd:r.bs);
+  const print=doPrint?sheets*rate:0;
+  const cut=Math.ceil(sheets/200)*25;
+  const ass=doAss?qty*0.50:0;
+  const tot=paper+print+cut+ass;
+  sv('lpp'+id,paper);sv('lprc'+id,print);sv('lcut'+id,cut);sv('lasc'+id,ass);sv('ltot'+id,tot); calcL();
+}
+
+function calcL() {
+  const t=lrows.reduce((a,id)=>a+(parseFloat($('ltot'+id)?.textContent?.replace('$',''))||0),0);
+  sv('lin-sub',t); updateHero();
+}
+
+// ── POSTERS ──
+const posMatOpts = PMATS.map(m=>`<option>${m}</option>`).join('');
+
+function addPoster() {
+  const id=++oid; orows.push(id);
+  const tr=document.createElement('tr'); tr.id='or'+id;
+  tr.innerHTML=
+    `<td style="color:var(--muted);font-family:var(--font-mono);font-size:11px">${orows.length}</td>`+
+    `<td><select id="omat${id}" class="wmd" oninput="cO(${id})">${posMatOpts}</select></td>`+
+    `<td><input type="number" class="wxs" id="ow${id}" placeholder="W" oninput="cO(${id})"></td>`+
+    `<td><input type="number" class="wxs" id="oh${id}" placeholder="H" oninput="cO(${id})"></td>`+
+    `<td><input type="number" class="wxs" id="oq${id}" value="1" min="1" oninput="cO(${id})"></td>`+
+    `<td class="nc" id="osqft${id}">0</td><td class="nc" id="orate${id}">$13/sqft</td>`+
+    `<td class="nc" id="oppc${id}">$0.00</td><td class="nc" id="oorig${id}">$0.00</td>`+
+    `<td class="tot" id="otot${id}">$0.00</td>`+
+    `<td><input type="text" id="onote${id}" placeholder="Note" style="min-width:100px"></td>`+
+    `<td><button class="btn-rm" onclick="remO(${id})">×</button></td>`;
+  $('pos-body').appendChild(tr); cO(id); bv('bo',orows.length);
+}
+
+function remO(id) { orows=orows.filter(r=>r!==id); $('or'+id)?.remove(); reIdx('pos-body'); bv('bo',orows.length); calcO(); }
+
+function cO(id) {
+  const mat=$('omat'+id)?.value||'Matte', w=gv('ow'+id), h=gv('oh'+id), qty=gv('oq'+id)||1;
+  const rate=PRATES[mat]||13, sqft=(w*h)/144, ppc=sqft*rate, orig=ppc*qty, fin=Math.max(orig,50);
+  $('osqft'+id).textContent=sqft.toFixed(2);
+  $('orate'+id).textContent='$'+rate+'/sqft';
+  sv('oppc'+id,ppc);sv('oorig'+id,orig);sv('otot'+id,fin); calcO();
+}
+
+function calcO() {
+  const t=orows.reduce((a,id)=>a+(parseFloat($('otot'+id)?.textContent?.replace('$',''))||0),0);
+  sv('pos-sub',t); updateHero();
+}
+
+// ── INVOICE ──
+function toggleSetup() {
+  const c=$('setup-check').checked;
+  $('setup-val').style.display=c?'block':'none';
+  calcInvoice();
+}
+
+function calcInvoice() {
+  const gs=id=>parseFloat($(id)?.textContent?.replace('$','')||0)||0;
+  const pr=gs('print-sub'),en=gs('env-sub'),ln=gs('lin-sub'),po=gs('pos-sub');
+  const setup=$('setup-check')?.checked?gv('setup-val'):0;
+  const sub=pr+en+ln+po+setup, tax=sub*TAX, tot=sub+tax;
+  sv('i-print',pr);sv('i-env',en);sv('i-lin',ln);sv('i-pos',po);
+  sv('i-setup',setup);sv('i-sub',sub);sv('i-tax',tax);sv('i-total',tot);
+  sv('aside-total',tot);sv('hero-sub',sub);sv('hero-total',tot);
+}
+
+function copySummary() {
+  const client=$('g-client')?.value||'(no client)';
+  const text=[
+    'PRESSMARK — PRINT ESTIMATE',
+    `Client: ${client}   Date: ${$('g-date')?.value||''}`,
+    '',
+    `Print items:  ${$('print-sub')?.textContent}`,
+    `Envelopes:    ${$('env-sub')?.textContent}`,
+    `Liners:       ${$('lin-sub')?.textContent}`,
+    `Posters:      ${$('pos-sub')?.textContent}`,
+    `Subtotal:     ${$('hero-sub')?.textContent}`,
+    `Tax (8.875%): ${$('i-tax')?.textContent||'—'}`,
+    `TOTAL:        ${$('hero-total')?.textContent}`,
+  ].join('\n');
+  navigator.clipboard.writeText(text).then(()=>alert('Estimate copied to clipboard!'));
+}
+
+// init
+$('g-date').value = new Date().toISOString().split('T')[0];
+addPrint();
+</script>
+</body>
+</html>
