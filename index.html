@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Dynamic — Personalize anything</title>
+  <meta name="description" content="Dynamic — a premium product customization platform. Design mugs, apparel, and more with a live, Apple-style editor." />
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+  <link rel="stylesheet" href="assets/css/dynamic.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='11' fill='%230071e3'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <!-- Top nav -->
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand"><span class="brand-dot"></span> Dynamic</div>
+      <nav class="nav-links" aria-label="Products">
+        <a href="#" data-product="mug" aria-pressed="true">Mugs</a>
+        <a href="#" data-product="tshirt">T-Shirts</a>
+        <a href="#" data-product="hoodie">Hoodies</a>
+        <a href="#" data-product="tumbler">Tumblers</a>
+        <a href="#" data-product="canvas">Canvas</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Product switcher (demonstrates: works with any product) -->
+  <div style="max-width:1120px;margin:0 auto;padding:16px 22px 0;display:flex;gap:8px;overflow-x:auto">
+    <button class="mode-btn" data-product="mug" aria-pressed="true">Mug</button>
+    <button class="mode-btn" data-product="tshirt">T-Shirt</button>
+    <button class="mode-btn" data-product="hoodie">Hoodie</button>
+    <button class="mode-btn" data-product="hat">Hat</button>
+    <button class="mode-btn" data-product="tumbler">Tumbler</button>
+    <button class="mode-btn" data-product="notebook">Notebook</button>
+    <button class="mode-btn" data-product="giftbox">Gift Box</button>
+    <button class="mode-btn" data-product="tote">Tote Bag</button>
+    <button class="mode-btn" data-product="phonecase">Phone Case</button>
+    <button class="mode-btn" data-product="canvas">Canvas</button>
+  </div>
+
+  <!-- Product page -->
+  <main class="product">
+    <div class="gallery">
+      <div class="gallery-stage" id="galleryStage"></div>
+    </div>
+
+    <section class="detail">
+      <div class="eyebrow" id="pEyebrow">Ceramic Mug</div>
+      <h1 class="headline" id="pName">Personalized Ceramic Mug</h1>
+
+      <div class="price-row">
+        <span class="price" id="pPrice">$20</span>
+        <span class="price-note" id="pPriceNote">Free shipping</span>
+      </div>
+
+      <p class="desc" id="pDesc"></p>
+
+      <div class="opt-group">
+        <div class="opt-label">Color <span id="colorName">White</span></div>
+        <div class="swatches" id="pColors"></div>
+      </div>
+
+      <div class="opt-group" id="pSizeGroup">
+        <div class="opt-label">Size</div>
+        <div class="pills" id="pSizes"></div>
+      </div>
+
+      <div class="opt-group">
+        <div class="opt-label">Quantity</div>
+        <div class="qty">
+          <button id="qtyMinus" aria-label="Decrease quantity">−</button>
+          <input id="qtyInput" type="number" value="1" min="1" max="999" aria-label="Quantity" />
+          <button id="qtyPlus" aria-label="Increase quantity">+</button>
+        </div>
+      </div>
+
+      <div class="cta-stack">
+        <button class="btn btn-primary btn-lg btn-block" id="customizeBtn">Customize</button>
+        <button class="btn btn-secondary btn-lg btn-block" id="pageAddCart">Add to Cart</button>
+        <div class="customize-summary" id="customizeSummary">Not customized yet</div>
+      </div>
+
+      <div class="reassure">
+        <div class="reassure-item">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 7h13v8H3z" stroke-width="1.5"/><path d="M16 10h3l2 3v2h-5" stroke-width="1.5"/><circle cx="7" cy="17" r="1.6" stroke-width="1.5"/><circle cx="17" cy="17" r="1.6" stroke-width="1.5"/></svg>
+          Free delivery
+        </div>
+        <div class="reassure-item">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 1 8 8" stroke-width="1.5"/><path d="M12 8v4l3 2" stroke-width="1.5"/></svg>
+          Made in 3–5 days
+        </div>
+        <div class="reassure-item">
+          <svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke-width="1.5"/></svg>
+          Free & easy returns
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Fullscreen customization modal (populated by app.js) -->
+  <div class="modal-root" id="modalRoot" aria-hidden="true"></div>
+
+  <!-- Third-party libs. Loaded from CDN; the app degrades gracefully if a lib
+       is blocked (editor shows a message, modal falls back to CSS animation).
+       For a zero-external-dependency build, drop fabric.min.js / gsap.min.js
+       into assets/vendor/ and point these two tags there. -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- Application modules (load order matters: data → engines → controller) -->
+  <script defer src="assets/js/products.js"></script>
+  <script defer src="assets/js/silhouettes.js"></script>
+  <script defer src="assets/js/pricing.js"></script>
+  <script defer src="assets/js/store.js"></script>
+  <script defer src="assets/js/designs.js"></script>
+  <script defer src="assets/js/editor.js"></script>
+  <script defer src="assets/js/cart.js"></script>
+  <script defer src="assets/js/app.js"></script>
+</body>
+</html>
