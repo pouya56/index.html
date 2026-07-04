@@ -1,0 +1,2931 @@
+{%- comment -%}
+  Dynamic — Product Customization Platform
+  Paste this whole block into a "Custom Liquid" section/block in the Shopify
+  theme editor (Online Store > Themes > Customize > Add section > Custom Liquid),
+  or save it as sections/dynamic-customizer.liquid and add it to a template.
+  Libraries load from CDN. See the ADD-TO-CART note near the bottom to wire the
+  real Shopify variant + /cart/add.js.
+{%- endcomment -%}
+
+<style>
+/* ============================================================================
+   Dynamic — Premium Product Customization Platform
+   Design system: Apple-inspired. Minimal, elegant, generous whitespace.
+   ========================================================================== */
+
+:root {
+  /* Palette */
+  --bg: #ffffff;
+  --bg-elevated: #fbfbfd;
+  --bg-panel: #f5f5f7;
+  --ink: #1d1d1f;
+  --ink-soft: #6e6e73;
+  --ink-faint: #86868b;
+  --line: #d2d2d7;
+  --line-soft: #e8e8ed;
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --accent-press: #006edb;
+  --accent-soft: #e8f2fd;
+  --gold: #b8860b;
+  --success: #1a7f37;
+  --danger: #d70015;
+  --scrim: rgba(0, 0, 0, 0.48);
+
+  /* Typography */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter",
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Radii */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 28px;
+  --r-pill: 980px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 180ms;
+  --dur: 320ms;
+  --dur-slow: 520ms;
+
+  /* Elevation (kept subtle, Apple-like) */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --bg-elevated: #0a0a0a;
+    --bg-panel: #1c1c1e;
+    --ink: #f5f5f7;
+    --ink-soft: #a1a1a6;
+    --ink-faint: #86868b;
+    --line: #3a3a3c;
+    --line-soft: #2a2a2c;
+    --accent-soft: #12283d;
+    --scrim: rgba(0, 0, 0, 0.66);
+    --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.6);
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.47;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+img { max-width: 100%; display: block; }
+button { font-family: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+/* ---------- Typography scale ---------- */
+.eyebrow {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: none; color: var(--accent);
+}
+.display {
+  font-size: clamp(40px, 6vw, 72px); font-weight: 700;
+  line-height: 1.03; letter-spacing: -0.02em;
+}
+.headline { font-size: clamp(28px, 4vw, 44px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.08; }
+.title { font-size: 24px; font-weight: 600; letter-spacing: -0.015em; }
+.lead { font-size: 21px; color: var(--ink-soft); font-weight: 400; line-height: 1.4; }
+.meta { font-size: 13px; color: var(--ink-faint); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  appearance: none; border: none; border-radius: var(--r-pill);
+  font-size: 17px; font-weight: 500; padding: 13px 26px;
+  transition: transform var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out), opacity var(--dur-fast);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-secondary {
+  background: transparent; color: var(--accent);
+  border: 1px solid var(--line);
+}
+.btn-secondary:hover { border-color: var(--accent); background: var(--accent-soft); }
+.btn-ghost { background: var(--bg-panel); color: var(--ink); }
+.btn-ghost:hover { background: var(--line-soft); }
+.btn-block { width: 100%; }
+.btn-lg { font-size: 19px; padding: 16px 32px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ============================================================================
+   PRODUCT PAGE
+   ========================================================================== */
+.nav {
+  position: sticky; top: 0; z-index: 40;
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  border-bottom: 1px solid var(--line-soft);
+}
+.nav-inner {
+  max-width: 1120px; margin: 0 auto; height: 52px; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.brand { font-weight: 600; font-size: 19px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 9px; }
+.brand-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+.nav-links { display: flex; gap: 26px; font-size: 13px; color: var(--ink-soft); }
+.nav-links a { color: inherit; text-decoration: none; transition: color var(--dur-fast); }
+.nav-links a:hover { color: var(--ink); }
+
+.product {
+  max-width: 1120px; margin: 0 auto; padding: 64px 22px 96px;
+  display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 72px; align-items: start;
+}
+.gallery {
+  position: sticky; top: 92px;
+  background: var(--bg-panel); border-radius: var(--r-xl);
+  aspect-ratio: 1 / 1; display: grid; place-items: center; overflow: hidden;
+}
+.gallery-stage { width: 82%; height: 82%; display: grid; place-items: center; position: relative; }
+.gallery img, .gallery svg { width: 100%; height: 100%; object-fit: contain;
+  filter: drop-shadow(0 24px 40px rgba(0,0,0,0.14)); transition: opacity var(--dur) var(--ease-out); }
+
+.detail { padding-top: 8px; }
+.detail .eyebrow { margin-bottom: 10px; }
+.detail h1 { margin-bottom: 6px; }
+.price-row { display: flex; align-items: baseline; gap: 12px; margin: 22px 0 20px; }
+.price { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+.price-note { font-size: 13px; color: var(--ink-faint); }
+.detail p.desc { color: var(--ink-soft); font-size: 17px; max-width: 46ch; margin-bottom: 34px; }
+
+.opt-group { margin-bottom: 28px; }
+.opt-label { font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 12px;
+  display: flex; justify-content: space-between; }
+.opt-label span { font-weight: 400; color: var(--ink); }
+.swatches { display: flex; gap: 12px; flex-wrap: wrap; }
+.swatch {
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line);
+  position: relative; transition: transform var(--dur-fast) var(--ease-out);
+  background: var(--swatch, #ccc);
+}
+.swatch:hover { transform: scale(1.06); }
+.swatch[aria-pressed="true"]::after {
+  content: ""; position: absolute; inset: -5px; border-radius: 50%;
+  border: 2px solid var(--accent);
+}
+.pills { display: flex; gap: 10px; flex-wrap: wrap; }
+.pill {
+  min-width: 52px; padding: 10px 16px; border-radius: var(--r-md);
+  border: 1px solid var(--line); background: transparent; color: var(--ink);
+  font-size: 15px; font-weight: 500; transition: all var(--dur-fast) var(--ease-out);
+}
+.pill:hover { border-color: var(--ink-faint); }
+.pill[aria-pressed="true"] { border-color: var(--accent); color: var(--accent);
+  background: var(--accent-soft); }
+
+.qty { display: inline-flex; align-items: center; border: 1px solid var(--line);
+  border-radius: var(--r-md); overflow: hidden; }
+.qty button { width: 44px; height: 44px; background: transparent; border: none; font-size: 20px;
+  color: var(--ink); transition: background var(--dur-fast); }
+.qty button:hover { background: var(--bg-panel); }
+.qty input { width: 48px; height: 44px; text-align: center; border: none; background: transparent;
+  color: var(--ink); font-size: 16px; -moz-appearance: textfield; }
+.qty input::-webkit-outer-spin-button, .qty input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.cta-stack { display: flex; flex-direction: column; gap: 12px; margin-top: 36px; }
+.customize-summary {
+  font-size: 13px; color: var(--ink-soft); text-align: center; min-height: 18px;
+  transition: opacity var(--dur-fast);
+}
+.reassure { display: flex; gap: 26px; justify-content: center; margin-top: 34px; flex-wrap: wrap; }
+.reassure-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-faint); }
+.reassure-item svg { width: 16px; height: 16px; stroke: var(--ink-faint); }
+
+/* ============================================================================
+   APPLE-STYLE FULLSCREEN MODAL
+   ========================================================================== */
+.modal-root { position: fixed; inset: 0; z-index: 100; display: none; }
+.modal-root.open { display: block; }
+.modal-scrim { position: absolute; inset: 0; background: var(--scrim); opacity: 0;
+  backdrop-filter: blur(2px); }
+.modal-sheet {
+  position: absolute; inset: 24px; background: var(--bg);
+  border-radius: var(--r-xl); overflow: hidden; box-shadow: var(--shadow-lg);
+  display: grid; grid-template-rows: auto 1fr auto;
+  opacity: 0; transform: translateY(28px) scale(0.985);
+}
+@media (max-width: 720px) { .modal-sheet { inset: 0; border-radius: 0; } }
+
+.modal-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 34px 40px 20px; gap: 16px;
+}
+.modal-head h2 { font-size: clamp(26px, 3.4vw, 40px); font-weight: 700; letter-spacing: -0.02em; }
+.modal-head .sub { color: var(--ink-soft); font-size: 18px; margin-top: 4px; }
+.modal-close {
+  width: 40px; height: 40px; border-radius: 50%; border: none; flex: none;
+  background: var(--bg-panel); color: var(--ink); font-size: 19px; line-height: 1;
+  display: grid; place-items: center; transition: background var(--dur-fast), transform var(--dur-fast);
+}
+.modal-close:hover { background: var(--line-soft); transform: rotate(90deg); }
+
+.modal-body {
+  display: grid; grid-template-columns: 1fr 400px; min-height: 0;
+}
+@media (max-width: 900px) { .modal-body { grid-template-columns: 1fr; grid-template-rows: 1fr auto; } }
+
+/* Canvas stage */
+.stage {
+  position: relative; background:
+    radial-gradient(120% 120% at 50% 0%, var(--bg-elevated), var(--bg-panel));
+  display: flex; flex-direction: column; min-height: 0;
+}
+.stage-toolbar {
+  display: flex; align-items: center; gap: 6px; padding: 12px 18px;
+  border-bottom: 1px solid var(--line-soft); flex-wrap: wrap;
+}
+.area-tabs { display: flex; gap: 4px; background: var(--bg-panel); border-radius: var(--r-pill); padding: 4px; }
+.area-tab {
+  border: none; background: transparent; color: var(--ink-soft); font-size: 13px; font-weight: 500;
+  padding: 7px 15px; border-radius: var(--r-pill); position: relative;
+  transition: color var(--dur-fast);
+}
+.area-tab[aria-selected="true"] { color: var(--ink); }
+.area-tab-bg {
+  position: absolute; inset: 0; background: var(--bg); border-radius: var(--r-pill);
+  box-shadow: var(--shadow-sm); z-index: -1;
+}
+.tool-spacer { flex: 1; }
+.tool-btn {
+  width: 36px; height: 36px; border-radius: var(--r-sm); border: none; background: transparent;
+  color: var(--ink-soft); display: grid; place-items: center;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+.tool-btn:hover:not(:disabled) { background: var(--bg-panel); color: var(--ink); }
+.tool-btn:disabled { opacity: 0.32; cursor: not-allowed; }
+.tool-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round; }
+.tool-divider { width: 1px; height: 22px; background: var(--line-soft); margin: 0 4px; }
+
+.canvas-wrap { flex: 1; display: grid; place-items: center; padding: 24px; min-height: 320px; position: relative; overflow: hidden; }
+.canvas-frame { position: relative; transition: transform var(--dur) var(--ease-out); }
+.canvas-frame canvas { border-radius: 4px; }
+.zoom-badge {
+  position: absolute; bottom: 14px; left: 18px; font-size: 12px; color: var(--ink-faint);
+  background: color-mix(in srgb, var(--bg) 70%, transparent); padding: 4px 10px; border-radius: var(--r-pill);
+  backdrop-filter: blur(8px);
+}
+.stage-empty {
+  position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  color: var(--ink-faint); font-size: 14px; text-align: center; padding: 40px;
+  transition: opacity var(--dur);
+}
+
+/* Side panel */
+.panel {
+  border-left: 1px solid var(--line-soft); display: flex; flex-direction: column;
+  min-height: 0; background: var(--bg);
+}
+@media (max-width: 900px) { .panel { border-left: none; border-top: 1px solid var(--line-soft); max-height: 46vh; } }
+.mode-rail { display: flex; gap: 6px; padding: 16px 20px 8px; overflow-x: auto; }
+.mode-btn {
+  border: none; background: var(--bg-panel); color: var(--ink-soft);
+  border-radius: var(--r-pill); padding: 9px 15px; font-size: 13px; font-weight: 500; white-space: nowrap;
+  transition: all var(--dur-fast) var(--ease-out); display: inline-flex; align-items: center; gap: 6px;
+}
+.mode-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+.mode-btn:hover { color: var(--ink); }
+.mode-btn[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+
+.panel-scroll { flex: 1; overflow-y: auto; padding: 12px 20px 20px; }
+.panel-pane { display: none; animation: fadeUp var(--dur) var(--ease-out); }
+.panel-pane.active { display: block; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+.field { margin-bottom: 18px; }
+.field > label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 8px; }
+.input, .textarea, .select {
+  width: 100%; border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 12px 14px; font-size: 15px; color: var(--ink); background: var(--bg);
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+.input:focus, .textarea:focus, .select:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.textarea { resize: vertical; min-height: 84px; line-height: 1.4; }
+
+.font-grid, .swatch-grid { display: grid; gap: 8px; }
+.font-grid { grid-template-columns: 1fr 1fr; }
+.font-chip {
+  border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 10px; background: var(--bg);
+  font-size: 17px; color: var(--ink); text-align: center; transition: all var(--dur-fast);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.font-chip:hover { border-color: var(--ink-faint); }
+.font-chip[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.swatch-grid { grid-template-columns: repeat(8, 1fr); }
+.color-dot { aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--line-soft);
+  background: var(--c); transition: transform var(--dur-fast); }
+.color-dot:hover { transform: scale(1.12); }
+.color-dot[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+
+.dropzone {
+  border: 2px dashed var(--line); border-radius: var(--r-lg); padding: 34px 20px; text-align: center;
+  color: var(--ink-faint); transition: all var(--dur-fast) var(--ease-out); background: var(--bg-elevated);
+}
+.dropzone.drag { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.dropzone strong { color: var(--ink); display: block; margin-bottom: 4px; font-size: 15px; }
+.dropzone .formats { font-size: 12px; margin-top: 10px; }
+
+.emoji-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.emoji-btn { border: none; background: transparent; font-size: 22px; padding: 6px; border-radius: var(--r-sm);
+  transition: background var(--dur-fast); line-height: 1; }
+.emoji-btn:hover { background: var(--bg-panel); }
+
+.template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.template-card {
+  border: 1px solid var(--line-soft); border-radius: var(--r-md); overflow: hidden; background: var(--bg-panel);
+  aspect-ratio: 4/3; padding: 0; transition: transform var(--dur-fast), box-shadow var(--dur-fast);
+}
+.template-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.template-card svg { width: 100%; height: 100%; }
+
+.layer-list { display: flex; flex-direction: column; gap: 6px; }
+.layer {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-sm);
+  background: var(--bg-elevated); border: 1px solid transparent; transition: all var(--dur-fast);
+}
+.layer.sel { border-color: var(--accent); background: var(--accent-soft); }
+.layer-ico { width: 22px; height: 22px; display: grid; place-items: center; color: var(--ink-soft); flex: none; }
+.layer-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.layer-del { border: none; background: transparent; color: var(--ink-faint); padding: 4px; border-radius: 6px; }
+.layer-del:hover { color: var(--danger); background: var(--bg-panel); }
+
+.spin { width: 18px; height: 18px; border: 2px solid var(--line); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.hint { font-size: 12px; color: var(--ink-faint); line-height: 1.5; }
+.divider { height: 1px; background: var(--line-soft); margin: 18px 0; }
+
+/* Modal footer — dynamic pricing */
+.modal-foot {
+  display: flex; align-items: center; gap: 20px; padding: 18px 40px;
+  border-top: 1px solid var(--line-soft); background: var(--bg-elevated);
+}
+@media (max-width: 720px) { .modal-foot { padding: 14px 20px; flex-wrap: wrap; } }
+.price-breakdown { flex: 1; min-width: 0; }
+.price-breakdown-toggle {
+  display: flex; align-items: baseline; gap: 10px; background: none; border: none; padding: 0; color: var(--ink);
+}
+.price-breakdown-toggle .total { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+.price-breakdown-toggle .caret { color: var(--ink-faint); font-size: 12px; transition: transform var(--dur-fast); }
+.price-breakdown.open .caret { transform: rotate(180deg); }
+.price-items {
+  display: grid; grid-template-rows: 0fr; overflow: hidden;
+  transition: grid-template-rows var(--dur) var(--ease-out);
+}
+.price-breakdown.open .price-items { grid-template-rows: 1fr; }
+.price-items-inner { min-height: 0; }
+.price-items ul { list-style: none; padding: 12px 0 4px; }
+.price-items li { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft);
+  padding: 3px 0; }
+.price-items li .free { color: var(--success); }
+.foot-actions { display: flex; gap: 12px; flex: none; }
+
+/* Toast */
+.toast-host { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); z-index: 200;
+  display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+.toast {
+  background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: var(--r-pill);
+  font-size: 14px; box-shadow: var(--shadow-md); opacity: 0; transform: translateY(12px);
+  transition: all var(--dur) var(--ease-out); max-width: 90vw;
+}
+.toast.show { opacity: 1; transform: none; }
+
+/* Utility */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.no-scroll { overflow: hidden; }
+
+@media (max-width: 860px) {
+  .product { grid-template-columns: 1fr; gap: 32px; padding-top: 32px; }
+  .gallery { position: static; }
+  .nav-links { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto; }
+}
+
+</style>
+
+{%- raw -%}
+
+  <!-- Top nav -->
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand"><span class="brand-dot"></span> Dynamic</div>
+      <nav class="nav-links" aria-label="Products">
+        <a href="#" data-product="mug" aria-pressed="true">Mugs</a>
+        <a href="#" data-product="tshirt">T-Shirts</a>
+        <a href="#" data-product="hoodie">Hoodies</a>
+        <a href="#" data-product="tumbler">Tumblers</a>
+        <a href="#" data-product="canvas">Canvas</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Product switcher (demonstrates: works with any product) -->
+  <div style="max-width:1120px;margin:0 auto;padding:16px 22px 0;display:flex;gap:8px;overflow-x:auto">
+    <button class="mode-btn" data-product="mug" aria-pressed="true">Mug</button>
+    <button class="mode-btn" data-product="tshirt">T-Shirt</button>
+    <button class="mode-btn" data-product="hoodie">Hoodie</button>
+    <button class="mode-btn" data-product="hat">Hat</button>
+    <button class="mode-btn" data-product="tumbler">Tumbler</button>
+    <button class="mode-btn" data-product="notebook">Notebook</button>
+    <button class="mode-btn" data-product="giftbox">Gift Box</button>
+    <button class="mode-btn" data-product="tote">Tote Bag</button>
+    <button class="mode-btn" data-product="phonecase">Phone Case</button>
+    <button class="mode-btn" data-product="canvas">Canvas</button>
+  </div>
+
+  <!-- Product page -->
+  <main class="product">
+    <div class="gallery">
+      <div class="gallery-stage" id="galleryStage"></div>
+    </div>
+
+    <section class="detail">
+      <div class="eyebrow" id="pEyebrow">Ceramic Mug</div>
+      <h1 class="headline" id="pName">Personalized Ceramic Mug</h1>
+
+      <div class="price-row">
+        <span class="price" id="pPrice">$20</span>
+        <span class="price-note" id="pPriceNote">Free shipping</span>
+      </div>
+
+      <p class="desc" id="pDesc"></p>
+
+      <div class="opt-group">
+        <div class="opt-label">Color <span id="colorName">White</span></div>
+        <div class="swatches" id="pColors"></div>
+      </div>
+
+      <div class="opt-group" id="pSizeGroup">
+        <div class="opt-label">Size</div>
+        <div class="pills" id="pSizes"></div>
+      </div>
+
+      <div class="opt-group">
+        <div class="opt-label">Quantity</div>
+        <div class="qty">
+          <button id="qtyMinus" aria-label="Decrease quantity">−</button>
+          <input id="qtyInput" type="number" value="1" min="1" max="999" aria-label="Quantity" />
+          <button id="qtyPlus" aria-label="Increase quantity">+</button>
+        </div>
+      </div>
+
+      <div class="cta-stack">
+        <button class="btn btn-primary btn-lg btn-block" id="customizeBtn">Customize</button>
+        <button class="btn btn-secondary btn-lg btn-block" id="pageAddCart">Add to Cart</button>
+        <div class="customize-summary" id="customizeSummary">Not customized yet</div>
+      </div>
+
+      <div class="reassure">
+        <div class="reassure-item">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 7h13v8H3z" stroke-width="1.5"/><path d="M16 10h3l2 3v2h-5" stroke-width="1.5"/><circle cx="7" cy="17" r="1.6" stroke-width="1.5"/><circle cx="17" cy="17" r="1.6" stroke-width="1.5"/></svg>
+          Free delivery
+        </div>
+        <div class="reassure-item">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 1 8 8" stroke-width="1.5"/><path d="M12 8v4l3 2" stroke-width="1.5"/></svg>
+          Made in 3–5 days
+        </div>
+        <div class="reassure-item">
+          <svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke-width="1.5"/></svg>
+          Free & easy returns
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Fullscreen customization modal (populated by app.js) -->
+  <div class="modal-root" id="modalRoot" aria-hidden="true"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+/* ===== products.js ===== */
+/* ============================================================================
+   products.js — Product catalog, print-area geometry & pricing rules.
+
+   The whole platform is data-driven: adding a product here makes it fully
+   customizable with correct print areas, colours, sizes and pricing. This is
+   the single source of truth the editor, preview and pricing engine read from.
+   ========================================================================== */
+(function (root) {
+  "use strict";
+
+  /**
+   * Each product defines:
+   *  - base:        base price in cents
+   *  - colors:      selectable body colours (affects preview + swatches)
+   *  - sizes:       optional size options (null = none, e.g. mugs)
+   *  - areas:       ordered print areas. Each area has an id, label, a
+   *                 normalized print rectangle {x,y,w,h} (0..1 of the canvas)
+   *                 and a per-area surcharge in cents (first used area is free).
+   *  - finishes:    optional print finishes with surcharges (e.g. gold foil)
+   *  - addons:      optional product add-ons (e.g. gift box)
+   *  - render:      a function (color) -> SVG string for the product silhouette.
+   *
+   * Geometry is normalized so the same design JSON renders identically at any
+   * canvas resolution and maps cleanly onto a physical print template.
+   */
+
+  const SIZES_APPAREL = ["XS", "S", "M", "L", "XL", "2XL"];
+
+  const catalog = {
+    mug: {
+      id: "mug",
+      name: "Ceramic Mug",
+      tagline: "Personalized Ceramic Mug",
+      description:
+        "A 325 ml kiln-fired ceramic mug with an ultra-smooth print surface. Dishwasher and microwave safe.",
+      base: 2000,
+      colors: [
+        { id: "white", name: "White", hex: "#ffffff" },
+        { id: "black", name: "Black", hex: "#1d1d1f" },
+        { id: "sage", name: "Sage", hex: "#b7c4b0" },
+        { id: "blush", name: "Blush", hex: "#e8cdc9" },
+      ],
+      sizes: null,
+      areas: [
+        { id: "front", label: "Front", rect: { x: 0.28, y: 0.26, w: 0.44, h: 0.48 }, surcharge: 0 },
+        { id: "back", label: "Back", rect: { x: 0.28, y: 0.26, w: 0.44, h: 0.48 }, surcharge: 500 },
+        { id: "wrap", label: "Wrap Around", rect: { x: 0.12, y: 0.26, w: 0.76, h: 0.48 }, surcharge: 800 },
+      ],
+      finishes: [
+        { id: "standard", name: "Standard Print", surcharge: 0 },
+        { id: "gold", name: "Gold Metallic Print", surcharge: 700 },
+      ],
+      addons: [{ id: "giftbox", name: "Premium Gift Box", surcharge: 800 }],
+    },
+
+    tshirt: {
+      id: "tshirt",
+      name: "T-Shirt",
+      tagline: "Custom Cotton T-Shirt",
+      description:
+        "220 gsm combed ring-spun cotton with a soft hand-feel and durable direct-to-garment print.",
+      base: 2400,
+      colors: [
+        { id: "white", name: "White", hex: "#ffffff" },
+        { id: "black", name: "Black", hex: "#1d1d1f" },
+        { id: "navy", name: "Navy", hex: "#25324a" },
+        { id: "sand", name: "Sand", hex: "#d9cbb2" },
+      ],
+      sizes: SIZES_APPAREL,
+      areas: [
+        { id: "front", label: "Front", rect: { x: 0.30, y: 0.28, w: 0.40, h: 0.42 }, surcharge: 0 },
+        { id: "back", label: "Back", rect: { x: 0.30, y: 0.26, w: 0.40, h: 0.46 }, surcharge: 600 },
+        { id: "sleeve_l", label: "Left Sleeve", rect: { x: 0.10, y: 0.30, w: 0.12, h: 0.14 }, surcharge: 400 },
+        { id: "sleeve_r", label: "Right Sleeve", rect: { x: 0.78, y: 0.30, w: 0.12, h: 0.14 }, surcharge: 400 },
+      ],
+      finishes: [
+        { id: "standard", name: "Standard DTG", surcharge: 0 },
+        { id: "puff", name: "Puff Print", surcharge: 500 },
+      ],
+      addons: [{ id: "giftbox", name: "Premium Gift Box", surcharge: 800 }],
+    },
+
+    hoodie: {
+      id: "hoodie",
+      name: "Hoodie",
+      tagline: "Heavyweight Custom Hoodie",
+      description: "400 gsm brushed-back fleece with a double-layer hood and kangaroo pocket.",
+      base: 4800,
+      colors: [
+        { id: "black", name: "Black", hex: "#1d1d1f" },
+        { id: "heather", name: "Heather Grey", hex: "#b9bbbe" },
+        { id: "forest", name: "Forest", hex: "#2e4034" },
+        { id: "cream", name: "Cream", hex: "#efe9dd" },
+      ],
+      sizes: SIZES_APPAREL,
+      areas: [
+        { id: "front", label: "Front", rect: { x: 0.32, y: 0.34, w: 0.36, h: 0.34 }, surcharge: 0 },
+        { id: "back", label: "Back", rect: { x: 0.30, y: 0.28, w: 0.40, h: 0.44 }, surcharge: 700 },
+        { id: "sleeve_l", label: "Left Sleeve", rect: { x: 0.11, y: 0.34, w: 0.11, h: 0.16 }, surcharge: 400 },
+        { id: "sleeve_r", label: "Right Sleeve", rect: { x: 0.78, y: 0.34, w: 0.11, h: 0.16 }, surcharge: 400 },
+      ],
+      finishes: [
+        { id: "standard", name: "Standard Print", surcharge: 0 },
+        { id: "embroidery", name: "Embroidered", surcharge: 900 },
+      ],
+      addons: [{ id: "giftbox", name: "Premium Gift Box", surcharge: 800 }],
+    },
+
+    hat: {
+      id: "hat",
+      name: "Hat",
+      tagline: "Structured Custom Cap",
+      description: "Six-panel structured cap with a curved brim and adjustable strap.",
+      base: 2600,
+      colors: [
+        { id: "black", name: "Black", hex: "#1d1d1f" },
+        { id: "stone", name: "Stone", hex: "#cabfa8" },
+        { id: "navy", name: "Navy", hex: "#25324a" },
+        { id: "olive", name: "Olive", hex: "#5c5a3a" },
+      ],
+      sizes: null,
+      areas: [
+        { id: "front", label: "Front", rect: { x: 0.34, y: 0.36, w: 0.32, h: 0.20 }, surcharge: 0 },
+        { id: "side", label: "Side", rect: { x: 0.68, y: 0.40, w: 0.16, h: 0.12 }, surcharge: 400 },
+      ],
+      finishes: [
+        { id: "standard", name: "Standard Print", surcharge: 0 },
+        { id: "embroidery", name: "3D Embroidery", surcharge: 800 },
+      ],
+      addons: [{ id: "giftbox", name: "Premium Gift Box", surcharge: 800 }],
+    },
+
+    tumbler: {
+      id: "tumbler",
+      name: "Tumbler",
+      tagline: "Insulated Custom Tumbler",
+      description: "600 ml double-wall vacuum-insulated stainless steel with a sip-lid.",
+      base: 3200,
+      colors: [
+        { id: "steel", name: "Steel", hex: "#c4c8cc" },
+        { id: "black", name: "Matte Black", hex: "#26262a" },
+        { id: "white", name: "White", hex: "#ffffff" },
+        { id: "ocean", name: "Ocean", hex: "#3a6b86" },
+      ],
+      sizes: null,
+      areas: [
+        { id: "front", label: "Front", rect: { x: 0.34, y: 0.22, w: 0.32, h: 0.56 }, surcharge: 0 },
+        { id: "wrap", label: "Wrap Around", rect: { x: 0.16, y: 0.22, w: 0.68, h: 0.56 }, surcharge: 800 },
+      ],
+      finishes: [
+        { id: "standard", name: "UV Print", surcharge: 0 },
+        { id: "engrave", name: "Laser Engrave", surcharge: 600 },
+      ],
+      addons: [{ id: "giftbox", name: "Premium Gift Box", surcharge: 800 }],
+    },
+
+    notebook: {
+      id: "notebook",
+      name: "Notebook",
+      tagline: "Hardcover Custom Notebook",
+      description: "A5 hardcover notebook, 160 pages of 100 gsm dotted paper with an elastic closure.",
+      base: 1800,
+      colors: [
+        { id: "kraft", name: "Kraft", hex: "#c8a97e" },
+        { id: "black", name: "Black", hex: "#1d1d1f" },
+        { id: "navy", name: "Navy", hex: "#25324a" },
+        { id: "terracotta", name: "Terracotta", hex: "#b5654a" },
+      ],
+      sizes: null,
+      areas: [
+        { id: "front", label: "Front Cover", rect: { x: 0.30, y: 0.20, w: 0.40, h: 0.60 }, surcharge: 0 },
+        { id: "back", label: "Back Cover", rect: { x: 0.30, y: 0.20, w: 0.40, h: 0.60 }, surcharge: 400 },
+      ],
+      finishes: [
+        { id: "standard", name: "Print", surcharge: 0 },
+        { id: "foil", name: "Gold Foil Deboss", surcharge: 700 },
+      ],
+      addons: [{ id: "giftbox", name: "Premium Gift Box", surcharge: 800 }],
+    },
+
+    giftbox: {
+      id: "giftbox",
+      name: "Gift Box",
+      tagline: "Custom Keepsake Gift Box",
+      description: "Rigid magnetic-close gift box with a soft-touch finish and ribbon.",
+      base: 2200,
+      colors: [
+        { id: "white", name: "White", hex: "#ffffff" },
+        { id: "charcoal", name: "Charcoal", hex: "#3a3a3d" },
+        { id: "blush", name: "Blush", hex: "#e8cdc9" },
+        { id: "forest", name: "Forest", hex: "#2e4034" },
+      ],
+      sizes: null,
+      areas: [
+        { id: "lid", label: "Lid", rect: { x: 0.24, y: 0.24, w: 0.52, h: 0.34 }, surcharge: 0 },
+        { id: "bottom", label: "Bottom", rect: { x: 0.24, y: 0.58, w: 0.52, h: 0.20 }, surcharge: 500 },
+        { id: "inside", label: "Inside", rect: { x: 0.26, y: 0.30, w: 0.48, h: 0.28 }, surcharge: 500 },
+      ],
+      finishes: [
+        { id: "standard", name: "Print", surcharge: 0 },
+        { id: "foil", name: "Foil Print", surcharge: 700 },
+      ],
+      addons: [],
+    },
+
+    tote: {
+      id: "tote",
+      name: "Tote Bag",
+      tagline: "Organic Cotton Tote",
+      description: "280 gsm heavyweight organic cotton canvas tote with reinforced handles.",
+      base: 2000,
+      colors: [
+        { id: "natural", name: "Natural", hex: "#e4dcc7" },
+        { id: "black", name: "Black", hex: "#1d1d1f" },
+        { id: "sage", name: "Sage", hex: "#b7c4b0" },
+      ],
+      sizes: null,
+      areas: [
+        { id: "front", label: "Front", rect: { x: 0.28, y: 0.34, w: 0.44, h: 0.42 }, surcharge: 0 },
+        { id: "back", label: "Back", rect: { x: 0.28, y: 0.34, w: 0.44, h: 0.42 }, surcharge: 500 },
+      ],
+      finishes: [{ id: "standard", name: "Screen Print", surcharge: 0 }],
+      addons: [{ id: "giftbox", name: "Premium Gift Box", surcharge: 800 }],
+    },
+
+    phonecase: {
+      id: "phonecase",
+      name: "Phone Case",
+      tagline: "Impact Custom Phone Case",
+      description: "Shock-absorbing dual-layer case with a scratch-resistant matte print.",
+      base: 2800,
+      colors: [
+        { id: "clear", name: "Clear", hex: "#eef1f4" },
+        { id: "black", name: "Black", hex: "#1d1d1f" },
+        { id: "white", name: "White", hex: "#ffffff" },
+      ],
+      sizes: ["iPhone 15", "iPhone 15 Pro", "iPhone 16", "iPhone 16 Pro"],
+      areas: [{ id: "back", label: "Back", rect: { x: 0.30, y: 0.16, w: 0.40, h: 0.68 }, surcharge: 0 }],
+      finishes: [
+        { id: "standard", name: "Matte Print", surcharge: 0 },
+        { id: "gloss", name: "Glossy Print", surcharge: 400 },
+      ],
+      addons: [{ id: "giftbox", name: "Premium Gift Box", surcharge: 800 }],
+    },
+
+    canvas: {
+      id: "canvas",
+      name: "Canvas Print",
+      tagline: "Gallery Canvas Print",
+      description: "Museum-grade cotton canvas on a 38 mm solid-wood stretcher frame.",
+      base: 3600,
+      colors: [{ id: "white", name: "White Frame", hex: "#f3f0ea" }, { id: "walnut", name: "Walnut", hex: "#5a4632" }, { id: "black", name: "Black", hex: "#1d1d1f" }],
+      sizes: ["30×30 cm", "40×50 cm", "50×70 cm"],
+      areas: [{ id: "face", label: "Canvas", rect: { x: 0.16, y: 0.16, w: 0.68, h: 0.68 }, surcharge: 0 }],
+      finishes: [
+        { id: "standard", name: "Matte Canvas", surcharge: 0 },
+        { id: "satin", name: "Satin Canvas", surcharge: 500 },
+      ],
+      addons: [],
+    },
+  };
+
+  root.Dynamic = root.Dynamic || {};
+  root.Dynamic.catalog = catalog;
+  root.Dynamic.getProduct = function (id) {
+    return catalog[id] || catalog.mug;
+  };
+})(window);
+
+/* ===== silhouettes.js ===== */
+/* ============================================================================
+   silhouettes.js — Vector product renderers.
+
+   No static product photos. Each product is drawn as a resolution-independent
+   SVG that reacts to the selected body colour, so the live preview stays crisp
+   at any zoom and can later be swapped for a Three.js mesh without touching the
+   editor. Returns an SVG string sized to a unit 1000×1000 viewBox.
+   ========================================================================== */
+(function (root) {
+  "use strict";
+
+  // Choose a legible line colour against the body colour.
+  function stroke(hex) {
+    const c = hex.replace("#", "");
+    const r = parseInt(c.substr(0, 2), 16),
+      g = parseInt(c.substr(2, 2), 16),
+      b = parseInt(c.substr(4, 2), 16);
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return lum > 0.6 ? "rgba(0,0,0,0.14)" : "rgba(255,255,255,0.22)";
+  }
+  function shade(hex, amt) {
+    const c = hex.replace("#", "");
+    let r = parseInt(c.substr(0, 2), 16),
+      g = parseInt(c.substr(2, 2), 16),
+      b = parseInt(c.substr(4, 2), 16);
+    r = Math.max(0, Math.min(255, r + amt));
+    g = Math.max(0, Math.min(255, g + amt));
+    b = Math.max(0, Math.min(255, b + amt));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  const S = 1000;
+  const wrap = (inner) =>
+    `<svg viewBox="0 0 ${S} ${S}" xmlns="http://www.w3.org/2000/svg" role="img">${inner}</svg>`;
+
+  const renderers = {
+    mug(hex) {
+      const s = stroke(hex), hi = shade(hex, 26), lo = shade(hex, -22);
+      return wrap(`
+        <defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="${lo}"/><stop offset="0.2" stop-color="${hex}"/>
+          <stop offset="0.8" stop-color="${hi}"/><stop offset="1" stop-color="${lo}"/>
+        </linearGradient></defs>
+        <path d="M260 320 h360 a24 24 0 0 1 24 24 v300 a90 90 0 0 1 -90 90 H326 a90 90 0 0 1 -90 -90 V344 a24 24 0 0 1 24 -24 Z" fill="url(#mg)" stroke="${s}" stroke-width="3"/>
+        <path d="M644 380 a120 110 0 0 1 0 220" fill="none" stroke="${hex}" stroke-width="46"/>
+        <path d="M644 380 a120 110 0 0 1 0 220" fill="none" stroke="${s}" stroke-width="4"/>
+        <ellipse cx="440" cy="330" rx="200" ry="34" fill="${lo}" stroke="${s}" stroke-width="3"/>
+        <ellipse cx="440" cy="326" rx="176" ry="24" fill="${shade(hex,-40)}"/>
+      `);
+    },
+    tshirt(hex) {
+      const s = stroke(hex);
+      return wrap(`
+        <path d="M370 210 q70 60 130 60 q60 0 130 -60 l120 60 l70 150 l-110 70 l-40 -50 v320 q0 30 -30 30 H360 q-30 0 -30 -30 V440 l-40 50 l-110 -70 l70 -150 Z"
+          fill="${hex}" stroke="${s}" stroke-width="4"/>
+        <path d="M370 210 q70 90 140 90 q70 0 120 -90" fill="none" stroke="${s}" stroke-width="4"/>`);
+    },
+    hoodie(hex) {
+      const s = stroke(hex), lo = shade(hex, -18);
+      return wrap(`
+        <path d="M360 250 q80 -40 280 0 l130 70 l70 160 l-120 66 v300 q0 30 -30 30 H340 q-30 0 -30 -30 V546 l-120 -66 l70 -160 Z"
+          fill="${hex}" stroke="${s}" stroke-width="4"/>
+        <path d="M360 250 q140 120 280 0 q20 80 -140 120 q-160 -40 -140 -120 Z" fill="${lo}" stroke="${s}" stroke-width="3"/>
+        <path d="M470 300 v250 M530 300 v250" stroke="${s}" stroke-width="4"/>
+        <rect x="380" y="620" width="240" height="120" rx="16" fill="none" stroke="${s}" stroke-width="4"/>`);
+    },
+    hat(hex) {
+      const s = stroke(hex), lo = shade(hex, -20);
+      return wrap(`
+        <path d="M250 560 q0 -230 250 -230 q250 0 250 230 q-250 -70 -500 0 Z" fill="${hex}" stroke="${s}" stroke-width="4"/>
+        <path d="M245 560 q255 -70 510 0 q40 12 40 44 q0 40 -60 40 q-235 -60 -470 0 q-60 0 -60 -40 q0 -32 40 -44 Z" fill="${lo}" stroke="${s}" stroke-width="4"/>
+        <path d="M500 330 v220" stroke="${s}" stroke-width="3"/>`);
+    },
+    tumbler(hex) {
+      const s = stroke(hex), hi = shade(hex, 28), lo = shade(hex, -24);
+      return wrap(`
+        <defs><linearGradient id="tg" x1="0" x2="1"><stop offset="0" stop-color="${lo}"/><stop offset="0.5" stop-color="${hi}"/><stop offset="1" stop-color="${lo}"/></linearGradient></defs>
+        <path d="M360 260 h280 l-20 480 a40 40 0 0 1 -40 36 H420 a40 40 0 0 1 -40 -36 Z" fill="url(#tg)" stroke="${s}" stroke-width="3"/>
+        <rect x="352" y="212" width="296" height="60" rx="18" fill="${shade(hex,-10)}" stroke="${s}" stroke-width="3"/>
+        <rect x="372" y="176" width="256" height="44" rx="16" fill="${lo}" stroke="${s}" stroke-width="3"/>`);
+    },
+    notebook(hex) {
+      const s = stroke(hex), lo = shade(hex, -22);
+      return wrap(`
+        <rect x="300" y="180" width="400" height="640" rx="20" fill="${lo}"/>
+        <rect x="316" y="180" width="384" height="640" rx="18" fill="${hex}" stroke="${s}" stroke-width="3"/>
+        <rect x="316" y="180" width="46" height="640" fill="${shade(hex,-14)}"/>
+        <line x1="640" y1="180" x2="640" y2="820" stroke="${s}" stroke-width="4"/>`);
+    },
+    giftbox(hex) {
+      const s = stroke(hex), lo = shade(hex, -22), hi = shade(hex, 18);
+      return wrap(`
+        <rect x="280" y="420" width="440" height="340" rx="12" fill="${hex}" stroke="${s}" stroke-width="3"/>
+        <rect x="255" y="330" width="490" height="130" rx="12" fill="${hi}" stroke="${s}" stroke-width="3"/>
+        <rect x="470" y="330" width="60" height="430" fill="${lo}"/>
+        <path d="M500 330 q-80 -110 -150 -70 q-30 40 30 70 Z M500 330 q80 -110 150 -70 q30 40 -30 70 Z" fill="${lo}" stroke="${s}" stroke-width="3"/>`);
+    },
+    tote(hex) {
+      const s = stroke(hex);
+      return wrap(`
+        <path d="M320 360 h360 l30 420 a20 20 0 0 1 -20 22 H310 a20 20 0 0 1 -20 -22 Z" fill="${hex}" stroke="${s}" stroke-width="4"/>
+        <path d="M390 360 v-40 a110 110 0 0 1 220 0 v40" fill="none" stroke="${s}" stroke-width="14"/>`);
+    },
+    phonecase(hex) {
+      const s = stroke(hex), lo = shade(hex, -18);
+      return wrap(`
+        <rect x="350" y="150" width="300" height="700" rx="60" fill="${hex}" stroke="${s}" stroke-width="4"/>
+        <rect x="372" y="190" width="150" height="120" rx="30" fill="${lo}" stroke="${s}" stroke-width="3"/>
+        <circle cx="410" cy="240" r="26" fill="${shade(hex,-40)}"/><circle cx="484" cy="240" r="26" fill="${shade(hex,-40)}"/>
+        <circle cx="447" cy="290" r="20" fill="${shade(hex,-30)}"/>`);
+    },
+    canvas(hex) {
+      const s = stroke(hex), lo = shade(hex, -30);
+      return wrap(`
+        <rect x="200" y="200" width="600" height="600" rx="6" fill="#fbfbfd" stroke="${lo}" stroke-width="26"/>
+        <rect x="200" y="200" width="600" height="600" rx="6" fill="none" stroke="${hex}" stroke-width="20"/>
+        <rect x="222" y="222" width="556" height="556" fill="#ffffff" stroke="${s}" stroke-width="2"/>`);
+    },
+  };
+
+  root.Dynamic = root.Dynamic || {};
+  root.Dynamic.renderSilhouette = function (productId, hex) {
+    const fn = renderers[productId] || renderers.mug;
+    return fn(hex);
+  };
+})(window);
+
+/* ===== pricing.js ===== */
+/* ============================================================================
+   pricing.js — Deterministic dynamic pricing engine.
+
+   Pure function: given a product and the current customization state it returns
+   an itemized breakdown and totals. No side effects, no DOM — trivially testable
+   and safe to call on every keystroke. Prices are integer cents throughout to
+   avoid floating-point drift; formatting to currency happens only at the edge.
+   ========================================================================== */
+(function (root) {
+  "use strict";
+
+  const money = (cents) =>
+    "$" + (cents / 100).toFixed(2).replace(/\.00$/, "");
+
+  /**
+   * @param {object} product  entry from the catalog
+   * @param {object} state    { colorId, sizeId, quantity, finishId, addons:Set,
+   *                            areas: { [areaId]: { objectCount } } }
+   * @returns {{ items: Array, subtotalUnit:number, total:number, currency }}
+   */
+  function compute(product, state) {
+    const items = [];
+
+    // 1. Base product (unit price).
+    items.push({ label: product.name, amount: product.base, kind: "base" });
+
+    // 2. Print areas. First area that actually has a design is included;
+    //    every additional decorated area adds its surcharge.
+    const decorated = product.areas.filter(
+      (a) => state.areas[a.id] && state.areas[a.id].objectCount > 0
+    );
+    decorated.forEach((area, i) => {
+      if (i === 0) {
+        items.push({ label: `${area.label} print`, amount: 0, kind: "free" });
+      } else {
+        items.push({
+          label: `${area.label} print`,
+          amount: area.surcharge,
+          kind: "area",
+        });
+      }
+    });
+
+    // 3. Finish (e.g. gold metallic / foil / embroidery), charged once per
+    //    decorated area beyond plain standard.
+    const finish = (product.finishes || []).find((f) => f.id === state.finishId);
+    if (finish && finish.surcharge > 0 && decorated.length > 0) {
+      items.push({
+        label: finish.name,
+        amount: finish.surcharge,
+        kind: "finish",
+      });
+    }
+
+    // 4. Add-ons (gift box, etc.).
+    (product.addons || []).forEach((addon) => {
+      if (state.addons && state.addons.has(addon.id)) {
+        items.push({ label: addon.name, amount: addon.surcharge, kind: "addon" });
+      }
+    });
+
+    const subtotalUnit = items.reduce((s, it) => s + it.amount, 0);
+    const qty = Math.max(1, state.quantity || 1);
+    const total = subtotalUnit * qty;
+
+    return {
+      items,
+      subtotalUnit,
+      quantity: qty,
+      total,
+      currency: "USD",
+      format: money,
+      decoratedAreas: decorated.length,
+    };
+  }
+
+  root.Dynamic = root.Dynamic || {};
+  root.Dynamic.pricing = { compute, money };
+})(window);
+
+/* ===== store.js ===== */
+/* ============================================================================
+   store.js — Minimal reactive state container.
+
+   A tiny observable store (no framework). Holds the full customization state;
+   any part of the UI can subscribe and re-render on change. Kept deliberately
+   small: predictable, serializable, and the single source of truth that both
+   the pricing engine and the Shopify cart payload read from.
+   ========================================================================== */
+(function (root) {
+  "use strict";
+
+  function createStore(initial) {
+    let state = initial;
+    const subs = new Set();
+
+    return {
+      get: () => state,
+      set(patch) {
+        state = typeof patch === "function" ? patch(state) : { ...state, ...patch };
+        subs.forEach((fn) => fn(state));
+      },
+      subscribe(fn) {
+        subs.add(fn);
+        return () => subs.delete(fn);
+      },
+    };
+  }
+
+  /** Build a fresh state object for a given product. */
+  function initState(product) {
+    const areas = {};
+    product.areas.forEach((a) => {
+      areas[a.id] = { json: null, objectCount: 0 };
+    });
+    return {
+      productId: product.id,
+      colorId: product.colors[0].id,
+      sizeId: product.sizes ? product.sizes[Math.min(2, product.sizes.length - 1)] : null,
+      quantity: 1,
+      finishId: (product.finishes && product.finishes[0].id) || "standard",
+      addons: new Set(),
+      activeAreaId: product.areas[0].id,
+      areas,
+    };
+  }
+
+  root.Dynamic = root.Dynamic || {};
+  root.Dynamic.createStore = createStore;
+  root.Dynamic.initState = initState;
+})(window);
+
+/* ===== designs.js ===== */
+/* ============================================================================
+   designs.js — Template library + AI artwork generator.
+
+   AI generation runs locally and procedurally so the live demo works with no
+   backend or API keys: a prompt is hashed into a deterministic, themed vector
+   composition. In production, `generateAI` is the single seam to swap for a
+   real image model — return an image URL / SVG and the editor inserts it
+   identically. See docs/BACKEND_CONTRACT.md ("AI Design").
+   ========================================================================== */
+(function (root) {
+  "use strict";
+
+  /* ---------------- Ready-made templates (inserted as SVG) ---------------- */
+  const templates = [
+    {
+      id: "monogram",
+      name: "Monogram",
+      svg: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="86" fill="none" stroke="#1d1d1f" stroke-width="4"/>
+        <text x="100" y="128" font-family="Georgia,serif" font-size="90" text-anchor="middle" fill="#1d1d1f">A</text>
+      </svg>`,
+    },
+    {
+      id: "badge",
+      name: "Est. Badge",
+      svg: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="90" fill="#1d1d1f"/>
+        <circle cx="100" cy="100" r="78" fill="none" stroke="#fff" stroke-width="3"/>
+        <text x="100" y="92" font-family="Helvetica,sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#fff">GOOD</text>
+        <text x="100" y="120" font-family="Helvetica,sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#fff">VIBES</text>
+        <text x="100" y="150" font-family="Helvetica,sans-serif" font-size="12" letter-spacing="3" text-anchor="middle" fill="#fff">EST 2025</text>
+      </svg>`,
+    },
+    {
+      id: "wave",
+      name: "Wave",
+      svg: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 80 Q25 40 50 80 T100 80 T150 80 T200 80" fill="none" stroke="#0071e3" stroke-width="6" stroke-linecap="round"/>
+        <path d="M0 96 Q25 56 50 96 T100 96 T150 96 T200 96" fill="none" stroke="#1d1d1f" stroke-width="4" stroke-linecap="round"/>
+      </svg>`,
+    },
+    {
+      id: "heart",
+      name: "Heart",
+      svg: `<svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 160 C40 110 20 70 40 45 C60 20 95 30 100 55 C105 30 140 20 160 45 C180 70 160 110 100 160 Z" fill="#d70015"/>
+      </svg>`,
+    },
+    {
+      id: "arch",
+      name: "Sun Arch",
+      svg: `<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+        <path d="M40 140 A60 60 0 0 1 160 140 Z" fill="#e8a13a"/>
+        <line x1="30" y1="140" x2="170" y2="140" stroke="#1d1d1f" stroke-width="5"/>
+        <text x="100" y="130" font-family="Georgia,serif" font-size="22" text-anchor="middle" fill="#1d1d1f">SUNCHILD</text>
+      </svg>`,
+    },
+    {
+      id: "leaf",
+      name: "Botanical",
+      svg: `<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+        <path d="M80 190 V40" stroke="#2e4034" stroke-width="4"/>
+        <path d="M80 70 q40 -20 44 -50 q-40 4 -44 34 Z" fill="#3f6b4a"/>
+        <path d="M80 100 q-40 -20 -44 -50 q40 4 44 34 Z" fill="#3f6b4a"/>
+        <path d="M80 130 q40 -20 44 -50 q-40 4 -44 34 Z" fill="#3f6b4a"/>
+      </svg>`,
+    },
+  ];
+
+  /* ---------------- Procedural AI artwork ---------------- */
+  const PALETTES = [
+    ["#0b3d2e", "#3f6b4a", "#e8d9b5", "#c0392b"],
+    ["#1b2a4a", "#3a6ea5", "#c9d6df", "#f0a500"],
+    ["#2d1b2e", "#7d3c6a", "#e8a5c0", "#f5d491"],
+    ["#1d1d1f", "#6e6e73", "#b8860b", "#f5f5f7"],
+    ["#132a13", "#4f772d", "#90a955", "#ecf39e"],
+  ];
+
+  function hash(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+  function rng(seed) {
+    let s = seed || 1;
+    return () => {
+      s = (Math.imul(s, 1103515245) + 12345) & 0x7fffffff;
+      return s / 0x7fffffff;
+    };
+  }
+
+  // Keyword → motif hints so generated art loosely reflects the prompt.
+  const MOTIFS = {
+    mountain: "mountain",
+    peak: "mountain",
+    pine: "tree",
+    tree: "tree",
+    forest: "tree",
+    wave: "wave",
+    ocean: "wave",
+    sea: "wave",
+    sun: "sun",
+    sunset: "sun",
+    moon: "moon",
+    star: "stars",
+    night: "stars",
+    flower: "bloom",
+    floral: "bloom",
+    bloom: "bloom",
+    heart: "heart",
+    love: "heart",
+  };
+
+  function detectMotif(prompt) {
+    const p = prompt.toLowerCase();
+    for (const k in MOTIFS) if (p.includes(k)) return MOTIFS[k];
+    return "abstract";
+  }
+
+  function drawMotif(motif, r, pal) {
+    const [c1, c2, c3, c4] = pal;
+    switch (motif) {
+      case "mountain":
+        return `
+          <rect x="0" y="0" width="300" height="300" fill="${c3}"/>
+          <circle cx="220" cy="80" r="42" fill="${c4}"/>
+          <path d="M0 240 L80 120 L130 190 L190 90 L300 240 Z" fill="${c1}"/>
+          <path d="M0 240 L80 120 L110 158 L150 120 L300 240 Z" fill="${c2}" opacity="0.85"/>
+          <rect x="0" y="240" width="300" height="60" fill="${c1}"/>`;
+      case "tree":
+        return `
+          <rect x="0" y="0" width="300" height="300" fill="${c3}"/>
+          ${[70, 150, 230]
+            .map(
+              (x, i) =>
+                `<path d="M${x} 250 L${x - 34} 250 L${x} ${120 + i * 8} L${x + 34} 250 Z" fill="${c1}"/>
+                 <rect x="${x - 6}" y="240" width="12" height="26" fill="${c2}"/>`
+            )
+            .join("")}
+          <rect x="0" y="266" width="300" height="34" fill="${c2}"/>`;
+      case "wave":
+        return `
+          <rect x="0" y="0" width="300" height="300" fill="${c3}"/>
+          ${[120, 160, 200]
+            .map(
+              (y, i) =>
+                `<path d="M0 ${y} Q75 ${y - 40} 150 ${y} T300 ${y} V300 H0 Z" fill="${[c1, c2, c4][i]}" opacity="${0.9 - i * 0.15}"/>`
+            )
+            .join("")}`;
+      case "sun":
+        return `
+          <rect x="0" y="0" width="300" height="300" fill="${c3}"/>
+          <circle cx="150" cy="150" r="70" fill="${c4}"/>
+          ${Array.from({ length: 12 })
+            .map((_, i) => {
+              const a = (i / 12) * Math.PI * 2;
+              return `<line x1="${150 + Math.cos(a) * 90}" y1="${150 + Math.sin(a) * 90}" x2="${150 + Math.cos(a) * 120}" y2="${150 + Math.sin(a) * 120}" stroke="${c1}" stroke-width="6" stroke-linecap="round"/>`;
+            })
+            .join("")}`;
+      case "stars":
+        return `
+          <rect x="0" y="0" width="300" height="300" fill="${c1}"/>
+          <circle cx="220" cy="80" r="40" fill="${c4}"/>
+          ${Array.from({ length: 24 })
+            .map(() => `<circle cx="${r() * 300}" cy="${r() * 300}" r="${1 + r() * 2.5}" fill="${c3}"/>`)
+            .join("")}`;
+      case "bloom":
+        return `
+          <rect x="0" y="0" width="300" height="300" fill="${c3}"/>
+          ${Array.from({ length: 6 })
+            .map((_, i) => {
+              const a = (i / 6) * Math.PI * 2;
+              return `<ellipse cx="${150 + Math.cos(a) * 46}" cy="${150 + Math.sin(a) * 46}" rx="40" ry="20" fill="${c2}" transform="rotate(${(a * 180) / Math.PI} ${150 + Math.cos(a) * 46} ${150 + Math.sin(a) * 46})"/>`;
+            })
+            .join("")}
+          <circle cx="150" cy="150" r="28" fill="${c4}"/>`;
+      case "heart":
+        return `
+          <rect x="0" y="0" width="300" height="300" fill="${c3}"/>
+          <path d="M150 230 C70 170 40 110 75 75 C110 40 148 60 150 95 C152 60 190 40 225 75 C260 110 230 170 150 230 Z" fill="${c4}"/>`;
+      default:
+        return `
+          <rect x="0" y="0" width="300" height="300" fill="${c3}"/>
+          ${Array.from({ length: 7 })
+            .map(
+              () =>
+                `<circle cx="${r() * 300}" cy="${r() * 300}" r="${20 + r() * 60}" fill="${[c1, c2, c4][Math.floor(r() * 3)]}" opacity="0.55"/>`
+            )
+            .join("")}`;
+    }
+  }
+
+  /**
+   * Generate artwork from a prompt.
+   * @returns {Promise<{ kind:'svg', svg:string, name:string, motif:string }>}
+   */
+  function generateAI(prompt) {
+    return new Promise((resolve) => {
+      const clean = (prompt || "abstract design").trim();
+      const seed = hash(clean);
+      const r = rng(seed);
+      const pal = PALETTES[seed % PALETTES.length];
+      const motif = detectMotif(clean);
+      const art = drawMotif(motif, r, pal);
+      const label = clean.split(/\s+/).slice(0, 3).join(" ");
+      const svg = `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <defs><clipPath id="rc"><rect width="300" height="300" rx="20"/></clipPath></defs>
+        <g clip-path="url(#rc)">${art}</g>
+      </svg>`;
+      // Simulate model latency for realistic UX; real API replaces this block.
+      const delay = root.Dynamic._aiInstant ? 0 : 900;
+      setTimeout(() => resolve({ kind: "svg", svg, name: `AI · ${label}`, motif }), delay);
+    });
+  }
+
+  root.Dynamic = root.Dynamic || {};
+  root.Dynamic.templates = templates;
+  root.Dynamic.generateAI = generateAI;
+})(window);
+
+/* ===== editor.js ===== */
+/* ============================================================================
+   editor.js — Canvas design editor (built on Fabric.js).
+
+   Owns one Fabric canvas that is re-populated as the customer switches print
+   areas. Provides the full editing surface: add / transform / align / snap /
+   layer / undo-redo / zoom, plus (de)serialization to the design JSON that the
+   Shopify cart payload stores. All operations are guarded so a missing Fabric
+   (e.g. offline CDN) degrades gracefully instead of throwing.
+   ========================================================================== */
+(function (root) {
+  "use strict";
+
+  const BASE = 560; // internal canvas resolution (square print stage)
+  const HISTORY_LIMIT = 40;
+
+  function createEditor(opts) {
+    const { canvasEl, product } = opts;
+    const on = opts.callbacks || {};
+    if (typeof root.fabric === "undefined") {
+      console.warn("[Dynamic] Fabric.js not loaded — editor disabled.");
+      return null;
+    }
+    const fabric = root.fabric;
+
+    const canvas = new fabric.Canvas(canvasEl, {
+      width: BASE,
+      height: BASE,
+      backgroundColor: "transparent",
+      preserveObjectStacking: true,
+      selection: true,
+      controlsAboveOverlay: true,
+    });
+    fabric.Object.prototype.cornerStyle = "circle";
+    fabric.Object.prototype.cornerColor = "#0071e3";
+    fabric.Object.prototype.cornerStrokeColor = "#fff";
+    fabric.Object.prototype.borderColor = "#0071e3";
+    fabric.Object.prototype.cornerSize = 11;
+    fabric.Object.prototype.transparentCorners = false;
+    fabric.Object.prototype.padding = 4;
+
+    let zoom = 1;
+    let activeAreaId = product.areas[0].id;
+    let boundary = null;
+    let guideV = null,
+      guideH = null;
+    // Per-area history stacks so undo/redo respect the active area.
+    const histories = {};
+    product.areas.forEach((a) => (histories[a.id] = { stack: [], index: -1 }));
+    let suspend = false; // pause history capture during programmatic loads
+
+    /* ---------- print-area boundary + clip ---------- */
+    function areaRect(areaId) {
+      const a = product.areas.find((x) => x.id === areaId) || product.areas[0];
+      return {
+        left: a.rect.x * BASE,
+        top: a.rect.y * BASE,
+        width: a.rect.w * BASE,
+        height: a.rect.h * BASE,
+      };
+    }
+
+    function applyBoundary(areaId) {
+      const r = areaRect(areaId);
+      if (boundary) canvas.remove(boundary);
+      boundary = new fabric.Rect({
+        left: r.left,
+        top: r.top,
+        width: r.width,
+        height: r.height,
+        fill: "transparent",
+        stroke: "rgba(0,113,227,0.55)",
+        strokeDashArray: [6, 6],
+        strokeWidth: 1.5,
+        selectable: false,
+        evented: false,
+        excludeFromExport: true,
+        hoverCursor: "default",
+      });
+      canvas.add(boundary);
+      canvas.sendToBack(boundary);
+      // Clip every design object to the printable rectangle.
+      canvas.clipPath = new fabric.Rect({
+        left: r.left,
+        top: r.top,
+        width: r.width,
+        height: r.height,
+        absolutePositioned: true,
+      });
+    }
+
+    /* ---------- history ---------- */
+    function serializeCanvas() {
+      return JSON.stringify(
+        canvas.toJSON(["selectable", "name", "dynamicKind"])
+      );
+    }
+    function pushHistory() {
+      if (suspend) return;
+      const h = histories[activeAreaId];
+      h.stack = h.stack.slice(0, h.index + 1);
+      h.stack.push(serializeCanvas());
+      if (h.stack.length > HISTORY_LIMIT) h.stack.shift();
+      h.index = h.stack.length - 1;
+      emitChange();
+    }
+    function restore(json, cb) {
+      suspend = true;
+      canvas.loadFromJSON(json, () => {
+        // Boundary/clip are excluded from export, so re-apply them.
+        applyBoundary(activeAreaId);
+        canvas.renderAll();
+        suspend = false;
+        if (cb) cb();
+        emitChange();
+      });
+    }
+    function undo() {
+      const h = histories[activeAreaId];
+      if (h.index <= 0) return;
+      h.index--;
+      restore(h.stack[h.index]);
+    }
+    function redo() {
+      const h = histories[activeAreaId];
+      if (h.index >= h.stack.length - 1) return;
+      h.index++;
+      restore(h.stack[h.index]);
+    }
+    function canUndo() {
+      return histories[activeAreaId].index > 0;
+    }
+    function canRedo() {
+      const h = histories[activeAreaId];
+      return h.index < h.stack.length - 1;
+    }
+
+    /* ---------- change notification ---------- */
+    function designObjects() {
+      return canvas.getObjects().filter((o) => !o.excludeFromExport);
+    }
+    function emitChange() {
+      if (on.onChange)
+        on.onChange({
+          areaId: activeAreaId,
+          objectCount: designObjects().length,
+          canUndo: canUndo(),
+          canRedo: canRedo(),
+        });
+    }
+
+    /* ---------- snapping ---------- */
+    const SNAP = 8;
+    function clearGuides() {
+      if (guideV) {
+        canvas.remove(guideV);
+        guideV = null;
+      }
+      if (guideH) {
+        canvas.remove(guideH);
+        guideH = null;
+      }
+    }
+    function showGuide(vertical) {
+      const cx = BASE / 2,
+        cy = BASE / 2;
+      const common = {
+        stroke: "#ff375f",
+        strokeWidth: 1,
+        selectable: false,
+        evented: false,
+        excludeFromExport: true,
+      };
+      if (vertical && !guideV) {
+        guideV = new fabric.Line([cx, 0, cx, BASE], common);
+        canvas.add(guideV);
+      }
+      if (!vertical && !guideH) {
+        guideH = new fabric.Line([0, cy, BASE, cy], common);
+        canvas.add(guideH);
+      }
+    }
+
+    canvas.on("object:moving", (e) => {
+      const o = e.target;
+      const c = o.getCenterPoint();
+      const cx = BASE / 2,
+        cy = BASE / 2;
+      clearGuides();
+      if (Math.abs(c.x - cx) < SNAP) {
+        o.setPositionByOrigin(new fabric.Point(cx, c.y), "center", "center");
+        showGuide(true);
+      }
+      if (Math.abs(c.y - cy) < SNAP) {
+        o.setPositionByOrigin(new fabric.Point(o.getCenterPoint().x, cy), "center", "center");
+        showGuide(false);
+      }
+    });
+    canvas.on("mouse:up", clearGuides);
+    canvas.on("object:modified", () => {
+      clearGuides();
+      pushHistory();
+    });
+    canvas.on("selection:created", () => on.onSelection && on.onSelection(active()));
+    canvas.on("selection:updated", () => on.onSelection && on.onSelection(active()));
+    canvas.on("selection:cleared", () => on.onSelection && on.onSelection(null));
+
+    function active() {
+      return canvas.getActiveObject() || null;
+    }
+
+    /* ---------- add operations ---------- */
+    function centreOf(areaId) {
+      const r = areaRect(areaId);
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }
+
+    function addText(text, style) {
+      const c = centreOf(activeAreaId);
+      const t = new fabric.Textbox(text || "Your text", {
+        left: c.x,
+        top: c.y,
+        originX: "center",
+        originY: "center",
+        fontFamily: (style && style.fontFamily) || "SF Pro Display, -apple-system, sans-serif",
+        fontSize: (style && style.fontSize) || 46,
+        fill: (style && style.fill) || "#1d1d1f",
+        textAlign: "center",
+        width: 260,
+        dynamicKind: "text",
+        name: (text || "Text").slice(0, 24),
+      });
+      canvas.add(t).setActiveObject(t);
+      canvas.renderAll();
+      pushHistory();
+      return t;
+    }
+
+    function addImageFromURL(url, meta) {
+      return new Promise((resolve) => {
+        fabric.Image.fromURL(
+          url,
+          (img) => {
+            if (!img) return resolve(null);
+            const r = areaRect(activeAreaId);
+            const scale = Math.min(
+              (r.width * 0.8) / img.width,
+              (r.height * 0.8) / img.height,
+              1
+            );
+            const c = centreOf(activeAreaId);
+            img.set({
+              left: c.x,
+              top: c.y,
+              originX: "center",
+              originY: "center",
+              scaleX: scale,
+              scaleY: scale,
+              dynamicKind: (meta && meta.kind) || "image",
+              name: (meta && meta.name) || "Image",
+            });
+            canvas.add(img).setActiveObject(img);
+            canvas.renderAll();
+            pushHistory();
+            resolve(img);
+          },
+          { crossOrigin: "anonymous" }
+        );
+      });
+    }
+
+    function addSVG(svgString, name) {
+      return new Promise((resolve) => {
+        fabric.loadSVGFromString(svgString, (objects, options) => {
+          const grp = fabric.util.groupSVGElements(objects, options);
+          const r = areaRect(activeAreaId);
+          const scale = Math.min(
+            (r.width * 0.8) / (grp.width || 100),
+            (r.height * 0.8) / (grp.height || 100),
+            2
+          );
+          const c = centreOf(activeAreaId);
+          grp.set({
+            left: c.x,
+            top: c.y,
+            originX: "center",
+            originY: "center",
+            scaleX: scale,
+            scaleY: scale,
+            dynamicKind: "svg",
+            name: name || "Vector",
+          });
+          canvas.add(grp).setActiveObject(grp);
+          canvas.renderAll();
+          pushHistory();
+          resolve(grp);
+        });
+      });
+    }
+
+    /* ---------- object ops ---------- */
+    function duplicate() {
+      const o = active();
+      if (!o) return;
+      o.clone((cl) => {
+        cl.set({ left: o.left + 24, top: o.top + 24 });
+        cl.dynamicKind = o.dynamicKind;
+        cl.name = o.name;
+        canvas.add(cl).setActiveObject(cl);
+        canvas.renderAll();
+        pushHistory();
+      });
+    }
+    function removeSelected() {
+      const objs = canvas.getActiveObjects();
+      if (!objs.length) return;
+      objs.forEach((o) => canvas.remove(o));
+      canvas.discardActiveObject();
+      canvas.renderAll();
+      pushHistory();
+    }
+    function bringForward() {
+      const o = active();
+      if (o) {
+        canvas.bringForward(o);
+        pushHistory();
+      }
+    }
+    function sendBackward() {
+      const o = active();
+      if (o) {
+        canvas.sendBackwards(o);
+        if (boundary) canvas.sendToBack(boundary);
+        pushHistory();
+      }
+    }
+    function rotateSelected(deg) {
+      const o = active();
+      if (!o) return;
+      o.rotate((o.angle || 0) + deg);
+      canvas.renderAll();
+      pushHistory();
+    }
+
+    /* ---------- align + snap ---------- */
+    function align(dir) {
+      const o = active();
+      if (!o) return;
+      const r = areaRect(activeAreaId);
+      o.setCoords();
+      const b = o.getBoundingRect(true, true);
+      let dx = 0,
+        dy = 0;
+      if (dir === "left") dx = r.left - b.left;
+      if (dir === "right") dx = r.left + r.width - (b.left + b.width);
+      if (dir === "top") dy = r.top - b.top;
+      if (dir === "bottom") dy = r.top + r.height - (b.top + b.height);
+      if (dir === "centerH") dx = r.left + r.width / 2 - (b.left + b.width / 2);
+      if (dir === "centerV") dy = r.top + r.height / 2 - (b.top + b.height / 2);
+      o.left += dx;
+      o.top += dy;
+      o.setCoords();
+      canvas.renderAll();
+      pushHistory();
+    }
+    function snapCenter() {
+      const o = active();
+      if (!o) return;
+      const c = centreOf(activeAreaId);
+      o.setPositionByOrigin(new fabric.Point(c.x, c.y), "center", "center");
+      o.setCoords();
+      canvas.renderAll();
+      pushHistory();
+    }
+
+    /* ---------- selected text styling ---------- */
+    function styleSelected(patch) {
+      const o = active();
+      if (!o) return;
+      Object.keys(patch).forEach((k) => o.set(k, patch[k]));
+      if (patch.text && o.name !== undefined) o.name = String(patch.text).slice(0, 24);
+      o.setCoords();
+      canvas.renderAll();
+      pushHistory();
+    }
+
+    /* ---------- zoom ---------- */
+    function applyZoom(z) {
+      zoom = Math.max(0.5, Math.min(2, z));
+      canvas.setZoom(zoom);
+      canvas.setDimensions({ width: BASE * zoom, height: BASE * zoom });
+      if (on.onZoom) on.onZoom(zoom);
+      canvas.renderAll();
+    }
+    const zoomIn = () => applyZoom(zoom + 0.15);
+    const zoomOut = () => applyZoom(zoom - 0.15);
+    const zoomReset = () => applyZoom(1);
+
+    /* ---------- area switching ---------- */
+    function saveActiveArea() {
+      const store = opts.store;
+      const s = store.get();
+      s.areas[activeAreaId] = {
+        json: serializeCanvas(),
+        objectCount: designObjects().length,
+      };
+    }
+    function setActiveArea(areaId) {
+      if (areaId === activeAreaId) return;
+      saveActiveArea();
+      activeAreaId = areaId;
+      const s = opts.store.get();
+      const saved = s.areas[areaId] && s.areas[areaId].json;
+      canvas.discardActiveObject();
+      if (saved) {
+        restore(saved);
+      } else {
+        suspend = true;
+        canvas.clear();
+        applyBoundary(areaId);
+        suspend = false;
+        // seed history baseline for the empty area
+        const h = histories[areaId];
+        if (h.index < 0) {
+          h.stack = [serializeCanvas()];
+          h.index = 0;
+        }
+        canvas.renderAll();
+        emitChange();
+      }
+      if (on.onSelection) on.onSelection(null);
+    }
+
+    /* ---------- export ---------- */
+    function exportAreaPNG(areaId, mult) {
+      // Render just the printable rect of the given area at higher resolution.
+      const target = areaId || activeAreaId;
+      if (target !== activeAreaId) saveActiveArea();
+      const r = areaRect(target);
+      // temporarily hide boundary
+      const hadBoundary = boundary && boundary.visible;
+      if (boundary) boundary.visible = false;
+      canvas.renderAll();
+      const data = canvas.toDataURL({
+        format: "png",
+        left: r.left * zoom,
+        top: r.top * zoom,
+        width: r.width * zoom,
+        height: r.height * zoom,
+        multiplier: (mult || 2) / zoom,
+      });
+      if (boundary) boundary.visible = hadBoundary !== false;
+      canvas.renderAll();
+      return data;
+    }
+    function exportCompositePNG() {
+      const hadBoundary = boundary && boundary.visible;
+      if (boundary) boundary.visible = false;
+      canvas.discardActiveObject();
+      canvas.renderAll();
+      const data = canvas.toDataURL({ format: "png", multiplier: 2 / zoom });
+      if (boundary) boundary.visible = hadBoundary !== false;
+      canvas.renderAll();
+      return data;
+    }
+
+    function serializeAllAreas() {
+      saveActiveArea();
+      const s = opts.store.get();
+      const out = {};
+      Object.keys(s.areas).forEach((k) => {
+        out[k] = {
+          objectCount: s.areas[k].objectCount || 0,
+          json: s.areas[k].json ? JSON.parse(s.areas[k].json) : null,
+        };
+      });
+      return out;
+    }
+
+    /* ---------- keyboard shortcuts ---------- */
+    function keyHandler(e) {
+      const tag = (e.target && e.target.tagName) || "";
+      if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        e.shiftKey ? redo() : undo();
+      } else if (meta && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        duplicate();
+      } else if (e.key === "Delete" || e.key === "Backspace") {
+        if (active()) {
+          e.preventDefault();
+          removeSelected();
+        }
+      } else if (e.key === "Escape") {
+        canvas.discardActiveObject();
+        canvas.renderAll();
+      }
+    }
+
+    // init
+    applyBoundary(activeAreaId);
+    histories[activeAreaId].stack = [serializeCanvas()];
+    histories[activeAreaId].index = 0;
+    canvas.renderAll();
+    emitChange();
+
+    return {
+      canvas,
+      addText,
+      addImageFromURL,
+      addSVG,
+      duplicate,
+      removeSelected,
+      bringForward,
+      sendBackward,
+      rotateSelected,
+      align,
+      snapCenter,
+      styleSelected,
+      undo,
+      redo,
+      canUndo,
+      canRedo,
+      zoomIn,
+      zoomOut,
+      zoomReset,
+      getZoom: () => zoom,
+      setActiveArea,
+      getActiveAreaId: () => activeAreaId,
+      getActive: active,
+      listObjects: () => designObjects(),
+      selectObject: (o) => {
+        canvas.setActiveObject(o);
+        canvas.renderAll();
+      },
+      exportAreaPNG,
+      exportCompositePNG,
+      serializeAllAreas,
+      keyHandler,
+      dispose: () => {
+        document.removeEventListener("keydown", keyHandler);
+        canvas.dispose();
+      },
+    };
+  }
+
+  root.Dynamic = root.Dynamic || {};
+  root.Dynamic.createEditor = createEditor;
+})(window);
+
+/* ===== cart.js ===== */
+/* ============================================================================
+   cart.js — Shopify Add-to-Cart payload builder.
+
+   Turns the current customization into the exact shape a Shopify storefront
+   expects. Small design metadata rides along as line-item properties (visible
+   on the order + in the admin); large artefacts (full design JSON, uploaded
+   files, hi-res preview) are meant to be uploaded first and referenced by URL.
+   This module produces both the AJAX-cart body and a portable design bundle.
+   See docs/BACKEND_CONTRACT.md for the storage contract.
+   ========================================================================== */
+(function (root) {
+  "use strict";
+
+  /**
+   * Build the design bundle — everything needed to reproduce & print the order.
+   * @returns {object} JSON-serializable design record.
+   */
+  function buildDesignBundle(ctx) {
+    const { product, state, editor, pricing } = ctx;
+    const design = editor ? editor.serializeAllAreas() : {};
+    const decorated = Object.keys(design).filter(
+      (k) => design[k] && design[k].objectCount > 0
+    );
+    return {
+      schemaVersion: "1.0",
+      productId: product.id,
+      productName: product.name,
+      options: {
+        color: colorName(product, state.colorId),
+        size: state.sizeId || null,
+        finish: finishName(product, state.finishId),
+        addons: Array.from(state.addons || []),
+        quantity: state.quantity,
+      },
+      printAreas: decorated,
+      design, // per-area Fabric JSON (text, fonts, colours, transforms, artwork)
+      pricing: {
+        currency: pricing.currency,
+        unitCents: pricing.subtotalUnit,
+        totalCents: pricing.total,
+        breakdown: pricing.items.map((i) => ({ label: i.label, cents: i.amount })),
+      },
+      // In production these are Cloudinary/S3 URLs returned by the upload step.
+      previewImage: ctx.previewDataUrl || null,
+      areaPreviews: ctx.areaPreviews || {},
+      uploadedAssets: ctx.uploadedAssets || [],
+    };
+  }
+
+  /**
+   * Build the Shopify AJAX cart request body (POST /cart/add.js).
+   * Small values go directly as line-item properties; heavy blobs are expected
+   * to be uploaded first (see uploadArtifacts) and referenced by URL.
+   */
+  function buildCartRequest(ctx, refs) {
+    const { product, state, variantId } = ctx;
+    const bundle = buildDesignBundle(ctx);
+    const properties = {
+      _dynamic_design_id: (refs && refs.designId) || "",
+      _dynamic_schema: bundle.schemaVersion,
+      Color: bundle.options.color,
+      Finish: bundle.options.finish,
+      "Print Areas": bundle.printAreas.join(", ") || "None",
+      // Underscore-prefixed properties are hidden from the storefront line item
+      // but retained on the order for fulfilment.
+      _design_json_url: (refs && refs.designJsonUrl) || "",
+      _preview_url: (refs && refs.previewUrl) || "",
+    };
+    if (bundle.options.size) properties.Size = bundle.options.size;
+    if (bundle.options.addons.length)
+      properties["Add-ons"] = bundle.options.addons.join(", ");
+
+    return {
+      items: [
+        {
+          id: variantId || null, // Shopify variant id, resolved from color/size
+          quantity: state.quantity,
+          properties,
+        },
+      ],
+      // convenience mirror of what will be persisted server-side
+      _bundle: bundle,
+    };
+  }
+
+  function colorName(product, id) {
+    const c = product.colors.find((x) => x.id === id);
+    return c ? c.name : id;
+  }
+  function finishName(product, id) {
+    const f = (product.finishes || []).find((x) => x.id === id);
+    return f ? f.name : id;
+  }
+
+  /**
+   * Attempt a real Shopify AJAX add-to-cart. Falls back to returning the payload
+   * when not embedded in a storefront (e.g. this standalone demo), so the flow
+   * is always observable.
+   */
+  async function addToCart(cartRequest) {
+    const inShopify =
+      typeof root.Shopify !== "undefined" ||
+      /myshopify\.com$/.test(root.location.hostname);
+    if (!inShopify) {
+      return { ok: false, simulated: true, request: cartRequest };
+    }
+    const res = await fetch("/cart/add.js", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ items: cartRequest.items }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, simulated: false, response: data };
+  }
+
+  root.Dynamic = root.Dynamic || {};
+  root.Dynamic.cart = { buildDesignBundle, buildCartRequest, addToCart };
+})(window);
+
+/* ===== app.js ===== */
+/* ============================================================================
+   app.js — Application controller.
+
+   Bootstraps the product page, constructs the Apple-style customization modal,
+   and wires the editor, store, pricing engine and cart payload together. Owns
+   presentation + orchestration only; all domain logic lives in the focused
+   modules it composes (products, store, pricing, editor, designs, cart).
+   ========================================================================== */
+(function (root) {
+  "use strict";
+  const D = root.Dynamic;
+  const $ = (sel, ctx) => (ctx || document).querySelector(sel);
+  const el = (tag, cls, html) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html != null) n.innerHTML = html;
+    return n;
+  };
+
+  /* --------------------------- constants --------------------------- */
+  const FONTS = [
+    { name: "SF Pro", stack: "'SF Pro Display', -apple-system, sans-serif" },
+    { name: "Serif", stack: "Georgia, 'Times New Roman', serif" },
+    { name: "Rounded", stack: "'SF Pro Rounded', 'Trebuchet MS', sans-serif" },
+    { name: "Mono", stack: "'SF Mono', ui-monospace, monospace" },
+    { name: "Condensed", stack: "'Arial Narrow', sans-serif" },
+    { name: "Script", stack: "'Snell Roundhand', 'Segoe Script', cursive" },
+  ];
+  const TEXT_COLORS = [
+    "#1d1d1f", "#ffffff", "#0071e3", "#d70015", "#1a7f37", "#b8860b",
+    "#7d3c6a", "#3a6ea5", "#e8a13a", "#ff375f", "#5c5a3a", "#c0392b",
+    "#25324a", "#b7c4b0", "#e8cdc9", "#000000",
+  ];
+  const EMOJI = "😀 😍 🥳 😎 🤩 🥰 😂 🙌 👍 🤟 ✌️ 👑 ❤️ 💛 💚 🔥 ✨ ⭐ 🌟 🎉 🎂 🎁 🌈 ☀️ 🌙 🌸 🌿 🍀 🐝 🦋 🐶 🐱 ⚽ 🏀 🎸 🚀 💯 🍕 ☕ 🍩".split(" ");
+
+  const icon = (p) =>
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const ICONS = {
+    undo: icon('<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/>'),
+    redo: icon('<path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h1"/>'),
+    dup: icon('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>'),
+    del: icon('<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>'),
+    rotate: icon('<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v4h-4"/>'),
+    center: icon('<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>'),
+    alignL: icon('<path d="M4 4v16"/><rect x="7" y="8" width="10" height="3"/><rect x="7" y="14" width="6" height="3"/>'),
+    alignR: icon('<path d="M20 4v16"/><rect x="7" y="8" width="10" height="3"/><rect x="11" y="14" width="6" height="3"/>'),
+    alignT: icon('<path d="M4 4h16"/><rect x="8" y="7" width="3" height="10"/><rect x="14" y="7" width="3" height="6"/>'),
+    alignB: icon('<path d="M4 20h16"/><rect x="8" y="7" width="3" height="10"/><rect x="14" y="11" width="3" height="6"/>'),
+    zoomIn: icon('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4M11 8v6M8 11h6"/>'),
+    zoomOut: icon('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4M8 11h6"/>'),
+    front: icon('<path d="M4 8l8-4 8 4-8 4-8-4Z"/><path d="M4 12l8 4 8-4"/>'),
+    text: icon('<path d="M4 7V5h16v2M12 5v14M9 19h6"/>'),
+    upload: icon('<path d="M12 15V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>'),
+    photo: icon('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m3 17 5-4 4 3 3-2 6 5"/>'),
+    ai: icon('<path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3Z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8L18 15Z"/>'),
+    tmpl: icon('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'),
+    layerText: icon('<path d="M4 7V5h16v2M12 5v14M9 19h6"/>'),
+    layerImg: icon('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m3 17 5-4 4 3 3-2 6 5"/>'),
+  };
+
+  /* --------------------------- runtime state --------------------------- */
+  let product, store, editor, unsubStore;
+  let currentPricing;
+  const uploadedAssets = [];
+
+  /* ============================ PRODUCT PAGE ============================ */
+  function renderProductPage() {
+    $("#galleryStage").innerHTML = D.renderSilhouette(
+      product.id,
+      colorHex(store.get().colorId)
+    );
+    $("#pName").textContent = product.tagline;
+    $("#pDesc").textContent = product.description;
+    $("#pEyebrow").textContent = product.name;
+    renderSwatches();
+    renderSizes();
+    updatePagePrice();
+    updateCustomizeSummary();
+  }
+
+  function renderSwatches() {
+    const host = $("#pColors");
+    host.innerHTML = "";
+    const cur = store.get().colorId;
+    product.colors.forEach((c) => {
+      const b = el("button", "swatch");
+      b.style.setProperty("--swatch", c.hex);
+      b.setAttribute("aria-label", c.name);
+      b.setAttribute("aria-pressed", String(c.id === cur));
+      b.onclick = () => {
+        store.set({ colorId: c.id });
+        renderProductPage();
+        $("#colorName").textContent = c.name;
+        // refresh modal preview if open
+        if (modalOpen) $("#stageSilhouette").innerHTML = D.renderSilhouette(product.id, c.hex);
+      };
+      host.appendChild(b);
+    });
+    $("#colorName").textContent = product.colors.find((c) => c.id === cur).name;
+  }
+
+  function renderSizes() {
+    const grp = $("#pSizeGroup");
+    if (!product.sizes) {
+      grp.style.display = "none";
+      return;
+    }
+    grp.style.display = "";
+    const host = $("#pSizes");
+    host.innerHTML = "";
+    const cur = store.get().sizeId;
+    product.sizes.forEach((s) => {
+      const b = el("button", "pill", s);
+      b.setAttribute("aria-pressed", String(s === cur));
+      b.onclick = () => {
+        store.set({ sizeId: s });
+        renderSizes();
+      };
+      host.appendChild(b);
+    });
+  }
+
+  function updatePagePrice() {
+    const p = D.pricing.compute(product, store.get());
+    currentPricing = p;
+    $("#pPrice").textContent = p.format(p.total);
+    $("#pPriceNote").textContent =
+      store.get().quantity > 1 ? `${p.format(p.subtotalUnit)} each` : "Free shipping";
+  }
+
+  function updateCustomizeSummary() {
+    const areas = decoratedCount();
+    $("#customizeSummary").textContent = areas
+      ? `${areas} print area${areas > 1 ? "s" : ""} designed`
+      : "Not customized yet";
+  }
+
+  function colorHex(id) {
+    const c = product.colors.find((x) => x.id === id);
+    return c ? c.hex : "#ffffff";
+  }
+  function decoratedCount() {
+    const s = store.get();
+    return Object.keys(s.areas).filter((k) => s.areas[k].objectCount > 0).length;
+  }
+
+  /* ============================ MODAL ============================ */
+  let modalOpen = false;
+
+  function buildModal() {
+    const areasTabs = product.areas
+      .map(
+        (a, i) =>
+          `<button class="area-tab" role="tab" data-area="${a.id}" aria-selected="${i === 0}">
+             ${a.label}<span class="area-count" data-count="${a.id}"></span>
+             ${i === 0 ? '<span class="area-tab-bg"></span>' : ""}
+           </button>`
+      )
+      .join("");
+
+    const modeButtons = [
+      ["text", "Add Text", ICONS.text],
+      ["upload", "Upload Logo", ICONS.upload],
+      ["photo", "Upload Photo", ICONS.photo],
+      ["ai", "AI Design", ICONS.ai],
+      ["templates", "Templates", ICONS.tmpl],
+    ]
+      .map(
+        ([k, label, ic], i) =>
+          `<button class="mode-btn" role="tab" data-mode="${k}" aria-selected="${i === 0}">${ic}<span>${label}</span></button>`
+      )
+      .join("");
+
+    const html = `
+      <div class="modal-scrim" data-close></div>
+      <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-head">
+          <div>
+            <h2 id="modalTitle">Customize your ${escapeHtml(product.name)}.</h2>
+            <div class="sub">Design it your way. Live preview updates as you go.</div>
+          </div>
+          <button class="modal-close" data-close aria-label="Close">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <section class="stage" aria-label="Live preview">
+            <div class="stage-toolbar">
+              <div class="area-tabs" role="tablist" aria-label="Print areas">${areasTabs}</div>
+              <span class="tool-spacer"></span>
+              <button class="tool-btn" data-act="undo" title="Undo (⌘Z)" disabled>${ICONS.undo}</button>
+              <button class="tool-btn" data-act="redo" title="Redo (⇧⌘Z)" disabled>${ICONS.redo}</button>
+              <span class="tool-divider"></span>
+              <button class="tool-btn" data-act="dup" title="Duplicate (⌘D)" disabled>${ICONS.dup}</button>
+              <button class="tool-btn" data-act="rotate" title="Rotate 15°" disabled>${ICONS.rotate}</button>
+              <button class="tool-btn" data-act="del" title="Delete (⌫)" disabled>${ICONS.del}</button>
+              <span class="tool-divider"></span>
+              <button class="tool-btn" data-act="alignL" title="Align left" disabled>${ICONS.alignL}</button>
+              <button class="tool-btn" data-act="alignT" title="Align top" disabled>${ICONS.alignT}</button>
+              <button class="tool-btn" data-act="alignB" title="Align bottom" disabled>${ICONS.alignB}</button>
+              <button class="tool-btn" data-act="alignR" title="Align right" disabled>${ICONS.alignR}</button>
+              <button class="tool-btn" data-act="center" title="Snap to center" disabled>${ICONS.center}</button>
+              <span class="tool-divider"></span>
+              <button class="tool-btn" data-act="zoomOut" title="Zoom out">${ICONS.zoomOut}</button>
+              <button class="tool-btn" data-act="zoomIn" title="Zoom in">${ICONS.zoomIn}</button>
+            </div>
+            <div class="canvas-wrap">
+              <div class="canvas-frame" id="canvasFrame">
+                <div id="stageSilhouette" style="position:absolute;inset:0;pointer-events:none;"></div>
+                <canvas id="designCanvas"></canvas>
+              </div>
+              <div class="stage-empty" id="stageEmpty">Pick an option on the right to start designing.<br>Everything you add appears here, live.</div>
+              <div class="zoom-badge" id="zoomBadge">100%</div>
+            </div>
+          </section>
+
+          <aside class="panel">
+            <div class="mode-rail" role="tablist" aria-label="Design tools">${modeButtons}</div>
+            <div class="panel-scroll">
+              <div class="panel-pane active" data-pane="text">${paneText()}</div>
+              <div class="panel-pane" data-pane="upload">${paneUpload("logo")}</div>
+              <div class="panel-pane" data-pane="photo">${paneUpload("photo")}</div>
+              <div class="panel-pane" data-pane="ai">${paneAI()}</div>
+              <div class="panel-pane" data-pane="templates">${paneTemplates()}</div>
+              <div class="divider"></div>
+              ${paneFinishing()}
+              <div class="divider"></div>
+              <div id="layersSection"></div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="modal-foot">
+          <div class="price-breakdown" id="priceBreakdown">
+            <button class="price-breakdown-toggle" id="priceToggle" aria-expanded="false">
+              <span class="total" id="modalTotal">$0</span>
+              <span class="meta">Total <span class="caret">▾</span></span>
+            </button>
+            <div class="price-items"><div class="price-items-inner"><ul id="priceList"></ul></div></div>
+          </div>
+          <div class="foot-actions">
+            <button class="btn btn-ghost" data-close>Cancel</button>
+            <button class="btn btn-primary" id="applyBtn">Add to Cart</button>
+          </div>
+        </div>
+      </div>`;
+
+    const rootEl = $("#modalRoot");
+    rootEl.innerHTML = html;
+    wireModal();
+  }
+
+  function paneText() {
+    return `
+      <div class="field">
+        <label for="txtInput">Your text</label>
+        <textarea class="textarea" id="txtInput" placeholder="Happy Birthday Sarah" maxlength="120"></textarea>
+      </div>
+      <button class="btn btn-primary btn-block" id="addTextBtn">Add to design</button>
+      <div class="divider"></div>
+      <div class="field">
+        <label>Font</label>
+        <div class="font-grid" id="fontGrid">
+          ${FONTS.map(
+            (f, i) =>
+              `<button class="font-chip" data-font="${f.stack}" style="font-family:${f.stack}" aria-pressed="${i === 0}">${f.name}</button>`
+          ).join("")}
+        </div>
+      </div>
+      <div class="field">
+        <label>Color</label>
+        <div class="swatch-grid" id="textColors">
+          ${TEXT_COLORS.map(
+            (c, i) => `<button class="color-dot" style="--c:${c}" data-color="${c}" aria-pressed="${i === 0}" aria-label="${c}"></button>`
+          ).join("")}
+        </div>
+      </div>
+      <div class="field">
+        <label>Size <span id="fontSizeVal" style="float:right;color:var(--ink-faint)">46</span></label>
+        <input type="range" id="fontSize" min="16" max="120" value="46" style="width:100%">
+      </div>
+      <div class="field">
+        <label>Emoji</label>
+        <div class="emoji-grid">${EMOJI.map((e) => `<button class="emoji-btn" data-emoji="${e}">${e}</button>`).join("")}</div>
+      </div>`;
+  }
+
+  function paneUpload(kind) {
+    const formats = kind === "logo" ? "PNG · JPG · SVG · PDF" : "PNG · JPG";
+    const accept = kind === "logo" ? ".png,.jpg,.jpeg,.svg,.pdf" : ".png,.jpg,.jpeg";
+    return `
+      <div class="dropzone" data-drop="${kind}" tabindex="0" role="button" aria-label="Upload ${kind}">
+        <strong>Drop your ${kind} here</strong>
+        or click to browse
+        <div class="formats">${formats} · up to 20&nbsp;MB</div>
+      </div>
+      <input type="file" data-file="${kind}" accept="${accept}" hidden>
+      <p class="hint" style="margin-top:12px">${
+        kind === "logo"
+          ? "Transparent PNG or SVG works best. Vectors stay razor-sharp at any size."
+          : "High-resolution photos print best. We recommend at least 1500&nbsp;px on the long edge."
+      }</p>`;
+  }
+
+  function paneAI() {
+    return `
+      <div class="field">
+        <label for="aiPrompt">Describe your design</label>
+        <textarea class="textarea" id="aiPrompt" placeholder="Vintage mountain logo with pine trees"></textarea>
+      </div>
+      <button class="btn btn-primary btn-block" id="aiGenBtn">Generate</button>
+      <div id="aiResults" style="margin-top:16px"></div>
+      <p class="hint" style="margin-top:12px">Generated artwork drops straight into the editor — resize, move and combine it with text.</p>`;
+  }
+
+  function paneTemplates() {
+    return `<div class="template-grid">${D.templates
+      .map((t) => `<button class="template-card" data-tmpl="${t.id}" aria-label="${t.name}">${t.svg}</button>`)
+      .join("")}</div>`;
+  }
+
+  function paneFinishing() {
+    const finishes = (product.finishes || [])
+      .map(
+        (f, i) =>
+          `<button class="pill" data-finish="${f.id}" aria-pressed="${i === 0}">${f.name}${
+            f.surcharge ? ` +${D.pricing.money(f.surcharge)}` : ""
+          }</button>`
+      )
+      .join("");
+    const addons = (product.addons || [])
+      .map(
+        (a) =>
+          `<label style="display:flex;align-items:center;gap:10px;font-size:14px;margin-top:8px">
+             <input type="checkbox" data-addon="${a.id}"> ${a.name} <span class="meta">+${D.pricing.money(a.surcharge)}</span>
+           </label>`
+      )
+      .join("");
+    return `
+      <div class="field"><label>Finish</label><div class="pills" id="finishPills">${finishes}</div></div>
+      ${addons ? `<div class="field"><label>Add-ons</label>${addons}</div>` : ""}`;
+  }
+
+  /* --------------------------- modal wiring --------------------------- */
+  function wireModal() {
+    // Instantiate editor.
+    editor = D.createEditor({
+      canvasEl: $("#designCanvas"),
+      product,
+      store,
+      callbacks: {
+        onChange: onEditorChange,
+        onSelection: onSelection,
+        onZoom: (z) => {
+          $("#zoomBadge").textContent = Math.round(z * 100) + "%";
+        },
+      },
+    });
+    $("#stageSilhouette").innerHTML = D.renderSilhouette(product.id, colorHex(store.get().colorId));
+
+    // Close handlers (always available, even without the editor library).
+    $("#modalRoot")
+      .querySelectorAll("[data-close]")
+      .forEach((b) => (b.onclick = closeModal));
+
+    if (!editor) {
+      // Fabric.js unavailable (e.g. offline / blocked CDN). Keep the modal
+      // usable: show a clear message instead of throwing on interaction.
+      $("#stageEmpty").innerHTML =
+        "The design editor needs to load its canvas engine.<br>Check your connection and reopen Customize.";
+      $("#stageEmpty").style.opacity = "1";
+      $("#priceToggle").onclick = null;
+      $("#applyBtn").disabled = true;
+      return;
+    }
+
+    // Mode rail
+    $("#modalRoot")
+      .querySelectorAll(".mode-btn")
+      .forEach((btn) => {
+        btn.onclick = () => selectMode(btn.dataset.mode);
+      });
+
+    // Area tabs
+    $("#modalRoot")
+      .querySelectorAll(".area-tab")
+      .forEach((tab) => {
+        tab.onclick = () => selectArea(tab.dataset.area);
+      });
+
+    // Toolbar
+    $("#modalRoot")
+      .querySelectorAll(".tool-btn")
+      .forEach((btn) => {
+        btn.onclick = () => toolAction(btn.dataset.act);
+      });
+
+    // Text pane
+    $("#addTextBtn").onclick = () => {
+      const v = $("#txtInput").value.trim();
+      if (!v) {
+        toast("Type something first");
+        $("#txtInput").focus();
+        return;
+      }
+      editor.addText(v, currentTextStyle());
+      $("#txtInput").value = "";
+    };
+    $("#fontGrid")
+      .querySelectorAll(".font-chip")
+      .forEach((c) => {
+        c.onclick = () => {
+          pressOne("#fontGrid", c);
+          editor.styleSelected({ fontFamily: c.dataset.font });
+        };
+      });
+    $("#textColors")
+      .querySelectorAll(".color-dot")
+      .forEach((c) => {
+        c.onclick = () => {
+          pressOne("#textColors", c);
+          editor.styleSelected({ fill: c.dataset.color });
+        };
+      });
+    $("#fontSize").oninput = (e) => {
+      $("#fontSizeVal").textContent = e.target.value;
+      editor.styleSelected({ fontSize: parseInt(e.target.value, 10) });
+    };
+    $("#modalRoot")
+      .querySelectorAll(".emoji-btn")
+      .forEach((b) => {
+        b.onclick = () => editor.addText(b.dataset.emoji, { fontSize: 80 });
+      });
+
+    // Uploads
+    ["logo", "photo"].forEach(wireUpload);
+
+    // AI
+    $("#aiGenBtn").onclick = runAI;
+
+    // Templates
+    $("#modalRoot")
+      .querySelectorAll(".template-card")
+      .forEach((card) => {
+        card.onclick = async () => {
+          const t = D.templates.find((x) => x.id === card.dataset.tmpl);
+          await editor.addSVG(t.svg, t.name);
+          toast(`${t.name} added`);
+        };
+      });
+
+    // Finishing
+    $("#finishPills") &&
+      $("#finishPills")
+        .querySelectorAll(".pill")
+        .forEach((p) => {
+          p.onclick = () => {
+            pressOne("#finishPills", p);
+            store.set({ finishId: p.dataset.finish });
+            refreshPricing();
+          };
+        });
+    $("#modalRoot")
+      .querySelectorAll("[data-addon]")
+      .forEach((cb) => {
+        cb.onchange = () => {
+          const s = store.get();
+          const set = new Set(s.addons);
+          cb.checked ? set.add(cb.dataset.addon) : set.delete(cb.dataset.addon);
+          store.set({ addons: set });
+          refreshPricing();
+        };
+      });
+
+    // Price breakdown toggle
+    $("#priceToggle").onclick = () => {
+      const bd = $("#priceBreakdown");
+      const open = bd.classList.toggle("open");
+      $("#priceToggle").setAttribute("aria-expanded", String(open));
+    };
+
+    // Apply / add to cart
+    $("#applyBtn").onclick = onAddToCart;
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", editor.keyHandler);
+
+    refreshPricing();
+    updateLayers();
+    updateAreaCounts();
+    selectMode("text");
+  }
+
+  function currentTextStyle() {
+    const font = $("#fontGrid .font-chip[aria-pressed='true']");
+    const color = $("#textColors .color-dot[aria-pressed='true']");
+    return {
+      fontFamily: font ? font.dataset.font : FONTS[0].stack,
+      fill: color ? color.dataset.color : "#1d1d1f",
+      fontSize: parseInt($("#fontSize").value, 10) || 46,
+    };
+  }
+
+  function wireUpload(kind) {
+    const drop = $(`[data-drop="${kind}"]`);
+    const input = $(`[data-file="${kind}"]`);
+    drop.onclick = () => input.click();
+    drop.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        input.click();
+      }
+    };
+    ["dragenter", "dragover"].forEach((ev) =>
+      drop.addEventListener(ev, (e) => {
+        e.preventDefault();
+        drop.classList.add("drag");
+      })
+    );
+    ["dragleave", "drop"].forEach((ev) =>
+      drop.addEventListener(ev, (e) => {
+        e.preventDefault();
+        drop.classList.remove("drag");
+      })
+    );
+    drop.addEventListener("drop", (e) => {
+      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    });
+    input.onchange = (e) => {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+      input.value = "";
+    };
+  }
+
+  async function handleFile(file) {
+    const MAX = 20 * 1024 * 1024;
+    if (file.size > MAX) return toast("File is larger than 20 MB");
+    const ext = file.name.split(".").pop().toLowerCase();
+    uploadedAssets.push({ name: file.name, type: file.type, size: file.size });
+    toast(`Adding ${file.name}…`);
+    try {
+      if (ext === "svg") {
+        const text = await file.text();
+        await editor.addSVG(text, file.name);
+      } else if (ext === "pdf") {
+        await addPDF(file);
+      } else {
+        const url = await readAsDataURL(file);
+        await editor.addImageFromURL(url, { kind: "upload", name: file.name });
+      }
+      toast(`${file.name} added`);
+    } catch (err) {
+      console.error(err);
+      toast("Couldn't read that file");
+    }
+  }
+
+  function readAsDataURL(file) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function addPDF(file) {
+    // Lazy-load pdf.js only when a PDF is actually uploaded.
+    try {
+      const pdfjs = await loadPdfJs();
+      const buf = await file.arrayBuffer();
+      const doc = await pdfjs.getDocument({ data: buf }).promise;
+      const page = await doc.getPage(1);
+      const viewport = page.getViewport({ scale: 2 });
+      const c = document.createElement("canvas");
+      c.width = viewport.width;
+      c.height = viewport.height;
+      await page.render({ canvasContext: c.getContext("2d"), viewport }).promise;
+      await editor.addImageFromURL(c.toDataURL("image/png"), { kind: "pdf", name: file.name });
+    } catch (e) {
+      console.warn("pdf.js unavailable, storing PDF as attached asset", e);
+      // Graceful fallback: attach the file and drop a labelled placeholder.
+      const svg = `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="192" height="112" rx="10" fill="#f5f5f7" stroke="#d2d2d7"/>
+        <text x="100" y="56" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#d70015" font-weight="700">PDF</text>
+        <text x="100" y="82" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#6e6e73">${escapeHtml(file.name).slice(0, 22)}</text>
+      </svg>`;
+      await editor.addSVG(svg, file.name);
+    }
+  }
+
+  let pdfJsPromise = null;
+  function loadPdfJs() {
+    if (root.pdfjsLib) return Promise.resolve(root.pdfjsLib);
+    if (pdfJsPromise) return pdfJsPromise;
+    // Loaded lazily only when a PDF is actually dropped. If the CDN is
+    // unreachable, handleFile()'s catch falls back to an attached-asset
+    // placeholder, so PDF upload degrades gracefully.
+    pdfJsPromise = new Promise((res, rej) => {
+      const CDN = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174";
+      const s = document.createElement("script");
+      s.src = `${CDN}/pdf.min.js`;
+      s.onload = () => {
+        root.pdfjsLib.GlobalWorkerOptions.workerSrc = `${CDN}/pdf.worker.min.js`;
+        res(root.pdfjsLib);
+      };
+      s.onerror = rej;
+      document.head.appendChild(s);
+    });
+    return pdfJsPromise;
+  }
+
+  async function runAI() {
+    const prompt = $("#aiPrompt").value.trim();
+    if (!prompt) {
+      toast("Describe your design first");
+      return;
+    }
+    const btn = $("#aiGenBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> Generating';
+    $("#aiResults").innerHTML =
+      '<p class="hint">Dreaming up your artwork…</p>';
+    try {
+      const art = await D.generateAI(prompt);
+      $("#aiResults").innerHTML = `
+        <div class="template-grid">
+          <button class="template-card" id="aiUse" aria-label="Use generated art">${art.svg}</button>
+        </div>
+        <p class="hint" style="margin-top:8px">Motif: ${art.motif}. Tap the artwork to place it, or generate again.</p>`;
+      $("#aiUse").onclick = async () => {
+        await editor.addSVG(art.svg, art.name);
+        toast("AI artwork added");
+      };
+    } catch (e) {
+      $("#aiResults").innerHTML = '<p class="hint">Generation failed. Try again.</p>';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Generate";
+    }
+  }
+
+  function selectMode(mode) {
+    $("#modalRoot")
+      .querySelectorAll(".mode-btn")
+      .forEach((b) => b.setAttribute("aria-selected", String(b.dataset.mode === mode)));
+    $("#modalRoot")
+      .querySelectorAll(".panel-pane")
+      .forEach((p) => p.classList.toggle("active", p.dataset.pane === mode));
+  }
+
+  function selectArea(areaId) {
+    editor.setActiveArea(areaId);
+    $("#modalRoot")
+      .querySelectorAll(".area-tab")
+      .forEach((t) => {
+        const on = t.dataset.area === areaId;
+        t.setAttribute("aria-selected", String(on));
+        const existing = t.querySelector(".area-tab-bg");
+        if (on && !existing) t.appendChild(el("span", "area-tab-bg"));
+        if (!on && existing) existing.remove();
+      });
+    // gentle transition on the stage
+    const frame = $("#canvasFrame");
+    if (frame) {
+      frame.style.opacity = "0";
+      setTimeout(() => (frame.style.opacity = "1"), 90);
+    }
+  }
+
+  function toolAction(act) {
+    switch (act) {
+      case "undo": editor.undo(); break;
+      case "redo": editor.redo(); break;
+      case "dup": editor.duplicate(); break;
+      case "rotate": editor.rotateSelected(15); break;
+      case "del": editor.removeSelected(); break;
+      case "alignL": editor.align("left"); break;
+      case "alignR": editor.align("right"); break;
+      case "alignT": editor.align("top"); break;
+      case "alignB": editor.align("bottom"); break;
+      case "center": editor.snapCenter(); break;
+      case "zoomIn": editor.zoomIn(); break;
+      case "zoomOut": editor.zoomOut(); break;
+    }
+  }
+
+  /* --------------------------- editor callbacks --------------------------- */
+  function onEditorChange(info) {
+    const s = store.get();
+    s.areas[info.areaId].objectCount = info.objectCount;
+    $("#stageEmpty").style.opacity = info.objectCount ? "0" : "1";
+    setDisabled("undo", !info.canUndo);
+    setDisabled("redo", !info.canRedo);
+    updateAreaCounts();
+    updateLayers();
+    refreshPricing();
+    updateCustomizeSummary();
+    updatePagePrice();
+  }
+
+  function onSelection(obj) {
+    const hasSel = !!obj;
+    ["dup", "rotate", "del", "alignL", "alignR", "alignT", "alignB", "center"].forEach((a) =>
+      setDisabled(a, !hasSel)
+    );
+    updateLayers();
+    // Sync text controls to the selected object.
+    if (obj && obj.dynamicKind === "text") {
+      if (obj.fill) markPressed("#textColors", "[data-color]", obj.fill);
+      if (obj.fontFamily) markPressed("#fontGrid", "[data-font]", obj.fontFamily);
+      if (obj.fontSize) {
+        $("#fontSize").value = obj.fontSize;
+        $("#fontSizeVal").textContent = Math.round(obj.fontSize);
+      }
+      selectMode("text");
+    }
+  }
+
+  function setDisabled(act, val) {
+    const b = $(`.tool-btn[data-act="${act}"]`);
+    if (b) b.disabled = val;
+  }
+
+  function updateAreaCounts() {
+    const s = store.get();
+    Object.keys(s.areas).forEach((k) => {
+      const badge = $(`.area-count[data-count="${k}"]`);
+      if (badge) {
+        const n = s.areas[k].objectCount;
+        badge.textContent = n ? ` · ${n}` : "";
+      }
+    });
+  }
+
+  function updateLayers() {
+    const host = $("#layersSection");
+    if (!host || !editor) return;
+    const objs = editor.listObjects().slice().reverse();
+    const activeObj = editor.getActive();
+    if (!objs.length) {
+      host.innerHTML = `<label style="font-size:12px;font-weight:600;color:var(--ink-soft)">Layers</label><p class="hint" style="margin-top:6px">Nothing on this area yet.</p>`;
+      return;
+    }
+    host.innerHTML = `<label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:8px">Layers · ${objs.length}</label><div class="layer-list"></div>`;
+    const list = host.querySelector(".layer-list");
+    objs.forEach((o) => {
+      const isText = o.dynamicKind === "text";
+      const row = el("div", "layer" + (o === activeObj ? " sel" : ""));
+      row.innerHTML = `<span class="layer-ico">${isText ? ICONS.layerText : ICONS.layerImg}</span>
+        <span class="layer-name">${escapeHtml(o.name || (isText ? o.text : "Layer"))}</span>
+        <button class="layer-del" aria-label="Delete layer">${ICONS.del}</button>`;
+      row.querySelector(".layer-name").onclick = () => editor.selectObject(o);
+      row.querySelector(".layer-ico").onclick = () => editor.selectObject(o);
+      row.querySelector(".layer-del").onclick = (e) => {
+        e.stopPropagation();
+        editor.selectObject(o);
+        editor.removeSelected();
+      };
+      list.appendChild(row);
+    });
+  }
+
+  /* --------------------------- pricing --------------------------- */
+  function refreshPricing() {
+    const p = D.pricing.compute(product, store.get());
+    currentPricing = p;
+    $("#modalTotal").textContent = p.format(p.total);
+    $("#priceList").innerHTML = p.items
+      .map(
+        (i) =>
+          `<li><span>${escapeHtml(i.label)}</span><span class="${i.kind === "free" ? "free" : ""}">${
+            i.kind === "free" ? "Free" : "+" + p.format(i.amount).replace("$", "$")
+          }</span></li>`
+      )
+      .join("") +
+      (p.quantity > 1
+        ? `<li style="border-top:1px solid var(--line-soft);margin-top:6px;padding-top:8px"><span>× ${p.quantity} qty</span><span>${p.format(p.total)}</span></li>`
+        : "");
+  }
+
+  /* --------------------------- add to cart --------------------------- */
+  async function onAddToCart() {
+    const btn = $("#applyBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> Saving';
+    try {
+      const previewDataUrl = editor.exportCompositePNG();
+      const areaPreviews = {};
+      product.areas.forEach((a) => {
+        const s = store.get().areas[a.id];
+        if (s && s.objectCount > 0) areaPreviews[a.id] = editor.exportAreaPNG(a.id, 2);
+      });
+      const ctx = {
+        product,
+        state: store.get(),
+        editor,
+        pricing: currentPricing,
+        previewDataUrl,
+        areaPreviews,
+        uploadedAssets,
+        variantId: null, // resolved from color/size by the storefront integration
+      };
+      const bundle = D.cart.buildDesignBundle(ctx);
+      const request = D.cart.buildCartRequest(ctx, {
+        designId: "local-" + bundle.productId,
+      });
+      const result = await D.cart.addToCart(request);
+
+      // Expose for inspection / integration testing.
+      root.Dynamic.lastOrder = { bundle, request, result };
+      console.groupCollapsed("%c[Dynamic] Add to Cart payload", "color:#0071e3;font-weight:600");
+      console.log("Design bundle:", bundle);
+      console.log("Shopify cart request:", request);
+      console.groupEnd();
+
+      updateCustomizeSummary();
+      closeModal();
+      toast(
+        result.simulated
+          ? "Design saved — cart payload ready (see console)"
+          : "Added to cart"
+      );
+    } catch (e) {
+      console.error(e);
+      toast("Something went wrong saving your design");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Add to Cart";
+    }
+  }
+
+  /* --------------------------- open / close --------------------------- */
+  function openModal() {
+    const rootEl = $("#modalRoot");
+    rootEl.classList.add("open");
+    modalOpen = true;
+    document.body.classList.add("no-scroll");
+    const sheet = $(".modal-sheet");
+    const scrim = $(".modal-scrim");
+    if (root.gsap) {
+      root.gsap.to(scrim, { opacity: 1, duration: 0.3, ease: "power2.out" });
+      root.gsap.fromTo(
+        sheet,
+        { opacity: 0, y: 28, scale: 0.985 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "expo.out" }
+      );
+    } else {
+      scrim.style.transition = "opacity .3s";
+      sheet.style.transition = "opacity .45s cubic-bezier(.16,1,.3,1), transform .45s cubic-bezier(.16,1,.3,1)";
+      requestAnimationFrame(() => {
+        scrim.style.opacity = "1";
+        sheet.style.opacity = "1";
+        sheet.style.transform = "none";
+      });
+    }
+    // focus management
+    setTimeout(() => $(".modal-close") && $(".modal-close").focus(), 60);
+  }
+
+  function closeModal() {
+    const rootEl = $("#modalRoot");
+    const sheet = $(".modal-sheet");
+    const scrim = $(".modal-scrim");
+    const done = () => {
+      rootEl.classList.remove("open");
+      modalOpen = false;
+      document.body.classList.remove("no-scroll");
+      $("#customizeBtn") && $("#customizeBtn").focus();
+    };
+    if (root.gsap) {
+      root.gsap.to(scrim, { opacity: 0, duration: 0.28 });
+      root.gsap.to(sheet, {
+        opacity: 0,
+        y: 24,
+        scale: 0.99,
+        duration: 0.32,
+        ease: "power2.in",
+        onComplete: done,
+      });
+    } else {
+      sheet.style.opacity = "0";
+      sheet.style.transform = "translateY(24px) scale(.99)";
+      scrim.style.opacity = "0";
+      setTimeout(done, 300);
+    }
+  }
+
+  /* --------------------------- helpers --------------------------- */
+  function pressOne(scope, btn) {
+    $(scope)
+      .querySelectorAll("[aria-pressed]")
+      .forEach((b) => b.setAttribute("aria-pressed", "false"));
+    btn.setAttribute("aria-pressed", "true");
+  }
+  function markPressed(scope, sel, value) {
+    const host = $(scope);
+    if (!host) return;
+    host.querySelectorAll(sel).forEach((b) => {
+      const key = b.dataset.color || b.dataset.font;
+      b.setAttribute("aria-pressed", String(key === value));
+    });
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+  let toastTimer;
+  function toast(msg) {
+    let host = $(".toast-host");
+    if (!host) {
+      host = el("div", "toast-host");
+      document.body.appendChild(host);
+    }
+    const t = el("div", "toast", escapeHtml(msg));
+    host.appendChild(t);
+    requestAnimationFrame(() => t.classList.add("show"));
+    clearTimeout(toastTimer);
+    setTimeout(() => {
+      t.classList.remove("show");
+      setTimeout(() => t.remove(), 400);
+    }, 2400);
+  }
+
+  /* --------------------------- product switching --------------------------- */
+  function loadProduct(id) {
+    product = D.getProduct(id);
+    store = D.createStore(D.initState(product));
+    unsubStore && unsubStore();
+    renderProductPage();
+    buildModal();
+    // reflect in switcher
+    document.querySelectorAll("[data-product]").forEach((b) =>
+      b.setAttribute("aria-pressed", String(b.dataset.product === id))
+    );
+  }
+
+  /* --------------------------- init --------------------------- */
+  function init() {
+    // Product switcher
+    document.querySelectorAll("[data-product]").forEach((b) => {
+      b.onclick = () => loadProduct(b.dataset.product);
+    });
+    // Quantity
+    const qtyInput = $("#qtyInput");
+    $("#qtyMinus").onclick = () => setQty(store.get().quantity - 1);
+    $("#qtyPlus").onclick = () => setQty(store.get().quantity + 1);
+    qtyInput.onchange = () => setQty(parseInt(qtyInput.value, 10) || 1);
+    function setQty(n) {
+      n = Math.max(1, Math.min(999, n));
+      store.set({ quantity: n });
+      qtyInput.value = n;
+      updatePagePrice();
+      if (modalOpen) refreshPricing();
+    }
+    // Customize + add to cart (page)
+    $("#customizeBtn").onclick = openModal;
+    $("#pageAddCart").onclick = () => {
+      // Quick add without customization.
+      toast(decoratedCount() ? "Added your customized item" : "Added to cart");
+    };
+    // Escape closes modal
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modalOpen) closeModal();
+    });
+
+    loadProduct("mug");
+  }
+
+  if (document.readyState === "loading")
+    document.addEventListener("DOMContentLoaded", init);
+  else init();
+})(window);
+
+</script>
+{%- endraw -%}
