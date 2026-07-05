@@ -1873,6 +1873,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // Photo-only click-to-upload hint hides once a design is on the print area.
     const hint = q2("#printHint");
     if (hint) hint.style.display = countKind("img") ? "none" : "";
+    // Example placeholder: hide as soon as the customer adds any design.
+    const example = q2("#upExample");
+    if (example) example.style.display = (layers && layers.length) ? "none" : "";
     // Mug-wrap mode: draw the cylindrically warped design on the overlay canvas.
   }
   // Photo-only methods (e.g. DTF) allow just ONE design; others allow up to MAX_IMG.
@@ -2090,6 +2093,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const noun = product.engraveNoun || (window.DYN_SHOPIFY && window.DYN_SHOPIFY.productTitle) || product.name || "product";
     const priceStr = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.priceMoney) || D.pricing.money(product.base);
     const photoOnly = !!(product && product.photoOnly);
+    const exampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.exampleImage) || "";
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
     const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (photoOnly
       ? ("Click the image to upload your design, then drag, resize or rotate it on your " + noun + ".")
@@ -2114,6 +2118,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           '<div class="engrave-stage"><div class="engrave-frame">' +
             '<img src="' + (sideImage("front") || "") + '" alt="">' +
             '<div class="print-area" id="printArea">' +
+              // Faded example design: shows customers where/how their design goes; hidden once they upload.
+              (exampleImg ? '<img class="up-example" id="upExample" src="' + exampleImg + '" alt="Example design">' : '') +
               '<span class="print-area-label">Print area</span>' +
               '<div class="up-guide up-guide-v" id="guideV"></div><div class="up-guide up-guide-h" id="guideH"></div>' +
               // Photo-only (e.g. DTF): the customer uploads by clicking the image itself.
