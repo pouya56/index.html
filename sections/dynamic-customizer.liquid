@@ -88,6 +88,7 @@
     "labelBackPreview": {{ section.settings.label_back_preview | default: '' | json }},
     "labelText": {{ section.settings.label_text | default: '' | json }},
     "labelBackText": {{ section.settings.label_back_text | default: '' | json }},
+    "labelFileName": {{ section.settings.label_filename | default: '' | json }},
     "backImage": {% if section.settings.back_image %}{{ section.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "printBack": {
       "show": {% if section.settings.back_print_show %}true{% else %}false{% endif %},
@@ -1080,6 +1081,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "text", "id": "label_back_preview", "label": "Back preview label", "default": "Back preview" },
     { "type": "text", "id": "label_text", "label": "Front text label", "default": "Text" },
     { "type": "text", "id": "label_back_text", "label": "Back text label", "default": "Back text" },
+    { "type": "text", "id": "label_filename", "label": "Readable file-name label", "info": "Shopify hashes the actual download name, so this line shows the intended name(s) (product-colour-side) on the order for reference.", "default": "File name" },
     { "type": "checkbox", "id": "print_show", "label": "Show the printable-area outline to customers", "default": true },
     { "type": "range", "id": "print_x", "label": "Area left", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 22 },
     { "type": "range", "id": "print_y", "label": "Area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },
