@@ -202,11 +202,17 @@
 
   Viewer.prototype._buildDecal = function () {
     var THREE = this.THREE, o = this.opts, m = this._metrics || { radius: 0.66, height: 1.8, cy: 0 };
-    var arcDeg = num(o.arcDeg, 200);
-    var radiusScale = num(o.radiusScale, 1.02);
-    var heightFrac = num(o.heightFrac, 0.55);
-    var yOffset = num(o.yOffset, 0);
-    var rotationDeg = num(o.rotationDeg, 0);
+    // this.fit holds the current (live-tunable) fit values.
+    if (!this.fit) this.fit = {
+      arcDeg: num(o.arcDeg, 200), radiusScale: num(o.radiusScale, 1.02),
+      heightFrac: num(o.heightFrac, 0.55), yOffset: num(o.yOffset, 0),
+      rotationDeg: num(o.rotationDeg, 0), flipY: o.flipY === true
+    };
+    var arcDeg = this.fit.arcDeg;
+    var radiusScale = this.fit.radiusScale;
+    var heightFrac = this.fit.heightFrac;
+    var yOffset = this.fit.yOffset;
+    var rotationDeg = this.fit.rotationDeg;
 
     var r = m.radius * radiusScale;
     var bandH = m.height * heightFrac;
@@ -234,11 +240,36 @@
     if (this._designSource) this._applyDesign();
   };
 
+  Viewer.prototype._removeDecal = function () {
+    if (!this._decal) return;
+    try { this._model.remove(this._decal); } catch (e) {}
+    try { if (this._decal.geometry) this._decal.geometry.dispose(); } catch (e) {}
+    try { if (this._decal.material) { if (this._decal.material.map) this._decal.material.map.dispose(); this._decal.material.dispose(); } } catch (e) {}
+    this._decal = null; this._decalTex = null;
+  };
+
+  // Live-adjust the wrap fit (used by the in-popup tuner). Rebuilds the decal
+  // in place without reloading the model. Returns the current fit values.
+  Viewer.prototype.setFit = function (partial) {
+    if (!this.fit) this.fit = {};
+    if (partial) {
+      if (partial.arcDeg != null) this.fit.arcDeg = num(partial.arcDeg, this.fit.arcDeg);
+      if (partial.radiusScale != null) this.fit.radiusScale = num(partial.radiusScale, this.fit.radiusScale);
+      if (partial.heightFrac != null) this.fit.heightFrac = num(partial.heightFrac, this.fit.heightFrac);
+      if (partial.yOffset != null) this.fit.yOffset = num(partial.yOffset, this.fit.yOffset);
+      if (partial.rotationDeg != null) this.fit.rotationDeg = num(partial.rotationDeg, this.fit.rotationDeg);
+      if (partial.flipY != null) this.fit.flipY = !!partial.flipY;
+    }
+    if (this.THREE && this._model) { this._removeDecal(); this._buildDecal(); }
+    return this.fit;
+  };
+
   Viewer.prototype._makeTexture = function () {
     var THREE = this.THREE;
     var cv = document.createElement("canvas"); cv.width = 4; cv.height = 4;
     var tex = new THREE.CanvasTexture(cv);
-    tex.flipY = this.opts.flipY === false ? false : true;
+    var flip = this.fit ? this.fit.flipY : (this.opts.flipY === true);
+    tex.flipY = flip ? true : false;
     tex.wrapS = THREE.ClampToEdgeWrapping;
     tex.wrapT = THREE.ClampToEdgeWrapping;
     tex.anisotropy = this.renderer ? this.renderer.capabilities.getMaxAnisotropy() : 1;
