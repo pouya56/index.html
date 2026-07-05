@@ -1314,6 +1314,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let sideActive = { front: null, back: null };
   let currentSide = "front";
   let curVariantOpts = [];   // option values of the currently-selected variant (for per-variant back image)
+  let _sidesResolve = null;  // (hasBack) => variant matching current options with the "sides" option forced; set by the variant picker
   let layers = sideLayers.front;   // alias to the current side's layer array
   let activeLayerId = null;
   let layerSeq = 0;
@@ -1434,6 +1435,31 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const firstAvail = variants.find((v) => v.available) || variants[0];
     const selected = (firstAvail.options || []).slice();
 
+    // Single-line-item back charge: if the product has a "Print sides" option
+    // (front-only vs front+back at a higher price), we drive it automatically
+    // from whether the customer adds a back design — no separate fee line.
+    const DS = window.DYN_SETTINGS || {};
+    const sidesName = String(DS.sidesOption || "").trim().toLowerCase();
+    let sidesIdx = -1, sidesFront = "", sidesBoth = "";
+    if (sidesName) {
+      sidesIdx = options.findIndex((o) => String(o.name || "").trim().toLowerCase() === sidesName);
+      if (sidesIdx >= 0) {
+        const vals = options[sidesIdx].values || [];
+        const findVal = (want) => vals.find((v) => String(v).trim().toLowerCase() === String(want).trim().toLowerCase()) || "";
+        sidesFront = findVal(DS.sidesFrontValue || "Front only") || vals[0] || "";
+        sidesBoth = findVal(DS.sidesBothValue || "Front + Back") || "";
+        if (!sidesBoth) sidesIdx = -1;           // can't map the upcharge value — fall back to the fee line
+        else if (sidesFront) selected[sidesIdx] = sidesFront;   // start on the base (front-only) price
+      }
+    }
+    // Expose a resolver so the "Add to Bag" step can pick the front-only or
+    // front+back variant that matches the customer's other choices (colour/size).
+    _sidesResolve = (sidesIdx < 0) ? null : function (hasBack) {
+      const want = selected.slice();
+      want[sidesIdx] = hasBack ? sidesBoth : (sidesFront || want[sidesIdx]);
+      return variants.find((vv) => (vv.options || []).join("~~") === want.join("~~")) || null;
+    };
+
     function valueInStock(oi, val) {
       return variants.some((vv) => vv.available && (vv.options || [])[oi] === val &&
         options.every((_, j) => j === oi || (vv.options || [])[j] === selected[j]));
@@ -1441,6 +1467,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     function refreshAvail() {
       modelGroup.querySelectorAll(".pill, .swatch").forEach((b) => {
         const oi = parseInt(b.dataset.oi, 10);
+        if (oi === sidesIdx) return;
         const oos = !madeToOrder && !valueInStock(oi, b.dataset.val);
         b.classList.toggle("soldout", oos);
         b.title = oos ? b.dataset.val + " — Out of stock" : b.dataset.val;
@@ -1496,6 +1523,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
 
     modelGroup.innerHTML = options.map((o, oi) => {
+      if (oi === sidesIdx) return "";   // auto-managed by the customizer — hidden from the picker
       const label = '<div class="opt-label"' + (oi ? ' style="margin-top:16px"' : '') + '>' + escapeHtml(o.name) +
         ' <span class="opt-val" data-oi="' + oi + '">' + escapeHtml(selected[oi] || "") + '</span></div>';
       if (isColorOption(o, oi)) {
@@ -1632,8 +1660,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     } catch (e) { return null; }
   }
 
-  async function submitToShopify(properties, extraItems, files) {
+  async function submitToShopify(properties, extraItems, files, variantOverride) {
     const S = window.DYN_SHOPIFY || {};
+    const submitId = variantOverride || S.variantId;   // front+back variant when a back design is present
     const qty = Math.max(1, (store.get().quantity) || 1);
     const clean = {};
     Object.keys(properties || {}).forEach((k) => { if (properties[k]) clean[k] = properties[k]; });
@@ -1642,14 +1671,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const m = String(it.id).match(/\d{4,}/);
       return m ? Object.assign({}, it, { id: m[0] }) : null;
     }).filter(Boolean);
-    if (S.variantId) {
+    if (submitId) {
       try {
         let res;
         if (files && files.length) {
           // Multipart add — Shopify uploads the attached files and stores their
           // URLs on the line item (free hosting, no third-party service).
           const fd = new FormData();
-          fd.append("id", String(S.variantId));
+          fd.append("id", String(submitId));
           fd.append("quantity", String(qty));
           Object.keys(clean).forEach((k) => fd.append("properties[" + k + "]", clean[k]));
           files.forEach((f) => {
@@ -1661,7 +1690,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           res = await fetch("/cart/add.js", {
             method: "POST",
             headers: { "Content-Type": "application/json", Accept: "application/json" },
-            body: JSON.stringify({ items: [{ id: S.variantId, quantity: qty, properties: clean }] }),
+            body: JSON.stringify({ items: [{ id: submitId, quantity: qty, properties: clean }] }),
           });
         }
         if (!res.ok) {
@@ -1691,7 +1720,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         return true;
       } catch (e) { console.warn("[Dynamic] cart error", e); }
     }
-    window.Dynamic.lastOrder = { variantId: S.variantId || null, quantity: qty, properties: clean };
+    window.Dynamic.lastOrder = { variantId: submitId || null, quantity: qty, properties: clean };
     console.groupCollapsed("%c[Dynamic] Add to Bag (demo \u2014 no Shopify variant)", "color:#0071e3;font-weight:600");
     console.log(window.Dynamic.lastOrder);
     console.groupEnd();
@@ -2364,8 +2393,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       ).filter((s2) => s2.kind === "img" || (s2.kind === "text" && s2.text));
       const _state = { v: (window.DYN_SHOPIFY || {}).variantId || null, front: ser(sideLayers.front), back: ser(sideLayers.back) };
       if (_state.front.length || _state.back.length) props["_design_state"] = JSON.stringify(_state);
+      // Single-line-item pricing: pick the front+back variant (higher price) so
+      // the back charge rides on the same line. Only if the merchant mapped a
+      // "Print sides" option; otherwise fall back to the separate fee line.
+      const sidesVariant = (typeof _sidesResolve === "function" && _sidesResolve) ? _sidesResolve(hasBackDesign) : null;
       const extraItems = [];
-      if (hasBackDesign && S.backFeeVariantId) {
+      if (!sidesVariant && hasBackDesign && S.backFeeVariantId) {
         const grp = "g" + Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36);
         props["_grp"] = grp;
         const qty = Math.max(1, (store.get().quantity) || 1);
@@ -2373,7 +2406,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       }
       root.Dynamic.lastOrder = { properties: props };
       $("#customizeSummary") && ($("#customizeSummary").textContent = "Design added");
-      const ok = await submitToShopify(props, extraItems, files);
+      const ok = await submitToShopify(props, extraItems, files, sidesVariant ? sidesVariant.id : null);
       if (ok) {
         const wasEditing = !!(editingLineKey || editingGrp);
         const oldGrp = editingGrp, oldKey = editingLineKey;
