@@ -2317,12 +2317,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const L = labels();
       const base = fileBaseName();
       const props = {};
-      if (txts("front").length) props[L.text] = txts("front").map((l) => l.text).join(" | ");
+      // Customer-facing: one clean note. Everything else is prefixed "_" so Shopify
+      // hides it from the cart/checkout but keeps it on your order (admin) page.
+      props["Personalized"] = hasBackDesign ? "Front + Back" : "Front";
+      if (txts("front").length) props["_" + L.text] = txts("front").map((l) => l.text).join(" | ");
       if (hasBackDesign) {
-        if (txts("back").length) props[L.backText] = txts("back").map((l) => l.text).join(" | ");
-        props["Sides"] = "Front + Back";
+        if (txts("back").length) props["_" + L.backText] = txts("back").map((l) => l.text).join(" | ");
+        props["_Sides"] = "Front + Back";
       }
-      if (product && product.method) props["Print method"] = product.method;
+      if (product && product.method) props["_Print method"] = product.method;
       // Collect the raw design files + composed previews — Shopify hosts them for
       // free (attached as multipart line-item properties; no third-party host).
       const files = [];
@@ -2330,7 +2333,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       async function collectFiles(side, label, sideName) {
         const arr = imgs(side);
         for (let i = 0; i < arr.length; i++) {
-          const l = arr[i], name = label + (i ? " " + (i + 1) : "");
+          const l = arr[i], name = "_" + label + (i ? " " + (i + 1) : "");
           const fname = base + "-" + sideName + (i ? "-" + (i + 1) : "") + extOf(l.file && l.file.name);
           if (l.file instanceof File) { files.push({ name: name, file: l.file, filename: fname }); }
           else if (/^https?:/i.test(String(l.cloudUrl || l.url || ""))) {
@@ -2344,16 +2347,16 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       // Composed preview = the product with the design in the customer's exact
       // position/size/rotation. Visible name so it shows on the order + cart.
       const compF = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
-      if (compF) files.push({ name: L.preview, blob: dataURLtoBlob(compF), filename: base + "-front-preview.png" });
+      if (compF) files.push({ name: "_" + L.preview, blob: dataURLtoBlob(compF), filename: base + "-front-preview.png" });
       if (hasBackDesign) {
         const compB = await compositeSide(sideLayers.back, sideImage("back"), sidePrint("back"));
-        if (compB) files.push({ name: L.backPreview, blob: dataURLtoBlob(compB), filename: base + "-back-preview.png" });
+        if (compB) files.push({ name: "_" + L.backPreview, blob: dataURLtoBlob(compB), filename: base + "-back-preview.png" });
       }
       const desc = (s) => [
         imgs(s).length ? (imgs(s).length + " image" + (imgs(s).length > 1 ? "s" : "")) : null,
         txts(s).length ? (txts(s).length + " text") : null
       ].filter(Boolean).join(" + ");
-      props["Customized"] = ("Front: " + (desc("front") || "—")) + (hasBackDesign ? (" · Back: " + desc("back")) : "");
+      props["_Customized"] = ("Front: " + (desc("front") || "—")) + (hasBackDesign ? (" · Back: " + desc("back")) : "");
       // Design state keeps positions/text only (image pixels live in the hosted files).
       const ser = (arr) => arr.map((l) => l.kind === "img"
         ? { kind: "img", x: l.x, y: l.y, scale: l.scale, rotate: l.rotate || 0 }
@@ -2366,7 +2369,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         const grp = "g" + Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36);
         props["_grp"] = grp;
         const qty = Math.max(1, (store.get().quantity) || 1);
-        extraItems.push({ id: S.backFeeVariantId, quantity: qty, properties: { "For": (window.DYN_SHOPIFY || {}).productTitle || "custom item", "_grp": grp } });
+        extraItems.push({ id: S.backFeeVariantId, quantity: qty, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "custom item", "_grp": grp } });
       }
       root.Dynamic.lastOrder = { properties: props };
       $("#customizeSummary") && ($("#customizeSummary").textContent = "Design added");
@@ -2415,7 +2418,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // not in _design_state — pair those URLs back onto the image layers, in order.
     try {
       const L = labels();
-      const rx = (lab) => new RegExp("^" + lab.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "( \\d+)?$");
+      const rx = (lab) => new RegExp("^_?" + lab.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "( \\d+)?$");
       const gather = (re) => Object.keys(line.properties)
         .filter((k) => re.test(k)).sort()
         .map((k) => line.properties[k]).filter((v) => /^https?:/i.test(String(v)));
