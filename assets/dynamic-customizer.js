@@ -2381,6 +2381,75 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     updateCode();
   }
 
+  // ---- AI image generation (free, no key — Pollinations.ai) ----------------
+  // Gated merchant-only for now: on with the section checkbox or ?aigen=1.
+  function aiGenOn() {
+    var byUrl = false;
+    try { byUrl = /[?&]aigen(=1)?(&|$)/i.test(location.search || ""); } catch (e) {}
+    return mug3dConfigured() && (!!(window.DYN_SETTINGS && window.DYN_SETTINGS.aiEnabled) || byUrl);
+  }
+
+  function aiGenerate(prompt) {
+    const S = window.DYN_SETTINGS || {};
+    const dims = String(S.aiSize || "1024x1024").split("x");
+    const w = parseInt(dims[0], 10) || 1024, h = parseInt(dims[1], 10) || 1024;
+    const seed = Math.floor(Math.random() * 1e7);
+    const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt) +
+      "?width=" + w + "&height=" + h + "&nologo=true&seed=" + seed + "&model=flux";
+    return fetch(url).then(function (res) {
+      if (!res.ok) throw new Error("Generation failed (" + res.status + ")");
+      return res.blob();
+    }).then(function (blob) { return { blob: blob, seed: seed }; });
+  }
+
+  function buildAiPanel() {
+    const wrap = q2(".mug3d-wrap"); if (!wrap || q2("#aiPanel")) return;
+    const S = window.DYN_SETTINGS || {};
+    const ph = S.aiPlaceholder || "Describe your design… e.g. “a watercolor fox in a forest”";
+    const box = document.createElement("div");
+    box.id = "aiPanel"; box.className = "ai-panel";
+    box.innerHTML =
+      '<div class="ai-panel-head"><strong>✨ Generate with AI</strong></div>' +
+      '<div class="ai-row">' +
+        '<textarea id="aiPrompt" class="ai-prompt" rows="2" maxlength="500" placeholder="' + escapeHtml(ph) + '"></textarea>' +
+        '<button type="button" id="aiGo" class="ai-go">Generate</button>' +
+      '</div>' +
+      '<p class="ai-status" id="aiStatus" hidden></p>';
+    wrap.appendChild(box);
+
+    const promptEl = q2("#aiPrompt"), goEl = q2("#aiGo"), statusEl = q2("#aiStatus");
+    const setStatus = function (msg, spinning) {
+      if (!statusEl) return;
+      statusEl.hidden = !msg;
+      statusEl.innerHTML = (spinning ? '<span class="ai-spin"></span>' : '') + (msg || "");
+    };
+    let busy = false;
+    const run = function () {
+      if (busy) return;
+      const prompt = (promptEl.value || "").trim();
+      if (!prompt) { setStatus("Type a few words first.", false); return; }
+      busy = true; goEl.disabled = true; goEl.textContent = "Generating…";
+      setStatus("Creating your design — this can take 10–20 seconds…", true);
+      aiGenerate(prompt).then(function (out) {
+        // Replace any existing design (one design per mug).
+        (layers || []).filter(function (l) { return l.kind === "img"; }).slice()
+          .forEach(function (l) { removeLayer(l.id); });
+        const file = new File([out.blob], "ai-" + out.seed + ".png", { type: out.blob.type || "image/png" });
+        const objUrl = URL.createObjectURL(out.blob);
+        addImageLayer(objUrl, file);
+        setStatus("Done — drag the mug to see it. Not happy? Tweak the words and Generate again.", false);
+      }).catch(function (err) {
+        setStatus("Couldn’t generate that one — please try again. (" + (err && err.message ? err.message : "error") + ")", false);
+      }).finally(function () {
+        busy = false; goEl.disabled = false; goEl.textContent = "Generate";
+      });
+    };
+    if (goEl) goEl.onclick = run;
+    if (promptEl) promptEl.addEventListener("keydown", function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); run(); }
+    });
+  }
+
   function teardownMug3D() {
     if (_mug3dRaf) { cancelAnimationFrame(_mug3dRaf); _mug3dRaf = 0; }
     if (_mug3d) { try { _mug3d.dispose(); } catch (e) {} _mug3d = null; }
@@ -2962,7 +3031,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     });
     q2("#uploadApply").onclick = onUploadApply;
     renderUpEls();
-    if (mug3dConfigured()) { bindMug3DSliders(); mountMug3D(); }
+    if (mug3dConfigured()) { bindMug3DSliders(); mountMug3D(); if (aiGenOn()) buildAiPanel(); }
   }
 
   // Wipe the canvas back to an empty Front side (both sides cleared, field empty).
