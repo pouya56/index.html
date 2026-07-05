@@ -3256,13 +3256,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     layers = []; activeLayerId = null; layerSeq = 0;
     const noun = product.engraveNoun || (window.DYN_SHOPIFY && window.DYN_SHOPIFY.productTitle) || product.name || "product";
     const priceStr = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.priceMoney) || D.pricing.money(product.base);
+    // Use the merchant's "Popup title" / "Popup subtitle" theme settings so the
+    // popup matches what they edit; fall back to a photos+text default if blank.
+    const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
+    const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) ||
+      ("Add photos and text — tap to select, then drag, resize or rotate each on your " + noun + ". Up to " + MAX_IMG + " of each.");
     const html =
       '<div class="modal-scrim" data-close></div>' +
       '<div class="modal-sheet engrave-sheet" role="dialog" aria-modal="true" aria-labelledby="engraveTitle">' +
         '<button class="modal-close" data-close aria-label="Close">✕</button>' +
         '<div class="engrave-scroll">' +
-          '<div class="engrave-head"><h2 id="engraveTitle">Personalize it.</h2>' +
-            '<p>Add photos and text — tap to select, then drag, resize or rotate each on your ' + escapeHtml(noun) + '. Up to ' + MAX_IMG + ' of each.</p></div>' +
+          '<div class="engrave-head"><h2 id="engraveTitle">' + escapeHtml(eTitle) + '</h2>' +
+            '<p>' + escapeHtml(eSub) + '</p></div>' +
           '<div class="engrave-stage"><div class="engrave-frame">' +
             '<img src="' + (product.image || "") + '" alt="">' +
             '<div class="print-area" id="printArea">' +
