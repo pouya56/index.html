@@ -2315,11 +2315,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       }
       await collectFiles("front", "Design");
       if (hasBackDesign) await collectFiles("back", "Back design");
+      // Composed preview = the product with the design in the customer's exact
+      // position/size/rotation. Visible name so it shows on the order + cart.
       const compF = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
-      if (compF) files.push({ name: "_preview_url", blob: dataURLtoBlob(compF), filename: "preview-front.png" });
+      if (compF) files.push({ name: "Preview", blob: dataURLtoBlob(compF), filename: "preview-front.png" });
       if (hasBackDesign) {
         const compB = await compositeSide(sideLayers.back, sideImage("back"), sidePrint("back"));
-        if (compB) files.push({ name: "_preview_url_back", blob: dataURLtoBlob(compB), filename: "preview-back.png" });
+        if (compB) files.push({ name: "Back preview", blob: dataURLtoBlob(compB), filename: "preview-back.png" });
       }
       const desc = (s) => [
         imgs(s).length ? (imgs(s).length + " image" + (imgs(s).length > 1 ? "s" : "")) : null,
