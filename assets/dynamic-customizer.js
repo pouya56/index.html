@@ -3296,10 +3296,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     else { const sheet = root.querySelector(".modal-sheet"); if (sheet) sheet.appendChild(row); else return; }
     const lb = document.createElement("div");
     lb.className = "sample-lightbox"; lb.id = "sampleLightbox"; lb.setAttribute("aria-hidden", "true");
+    // One or two finished photos (e.g. front + back) shown side by side.
+    const shots = S.sampleImage2
+      ? '<div class="sample-shots"><img src="' + S.sampleImage + '" alt="Finished example (front)"><img src="' + S.sampleImage2 + '" alt="Finished example (back)"></div>'
+      : '<img src="' + S.sampleImage + '" alt="Finished product example">';
     lb.innerHTML = '<div class="sample-lightbox-scrim" data-sample-close></div>' +
       '<figure class="sample-lightbox-fig">' +
         '<button type="button" class="sample-lightbox-close" data-sample-close aria-label="Close">✕</button>' +
-        '<img src="' + S.sampleImage + '" alt="Finished product example">' +
+        shots +
         (caption ? '<figcaption>' + escapeHtml(caption) + '</figcaption>' : '') +
       '</figure>';
     // Keep clicks inside the popup from bubbling to the modal's click-outside-to-close.
