@@ -471,9 +471,16 @@
       // A fee whose item is shown above is rendered as a sub-note, not its own row.
       if (isFee(it) && it.properties._grp && mainGrps[it.properties._grp]) return "";
       var variant = (it.variant_title && it.variant_title !== "Default Title") ? '<div class="hd-line-variant">' + esc(it.variant_title) + "</div>" : "";
-      // Prefer the customer's positioned design preview when we have one.
-      var previewUrl = it.properties && (it.properties["Preview"] || it.properties["_preview_url"]);
-      var img = (previewUrl && /^https?:/i.test(previewUrl)) ? previewUrl
+      // Prefer the customer's positioned design preview when we have one — match a
+      // property whose key looks like a preview/mockup (label is merchant-editable).
+      var previewUrl = "";
+      if (it.properties) {
+        for (var pk in it.properties) {
+          if (/preview|mockup/i.test(pk) && /^https?:/i.test(String(it.properties[pk]))) { previewUrl = it.properties[pk]; break; }
+        }
+        if (!previewUrl && /^https?:/i.test(String(it.properties._preview_url || ""))) previewUrl = it.properties._preview_url;
+      }
+      var img = previewUrl ? previewUrl
               : (it.image ? it.image.replace(/(\.[a-z]+)(\?|$)/i, "_120x$1$2") : "");
       var canEdit = it.properties && it.properties._design_state && it.url;
       var editUrl = canEdit ? (it.url + (it.url.indexOf("?") >= 0 ? "&" : "?") + "edit=" + encodeURIComponent(it.key)) : "";

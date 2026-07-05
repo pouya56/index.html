@@ -1751,6 +1751,26 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (side === "back") return variantBackImage() || S.backImage || S.frontImage || product.image;
     return S.frontImage || product.image;
   }
+  // Merchant-configurable property labels shown on the order.
+  function labels() {
+    const S = window.DYN_SETTINGS || {};
+    return {
+      design: S.labelDesign || "Design",
+      backDesign: S.labelBackDesign || "Back design",
+      preview: S.labelPreview || "Preview",
+      backPreview: S.labelBackPreview || "Back preview",
+      text: S.labelText || "Text",
+      backText: S.labelBackText || "Back text"
+    };
+  }
+  function slug(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40); }
+  // Base for the downloadable file names: product + selected colour/options.
+  function fileBaseName() {
+    const shop = window.DYN_SHOPIFY || {};
+    const parts = [slug(shop.productTitle) || "design"];
+    if (curVariantOpts && curVariantOpts.length) { const v = slug(curVariantOpts.join("-")); if (v) parts.push(v); }
+    return parts.join("-") || "design";
+  }
   function sidePrint(side) {
     const S = window.DYN_SETTINGS || {};
     return (side === "back" ? S.printBack : S.print) || {};
@@ -2292,36 +2312,42 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const imgs = (s) => sideLayers[s].filter((l) => l.kind === "img" && l.url);
       const txts = (s) => sideLayers[s].filter((l) => l.kind === "text" && l.text);
       const hasBackDesign = !!(imgs("back").length || txts("back").length);
+      // Merchant-configurable labels (what shows on the order) + a base for the
+      // downloadable file names (product + colour), so files are identifiable.
+      const L = labels();
+      const base = fileBaseName();
       const props = {};
-      if (txts("front").length) props["Text"] = txts("front").map((l) => l.text).join(" | ");
+      if (txts("front").length) props[L.text] = txts("front").map((l) => l.text).join(" | ");
       if (hasBackDesign) {
-        if (txts("back").length) props["Back text"] = txts("back").map((l) => l.text).join(" | ");
+        if (txts("back").length) props[L.backText] = txts("back").map((l) => l.text).join(" | ");
         props["Sides"] = "Front + Back";
       }
       if (product && product.method) props["Print method"] = product.method;
       // Collect the raw design files + composed previews — Shopify hosts them for
       // free (attached as multipart line-item properties; no third-party host).
       const files = [];
-      async function collectFiles(side, prefix) {
+      const extOf = (fn) => { const m = String(fn || "").match(/\.[a-z0-9]{1,5}$/i); return m ? m[0] : ".png"; };
+      async function collectFiles(side, label, sideName) {
         const arr = imgs(side);
         for (let i = 0; i < arr.length; i++) {
-          const l = arr[i], name = prefix + (i ? " " + (i + 1) : "");
-          if (l.file instanceof File) { files.push({ name: name, file: l.file }); }
+          const l = arr[i], name = label + (i ? " " + (i + 1) : "");
+          const fname = base + "-" + sideName + (i ? "-" + (i + 1) : "") + extOf(l.file && l.file.name);
+          if (l.file instanceof File) { files.push({ name: name, file: l.file, filename: fname }); }
           else if (/^https?:/i.test(String(l.cloudUrl || l.url || ""))) {
             const blob = await fetch(l.cloudUrl || l.url).then((r) => r.blob()).catch(() => null);
-            if (blob) files.push({ name: name, blob: blob, filename: "design.png" });
+            if (blob) files.push({ name: name, blob: blob, filename: base + "-" + sideName + ".png" });
           }
         }
       }
-      await collectFiles("front", "Design");
-      if (hasBackDesign) await collectFiles("back", "Back design");
+      await collectFiles("front", L.design, "front");
+      if (hasBackDesign) await collectFiles("back", L.backDesign, "back");
       // Composed preview = the product with the design in the customer's exact
       // position/size/rotation. Visible name so it shows on the order + cart.
       const compF = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
-      if (compF) files.push({ name: "Preview", blob: dataURLtoBlob(compF), filename: "preview-front.png" });
+      if (compF) files.push({ name: L.preview, blob: dataURLtoBlob(compF), filename: base + "-front-preview.png" });
       if (hasBackDesign) {
         const compB = await compositeSide(sideLayers.back, sideImage("back"), sidePrint("back"));
-        if (compB) files.push({ name: "Back preview", blob: dataURLtoBlob(compB), filename: "preview-back.png" });
+        if (compB) files.push({ name: L.backPreview, blob: dataURLtoBlob(compB), filename: base + "-back-preview.png" });
       }
       const desc = (s) => [
         imgs(s).length ? (imgs(s).length + " image" + (imgs(s).length > 1 ? "s" : "")) : null,
@@ -2388,10 +2414,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // Image pixels live in the Shopify-hosted files (Design / Back design props),
     // not in _design_state — pair those URLs back onto the image layers, in order.
     try {
+      const L = labels();
+      const rx = (lab) => new RegExp("^" + lab.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "( \\d+)?$");
       const gather = (re) => Object.keys(line.properties)
         .filter((k) => re.test(k)).sort()
         .map((k) => line.properties[k]).filter((v) => /^https?:/i.test(String(v)));
-      const fUrls = gather(/^Design( \d+)?$/), bUrls = gather(/^Back design( \d+)?$/);
+      const fUrls = gather(rx(L.design)), bUrls = gather(rx(L.backDesign));
       const fill = (list, urls) => { let i = 0; (list || []).forEach((s) => { if (s.kind === "img") s.url = urls[i++] || s.url || ""; }); };
       fill(state.front, fUrls); fill(state.back, bUrls);
     } catch (e) {}
