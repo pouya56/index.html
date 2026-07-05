@@ -619,9 +619,6 @@ button { font-family: inherit; cursor: pointer; }
   background: #fff; border-radius: 16px; padding: 12px; box-shadow: 0 30px 80px rgba(0,0,0,0.4);
   display: flex; flex-direction: column; }
 .sample-lightbox-fig img { display: block; max-width: 100%; max-height: 74vh; object-fit: contain; border-radius: 8px; }
-.sample-lightbox-fig:has(.sample-shots) { max-width: min(94vw, 900px); }
-.sample-shots { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-.sample-shots img { flex: 1 1 240px; max-width: 100%; max-height: 68vh; object-fit: contain; border-radius: 8px; }
 .sample-lightbox-fig figcaption { margin-top: 10px; text-align: center; font-size: 13px; color: #6e6e73; letter-spacing: -0.01em; }
 .sample-lightbox-close { position: absolute; top: -14px; right: -14px; width: 34px; height: 34px; border-radius: 50%;
   border: 0; background: #fff; color: #1d1d1f; font-size: 15px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
@@ -1064,8 +1061,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "paragraph", "content": "The box on the product where the customer's design must stay. Percentages of the product image, so set it per product. Left/Top is the top-left corner of the box." },
     { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
     { "type": "image_picker", "id": "example_image", "label": "Example design (placeholder)", "info": "A faded sample shown in the print area to show customers where their design goes. It disappears when they upload. Leave empty to hide." },
-    { "type": "image_picker", "id": "sample_image", "label": "Finished-product sample (front)", "info": "A photo of a finished/printed product. Shown behind a button below the editor — customers click to view it in a popup. Leave empty to hide." },
-    { "type": "image_picker", "id": "sample_image_2", "label": "Finished-product sample (back / 2nd, optional)", "info": "A second finished photo (e.g. the back). If set, the popup shows both side by side. Leave empty to show just one." },
+    { "type": "image_picker", "id": "sample_image", "label": "Finished sample — FRONT", "info": "Photo of the finished front. Shown behind the 'See a finished sample' button. On the Front tab, the button shows THIS photo." },
+    { "type": "image_picker", "id": "sample_image_2", "label": "Finished sample — BACK (optional)", "info": "Photo of the finished back. On the Back tab, the button shows THIS photo instead. Needs 'Enable back side' on. Leave empty to always show the front sample." },
     { "type": "text", "id": "sample_button_label", "label": "Sample button text", "default": "See a finished sample" },
     { "type": "text", "id": "sample_caption", "label": "Sample caption (in popup)", "info": "Text shown under the finished-product photo in the popup.", "default": "How your finished product will look" },
     { "type": "checkbox", "id": "print_show", "label": "Show the printable-area outline to customers", "default": true },
@@ -1074,11 +1071,11 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "range", "id": "print_w", "label": "Area width", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 56 },
     { "type": "range", "id": "print_h", "label": "Area height", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 40 },
     { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes. Customers place, size and rotate each text/photo themselves.", "default": "#1d1d1f" },
-    { "type": "header", "content": "Back side (two-sided design)" },
-    { "type": "paragraph", "content": "Let customers design a second (back) side for an extra fee. FEE: create a product in Shopify for the charge (e.g. \"Back print +$5\", £/$ set on that product), then paste its VARIANT id below — it's added to the cart automatically when the customer designs the back." },
-    { "type": "checkbox", "id": "enable_back", "label": "Enable back side", "default": false },
-    { "type": "image_picker", "id": "back_image", "label": "Back image (mockup)", "info": "Photo of the product's back. Required for the back side to show." },
-    { "type": "text", "id": "back_fee_variant_id", "label": "Back fee — product VARIANT id", "info": "The numeric variant id of your fee product (e.g. 4123456789012). Added to the cart when the back is designed." },
+    { "type": "header", "content": "Back side (Front / Back tabs)" },
+    { "type": "paragraph", "content": "Tick 'Enable back side' to give customers Front / Back tabs. A separate back image and the back fee are BOTH optional. The FRONT/BACK finished-sample photos above follow whichever tab the customer is on." },
+    { "type": "checkbox", "id": "enable_back", "label": "Enable back side (adds Front / Back tabs)", "default": false },
+    { "type": "image_picker", "id": "back_image", "label": "Back image (optional)", "info": "Photo of the product's back. Optional — if empty, the back uses the same surface as the front." },
+    { "type": "text", "id": "back_fee_variant_id", "label": "Back fee — product VARIANT id (optional)", "info": "Optional. Leave empty for no extra charge. To charge for the back, paste your fee product's numeric variant id." },
     { "type": "text", "id": "back_fee_money", "label": "Back fee — amount shown on the tab", "info": "Display only, e.g. $5. The real charge comes from the fee product above." },
     { "type": "checkbox", "id": "back_print_show", "label": "Show the back printable-area outline", "default": true },
     { "type": "range", "id": "back_print_x", "label": "Back area left", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 22 },

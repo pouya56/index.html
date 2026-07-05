@@ -1707,11 +1707,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   function backEnabled() {
     const S = window.DYN_SETTINGS || {};
-    return !!(S.enableBack && S.backImage && (product && product.uploadMode));
+    // Only needs "Enable back side"; a separate back image and the back fee are optional.
+    return !!(S.enableBack && (product && product.uploadMode));
   }
   function sideImage(side) {
     const S = window.DYN_SETTINGS || {};
-    return side === "back" ? (S.backImage || product.image) : (S.frontImage || product.image);
+    return side === "back" ? (S.backImage || S.frontImage || product.image) : (S.frontImage || product.image);
   }
   function sidePrint(side) {
     const S = window.DYN_SETTINGS || {};
@@ -3296,20 +3297,22 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     else { const sheet = root.querySelector(".modal-sheet"); if (sheet) sheet.appendChild(row); else return; }
     const lb = document.createElement("div");
     lb.className = "sample-lightbox"; lb.id = "sampleLightbox"; lb.setAttribute("aria-hidden", "true");
-    // One or two finished photos (e.g. front + back) shown side by side.
-    const shots = S.sampleImage2
-      ? '<div class="sample-shots"><img src="' + S.sampleImage + '" alt="Finished example (front)"><img src="' + S.sampleImage2 + '" alt="Finished example (back)"></div>'
-      : '<img src="' + S.sampleImage + '" alt="Finished product example">';
     lb.innerHTML = '<div class="sample-lightbox-scrim" data-sample-close></div>' +
       '<figure class="sample-lightbox-fig">' +
         '<button type="button" class="sample-lightbox-close" data-sample-close aria-label="Close">✕</button>' +
-        shots +
+        '<img id="sampleShot" src="' + S.sampleImage + '" alt="Finished product example">' +
         (caption ? '<figcaption>' + escapeHtml(caption) + '</figcaption>' : '') +
       '</figure>';
     // Keep clicks inside the popup from bubbling to the modal's click-outside-to-close.
     lb.addEventListener("click", function (e) { e.stopPropagation(); });
     root.appendChild(lb);
-    root.querySelector("#sampleBtn").onclick = function () { lb.classList.add("open"); lb.setAttribute("aria-hidden", "false"); };
+    // Show the sample for the side the customer is currently on (Front vs Back).
+    root.querySelector("#sampleBtn").onclick = function () {
+      const onBack = (currentSide === "back");
+      const shot = lb.querySelector("#sampleShot");
+      if (shot) shot.src = (onBack && S.sampleImage2) ? S.sampleImage2 : S.sampleImage;
+      lb.classList.add("open"); lb.setAttribute("aria-hidden", "false");
+    };
     const closeLb = function () { lb.classList.remove("open"); lb.setAttribute("aria-hidden", "true"); };
     lb.querySelectorAll("[data-sample-close]").forEach(function (el) { el.onclick = closeLb; });
   }
