@@ -112,7 +112,9 @@
   data-limit="{{ section.settings.max_items | default: 12 }}">
   <div class="ds-topbar" id="dsTop" hidden>
     <div class="ds-top-item">
-      <img id="dsTopImg" src="" alt="">
+      {%- # theme-check-disable RemoteAsset -%}
+      <img id="dsTopImg" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" width="60" height="60">
+      {%- # theme-check-enable RemoteAsset -%}
       <div class="ds-top-txt">
         <div class="ds-top-title" id="dsTopTitle"></div>
         <div class="ds-top-sub">{{ section.settings.bag_subtitle | default: 'One-time payment' }}</div>
