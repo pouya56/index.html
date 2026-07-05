@@ -124,8 +124,12 @@
   .dyn-hd .hd-cart-checkout { display: block; text-align: center; background: var(--ink); color: #fff; padding: 15px;
     border-radius: 14px; font-weight: 600; font-size: 15px; text-decoration: none; transition: opacity .16s; }
   .dyn-hd .hd-cart-checkout:hover { opacity: 0.88; }
-  .dyn-hd .hd-cart-view { display: block; text-align: center; margin-top: 10px; color: var(--ink-soft); font-size: 14px; text-decoration: none; }
+  .dyn-hd .hd-cart-links { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 10px; }
+  .dyn-hd .hd-cart-view { color: var(--ink-soft); font-size: 14px; text-decoration: none; }
   .dyn-hd .hd-cart-view:hover { color: var(--ink); }
+  .dyn-hd .hd-cart-clear { background: none; border: 0; padding: 0; cursor: pointer; font: inherit;
+    color: var(--ink-soft); font-size: 14px; opacity: .85; transition: color .16s, opacity .16s; }
+  .dyn-hd .hd-cart-clear:hover { color: #c0392b; opacity: 1; }
 
   /* Glass search overlay (natural-language product finder) */
   .dyn-hd .search-overlay { position: fixed; inset: 0; z-index: 9990; display: none;
@@ -290,7 +294,10 @@
       <div class="hd-cart-subtotal"><span>Subtotal</span><span id="hdCartSubtotal">—</span></div>
       <p class="hd-cart-note">Shipping &amp; taxes calculated at checkout.</p>
       <a class="hd-cart-checkout" href="/checkout">Checkout</a>
-      <a class="hd-cart-view" id="hdCartView" href="{{ routes.cart_url }}">View full cart</a>
+      <div class="hd-cart-links">
+        <a class="hd-cart-view" id="hdCartView" href="{{ routes.cart_url }}">View full cart</a>
+        <button type="button" class="hd-cart-clear" id="hdCartClear">Clear cart</button>
+      </div>
     </div>
   </aside>
 
@@ -555,6 +562,14 @@
         if (cartPending) { var u = cartPending; cartPending = null; sendUpdates(u); }
       });
   }
+  // Empty the whole cart in one call, then re-render the (now empty) drawer.
+  function clearCart() {
+    if (lastCart && lastCart.items) { lastCart.items = []; lastCart.item_count = 0; lastCart.items_subtotal_price = 0; lastCart.total_price = 0; renderCart(lastCart); }
+    fetch("/cart/clear.js", { method: "POST", headers: { "Accept": "application/json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (cart) { if (cart && cart.items != null) renderCart(cart); })
+      .catch(function () { loadCart(); });
+  }
   function openCart() {
     if (!cartEl) return;
     closeWish(); close(); // only one panel open at a time
@@ -580,6 +595,11 @@
 
     var view = document.getElementById("hdCartView");
     if (view) view.href = H().cartUrl || "/cart";
+
+    var clearBtn = document.getElementById("hdCartClear");
+    if (clearBtn) clearBtn.addEventListener("click", function () {
+      if (window.confirm("Remove all items from your cart?")) clearCart();
+    });
 
     cartTabs.forEach(function (t) { t.addEventListener("click", function (e) { e.preventDefault(); if (cartEl.classList.contains("open")) closeCart(); else openCart(); }); });
     var cc = document.getElementById("hdCartClose"); if (cc) cc.addEventListener("click", closeCart);
