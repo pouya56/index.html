@@ -82,6 +82,12 @@
     "modelLabel": {{ section.settings.model_label | default: '' | json }},
     "customizeLabel": {{ section.settings.customize_label | default: '' | json }},
     "addcartLabel": {{ section.settings.addcart_label | default: '' | json }},
+    "customPrintLabel": {{ section.settings.custom_print_label | default: '' | json }},
+    "reassure": [
+      {{ section.settings.reassure_1 | default: '' | json }},
+      {{ section.settings.reassure_2 | default: '' | json }},
+      {{ section.settings.reassure_3 | default: '' | json }}
+    ],
     "engraveTitle": {{ section.settings.engrave_title | default: '' | json }},
     "engraveSub": {{ section.settings.engrave_sub | default: '' | json }},
     "engrave": {
@@ -934,17 +940,17 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       </div>
 
       <div class="reassure">
-        <div class="reassure-item">
+        <div class="reassure-item" data-reassure-item="0">
           <svg viewBox="0 0 24 24" fill="none"><path d="M3 7h13v8H3z" stroke-width="1.5"></path><path d="M16 10h3l2 3v2h-5" stroke-width="1.5"></path><circle cx="7" cy="17" r="1.6" stroke-width="1.5"></circle><circle cx="17" cy="17" r="1.6" stroke-width="1.5"></circle></svg>
-          Free delivery
+          <span data-reassure="0">Free delivery</span>
         </div>
-        <div class="reassure-item">
+        <div class="reassure-item" data-reassure-item="1">
           <svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 1 8 8" stroke-width="1.5"></path><path d="M12 8v4l3 2" stroke-width="1.5"></path></svg>
-          Made in 3–5 days
+          <span data-reassure="1">Made in 3–5 days</span>
         </div>
-        <div class="reassure-item">
+        <div class="reassure-item" data-reassure-item="2">
           <svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke-width="1.5"></path></svg>
-          Free &amp; easy returns
+          <span data-reassure="2">Free &amp; easy returns</span>
         </div>
       </div>
     </section>
@@ -3293,7 +3299,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           '</div>' +
         '</div>' +
         '<div class="modal-foot"><div class="price-breakdown"><div class="price-breakdown-toggle" style="cursor:default">' +
-          '<span class="total">' + priceStr + '</span><span class="meta">Custom print</span></div></div>' +
+          '<span class="total">' + priceStr + '</span><span class="meta">' + escapeHtml((window.DYN_SETTINGS && window.DYN_SETTINGS.customPrintLabel) || "Custom print") + '</span></div></div>' +
           '<div class="foot-actions"><button class="btn btn-ghost" data-close>Cancel</button>' +
           '<button class="btn btn-primary" id="uploadApply" disabled>Add to Bag</button></div></div>' +
       '</div>';
@@ -4389,6 +4395,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     setText("#pageAddCart", S.addcartLabel);
     const _shop = window.DYN_SHOPIFY || {};
     setText("#pPrice", _shop.priceMoney || S.price);
+    // Trust row under the buttons: override each label from settings; a blank
+    // field hides that item (and an all-blank row hides itself).
+    const RZ = Array.isArray(S.reassure) ? S.reassure : [];
+    let shownRz = 0;
+    ["0", "1", "2"].forEach((i) => {
+      const item = document.querySelector('[data-reassure-item="' + i + '"]');
+      const span = document.querySelector('[data-reassure="' + i + '"]');
+      if (!item || !span) return;
+      const val = RZ[+i];
+      if (val === "") { item.style.display = "none"; }
+      else { if (val != null) span.textContent = val; item.style.display = ""; shownRz++; }
+    });
+    const rzRow = document.querySelector(".reassure");
+    if (rzRow) rzRow.style.display = shownRz ? "" : "none";
   }
 
   function loadProduct(id) {
@@ -4698,6 +4718,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     { "type": "text", "id": "model_label", "label": "Model / variant label", "default": "AirPods Pro 3" },
     { "type": "text", "id": "customize_label", "label": "Customize button text", "default": "Customize" },
     { "type": "text", "id": "addcart_label", "label": "Add-to-cart button text", "default": "Add to Cart" },
+    { "type": "header", "content": "Trust row (under the buttons)" },
+    { "type": "paragraph", "content": "The three short reassurance items shown beneath the buttons. Leave a field blank to hide that item; clear all three to hide the whole row." },
+    { "type": "text", "id": "reassure_1", "label": "Trust item 1", "default": "Free delivery" },
+    { "type": "text", "id": "reassure_2", "label": "Trust item 2", "default": "Made in 3–5 days" },
+    { "type": "text", "id": "reassure_3", "label": "Trust item 3", "default": "Free & easy returns" },
+    { "type": "text", "id": "custom_print_label", "label": "Popup price caption", "info": "Small line under the price in the customizer popup.", "default": "Custom print" },
     { "type": "header", "content": "Engraving popup" },
     { "type": "text", "id": "engrave_title", "label": "Popup title", "default": "Personalize your AirPods." },
     { "type": "textarea", "id": "engrave_sub", "label": "Popup subtitle", "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them." },
