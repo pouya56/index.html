@@ -85,9 +85,6 @@
     "mug3dFlipY": {% if section.settings.mug3d_flipy %}true{% else %}false{% endif %},
     "mug3dAutoRotate": {% if section.settings.mug3d_autorotate == false %}false{% else %}true{% endif %},
     "mug3dTuner": {% if section.settings.mug3d_tuner %}true{% else %}false{% endif %},
-    "aiEnabled": {% if section.settings.ai_enabled %}true{% else %}false{% endif %},
-    "aiSize": {{ section.settings.ai_size | default: '1024x1024' | json }},
-    "aiPlaceholder": {{ section.settings.ai_placeholder | default: '' | json }},
     "enableBack": {% if section.settings.enable_back %}true{% else %}false{% endif %},
     "backImage": {% if section.settings.back_image %}{{ section.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "printBack": {
@@ -732,22 +729,6 @@ button { font-family: inherit; cursor: pointer; }
 .mug3d-tuner-out button { border: 0; border-radius: 8px; background: #b8860b; color: #fff; font-weight: 600;
   font-size: 12px; padding: 7px 12px; cursor: pointer; }
 .mug3d-tuner-note { margin: 8px 0 0; font-size: 11.5px; color: #a9852a; line-height: 1.4; }
-.ai-panel { margin: 14px auto 0; width: min(94%, 460px); padding: 14px 16px; border-radius: 16px;
-  background: linear-gradient(180deg, #f4f0ff 0%, #eef4ff 100%); border: 1px solid #dcd4f5; }
-.ai-panel-head { margin-bottom: 9px; }
-.ai-panel-head strong { font-size: 14px; color: #5b3fbf; letter-spacing: -0.01em; }
-.ai-row { display: flex; gap: 8px; align-items: stretch; }
-.ai-prompt { flex: 1; resize: none; border: 1px solid #d6cdf0; border-radius: 12px; padding: 10px 12px;
-  font-size: 14px; font-family: inherit; color: #1d1d1f; background: #fff; letter-spacing: -0.01em; line-height: 1.35; }
-.ai-prompt:focus { outline: none; border-color: #7c5cff; box-shadow: 0 0 0 3px rgba(124,92,255,0.16); }
-.ai-go { flex: 0 0 auto; align-self: stretch; border: 0; border-radius: 12px; padding: 0 18px;
-  background: #7c5cff; color: #fff; font-weight: 600; font-size: 14px; letter-spacing: -0.01em; cursor: pointer;
-  box-shadow: 0 4px 14px rgba(124,92,255,0.34); }
-.ai-go:hover { background: #8a6dff; }
-.ai-go:disabled { opacity: 0.6; cursor: default; }
-.ai-status { margin: 9px 0 0; font-size: 12.5px; color: #6e6e73; display: flex; align-items: center; gap: 8px; letter-spacing: -0.01em; }
-.ai-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #d6cdf0; border-top-color: #7c5cff;
-  animation: mug3dspin 0.8s linear infinite; display: inline-block; flex: 0 0 auto; }
 .mug3d-error { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   padding: 18px; text-align: center; font-size: 13px; color: #86868b; }
 .up-img { display: block; line-height: 0; }
@@ -1141,11 +1122,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "checkbox", "id": "mug3d_flipy", "label": "Flip print vertically", "default": false, "info": "Turn on if the design appears upside-down." },
     { "type": "checkbox", "id": "mug3d_autorotate", "label": "Gently spin the mug when idle", "default": true },
     { "type": "checkbox", "id": "mug3d_tuner", "label": "Show 3D fit tuner (setup only)", "default": false, "info": "Adds live sliders inside the popup to position the print on the mug without reloading. Turn OFF before launch — or leave off and add ?mugfit=1 to the product URL instead." },
-    { "type": "header", "content": "AI image generation (free)" },
-    { "type": "paragraph", "content": "Lets you type a prompt and have AI create a design that wraps on the mug. Uses a free service (Pollinations.ai) — no API key or cost. While testing, add ?aigen=1 to the product URL to use it yourself. Tick 'Enable for customers' only when you're happy with it. Note: it's a free public service, so quality and uptime aren't guaranteed." },
-    { "type": "checkbox", "id": "ai_enabled", "label": "Enable AI generation for customers", "default": false },
-    { "type": "select", "id": "ai_size", "label": "Generated image size", "default": "1024x1024", "options": [ { "value": "1024x1024", "label": "Square (1024×1024)" }, { "value": "1280x720", "label": "Wide (1280×720)" }, { "value": "1024x1536", "label": "Tall (1024×1536)" } ] },
-    { "type": "text", "id": "ai_placeholder", "label": "Prompt box hint text", "info": "Optional. Shown as placeholder in the prompt box." },
     { "type": "header", "content": "Back side (two-sided design)" },
     { "type": "paragraph", "content": "Let customers design a second (back) side for an extra fee. FEE: create a product in Shopify for the charge (e.g. \"Back print +$5\", £/$ set on that product), then paste its VARIANT id below — it's added to the cart automatically when the customer designs the back." },
     { "type": "checkbox", "id": "enable_back", "label": "Enable back side", "default": false },
