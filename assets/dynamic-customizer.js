@@ -1632,7 +1632,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     } catch (e) { return null; }
   }
 
-  async function submitToShopify(properties, extraItems) {
+  async function submitToShopify(properties, extraItems, files) {
     const S = window.DYN_SHOPIFY || {};
     const qty = Math.max(1, (store.get().quantity) || 1);
     const clean = {};
@@ -1644,11 +1644,26 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }).filter(Boolean);
     if (S.variantId) {
       try {
-        const res = await fetch("/cart/add.js", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ items: [{ id: S.variantId, quantity: qty, properties: clean }] }),
-        });
+        let res;
+        if (files && files.length) {
+          // Multipart add — Shopify uploads the attached files and stores their
+          // URLs on the line item (free hosting, no third-party service).
+          const fd = new FormData();
+          fd.append("id", String(S.variantId));
+          fd.append("quantity", String(qty));
+          Object.keys(clean).forEach((k) => fd.append("properties[" + k + "]", clean[k]));
+          files.forEach((f) => {
+            const blob = f.file || f.blob; if (!blob) return;
+            fd.append("properties[" + f.name + "]", blob, f.filename || (f.file && f.file.name) || "file.png");
+          });
+          res = await fetch("/cart/add.js", { method: "POST", headers: { Accept: "application/json" }, body: fd });
+        } else {
+          res = await fetch("/cart/add.js", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify({ items: [{ id: S.variantId, quantity: qty, properties: clean }] }),
+          });
+        }
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
           console.warn("[Dynamic] /cart/add.js failed", err);
@@ -2276,41 +2291,46 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       await ensureCloud(sideLayers.front); await ensureCloud(sideLayers.back);
       const imgs = (s) => sideLayers[s].filter((l) => l.kind === "img" && l.url);
       const txts = (s) => sideLayers[s].filter((l) => l.kind === "text" && l.text);
-      // Safety net: an uploaded image MUST be hosted (Cloudinary) so we save a short
-      // link, not the raw base64 (which makes Shopify reject the cart as "too large").
-      const unhosted = [].concat(imgs("front"), imgs("back")).some(function (l) { return !/^https?:/i.test(String(l.cloudUrl || "")); });
-      if (unhosted) {
-        toast("Couldn’t upload your image. Check the Cloudinary settings (cloud name + unsigned upload preset), then try again.");
-        return;
-      }
       const hasBackDesign = !!(imgs("back").length || txts("back").length);
       const props = {};
-      const fUrls = imgs("front").map((l) => l.cloudUrl).filter(Boolean);
-      if (fUrls.length) props["Design"] = fUrls.join(" , ");
       if (txts("front").length) props["Text"] = txts("front").map((l) => l.text).join(" | ");
       if (hasBackDesign) {
-        const bUrls = imgs("back").map((l) => l.cloudUrl).filter(Boolean);
-        if (bUrls.length) props["Back design"] = bUrls.join(" , ");
         if (txts("back").length) props["Back text"] = txts("back").map((l) => l.text).join(" | ");
         props["Sides"] = "Front + Back";
       }
       if (product && product.method) props["Print method"] = product.method;
+      // Collect the raw design files + composed previews — Shopify hosts them for
+      // free (attached as multipart line-item properties; no third-party host).
+      const files = [];
+      async function collectFiles(side, prefix) {
+        const arr = imgs(side);
+        for (let i = 0; i < arr.length; i++) {
+          const l = arr[i], name = prefix + (i ? " " + (i + 1) : "");
+          if (l.file instanceof File) { files.push({ name: name, file: l.file }); }
+          else if (/^https?:/i.test(String(l.cloudUrl || l.url || ""))) {
+            const blob = await fetch(l.cloudUrl || l.url).then((r) => r.blob()).catch(() => null);
+            if (blob) files.push({ name: name, blob: blob, filename: "design.png" });
+          }
+        }
+      }
+      await collectFiles("front", "Design");
+      if (hasBackDesign) await collectFiles("back", "Back design");
       const compF = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
-      if (compF) { const cu = await uploadToCloudinary(dataURLtoBlob(compF), product.id + "-front.png"); if (cu) props["_preview_url"] = cu; }
+      if (compF) files.push({ name: "_preview_url", blob: dataURLtoBlob(compF), filename: "preview-front.png" });
       if (hasBackDesign) {
         const compB = await compositeSide(sideLayers.back, sideImage("back"), sidePrint("back"));
-        if (compB) { const cu = await uploadToCloudinary(dataURLtoBlob(compB), product.id + "-back.png"); if (cu) props["_preview_url_back"] = cu; }
+        if (compB) files.push({ name: "_preview_url_back", blob: dataURLtoBlob(compB), filename: "preview-back.png" });
       }
       const desc = (s) => [
         imgs(s).length ? (imgs(s).length + " image" + (imgs(s).length > 1 ? "s" : "")) : null,
         txts(s).length ? (txts(s).length + " text") : null
       ].filter(Boolean).join(" + ");
       props["Customized"] = ("Front: " + (desc("front") || "—")) + (hasBackDesign ? (" · Back: " + desc("back")) : "");
+      // Design state keeps positions/text only (image pixels live in the hosted files).
       const ser = (arr) => arr.map((l) => l.kind === "img"
-        ? { kind: "img", url: l.cloudUrl || l.url, x: l.x, y: l.y, scale: l.scale, rotate: l.rotate || 0 }
+        ? { kind: "img", x: l.x, y: l.y, scale: l.scale, rotate: l.rotate || 0 }
         : { kind: "text", text: l.text, x: l.x, y: l.y, size: l.size, rotate: l.rotate || 0, font: l.font, color: l.color }
-      // Only keep HOSTED image links in the cart state — never raw base64 (keeps the cart small).
-      ).filter((s2) => (s2.kind === "img" && /^https?:/i.test(String(s2.url || ""))) || (s2.kind === "text" && s2.text));
+      ).filter((s2) => s2.kind === "img" || (s2.kind === "text" && s2.text));
       const _state = { v: (window.DYN_SHOPIFY || {}).variantId || null, front: ser(sideLayers.front), back: ser(sideLayers.back) };
       if (_state.front.length || _state.back.length) props["_design_state"] = JSON.stringify(_state);
       const extraItems = [];
@@ -2322,7 +2342,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       }
       root.Dynamic.lastOrder = { properties: props };
       $("#customizeSummary") && ($("#customizeSummary").textContent = "Design added");
-      const ok = await submitToShopify(props, extraItems);
+      const ok = await submitToShopify(props, extraItems, files);
       if (ok) {
         const wasEditing = !!(editingLineKey || editingGrp);
         const oldGrp = editingGrp, oldKey = editingLineKey;
@@ -2362,6 +2382,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (!line || !line.properties || !line.properties._design_state) { toast("Couldn't load that design"); return; }
     let state;
     try { state = JSON.parse(line.properties._design_state); } catch (e) { return; }
+
+    // Image pixels live in the Shopify-hosted files (Design / Back design props),
+    // not in _design_state — pair those URLs back onto the image layers, in order.
+    try {
+      const gather = (re) => Object.keys(line.properties)
+        .filter((k) => re.test(k)).sort()
+        .map((k) => line.properties[k]).filter((v) => /^https?:/i.test(String(v)));
+      const fUrls = gather(/^Design( \d+)?$/), bUrls = gather(/^Back design( \d+)?$/);
+      const fill = (list, urls) => { let i = 0; (list || []).forEach((s) => { if (s.kind === "img") s.url = urls[i++] || s.url || ""; }); };
+      fill(state.front, fUrls); fill(state.back, bUrls);
+    } catch (e) {}
 
     if (state.v) {
       const shop = window.DYN_SHOPIFY || {};
