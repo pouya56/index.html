@@ -2949,14 +2949,24 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   // Stagger each new layer a little so they don't all stack dead-centre.
   const CASCADE = [[0, 0], [12, 12], [-12, 12], [12, -12], [-12, -12], [0, 14]];
   function cascade() { return CASCADE[layers.length % CASCADE.length]; }
+  // Text boxes stack in separate horizontal rows (centre, then upper, then lower)
+  // so they never land on top of each other.
+  const TEXT_ROWS = [50, 26, 74];
+  function freeTextY() {
+    const used = layers.filter((l) => l.kind === "text").map((l) => l.y);
+    for (let i = 0; i < TEXT_ROWS.length; i++) {
+      const s = TEXT_ROWS[i];
+      if (!used.some((u) => Math.abs(u - s) < 18)) return s;
+    }
+    return TEXT_ROWS[used.length % TEXT_ROWS.length];
+  }
 
   function addTextLayer(geom) {
     pruneEmptyText();
     if (countKind("text") >= MAX_TXT) { toast("Up to " + MAX_TXT + " text boxes"); return null; }
     const eg = (window.DYN_SETTINGS && window.DYN_SETTINGS.engrave) || {};
-    const o = cascade();
     const layer = Object.assign({
-      id: ++layerSeq, kind: "text", x: 50 + o[0], y: 50 + o[1], size: 15, rotate: 0,
+      id: ++layerSeq, kind: "text", x: 50, y: freeTextY(), size: 12, rotate: 0,
       font: UPLOAD_FONTS[0].stack,
       color: (eg.color && eg.color !== "#9a9ba2" ? eg.color : "#1d1d1f"), text: ""
     }, geom || {});
