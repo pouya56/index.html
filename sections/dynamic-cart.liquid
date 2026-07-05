@@ -1,6 +1,6 @@
 {% comment %}
   ============================================================================
-  Dynamic Cart — full-page cart that matches the Dynamic design system
+  Dynamic Cart - full-page cart that matches the Dynamic design system
   ----------------------------------------------------------------------------
   INSTALL:
   1. Theme code editor > Sections > Add a new section > name it "dynamic-cart"
@@ -120,7 +120,7 @@
         {%- for item in cart.items -%}
           {%- assign grp = item.properties["_grp"] -%}
           {%- assign dstate = item.properties["_design_state"] -%}
-          {%- comment -%} Skip a standalone back-fee line — it's folded into its item below. {%- endcomment -%}
+          {%- comment -%} Skip a standalone back-fee line - it's folded into its item below. {%- endcomment -%}
           {%- if grp != blank and dstate == blank -%}{%- continue -%}{%- endif -%}
 
           {%- comment -%} Find this item's folded fee (older single-line carts have none). {%- endcomment -%}
@@ -174,7 +174,7 @@
                   {%- endunless -%}
                 {%- endfor -%}
                 {%- if fee_title != blank -%}
-                  <div class="dc-line-fee">Includes {{ fee_title | downcase }} · {{ fee_price | money }}</div>
+                  <div class="dc-line-fee">Includes {{ fee_title | downcase }} - {{ fee_price | money }}</div>
                 {%- endif -%}
                 {%- if dstate != blank and item.url != blank -%}
                   <div class="dc-line-actions">
@@ -236,7 +236,7 @@
       total += (unit + feeUnit) * q;
     });
     if (subEl) subEl.textContent = money(total);
-    if (!list.querySelector(".dc-line")) window.location.reload(); // cart emptied — show empty state
+    if (!list.querySelector(".dc-line")) window.location.reload(); // cart emptied - show empty state
   }
 
   function send(updates) {
