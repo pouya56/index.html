@@ -1464,8 +1464,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           galIndex = 0;
           renderGallery();
           if (modalOpen) {
-            const mimg = document.querySelector(".engrave-frame img, #stageProduct img, .up-stage img");
-            if (mimg) mimg.src = img;
+            const ef = document.querySelector(".engrave-frame > img");
+            if (ef) { const fi = sideImage(currentSide || "front"); if (fi) ef.src = fi; }
+            const st = document.querySelector("#stageProduct img, .up-stage img");
+            if (st) st.src = img;
           }
         }
       }
@@ -3119,6 +3121,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     rootEl.classList.add("open");
     modalOpen = true;
     document.body.classList.add("no-scroll");
+    // Show the currently-selected variant colour (in case it changed since the
+    // modal was built) — the editor image follows the chosen colour.
+    const efImg = rootEl.querySelector(".engrave-frame > img");
+    if (efImg) { const fi = sideImage(currentSide || "front"); if (fi) efImg.src = fi; }
+    const stImg = rootEl.querySelector("#stageProduct img, .up-stage img");
+    if (stImg && product && product.image) stImg.src = product.image;
     rootEl.onclick = (e) => { if (!e.target.closest(".modal-sheet")) closeModal(); };
     const sheet = $(".modal-sheet");
     const scrim = $(".modal-scrim");
