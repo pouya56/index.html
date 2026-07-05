@@ -2890,13 +2890,19 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       e.preventDefault(); e.stopPropagation();
       selectLayer(layer.id);
       const r = area.getBoundingClientRect();
-      const sx = e.clientX, start = (kind === "text" ? state.size : state.scale);
+      // Resize by how far the pointer is dragged from the design's CENTRE, relative
+      // to where it started. This is rotation-invariant, so dragging the corner
+      // handle feels natural at any angle (unlike a plain left/right drag).
+      const rect0 = ov.getBoundingClientRect();
+      const cx = rect0.left + rect0.width / 2, cy = rect0.top + rect0.height / 2;
+      const startDist = Math.max(1, Math.hypot(e.clientX - cx, e.clientY - cy));
+      const start = (kind === "text" ? state.size : state.scale);
       try { handle.setPointerCapture(e.pointerId); } catch (_) {}
       const move = (ev) => {
         const prev = (kind === "text" ? state.size : state.scale);
-        const d = ((ev.clientX - sx) / r.width) * 100;
-        if (kind === "text") state.size = Math.max(3, Math.min(60, start + d * 0.5));
-        else state.scale = Math.max(10, Math.min(100, start + d * 2));
+        const factor = Math.hypot(ev.clientX - cx, ev.clientY - cy) / startDist;
+        if (kind === "text") state.size = Math.max(3, Math.min(60, start * factor));
+        else state.scale = Math.max(10, Math.min(100, start * factor));
         renderUpEls();
         const er = ov.getBoundingClientRect();
         if (er.width > r.width + 1 || er.height > r.height + 1) {
