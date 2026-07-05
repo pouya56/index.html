@@ -77,6 +77,7 @@
     "maskImage": {% if section.settings.mask_image %}{{ section.settings.mask_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "wrapCurve": {{ section.settings.wrap_curve | default: 50 }},
     "enableBack": {% if section.settings.enable_back %}true{% else %}false{% endif %},
+    "frontImage": {% if section.settings.front_image %}{{ section.settings.front_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "backImage": {% if section.settings.back_image %}{{ section.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "printBack": {
       "show": {% if section.settings.back_print_show %}true{% else %}false{% endif %},
@@ -1039,6 +1040,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "text", "id": "cloudinary_upload_preset", "label": "Cloudinary unsigned upload preset" },
     { "type": "header", "content": "Printable area (Upload customizer)" },
     { "type": "paragraph", "content": "The box on the product where the customer's design must stay. Percentages of the product image, so set it per product. Left/Top is the top-left corner of the box." },
+    { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
     { "type": "checkbox", "id": "print_show", "label": "Show the printable-area outline to customers", "default": true },
     { "type": "range", "id": "print_x", "label": "Area left", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 22 },
     { "type": "range", "id": "print_y", "label": "Area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },

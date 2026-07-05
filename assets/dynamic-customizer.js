@@ -1711,7 +1711,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   }
   function sideImage(side) {
     const S = window.DYN_SETTINGS || {};
-    return side === "back" ? (S.backImage || product.image) : product.image;
+    return side === "back" ? (S.backImage || product.image) : (S.frontImage || product.image);
   }
   function sidePrint(side) {
     const S = window.DYN_SETTINGS || {};
@@ -2205,7 +2205,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               '</div>'
             : '') +
           '<div class="engrave-stage"><div class="engrave-frame' + (wrapActive() ? ' wrap-mode' : '') + '">' +
-            '<img src="' + (product.image || "") + '" alt="">' +
+            '<img src="' + (sideImage("front") || "") + '" alt="">' +
             (wrapActive() ? '<canvas class="wrap-canvas" id="wrapCanvas"></canvas>' : '') +
             '<div class="print-area" id="printArea">' +
               '<span class="print-area-label">Print area</span>' +
@@ -3389,7 +3389,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const cn = document.querySelector("#colorName");
     if (cn) cn.textContent = col.name;
     const im = document.querySelector(".engrave-frame img");
-    if (im && product.image) im.src = product.image;
+    const fimg = sideImage(currentSide || "front");
+    if (im && fimg) im.src = fimg;
     return true;
   };
 
