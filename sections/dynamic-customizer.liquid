@@ -68,7 +68,6 @@
   "settings": {
     "customizerType": {{ section.settings.customizer_type | default: 'uv' | json }},
     "madeToOrder": {% if dyn_product.tags contains 'made-to-order' or dyn_product.tags contains 'made_to_order' %}true{% else %}false{% endif %},
-    "suggestUrl": {{ section.settings.suggest_page_url | default: '' | json }},
     "print": {
       "show": {% if section.settings.print_show %}true{% else %}false{% endif %},
       "x": {{ section.settings.print_x | default: 22 }},
@@ -1064,9 +1063,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "textarea", "id": "engrave_sub", "label": "Popup subtitle", "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them." },
     { "type": "text", "id": "popup_button_label", "label": "Popup button text", "info": "The primary button inside the popup.", "default": "Add to Bag" },
     { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" },
-    { "type": "header", "content": "Accessory suggestion page (after Add to Bag)" },
-    { "type": "paragraph", "content": "Apple-style upsell. Create a Page (Online Store > Pages) that uses the 'Dynamic Suggest' section, then paste its URL below (e.g. /pages/style). When set, adding to bag sends the customer here first; 'Review Bag' takes them to the cart. Leave empty to open the cart drawer as before." },
-    { "type": "url", "id": "suggest_page_url", "label": "Suggestion page URL", "info": "e.g. /pages/style — leave empty to skip and open the cart drawer." },
     { "type": "header", "content": "File uploads (Cloudinary)" },
     { "type": "paragraph", "content": "Lets customers upload files that are saved to the order. Create a free Cloudinary account, add an UNSIGNED upload preset, then paste both below." },
     { "type": "text", "id": "cloudinary_cloud_name", "label": "Cloudinary cloud name" },

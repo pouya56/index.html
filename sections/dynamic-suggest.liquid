@@ -121,7 +121,7 @@
         <div class="ds-top-note" id="dsTopNote"></div>
       </div>
     </div>
-    <a class="ds-review" href="{{ routes.cart_url }}">{{ section.settings.review_label | default: 'Review Bag' }}</a>
+    <a class="ds-review" href="{{ section.settings.checkout_url | default: '/checkout' }}">{{ section.settings.checkout_label | default: 'Check out' }}</a>
   </div>
 
   <div class="ds-hero">
@@ -142,8 +142,8 @@
   </div>
 
   <div class="ds-foot">
-    <a class="ds-review" href="{{ routes.cart_url }}">{{ section.settings.review_label | default: 'Review Bag' }}</a>
-    <a class="ds-skip" href="{{ section.settings.continue_link | default: routes.all_products_collection_url }}">{{ section.settings.skip_label | default: 'No thanks, keep shopping' }}</a>
+    <a class="ds-review" href="{{ section.settings.checkout_url | default: '/checkout' }}">{{ section.settings.checkout_label | default: 'Check out' }}</a>
+    <a class="ds-skip" href="{{ routes.cart_url }}">{{ section.settings.review_label | default: 'Review Bag' }}</a>
   </div>
 </section>
 
@@ -323,9 +323,9 @@
     { "type": "text", "id": "heading", "label": "Heading", "default": "Style. In a snap." },
     { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Add a MagSafe case, a wallet, or both. Mix and match to make your iPhone yours." },
     { "type": "text", "id": "bag_subtitle", "label": "Top-bar subtitle (under item name)", "default": "One-time payment" },
-    { "type": "text", "id": "review_label", "label": "Review-bag button label", "default": "Review Bag" },
-    { "type": "text", "id": "skip_label", "label": "Keep-shopping link label", "default": "No thanks, keep shopping" },
-    { "type": "url", "id": "continue_link", "label": "Keep-shopping link", "info": "Leave empty to link to all products." },
+    { "type": "text", "id": "checkout_label", "label": "Checkout button label", "default": "Check out" },
+    { "type": "url", "id": "checkout_url", "label": "Checkout button link", "info": "Leave empty to go to the standard checkout (/checkout)." },
+    { "type": "text", "id": "review_label", "label": "Back-to-bag link label", "default": "Review Bag" },
     { "type": "range", "id": "max_items", "label": "Max suggestions", "min": 4, "max": 20, "step": 1, "default": 12 }
   ],
   "presets": [ { "name": "Dynamic Suggest" } ],

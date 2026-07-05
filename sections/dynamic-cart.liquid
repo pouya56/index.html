@@ -204,7 +204,7 @@
           <span class="dc-sub-amt" id="dcSubtotal">{{ cart.items_subtotal_price | money_with_currency }}</span>
         </div>
         <p class="dc-tax">{{ section.settings.tax_note | default: 'Taxes, discounts and shipping calculated at checkout.' }}</p>
-        <a class="dc-checkout" href="/checkout">{{ section.settings.checkout_label | default: 'Check out' }}</a>
+        <a class="dc-checkout" href="{{ section.settings.precheckout_url | default: '/checkout' }}">{{ section.settings.checkout_label | default: 'Check out' }}</a>
         {% if section.settings.show_clear %}<button type="button" class="dc-clear" id="dcClear">{{ section.settings.clear_label | default: 'Clear cart' }}</button>{% endif %}
       </div>
     {% endif %}
@@ -295,6 +295,7 @@
     { "type": "url", "id": "continue_link", "label": "Continue-shopping link", "info": "Leave empty to link to all products." },
     { "type": "text", "id": "subtotal_label", "label": "Subtotal label", "default": "Estimated total" },
     { "type": "text", "id": "checkout_label", "label": "Checkout button label", "default": "Check out" },
+    { "type": "url", "id": "precheckout_url", "label": "Show suggestion page before checkout (URL)", "info": "Optional. Paste your 'Dynamic Suggest' page URL (e.g. /pages/style) to show accessories after Check out is clicked, before the real checkout. Leave empty to go straight to checkout." },
     { "type": "text", "id": "tax_note", "label": "Fine print under the total", "default": "Taxes, discounts and shipping calculated at checkout." },
     { "type": "text", "id": "empty_text", "label": "Empty-cart message", "default": "Your cart is empty." },
     { "type": "checkbox", "id": "show_clear", "label": "Show 'Clear cart' button", "default": true },

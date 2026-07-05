@@ -293,7 +293,7 @@
     <div class="hd-cart-foot" id="hdCartFoot" hidden>
       <div class="hd-cart-subtotal"><span>Subtotal</span><span id="hdCartSubtotal">—</span></div>
       <p class="hd-cart-note">Shipping &amp; taxes calculated at checkout.</p>
-      <a class="hd-cart-checkout" href="/checkout">Checkout</a>
+      <a class="hd-cart-checkout" href="{{ section.settings.precheckout_url | default: '/checkout' }}">Checkout</a>
       <div class="hd-cart-links">
         <a class="hd-cart-view" id="hdCartView" href="{{ routes.cart_url }}">View full cart</a>
         <button type="button" class="hd-cart-clear" id="hdCartClear">Clear cart</button>
@@ -782,7 +782,9 @@
     { "type": "checkbox", "id": "show_search", "label": "Enable glass search window", "default": true },
     { "type": "text", "id": "search_title", "label": "Search window title", "default": "What are you looking for?" },
     { "type": "text", "id": "search_placeholder", "label": "Search box hint", "default": "Try “a birthday gift for my dad”…" },
-    { "type": "paragraph", "content": "Tip: for the best search results, tag your products (men, women, kids, gift, birthday, wedding, colours, etc.). Shopify search matches on those tags." }
+    { "type": "paragraph", "content": "Tip: for the best search results, tag your products (men, women, kids, gift, birthday, wedding, colours, etc.). Shopify search matches on those tags." },
+    { "type": "header", "content": "Checkout" },
+    { "type": "url", "id": "precheckout_url", "label": "Show suggestion page before checkout (URL)", "info": "Optional. Paste your 'Dynamic Suggest' page URL (e.g. /pages/style) to show accessories when the cart Checkout button is clicked, before the real checkout. Leave empty to go straight to checkout." }
   ],
   "blocks": [
     {
