@@ -692,6 +692,22 @@ button { font-family: inherit; cursor: pointer; }
 .mug3d-hint { margin: 8px 0 0; text-align: center; font-size: 12.5px; color: #86868b; letter-spacing: -0.01em; }
 .mug3d-error { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   padding: 18px; text-align: center; font-size: 13px; color: #86868b; }
+/* 3D-only mode: the flat mug editor is replaced by the 3D mug + sliders. */
+.engrave-sheet.mug3d-live .engrave-stage { position: absolute !important; left: -99999px !important; top: 0;
+  width: 440px; pointer-events: none; }
+.engrave-sheet.mug3d-live .mug3d-wrap { margin-top: 4px; }
+.mug3d-upload { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 4;
+  display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px 11px 15px; border: 0; border-radius: 980px;
+  background: #0071e3; color: #fff; font-weight: 600; font-size: 14px; letter-spacing: -0.01em; cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,113,227,0.38); }
+.mug3d-upload:hover { background: #0077ed; }
+.mug3d-upload svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.mug3d-controls { margin-top: 14px; width: min(94%, 460px); margin-left: auto; margin-right: auto; display: grid; gap: 12px; }
+.mug3d-ctl { display: grid; grid-template-columns: 84px 1fr; align-items: center; gap: 12px; font-size: 13px; color: #1d1d1f; letter-spacing: -0.01em; }
+.mug3d-ctl > span { color: #6e6e73; }
+.mug3d-ctl input[type="range"] { width: 100%; accent-color: #0071e3; }
+.mug3d-replace { justify-self: start; margin-top: 2px; background: none; border: 0; color: #0071e3;
+  font-weight: 600; font-size: 13px; cursor: pointer; padding: 4px 0; }
 .up-img { display: block; line-height: 0; }
 .up-img img { display: block; width: 100%; height: auto; pointer-events: none; -webkit-user-drag: none;
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.18)); }

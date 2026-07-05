@@ -1872,6 +1872,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     opts.onReady = function () {
       _mug3dPending = false;
       const load = q2("#mug3dLoading"); if (load) load.remove();
+      // Engine is live — hide the flat editor and drive the design from sliders.
+      const sheet = q2(".engrave-sheet"); if (sheet) sheet.classList.add("mug3d-live");
+      syncMug3DControls();
       refreshMug3D();
     };
     opts.onError = function (err) {
@@ -1937,6 +1940,38 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       _mug3dRaf = 0;
       if (!_mug3d) return;
       try { _mug3d.setDesignCanvas(compositeMugTexture()); } catch (e) {}
+    });
+  }
+
+  // In 3D-only mode: swap the upload pill for the sliders once a design exists,
+  // and keep the slider positions mirroring the design (a no-op mid-drag since
+  // the handler already set the layer to the slider's value).
+  function syncMug3DControls() {
+    const sheet = q2(".engrave-sheet");
+    if (!sheet || !sheet.classList.contains("mug3d-live")) return;
+    const imgLayer = (layers || []).find(function (l) { return l.kind === "img" && l.url; });
+    const up = q2("#mug3dUpload"), ctl = q2("#mug3dControls");
+    if (up) up.hidden = !!imgLayer;
+    if (ctl) ctl.hidden = !imgLayer;
+    if (imgLayer) {
+      const s = q2("#m3dSize"), x = q2("#m3dX"), y = q2("#m3dY"), r = q2("#m3dR");
+      if (s) s.value = Math.round(imgLayer.scale);
+      if (x) x.value = Math.round(imgLayer.x);
+      if (y) y.value = Math.round(imgLayer.y);
+      if (r) r.value = Math.round(imgLayer.rotate || 0);
+    }
+  }
+
+  function bindMug3DSliders() {
+    const map = [["#m3dSize", "scale"], ["#m3dX", "x"], ["#m3dY", "y"], ["#m3dR", "rotate"]];
+    map.forEach(function (pair) {
+      const el = q2(pair[0]); if (!el) return;
+      el.addEventListener("input", function () {
+        const l = (layers || []).find(function (x) { return x.kind === "img" && x.url; });
+        if (!l) return;
+        l[pair[1]] = +el.value;
+        renderUpEls();
+      });
     });
   }
 
@@ -2081,8 +2116,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (hint) hint.style.display = countKind("img") ? "none" : "";
     // Mug-wrap mode: draw the cylindrically warped design on the overlay canvas.
     if (wrapActive()) renderWrap();
-    // 3D mode: push the live design onto the mug texture.
-    if (_mug3d) refreshMug3D();
+    // 3D mode: push the live design onto the mug texture + update the controls.
+    if (_mug3d) { refreshMug3D(); syncMug3DControls(); }
   }
   // Photo-only methods (e.g. DTF) allow just ONE design; others allow up to MAX_IMG.
   function maxImages() { return (product && product.photoOnly) ? 1 : MAX_IMG; }
@@ -2338,7 +2373,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           (mug3dConfigured()
             ? '<div class="mug3d-wrap"><div class="mug3d-stage" id="mug3dStage">' +
                 '<div class="mug3d-loading" id="mug3dLoading"><span class="mug3d-spin"></span>Loading 3D preview…</div>' +
-              '</div><p class="mug3d-hint">Drag to rotate · scroll to zoom</p></div>'
+                '<button type="button" class="mug3d-upload" id="mug3dUpload" data-drop="design" hidden>' +
+                  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
+                  '<span>Upload your design</span></button>' +
+              '</div>' +
+              '<div class="mug3d-controls" id="mug3dControls" hidden>' +
+                '<label class="mug3d-ctl"><span>Size</span><input type="range" id="m3dSize" min="10" max="100" step="1" aria-label="Design size"></label>' +
+                '<label class="mug3d-ctl"><span>Left · right</span><input type="range" id="m3dX" min="0" max="100" step="1" aria-label="Move left or right"></label>' +
+                '<label class="mug3d-ctl"><span>Up · down</span><input type="range" id="m3dY" min="0" max="100" step="1" aria-label="Move up or down"></label>' +
+                '<label class="mug3d-ctl"><span>Rotate</span><input type="range" id="m3dR" min="-180" max="180" step="1" aria-label="Rotate design"></label>' +
+                '<button type="button" class="mug3d-replace" id="m3dReplace" data-drop="design">Replace design</button>' +
+              '</div>' +
+              '<p class="mug3d-hint">Drag the mug to rotate · scroll to zoom</p></div>'
             : '') +
           '<div class="up-controls">' +
             '<input type="file" data-file="design" accept=".png,.jpg,.jpeg,.svg,.pdf" hidden>' +
@@ -2426,7 +2472,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     });
     q2("#uploadApply").onclick = onUploadApply;
     renderUpEls();
-    if (mug3dConfigured()) mountMug3D();
+    if (mug3dConfigured()) { bindMug3DSliders(); mountMug3D(); }
   }
 
   // Wipe the canvas back to an empty Front side (both sides cleared, field empty).
