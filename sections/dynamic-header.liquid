@@ -434,6 +434,7 @@
 
   /* ---------------------------------------------------------------- Cart drawer */
   var cartEl, cartOverlay, cartBody, cartFoot, cartSub, cartBusy = false;
+  var lastCart = null, cartInFlight = false, cartPending = null;
 
   function cartMoney(cents) {
     if (typeof cents !== "number") return "";
@@ -449,6 +450,7 @@
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
   function renderCart(cart) {
+    lastCart = cart;
     setCount(cart.item_count || 0);
     if (!cartBody) return;
     if (!cart.items || !cart.items.length) {
@@ -501,23 +503,47 @@
       .then(function (cart) { renderCart(cart); return cart; })
       .catch(function () {});
   }
-  // Apply a list of cart changes in sequence (used to keep an item and its
-  // back-fee line in lock-step). Each op = { id: <line key>, quantity: n }.
-  function changeLines(ops) {
-    if (cartBusy || !ops.length) return; cartBusy = true;
-    var p = Promise.resolve();
-    ops.forEach(function (op) {
-      p = p.then(function () {
-        return fetch("/cart/change.js", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Accept": "application/json" },
-          body: JSON.stringify({ id: op.id, quantity: op.quantity })
-        }).then(function (r) { return r.json(); });
+  // Instant cart edits: update the drawer immediately (optimistic), then sync to
+  // Shopify in ONE /cart/update.js call (an item and its back-fee line change
+  // together). `updates` = { "<line key>": quantity, ... }.
+  function applyUpdates(updates) {
+    // 1) Optimistically patch the last-known cart and re-render right away.
+    if (lastCart && lastCart.items) {
+      var kept = [];
+      lastCart.items.forEach(function (it) {
+        if (Object.prototype.hasOwnProperty.call(updates, it.key)) {
+          var q = updates[it.key];
+          if (q <= 0) return; // removed
+          it.quantity = q;
+          if (typeof it.final_price === "number") it.final_line_price = it.final_price * q;
+          if (typeof it.original_price === "number") it.original_line_price = it.original_price * q;
+        }
+        kept.push(it);
       });
-    });
-    p.then(function (cart) { if (cart) renderCart(cart); })
-      .catch(function () {})
-      .then(function () { cartBusy = false; });
+      lastCart.items = kept;
+      lastCart.item_count = kept.reduce(function (n, it) { return n + (it.quantity || 0); }, 0);
+      lastCart.items_subtotal_price = kept.reduce(function (s, it) { return s + (it.final_line_price || 0); }, 0);
+      lastCart.total_price = lastCart.items_subtotal_price;
+      renderCart(lastCart);
+    }
+    // 2) Persist to Shopify. Coalesce rapid clicks so only the latest wins.
+    if (cartInFlight) { cartPending = Object.assign(cartPending || {}, updates); return; }
+    sendUpdates(updates);
+  }
+  function sendUpdates(updates) {
+    cartInFlight = true;
+    fetch("/cart/update.js", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ updates: updates })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (cart) { if (!cartPending && cart && cart.items != null) renderCart(cart); })
+      .catch(function () { loadCart(); })
+      .then(function () {
+        cartInFlight = false;
+        if (cartPending) { var u = cartPending; cartPending = null; sendUpdates(u); }
+      });
   }
   function openCart() {
     if (!cartEl) return;
@@ -549,25 +575,31 @@
     var cc = document.getElementById("hdCartClose"); if (cc) cc.addEventListener("click", closeCart);
     if (cartOverlay) cartOverlay.addEventListener("click", closeCart);
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && cartEl.classList.contains("open")) closeCart(); });
+    // Click anywhere outside the drawer (and not on a cart button) closes it.
+    document.addEventListener("pointerdown", function (e) {
+      if (!cartEl.classList.contains("open")) return;
+      if (e.target.closest("#hdCart") || e.target.closest("[data-hd-cart]")) return;
+      closeCart();
+    });
 
     cartBody.addEventListener("click", function (e) {
       var lineEl = e.target.closest(".hd-line"); if (!lineEl) return;
       var key = lineEl.getAttribute("data-key"); if (!key) return;
       var feeKey = lineEl.getAttribute("data-fee-key");
-      // Removing or changing an item keeps its folded-in back-fee line in sync.
+      // Removing or changing an item keeps its folded-in back-fee line in sync,
+      // and updates instantly (optimistic) in a single request.
+      var updates = {};
       if (e.target.closest("[data-remove]")) {
-        var ops = [{ id: key, quantity: 0 }];
-        if (feeKey) ops.push({ id: feeKey, quantity: 0 });
-        changeLines(ops); return;
+        updates[key] = 0; if (feeKey) updates[feeKey] = 0;
+        applyUpdates(updates); return;
       }
       if (e.target.closest("[data-inc]") || e.target.closest("[data-dec]")) {
         var span = lineEl.querySelector(".hd-qty span");
         var cur = parseInt(span ? span.textContent : "1", 10) || 0;
         var next = e.target.closest("[data-inc]") ? cur + 1 : Math.max(0, cur - 1);
         if (next === cur) return;
-        var ops2 = [{ id: key, quantity: next }];
-        if (feeKey) ops2.push({ id: feeKey, quantity: next });
-        changeLines(ops2);
+        updates[key] = next; if (feeKey) updates[feeKey] = next;
+        applyUpdates(updates);
       }
     });
 

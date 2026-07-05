@@ -4307,6 +4307,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
 (function () {
   var drawer, overlay, itemsEl, footEl;
+  var lastCart = null, inFlight = false, pending = null;
   function fmt(cents, cur) {
     try { return new Intl.NumberFormat(undefined, { style: "currency", currency: cur || "USD" }).format((cents || 0) / 100); }
     catch (e) { return "$" + ((cents || 0) / 100).toFixed(2); }
@@ -4341,6 +4342,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   function render(cart) {
     build();
+    lastCart = cart;
     var cur = cart.currency;
     if (!cart.items || !cart.items.length) {
       itemsEl.innerHTML = '<div class="dyn-cart-empty">Your bag is empty.</div>'; footEl.innerHTML = ""; return;
@@ -4378,10 +4380,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       var key = row.getAttribute("data-key"), feeKey = row.getAttribute("data-fee-key");
       var span = row.querySelector(".dyn-cart-qty span"), qty = parseInt(span ? span.textContent : "1", 10) || 0;
       var dec = row.querySelector("[data-dec]"), inc = row.querySelector("[data-inc]"), rm = row.querySelector("[data-remove]");
-      var ops = function (q) { var o = [{ id: key, quantity: q }]; if (feeKey) o.push({ id: feeKey, quantity: q }); return o; };
-      if (dec) dec.onclick = function () { changeLines(ops(Math.max(0, qty - 1))); };
-      if (inc) inc.onclick = function () { changeLines(ops(qty + 1)); };
-      if (rm) rm.onclick = function () { changeLines(ops(0)); };
+      var upd = function (q) { var o = {}; o[key] = q; if (feeKey) o[feeKey] = q; return o; };
+      if (dec) dec.onclick = function () { applyUpdates(upd(Math.max(0, qty - 1))); };
+      if (inc) inc.onclick = function () { applyUpdates(upd(qty + 1)); };
+      if (rm) rm.onclick = function () { applyUpdates(upd(0)); };
     });
   }
 
@@ -4399,18 +4401,35 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       .then(function (cart) { if (itemsEl) itemsEl.style.opacity = ""; setCount(cart.item_count); render(cart); return cart; })
       .catch(function (e) { if (itemsEl) itemsEl.style.opacity = ""; console.warn(e); });
   }
-  function changeLines(ops) {
-    if (!ops || !ops.length) return;
-    if (itemsEl) itemsEl.style.opacity = "0.5";
-    var p = Promise.resolve();
-    ops.forEach(function (op) {
-      p = p.then(function () {
-        return fetch("/cart/change.js", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ id: op.id, quantity: op.quantity }) })
-          .then(function (r) { return r.json(); });
+  // Instant edits: patch the drawer immediately, then sync in one /cart/update.js
+  // call (item + its back-fee line together). `updates` = { "<key>": quantity }.
+  function applyUpdates(updates) {
+    if (lastCart && lastCart.items) {
+      var kept = [];
+      lastCart.items.forEach(function (it) {
+        if (Object.prototype.hasOwnProperty.call(updates, it.key)) {
+          var q = updates[it.key];
+          if (q <= 0) return;
+          it.quantity = q;
+          if (typeof it.final_price === "number") it.final_line_price = it.final_price * q;
+        }
+        kept.push(it);
       });
-    });
-    return p.then(function (cart) { if (itemsEl) itemsEl.style.opacity = ""; if (cart) { setCount(cart.item_count); render(cart); } return cart; })
-      .catch(function (e) { if (itemsEl) itemsEl.style.opacity = ""; console.warn(e); });
+      lastCart.items = kept;
+      lastCart.item_count = kept.reduce(function (n, it) { return n + (it.quantity || 0); }, 0);
+      lastCart.total_price = kept.reduce(function (s, it) { return s + (it.final_line_price || 0); }, 0);
+      setCount(lastCart.item_count); render(lastCart);
+    }
+    if (inFlight) { pending = Object.assign(pending || {}, updates); return; }
+    sendUpdates(updates);
+  }
+  function sendUpdates(updates) {
+    inFlight = true;
+    fetch("/cart/update.js", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ updates: updates }) })
+      .then(function (r) { return r.json(); })
+      .then(function (cart) { if (!pending && cart && cart.items != null) { setCount(cart.item_count); render(cart); } })
+      .catch(function () { refresh(); })
+      .then(function () { inFlight = false; if (pending) { var u = pending; pending = null; sendUpdates(u); } });
   }
 
   function patchFetch() {
