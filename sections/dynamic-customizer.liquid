@@ -65,7 +65,7 @@
     "onProductPage": {% if dyn_product %}true{% else %}false{% endif %}
   },
   "settings": {
-    "customizerType": {{ section.settings.customizer_type | default: 'airpods' | json }},
+    "customizerType": {{ section.settings.customizer_type | default: 'uv' | json }},
     "madeToOrder": {% if dyn_product.tags contains 'made-to-order' or dyn_product.tags contains 'made_to_order' %}true{% else %}false{% endif %},
     "print": {
       "show": {% if section.settings.print_show %}true{% else %}false{% endif %},
@@ -1003,78 +1003,29 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   const SIZES_APPAREL = ["XS", "S", "M", "L", "XL", "2XL"];
 
-  const catalog = {
-    airpods: {
-      id: "airpods",
-      name: "AirPods Pro 3",
-      tagline: "AirPods Pro 3 with USB‑C",
-      engraveNoun: "AirPods",
-      description:
-        "Fast, free engraving of emoji, names, initials, or numbers on your AirPods case. You can even combine them.",
-      base: 24900,
-      image: DYNasset("airpods-pro-3.png"),
-      engraving: true,
-      colors: [
-        { id: "pro3", name: "AirPods Pro 3", hex: "#ffffff", image: DYNasset("airpods-pro-3.png") },
-      ],
-      sizes: null,
-      areas: [
-        { id: "case", label: "Case", rect: { x: 0.3, y: 0.5, w: 0.4, h: 0.14 }, surcharge: 0 },
-      ],
-      finishes: [{ id: "standard", name: "Laser Engraving", surcharge: 0 }],
-      addons: [],
-    },
-
-    mug: {
-      id: "mug", name: "Mug", tagline: "Custom Mug", description: "Design your mug.", base: 2000,
-      colors: [{ id: "white", name: "White", hex: "#ffffff" }], sizes: null,
-      areas: [
-        { id: "front", label: "Front", rect: { x: 0.32, y: 0.40, w: 0.24, h: 0.28 }, surcharge: 0 },
-        { id: "back", label: "Back", rect: { x: 0.32, y: 0.40, w: 0.24, h: 0.28 }, surcharge: 0 },
-        { id: "wrap", label: "Wrap Around", rect: { x: 0.27, y: 0.40, w: 0.35, h: 0.28 }, surcharge: 0 },
-      ],
-      finishes: [{ id: "standard", name: "Print", surcharge: 0 }], addons: [],
-    },
-    tshirt: {
-      id: "tshirt", name: "T-Shirt", tagline: "Custom T-Shirt", description: "Design your t-shirt.", base: 2400,
-      colors: [{ id: "white", name: "White", hex: "#ffffff" }], sizes: ["XS","S","M","L","XL","2XL"],
-      areas: [
-        { id: "front", label: "Front", rect: { x: 0.37, y: 0.34, w: 0.26, h: 0.34 }, surcharge: 0 },
-        { id: "back", label: "Back", rect: { x: 0.35, y: 0.30, w: 0.30, h: 0.42 }, surcharge: 0 },
-      ],
-      finishes: [{ id: "standard", name: "Print", surcharge: 0 }], addons: [],
-    },
-    notebook: {
-      id: "notebook", name: "Notebook", tagline: "Custom Notebook", description: "Design your notebook.", base: 1800,
-      colors: [{ id: "kraft", name: "Kraft", hex: "#c8a97e" }], sizes: null,
-      areas: [
-        { id: "front", label: "Front Cover", rect: { x: 0.34, y: 0.24, w: 0.32, h: 0.52 }, surcharge: 0 },
-        { id: "back", label: "Back Cover", rect: { x: 0.34, y: 0.24, w: 0.32, h: 0.52 }, surcharge: 0 },
-      ],
-      finishes: [{ id: "standard", name: "Print", surcharge: 0 }], addons: [],
-    },
-    pen: {
-      id: "pen", name: "Pen", tagline: "Custom Pen", description: "Engrave your pen.", base: 900,
-      colors: [{ id: "silver", name: "Silver", hex: "#c9ccd1" }], sizes: null,
-      areas: [
-        { id: "side", label: "Side", rect: { x: 0.28, y: 0.475, w: 0.36, h: 0.05 }, surcharge: 0 },
-      ],
-      finishes: [{ id: "standard", name: "Engrave", surcharge: 0 }], addons: [],
-    },
-    upload: {
-      id: "upload", name: "Product", tagline: "Custom Product", description: "Upload your design.",
-      base: 2000, uploadMode: true, image: DYNasset("airpods-pro-3.png"),
+  // One customizer experience (upload: photos + text on a printable area), offered
+  // as four print methods. They behave identically; the chosen method is recorded
+  // on the order so fulfilment knows how to produce it.
+  function makeMethod(id, method, finish) {
+    return {
+      id: id, name: "Product", tagline: "Custom Product", description: "Upload your design.",
+      method: method, base: 2000, uploadMode: true, image: DYNasset("airpods-pro-3.png"),
       colors: [{ id: "default", name: "Default", hex: "#ffffff" }], sizes: null,
       areas: [{ id: "design", label: "Design", rect: { x: 0.3, y: 0.3, w: 0.4, h: 0.4 }, surcharge: 0 }],
-      finishes: [{ id: "standard", name: "Print", surcharge: 0 }], addons: [],
-    },
-
+      finishes: [{ id: "standard", name: finish, surcharge: 0 }], addons: [],
+    };
+  }
+  const catalog = {
+    uv: makeMethod("uv", "UV", "UV Print"),
+    dtf: makeMethod("dtf", "DTF", "DTF Print"),
+    sublimation: makeMethod("sublimation", "Sublimation", "Sublimation Print"),
+    engraving: makeMethod("engraving", "Engraving", "Engraving"),
   };
 
   root.Dynamic = root.Dynamic || {};
   root.Dynamic.catalog = catalog;
   root.Dynamic.getProduct = function (id) {
-    return catalog[id] || catalog.mug;
+    return catalog[id] || catalog.uv;
   };
 })(window);
 
@@ -3405,6 +3356,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const designUrls = imgLayers.map((l) => l.cloudUrl).filter(Boolean);
       if (designUrls.length) props["Design"] = designUrls.join(" , ");
       if (txtLayers.length) props["Text"] = txtLayers.map((l) => l.text).join(" | ");
+      // Record the print method (UV / DTF / Sublimation / Engraving) on the order.
+      if (product && product.method) props["Print method"] = product.method;
       const comp = await compositeUpload();
       if (comp) { const cu = await uploadToCloudinary(dataURLtoBlob(comp), product.id + "-mockup.png"); if (cu) props["_preview_url"] = cu; }
       props["Customized"] = [
@@ -4573,7 +4526,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       else if (e.key === "ArrowRight") lbMove(1);
     });
 
-    loadProduct((window.DYN_SETTINGS && window.DYN_SETTINGS.customizerType) || "airpods");
+    loadProduct((window.DYN_SETTINGS && window.DYN_SETTINGS.customizerType) || "uv");
     // After the product + modal are built: if we came from the cart's
     // "Edit design" link (?edit=<line_key>), re-open with that saved design.
     maybeEditMode();
@@ -4713,14 +4666,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   "name": "Dynamic Customizer",
   "settings": [
     { "type": "header", "content": "Customizer" },
-    { "type": "select", "id": "customizer_type", "label": "Customizer type", "default": "airpods",
+    { "type": "select", "id": "customizer_type", "label": "Print method / style", "default": "uv",
+      "info": "All four use the same design popup (photos + text on the printable area). The chosen method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template.",
       "options": [
-        { "value": "airpods", "label": "Engraving \u2014 single line (text/emoji)" },
-        { "value": "mug", "label": "Mug \u2014 Front / Back / Wrap" },
-        { "value": "tshirt", "label": "T-Shirt \u2014 Front / Back" },
-        { "value": "notebook", "label": "Notebook \u2014 Front / Back cover" },
-        { "value": "pen", "label": "Pen \u2014 Side" },
-        { "value": "upload", "label": "Upload design \u2014 shown on the product" }
+        { "value": "uv", "label": "UV" },
+        { "value": "dtf", "label": "DTF" },
+        { "value": "sublimation", "label": "Sublimation" },
+        { "value": "engraving", "label": "Engraving" }
       ] },
     { "type": "header", "content": "Product details" },
     { "type": "product", "id": "product_ref", "label": "Product (non-product pages only)", "info": "Only used when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown." },
