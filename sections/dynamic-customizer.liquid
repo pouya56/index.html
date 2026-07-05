@@ -654,6 +654,14 @@ button { font-family: inherit; cursor: pointer; }
   white-space: nowrap; opacity: 0; transition: opacity .2s ease; }
 .print-area.outline .print-area-label { opacity: 1; }
 .print-area .up-el { pointer-events: auto; }
+/* Photo-only click-to-upload prompt filling the print area (hidden once a design is added). */
+.print-hint { position: absolute; inset: 0; z-index: 4; pointer-events: auto; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  background: rgba(0,113,227,0.05); border: 1.6px dashed rgba(0,113,227,0.55); border-radius: 4px;
+  color: var(--accent); font: inherit; font-size: 12.5px; font-weight: 600; text-align: center; padding: 8px;
+  transition: background .15s ease; }
+.print-hint:hover { background: rgba(0,113,227,0.1); }
+.print-hint svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
 .print-area.setup { pointer-events: auto; cursor: move; outline: 2.5px solid #0071e3;
   background: rgba(0, 113, 227, 0.07); z-index: 8; }
@@ -2771,7 +2779,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   }
 
   function addImageLayer(url, file, geom) {
-    if (countKind("img") >= MAX_IMG) { toast("Up to " + MAX_IMG + " photos"); return null; }
+    const cap = maxImages();
+    if (countKind("img") >= cap) { toast(cap === 1 ? "One design per item" : "Up to " + cap + " photos"); return null; }
     const o = cascade();
     const layer = Object.assign({
       id: ++layerSeq, kind: "img", x: 50 + o[0], y: 50 + o[1], scale: 62, rotate: 0,
@@ -2820,7 +2829,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (apply) apply.disabled = !layers.some(function (l) {
       return (l.kind === "img" && l.url) || (l.kind === "text" && l.text);
     });
+    // Photo-only click-to-upload hint hides once a design is on the print area.
+    const hint = q2("#printHint");
+    if (hint) hint.style.display = countKind("img") ? "none" : "";
   }
+  // Photo-only methods (e.g. DTF) allow just ONE design; others allow up to MAX_IMG.
+  function maxImages() { return (product && product.photoOnly) ? 1 : MAX_IMG; }
 
   function clampIn(v, half) { return half >= 50 ? 50 : Math.max(half, Math.min(100 - half, v)); }
   function clampToArea(ov, area, state) {
@@ -3030,7 +3044,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const photoOnly = !!(product && product.photoOnly);
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
     const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (photoOnly
-      ? ("Upload your design, then drag, resize or rotate it on your " + noun + ". Up to " + MAX_IMG + " images.")
+      ? ("Click the image to upload your design, then drag, resize or rotate it on your " + noun + ".")
       : ("Add photos and text — tap to select, then drag, resize or rotate each on your " + noun + ". Up to " + MAX_IMG + " of each."));
     const eBtn = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "Add to Bag";
     const ePlaceholder = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupPlaceholder) || "Add your text";
@@ -3054,25 +3068,29 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             '<div class="print-area" id="printArea">' +
               '<span class="print-area-label">Print area</span>' +
               '<div class="up-guide up-guide-v" id="guideV"></div><div class="up-guide up-guide-h" id="guideH"></div>' +
+              // Photo-only (e.g. DTF): the customer uploads by clicking the image itself.
+              (photoOnly ? '<button type="button" class="print-hint" id="printHint" data-drop="design">' +
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
+                '<span>Click to upload your design</span></button>' : '') +
             '</div>' +
           '</div></div>' +
           '<div class="up-controls">' +
             '<input type="file" data-file="design" accept=".png,.jpg,.jpeg,.svg,.pdf" hidden>' +
-            '<div class="ios-compose">' +
-              '<button type="button" class="ios-plus" data-drop="design" aria-label="Upload your design (PNG, JPG, SVG, PDF)" title="Upload your design">' +
-                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
-              '</button>' +
-              (photoOnly
-                ? '<div class="ios-field"><button type="button" class="upload-cta" data-drop="design">Upload your design</button></div>'
-                : '<div class="ios-field"><textarea id="upText" class="engrave-input" maxlength="60" rows="1" placeholder="' + escapeHtml(ePlaceholder) + '" autocomplete="off"></textarea></div>' +
-                  '<button type="button" class="kbd-arrow" id="kbdArrow" aria-label="Show keyboard" aria-expanded="false" title="Keyboard">' +
-                    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
-                  '</button>' +
-                  '<button type="button" class="ios-plus" id="addTextBtn" aria-label="Add a text box" title="Add text">' +
-                    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' +
-                  '</button>') +
-            '</div>' +
-            (photoOnly ? '' : '<div class="engrave-tools">' + kbdHtml() + '</div>') +
+            // Photo-only has no compose bar — you upload by clicking the image above.
+            (photoOnly ? '' :
+              '<div class="ios-compose">' +
+                '<button type="button" class="ios-plus" data-drop="design" aria-label="Upload your design (PNG, JPG, SVG, PDF)" title="Upload your design">' +
+                  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+                '</button>' +
+                '<div class="ios-field"><textarea id="upText" class="engrave-input" maxlength="60" rows="1" placeholder="' + escapeHtml(ePlaceholder) + '" autocomplete="off"></textarea></div>' +
+                '<button type="button" class="kbd-arrow" id="kbdArrow" aria-label="Show keyboard" aria-expanded="false" title="Keyboard">' +
+                  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
+                '</button>' +
+                '<button type="button" class="ios-plus" id="addTextBtn" aria-label="Add a text box" title="Add text">' +
+                  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' +
+                '</button>' +
+              '</div>' +
+              '<div class="engrave-tools">' + kbdHtml() + '</div>') +
           '</div>' +
         '</div>' +
         '<div class="modal-foot"><div class="price-breakdown"><div class="price-breakdown-toggle" style="cursor:default">' +
@@ -3097,7 +3115,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const drop = q2('[data-drop="design"]'), input = q2('[data-file="design"]');
     async function accept(file) {
       if (file.size > 20 * 1024 * 1024) return toast("File is larger than 20 MB");
-      if (countKind("img") >= MAX_IMG) return toast("Up to " + MAX_IMG + " photos");
+      if (countKind("img") >= maxImages()) return toast(maxImages() === 1 ? "One design per item — remove the current one first" : "Up to " + maxImages() + " photos");
       toast("Adding " + file.name + "…");
       const url = await fileToImageDataUrl(file);
       if (!url) return toast("Couldn't read that file");
