@@ -1,0 +1,1407 @@
+{% comment %}
+  DYNAEIMIC - Story Sequence Section
+  Drop into: sections/story-sequence.liquid
+  Sections are now drag-reorderable BLOCKS: Hero, Story step, Pinned video, CTA.
+  Reorder / add / remove them in the theme editor. Global colors + light/dark
+  (by time of day) live in the section settings.
+{% endcomment %}
+
+<div class="dynaeimic-story" id="dynaeimic-story-{{ section.id }}">
+  {%- assign step_i = 0 -%}
+  {%- assign row_open = false -%}
+  {%- assign row_open_html = '<div class="ds-half-row">' -%}
+  {%- assign row_close = '</div>' -%}
+  {% for block in section.blocks %}
+    {%- unless block.type == 'half' -%}{%- if row_open -%}{{ row_close }}{%- assign row_open = false -%}{%- endif -%}{%- endunless -%}
+    {% case block.type %}
+
+    {% when 'hero' %}
+    {%- assign box_alpha = block.settings.box_opacity | divided_by: 100.0 -%}{%- capture box_style -%}{%- if block.settings.box_on -%}background:{{ block.settings.box_color | color_modify: 'alpha', box_alpha }};{%- if block.settings.box_blur > 0 -%}-webkit-backdrop-filter:blur({{ block.settings.box_blur }}px);backdrop-filter:blur({{ block.settings.box_blur }}px);{%- endif -%}border-radius:{{ block.settings.box_radius }}px;padding:{{ block.settings.box_padding }}px;{%- if block.settings.box_border -%}border:1px solid {{ block.settings.box_color | color_modify: 'alpha', 0.28 }};{%- else -%}border:none;{%- endif -%}box-shadow:0 20px 60px rgba(0,0,0,.28);{%- else -%}background:none;border:none;box-shadow:none;{%- endif -%}{%- endcapture -%}
+    <section class="ds-hero ds-hero-{{ block.settings.hero_align }}{% unless block.settings.box_on %} ds-hero-noglass{% endunless %}" style="min-height:{{ block.settings.sec_height }}vh" {{ block.shopify_attributes }}>
+      {% if block.settings.hero_video != blank %}
+        <video class="ds-hero-bg" muted playsinline preload="auto" loop data-scrub-video="hero" data-mode="{{ block.settings.hero_video_mode }}"><source src="{{ block.settings.hero_video }}" type="video/mp4"></video>
+      {% elsif block.settings.hero_image != blank %}
+        <img class="ds-hero-bg" src="{{ block.settings.hero_image | image_url: width: 1920 }}" width="1920" height="1080" alt="" loading="eager">
+      {% else %}
+        <div class="ds-hero-bg ds-placeholder-bg"><div class="ds-ph-inner"><span>🎬</span><p>Add a background video or image</p></div></div>
+      {% endif %}
+      <div class="ds-hero-overlay"></div>
+      {% if block.settings.hero_layout == 'minimal' %}
+      <div class="ds-hero-min">
+        <div class="ds-hero-min-top">
+          {% if block.settings.eyebrow != blank %}<p class="ds-eyebrow" style="font-size:calc(min({{ block.settings.hero_eyebrow_size }}px, 5vw) * var(--ds-head-scale,1))">{{ block.settings.eyebrow }}</p>{% endif %}
+          <h1 class="ds-hero-title" style="font-size:calc(min({{ block.settings.hero_title_size }}px, 12vw) * var(--ds-head-scale,1))">{{ block.settings.title_line1 }} <span class="ds-gold">{{ block.settings.title_line2 }}</span></h1>
+          {% if block.settings.subtitle != blank %}<p class="ds-hero-sub" style="font-size:calc(min({{ block.settings.hero_sub_size }}px, 6vw) * var(--ds-body-scale,1))">{{ block.settings.subtitle }}</p>{% endif %}
+        </div>
+        <div class="ds-hero-min-btns">
+          {% if block.settings.cta_label != blank %}<a href="{{ block.settings.cta_url }}" class="ds-hero-min-btn ds-hero-min-primary" style="font-size:calc(min({{ block.settings.hero_btn_size }}px, 5vw) * var(--ds-body-scale,1))">{{ block.settings.cta_label }}</a>{% endif %}
+          {% if block.settings.cta2_label != blank %}<a href="{{ block.settings.cta2_url }}" class="ds-hero-min-btn ds-hero-min-secondary" style="font-size:calc(min({{ block.settings.hero_btn_size }}px, 5vw) * var(--ds-body-scale,1))">{{ block.settings.cta2_label }}</a>{% endif %}
+        </div>
+      </div>
+      {% else %}
+      <div class="ds-hero-content" style="{{ box_style }}max-width:{{ block.settings.sec_width }}px">
+        {% if block.settings.eyebrow != blank %}<p class="ds-eyebrow" style="font-size:calc(min({{ block.settings.hero_eyebrow_size }}px, 5vw) * var(--ds-head-scale,1))">{{ block.settings.eyebrow }}</p>{% endif %}
+        <h1 class="ds-hero-title" style="font-size:calc(min({{ block.settings.hero_title_size }}px, 12vw) * var(--ds-head-scale,1))">{{ block.settings.title_line1 }}<br><span class="ds-gold">{{ block.settings.title_line2 }}</span></h1>
+        {% if block.settings.subtitle != blank %}<p class="ds-hero-sub" style="font-size:calc(min({{ block.settings.hero_sub_size }}px, 6vw) * var(--ds-body-scale,1))">{{ block.settings.subtitle }}</p>{% endif %}
+        {% if block.settings.cta_label != blank %}<a href="{{ block.settings.cta_url }}" class="ds-hero-cta" style="font-size:calc(min({{ block.settings.hero_btn_size }}px, 5vw) * var(--ds-body-scale,1))">{{ block.settings.cta_label }}</a>{% endif %}
+      </div>
+      {% endif %}
+    </section>
+
+    {% when 'story_step' %}
+    {%- assign step_i = step_i | plus: 1 -%}
+    {%- assign step_mod = step_i | modulo: 2 -%}
+    {%- assign box_alpha = block.settings.box_opacity | divided_by: 100.0 -%}{%- capture box_style -%}{%- if block.settings.box_on -%}background:{{ block.settings.box_color | color_modify: 'alpha', box_alpha }};{%- if block.settings.box_blur > 0 -%}-webkit-backdrop-filter:blur({{ block.settings.box_blur }}px);backdrop-filter:blur({{ block.settings.box_blur }}px);{%- endif -%}border-radius:{{ block.settings.box_radius }}px;padding:{{ block.settings.box_padding }}px;{%- if block.settings.box_border -%}border:1px solid {{ block.settings.box_color | color_modify: 'alpha', 0.28 }};{%- else -%}border:none;{%- endif -%}box-shadow:0 20px 60px rgba(0,0,0,.28);{%- else -%}background:none;border:none;box-shadow:none;{%- endif -%}{%- endcapture -%}
+    <section class="ds-story-section{% if step_mod == 1 %} ds-alt{% endif %}" style="min-height:{{ block.settings.sec_height }}vh" {{ block.shopify_attributes }}>
+      {%- capture ds_text -%}
+        <div class="ds-split-text" style="flex:{{ block.settings.text_col }} 1 0;min-width:220px;max-height:74vh;overflow-y:auto;{{ box_style }}">
+          <h2 class="ds-headline" style="font-size:calc(min({{ block.settings.story_head_size }}px, 9vw) * var(--ds-head-scale,1))">{{ block.settings.headline | newline_to_br }}</h2>
+          <div class="ds-divider"></div>
+          {% if block.settings.body != blank %}<p class="ds-body" style="font-size:calc(min({{ block.settings.story_body_size }}px, 6vw) * var(--ds-body-scale,1))">{{ block.settings.body }}</p>{% endif %}
+          <div class="ds-icon-row">
+            {%- for i in (1..5) -%}
+              {%- assign lk = 'chip' | append: i | append: '_label' -%}
+              {%- assign ik = 'chip' | append: i | append: '_icon' -%}
+              {%- assign ck = 'chip' | append: i | append: '_link' -%}
+              {%- if block.settings[lk] != blank -%}
+                {%- if block.settings[ck] != blank -%}
+                  <a href="{{ block.settings[ck] }}" class="ds-chip ds-chip-link" data-ds-chip style="transition-delay:{{ i | times: 0.1 }}s"><div class="ds-chip-icon">{{ block.settings[ik] }}</div><div class="ds-chip-label" style="font-size:calc(min({{ block.settings.story_chip_size }}px, 4vw) * var(--ds-body-scale,1))">{{ block.settings[lk] }}</div></a>
+                {%- else -%}
+                  <div class="ds-chip" data-ds-chip style="transition-delay:{{ i | times: 0.1 }}s"><div class="ds-chip-icon">{{ block.settings[ik] }}</div><div class="ds-chip-label" style="font-size:calc(min({{ block.settings.story_chip_size }}px, 4vw) * var(--ds-body-scale,1))">{{ block.settings[lk] }}</div></div>
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        </div>
+      {%- endcapture -%}
+      <div class="ds-split ds-split-multi" data-ds-animate style="max-width:{{ block.settings.sec_width }}px;gap:{{ block.settings.media_gap }}rem">
+        {%- for pos in (1..4) -%}
+          {%- if block.settings.show_text and block.settings.text_order == pos -%}{{ ds_text }}{%- endif -%}
+          {%- for mi in (1..3) -%}
+            {%- assign vk = 'm' | append: mi | append: '_video' -%}
+            {%- assign imk = 'm' | append: mi | append: '_image' -%}
+            {%- assign mok = 'm' | append: mi | append: '_order' -%}
+            {%- assign mmk = 'm' | append: mi | append: '_mode' -%}
+            {%- assign mwk = 'm' | append: mi | append: '_w' -%}
+            {%- assign mon = 'm' | append: mi | append: '_on' -%}
+            {%- assign mtk = 'm' | append: mi | append: '_text' -%}
+            {%- assign mtpk = 'm' | append: mi | append: '_text_pos' -%}
+            {%- capture media_text -%}{%- if block.settings[mtk] != blank -%}<div class="ds-media-text ds-media-text-{{ block.settings[mtpk] | default: 'bottom' }}" style="font-size:calc(min({{ block.settings.media_text_size | default: 20 }}px, 5vw) * var(--ds-body-scale,1))">{{ block.settings[mtk] | newline_to_br }}</div>{%- endif -%}{%- endcapture -%}
+            {%- if block.settings.show_media and block.settings[mon] and block.settings[mok] == pos -%}
+              {%- if block.settings[vk] != blank -%}
+                <div class="ds-split-media" data-ds-media style="flex:{{ block.settings[mwk] }} 1 0;min-width:110px;max-height:74vh;aspect-ratio:{{ block.settings.media_ratio }}">
+                  <video muted playsinline preload="auto" loop data-scrub-video data-mode="{{ block.settings[mmk] }}"><source src="{{ block.settings[vk] }}" type="video/mp4"></video>
+                  {{ media_text }}
+                </div>
+              {%- elsif block.settings[imk] != blank -%}
+                <div class="ds-split-media" data-ds-media style="flex:{{ block.settings[mwk] }} 1 0;min-width:110px;max-height:74vh;aspect-ratio:{{ block.settings.media_ratio }}">
+                  <img src="{{ block.settings[imk] | image_url: width: 900 }}" width="900" height="1125" alt="" loading="lazy">
+                  {{ media_text }}
+                </div>
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endfor -%}
+      </div>
+    </section>
+
+    {% when 'pinned' %}
+    {%- assign box_alpha = block.settings.box_opacity | divided_by: 100.0 -%}{%- capture box_style -%}{%- if block.settings.box_on -%}background:{{ block.settings.box_color | color_modify: 'alpha', box_alpha }};{%- if block.settings.box_blur > 0 -%}-webkit-backdrop-filter:blur({{ block.settings.box_blur }}px);backdrop-filter:blur({{ block.settings.box_blur }}px);{%- endif -%}border-radius:{{ block.settings.box_radius }}px;padding:{{ block.settings.box_padding }}px;{%- if block.settings.box_border -%}border:1px solid {{ block.settings.box_color | color_modify: 'alpha', 0.28 }};{%- else -%}border:none;{%- endif -%}box-shadow:0 20px 60px rgba(0,0,0,.28);{%- else -%}background:none;border:none;box-shadow:none;{%- endif -%}{%- endcapture -%}
+    {%- assign pin_count = 0 -%}
+    {%- for i in (1..5) -%}{%- assign hk = 'head_' | append: i -%}{%- if block.settings[hk] != blank -%}{%- assign pin_count = pin_count | plus: 1 -%}{%- endif -%}{%- endfor -%}
+    {%- assign pin_rows = pin_count -%}{%- if pin_rows < 1 -%}{%- assign pin_rows = 1 -%}{%- endif -%}
+    <div class="ds-pin-wrap" id="ds-pin-{{ block.id }}" data-pin-wrap data-pin-smooth="{{ block.settings.pin_smooth }}" style="height:calc({{ pin_rows }} * {{ block.settings.pin_step_vh }}vh)" {{ block.shopify_attributes }}>
+      <div class="ds-pin-stage" data-pin-stage style="height:{{ block.settings.pin_height_vh }}vh;{% if block.settings.pin_max_width < 100 %}max-width:{{ block.settings.pin_max_width }}%;right:0;margin-left:auto;margin-right:auto;border-radius:18px;{% endif %}">
+        {% if block.settings.pin_video != blank %}
+          <video class="ds-pin-media" muted playsinline preload="auto" data-pin-video style="object-fit:{{ block.settings.pin_fit }}"><source src="{{ block.settings.pin_video }}" type="video/mp4"></video>
+        {% elsif block.settings.pin_image != blank %}
+          <img class="ds-pin-media" src="{{ block.settings.pin_image | image_url: width: 1920 }}" width="1920" height="1080" alt="" loading="lazy" style="object-fit:{{ block.settings.pin_fit }}">
+        {% else %}
+          <div class="ds-pin-media ds-pin-ph"><div class="ds-ph-inner"><span>🎞️</span><p>Add a pinned video or image</p></div></div>
+        {% endif %}
+        <div class="ds-pin-overlays">
+          {%- for i in (1..5) -%}
+            {%- assign hk = 'head_' | append: i -%}
+            {%- assign bk = 'body_' | append: i -%}
+            {%- assign xk = 'x_' | append: i -%}
+            {%- assign yk = 'y_' | append: i -%}
+            {%- if block.settings[hk] != blank -%}
+              <div class="ds-pin-text" data-pin-text style="left:{{ block.settings[xk] }}%;top:{{ block.settings[yk] }}%;{{ box_style }}">
+                <div class="ds-pin-inner">
+                  <h2 class="ds-pin-head" style="font-size:calc(min({{ block.settings.pin_head_size }}px, 9vw) * var(--ds-head-scale,1))">{{ block.settings[hk] }}</h2>
+                  {%- if block.settings[bk] != blank -%}<p class="ds-pin-body" style="font-size:calc(min({{ block.settings.pin_body_size }}px, 5vw) * var(--ds-body-scale,1))">{{ block.settings[bk] }}</p>{%- endif -%}
+                </div>
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      </div>
+    </div>
+
+    {% when 'cta' %}
+    {%- assign box_alpha = block.settings.box_opacity | divided_by: 100.0 -%}{%- capture box_style -%}{%- if block.settings.box_on -%}background:{{ block.settings.box_color | color_modify: 'alpha', box_alpha }};{%- if block.settings.box_blur > 0 -%}-webkit-backdrop-filter:blur({{ block.settings.box_blur }}px);backdrop-filter:blur({{ block.settings.box_blur }}px);{%- endif -%}border-radius:{{ block.settings.box_radius }}px;padding:{{ block.settings.box_padding }}px;{%- if block.settings.box_border -%}border:1px solid {{ block.settings.box_color | color_modify: 'alpha', 0.28 }};{%- else -%}border:none;{%- endif -%}box-shadow:0 20px 60px rgba(0,0,0,.28);{%- else -%}background:none;border:none;box-shadow:none;{%- endif -%}{%- endcapture -%}
+    <section class="ds-cta-section" style="min-height:{{ block.settings.sec_height }}vh" {{ block.shopify_attributes }}>
+      <div class="ds-cta-glow"></div>
+      <div class="ds-inner" data-ds-animate style="{{ box_style }}max-width:{{ block.settings.sec_width }}px;text-align:{{ block.settings.cta_align }};margin-left:{% if block.settings.cta_align == 'left' %}0{% else %}auto{% endif %};margin-right:{% if block.settings.cta_align == 'right' %}0{% else %}auto{% endif %}">
+        <h2 class="ds-cta-headline" style="font-size:calc(min({{ block.settings.cta_head_size }}px, 9vw) * var(--ds-head-scale,1)){% if block.settings.cta_text_color != blank %};color:{{ block.settings.cta_text_color }}{% endif %}">{{ block.settings.headline | newline_to_br }}</h2>
+        {% if block.settings.subtitle != blank %}<p class="ds-cta-sub" style="font-size:calc(min({{ block.settings.cta_sub_size }}px, 5vw) * var(--ds-body-scale,1)){% if block.settings.cta_text_color != blank %};color:{{ block.settings.cta_text_color }}{% endif %};margin-left:{% if block.settings.cta_align == 'left' %}0{% else %}auto{% endif %};margin-right:{% if block.settings.cta_align == 'right' %}0{% else %}auto{% endif %}">{{ block.settings.subtitle }}</p>{% endif %}
+        <div class="ds-btn-group{% if block.settings.cta_rainbow %} ds-btn-glow{% endif %}" style="justify-content:{% if block.settings.cta_align == 'left' %}flex-start{% elsif block.settings.cta_align == 'right' %}flex-end{% else %}center{% endif %}">
+          {% if block.settings.primary_label != blank %}<a href="{{ block.settings.primary_url }}" class="ds-btn-primary" style="font-size:calc(min({{ block.settings.cta_btn_size }}px, 5vw) * var(--ds-body-scale,1))">{{ block.settings.primary_label }}</a>{% endif %}
+          {% if block.settings.secondary_label != blank %}<a href="{{ block.settings.secondary_url }}" class="ds-btn-secondary" style="font-size:calc(min({{ block.settings.cta_btn_size }}px, 5vw) * var(--ds-body-scale,1))">{{ block.settings.secondary_label }}</a>{% endif %}
+        </div>
+      </div>
+    </section>
+
+    {% when 'gallery' %}
+    {%- assign g_rows = 0 -%}
+    {%- for i in (1..8) -%}{%- assign gik = 'g' | append: i | append: '_image' -%}{%- assign gvk = 'g' | append: i | append: '_video' -%}{%- if block.settings[gik] != blank or block.settings[gvk] != blank -%}{%- assign g_rows = g_rows | plus: 1 -%}{%- endif -%}{%- endfor -%}
+    {%- if g_rows < 2 -%}{%- assign g_rows = 2 -%}{%- endif -%}
+    <div class="ds-hgal-wrap" id="ds-hgal-{{ block.id }}" data-hgal-wrap {{ block.shopify_attributes }}>
+      {% if block.settings.gal_title != blank %}<h2 class="ds-hgal-title" style="font-size:calc(min(56px, 8vw) * var(--ds-head-scale,1))">{{ block.settings.gal_title }}</h2>{% endif %}
+      <div class="ds-hgal-stage" data-hgal-stage style="height:{{ block.settings.gal_height_vh }}vh">
+        <div class="ds-hgal-track" data-hgal-track>
+          {%- for i in (1..8) -%}
+            {%- assign gik = 'g' | append: i | append: '_image' -%}
+            {%- assign gvk = 'g' | append: i | append: '_video' -%}
+            {%- assign gtk = 'g' | append: i | append: '_title' -%}
+            {%- assign gsk = 'g' | append: i | append: '_sub' -%}
+            {%- if block.settings[gik] != blank or block.settings[gvk] != blank -%}
+              <div class="ds-hgal-item" data-hgal-item style="aspect-ratio:{{ block.settings.gal_ratio }}">
+                <div class="ds-hgal-inner">
+                  {%- if block.settings[gvk] != blank -%}
+                    <video muted playsinline loop autoplay preload="auto"><source src="{{ block.settings[gvk] }}" type="video/mp4"></video>
+                  {%- else -%}
+                    <img src="{{ block.settings[gik] | image_url: width: 900 }}" width="900" height="1200" alt="" loading="lazy">
+                  {%- endif -%}
+                  {%- if block.settings[gtk] != blank or block.settings[gsk] != blank -%}
+                  <div class="ds-hgal-cap" data-hgal-cap>
+                    {%- if block.settings[gtk] != blank -%}<h3 class="ds-hgal-cap-t" style="font-size:calc(min(22px,2vw) * var(--ds-head-scale,1))">{{ block.settings[gtk] }}</h3>{%- endif -%}
+                    {%- if block.settings[gsk] != blank -%}<p class="ds-hgal-cap-s" style="font-size:calc(13px * var(--ds-body-scale,1))">{{ block.settings[gsk] }}</p>{%- endif -%}
+                  </div>
+                  {%- endif -%}
+                </div>
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      </div>
+      {% if block.settings.gal_arrows or block.settings.gal_dots %}
+      <div class="ds-hgal-nav">
+        {% if block.settings.gal_dots %}
+        <div class="ds-hgal-dots" data-hgal-dots>
+          {%- assign di = 0 -%}
+          {%- for i in (1..8) -%}
+            {%- assign gik = 'g' | append: i | append: '_image' -%}
+            {%- assign gvk = 'g' | append: i | append: '_video' -%}
+            {%- if block.settings[gik] != blank or block.settings[gvk] != blank -%}
+              <button class="ds-hgal-dot" data-hgal-dot="{{ di }}" aria-label="Go to image {{ di | plus: 1 }}"{% if block.settings[gik] != blank %} style="background-image:url({{ block.settings[gik] | image_url: width: 80 }})"{% endif %}></button>
+              {%- assign di = di | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+        {% endif %}
+        {% if block.settings.gal_arrows %}
+        <div class="ds-hgal-arrows">
+          <button class="ds-hgal-arrow" data-hgal-prev aria-label="Previous">‹</button>
+          <button class="ds-hgal-arrow" data-hgal-next aria-label="Next">›</button>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    {% when 'beforeafter' %}
+    {%- assign step_i = step_i | plus: 1 -%}{%- assign step_mod = step_i | modulo: 2 -%}
+    <section class="ds-ba-section{% if step_mod == 1 %} ds-alt{% endif %}">
+      <div class="ds-ba-inner" data-ds-animate>
+        <div class="ds-ba-row{% if block.settings.ba_side_pos == 'right' %} ds-ba-rev{% endif %}">
+        {% if block.settings.ba_side_pos != 'none' %}
+        <div class="ds-ba-side">
+          {% if block.settings.ba_side_heading != blank %}<h3 class="ds-ba-side-h">{{ block.settings.ba_side_heading }}</h3>{% endif %}
+          {% if block.settings.ba_side_body != blank %}<p class="ds-ba-side-b">{{ block.settings.ba_side_body }}</p>{% endif %}
+        </div>
+        {% endif %}
+        <div class="ds-ba" data-ba style="aspect-ratio:{{ block.settings.ba_ratio }};max-width:{{ block.settings.ba_width }}px">
+          <div class="ds-ba-before" data-ba-before>
+            {% if block.settings.ba_before != blank %}<img src="{{ block.settings.ba_before | image_url: width: 1400 }}" width="1400" height="875" alt="Before" loading="lazy">{% else %}<div class="ds-ba-ph" style="background:linear-gradient(135deg,#1a1a1a,#2a2a2a)"><span>▢</span><p>before photo</p></div>{% endif %}
+          </div>
+          <div class="ds-ba-after" data-ba-after>
+            {% if block.settings.ba_after != blank %}<img src="{{ block.settings.ba_after | image_url: width: 1400 }}" width="1400" height="875" alt="After" loading="lazy">{% else %}<div class="ds-ba-ph" style="background:linear-gradient(135deg,#3a2a18,#6b4f2f);color:var(--ds-accent)"><span>✦</span><p>after photo</p></div>{% endif %}
+          </div>
+          <div class="ds-ba-badge ds-ba-badge-l">{{ block.settings.ba_before_label }}</div>
+          <div class="ds-ba-badge ds-ba-badge-r">{{ block.settings.ba_after_label }}</div>
+          <div class="ds-ba-handle" data-ba-handle><div class="ds-ba-grip">⇄</div></div>
+        </div>
+        </div>
+      </div>
+    </section>
+
+    {% when 'marquee' %}
+    {%- capture mq_group -%}<span class="ds-mq-group">{%- assign words = block.settings.mq_words | split: ',' -%}{%- for w in words -%}{{ w | strip }} <span class="ds-mq-star">{{ block.settings.mq_sep }}</span> {%- endfor -%}</span>{%- endcapture -%}
+    <section class="ds-mq-section" style="background:{% if block.settings.mq_alt %}var(--ds-alt-bg){% else %}var(--ds-bg){% endif %}">
+      <div class="ds-mq-track" style="animation-duration:{{ block.settings.mq_speed }}s;font-size:{{ block.settings.mq_size }}px">{{ mq_group }}{{ mq_group }}</div>
+    </section>
+
+    {% when 'half' %}
+    {%- assign box_alpha = block.settings.box_opacity | divided_by: 100.0 -%}{%- capture box_style -%}{%- if block.settings.box_on -%}background:{{ block.settings.box_color | color_modify: 'alpha', box_alpha }};{%- if block.settings.box_blur > 0 -%}-webkit-backdrop-filter:blur({{ block.settings.box_blur }}px);backdrop-filter:blur({{ block.settings.box_blur }}px);{%- endif -%}border-radius:{{ block.settings.box_radius }}px;padding:{{ block.settings.box_padding }}px;{%- if block.settings.box_border -%}border:1px solid {{ block.settings.box_color | color_modify: 'alpha', 0.28 }};{%- else -%}border:none;{%- endif -%}box-shadow:0 20px 60px rgba(0,0,0,.28);{%- else -%}background:none;border:none;box-shadow:none;{%- endif -%}{%- endcapture -%}
+    {%- if row_open == false -%}{{ row_open_html }}{%- assign row_open = true -%}{%- endif -%}
+    <section class="ds-half-panel" style="min-height:{{ block.settings.sec_height }}vh" {{ block.shopify_attributes }}>
+      {%- if block.settings.half_type == 'media' -%}
+        <div class="ds-half-media" style="aspect-ratio:{{ block.settings.media_ratio }}">
+          {%- if block.settings.media_video != blank -%}
+            <video muted playsinline preload="auto" loop data-scrub-video data-mode="{{ block.settings.media_mode }}"><source src="{{ block.settings.media_video }}" type="video/mp4"></video>
+          {%- elsif block.settings.media_image != blank -%}
+            <img src="{{ block.settings.media_image | image_url: width: 1200 }}" width="1200" height="1500" alt="" loading="lazy">
+          {%- else -%}
+            <div class="ds-media-ph"><span>▢</span><p>Add a photo or video</p></div>
+          {%- endif -%}
+        </div>
+      {%- else -%}
+        <div class="ds-half-text" style="{{ box_style }}">
+          {%- if block.settings.eyebrow != blank -%}<p class="ds-half-eyebrow">{{ block.settings.eyebrow }}</p>{%- endif -%}
+          <h2 class="ds-headline" style="font-size:calc(min({{ block.settings.head_size }}px, 9vw) * var(--ds-head-scale,1))">{{ block.settings.headline | newline_to_br }}</h2>
+          <div class="ds-divider"></div>
+          {%- if block.settings.body != blank -%}<p class="ds-body" style="font-size:calc(min({{ block.settings.body_size }}px, 6vw) * var(--ds-body-scale,1))">{{ block.settings.body }}</p>{%- endif -%}
+          {%- if block.settings.cta_label != blank -%}<a href="{{ block.settings.cta_url }}" class="ds-hero-cta ds-half-cta" style="font-size:calc(15px * var(--ds-body-scale,1))">{{ block.settings.cta_label }}</a>{%- endif -%}
+        </div>
+      {%- endif -%}
+    </section>
+
+    {% when 'categories' %}
+    <section class="ds-cats-sec" {{ block.shopify_attributes }}>
+      {% if block.settings.cats_title != blank %}<h2 class="ds-cats-title" style="font-size:calc(min(52px,7vw) * var(--ds-head-scale,1))">{{ block.settings.cats_title }}</h2>{% endif %}
+      <div class="ds-cats-grid" data-ds-animate>
+        {%- for n in (1..3) -%}
+          {%- assign cnk = 'cat' | append: n | append: '_name' -%}
+          {%- assign cvk = 'cat' | append: n | append: '_video' -%}
+          {%- assign cik = 'cat' | append: n | append: '_image' -%}
+          {%- assign cuk = 'cat' | append: n | append: '_url' -%}
+          {%- if block.settings[cnk] != blank -%}
+          <a class="ds-cat-card" href="{{ block.settings[cuk] | default: '#' }}" style="transition-delay:{{ forloop.index0 | times: 150 }}ms">
+            {%- if block.settings[cvk] != blank -%}
+              <video class="ds-cat-media" autoplay loop muted playsinline preload="auto"><source src="{{ block.settings[cvk] }}" type="video/mp4"></video>
+            {%- elsif block.settings[cik] != blank -%}
+              <img class="ds-cat-media" src="{{ block.settings[cik] | image_url: width: 900 }}" width="900" height="1200" alt="{{ block.settings[cnk] }}" loading="lazy">
+            {%- else -%}
+              <div class="ds-cat-media ds-cat-ph"></div>
+            {%- endif -%}
+            <div class="ds-cat-scrim"></div>
+            <h3 class="ds-cat-name">{{ block.settings[cnk] }}</h3>
+            <span class="ds-cat-btn">shop {{ block.settings[cnk] }}</span>
+          </a>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </section>
+
+    {% when 'toon' %}
+    <section class="ds-toon" data-toon data-scale="{{ block.settings.toon_size | divided_by: 100.0 }}" data-reveal="{{ block.settings.toon_reveal_style }}" style="--toon-bg:{{ block.settings.toon1_bg }}">
+      <div class="ds-toon-ghost"><span style="font-size:calc(clamp(90px,28vw,380px) * var(--ds-head-scale,1))">{{ block.settings.toon_ghost }}</span></div>
+      {% if block.settings.toon_brand != blank %}<div class="ds-toon-brand">{{ block.settings.toon_brand }}</div>{% endif %}
+      <div class="ds-toon-stage">
+        {%- for o in (1..10) -%}
+          {%- for n in (1..10) -%}
+            {%- assign tik = 'toon' | append: n | append: '_image' -%}
+            {%- assign ti2k = 'toon' | append: n | append: '_image2' -%}
+            {%- assign tbk = 'toon' | append: n | append: '_bg' -%}
+            {%- assign tok = 'toon' | append: n | append: '_order' -%}
+            {%- assign this_order = block.settings[tok] | default: n -%}
+            {%- if block.settings[tik] != blank and this_order == o -%}
+            <div class="ds-toon-item" data-toon-item data-bg="{{ block.settings[tbk] }}">
+              <div class="ds-toon-inner">
+                <img class="ds-toon-base" src="{{ block.settings[tik] | image_url: width: 800 }}" width="800" height="1333" alt="" draggable="false" loading="lazy">
+                {%- if block.settings[ti2k] != blank -%}<canvas class="ds-toon-reveal" data-toon-reveal data-img2="{{ block.settings[ti2k] | image_url: width: 800 }}"></canvas>{%- endif -%}
+              </div>
+            </div>
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endfor -%}
+      </div>
+      <div class="ds-toon-info">
+        {% if block.settings.toon_title != blank %}<p class="ds-toon-title">{{ block.settings.toon_title }}</p>{% endif %}
+        {% if block.settings.toon_body != blank %}<p class="ds-toon-body">{{ block.settings.toon_body }}</p>{% endif %}
+        <div class="ds-toon-nav">
+          <button class="ds-toon-arrow" data-toon-prev aria-label="Previous">‹</button>
+          <button class="ds-toon-arrow" data-toon-next aria-label="Next">›</button>
+        </div>
+      </div>
+      {% if block.settings.toon_link_label != blank %}<a class="ds-toon-discover" href="{{ block.settings.toon_link_url | default: '#' }}">{{ block.settings.toon_link_label }} <span>→</span></a>{% endif %}
+    </section>
+
+    {% endcase %}
+  {% endfor %}
+  {%- if row_open -%}{{ row_close }}{%- endif -%}
+
+
+</div>
+
+{% if section.settings.show_top_btn %}<button class="ds-top-btn" id="ds-top-btn-{{ section.id }}" aria-label="Back to top">↑</button>{% endif %}
+<div class="ds-progress-bar" id="ds-progress-{{ section.id }}"></div>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+{% if section.settings.heading_font %}{{ section.settings.heading_font | font_face: font_display: 'swap' }}{% endif %}
+{% if section.settings.body_font %}{{ section.settings.body_font | font_face: font_display: 'swap' }}{% endif %}
+.dynaeimic-story *{box-sizing:border-box;margin:0;padding:0}
+.ds-hero-title,.ds-headline,.ds-cta-headline,.ds-pin-head,.ds-eyebrow{font-family:var(--ds-head-font, inherit)}
+.dynaeimic-story{position:relative;background:var(--ds-bg);color:var(--ds-text);font-family:var(--ds-body-font, -apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif);overflow-x:hidden;transition:background-color .5s ease,color .5s ease}
+#dynaeimic-story-{{ section.id }}{
+  --ds-bg:{{ section.settings.bg_color }};
+  --ds-text:{{ section.settings.text_color }};
+  --ds-alt-bg:{{ section.settings.bg_alt_color }};
+  --ds-accent:{{ section.settings.accent_color }};
+  --ds-muted:#888888;
+  --ds-glass-bg:rgba(255,255,255,.05);
+  --ds-glass-border:rgba(255,255,255,.12);
+  --ds-glass-shadow:rgba(0,0,0,.35);
+  --ds-chip-bg:rgba(255,255,255,.04);
+  --ds-chip-border:rgba(255,255,255,.09);
+  --ds-chip-label:#8a8a8a;
+  --ds-media-bg:#161616;
+  --ds-media-border:#222222;
+  --ds-media-text:#3a3a3a;
+  --ds-hairline:rgba(255,255,255,.2);
+  --ds-media-ratio:4/5;
+  --ds-media-gap:5rem;
+  --ds-media-cols:1fr 1fr;
+  --ds-head-scale:{{ section.settings.heading_scale | divided_by: 100.0 }};
+  --ds-body-scale:{{ section.settings.body_scale | divided_by: 100.0 }};
+  {% if section.settings.heading_font %}--ds-head-font:{{ section.settings.heading_font.family }}, {{ section.settings.heading_font.fallback_families }};{% endif %}
+  {% if section.settings.body_font %}--ds-body-font:{{ section.settings.body_font.family }}, {{ section.settings.body_font.fallback_families }};{% endif %}
+}
+#dynaeimic-story-{{ section.id }}.ds-theme-light{
+  --ds-bg:{{ section.settings.light_bg_color }};
+  --ds-alt-bg:{{ section.settings.light_bg_alt_color }};
+  --ds-text:{{ section.settings.light_text_color }};
+  --ds-accent:{{ section.settings.light_accent_color }};
+  --ds-muted:#86868b;
+  --ds-glass-bg:rgba(255,255,255,.72);
+  --ds-glass-border:rgba(0,0,0,.08);
+  --ds-glass-shadow:rgba(0,0,0,.12);
+  --ds-chip-bg:rgba(0,0,0,.03);
+  --ds-chip-border:rgba(0,0,0,.1);
+  --ds-chip-label:#86868b;
+  --ds-media-bg:#f5f5f7;
+  --ds-media-border:#d2d2d7;
+  --ds-media-text:#86868b;
+  --ds-hairline:rgba(0,0,0,.15);
+}
+@media(max-width:768px){.ds-split,.ds-ba-inner,.ds-inner,[data-ds-animate]{opacity:1 !important;transform:none !important}.ds-hgal-wrap,.ds-pin-wrap{height:auto !important}.ds-hgal-stage,.ds-pin-stage{position:relative !important;top:auto !important;bottom:auto !important;height:72vh !important}}
+.ds-top-btn{position:fixed;bottom:24px;right:24px;z-index:9000;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.14);-webkit-backdrop-filter:blur(12px) saturate(150%);backdrop-filter:blur(12px) saturate(150%);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:20px;cursor:pointer;opacity:0;pointer-events:none;transform:translateY(12px);transition:opacity .3s ease,transform .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.3);isolation:isolate}
+.ds-top-btn::before{content:'';position:absolute;inset:-4px;border-radius:50%;background:linear-gradient(90deg,#4f8cff,#a06bff,#ff5ea8,#ff9d5e,#5edfff,#4f8cff);background-size:300% 100%;animation:dsGlow 8s linear infinite;filter:blur(9px);opacity:0;transition:opacity .3s ease;z-index:-1}
+.ds-top-btn:hover::before{opacity:.9}
+.ds-top-btn.ds-show{opacity:1;pointer-events:auto;transform:translateY(0)}
+.ds-progress-bar{position:fixed;top:0;left:0;height:2px;background:var(--ds-accent);width:0%;transition:width .1s linear;z-index:9999;pointer-events:none}
+
+@keyframes dsMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ds-mq-section{padding:4.5rem 0;overflow:hidden;transition:background-color .5s ease}
+.ds-mq-track{display:inline-flex;white-space:nowrap;animation:dsMarquee linear infinite;will-change:transform}
+.ds-mq-group{display:inline-flex;align-items:center;padding-right:1rem;font-family:var(--ds-head-font,inherit);font-weight:800;letter-spacing:-.02em;text-transform:uppercase;color:var(--ds-text);line-height:1.1}
+.ds-mq-star{color:var(--ds-accent);margin:0 1.4rem}
+.ds-hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden}
+.ds-hero-min{position:relative;z-index:2;width:100%;min-height:inherit;display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center;padding:17vh 2rem 7vh}
+.ds-hero-min-top{display:flex;flex-direction:column;align-items:center;gap:.6rem}
+.ds-hero-min-btns{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;width:100%}
+.ds-hero-min-btn{display:block;flex:0 1 264px;min-width:220px;padding:12px 0;text-align:center;border-radius:10px;text-decoration:none;font-weight:600;letter-spacing:.02em;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:transform .2s ease,background .2s ease}
+.ds-hero-min-btn:hover{transform:scale(1.02)}
+.ds-hero-min-primary{background:rgba(23,26,32,.8);color:#ffffff}
+.ds-hero-min-primary:hover{background:rgba(23,26,32,.95)}
+.ds-hero-min-secondary{background:rgba(255,255,255,.65);color:#1d1d1f}
+.ds-hero-min-secondary:hover{background:rgba(255,255,255,.85)}
+@media(max-width:768px){.ds-hero-min{padding:15vh 1.2rem 5vh}.ds-hero-min-btn{flex:1 1 100%}}
+.ds-hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.ds-split-media video{width:100%;height:100%;object-fit:cover;display:block}
+.ds-placeholder-bg{background:linear-gradient(135deg,#111 0%,#1a1209 100%);display:flex;align-items:center;justify-content:center}
+.ds-ph-inner{display:flex;flex-direction:column;align-items:center;gap:12px;color:#3a3a3a}
+.ds-ph-inner span{font-size:40px;opacity:.4}
+.ds-ph-inner p{font-size:13px;line-height:1.5}
+.ds-hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.3) 0%,rgba(0,0,0,.6) 60%,rgba(0,0,0,.85) 100%);z-index:1}
+.ds-hero-content{position:relative;z-index:2;padding:3rem 2.75rem;max-width:760px;background:rgba(255,255,255,.07);-webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%);border:1px solid rgba(255,255,255,.18);border-radius:28px;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.ds-hero-center{justify-content:center;text-align:center;padding-left:2rem;padding-right:2rem}
+.ds-hero-left{justify-content:flex-start;text-align:left;padding-left:6vw;padding-right:6vw}
+.ds-hero-right{justify-content:flex-end;text-align:right;padding-left:6vw;padding-right:6vw}
+.ds-hero-left .ds-hero-sub{margin-left:0;margin-right:auto}
+.ds-hero-right .ds-hero-sub{margin-left:auto;margin-right:0}
+.ds-hero-noglass .ds-hero-content{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;border:none;border-radius:0;box-shadow:none;padding:2rem 0}
+.ds-eyebrow{font-size:calc(12px * var(--ds-head-scale,1));letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:1.5rem}
+.ds-hero-title{font-size:calc(clamp(48px,8vw,96px) * var(--ds-head-scale,1));font-weight:700;letter-spacing:-.03em;line-height:1.05;color:#fff;margin-bottom:1.5rem;text-shadow:0 2px 40px rgba(0,0,0,.5)}
+.ds-gold{color:var(--ds-accent)}
+.ds-hero-sub{font-size:calc(20px * var(--ds-body-scale,1));color:rgba(255,255,255,.7);font-weight:300;max-width:480px;line-height:1.55;margin:0 auto 2.5rem}
+.ds-hero-cta{display:inline-block;position:relative;isolation:isolate;padding:16px 36px;background:rgba(255,255,255,.16);-webkit-backdrop-filter:blur(12px) saturate(150%);backdrop-filter:blur(12px) saturate(150%);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:50px;font-size:15px;font-weight:600;letter-spacing:.02em;text-decoration:none;transition:background .2s,transform .2s}
+.ds-hero-cta::before{content:'';position:absolute;inset:-4px;border-radius:50px;background:linear-gradient(90deg,#4f8cff,#a06bff,#ff5ea8,#ff9d5e,#5edfff,#4f8cff);background-size:300% 100%;animation:dsGlow 8s linear infinite;filter:blur(9px);opacity:0;transition:opacity .3s ease;z-index:-1}
+.ds-hero-cta:hover::before{opacity:.9}
+.ds-hero-cta:hover{background:rgba(255,255,255,.28);transform:scale(1.03)}
+@keyframes dsPulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+.ds-story-section{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:5rem 4rem;background:var(--ds-bg);transition:background-color .5s ease}
+.ds-story-section.ds-alt{background:var(--ds-alt-bg)}
+.ds-split{max-width:1200px;width:100%;display:grid;grid-template-columns:var(--ds-media-cols,1fr 1fr);gap:var(--ds-media-gap,5rem);align-items:center;opacity:0;transform:translateY(40px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1)}
+.ds-split.ds-visible{opacity:1;transform:translateY(0)}
+.ds-split-reverse{direction:rtl}
+.ds-split-reverse>*{direction:ltr}
+.ds-split-multi{display:flex;flex-wrap:nowrap;justify-content:center;align-items:center}
+.ds-half-row{display:flex;flex-wrap:wrap;align-items:stretch;width:100%}
+.ds-half-panel{flex:1 1 0;min-width:340px;display:flex;align-items:center;justify-content:center;padding:4rem 3rem;background:var(--ds-bg);transition:background-color .5s ease}
+.ds-half-media{width:100%;max-width:620px;border-radius:20px;overflow:hidden}
+.ds-half-media video,.ds-half-media img{width:100%;height:100%;object-fit:cover;display:block}
+.ds-half-media .ds-media-ph{aspect-ratio:inherit}
+.ds-half-text{max-width:560px;width:100%}
+.ds-half-eyebrow{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--ds-muted);margin-bottom:1.2rem}
+.ds-half-cta{margin-top:2rem}
+
+
+.ds-split-media{position:relative;border-radius:20px;overflow:hidden;aspect-ratio:var(--ds-media-ratio,4/5);opacity:0;transform:translateX(30px) scale(.97);transition:opacity .9s .2s cubic-bezier(.16,1,.3,1),transform .9s .2s cubic-bezier(.16,1,.3,1)}
+.ds-split-reverse .ds-split-media{transform:translateX(-30px) scale(.97)}
+.ds-split.ds-visible .ds-split-media{opacity:1;transform:translateX(0) scale(1)}
+.ds-split-media img{width:100%;height:100%;object-fit:cover;display:block}
+.ds-media-text{position:absolute;left:0;right:0;z-index:2;padding:1.4rem;color:#ffffff;font-weight:600;line-height:1.35;text-shadow:0 2px 24px rgba(0,0,0,.55);pointer-events:none}
+.ds-media-text-top{top:0}
+.ds-media-text-center{top:50%;transform:translateY(-50%);text-align:center}
+.ds-media-text-bottom{bottom:0;background:linear-gradient(to top,rgba(0,0,0,.45),transparent)}
+.ds-media-ph{width:100%;height:100%;background:var(--ds-media-bg);border:2px dashed var(--ds-media-border);border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:2rem}
+.ds-media-ph span{font-size:36px;opacity:.4}
+.ds-media-ph p{font-size:13px;color:var(--ds-media-text);line-height:1.5}
+
+.ds-split-text{min-width:0;transition:background-color .5s ease,border-color .5s ease}
+.ds-glass{background:var(--ds-glass-bg);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);border:1px solid var(--ds-glass-border);border-radius:24px;padding:2.75rem;box-shadow:0 20px 60px var(--ds-glass-shadow)}
+
+.ds-headline{font-size:calc(clamp(32px,4vw,56px) * var(--ds-head-scale,1));font-weight:700;letter-spacing:-.03em;line-height:1.08;margin-bottom:1.5rem;color:var(--ds-text)}
+.ds-headline em{font-style:normal;color:var(--ds-accent)}
+.ds-divider{width:40px;height:1px;background:linear-gradient(to right,transparent,var(--ds-accent),transparent);margin:0 0 1.8rem}
+.ds-body{font-size:calc(17px * var(--ds-body-scale,1));line-height:1.65;color:var(--ds-muted);margin-bottom:2.5rem}
+.ds-icon-row{display:flex;gap:12px;flex-wrap:wrap}
+.ds-chip{background:var(--ds-chip-bg);border:1px solid var(--ds-chip-border);border-radius:12px;padding:14px 18px;text-align:center;opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease,border-color .2s,background .2s;text-decoration:none;display:inline-block;color:inherit}
+.ds-chip-link{cursor:pointer}
+.ds-chip-link:hover{border-color:rgba(212,169,106,.6);background:rgba(212,169,106,.1);transform:translateY(-2px) scale(1.03)}
+.ds-chip:hover{border-color:rgba(212,169,106,.4);background:rgba(212,169,106,.06)}
+.ds-chip.ds-chip-visible{opacity:1;transform:translateY(0)}
+.ds-chip-icon{font-size:22px;margin-bottom:5px}
+.ds-chip-label{font-size:10px;color:var(--ds-chip-label);letter-spacing:.1em;text-transform:uppercase}
+
+.ds-cta-section{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem;background:var(--ds-bg);position:relative;overflow:hidden;transition:background-color .5s ease}
+@keyframes dsGlow{to{background-position:300% 0}}
+.ds-btn-glow .ds-btn-primary,.ds-btn-glow .ds-btn-secondary{position:relative;isolation:isolate}
+.ds-btn-glow .ds-btn-primary::before,.ds-btn-glow .ds-btn-secondary::before{content:'';position:absolute;inset:-4px;border-radius:50px;background:linear-gradient(90deg,#4f8cff,#a06bff,#ff5ea8,#ff9d5e,#5edfff,#4f8cff);background-size:300% 100%;animation:dsGlow 8s linear infinite;filter:blur(9px);opacity:0;transition:opacity .3s ease;z-index:-1}
+.ds-btn-glow .ds-btn-primary:hover::before,.ds-btn-glow .ds-btn-secondary:hover::before{opacity:.9}
+@keyframes dsBreathe{0%,100%{opacity:.45}50%{opacity:1}}
+.ds-cta-glow{position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(212,169,106,.07) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.ds-inner{max-width:740px;width:100%;text-align:center;opacity:0;transform:translateY(48px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1)}
+.ds-inner.ds-visible{opacity:1;transform:translateY(0)}
+.ds-cta-headline{font-size:calc(clamp(34px,5vw,58px) * var(--ds-head-scale,1));font-weight:700;letter-spacing:-.03em;line-height:1.1;color:var(--ds-text);margin-bottom:1.2rem;position:relative}
+.ds-cta-sub{font-size:calc(18px * var(--ds-body-scale,1));color:var(--ds-muted);margin-bottom:2.5rem;line-height:1.6;max-width:500px;position:relative}
+.ds-btn-group{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;position:relative}
+.ds-btn-primary{padding:16px 36px;background:var(--ds-accent);color:#ffffff;border:none;border-radius:50px;font-size:15px;font-weight:600;text-decoration:none;display:inline-block;transition:filter .2s,transform .2s}
+.ds-btn-primary:hover{filter:brightness(1.1);transform:scale(1.03)}
+.ds-btn-secondary{padding:16px 36px;background:transparent;color:var(--ds-accent);border-radius:50px;font-size:15px;font-weight:600;text-decoration:none;display:inline-block;border:1px solid var(--ds-accent);transition:background .2s,transform .2s}
+.ds-btn-secondary:hover{background:color-mix(in srgb, var(--ds-accent) 12%, transparent);transform:scale(1.03)}
+
+.ds-ba-section{padding:6rem 2rem;background:var(--ds-bg);transition:background-color .5s ease}
+.ds-ba-section.ds-alt{background:var(--ds-alt-bg)}
+.ds-ba-inner{max-width:1080px;margin:0 auto;text-align:center;opacity:0;transform:translateY(40px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1)}
+.ds-ba-inner.ds-visible{opacity:1;transform:translateY(0)}
+.ds-toon{position:relative;width:100%;min-height:100vh;overflow:hidden;background:var(--toon-bg,#F4845F);transition:background-color 650ms cubic-bezier(0.4,0,0.2,1);font-family:var(--ds-body-font,'Inter',sans-serif)}
+.ds-toon-ghost{position:absolute;inset-inline:0;top:18%;display:flex;align-items:flex-start;justify-content:center;pointer-events:none;user-select:none;z-index:2}
+.ds-toon-ghost span{font-family:'Anton','Arial Black',sans-serif;font-weight:900;color:#fff;line-height:1;text-transform:uppercase;letter-spacing:-.02em;white-space:nowrap}
+.ds-toon-brand{position:absolute;top:24px;left:24px;z-index:60;font-size:12px;font-weight:600;text-transform:uppercase;color:#fff;opacity:.9;letter-spacing:.18em}
+.ds-toon-stage{position:absolute;inset:0;z-index:3}
+.ds-toon-item{position:absolute;aspect-ratio:0.6/1;transition:transform 650ms cubic-bezier(0.4,0,0.2,1),filter 650ms cubic-bezier(0.4,0,0.2,1),opacity 650ms cubic-bezier(0.4,0,0.2,1),left 650ms cubic-bezier(0.4,0,0.2,1);will-change:transform,filter,opacity}
+.ds-toon-inner{position:relative;width:100%;height:100%}
+.ds-toon-item img.ds-toon-base{width:100%;height:100%;object-fit:contain;object-position:bottom center}
+.ds-toon-reveal{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ds-toon-info{position:absolute;bottom:40px;left:24px;z-index:60;max-width:320px}
+@media(min-width:640px){.ds-toon-info{bottom:80px;left:96px}}
+.ds-toon-title{font-weight:700;text-transform:uppercase;letter-spacing:.02em;margin:0 0 12px;font-size:22px;color:#fff;opacity:.95}
+.ds-toon-body{font-size:14px;color:#fff;opacity:.85;line-height:1.6;margin:0 0 20px}
+@media(max-width:639px){.ds-toon-body{display:none}}
+.ds-toon-nav{display:flex;gap:14px}
+.ds-toon-arrow{width:56px;height:56px;border-radius:50%;background:transparent;border:2px solid #fff;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:26px;line-height:1;transition:transform .15s,background-color .15s}
+.ds-toon-arrow:hover{transform:scale(1.08);background:rgba(255,255,255,.12)}
+.ds-toon-discover{position:absolute;bottom:40px;right:24px;z-index:60;display:flex;align-items:center;gap:8px;font-family:'Anton','Arial Black',sans-serif;font-size:clamp(20px,4vw,56px);font-weight:400;color:#fff;opacity:.95;letter-spacing:-.02em;line-height:1;text-transform:uppercase;text-decoration:none;transition:opacity .2s ease}
+.ds-toon-discover:hover{opacity:1}
+@media(min-width:640px){.ds-toon-discover{bottom:80px;right:40px}}
+.ds-ba-row{display:flex;gap:2.5rem;align-items:center;justify-content:center}
+.ds-cats-sec{background:var(--ds-bg);padding:5rem 0;transition:background-color .5s ease}
+.ds-cats-title{margin:0 0 2.5rem;padding:0 5vw;font-weight:700;letter-spacing:-.015em;color:var(--ds-text);font-family:inherit}
+.ds-cats-grid{display:grid;grid-template-columns:1fr;opacity:0;transform:translateY(48px);transition:opacity 1s ease,transform 1s ease}
+.ds-cats-grid.ds-visible{opacity:1;transform:translateY(0)}
+@media(min-width:768px){.ds-cats-grid{grid-template-columns:repeat(3,1fr)}}
+.ds-cat-card{position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;padding:1.5rem;min-height:400px;overflow:hidden;text-decoration:none}
+@media(min-width:640px){.ds-cat-card{padding:2rem;min-height:500px}}
+@media(min-width:768px){.ds-cat-card{padding:3rem;min-height:750px}}
+.ds-cat-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .7s ease}
+.ds-cat-card:hover .ds-cat-media{transform:scale(1.05)}
+.ds-cat-ph{background:repeating-linear-gradient(45deg,#e2e2e6 0 16px,#d6d6db 16px 32px)}
+.ds-cat-scrim{position:absolute;inset:0;background:rgba(0,0,0,.10);transition:background-color .5s ease}
+.ds-cat-card:hover .ds-cat-scrim{background:rgba(0,0,0,.20)}
+.ds-cat-name{position:relative;z-index:2;margin:0;color:#ffffff;font-weight:500;line-height:1;font-family:inherit;writing-mode:vertical-lr;transform:rotate(180deg);font-size:clamp(48px,6vw,110px);transition:transform .5s ease}
+.ds-cat-card:hover .ds-cat-name{transform:rotate(180deg) translateX(-8px)}
+.ds-cat-btn{position:relative;z-index:2;margin-top:auto;padding:12px 32px;background:#ffffff;color:#000000;border-radius:50px;font-size:14px;font-weight:500;transition:transform .3s ease,box-shadow .3s ease}
+.ds-cat-card:hover .ds-cat-btn{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.ds-ba-rev{flex-direction:row-reverse}
+.ds-ba-side{flex:1 1 0;min-width:220px;text-align:left}
+.ds-ba-row .ds-ba{flex:1.6 1 0}
+.ds-ba-side-h{font-family:var(--ds-head-font,inherit);font-weight:700;font-size:clamp(24px,3vw,38px);letter-spacing:-.02em;line-height:1.1;color:var(--ds-text);margin:0 0 1rem}
+.ds-ba-side-h em{font-style:normal;color:var(--ds-accent)}
+.ds-ba-side-b{font-size:16px;line-height:1.65;color:var(--ds-muted);margin:0}
+@media(max-width:768px){.ds-ba-row,.ds-ba-rev{flex-direction:column}}
+.ds-ba-head{font-family:var(--ds-head-font,inherit);font-weight:700;letter-spacing:-.03em;line-height:1.08;margin:0 0 .8rem;color:var(--ds-text)}
+.ds-ba-head em{font-style:normal;color:var(--ds-accent)}
+.ds-ba-sub{font-size:17px;line-height:1.6;color:var(--ds-muted);margin:0 auto 2.5rem;max-width:48ch}
+.ds-ba{position:relative;width:100%;border-radius:20px;overflow:hidden;user-select:none;cursor:default;touch-action:none;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.ds-ba-before,.ds-ba-after{position:absolute;inset:0}
+.ds-ba-after{clip-path:inset(0 0 0 85%);-webkit-clip-path:inset(0 0 0 85%)}
+.ds-ba-before img,.ds-ba-after img{width:100%;height:100%;object-fit:cover;display:block}
+.ds-ba-ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#4a4a4a}
+.ds-ba-ph span{font-size:40px;opacity:.6}
+.ds-ba-ph p{font:12px ui-monospace,monospace;margin:0}
+.ds-ba-badge{position:absolute;top:16px;font:600 11px/1 -apple-system,sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:7px 12px;border-radius:50px;z-index:3}
+.ds-ba-badge-l{left:16px;background:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(10px) saturate(150%);backdrop-filter:blur(10px) saturate(150%);border:1px solid rgba(255,255,255,.3);color:#fff}
+.ds-ba-badge-r{right:16px;background:rgba(255,255,255,.18);-webkit-backdrop-filter:blur(10px) saturate(150%);backdrop-filter:blur(10px) saturate(150%);border:1px solid rgba(255,255,255,.45);color:#fff;font-weight:700}
+.ds-ba-handle{position:absolute;top:0;bottom:0;left:85%;width:2px;background:rgba(255,255,255,.6);transform:translateX(-1px);z-index:4;box-shadow:0 0 18px rgba(0,0,0,.45)}
+.ds-ba-grip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.18);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);border:1px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;box-shadow:0 6px 22px rgba(0,0,0,.35)}
+.ds-hgal-wrap{position:relative;width:100%;background:var(--ds-alt-bg);padding:4.5rem 0 4rem;transition:background-color .5s ease}
+.ds-hgal-title{margin:0 0 2.2rem;padding:0 5vw;font-weight:700;letter-spacing:-.015em;color:var(--ds-text);font-family:inherit}
+.ds-hgal-stage{position:relative;width:100%;overflow-x:auto;overflow-y:hidden;background:transparent;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;scroll-snap-type:x proximity}
+.ds-hgal-stage::-webkit-scrollbar{display:none}
+.ds-hgal-track{position:relative;height:100%;display:flex;align-items:stretch;gap:1.4rem;padding:0 5vw;width:max-content}
+.ds-hgal-item{flex:0 0 auto;height:100%;border-radius:28px;overflow:hidden;background:#ffffff;scroll-snap-align:center}
+.ds-hgal-inner{position:relative;width:100%;height:100%;overflow:hidden}
+.ds-hgal-cap{position:absolute;left:0;right:0;bottom:0;padding:1.5rem 1.2rem;text-align:center;background:linear-gradient(to top,rgba(255,255,255,.9),rgba(255,255,255,.45) 60%,transparent)}
+.ds-hgal-cap-t{margin:0;font-weight:600;letter-spacing:-.01em;color:#1d1d1f;font-family:inherit}
+.ds-hgal-cap-s{margin:.2rem 0 0;line-height:1.4;color:#6e6e73}
+.ds-hgal-inner img,.ds-hgal-inner video{width:100%;height:100%;object-fit:cover;display:block}
+@media(max-width:768px){.ds-hgal-track{gap:1rem;padding:0 1rem}}
+.ds-hgal-nav{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;padding:1.6rem 5vw 0;min-height:46px}
+.ds-hgal-dots{display:flex;gap:8px;align-items:center;background:var(--ds-alt-bg);border:1px solid var(--ds-hairline);border-radius:50px;padding:8px 12px;max-width:80vw;overflow-x:auto;scrollbar-width:none}
+.ds-hgal-dots::-webkit-scrollbar{display:none}
+.ds-hgal-dot{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1px solid var(--ds-hairline);background:var(--ds-bg);background-size:cover;background-position:center;cursor:pointer;opacity:.5;padding:0;transition:opacity .2s ease,transform .2s ease,box-shadow .2s ease}
+.ds-hgal-dot:hover{opacity:.85}
+.ds-hgal-dot.ds-active{opacity:1;transform:scale(1.12);box-shadow:0 0 0 2px var(--ds-accent)}
+.ds-hgal-arrows{position:absolute;right:5vw;display:flex;gap:14px}
+.ds-hgal-arrow{width:46px;height:46px;border-radius:50%;background:var(--ds-alt-bg);color:var(--ds-text);font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.08);border:1px solid var(--ds-hairline);transition:transform .2s ease,background .2s ease}
+.ds-hgal-arrow:hover{transform:scale(1.06);background:var(--ds-bg)}
+.ds-hgal-arrow:active{transform:scale(.96)}
+@media(max-width:768px){.ds-hgal-nav{padding:1.2rem 1rem 0}.ds-hgal-arrows{right:1rem}}
+.ds-pin-wrap{position:relative;width:100%}
+.ds-pin-stage{position:absolute;top:0;left:0;width:100%;height:100vh;overflow:hidden;background:#000;will-change:transform}
+.ds-pin-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.ds-pin-ph{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#111 0%,#1a1209 100%)}
+.ds-pin-overlays{position:absolute;inset:0;z-index:2}
+.ds-pin-text{position:absolute;transform:translate(calc(-50% + var(--mx,0px)),calc(-50% + var(--my,0px)));max-width:min(380px,82vw);opacity:0;background:rgba(10,7,5,.58);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:1.4rem 1.65rem;box-shadow:0 20px 50px rgba(0,0,0,.4);transition:opacity .25s ease}
+.ds-pin-inner{transform:translateY(22px);filter:blur(8px);transition:transform .3s ease,filter .3s ease}
+.ds-pin-head{font-size:calc(clamp(26px,3.2vw,46px) * var(--ds-head-scale,1));font-weight:700;letter-spacing:-.03em;line-height:1.05;color:#fff;margin:0 0 .7rem;text-shadow:0 2px 30px rgba(0,0,0,.5)}
+.ds-pin-body{font-size:calc(clamp(14px,1.2vw,17px) * var(--ds-body-scale,1));line-height:1.55;color:rgba(255,255,255,.85);margin:0;text-shadow:0 2px 18px rgba(0,0,0,.5)}
+
+@media(max-width:768px){
+  .ds-pin-text{max-width:90%;padding:2rem 1.5rem}
+  .ds-pin-head{font-size:34px}
+  .ds-story-section{padding:4rem 1.5rem}
+  .ds-half-panel{padding:2.5rem 1.25rem;flex:1 1 100%;min-width:0}
+  .ds-ba-row>*{flex:0 0 auto !important;width:100% !important}
+  .ds-hgal-stage{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+  .ds-hgal-track{position:relative !important;transform:none !important;padding:0 1rem !important;gap:1rem !important;height:100% !important;left:auto !important;align-items:center}
+  .ds-hgal-item{transform:none !important;opacity:1 !important;height:56vh !important;scroll-snap-align:center}
+  .ds-hgal-cap{opacity:1 !important;transform:none !important;filter:none !important}
+  .ds-split{grid-template-columns:1fr;gap:2.5rem}
+  .ds-split-multi{flex-direction:column;flex-wrap:nowrap}
+  .ds-split-multi>*{flex:0 0 auto !important;width:100% !important;min-width:0 !important;max-height:none !important}
+  .ds-split-reverse{direction:ltr}
+  .ds-split-media{aspect-ratio:16/9;opacity:1 !important;transform:none !important}
+  .ds-glass{padding:1.75rem}
+  .ds-headline{font-size:32px}
+  .ds-hero-title{font-size:42px}
+  .ds-hero-sub{font-size:17px}
+}
+</style>
+
+<script>
+(function(){
+  var root = document.getElementById('dynaeimic-story-{{ section.id }}');
+  var bar = document.getElementById('ds-progress-{{ section.id }}');
+
+  // Auto light/dark by time of day
+  var themeMode = {{ section.settings.theme_mode | json }};
+  var dayStart = {{ section.settings.day_start_hour }};
+  var nightStart = {{ section.settings.night_start_hour }};
+  function applyTheme(){
+    var mode = themeMode;
+    if(mode === 'auto'){
+      var hour = new Date().getHours();
+      mode = (hour >= dayStart && hour < nightStart) ? 'light' : 'dark';
+    }
+    if(root){
+      root.classList.toggle('ds-theme-light', mode === 'light');
+      root.classList.toggle('ds-theme-dark', mode === 'dark');
+    }
+  }
+  applyTheme();
+  setInterval(function(){ if(themeMode === 'auto') applyTheme(); }, 60000);
+
+
+  // Progress bar
+  window.addEventListener('scroll', function(){
+    var s = window.scrollY, m = document.body.scrollHeight - window.innerHeight;
+    if(bar) bar.style.width = (m > 0 ? (s/m)*100 : 0) + '%';
+  }, {passive:true});
+
+  // Fade-in animations
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.classList.add('ds-visible');
+        e.target.querySelectorAll('[data-ds-chip]').forEach(function(c,i){
+          setTimeout(function(){c.classList.add('ds-chip-visible');}, 400+i*100);
+        });
+      }
+    });
+  }, {threshold:0.1});
+  document.querySelectorAll('[data-ds-animate]').forEach(function(el){ obs.observe(el); });
+
+  // Videos: per-block playback mode (data-mode = loop | play | scrub | playrewind)
+  var scrubList = [], playList = [], playRewindList = [];
+  var dsIsMobile = (window.matchMedia && (window.matchMedia('(max-width:768px)').matches || window.matchMedia('(pointer:coarse)').matches));
+  document.querySelectorAll('[data-scrub-video]').forEach(function(video){
+    var mode = video.getAttribute('data-mode');
+    video.muted = true;
+    if(dsIsMobile && (mode === 'scrub' || mode === 'playrewind')){ mode = 'loop'; }
+    if(mode === 'scrub'){ scrubList.push(video); video.pause(); }
+    else if(mode === 'play'){ playList.push(video); video.loop = false; video.removeAttribute('loop'); video.pause(); }
+    else if(mode === 'once'){ video.loop = false; video.removeAttribute('loop'); playList.push(video); video.pause(); }
+    else if(mode === 'playrewind'){ playRewindList.push(video); var pr0 = video.play(); if(pr0 && pr0.catch) pr0.catch(function(){}); }
+    else { video.loop = true; video.setAttribute('autoplay',''); var pr = video.play(); if(pr && pr.catch) pr.catch(function(){}); }
+  });
+
+  if(playList.length){
+    var playObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(!e.isIntersecting) return;
+        var pr = e.target.play(); if(pr && pr.catch) pr.catch(function(){});
+        playObs.unobserve(e.target);
+      });
+    }, {threshold:0.25});
+    playList.forEach(function(v){ playObs.observe(v); });
+  }
+
+  if(playRewindList.length){
+    var prLastY = window.scrollY || 0, prIdle, prRAF = null;
+    playRewindList.forEach(function(v){ v._rw = false; v._target = 0; });
+    function prTick(){
+      var active = false;
+      playRewindList.forEach(function(v){
+        if(!v._rw) return;
+        active = true;
+        var diff = v._target - v.currentTime;
+        v.currentTime = Math.abs(diff) < 0.03 ? v._target : v.currentTime + diff * 0.18;
+      });
+      prRAF = active ? requestAnimationFrame(prTick) : null;
+    }
+    function prPlayForward(){
+      playRewindList.forEach(function(v){ v._rw = false; if(v.paused){ var p = v.play(); if(p && p.catch) p.catch(function(){}); } });
+    }
+    window.addEventListener('scroll', function(){
+      var y = window.scrollY || 0, dy = y - prLastY;
+      prLastY = y;
+      clearTimeout(prIdle);
+      prIdle = setTimeout(prPlayForward, 180);
+      if(dy >= 0){ prPlayForward(); return; }
+      playRewindList.forEach(function(v){
+        if(!v.duration) return;
+        if(!v._rw){ v._rw = true; v._target = v.currentTime; v.pause(); }
+        v._target = Math.max(0, v._target + dy * (v.duration / (window.innerHeight * 1.5)));
+      });
+      if(!prRAF) prRAF = requestAnimationFrame(prTick);
+    }, {passive:true});
+  }
+
+  function scrubTargets(){
+    scrubList.forEach(function(video){
+      if(!video.duration) return;
+      var section = video.closest('section') || video.closest('.ds-hero') || video.parentElement;
+      var rect = section.getBoundingClientRect();
+      var wh = window.innerHeight;
+      var progress = (wh - rect.top) / (wh + rect.height);
+      progress = Math.max(0, Math.min(1, progress));
+      video._target = progress * video.duration;
+    });
+  }
+  var scrubRAF = null;
+  function scrubTick(){
+    var active = false;
+    scrubList.forEach(function(video){
+      if(!video.duration || video.readyState < 2) return;
+      var diff = video._target - video.currentTime;
+      if(Math.abs(diff) > 0.01){ video.currentTime += diff * 0.2; active = true; }
+    });
+    scrubRAF = active ? requestAnimationFrame(scrubTick) : null;
+  }
+  function scrubKick(){ if(!scrubRAF) scrubRAF = requestAnimationFrame(scrubTick); }
+  if(scrubList.length){
+    scrubList.forEach(function(video){
+      video._target = 0;
+      video.addEventListener('loadedmetadata', function(){ scrubTargets(); scrubKick(); });
+      video.addEventListener('canplay', function(){ scrubTargets(); scrubKick(); });
+    });
+    window.addEventListener('scroll', function(){ scrubTargets(); scrubKick(); }, {passive:true});
+    scrubTargets(); scrubKick();
+  }
+})();
+</script>
+
+<script>
+(function(){
+  function initPin(wrap){
+    var stage = wrap.querySelector('[data-pin-stage]');
+    var video = wrap.querySelector('[data-pin-video]');
+    var items = [].slice.call(wrap.querySelectorAll('[data-pin-text]'));
+    var n = items.length;
+    var pinTarget = 0, pinRAF = null;
+    var pinMobile = (window.matchMedia && (window.matchMedia('(max-width:768px)').matches || window.matchMedia('(pointer:coarse)').matches));
+    var pinSmooth = parseFloat(wrap.getAttribute('data-pin-smooth'));
+    if(isNaN(pinSmooth)) pinSmooth = 70;
+    var pinEase = 0.35 - (Math.max(0, Math.min(95, pinSmooth)) / 95) * 0.31; // 0 => 0.35 snappy, 95 => 0.04 floaty
+    function pinTick(){
+      var go = false;
+      if(video && video.duration && video.readyState >= 2){
+        var diff = pinTarget - video.currentTime;
+        if(Math.abs(diff) > 0.004){ video.currentTime += diff * pinEase; go = true; }
+        else { video.currentTime = pinTarget; }
+      }
+      pinRAF = go ? requestAnimationFrame(pinTick) : null;
+    }
+    function pinKick(){ if(!pinRAF) pinRAF = requestAnimationFrame(pinTick); }
+    function onScroll(){
+      var rect = wrap.getBoundingClientRect();
+      var total = wrap.offsetHeight - window.innerHeight;
+      var top = rect.top;
+      var gap = Math.max(0, (window.innerHeight - stage.offsetHeight) / 2); // center shorter videos
+      if(top <= 0 && -top < total){ stage.style.position = 'fixed'; stage.style.top = gap + 'px'; stage.style.bottom = 'auto'; }
+      else if(-top >= total){ stage.style.position = 'absolute'; stage.style.top = 'auto'; stage.style.bottom = gap + 'px'; }
+      else { stage.style.position = 'absolute'; stage.style.top = gap + 'px'; stage.style.bottom = 'auto'; }
+      var scrolled = Math.min(Math.max(-top, 0), total);
+      var progress = total > 0 ? scrolled / total : 0;
+      if(video && video.duration && !pinMobile){ pinTarget = progress * video.duration; pinKick(); }
+      for(var i=0;i<n;i++){
+        var center = (i + 0.5) / n, half = 0.5 / n, plateau = half * 0.62;
+        var d = Math.abs(progress - center);
+        var op = d <= plateau ? 1 : 1 - (d - plateau) / (half - plateau);
+        op = Math.max(0, Math.min(1, op));
+        items[i].style.opacity = op;
+        items[i].style.pointerEvents = op > 0.15 ? 'auto' : 'none';
+        var inner = items[i].firstElementChild;
+        if(inner){ inner.style.transform = 'translateY(' + ((1 - op) * 22) + 'px)'; inner.style.filter = 'blur(' + ((1 - op) * 8) + 'px)'; }
+      }
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    window.addEventListener('resize', onScroll, {passive:true});
+    if(video){ video.addEventListener('loadedmetadata', onScroll); video.addEventListener('canplay', onScroll); if(pinMobile){ video.muted = true; video.loop = true; video.setAttribute('autoplay',''); var _pv = video.play(); if(_pv && _pv.catch) _pv.catch(function(){}); } else { video.pause(); } }
+    onScroll();
+  }
+  document.querySelectorAll('[data-pin-wrap]').forEach(initPin);
+})();
+</script>
+
+<script>
+(function(){
+  function initHGal(wrap){
+    var stage=wrap.querySelector('[data-hgal-stage]');
+    if(!stage) return;
+    var down=false, sx=0, sl=0;
+    stage.addEventListener('mousedown', function(e){ down=true; sx=e.clientX; sl=stage.scrollLeft; stage.style.cursor='grabbing'; e.preventDefault(); });
+    window.addEventListener('mousemove', function(e){ if(down){ stage.scrollLeft = sl - (e.clientX - sx); } });
+    window.addEventListener('mouseup', function(){ down=false; stage.style.cursor='grab'; });
+    var prev=wrap.querySelector('[data-hgal-prev]'), next=wrap.querySelector('[data-hgal-next]');
+    function step(dir){ var item=stage.querySelector('[data-hgal-item]'); var amt=item?(item.getBoundingClientRect().width+22):stage.clientWidth*0.6; stage.scrollBy({left:dir*amt,behavior:'smooth'}); }
+    if(prev) prev.addEventListener('click', function(){ step(-1); });
+    if(next) next.addEventListener('click', function(){ step(1); });
+    var dots=[].slice.call(wrap.querySelectorAll('[data-hgal-dot]'));
+    var itemsEls=[].slice.call(stage.querySelectorAll('[data-hgal-item]'));
+    function goTo(k){ var it=itemsEls[k]; if(!it) return; stage.scrollTo({left:it.offsetLeft-(stage.clientWidth-it.clientWidth)/2, behavior:'smooth'}); }
+    dots.forEach(function(d){ d.addEventListener('click', function(){ goTo(parseInt(d.getAttribute('data-hgal-dot'),10)); }); });
+    function updateActive(){ var c=stage.scrollLeft+stage.clientWidth/2, best=0, bd=1e9; itemsEls.forEach(function(it,k){ var ic=it.offsetLeft+it.clientWidth/2, dd=Math.abs(ic-c); if(dd<bd){ bd=dd; best=k; } }); dots.forEach(function(d,k){ d.classList.toggle('ds-active', k===best); }); }
+    if(dots.length){ stage.addEventListener('scroll', updateActive, {passive:true}); updateActive(); }
+  }
+  document.querySelectorAll('[data-hgal-wrap]').forEach(initHGal);
+})();
+</script>
+
+<script>
+(function(){
+  function initBA(el){
+    var after=el.querySelector('[data-ba-after]'), handle=el.querySelector('[data-ba-handle]');
+    var target=50, cur=50, raf=null;
+    function render(){ after.style.clipPath='inset(0 0 0 '+cur.toFixed(2)+'%)'; after.style.webkitClipPath='inset(0 0 0 '+cur.toFixed(2)+'%)'; handle.style.left=cur.toFixed(2)+'%'; }
+    function tick(){ cur+=(target-cur)*0.15; if(Math.abs(target-cur)<0.05) cur=target; render(); raf=(cur!==target)?requestAnimationFrame(tick):null; }
+    function kick(){ if(!raf) raf=requestAnimationFrame(tick); }
+    function to(p){ target=Math.max(2,Math.min(98,p)); kick(); }
+    after.style.transition='none'; after.style.webkitTransition='none'; handle.style.transition='none';
+    render();
+    el.addEventListener('mousemove',function(e){ var r=el.getBoundingClientRect(); to((e.clientX-r.left)/r.width*100); });
+    el.addEventListener('mouseleave',function(){ to(50); });
+    el.addEventListener('touchmove',function(e){ var r=el.getBoundingClientRect(); to((e.touches[0].clientX-r.left)/r.width*100); },{passive:true});
+  }
+  document.querySelectorAll('[data-ba]').forEach(initBA);
+  // reveal animation for .ds-ba-inner
+  var io=new IntersectionObserver(function(en){ en.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('ds-visible'); }); },{threshold:0.1});
+  document.querySelectorAll('.ds-ba-inner').forEach(function(el){ io.observe(el); });
+
+  // Figurine carousel
+  document.querySelectorAll('[data-toon]').forEach(function(sec){
+    var items=[].slice.call(sec.querySelectorAll('[data-toon-item]'));
+    var n=items.length; if(n===0) return;
+    var idx=0, anim=false;
+    var sc=parseFloat(sec.getAttribute('data-scale'))||1;
+    function apply(){
+      var center=idx, left=(idx+n-1)%n, right=(idx+1)%n, back=(idx+2)%n;
+      var mob=window.innerWidth<640;
+      items.forEach(function(it,i){
+        var role = i===center?'center' : i===left?'left' : i===right?'right' : i===back?'back' : 'hide';
+        if(role==='center'){ it.style.left='50%'; it.style.transform='translateX(-50%) scale('+((mob?1.25:1.68)*sc)+')'; it.style.filter='none'; it.style.opacity=1; it.style.zIndex=20; it.style.height=mob?'60%':'92%'; it.style.bottom=mob?'22%':'0'; }
+        else if(role==='left'){ it.style.left=mob?'20%':'30%'; it.style.transform='translateX(-50%) scale('+sc+')'; it.style.filter='blur(2px)'; it.style.opacity=0.85; it.style.zIndex=10; it.style.height=mob?'16%':'28%'; it.style.bottom=mob?'32%':'12%'; }
+        else if(role==='right'){ it.style.left=mob?'80%':'70%'; it.style.transform='translateX(-50%) scale('+sc+')'; it.style.filter='blur(2px)'; it.style.opacity=0.85; it.style.zIndex=10; it.style.height=mob?'16%':'28%'; it.style.bottom=mob?'32%':'12%'; }
+        else if(role==='back'){ it.style.left='50%'; it.style.transform='translateX(-50%) scale('+sc+')'; it.style.filter='blur(4px)'; it.style.opacity=1; it.style.zIndex=5; it.style.height=mob?'13%':'22%'; it.style.bottom=mob?'32%':'12%'; }
+        else { it.style.left='50%'; it.style.transform='translateX(-50%) scale(1)'; it.style.opacity=0; it.style.zIndex=1; it.style.height=mob?'13%':'22%'; it.style.bottom='12%'; }
+      });
+      var bg=items[center].getAttribute('data-bg'); if(bg) sec.style.setProperty('--toon-bg', bg);
+      // reset parallax on the previously-centered inner
+      items.forEach(function(it,i){ var im=it.firstElementChild; if(im){ im.style.transition='transform 650ms cubic-bezier(0.4,0,0.2,1)'; if(i!==center) im.style.transform=''; } });
+    }
+    // Subtle mouse parallax on the centered figure
+    var px=0,py=0,tx=0,ty=0,praf=null;
+    function ptick(){ px+=(tx-px)*0.08; py+=(ty-py)*0.08; var im=items[idx]&&items[idx].firstElementChild; if(im){ im.style.transition='transform 120ms ease-out'; im.style.transform='perspective(900px) rotateY('+(px*7).toFixed(2)+'deg) rotateX('+(-py*5).toFixed(2)+'deg) translate('+(px*14).toFixed(1)+'px,'+(py*10).toFixed(1)+'px)'; } if(Math.abs(tx-px)>0.001||Math.abs(ty-py)>0.001){ praf=requestAnimationFrame(ptick); } else { praf=null; } }
+    function pkick(){ if(!praf) praf=requestAnimationFrame(ptick); }
+    // Reveal of a second image on the centered figure (mask + soft bristle stamps)
+    var mode=(sec.getAttribute('data-reveal')||'brush').trim();
+    function makeOff(w,h){ var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+    var brushes=items.map(function(it){ var cv=it.querySelector('[data-toon-reveal]'); if(!cv) return null; var img=new Image(); var o={cv:cv,ctx:cv.getContext('2d'),img:img,ready:false,inner:it.querySelector('.ds-toon-inner'),a:0,at:0,px:null,py:null,stampReady:false}; img.onload=function(){ o.ready=true; o.stampReady=false; }; img.src=cv.getAttribute('data-img2'); return o; });
+    var hasBrush=brushes.some(function(b){ return !!b; });
+    function drawContain(ctx,img,W,H){ if(!img.width) return; var ir=img.width/img.height,dw,dh; if(ir>W/H){ dw=W; dh=W/ir; } else { dh=H; dw=H*ir; } ctx.drawImage(img,(W-dw)/2,H-dh,dw,dh); }
+    function sizeBrush(b){ if(!b) return; var w=b.inner.clientWidth,h=b.inner.clientHeight; if(!w||!h) return; if(b.cv.width!==w||b.cv.height!==h||!b.mask){ b.cv.width=w; b.cv.height=h; b.stamp=makeOff(w,h); b.mask=makeOff(w,h); b.sctx=b.stamp.getContext('2d'); b.mctx=b.mask.getContext('2d'); b.stampReady=false; } }
+    function ensureStamp(b){ if(b&&b.ready&&!b.stampReady&&b.sctx){ b.sctx.clearRect(0,0,b.stamp.width,b.stamp.height); drawContain(b.sctx,b.img,b.stamp.width,b.stamp.height); b.stampReady=true; } }
+    function softDab(mctx,x,y,rad,alpha){ var g=mctx.createRadialGradient(x,y,0,x,y,rad); g.addColorStop(0,'rgba(255,255,255,'+alpha+')'); g.addColorStop(0.55,'rgba(255,255,255,'+(alpha*0.55)+')'); g.addColorStop(1,'rgba(255,255,255,0)'); mctx.fillStyle=g; mctx.beginPath(); mctx.arc(x,y,rad,0,7); mctx.fill(); }
+    // bristle cluster: several scattered soft dabs along the stroke direction
+    function dab(b,x,y){ if(!b||!b.mctx) return; var W=b.cv.width; var base=W*0.13; var dx=(b.px==null?0:x-b.px), dy=(b.py==null?0:y-b.py); var ang=Math.atan2(dy,dx); var nx=Math.cos(ang+1.5708), ny=Math.sin(ang+1.5708); var m=b.mctx; m.globalCompositeOperation='source-over'; var k=7; for(var i=0;i<k;i++){ var t=(i/(k-1)-0.5); var off=t*base*1.7; var jx=(Math.random()-0.5)*base*0.5, jy=(Math.random()-0.5)*base*0.5; softDab(m, x+nx*off+jx, y+ny*off+jy, base*(0.4+Math.random()*0.5), 0.5+Math.random()*0.4); } b.px=x; b.py=y; }
+    function render(b){ if(!b) return; ensureStamp(b); var c=b.ctx,W=b.cv.width,H=b.cv.height; c.clearRect(0,0,W,H); if(!b.stampReady) return; c.globalCompositeOperation='source-over'; c.drawImage(b.stamp,0,0); c.globalCompositeOperation='destination-in'; c.drawImage(b.mask,0,0); c.globalCompositeOperation='source-over'; }
+    function toXY(b,cx,cy){ var r=b.cv.getBoundingClientRect(); return {x:(cx-r.left)/r.width*b.cv.width, y:(cy-r.top)/r.height*b.cv.height}; }
+    function clearMask(b){ if(b&&b.mctx){ b.mctx.clearRect(0,0,b.cv.width,b.cv.height); b.px=null; b.py=null; } }
+    function clearBrushes(){ brushes.forEach(function(b){ if(b){ clearMask(b); b.a=0; b.at=0; b.ctx.clearRect(0,0,b.cv.width,b.cv.height); } }); }
+    function stamp(b,cx,cy){ if(!b||!b.ready) return; var p=toXY(b,cx,cy); dab(b,p.x,p.y); render(b); }
+    function spotlight(b,cx,cy){ if(!b||!b.ready||!b.mctx) return; clearMask(b); var p=toXY(b,cx,cy); var rad=b.cv.width*0.22, m=b.mctx; m.globalCompositeOperation='source-over'; m.fillStyle='rgba(255,255,255,1)'; m.beginPath(); m.arc(p.x,p.y,rad,0,7); m.fill(); render(b); }
+    function wipeTo(b,cx){ if(!b||!b.ready||!b.mctx) return; var p=toXY(b,cx,0); var m=b.mctx,W=b.cv.width,H=b.cv.height; m.clearRect(0,0,W,H); var edge=W*0.06; var grd=m.createLinearGradient(Math.max(0,p.x-edge),0,p.x,0); grd.addColorStop(0,'rgba(255,255,255,1)'); grd.addColorStop(1,'rgba(255,255,255,0)'); m.fillStyle='rgba(255,255,255,1)'; m.fillRect(0,0,Math.max(0,p.x-edge),H); m.fillStyle=grd; m.fillRect(Math.max(0,p.x-edge),0,edge,H); render(b); }
+    var draf=null; function dtick(){ var any=false; brushes.forEach(function(b){ if(!b||!b.mctx) return; b.a+=(b.at-b.a)*0.12; if(Math.abs(b.at-b.a)<0.01){ b.a=b.at; } else { any=true; } b.mctx.clearRect(0,0,b.cv.width,b.cv.height); b.mctx.fillStyle='rgba(255,255,255,'+b.a+')'; b.mctx.fillRect(0,0,b.cv.width,b.cv.height); render(b); }); if(any){ draf=requestAnimationFrame(dtick); } else { draf=null; } }
+    function dkick(){ if(mode==='dissolve' && !draf) draf=requestAnimationFrame(dtick); }
+    var fadeRaf=null; function fade(){ brushes.forEach(function(b){ if(!b||!b.mctx) return; b.mctx.globalCompositeOperation='destination-out'; b.mctx.fillStyle='rgba(0,0,0,0.045)'; b.mctx.fillRect(0,0,b.cv.width,b.cv.height); b.mctx.globalCompositeOperation='source-over'; render(b); }); fadeRaf=requestAnimationFrame(fade); }
+    if(hasBrush && mode==='brush'){ fade(); }
+    if(hasBrush){ window.addEventListener('resize', function(){ brushes.forEach(function(b){ sizeBrush(b); }); }, {passive:true}); }
+    sec.addEventListener('mousemove', function(e){ if(anim) return; var r=sec.getBoundingClientRect(); tx=((e.clientX-r.left)/r.width-0.5)*2; ty=((e.clientY-r.top)/r.height-0.5)*2; pkick(); if(hasBrush){ var b=brushes[idx]; sizeBrush(b); if(mode==='spotlight'){ spotlight(b,e.clientX,e.clientY); } else if(mode==='wipe'){ wipeTo(b,e.clientX); } else if(mode==='dissolve'){ if(b){ b.at=1; } dkick(); } else { stamp(b,e.clientX,e.clientY); } } });
+    sec.addEventListener('mouseleave', function(){ tx=0; ty=0; pkick(); if(hasBrush){ var b=brushes[idx]; if(b) b.px=null; if(mode==='spotlight'||mode==='wipe'||mode==='scratch'){ clearMask(b); render(b); } else if(mode==='dissolve'){ if(b){ b.at=0; } dkick(); } } });
+    function nav(dir){ if(anim){return;} anim=true; idx = dir==='next' ? (idx+1)%n : (idx+n-1)%n; apply(); if(hasBrush){ clearBrushes(); sizeBrush(brushes[idx]); } setTimeout(function(){ anim=false; }, 650); }
+    var prev=sec.querySelector('[data-toon-prev]'), next=sec.querySelector('[data-toon-next]');
+    if(prev) prev.addEventListener('click', function(){ nav('prev'); });
+    if(next) next.addEventListener('click', function(){ nav('next'); });
+    window.addEventListener('resize', apply, {passive:true});
+    apply();
+    if(hasBrush){ setTimeout(function(){ brushes.forEach(sizeBrush); }, 80); }
+  });
+})();
+</script>
+
+<script>
+{% if section.settings.enable_mouse_motion %}
+(function(){
+  if(!window.matchMedia || !window.matchMedia('(pointer:fine)').matches) return;
+  var root = document.getElementById('dynaeimic-story-{{ section.id }}');
+  if(!root) return;
+
+  // Hero content parallax
+  root.querySelectorAll('.ds-hero').forEach(function(hero){
+    var content = hero.querySelector('.ds-hero-content');
+    if(!content) return;
+    var tx=0,ty=0,cx=0,cy=0,raf=null;
+    function tick(){
+      cx+=(tx-cx)*0.08; cy+=(ty-cy)*0.08;
+      content.style.transform='translate('+cx.toFixed(2)+'px,'+cy.toFixed(2)+'px)';
+      raf=(Math.abs(tx-cx)>0.1||Math.abs(ty-cy)>0.1)?requestAnimationFrame(tick):null;
+    }
+    function kick(){ if(!raf) raf=requestAnimationFrame(tick); }
+    hero.addEventListener('mousemove',function(e){
+      var r=hero.getBoundingClientRect();
+      tx=((e.clientX-r.left)/r.width-0.5)*26;
+      ty=((e.clientY-r.top)/r.height-0.5)*26;
+      kick();
+    });
+    hero.addEventListener('mouseleave',function(){ tx=0; ty=0; kick(); });
+  });
+
+  // Pinned caption cards drift
+  root.querySelectorAll('[data-pin-stage]').forEach(function(stage){
+    var cards=[].slice.call(stage.querySelectorAll('[data-pin-text]'));
+    if(!cards.length) return;
+    var tx=0,ty=0,cx=0,cy=0,raf=null;
+    function tick(){
+      cx+=(tx-cx)*0.07; cy+=(ty-cy)*0.07;
+      cards.forEach(function(c,i){
+        var depth=10+(i%3)*8;
+        c.style.setProperty('--mx',(cx*depth).toFixed(2)+'px');
+        c.style.setProperty('--my',(cy*depth).toFixed(2)+'px');
+      });
+      raf=(Math.abs(tx-cx)>0.001||Math.abs(ty-cy)>0.001)?requestAnimationFrame(tick):null;
+    }
+    function kick(){ if(!raf) raf=requestAnimationFrame(tick); }
+    stage.addEventListener('mousemove',function(e){
+      var r=stage.getBoundingClientRect();
+      tx=((e.clientX-r.left)/r.width-0.5)*2;
+      ty=((e.clientY-r.top)/r.height-0.5)*2;
+      kick();
+    });
+    stage.addEventListener('mouseleave',function(){ tx=0; ty=0; kick(); });
+  });
+})();
+{% endif %}
+</script>
+
+
+<script>
+(function(){
+  var btn=document.getElementById('ds-top-btn-{{ section.id }}');
+  if(!btn) return;
+  btn.addEventListener('click',function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+  function onScroll(){ btn.classList.toggle('ds-show',(window.scrollY||0)>window.innerHeight*0.6); }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Story Sequence",
+  "tag": "section",
+  "class": "dynaeimic-story-wrapper",
+  "max_blocks": 30,
+  "settings": [
+
+    { "type": "header", "content": "Back to top button" },
+    { "type": "checkbox", "id": "show_top_btn", "label": "Show back-to-top button", "default": true },
+
+    { "type": "header", "content": "Motion" },
+    { "type": "checkbox", "id": "enable_mouse_motion", "label": "Mouse-movement parallax (desktop)", "info": "Hero content and pinned captions drift gently with the cursor.", "default": true },
+
+    { "type": "header", "content": "Light / Dark mode" },
+    { "type": "select", "id": "theme_mode", "label": "Theme mode", "options": [{ "value": "auto", "label": "Auto (by time of day)" }, { "value": "light", "label": "Always light" }, { "value": "dark", "label": "Always dark" }], "default": "auto" },
+    { "type": "range", "id": "day_start_hour", "label": "Light mode starts at", "min": 0, "max": 23, "step": 1, "unit": "h", "default": 7 },
+    { "type": "range", "id": "night_start_hour", "label": "Dark mode starts at", "min": 0, "max": 23, "step": 1, "unit": "h", "default": 19 },
+
+    { "type": "header", "content": "Colors — Dark" },
+    { "type": "color", "id": "bg_color", "label": "Background color", "default": "#000000" },
+    { "type": "color", "id": "bg_alt_color", "label": "Alternate section background", "default": "#101010" },
+    { "type": "color", "id": "text_color", "label": "Text color", "default": "#f5f5f7" },
+    { "type": "color", "id": "accent_color", "label": "Accent color (buttons, links)", "default": "#2997ff" },
+
+    { "type": "header", "content": "Colors — Light" },
+    { "type": "color", "id": "light_bg_color", "label": "Background color", "default": "#ffffff" },
+    { "type": "color", "id": "light_bg_alt_color", "label": "Alternate section background", "default": "#f5f5f7" },
+    { "type": "color", "id": "light_text_color", "label": "Text color", "default": "#1d1d1f" },
+    { "type": "color", "id": "light_accent_color", "label": "Accent color (buttons, links)", "default": "#0071e3" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "playfair_display_n7" },
+    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "assistant_n4" },
+    { "type": "range", "id": "heading_scale", "label": "Heading size", "min": 60, "max": 160, "step": 5, "unit": "%", "default": 100 },
+    { "type": "range", "id": "body_scale", "label": "Body size", "min": 60, "max": 160, "step": 5, "unit": "%", "default": 100 },
+
+    { "type": "paragraph", "content": "Add, remove, and drag to reorder the sections below (Hero, Story step, Pinned video, Call to action)." }
+  ],
+  "blocks": [
+    {
+      "type": "hero", "name": "Hero", "limit": 1,
+      "settings": [
+        { "type": "select", "id": "hero_layout", "label": "Layout", "options": [{ "value": "glass", "label": "Glass box (centered)" }, { "value": "minimal", "label": "Minimal full-bleed — title top, buttons bottom" }], "default": "glass" },
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow text", "default": "DYNAEIMIC — Custom Personalization" },
+        { "type": "text", "id": "title_line1", "label": "Title line 1", "default": "Made for" },
+        { "type": "text", "id": "title_line2", "label": "Title line 2 (accent)", "default": "your moment." },
+        { "type": "textarea", "id": "subtitle", "label": "Subtitle", "default": "Every piece we create starts as a vision. It ends as something you'll never forget." },
+        { "type": "text", "id": "cta_label", "label": "Button label", "default": "See our work" },
+        { "type": "url", "id": "cta_url", "label": "Button link" },
+        { "type": "text", "id": "cta2_label", "label": "Second button label (minimal layout)" },
+        { "type": "url", "id": "cta2_url", "label": "Second button link" },
+        { "type": "header", "content": "Font sizes (px)" },
+        { "type": "range", "id": "hero_eyebrow_size", "label": "Eyebrow size", "min": 8, "max": 40, "step": 1, "unit": "px", "default": 12 },
+        { "type": "range", "id": "hero_title_size", "label": "Title size", "min": 24, "max": 140, "step": 2, "unit": "px", "default": 72 },
+        { "type": "range", "id": "hero_sub_size", "label": "Subtitle size", "min": 12, "max": 48, "step": 1, "unit": "px", "default": 20 },
+        { "type": "range", "id": "hero_btn_size", "label": "Button size", "min": 10, "max": 32, "step": 1, "unit": "px", "default": 15 },
+        { "type": "select", "id": "hero_align", "label": "Content position", "options": [{ "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "center" },
+        { "type": "header", "content": "Box behind text" },
+        { "type": "checkbox", "id": "box_on", "label": "Show box", "default": true },
+        { "type": "color", "id": "box_color", "label": "Box color", "default": "#ffffff" },
+        { "type": "range", "id": "box_opacity", "label": "Box opacity", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 10 },
+        { "type": "range", "id": "box_blur", "label": "Frosted blur", "min": 0, "max": 30, "step": 1, "unit": "px", "default": 16 },
+        { "type": "range", "id": "box_radius", "label": "Corner roundness", "min": 0, "max": 48, "step": 2, "unit": "px", "default": 28 },
+        { "type": "range", "id": "box_padding", "label": "Padding", "min": 0, "max": 72, "step": 4, "unit": "px", "default": 44 },
+        { "type": "checkbox", "id": "box_border", "label": "Border", "default": true },
+        { "type": "header", "content": "Section size" },
+        { "type": "range", "id": "sec_height", "label": "Section height", "min": 40, "max": 120, "step": 5, "unit": "vh", "default": 100 },
+        { "type": "range", "id": "sec_width", "label": "Content width", "min": 480, "max": 1600, "step": 20, "unit": "px", "default": 760 },
+        { "type": "text", "id": "hero_video", "label": "Background video URL (MP4)", "info": "Upload in Admin → Content → Files, paste the CDN URL." },
+        { "type": "select", "id": "hero_video_mode", "label": "Background video playback", "options": [{ "value": "loop", "label": "Autoplay & loop" }, { "value": "once", "label": "Autoplay once, stop at end" }, { "value": "play", "label": "Play to end on scroll-in" }, { "value": "scrub", "label": "Scrub with scroll" }, { "value": "playrewind", "label": "Play forward, rewind on scroll-up" }], "default": "loop" },
+        { "type": "image_picker", "id": "hero_image", "label": "Background image (if no video)" }
+      ]
+    },
+    {
+      "type": "story_step", "name": "Story step",
+      "settings": [
+        { "type": "textarea", "id": "headline", "label": "Headline (use <em>word</em> for accent)", "default": "Your headline\nwith an <em>accent.</em>" },
+        { "type": "textarea", "id": "body", "label": "Body text", "default": "Describe this step of your story here." },
+        { "type": "header", "content": "Font sizes (px)" },
+        { "type": "range", "id": "story_head_size", "label": "Headline size", "min": 20, "max": 100, "step": 2, "unit": "px", "default": 44 },
+        { "type": "range", "id": "story_body_size", "label": "Body size", "min": 12, "max": 40, "step": 1, "unit": "px", "default": 17 },
+        { "type": "range", "id": "story_chip_size", "label": "Chip label size", "min": 8, "max": 24, "step": 1, "unit": "px", "default": 10 },
+        { "type": "header", "content": "Box behind text" },
+        { "type": "checkbox", "id": "box_on", "label": "Show box", "default": true },
+        { "type": "color", "id": "box_color", "label": "Box color", "default": "#ffffff" },
+        { "type": "range", "id": "box_opacity", "label": "Box opacity", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 10 },
+        { "type": "range", "id": "box_blur", "label": "Frosted blur", "min": 0, "max": 30, "step": 1, "unit": "px", "default": 18 },
+        { "type": "range", "id": "box_radius", "label": "Corner roundness", "min": 0, "max": 48, "step": 2, "unit": "px", "default": 24 },
+        { "type": "range", "id": "box_padding", "label": "Padding", "min": 0, "max": 72, "step": 4, "unit": "px", "default": 44 },
+        { "type": "checkbox", "id": "box_border", "label": "Border", "default": true },
+        { "type": "header", "content": "Section size" },
+        { "type": "range", "id": "sec_height", "label": "Section height", "min": 40, "max": 120, "step": 5, "unit": "vh", "default": 100 },
+        { "type": "range", "id": "sec_width", "label": "Content width", "min": 480, "max": 1600, "step": 20, "unit": "px", "default": 1200 },
+        { "type": "header", "content": "Layout" },
+        { "type": "checkbox", "id": "show_text", "label": "Show text panel", "info": "Turn off for a video-only section.", "default": true },
+        { "type": "checkbox", "id": "show_media", "label": "Show media panel", "info": "Turn off for a text-only section (keeps your media URLs saved).", "default": true },
+        { "type": "select", "id": "media_ratio", "label": "Media shape (all videos)", "options": [{ "value": "1/1", "label": "Square (1:1)" }, { "value": "4/5", "label": "Portrait tall (4:5)" }, { "value": "3/4", "label": "Portrait taller (3:4)" }, { "value": "16/9", "label": "Landscape wide (16:9)" }, { "value": "4/3", "label": "Landscape classic (4:3)" }, { "value": "9/16", "label": "Vertical story (9:16)" }], "default": "4/5" },
+        { "type": "range", "id": "media_gap", "label": "Gap between items", "min": 0, "max": 10, "step": 1, "unit": "rem", "default": 5 },
+        { "type": "range", "id": "text_col", "label": "Text width", "min": 1, "max": 100, "step": 1, "unit": "fr", "default": 50 },
+        { "type": "range", "id": "text_order", "label": "Text position (1 = first … 4 = last)", "min": 1, "max": 4, "step": 1, "default": 1 },
+        { "type": "paragraph", "content": "Add up to 3 videos/photos. Set each item's Position to arrange them left→right; put the Text position between them if you like. Leave a media blank to skip it." },
+        { "type": "header", "content": "Media 1" },
+        { "type": "checkbox", "id": "m1_on", "label": "Show media 1", "default": true },
+        { "type": "text", "id": "m1_video", "label": "Video URL (MP4)", "info": "Upload in Admin → Content → Files, paste the CDN URL." },
+        { "type": "image_picker", "id": "m1_image", "label": "Photo (if no video)" },
+        { "type": "select", "id": "m1_mode", "label": "Playback", "options": [{ "value": "loop", "label": "Autoplay & loop" }, { "value": "once", "label": "Autoplay once, stop at end" }, { "value": "play", "label": "Play to end on scroll-in" }, { "value": "scrub", "label": "Scrub with scroll" }, { "value": "playrewind", "label": "Play forward, rewind on scroll-up" }], "default": "scrub" },
+        { "type": "range", "id": "m1_w", "label": "Width", "min": 1, "max": 100, "step": 1, "unit": "fr", "default": 50 },
+        { "type": "range", "id": "m1_order", "label": "Position (1 = first … 4 = last)", "min": 1, "max": 4, "step": 1, "default": 2 },
+        { "type": "text", "id": "m1_text", "label": "Text on media 1" },
+        { "type": "select", "id": "m1_text_pos", "label": "Text position", "options": [{ "value": "top", "label": "Top" }, { "value": "center", "label": "Center" }, { "value": "bottom", "label": "Bottom" }], "default": "bottom" },
+        { "type": "header", "content": "Media 2 (optional)" },
+        { "type": "checkbox", "id": "m2_on", "label": "Show media 2", "default": true },
+        { "type": "text", "id": "m2_video", "label": "Video URL (MP4)" },
+        { "type": "image_picker", "id": "m2_image", "label": "Photo (if no video)" },
+        { "type": "select", "id": "m2_mode", "label": "Playback", "options": [{ "value": "loop", "label": "Autoplay & loop" }, { "value": "once", "label": "Autoplay once, stop at end" }, { "value": "play", "label": "Play to end on scroll-in" }, { "value": "scrub", "label": "Scrub with scroll" }, { "value": "playrewind", "label": "Play forward, rewind on scroll-up" }], "default": "scrub" },
+        { "type": "range", "id": "m2_w", "label": "Width", "min": 1, "max": 100, "step": 1, "unit": "fr", "default": 50 },
+        { "type": "range", "id": "m2_order", "label": "Position (1 = first … 4 = last)", "min": 1, "max": 4, "step": 1, "default": 3 },
+        { "type": "text", "id": "m2_text", "label": "Text on media 2" },
+        { "type": "select", "id": "m2_text_pos", "label": "Text position", "options": [{ "value": "top", "label": "Top" }, { "value": "center", "label": "Center" }, { "value": "bottom", "label": "Bottom" }], "default": "bottom" },
+        { "type": "header", "content": "Media 3 (optional)" },
+        { "type": "checkbox", "id": "m3_on", "label": "Show media 3", "default": true },
+        { "type": "text", "id": "m3_video", "label": "Video URL (MP4)" },
+        { "type": "image_picker", "id": "m3_image", "label": "Photo (if no video)" },
+        { "type": "select", "id": "m3_mode", "label": "Playback", "options": [{ "value": "loop", "label": "Autoplay & loop" }, { "value": "once", "label": "Autoplay once, stop at end" }, { "value": "play", "label": "Play to end on scroll-in" }, { "value": "scrub", "label": "Scrub with scroll" }, { "value": "playrewind", "label": "Play forward, rewind on scroll-up" }], "default": "scrub" },
+        { "type": "range", "id": "m3_w", "label": "Width", "min": 1, "max": 100, "step": 1, "unit": "fr", "default": 50 },
+        { "type": "range", "id": "m3_order", "label": "Position (1 = first … 4 = last)", "min": 1, "max": 4, "step": 1, "default": 4 },
+        { "type": "text", "id": "m3_text", "label": "Text on media 3" },
+        { "type": "select", "id": "m3_text_pos", "label": "Text position", "options": [{ "value": "top", "label": "Top" }, { "value": "center", "label": "Center" }, { "value": "bottom", "label": "Bottom" }], "default": "bottom" },
+        { "type": "header", "content": "Chips (up to 5)" },
+        { "type": "text", "id": "chip1_icon", "label": "Chip 1 — emoji", "default": "✏️" },
+        { "type": "text", "id": "chip1_label", "label": "Chip 1 — label" },
+        { "type": "url", "id": "chip1_link", "label": "Chip 1 — link" },
+        { "type": "text", "id": "chip2_icon", "label": "Chip 2 — emoji" },
+        { "type": "text", "id": "chip2_label", "label": "Chip 2 — label" },
+        { "type": "url", "id": "chip2_link", "label": "Chip 2 — link" },
+        { "type": "text", "id": "chip3_icon", "label": "Chip 3 — emoji" },
+        { "type": "text", "id": "chip3_label", "label": "Chip 3 — label" },
+        { "type": "url", "id": "chip3_link", "label": "Chip 3 — link" },
+        { "type": "text", "id": "chip4_icon", "label": "Chip 4 — emoji" },
+        { "type": "text", "id": "chip4_label", "label": "Chip 4 — label" },
+        { "type": "url", "id": "chip4_link", "label": "Chip 4 — link" },
+        { "type": "text", "id": "chip5_icon", "label": "Chip 5 — emoji" },
+        { "type": "text", "id": "chip5_label", "label": "Chip 5 — label" },
+        { "type": "url", "id": "chip5_link", "label": "Chip 5 — link" }
+      ]
+    },
+    {
+      "type": "half", "name": "Half panel",
+      "settings": [
+        { "type": "select", "id": "half_type", "label": "This panel shows", "options": [{ "value": "text", "label": "Text" }, { "value": "media", "label": "Photo / video" }], "default": "text" },
+        { "type": "paragraph", "content": "Two neighbouring Half panels sit side by side (three = thirds). Pair a Text panel with a Media panel for a classic split." },
+        { "type": "range", "id": "sec_height", "label": "Panel height", "min": 40, "max": 120, "step": 5, "unit": "vh", "default": 90 },
+        { "type": "header", "content": "Text panel" },
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
+        { "type": "textarea", "id": "headline", "label": "Headline (use <em>word</em> for accent)", "default": "A bold\n<em>statement.</em>" },
+        { "type": "textarea", "id": "body", "label": "Body text", "default": "Describe this panel here." },
+        { "type": "range", "id": "head_size", "label": "Headline size", "min": 20, "max": 100, "step": 2, "unit": "px", "default": 44 },
+        { "type": "range", "id": "body_size", "label": "Body size", "min": 12, "max": 40, "step": 1, "unit": "px", "default": 17 },
+        { "type": "text", "id": "cta_label", "label": "Button label" },
+        { "type": "url", "id": "cta_url", "label": "Button link" },
+        { "type": "header", "content": "Box behind text" },
+        { "type": "checkbox", "id": "box_on", "label": "Show box", "default": true },
+        { "type": "color", "id": "box_color", "label": "Box color", "default": "#ffffff" },
+        { "type": "range", "id": "box_opacity", "label": "Box opacity", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 10 },
+        { "type": "range", "id": "box_blur", "label": "Frosted blur", "min": 0, "max": 30, "step": 1, "unit": "px", "default": 18 },
+        { "type": "range", "id": "box_radius", "label": "Corner roundness", "min": 0, "max": 48, "step": 2, "unit": "px", "default": 24 },
+        { "type": "range", "id": "box_padding", "label": "Padding", "min": 0, "max": 72, "step": 4, "unit": "px", "default": 44 },
+        { "type": "checkbox", "id": "box_border", "label": "Border", "default": true },
+        { "type": "header", "content": "Media panel" },
+        { "type": "text", "id": "media_video", "label": "Video URL (MP4)", "info": "Upload in Admin → Content → Files, paste the CDN URL." },
+        { "type": "image_picker", "id": "media_image", "label": "Photo (if no video)" },
+        { "type": "select", "id": "media_mode", "label": "Playback", "options": [{ "value": "loop", "label": "Autoplay & loop" }, { "value": "once", "label": "Autoplay once, stop at end" }, { "value": "play", "label": "Play to end on scroll-in" }, { "value": "scrub", "label": "Scrub with scroll" }, { "value": "playrewind", "label": "Play forward, rewind on scroll-up" }], "default": "loop" },
+        { "type": "select", "id": "media_ratio", "label": "Media shape", "options": [{ "value": "1/1", "label": "Square (1:1)" }, { "value": "4/5", "label": "Portrait tall (4:5)" }, { "value": "3/4", "label": "Portrait taller (3:4)" }, { "value": "16/9", "label": "Landscape wide (16:9)" }, { "value": "4/3", "label": "Landscape classic (4:3)" }, { "value": "9/16", "label": "Vertical story (9:16)" }], "default": "4/5" }
+      ]
+    },
+    {
+      "type": "marquee", "name": "Word marquee",
+      "settings": [
+        { "type": "text", "id": "mq_words", "label": "Words (comma separated)", "default": "Custom, Engraved, Personalized, Crafted" },
+        { "type": "text", "id": "mq_sep", "label": "Separator symbol", "default": "\u2726" },
+        { "type": "range", "id": "mq_size", "label": "Text size", "min": 30, "max": 160, "step": 2, "unit": "px", "default": 96 },
+        { "type": "range", "id": "mq_speed", "label": "Scroll duration (lower = faster)", "min": 8, "max": 60, "step": 2, "unit": "s", "default": 26 },
+        { "type": "checkbox", "id": "mq_alt", "label": "Alternate background shade", "default": true }
+      ]
+    },
+    {
+      "type": "beforeafter", "name": "Before / After slider",
+      "settings": [
+        { "type": "text", "id": "ba_heading", "label": "Heading", "default": "See the difference." },
+        { "type": "range", "id": "ba_head_size", "label": "Heading size", "min": 20, "max": 100, "step": 2, "unit": "px", "default": 44 },
+        { "type": "textarea", "id": "ba_sub", "label": "Subtitle", "default": "Drag the handle to compare before and after." },
+        { "type": "image_picker", "id": "ba_before", "label": "Before image" },
+        { "type": "image_picker", "id": "ba_after", "label": "After image" },
+        { "type": "text", "id": "ba_before_label", "label": "Before label", "default": "Before" },
+        { "type": "text", "id": "ba_after_label", "label": "After label", "default": "After" },
+        { "type": "select", "id": "ba_ratio", "label": "Shape", "options": [{ "value": "16/10", "label": "Landscape (16:10)" }, { "value": "16/9", "label": "Wide (16:9)" }, { "value": "4/3", "label": "Classic (4:3)" }, { "value": "1/1", "label": "Square (1:1)" }, { "value": "3/4", "label": "Portrait (3:4)" }], "default": "16/10" },
+        { "type": "range", "id": "ba_width", "label": "Width", "min": 400, "max": 1400, "step": 20, "unit": "px", "default": 1080 },
+        { "type": "header", "content": "Side text (optional)" },
+        { "type": "select", "id": "ba_side_pos", "label": "Text position", "options": [{ "value": "none", "label": "None" }, { "value": "left", "label": "Left of slider" }, { "value": "right", "label": "Right of slider" }], "default": "none" },
+        { "type": "text", "id": "ba_side_heading", "label": "Side heading", "default": "Before & after" },
+        { "type": "textarea", "id": "ba_side_body", "label": "Side text", "default": "Move your cursor across to see the transformation." }
+      ]
+    },
+    {
+      "type": "gallery", "name": "Horizontal gallery",
+      "settings": [
+        { "type": "text", "id": "gal_title", "label": "Heading", "default": "Take a closer look." },
+        { "type": "checkbox", "id": "gal_arrows", "label": "Show prev/next arrows", "default": true },
+        { "type": "checkbox", "id": "gal_dots", "label": "Show thumbnail dots", "default": true },
+        { "type": "select", "id": "gal_ratio", "label": "Image shape", "options": [{ "value": "3/4", "label": "Portrait (3:4)" }, { "value": "4/5", "label": "Portrait tall (4:5)" }, { "value": "1/1", "label": "Square (1:1)" }, { "value": "4/3", "label": "Landscape (4:3)" }, { "value": "16/9", "label": "Wide (16:9)" }], "default": "3/4" },
+        { "type": "range", "id": "gal_height_vh", "label": "Gallery height", "min": 60, "max": 100, "step": 5, "unit": "vh", "default": 100 },
+        { "type": "range", "id": "gal_step_vh", "label": "Scroll length per image", "min": 30, "max": 120, "step": 10, "unit": "vh", "default": 60 },
+        { "type": "paragraph", "content": "Add up to 8 images or videos. Visitors move through them with a two-finger swipe, touch swipe, or click-drag." },
+        { "type": "header", "content": "Image 1" },
+        { "type": "image_picker", "id": "g1_image", "label": "Image 1" },
+        { "type": "text", "id": "g1_video", "label": "Or video URL (MP4)" },
+        { "type": "text", "id": "g1_title", "label": "Caption title" },
+        { "type": "text", "id": "g1_sub", "label": "Caption text" },
+        { "type": "header", "content": "Image 2 (optional)" },
+        { "type": "image_picker", "id": "g2_image", "label": "Image 2" },
+        { "type": "text", "id": "g2_video", "label": "Or video URL (MP4)" },
+        { "type": "text", "id": "g2_title", "label": "Caption title" },
+        { "type": "text", "id": "g2_sub", "label": "Caption text" },
+        { "type": "header", "content": "Image 3 (optional)" },
+        { "type": "image_picker", "id": "g3_image", "label": "Image 3" },
+        { "type": "text", "id": "g3_video", "label": "Or video URL (MP4)" },
+        { "type": "text", "id": "g3_title", "label": "Caption title" },
+        { "type": "text", "id": "g3_sub", "label": "Caption text" },
+        { "type": "header", "content": "Image 4 (optional)" },
+        { "type": "image_picker", "id": "g4_image", "label": "Image 4" },
+        { "type": "text", "id": "g4_video", "label": "Or video URL (MP4)" },
+        { "type": "text", "id": "g4_title", "label": "Caption title" },
+        { "type": "text", "id": "g4_sub", "label": "Caption text" },
+        { "type": "header", "content": "Image 5 (optional)" },
+        { "type": "image_picker", "id": "g5_image", "label": "Image 5" },
+        { "type": "text", "id": "g5_video", "label": "Or video URL (MP4)" },
+        { "type": "text", "id": "g5_title", "label": "Caption title" },
+        { "type": "text", "id": "g5_sub", "label": "Caption text" },
+        { "type": "header", "content": "Image 6 (optional)" },
+        { "type": "image_picker", "id": "g6_image", "label": "Image 6" },
+        { "type": "text", "id": "g6_video", "label": "Or video URL (MP4)" },
+        { "type": "text", "id": "g6_title", "label": "Caption title" },
+        { "type": "text", "id": "g6_sub", "label": "Caption text" },
+        { "type": "header", "content": "Image 7 (optional)" },
+        { "type": "image_picker", "id": "g7_image", "label": "Image 7" },
+        { "type": "text", "id": "g7_video", "label": "Or video URL (MP4)" },
+        { "type": "text", "id": "g7_title", "label": "Caption title" },
+        { "type": "text", "id": "g7_sub", "label": "Caption text" },
+        { "type": "header", "content": "Image 8 (optional)" },
+        { "type": "image_picker", "id": "g8_image", "label": "Image 8" },
+        { "type": "text", "id": "g8_video", "label": "Or video URL (MP4)" },
+        { "type": "text", "id": "g8_title", "label": "Caption title" },
+        { "type": "text", "id": "g8_sub", "label": "Caption text" }
+      ]
+    },
+    {
+      "type": "pinned", "name": "Pinned video story",
+      "settings": [
+        { "type": "text", "id": "pin_video", "label": "Video URL (MP4) — scrubbed while pinned", "info": "Upload in Admin → Content → Files, paste the CDN URL." },
+        { "type": "image_picker", "id": "pin_image", "label": "Image (if no video)" },
+        { "type": "range", "id": "pin_step_vh", "label": "Scroll length per text", "min": 60, "max": 140, "step": 10, "unit": "vh", "default": 90 },
+        { "type": "range", "id": "pin_smooth", "label": "Scroll smoothing", "info": "Higher = smoother, more floaty video (video eases into position). Lower = tighter, snappier tracking.", "min": 0, "max": 95, "step": 5, "default": 70 },
+        { "type": "header", "content": "Video size" },
+        { "type": "range", "id": "pin_height_vh", "label": "Video height", "min": 50, "max": 100, "step": 5, "unit": "vh", "default": 100 },
+        { "type": "select", "id": "pin_fit", "label": "Fit", "options": [{ "value": "cover", "label": "Cover (fill, may crop)" }, { "value": "contain", "label": "Contain (show whole video)" }], "default": "cover" },
+        { "type": "range", "id": "pin_max_width", "label": "Video width", "min": 50, "max": 100, "step": 5, "unit": "%", "default": 100 },
+        { "type": "header", "content": "Box behind text" },
+        { "type": "checkbox", "id": "box_on", "label": "Show box", "default": true },
+        { "type": "color", "id": "box_color", "label": "Box color", "default": "#0a0705" },
+        { "type": "range", "id": "box_opacity", "label": "Box opacity", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 60 },
+        { "type": "range", "id": "box_blur", "label": "Frosted blur", "min": 0, "max": 30, "step": 1, "unit": "px", "default": 7 },
+        { "type": "range", "id": "box_radius", "label": "Corner roundness", "min": 0, "max": 48, "step": 2, "unit": "px", "default": 18 },
+        { "type": "range", "id": "box_padding", "label": "Padding", "min": 0, "max": 72, "step": 4, "unit": "px", "default": 24 },
+        { "type": "checkbox", "id": "box_border", "label": "Border", "default": true },
+        { "type": "header", "content": "Caption font sizes (px)" },
+        { "type": "range", "id": "pin_head_size", "label": "Caption headline size", "min": 18, "max": 90, "step": 2, "unit": "px", "default": 36 },
+        { "type": "range", "id": "pin_body_size", "label": "Caption body size", "min": 12, "max": 40, "step": 1, "unit": "px", "default": 16 },
+        { "type": "text", "id": "head_1", "label": "Text 1 — headline", "default": "Engraved by hand" },
+        { "type": "textarea", "id": "body_1", "label": "Text 1 — body" },
+        { "type": "range", "id": "x_1", "label": "Text 1 — X position", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 22 },
+        { "type": "range", "id": "y_1", "label": "Text 1 — Y position", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 32 },
+        { "type": "text", "id": "head_2", "label": "Text 2 — headline", "default": "Finished to perfection" },
+        { "type": "textarea", "id": "body_2", "label": "Text 2 — body" },
+        { "type": "range", "id": "x_2", "label": "Text 2 — X position", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 72 },
+        { "type": "range", "id": "y_2", "label": "Text 2 — Y position", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 24 },
+        { "type": "text", "id": "head_3", "label": "Text 3 — headline", "default": "Built to last" },
+        { "type": "textarea", "id": "body_3", "label": "Text 3 — body" },
+        { "type": "range", "id": "x_3", "label": "Text 3 — X position", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 24 },
+        { "type": "range", "id": "y_3", "label": "Text 3 — Y position", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 66 },
+        { "type": "text", "id": "head_4", "label": "Text 4 — headline", "default": "Made just for you" },
+        { "type": "textarea", "id": "body_4", "label": "Text 4 — body" },
+        { "type": "range", "id": "x_4", "label": "Text 4 — X position", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 70 },
+        { "type": "range", "id": "y_4", "label": "Text 4 — Y position", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 70 },
+        { "type": "text", "id": "head_5", "label": "Text 5 — headline", "default": "Ready for the moment" },
+        { "type": "textarea", "id": "body_5", "label": "Text 5 — body" },
+        { "type": "range", "id": "x_5", "label": "Text 5 — X position", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 46 },
+        { "type": "range", "id": "y_5", "label": "Text 5 — Y position", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 46 }
+      ]
+    },
+    {
+      "type": "cta", "name": "Call to action", "limit": 1,
+      "settings": [
+        { "type": "checkbox", "id": "cta_rainbow", "label": "Rainbow glow on buttons", "default": true },
+        { "type": "textarea", "id": "headline", "label": "Headline", "default": "Your idea\ndeserves to exist." },
+        { "type": "textarea", "id": "subtitle", "label": "Subtitle", "default": "Start your order today and we'll bring it to life — designed, crafted, and delivered right to your door." },
+        { "type": "select", "id": "cta_align", "label": "Text alignment", "options": [{ "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "center" },
+        { "type": "color", "id": "cta_text_color", "label": "Text color (blank = theme)" },
+        { "type": "header", "content": "Font sizes (px)" },
+        { "type": "range", "id": "cta_head_size", "label": "Headline size", "min": 20, "max": 100, "step": 2, "unit": "px", "default": 46 },
+        { "type": "range", "id": "cta_sub_size", "label": "Subtitle size", "min": 12, "max": 40, "step": 1, "unit": "px", "default": 18 },
+        { "type": "range", "id": "cta_btn_size", "label": "Button size", "min": 10, "max": 32, "step": 1, "unit": "px", "default": 15 },
+        { "type": "text", "id": "primary_label", "label": "Primary button", "default": "Start your order" },
+        { "type": "url", "id": "primary_url", "label": "Primary button link" },
+        { "type": "text", "id": "secondary_label", "label": "Secondary button", "default": "Browse products" },
+        { "type": "url", "id": "secondary_url", "label": "Secondary button link" },
+        { "type": "header", "content": "Box behind text" },
+        { "type": "checkbox", "id": "box_on", "label": "Show box", "default": false },
+        { "type": "color", "id": "box_color", "label": "Box color", "default": "#ffffff" },
+        { "type": "range", "id": "box_opacity", "label": "Box opacity", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 10 },
+        { "type": "range", "id": "box_blur", "label": "Frosted blur", "min": 0, "max": 30, "step": 1, "unit": "px", "default": 14 },
+        { "type": "range", "id": "box_radius", "label": "Corner roundness", "min": 0, "max": 48, "step": 2, "unit": "px", "default": 24 },
+        { "type": "range", "id": "box_padding", "label": "Padding", "min": 0, "max": 72, "step": 4, "unit": "px", "default": 40 },
+        { "type": "checkbox", "id": "box_border", "label": "Border", "default": true },
+        { "type": "header", "content": "Section size" },
+        { "type": "range", "id": "sec_height", "label": "Section height", "min": 40, "max": 120, "step": 5, "unit": "vh", "default": 70 },
+        { "type": "range", "id": "sec_width", "label": "Content width", "min": 480, "max": 1600, "step": 20, "unit": "px", "default": 740 }
+      ]
+    },
+    {
+      "type": "categories", "name": "Categories",
+      "settings": [
+        { "type": "text", "id": "cats_title", "label": "Heading", "default": "Shop by category" },
+        { "type": "header", "content": "Category 1" },
+        { "type": "text", "id": "cat1_name", "label": "Name", "default": "face" },
+        { "type": "text", "id": "cat1_video", "label": "Video URL (MP4)", "info": "Upload in Admin → Content → Files, paste the CDN URL." },
+        { "type": "image_picker", "id": "cat1_image", "label": "Image (if no video)" },
+        { "type": "url", "id": "cat1_url", "label": "Link" },
+        { "type": "header", "content": "Category 2" },
+        { "type": "text", "id": "cat2_name", "label": "Name", "default": "beauty tools" },
+        { "type": "text", "id": "cat2_video", "label": "Video URL (MP4)" },
+        { "type": "image_picker", "id": "cat2_image", "label": "Image (if no video)" },
+        { "type": "url", "id": "cat2_url", "label": "Link" },
+        { "type": "header", "content": "Category 3" },
+        { "type": "text", "id": "cat3_name", "label": "Name", "default": "body" },
+        { "type": "text", "id": "cat3_video", "label": "Video URL (MP4)" },
+        { "type": "image_picker", "id": "cat3_image", "label": "Image (if no video)" },
+        { "type": "url", "id": "cat3_url", "label": "Link" }
+      ]
+    },
+    {
+      "type": "toon", "name": "Figurine carousel",
+      "settings": [
+        { "type": "paragraph", "content": "A rotating 3-up carousel with a giant ghost word behind the figures. Add up to 4 images; each can set its own background color." },
+        { "type": "text", "id": "toon_ghost", "label": "Giant background word", "info": "Leave blank for none." },
+        { "type": "range", "id": "toon_size", "label": "Figure size", "min": 50, "max": 150, "step": 5, "unit": "%", "default": 100 },
+        { "type": "select", "id": "toon_reveal_style", "label": "Reveal style (2nd image)", "options": [{ "value": "brush", "label": "Brush — strokes fade back" }, { "value": "scratch", "label": "Scratch — strokes stay" }, { "value": "spotlight", "label": "Spotlight — circle follows cursor" }, { "value": "wipe", "label": "Wipe — slides in from left" }, { "value": "dissolve", "label": "Dissolve — crossfade on hover" }], "default": "brush" },
+        { "type": "text", "id": "toon_brand", "label": "Top-left label", "default": "TOONHUB" },
+        { "type": "text", "id": "toon_title", "label": "Bottom heading", "default": "TOONHUB FIGURINES" },
+        { "type": "textarea", "id": "toon_body", "label": "Bottom text", "default": "The artwork is stunning, shipped fully prepared. The 3D craft is flawless. Order now." },
+        { "type": "text", "id": "toon_link_label", "label": "Corner link label", "default": "DISCOVER IT" },
+        { "type": "url", "id": "toon_link_url", "label": "Corner link URL" },
+        { "type": "header", "content": "Figure 1" },
+        { "type": "range", "id": "toon1_order", "label": "Order", "min": 1, "max": 10, "step": 1, "default": 1 },
+        { "type": "image_picker", "id": "toon1_image", "label": "Image (transparent PNG works best)" },
+        { "type": "image_picker", "id": "toon1_image2", "label": "Reveal image (brush to show)" },
+        { "type": "color", "id": "toon1_bg", "label": "Background color", "default": "#F4845F" },
+        { "type": "header", "content": "Figure 2" },
+        { "type": "range", "id": "toon2_order", "label": "Order", "min": 1, "max": 10, "step": 1, "default": 2 },
+        { "type": "image_picker", "id": "toon2_image", "label": "Image" },
+        { "type": "image_picker", "id": "toon2_image2", "label": "Reveal image (brush to show)" },
+        { "type": "color", "id": "toon2_bg", "label": "Background color", "default": "#6BBF7A" },
+        { "type": "header", "content": "Figure 3" },
+        { "type": "range", "id": "toon3_order", "label": "Order", "min": 1, "max": 10, "step": 1, "default": 3 },
+        { "type": "image_picker", "id": "toon3_image", "label": "Image" },
+        { "type": "image_picker", "id": "toon3_image2", "label": "Reveal image (brush to show)" },
+        { "type": "color", "id": "toon3_bg", "label": "Background color", "default": "#E882B4" },
+        { "type": "header", "content": "Figure 4" },
+        { "type": "range", "id": "toon4_order", "label": "Order", "min": 1, "max": 10, "step": 1, "default": 4 },
+        { "type": "image_picker", "id": "toon4_image", "label": "Image" },
+        { "type": "image_picker", "id": "toon4_image2", "label": "Reveal image (brush to show)" },
+        { "type": "color", "id": "toon4_bg", "label": "Background color", "default": "#6EB5FF" },
+        { "type": "header", "content": "Figure 5" },
+        { "type": "range", "id": "toon5_order", "label": "Order", "min": 1, "max": 10, "step": 1, "default": 5 },
+        { "type": "image_picker", "id": "toon5_image", "label": "Image" },
+        { "type": "image_picker", "id": "toon5_image2", "label": "Reveal image (brush to show)" },
+        { "type": "color", "id": "toon5_bg", "label": "Background color", "default": "#F4C95F" },
+        { "type": "header", "content": "Figure 6" },
+        { "type": "range", "id": "toon6_order", "label": "Order", "min": 1, "max": 10, "step": 1, "default": 6 },
+        { "type": "image_picker", "id": "toon6_image", "label": "Image" },
+        { "type": "image_picker", "id": "toon6_image2", "label": "Reveal image (brush to show)" },
+        { "type": "color", "id": "toon6_bg", "label": "Background color", "default": "#7ED0C7" },
+        { "type": "header", "content": "Figure 7" },
+        { "type": "range", "id": "toon7_order", "label": "Order", "min": 1, "max": 10, "step": 1, "default": 7 },
+        { "type": "image_picker", "id": "toon7_image", "label": "Image" },
+        { "type": "image_picker", "id": "toon7_image2", "label": "Reveal image (brush to show)" },
+        { "type": "color", "id": "toon7_bg", "label": "Background color", "default": "#B98CE0" },
+        { "type": "header", "content": "Figure 8" },
+        { "type": "range", "id": "toon8_order", "label": "Order", "min": 1, "max": 10, "step": 1, "default": 8 },
+        { "type": "image_picker", "id": "toon8_image", "label": "Image" },
+        { "type": "image_picker", "id": "toon8_image2", "label": "Reveal image (brush to show)" },
+        { "type": "color", "id": "toon8_bg", "label": "Background color", "default": "#F58F8F" },
+        { "type": "header", "content": "Figure 9" },
+        { "type": "range", "id": "toon9_order", "label": "Order", "min": 1, "max": 10, "step": 1, "default": 9 },
+        { "type": "image_picker", "id": "toon9_image", "label": "Image" },
+        { "type": "image_picker", "id": "toon9_image2", "label": "Reveal image (brush to show)" },
+        { "type": "color", "id": "toon9_bg", "label": "Background color", "default": "#8FB9F5" },
+        { "type": "header", "content": "Figure 10" },
+        { "type": "range", "id": "toon10_order", "label": "Order", "min": 1, "max": 10, "step": 1, "default": 10 },
+        { "type": "image_picker", "id": "toon10_image", "label": "Image" },
+        { "type": "image_picker", "id": "toon10_image2", "label": "Reveal image (brush to show)" },
+        { "type": "color", "id": "toon10_bg", "label": "Background color", "default": "#9BE08C" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Story Sequence",
+      "blocks": [
+        { "type": "hero" },
+        { "type": "story_step", "settings": { "headline": "It starts\nwith an <em>idea.</em>", "body": "Tell us your vision — a name, a logo, a feeling. We turn your concept into a precise digital design, ready to be brought to life exactly how you imagined it.", "chip1_icon": "✏️", "chip1_label": "Custom Art", "chip2_icon": "🖼️", "chip2_label": "Your Logo", "chip3_icon": "✨", "chip3_label": "Any Text" } },
+        { "type": "story_step", "settings": { "headline": "Crafted with\n<em>precision.</em>", "body": "From laser engraving and UV printing to 3D printing and custom embroidery — we use professional-grade equipment to produce results that look as good in person as they do on screen.", "chip1_icon": "🔆", "chip1_label": "UV Print", "chip2_icon": "⚡", "chip2_label": "Laser Engrave", "chip3_icon": "🧵", "chip3_label": "Embroidery", "chip4_icon": "🖨️", "chip4_label": "3D Print" } },
+        { "type": "story_step", "settings": { "headline": "Made for\nthe <em>moment.</em>", "body": "Weddings. Corporate events. Birthdays. Milestones. Whatever the occasion, your custom piece arrives ready to impress — packaged with care, delivered on time.", "chip1_icon": "💍", "chip1_label": "Weddings", "chip2_icon": "🏢", "chip2_label": "Corporate", "chip3_icon": "🎁", "chip3_label": "Gifts" } },
+        { "type": "pinned" },
+        { "type": "gallery" },
+        { "type": "beforeafter" },
+        { "type": "categories" },
+        { "type": "toon" },
+        { "type": "marquee" },
+        { "type": "cta" }
+      ]
+    }
+  ]
+}
+{% endschema %}

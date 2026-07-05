@@ -1,0 +1,88 @@
+{% comment %}
+  ============================================================================
+  Dynamic FAQ — editable accordion section
+  ----------------------------------------------------------------------------
+  INSTALL:
+  1. Theme code editor > Sections > Add a new section > name it "dynamic-faq"
+     and REPLACE its contents with this whole file.
+  2. In the theme editor (Customize), click "Add section" > "Dynamic FAQ".
+  3. Every question is a Block: click a question to edit it, use "Add Question"
+     to add more, and drag to reorder. The heading is editable too.
+  No images or apps required.
+  ============================================================================
+{% endcomment %}
+
+<style>
+  .dyn-faq { max-width: 1080px; margin: 40px auto 96px; padding: 0 22px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: inherit; -webkit-font-smoothing: antialiased; }
+  .dyn-faq-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 4px 22px; }
+  .dyn-faq-head h2 { font-size: clamp(28px, 3.6vw, 44px); font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+  .dyn-faq-item { border-top: 1px solid #e8e8ed; }
+  .dyn-faq-item:last-of-type { border-bottom: 1px solid #e8e8ed; }
+  .dyn-faq-item > summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    padding: 24px 18px; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; color: inherit;
+    border: 2px solid transparent; border-radius: 12px; transition: border-color .18s ease; }
+  .dyn-faq-item > summary::-webkit-details-marker { display: none; }
+  .dyn-faq-item > summary:focus-visible { outline: none; border-color: #0071e3; }
+  .dyn-faq-item[open] > summary { border-color: #0071e3; }
+  .dyn-faq-ico { flex: none; width: 22px; height: 22px; stroke: #6e6e73; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s cubic-bezier(.16,1,.3,1); }
+  .dyn-faq-item[open] .dyn-faq-ico { transform: rotate(180deg); }
+  .dyn-faq-answer { padding: 2px 20px 30px; font-size: 17px; line-height: 1.6; color: inherit; opacity: 0.68; max-width: 68ch; }
+  .dyn-faq-answer p { margin: 0 0 12px; } .dyn-faq-answer p:last-child { margin-bottom: 0; }
+  .dyn-faq-empty { padding: 40px 18px; color: inherit; opacity: 0.55; font-size: 16px; }
+  @media (max-width: 860px) { .dyn-faq-item > summary { font-size: 18px; padding: 20px 12px; } }
+</style>
+
+<section class="dyn-faq" aria-label="{{ section.settings.heading | escape }}">
+  {% if section.settings.heading != blank %}
+    <div class="dyn-faq-head">
+      <h2>{{ section.settings.heading }}</h2>
+      <svg class="dyn-faq-ico" viewBox="0 0 24 24" style="transform:rotate(180deg)" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg>
+    </div>
+  {% endif %}
+
+  {% for block in section.blocks %}
+    <details class="dyn-faq-item"{% if forloop.first and section.settings.open_first %} open{% endif %} {{ block.shopify_attributes }}>
+      <summary>{{ block.settings.question }}<svg class="dyn-faq-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></summary>
+      <div class="dyn-faq-answer">{{ block.settings.answer }}</div>
+    </details>
+  {% else %}
+    <p class="dyn-faq-empty">Add your first question with “Add Question”.</p>
+  {% endfor %}
+</section>
+
+{% schema %}
+{
+  "name": "Dynamic FAQ",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Frequently Asked Questions" },
+    { "type": "checkbox", "id": "open_first", "label": "Open first question by default", "default": true }
+  ],
+  "blocks": [
+    {
+      "type": "faq",
+      "name": "Question",
+      "settings": [
+        { "type": "text", "id": "question", "label": "Question", "default": "Your question here?" },
+        { "type": "richtext", "id": "answer", "label": "Answer", "default": "<p>Type your answer here.</p>" }
+      ]
+    }
+  ],
+  "max_blocks": 25,
+  "presets": [
+    {
+      "name": "Dynamic FAQ",
+      "blocks": [
+        { "type": "faq", "settings": { "question": "Are AirPods Pro 3 covered by insurance benefits?", "answer": "<p>If you are using the Hearing Aid feature on your AirPods Pro 3 to help with perceived mild to moderate hearing loss, some insurance providers may allow you to receive reimbursement for your order. Please check with your insurance provider.</p>" } },
+        { "type": "faq", "settings": { "question": "Where are the hearing health features available?", "answer": "<p>The Hearing Test, Hearing Aid, and Hearing Protection features are available in over 100 countries and regions. Availability varies by market, so check local support for the latest list.</p>" } },
+        { "type": "faq", "settings": { "question": "What products can be covered by AppleCare One?", "answer": "<p>AppleCare One lets you cover multiple eligible devices under a single plan — including AirPods, iPhone, iPad, Apple Watch, and Mac — with accidental damage protection and priority support.</p>" } },
+        { "type": "faq", "settings": { "question": "Which languages are supported with Live Translation?", "answer": "<p>Live Translation supports a growing set of languages, including English, Spanish, French, German, Portuguese, and more, with additional languages added over time through software updates.</p>" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

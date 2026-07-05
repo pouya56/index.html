@@ -1,0 +1,760 @@
+{% comment %}
+  ============================================================================
+  Dynamic Header — centered logo + Instagram-style glass bar + smart search
+  ----------------------------------------------------------------------------
+  INSTALL:
+  1. Theme code editor > Sections > Add a new section > name it "dynamic-header"
+     and REPLACE its contents with this whole file.
+  2. In the theme editor (Customize), click "Add section" > "Dynamic Header".
+     Add it ONCE (usually at the very top of the template).
+  3. Upload your logo in the section settings (leave blank to show the wordmark).
+  4. Each icon in the bottom bar is a BLOCK. Click a tab to choose its icon and
+     link, use "Add tab" to add more, and drag to reorder. Set a tab's action to
+     "Open search window" to make it launch the glass search finder.
+  No apps required.
+  ============================================================================
+{% endcomment %}
+
+<script type="application/json" id="dyn-header-config">
+{
+  "rootUrl": {{ routes.root_url | default: '/' | json }},
+  "searchUrl": {{ routes.search_url | default: '/search' | json }},
+  "cartUrl": {{ routes.cart_url | default: '/cart' | json }},
+  "moneyFormat": {{ shop.money_format | json }},
+  "currencyCode": {{ shop.currency | default: 'USD' | json }},
+  "logo": {% if section.settings.logo_image %}{{ section.settings.logo_image | image_url: width: 700 | json }}{% else %}""{% endif %},
+  "brandText": {{ section.settings.brand_text | default: 'DYNAEIMIC' | json }},
+  "showSearch": {% if section.settings.show_search %}true{% else %}false{% endif %},
+  "searchTitle": {{ section.settings.search_title | default: 'What are you looking for?' | json }},
+  "searchPlaceholder": {{ section.settings.search_placeholder | default: 'Try “a birthday gift for my dad”…' | json }}
+}
+</script>
+<script>
+(function(){ try { var el=document.getElementById('dyn-header-config'); if(el){ window.DYN_HEADER = JSON.parse(el.textContent || el.innerText || '{}'); } }catch(e){ window.__dynHeaderErr = String(e); } })();
+</script>
+
+<style>
+  .dyn-hd {
+    --bg: #ffffff; --bg-panel: #f5f5f7;
+    --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
+    --line: #d2d2d7; --accent: #0071e3;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased;
+  }
+
+  /* Logo now lives in the CENTRE of the bottom glass bar (see .gb-logo below). */
+
+  /* Instagram-style frosted-glass bar, floating at the bottom */
+  .dyn-hd .glass-bar { position: fixed; left: 0; right: 0; bottom: max(16px, env(safe-area-inset-bottom));
+    z-index: 9980; display: flex; justify-content: center; padding: 0 16px; pointer-events: none; }
+  .dyn-hd .glass-bar-inner {
+    pointer-events: auto; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    gap: 8px; padding: 8px 16px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.42);
+    -webkit-backdrop-filter: blur(24px) saturate(1.7); backdrop-filter: blur(24px) saturate(1.7);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+  .dyn-hd .gb-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .dyn-hd .gb-side.gb-right { justify-content: flex-end; }
+  /* Logo in the middle of the bar */
+  .dyn-hd .gb-logo { display: flex; align-items: center; justify-content: center; text-decoration: none;
+    padding: 0 8px; }
+  .dyn-hd .gb-logo img { height: 24px; width: auto; max-width: min(38vw, 150px); object-fit: contain; display: block; }
+  .dyn-hd .gb-word { font-weight: 700; font-size: 15px; letter-spacing: 0.14em; color: var(--ink); white-space: nowrap; }
+  @media (max-width: 480px) { .dyn-hd .gb-logo img { height: 20px; } .dyn-hd .gb-word { font-size: 13px; letter-spacing: 0.1em; } }
+  .dyn-hd .gb-ico { position: relative; width: 54px; height: 46px; display: grid; place-items: center; border-radius: 999px;
+    color: #1a1a1f; text-decoration: none; transition: background .16s ease, transform .1s ease; }
+  .dyn-hd .gb-ico:hover { background: rgba(255, 255, 255, 0.55); }
+  .dyn-hd .gb-ico:active { transform: scale(0.9); }
+  .dyn-hd .gb-ico svg { width: 27px; height: 27px; fill: none; stroke: currentColor; stroke-width: 1.9;
+    stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-hd .gb-ico img { width: 27px; height: 27px; object-fit: contain; }
+  .dyn-hd .gb-badge { position: absolute; top: 4px; right: 7px; min-width: 17px; height: 17px; padding: 0 4px;
+    border-radius: 10px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700;
+    display: grid; place-items: center; line-height: 1; pointer-events: none; }
+  .dyn-hd .gb-badge[hidden] { display: none; }
+  @media (max-width: 480px) { .dyn-hd .gb-ico { width: 46px; height: 44px; } .dyn-hd .gb-ico svg,
+    .dyn-hd .gb-ico img { width: 25px; height: 25px; } }
+
+  /* Slide-out cart drawer */
+  .dyn-hd .hd-cart-overlay { position: fixed; inset: 0; background: rgba(20,20,28,0.26); opacity: 0; pointer-events: none;
+    transition: opacity .3s ease; z-index: 9995; -webkit-backdrop-filter: blur(6px) saturate(1.3); backdrop-filter: blur(6px) saturate(1.3); }
+  .dyn-hd .hd-cart-overlay.open { opacity: 1; pointer-events: auto; }
+  .dyn-hd .hd-cart { position: fixed; top: 0; right: 0; height: 100%; width: min(430px, 94vw);
+    background: rgba(255, 255, 255, 0.68);
+    -webkit-backdrop-filter: blur(34px) saturate(1.8); backdrop-filter: blur(34px) saturate(1.8);
+    border-left: 1px solid rgba(255, 255, 255, 0.6);
+    z-index: 9996; display: flex; flex-direction: column; transform: translateX(100%);
+    transition: transform .38s cubic-bezier(.16,1,.3,1);
+    font-family: var(--font); color: var(--ink); }
+  /* Shadow only while open, so the off-screen drawer doesn't bleed onto the page edge. */
+  .dyn-hd .hd-cart.open { transform: none; box-shadow: -20px 0 60px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.7); }
+  .dyn-hd .hd-cart-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 22px;
+    border-bottom: 1px solid rgba(0,0,0,0.08); }
+  .dyn-hd .hd-cart-head h3 { font-size: 19px; font-weight: 600; margin: 0; }
+  .dyn-hd .hd-cart-close { border: none; background: rgba(0,0,0,0.06); width: 34px; height: 34px; border-radius: 50%;
+    display: grid; place-items: center; cursor: pointer; color: var(--ink); transition: background .16s; }
+  .dyn-hd .hd-cart-close:hover { background: rgba(0,0,0,0.12); }
+  .dyn-hd .hd-cart-close svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+  .dyn-hd .hd-cart-body { flex: 1; overflow-y: auto; padding: 6px 22px; }
+  .dyn-hd .hd-cart-empty { text-align: center; color: var(--ink-soft); padding: 60px 12px; font-size: 15px; }
+  .dyn-hd .hd-line { display: flex; gap: 14px; padding: 18px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+  .dyn-hd .hd-line-img { width: 66px; height: 66px; border-radius: 12px; object-fit: cover; background: var(--bg-panel); flex: none; }
+  .dyn-hd .hd-line-main { flex: 1; min-width: 0; }
+  .dyn-hd .hd-line-title { font-size: 15px; font-weight: 600; line-height: 1.3; }
+  .dyn-hd .hd-line-variant { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+  .dyn-hd .hd-line-price { font-size: 14px; margin-top: 5px; font-weight: 500; }
+  .dyn-hd .hd-line-ctrls { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+  .dyn-hd .hd-qty { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; }
+  .dyn-hd .hd-qty button { width: 30px; height: 30px; border: none; background: transparent; font-size: 18px;
+    line-height: 1; cursor: pointer; color: var(--ink); border-radius: 999px; }
+  .dyn-hd .hd-qty button:hover { background: rgba(0,0,0,0.05); }
+  .dyn-hd .hd-qty span { min-width: 24px; text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .dyn-hd .hd-line-edit { color: var(--accent); font-size: 12px; font-weight: 600; text-decoration: none; }
+  .dyn-hd .hd-line-edit:hover { text-decoration: underline; }
+  .dyn-hd .hd-line-remove { background: none; border: none; color: var(--ink-faint); font-size: 12px; cursor: pointer;
+    text-decoration: underline; padding: 0; }
+  .dyn-hd .hd-line-remove:hover { color: var(--ink); }
+  .dyn-hd .hd-cart-foot { border-top: 1px solid rgba(0,0,0,0.08); padding: 18px 22px calc(18px + env(safe-area-inset-bottom)); }
+  .dyn-hd .hd-cart-subtotal { display: flex; justify-content: space-between; align-items: baseline; font-size: 16px;
+    font-weight: 600; margin-bottom: 6px; }
+  .dyn-hd .hd-cart-note { font-size: 12px; color: var(--ink-faint); margin: 0 0 14px; }
+  .dyn-hd .hd-cart-checkout { display: block; text-align: center; background: var(--ink); color: #fff; padding: 15px;
+    border-radius: 14px; font-weight: 600; font-size: 15px; text-decoration: none; transition: opacity .16s; }
+  .dyn-hd .hd-cart-checkout:hover { opacity: 0.88; }
+  .dyn-hd .hd-cart-view { display: block; text-align: center; margin-top: 10px; color: var(--ink-soft); font-size: 14px; text-decoration: none; }
+  .dyn-hd .hd-cart-view:hover { color: var(--ink); }
+
+  /* Glass search overlay (natural-language product finder) */
+  .dyn-hd .search-overlay { position: fixed; inset: 0; z-index: 9990; display: none;
+    align-items: flex-start; justify-content: center;
+    background: rgba(20, 20, 28, 0.28);
+    -webkit-backdrop-filter: blur(8px) saturate(1.3); backdrop-filter: blur(8px) saturate(1.3);
+    opacity: 0; transition: opacity .28s ease; padding: 12vh 16px 24px; overflow-y: auto; }
+  .dyn-hd .search-overlay.open { display: flex; opacity: 1; }
+  .dyn-hd .search-panel {
+    width: min(680px, 100%); border-radius: 26px;
+    background: rgba(255, 255, 255, 0.66);
+    -webkit-backdrop-filter: blur(30px) saturate(1.8); backdrop-filter: blur(30px) saturate(1.8);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    padding: 26px 26px 22px; transform: translateY(-14px) scale(0.98);
+    transition: transform .3s cubic-bezier(.16,1,.3,1); }
+  .dyn-hd .search-overlay.open .search-panel { transform: translateY(0) scale(1); }
+  .dyn-hd .search-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .dyn-hd .search-title { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); margin: 0; }
+  .dyn-hd .search-close { border: none; background: rgba(0,0,0,0.06); width: 34px; height: 34px; border-radius: 50%;
+    display: grid; place-items: center; cursor: pointer; color: var(--ink); transition: background .16s; flex: none; }
+  .dyn-hd .search-close:hover { background: rgba(0,0,0,0.12); }
+  .dyn-hd .search-close svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+  .dyn-hd .search-field { display: flex; align-items: center; gap: 10px; margin-top: 16px;
+    background: rgba(255,255,255,0.72); border: 1px solid rgba(0,0,0,0.08); border-radius: 16px;
+    padding: 13px 16px; transition: border-color .18s, box-shadow .18s; }
+  .dyn-hd .search-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+  .dyn-hd .search-field svg { width: 20px; height: 20px; stroke: var(--ink-soft); fill: none; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .dyn-hd .search-field input { flex: 1; border: none; background: transparent; outline: none; font: inherit;
+    font-size: 17px; color: var(--ink); }
+  .dyn-hd .search-field input::placeholder { color: var(--ink-faint); }
+  .dyn-hd .search-hint { font-size: 13px; color: var(--ink-faint); margin: 10px 2px 0; line-height: 1.4; }
+  .dyn-hd .search-results { margin-top: 18px; display: grid; gap: 8px; }
+  .dyn-hd .search-item { display: flex; align-items: center; gap: 14px; padding: 8px; border-radius: 14px;
+    text-decoration: none; color: var(--ink); transition: background .14s; }
+  .dyn-hd .search-item:hover { background: rgba(255,255,255,0.7); }
+  .dyn-hd .search-item-img { width: 56px; height: 56px; border-radius: 11px; object-fit: cover; flex: none;
+    background: var(--bg-panel); }
+  .dyn-hd .search-item-body { min-width: 0; flex: 1; }
+  .dyn-hd .search-item-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dyn-hd .search-item-price { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+  .dyn-hd .search-state { font-size: 15px; color: var(--ink-soft); padding: 22px 6px; text-align: center; }
+  .dyn-hd .search-viewall { display: block; text-align: center; margin-top: 12px; padding: 12px; border-radius: 14px;
+    background: var(--ink); color: var(--bg); font-weight: 600; font-size: 15px; text-decoration: none;
+    transition: opacity .16s; }
+  .dyn-hd .search-viewall:hover { opacity: 0.88; }
+  @media (max-width: 480px) { .dyn-hd .search-overlay { padding: 8vh 12px 20px; } .dyn-hd .search-panel { padding: 20px 18px 18px; } }
+  @media (prefers-reduced-motion: reduce) {
+    .dyn-hd .search-overlay, .dyn-hd .search-panel, .dyn-hd .gb-ico { transition-duration: 0.01ms !important; }
+  }
+</style>
+
+<div class="dyn-hd">
+  <!-- Centered site logo -->
+  <!-- Frosted-glass bar with the LOGO in the middle and tabs on each side. Each icon = a Block. -->
+  <nav class="glass-bar" aria-label="Main">
+    <div class="glass-bar-inner">
+      {%- assign left_html = '' -%}
+      {%- assign right_html = '' -%}
+      {%- for block in section.blocks -%}
+        {%- comment -%} Cart tab opens the cart drawer; search tab opens search; heart tab opens the wishlist. {%- endcomment -%}
+        {%- assign is_cart = false -%}
+        {%- if block.settings.action == 'cart' or block.settings.icon == 'cart' -%}{%- assign is_cart = true -%}{%- endif -%}
+        {%- assign is_wish = false -%}
+        {%- if block.settings.action == 'wishlist' or block.settings.icon == 'heart' -%}{%- assign is_wish = true -%}{%- endif -%}
+        {%- assign is_search = false -%}
+        {%- if block.settings.action == 'search' or block.settings.icon == 'search' -%}{%- assign is_search = true -%}{%- endif -%}
+        {%- if is_cart -%}{%- assign is_wish = false -%}{%- assign is_search = false -%}{%- endif -%}
+        {%- if is_wish -%}{%- assign is_search = false -%}{%- endif -%}
+        {%- capture ico -%}
+          {%- if block.settings.custom_icon -%}
+            <img src="{{ block.settings.custom_icon | image_url: width: 80 }}" alt="" width="27" height="27">
+          {%- else -%}
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+            {%- case block.settings.icon -%}
+              {%- when 'bag' -%}<path d="M5 8h14l-1 11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 8Z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path>
+              {%- when 'cart' -%}<circle cx="9" cy="20" r="1.4"></circle><circle cx="17" cy="20" r="1.4"></circle><path d="M3 4h2l2.4 11.5h10L20 7H6"></path>
+              {%- when 'search' -%}<circle cx="11" cy="11" r="7"></circle><path d="m21 21-4-4"></path>
+              {%- when 'user' -%}<circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6.5 8-6.5s8 2.5 8 6.5"></path>
+              {%- when 'mail' -%}<rect x="3" y="5" width="18" height="14" rx="2.5"></rect><path d="m4 7 8 6 8-6"></path>
+              {%- when 'phone' -%}<path d="M6 3h3l2 5-2 1.5a12 12 0 0 0 5.5 5.5L18 13l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"></path>
+              {%- when 'home' -%}<path d="M4 11 12 4l8 7"></path><path d="M6 10v9h12v-9"></path>
+              {%- when 'heart' -%}<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"></path>
+              {%- when 'star' -%}<path d="M12 3.5l2.6 5.5 6 .8-4.3 4.2 1 6-5.3-2.9-5.3 2.9 1-6L3.4 9.8l6-.8Z"></path>
+              {%- when 'gift' -%}<rect x="3.5" y="8" width="17" height="4.5" rx="1"></rect><path d="M5 12.5V20h14v-7.5"></path><path d="M12 8v12"></path><path d="M12 8C11 5.5 7.5 5.5 7.5 7.6 7.5 9 9.6 8 12 8Zm0 0c1-2.5 4.5-2.5 4.5-.4C16.5 9 14.4 8 12 8Z"></path>
+              {%- when 'tag' -%}<path d="M4 12V5a1 1 0 0 1 1-1h7l8 8-8 8-8-8Z"></path><circle cx="8.5" cy="8.5" r="1.3"></circle>
+              {%- when 'instagram' -%}<rect x="3.5" y="3.5" width="17" height="17" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17" cy="7" r="1"></circle>
+              {%- when 'location' -%}<path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle>
+              {%- when 'info' -%}<circle cx="12" cy="12" r="8.5"></circle><path d="M12 11v5"></path><circle cx="12" cy="8" r="0.7" fill="currentColor" stroke="none"></circle>
+              {%- when 'menu' -%}<path d="M4 7h16M4 12h16M4 17h16"></path>
+              {%- else -%}<circle cx="11" cy="11" r="7"></circle><path d="m21 21-4-4"></path>
+            {%- endcase -%}
+            </svg>
+          {%- endif -%}
+        {%- endcapture -%}
+        {%- assign lbl = block.settings.label | default: 'Link' -%}
+        {%- capture tab_html -%}
+          {%- if is_cart -%}
+            <a class="gb-ico" data-hd-cart href="{{ block.settings.link | default: routes.cart_url }}" aria-label="{{ lbl | escape }}" title="{{ lbl | escape }}" {{ block.shopify_attributes }}>{{ ico }}<span class="gb-badge" data-hd-cart-count hidden>0</span></a>
+          {%- elsif is_wish -%}
+            <a class="gb-ico" data-hd-wishlist href="{{ block.settings.link | default: routes.root_url }}" aria-label="{{ lbl | escape }}" title="{{ lbl | escape }}" {{ block.shopify_attributes }}>{{ ico }}<span class="gb-badge" data-hd-wishlist-count hidden>0</span></a>
+          {%- elsif is_search -%}
+            <a class="gb-ico" data-hd-search href="{{ block.settings.link | default: routes.search_url }}" aria-label="{{ lbl | escape }}" title="{{ lbl | escape }}" {{ block.shopify_attributes }}>{{ ico }}</a>
+          {%- else -%}
+            <a class="gb-ico" href="{{ block.settings.link | default: routes.root_url }}" aria-label="{{ lbl | escape }}" title="{{ lbl | escape }}" {{ block.shopify_attributes }}>{{ ico }}</a>
+          {%- endif -%}
+        {%- endcapture -%}
+        {%- if block.settings.position == 'right' -%}
+          {%- capture right_html -%}{{ right_html }}{{ tab_html }}{%- endcapture -%}
+        {%- else -%}
+          {%- capture left_html -%}{{ left_html }}{{ tab_html }}{%- endcapture -%}
+        {%- endif -%}
+      {%- endfor -%}
+
+      <div class="gb-side gb-left">{{ left_html }}</div>
+
+      <a class="gb-logo" href="{{ section.settings.logo_link | default: routes.root_url }}" aria-label="{{ shop.name | escape }} — Home">
+        {%- if section.settings.logo_image -%}
+          <img src="{{ section.settings.logo_image | image_url: width: 400 }}"
+            width="{{ section.settings.logo_image.width }}" height="{{ section.settings.logo_image.height }}"
+            alt="{{ shop.name | escape }}">
+        {%- else -%}
+          <span class="gb-word brand-word">{{ section.settings.brand_text | default: 'DYNAEIMIC' }}</span>
+        {%- endif -%}
+      </a>
+
+      <div class="gb-side gb-right">{{ right_html }}</div>
+    </div>
+  </nav>
+
+  <!-- Glass search overlay: natural-language product finder -->
+  <div class="search-overlay" id="hdSearchOverlay" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Search">
+    <div class="search-panel">
+      <div class="search-head">
+        <h2 class="search-title" id="hdSearchTitle">What are you looking for?</h2>
+        <button class="search-close" id="hdSearchClose" type="button" aria-label="Close search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+        </button>
+      </div>
+      <div class="search-field">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4-4"></path></svg>
+        <input id="hdSearchInput" type="search" autocomplete="off" enterkeyhint="search"
+          placeholder="Try &ldquo;a birthday gift for my dad&rdquo;&hellip;" aria-label="Describe what you want">
+      </div>
+      <p class="search-hint">Describe it in your own words — an occasion, who it’s for, a style or colour. We’ll find the closest matches.</p>
+      <div class="search-results" id="hdSearchResults"></div>
+    </div>
+  </div>
+
+  <!-- Slide-out cart drawer -->
+  <div class="hd-cart-overlay" id="hdCartOverlay" aria-hidden="true"></div>
+  <aside class="hd-cart" id="hdCart" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Cart">
+    <div class="hd-cart-head">
+      <h3>Your cart</h3>
+      <button class="hd-cart-close" id="hdCartClose" type="button" aria-label="Close cart">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+    <div class="hd-cart-body" id="hdCartBody"></div>
+    <div class="hd-cart-foot" id="hdCartFoot" hidden>
+      <div class="hd-cart-subtotal"><span>Subtotal</span><span id="hdCartSubtotal">—</span></div>
+      <p class="hd-cart-note">Shipping &amp; taxes calculated at checkout.</p>
+      <a class="hd-cart-checkout" href="/checkout">Checkout</a>
+      <a class="hd-cart-view" id="hdCartView" href="{{ routes.cart_url }}">View full cart</a>
+    </div>
+  </aside>
+
+  <!-- Slide-out wishlist drawer (reuses the cart-drawer styles) -->
+  <div class="hd-cart-overlay" id="hdWishOverlay" aria-hidden="true"></div>
+  <aside class="hd-cart" id="hdWish" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Wishlist">
+    <div class="hd-cart-head">
+      <h3>Your wishlist</h3>
+      <button class="hd-cart-close" id="hdWishClose" type="button" aria-label="Close wishlist">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+    <div class="hd-cart-body" id="hdWishBody"></div>
+    <div class="hd-cart-foot" id="hdWishFoot" hidden>
+      <p class="hd-cart-note">Saved in this browser. Add them to your cart any time.</p>
+      <a class="hd-cart-checkout" href="{{ routes.all_products_collection_url }}">Continue shopping</a>
+    </div>
+  </aside>
+</div>
+
+{% raw %}
+<script>
+/* ---- Dynamic Header: logo + glass bar + natural-language product finder ----
+   Shopify sections can't call an AI model, so this turns a plain-language
+   question ("a birthday gift for my dad") into the keywords Shopify's
+   predictive search understands: it drops filler words, and maps who-it's-for
+   words (dad/husband/him -> men, mom/wife/her -> women, kid/son -> kids, etc.)
+   plus occasions onto real search terms. Best results come when the merchant
+   tags products (men, women, gift, birthday, ...). ------------------------- */
+(function (root) {
+  "use strict";
+  var overlay, input, resultsEl, titleEl, closeBtn, debounceT = 0, reqSeq = 0, lastRaw = "";
+  function H() { return root.DYN_HEADER || {}; }
+
+  // Map the store's currency CODE (e.g. "USD") to a symbol (e.g. "$"). Shopify's
+  // shop.currency returns the code, not the symbol — this turns "USD33" into "$33".
+  var CUR_SYMBOLS = { USD: "$", CAD: "$", AUD: "$", NZD: "$", HKD: "$", SGD: "$", MXN: "$", ARS: "$", CLP: "$", COP: "$",
+    EUR: "€", GBP: "£", JPY: "¥", CNY: "¥", INR: "₹", KRW: "₩", RUB: "₽",
+    BRL: "R$", ZAR: "R", TRY: "₺", ILS: "₪", PHP: "₱", THB: "฿", AED: "د.إ", SAR: "﷼" };
+  function curSym() { var h = H(); return CUR_SYMBOLS[h.currencyCode] || h.currencySymbol || "$"; }
+
+  var STOP = ("a an the some any of for to from with without and or but my mine your yours our his her their its" +
+    " i me we you he she they them us is are am was were be been being do does did will would can could should" +
+    " that this these those it as at on in into by please want wants need needs looking look find get buy buying" +
+    " something anything gift gifts idea ideas present presents give giving good great nice best perfect really" +
+    " who whom whose what which where when why how do you have has like about around under over out just").split(/\s+/);
+  var STOPSET = {}; STOP.forEach(function (w) { STOPSET[w] = 1; });
+
+  var MAP = {
+    dad: "men", father: "men", daddy: "men", papa: "men", husband: "men", boyfriend: "men",
+    grandpa: "men", grandfather: "men", uncle: "men", brother: "men", him: "men", man: "men",
+    men: "men", male: "men", guy: "men", gentleman: "men", son: "men", dads: "men",
+    mom: "women", mother: "women", mommy: "women", mum: "women", mama: "women", wife: "women",
+    girlfriend: "women", grandma: "women", grandmother: "women", aunt: "women", sister: "women",
+    her: "women", woman: "women", women: "women", female: "women", lady: "women", daughter: "women", moms: "women",
+    kid: "kids", kids: "kids", child: "kids", children: "kids", boy: "kids", girl: "kids",
+    baby: "baby", toddler: "baby", newborn: "baby", infant: "baby",
+    friend: "", partner: "", them: "", family: "", coworker: "", colleague: "", boss: ""
+  };
+
+  function clean(raw) {
+    var words = String(raw || "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
+    var out = [], seen = {};
+    words.forEach(function (w) {
+      if (MAP.hasOwnProperty(w)) w = MAP[w];
+      else if (STOPSET[w]) return;
+      if (!w || w.length < 2) return;
+      if (!seen[w]) { seen[w] = 1; out.push(w); }
+    });
+    return out;
+  }
+
+  function money(cents) {
+    if (typeof cents !== "number") return "";
+    var v = cents / 100;
+    return curSym() + (v % 1 === 0 ? v.toFixed(0) : v.toFixed(2));
+  }
+
+  function state(msg) { resultsEl.innerHTML = '<div class="search-state">' + msg + "</div>"; }
+
+  function render(products, terms) {
+    if (!products || !products.length) {
+      state("No matches yet — try describing it differently (an occasion, a colour, or who it’s for).");
+      return;
+    }
+    var root2 = (H().rootUrl || "/").replace(/\/+$/, "");
+    var html = products.map(function (p) {
+      var img = (p.featured_image && (p.featured_image.url || p.featured_image)) || p.image || "";
+      var price = (typeof p.price === "number") ? money(p.price)
+        : (typeof p.price_min === "number" ? money(p.price_min) : "");
+      var url = p.url ? (p.url.charAt(0) === "/" ? p.url : root2 + "/" + p.url) : (root2 + "/products/" + (p.handle || ""));
+      return '<a class="search-item" href="' + url + '">' +
+        (img ? '<img class="search-item-img" src="' + img + '" alt="" loading="lazy" width="56" height="56">'
+             : '<span class="search-item-img"></span>') +
+        '<span class="search-item-body">' +
+          '<span class="search-item-title">' + (p.title || "") + "</span>" +
+          (price ? '<span class="search-item-price">' + price + "</span>" : "") +
+        "</span></a>";
+    }).join("");
+    html += '<a class="search-viewall" href="' + (H().searchUrl || "/search") + "?q=" + encodeURIComponent(terms.join(" ")) + '">See all results</a>';
+    resultsEl.innerHTML = html;
+  }
+
+  function run(raw) {
+    var terms = clean(raw);
+    if (!terms.length) { resultsEl.innerHTML = ""; return; }
+    var seq = ++reqSeq;
+    state("Searching…");
+    var url = "/search/suggest.json?q=" + encodeURIComponent(terms.join(" ")) +
+      "&resources[type]=product&resources[limit]=8&resources[options][unavailable_products]=last";
+    fetch(url, { headers: { "Accept": "application/json" } })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+      .then(function (data) {
+        if (seq !== reqSeq) return;
+        var products = (data && data.resources && data.resources.results && data.resources.results.products) || [];
+        render(products, terms);
+      })
+      .catch(function () { if (seq === reqSeq) state("Search is unavailable right now. Please try again."); });
+  }
+
+  function onInput() {
+    var raw = input.value;
+    if (raw === lastRaw) return; lastRaw = raw;
+    clearTimeout(debounceT);
+    if (!raw.trim()) { resultsEl.innerHTML = ""; return; }
+    debounceT = setTimeout(function () { run(raw); }, 260);
+  }
+
+  function open() {
+    if (!overlay) return;
+    closeCart(); closeWish(); // only one panel open at a time
+    overlay.classList.add("open"); overlay.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    setTimeout(function () { try { input.focus(); } catch (e) {} }, 60);
+  }
+  function close() {
+    if (!overlay) return;
+    overlay.classList.remove("open"); overlay.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  /* ---------------------------------------------------------------- Cart drawer */
+  var cartEl, cartOverlay, cartBody, cartFoot, cartSub, cartBusy = false;
+
+  function cartMoney(cents) {
+    if (typeof cents !== "number") return "";
+    var v = cents / 100;
+    return curSym() + (v % 1 === 0 ? v.toFixed(0) : v.toFixed(2));
+  }
+  function setCount(n) {
+    document.querySelectorAll("[data-hd-cart-count]").forEach(function (b) {
+      b.textContent = n; if (n > 0) b.removeAttribute("hidden"); else b.setAttribute("hidden", "");
+    });
+  }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function renderCart(cart) {
+    setCount(cart.item_count || 0);
+    if (!cartBody) return;
+    if (!cart.items || !cart.items.length) {
+      cartBody.innerHTML = '<div class="hd-cart-empty">Your cart is empty.</div>';
+      if (cartFoot) cartFoot.hidden = true;
+      return;
+    }
+    if (cartFoot) cartFoot.hidden = false;
+    cartBody.innerHTML = cart.items.map(function (it, i) {
+      var line = i + 1;
+      var variant = (it.variant_title && it.variant_title !== "Default Title") ? '<div class="hd-line-variant">' + esc(it.variant_title) + "</div>" : "";
+      var img = it.image ? it.image.replace(/(\.[a-z]+)(\?|$)/i, "_120x$1$2") : "";
+      // Show "Edit design" for customized items (they carry a saved layout).
+      var canEdit = it.properties && it.properties._design_state && it.url;
+      var editUrl = canEdit ? (it.url + (it.url.indexOf("?") >= 0 ? "&" : "?") + "edit=" + encodeURIComponent(it.key)) : "";
+      var editLink = canEdit ? '<a class="hd-line-edit" href="' + esc(editUrl) + '">Edit design</a>' : "";
+      return '<div class="hd-line">' +
+        (img ? '<img class="hd-line-img" src="' + img + '" alt="" width="66" height="66" loading="lazy">' : '<span class="hd-line-img"></span>') +
+        '<div class="hd-line-main">' +
+          '<div class="hd-line-title">' + esc(it.product_title) + "</div>" + variant +
+          '<div class="hd-line-price">' + cartMoney(it.final_line_price) + "</div>" +
+          '<div class="hd-line-ctrls">' +
+            '<span class="hd-qty" data-line="' + line + '">' +
+              '<button type="button" data-dec aria-label="Decrease quantity">−</button>' +
+              "<span>" + it.quantity + "</span>" +
+              '<button type="button" data-inc aria-label="Increase quantity">+</button>' +
+            "</span>" +
+            editLink +
+            '<button type="button" class="hd-line-remove" data-remove="' + line + '">Remove</button>' +
+          "</div>" +
+        "</div></div>";
+    }).join("");
+    if (cartSub) cartSub.textContent = cartMoney(cart.items_subtotal_price != null ? cart.items_subtotal_price : cart.total_price);
+  }
+
+  function loadCart() {
+    return fetch("/cart.js", { headers: { "Accept": "application/json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (cart) { renderCart(cart); return cart; })
+      .catch(function () {});
+  }
+  function changeLine(line, qty) {
+    if (cartBusy) return; cartBusy = true;
+    fetch("/cart/change.js", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ line: line, quantity: qty })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (cart) { renderCart(cart); })
+      .catch(function () {})
+      .then(function () { cartBusy = false; });
+  }
+  function openCart() {
+    if (!cartEl) return;
+    closeWish(); close(); // only one panel open at a time
+    loadCart();
+    cartOverlay.classList.add("open");
+    cartEl.classList.add("open"); cartEl.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+  function closeCart() {
+    if (!cartEl) return;
+    cartOverlay.classList.remove("open");
+    cartEl.classList.remove("open"); cartEl.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+  function initCart() {
+    cartEl = document.getElementById("hdCart");
+    cartOverlay = document.getElementById("hdCartOverlay");
+    cartBody = document.getElementById("hdCartBody");
+    cartFoot = document.getElementById("hdCartFoot");
+    cartSub = document.getElementById("hdCartSubtotal");
+    var cartTabs = document.querySelectorAll("[data-hd-cart]");
+    if (!cartEl || !cartTabs.length) { if (cartEl) cartEl.remove(); if (cartOverlay) cartOverlay.remove(); return; }
+
+    var view = document.getElementById("hdCartView");
+    if (view) view.href = H().cartUrl || "/cart";
+
+    cartTabs.forEach(function (t) { t.addEventListener("click", function (e) { e.preventDefault(); if (cartEl.classList.contains("open")) closeCart(); else openCart(); }); });
+    var cc = document.getElementById("hdCartClose"); if (cc) cc.addEventListener("click", closeCart);
+    if (cartOverlay) cartOverlay.addEventListener("click", closeCart);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && cartEl.classList.contains("open")) closeCart(); });
+
+    cartBody.addEventListener("click", function (e) {
+      var q = e.target.closest(".hd-qty"); var rm = e.target.closest("[data-remove]");
+      if (rm) { changeLine(parseInt(rm.getAttribute("data-remove"), 10), 0); return; }
+      if (q) {
+        var line = parseInt(q.getAttribute("data-line"), 10);
+        var cur = parseInt(q.querySelector("span").textContent, 10) || 0;
+        if (e.target.closest("[data-inc]")) changeLine(line, cur + 1);
+        else if (e.target.closest("[data-dec]")) changeLine(line, Math.max(0, cur - 1));
+      }
+    });
+
+    loadCart(); // set the badge count on page load
+  }
+
+  /* ------------------------------------------------------------ Wishlist drawer
+     Browser-stored (localStorage) so it needs no app or login. The product page
+     writes to the same key + fires the same event, so the two stay in sync. */
+  var WL_KEY = "dyn_wishlist";
+  var wishEl, wishOverlay, wishBody, wishFoot;
+
+  function wlRead() { try { var a = JSON.parse(localStorage.getItem(WL_KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function wlWrite(list) { try { localStorage.setItem(WL_KEY, JSON.stringify(list)); } catch (e) {} try { root.dispatchEvent(new CustomEvent("dyn-wishlist-change")); } catch (e) {} }
+  function wlRemove(id) { wlWrite(wlRead().filter(function (x) { return String(x.id) !== String(id); })); }
+  function setWishCount(n) {
+    document.querySelectorAll("[data-hd-wishlist-count]").forEach(function (b) {
+      b.textContent = n; if (n > 0) b.removeAttribute("hidden"); else b.setAttribute("hidden", "");
+    });
+  }
+  function renderWish() {
+    var list = wlRead();
+    setWishCount(list.length);
+    if (!wishBody) return;
+    if (!list.length) {
+      wishBody.innerHTML = '<div class="hd-cart-empty">Your wishlist is empty.<br>Tap the &#9825; on a product to save it here.</div>';
+      if (wishFoot) wishFoot.hidden = true;
+      return;
+    }
+    if (wishFoot) wishFoot.hidden = false;
+    wishBody.innerHTML = list.map(function (it) {
+      var url = it.url || "#";
+      return '<div class="hd-line">' +
+        '<a href="' + esc(url) + '" aria-label="' + esc(it.title) + '">' +
+          (it.image ? '<img class="hd-line-img" src="' + esc(it.image) + '" alt="" width="66" height="66" loading="lazy">' : '<span class="hd-line-img"></span>') +
+        "</a>" +
+        '<div class="hd-line-main">' +
+          '<a class="hd-line-title" href="' + esc(url) + '" style="text-decoration:none;color:inherit">' + esc(it.title) + "</a>" +
+          (it.price ? '<div class="hd-line-price">' + esc(it.price) + "</div>" : "") +
+          '<div class="hd-line-ctrls">' +
+            '<a class="hd-line-remove" style="text-decoration:none" href="' + esc(url) + '">View</a>' +
+            '<button type="button" class="hd-line-remove" data-wlremove="' + esc(it.id) + '">Remove</button>' +
+          "</div>" +
+        "</div></div>";
+    }).join("");
+  }
+  function openWish() {
+    if (!wishEl) return;
+    closeCart(); close(); // only one panel open at a time
+    renderWish();
+    wishOverlay.classList.add("open");
+    wishEl.classList.add("open"); wishEl.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+  function closeWish() {
+    if (!wishEl) return;
+    wishOverlay.classList.remove("open");
+    wishEl.classList.remove("open"); wishEl.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+  function initWishlist() {
+    wishEl = document.getElementById("hdWish");
+    wishOverlay = document.getElementById("hdWishOverlay");
+    wishBody = document.getElementById("hdWishBody");
+    wishFoot = document.getElementById("hdWishFoot");
+    var wishTabs = document.querySelectorAll("[data-hd-wishlist]");
+    if (!wishEl || !wishTabs.length) { if (wishEl) wishEl.remove(); if (wishOverlay) wishOverlay.remove(); return; }
+
+    wishTabs.forEach(function (t) { t.addEventListener("click", function (e) { e.preventDefault(); if (wishEl.classList.contains("open")) closeWish(); else openWish(); }); });
+    var wc = document.getElementById("hdWishClose"); if (wc) wc.addEventListener("click", closeWish);
+    if (wishOverlay) wishOverlay.addEventListener("click", closeWish);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && wishEl.classList.contains("open")) closeWish(); });
+    wishBody.addEventListener("click", function (e) {
+      var rm = e.target.closest("[data-wlremove]");
+      if (rm) { e.preventDefault(); wlRemove(rm.getAttribute("data-wlremove")); }
+    });
+
+    // Keep badge + drawer live when the product page (or another tab) changes the wishlist.
+    root.addEventListener("dyn-wishlist-change", function () { renderWish(); });
+    root.addEventListener("storage", function (e) { if (e.key === WL_KEY) renderWish(); });
+    setWishCount(wlRead().length);
+  }
+
+  function boot() {
+    var S = H();
+
+    // Logo wordmark text (only present when no logo image was uploaded).
+    document.querySelectorAll(".dyn-hd .brand-word").forEach(function (w) { if (S.brandText) w.textContent = S.brandText; });
+
+    // Search overlay.
+    overlay = document.getElementById("hdSearchOverlay");
+    input = document.getElementById("hdSearchInput");
+    resultsEl = document.getElementById("hdSearchResults");
+    titleEl = document.getElementById("hdSearchTitle");
+    closeBtn = document.getElementById("hdSearchClose");
+    if (titleEl && S.searchTitle) titleEl.textContent = S.searchTitle;
+    if (input && S.searchPlaceholder) input.setAttribute("placeholder", S.searchPlaceholder);
+
+    // If search is turned off, drop the overlay; search tabs just follow their href.
+    if (S.showSearch === false && overlay) { overlay.remove(); overlay = null; }
+
+    // Wire every "Open search window" tab.
+    document.querySelectorAll("[data-hd-search]").forEach(function (ico) {
+      if (overlay) ico.addEventListener("click", function (e) { e.preventDefault(); if (overlay.classList.contains("open")) close(); else open(); });
+    });
+
+    if (input) {
+      input.addEventListener("input", onInput);
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          var terms = clean(input.value);
+          if (terms.length) { e.preventDefault(); window.location.href = (H().searchUrl || "/search") + "?q=" + encodeURIComponent(terms.join(" ")); }
+        }
+      });
+    }
+    if (closeBtn) closeBtn.addEventListener("click", close);
+    if (overlay) overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && overlay && overlay.classList.contains("open")) close(); });
+
+    // Cart drawer + wishlist.
+    initCart();
+    initWishlist();
+  }
+
+  // Shared wishlist API other sections (the product page) can call.
+  root.DynWishlist = {
+    all: wlRead,
+    has: function (id) { return wlRead().some(function (x) { return String(x.id) === String(id); }); },
+    add: function (item) { if (!item || item.id == null) return; var l = wlRead(); if (!l.some(function (x) { return String(x.id) === String(item.id); })) { l.unshift(item); wlWrite(l); } },
+    remove: wlRemove,
+    toggle: function (item) { if (!item || item.id == null) return false; var l = wlRead(); var i = -1; l.forEach(function (x, k) { if (String(x.id) === String(item.id)) i = k; }); if (i >= 0) { l.splice(i, 1); wlWrite(l); return false; } l.unshift(item); wlWrite(l); return true; },
+    count: function () { return wlRead().length; }
+  };
+  root.DynamicHeader = { boot: boot, open: open, close: close, clean: clean, openCart: openCart, closeCart: closeCart, refreshCart: loadCart, openWishlist: openWish };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
+})(window);
+</script>
+{% endraw %}
+
+{% schema %}
+{
+  "name": "Dynamic Header",
+  "tag": "section",
+  "settings": [
+    { "type": "header", "content": "Logo" },
+    { "type": "image_picker", "id": "logo_image", "label": "Logo image (leave blank to show the wordmark below)" },
+    { "type": "text", "id": "brand_text", "label": "Wordmark (shown when no logo image)", "default": "DYNAEIMIC" },
+    { "type": "url", "id": "logo_link", "label": "Logo links to (defaults to home)" },
+    { "type": "header", "content": "Smart search" },
+    { "type": "checkbox", "id": "show_search", "label": "Enable glass search window", "default": true },
+    { "type": "text", "id": "search_title", "label": "Search window title", "default": "What are you looking for?" },
+    { "type": "text", "id": "search_placeholder", "label": "Search box hint", "default": "Try “a birthday gift for my dad”…" },
+    { "type": "paragraph", "content": "Tip: for the best search results, tag your products (men, women, kids, gift, birthday, wedding, colours, etc.). Shopify search matches on those tags." }
+  ],
+  "blocks": [
+    {
+      "type": "tab",
+      "name": "Tab",
+      "settings": [
+        {
+          "type": "select", "id": "icon", "label": "Icon", "default": "bag",
+          "options": [
+            { "value": "bag", "label": "Shopping bag" },
+            { "value": "cart", "label": "Cart" },
+            { "value": "search", "label": "Search" },
+            { "value": "user", "label": "Account / login" },
+            { "value": "mail", "label": "Contact / mail" },
+            { "value": "phone", "label": "Phone" },
+            { "value": "home", "label": "Home" },
+            { "value": "heart", "label": "Heart / wishlist" },
+            { "value": "star", "label": "Star" },
+            { "value": "gift", "label": "Gift" },
+            { "value": "tag", "label": "Tag / sale" },
+            { "value": "instagram", "label": "Instagram" },
+            { "value": "location", "label": "Location" },
+            { "value": "info", "label": "Info" },
+            { "value": "menu", "label": "Menu" }
+          ]
+        },
+        { "type": "image_picker", "id": "custom_icon", "label": "Custom icon image (optional — overrides the icon above)" },
+        { "type": "text", "id": "label", "label": "Label (tooltip / accessibility)", "default": "Shop" },
+        {
+          "type": "select", "id": "position", "label": "Side of the logo", "default": "left",
+          "options": [
+            { "value": "left", "label": "Left of logo" },
+            { "value": "right", "label": "Right of logo" }
+          ]
+        },
+        {
+          "type": "select", "id": "action", "label": "When tapped", "default": "link",
+          "options": [
+            { "value": "link", "label": "Open a link" },
+            { "value": "search", "label": "Open the search window" },
+            { "value": "cart", "label": "Open the cart drawer" },
+            { "value": "wishlist", "label": "Open the wishlist" }
+          ]
+        },
+        { "type": "url", "id": "link", "label": "Link (used when 'Open a link' is selected)" },
+        { "type": "paragraph", "content": "The Cart, Search and Heart (wishlist) icons open their pop-up automatically — you don't need to change 'When tapped'." }
+      ]
+    }
+  ],
+  "max_blocks": 7,
+  "presets": [
+    {
+      "name": "Dynamic Header",
+      "blocks": [
+        { "type": "tab", "settings": { "icon": "bag", "label": "Shop", "position": "left", "action": "link" } },
+        { "type": "tab", "settings": { "icon": "search", "label": "Search", "position": "left", "action": "search" } },
+        { "type": "tab", "settings": { "icon": "heart", "label": "Wishlist", "position": "left", "action": "wishlist" } },
+        { "type": "tab", "settings": { "icon": "user", "label": "Login", "position": "right", "action": "link" } },
+        { "type": "tab", "settings": { "icon": "cart", "label": "Cart", "position": "right", "action": "cart" } },
+        { "type": "tab", "settings": { "icon": "mail", "label": "Contact", "position": "right", "action": "link" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
