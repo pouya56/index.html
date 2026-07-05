@@ -77,6 +77,8 @@
     "enableBack": {% if section.settings.enable_back %}true{% else %}false{% endif %},
     "frontImage": {% if section.settings.front_image %}{{ section.settings.front_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "exampleImage": {% if section.settings.example_image %}{{ section.settings.example_image | image_url: width: 1000 | json }}{% else %}""{% endif %},
+    "sampleImage": {% if section.settings.sample_image %}{{ section.settings.sample_image | image_url: width: 1200 | json }}{% else %}""{% endif %},
+    "sampleCaption": {{ section.settings.sample_caption | default: '' | json }},
     "backImage": {% if section.settings.back_image %}{{ section.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "printBack": {
       "show": {% if section.settings.back_print_show %}true{% else %}false{% endif %},
@@ -601,6 +603,11 @@ button { font-family: inherit; cursor: pointer; }
 .side-tab.on { background: var(--ink); color: #fff; border-color: var(--ink); }
 .side-fee { font-size: 11px; font-weight: 600; opacity: 0.85; }
 .engrave-stage { background: var(--bg-panel); margin-top: 10px; padding: 10px 16px; display: grid; place-items: center; }
+/* Finished-product sample shown below the editor (a real example of the result). */
+.engrave-sample { margin: 14px auto 2px; width: min(92%, 429px); text-align: center; }
+.engrave-sample img { display: block; width: 100%; height: auto; border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10); }
+.engrave-sample-cap { margin: 8px 0 0; font-size: 12.5px; color: #86868b; letter-spacing: -0.01em; }
 .engrave-frame { position: relative; width: min(92%, 429px); container-type: inline-size; }
 .engrave-frame img { width: 100%; height: auto; display: block; }
 .upload-overlay { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -1040,6 +1047,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "paragraph", "content": "The box on the product where the customer's design must stay. Percentages of the product image, so set it per product. Left/Top is the top-left corner of the box." },
     { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
     { "type": "image_picker", "id": "example_image", "label": "Example design (placeholder)", "info": "A faded sample shown in the print area to show customers where their design goes. It disappears when they upload. Leave empty to hide." },
+    { "type": "image_picker", "id": "sample_image", "label": "Finished-product sample", "info": "A photo of a finished/printed product shown below the editor (NOT in the print area) so customers see the real result. Leave empty to hide." },
+    { "type": "text", "id": "sample_caption", "label": "Sample caption", "info": "Text shown under the finished-product sample.", "default": "How your finished product will look" },
     { "type": "checkbox", "id": "print_show", "label": "Show the printable-area outline to customers", "default": true },
     { "type": "range", "id": "print_x", "label": "Area left", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 22 },
     { "type": "range", "id": "print_y", "label": "Area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },

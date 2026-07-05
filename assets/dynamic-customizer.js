@@ -2094,6 +2094,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const priceStr = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.priceMoney) || D.pricing.money(product.base);
     const photoOnly = !!(product && product.photoOnly);
     const exampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.exampleImage) || "";
+    const sampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.sampleImage) || "";
+    const sampleCaption = (window.DYN_SETTINGS && window.DYN_SETTINGS.sampleCaption) || "How your finished product will look";
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
     const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (photoOnly
       ? ("Click the image to upload your design, then drag, resize or rotate it on your " + noun + ".")
@@ -2128,6 +2130,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                 '<span>Click to upload your design</span></button>' : '') +
             '</div>' +
           '</div></div>' +
+          // Finished-product sample (not part of the print area) — shows customers the real result.
+          (sampleImg ? '<div class="engrave-sample"><img src="' + sampleImg + '" alt="Finished product example" loading="lazy">' +
+            (sampleCaption ? '<p class="engrave-sample-cap">' + escapeHtml(sampleCaption) + '</p>' : '') +
+          '</div>' : '') +
           '<div class="up-controls">' +
             '<input type="file" data-file="design" accept=".png,.jpg,.jpeg,.svg,.pdf" hidden>' +
             // Photo-only has no compose bar — you upload by clicking the image above.
