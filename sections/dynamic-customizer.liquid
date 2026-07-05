@@ -3144,6 +3144,23 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     renderUpEls();
   }
 
+  // Wipe the canvas back to an empty Front side (both sides cleared, field empty).
+  // Called after Add to Bag so the next open starts fresh for a new design.
+  function resetUploadDesign() {
+    sideLayers = { front: [], back: [] };
+    sideActive = { front: null, back: null };
+    currentSide = "front";
+    layers = sideLayers.front; activeLayerId = null;
+    const pa = q2("#printArea"); if (pa) pa.querySelectorAll(".up-el").forEach((e) => e.remove());
+    const t = q2("#upText"); if (t) t.value = "";
+    document.querySelectorAll(".side-tab").forEach(function (tb) {
+      var on = tb.dataset.side === "front";
+      tb.classList.toggle("on", on); tb.setAttribute("aria-selected", String(on));
+    });
+    if (pa) applyStageForSide("front");
+    renderUpEls();
+  }
+
   async function onUploadApply() {
     const btn = $("#uploadApply");
     btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Saving';
@@ -3223,9 +3240,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         } catch (e) {}
         if (window.DynamicCart && window.DynamicCart.refresh) { try { window.DynamicCart.refresh(); } catch (e) {} }
         closeModal(); toast(wasEditing ? "Design updated" : "Added to Bag");
+        // Clear the canvas so the next time it opens the customer starts fresh
+        // (can upload a different design without the old one still there).
+        resetUploadDesign();
       }
     } catch (e) { console.error(e); toast("Something went wrong"); }
-    finally { btn.disabled = false; btn.textContent = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "Add to Bag"; }
+    finally { btn.textContent = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "Add to Bag"; renderUpEls(); }
   }
 
   async function maybeEditMode() {
