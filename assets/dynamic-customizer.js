@@ -2276,6 +2276,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       await ensureCloud(sideLayers.front); await ensureCloud(sideLayers.back);
       const imgs = (s) => sideLayers[s].filter((l) => l.kind === "img" && l.url);
       const txts = (s) => sideLayers[s].filter((l) => l.kind === "text" && l.text);
+      // Safety net: an uploaded image MUST be hosted (Cloudinary) so we save a short
+      // link, not the raw base64 (which makes Shopify reject the cart as "too large").
+      const unhosted = [].concat(imgs("front"), imgs("back")).some(function (l) { return !/^https?:/i.test(String(l.cloudUrl || "")); });
+      if (unhosted) {
+        toast("Couldn’t upload your image. Check the Cloudinary settings (cloud name + unsigned upload preset), then try again.");
+        return;
+      }
       const hasBackDesign = !!(imgs("back").length || txts("back").length);
       const props = {};
       const fUrls = imgs("front").map((l) => l.cloudUrl).filter(Boolean);
@@ -2302,7 +2309,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const ser = (arr) => arr.map((l) => l.kind === "img"
         ? { kind: "img", url: l.cloudUrl || l.url, x: l.x, y: l.y, scale: l.scale, rotate: l.rotate || 0 }
         : { kind: "text", text: l.text, x: l.x, y: l.y, size: l.size, rotate: l.rotate || 0, font: l.font, color: l.color }
-      ).filter((s2) => (s2.kind === "img" && s2.url) || (s2.kind === "text" && s2.text));
+      // Only keep HOSTED image links in the cart state — never raw base64 (keeps the cart small).
+      ).filter((s2) => (s2.kind === "img" && /^https?:/i.test(String(s2.url || ""))) || (s2.kind === "text" && s2.text));
       const _state = { v: (window.DYN_SHOPIFY || {}).variantId || null, front: ser(sideLayers.front), back: ser(sideLayers.back) };
       if (_state.front.length || _state.back.length) props["_design_state"] = JSON.stringify(_state);
       const extraItems = [];
