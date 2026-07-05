@@ -2094,9 +2094,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const priceStr = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.priceMoney) || D.pricing.money(product.base);
     const photoOnly = !!(product && product.photoOnly);
     const exampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.exampleImage) || "";
-    const sampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.sampleImage) || "";
-    const sampleCaption = (window.DYN_SETTINGS && window.DYN_SETTINGS.sampleCaption) || "How your finished product will look";
-    const sampleLabel = (window.DYN_SETTINGS && window.DYN_SETTINGS.sampleButtonLabel) || "See a finished sample";
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
     const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (photoOnly
       ? ("Click the image to upload your design, then drag, resize or rotate it on your " + noun + ".")
@@ -2131,22 +2128,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                 '<span>Click to upload your design</span></button>' : '') +
             '</div>' +
           '</div></div>' +
-          // Finished-product sample — a button that opens the photo in a popup (not in the print area).
-          (sampleImg ? '<div class="engrave-sample-row">' +
-              '<button type="button" class="sample-btn" id="sampleBtn">' +
-                '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 15l5-4 4 3 3-2 6 5"/><circle cx="8.5" cy="9" r="1.4"/></svg>' +
-                '<span>' + escapeHtml(sampleLabel) + '</span>' +
-              '</button>' +
-            '</div>' +
-            '<div class="sample-lightbox" id="sampleLightbox" aria-hidden="true">' +
-              '<div class="sample-lightbox-scrim" data-sample-close></div>' +
-              '<figure class="sample-lightbox-fig">' +
-                '<button type="button" class="sample-lightbox-close" data-sample-close aria-label="Close">✕</button>' +
-                '<img src="' + sampleImg + '" alt="Finished product example">' +
-                (sampleCaption ? '<figcaption>' + escapeHtml(sampleCaption) + '</figcaption>' : '') +
-              '</figure>' +
-            '</div>'
-          : '') +
           '<div class="up-controls">' +
             '<input type="file" data-file="design" accept=".png,.jpg,.jpeg,.svg,.pdf" hidden>' +
             // Photo-only has no compose bar — you upload by clicking the image above.
@@ -2232,13 +2213,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (!e.target.closest(".up-el")) { activeLayerId = null; if (txt) txt.value = ""; renderUpEls(); }
     });
     q2("#uploadApply").onclick = onUploadApply;
-    // Finished-sample button → open/close the photo popup.
-    const sampleBtn = q2("#sampleBtn"), sampleLb = q2("#sampleLightbox");
-    if (sampleBtn && sampleLb) {
-      sampleBtn.onclick = function () { sampleLb.classList.add("open"); sampleLb.setAttribute("aria-hidden", "false"); };
-      const closeLb = function () { sampleLb.classList.remove("open"); sampleLb.setAttribute("aria-hidden", "true"); };
-      sampleLb.querySelectorAll("[data-sample-close]").forEach(function (el) { el.onclick = closeLb; });
-    }
     renderUpEls();
   }
 
@@ -3303,6 +3277,39 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     badge: '<circle cx="12" cy="9" r="5" stroke-width="1.5"></circle><path d="M9 13.2 7.5 21l4.5-2.6L16.5 21 15 13.2" stroke-width="1.5"></path>'
   };
 
+  // Finished-product sample button + popup — injected into whichever modal is
+  // open, so it works for every customizer style (upload, engrave, and multi-mode).
+  function installSampleButton() {
+    const S = window.DYN_SETTINGS || {};
+    if (!S.sampleImage) return;
+    const root = document.querySelector("#modalRoot");
+    if (!root || root.querySelector("#sampleBtn")) return;
+    const label = S.sampleButtonLabel || "See a finished sample";
+    const caption = S.sampleCaption || "How your finished product will look";
+    const row = document.createElement("div");
+    row.className = "engrave-sample-row";
+    row.innerHTML = '<button type="button" class="sample-btn" id="sampleBtn">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 15l5-4 4 3 3-2 6 5"/><circle cx="8.5" cy="9" r="1.4"/></svg>' +
+      '<span>' + escapeHtml(label) + '</span></button>';
+    const anchor = root.querySelector(".engrave-stage") || root.querySelector(".stage");
+    if (anchor) anchor.insertAdjacentElement("afterend", row);
+    else { const sheet = root.querySelector(".modal-sheet"); if (sheet) sheet.appendChild(row); else return; }
+    const lb = document.createElement("div");
+    lb.className = "sample-lightbox"; lb.id = "sampleLightbox"; lb.setAttribute("aria-hidden", "true");
+    lb.innerHTML = '<div class="sample-lightbox-scrim" data-sample-close></div>' +
+      '<figure class="sample-lightbox-fig">' +
+        '<button type="button" class="sample-lightbox-close" data-sample-close aria-label="Close">✕</button>' +
+        '<img src="' + S.sampleImage + '" alt="Finished product example">' +
+        (caption ? '<figcaption>' + escapeHtml(caption) + '</figcaption>' : '') +
+      '</figure>';
+    // Keep clicks inside the popup from bubbling to the modal's click-outside-to-close.
+    lb.addEventListener("click", function (e) { e.stopPropagation(); });
+    root.appendChild(lb);
+    root.querySelector("#sampleBtn").onclick = function () { lb.classList.add("open"); lb.setAttribute("aria-hidden", "false"); };
+    const closeLb = function () { lb.classList.remove("open"); lb.setAttribute("aria-hidden", "true"); };
+    lb.querySelectorAll("[data-sample-close]").forEach(function (el) { el.onclick = closeLb; });
+  }
+
   function loadProduct(id) {
     product = D.getProduct(id);
     patchProductFromSettings(product);
@@ -3312,6 +3319,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (product.uploadMode) buildUploadModal();
     else if (product.engraving) buildEngraveModal();
     else buildModal();
+    installSampleButton();
     applyDomSettings();
     document.querySelectorAll("[data-product]").forEach((b) =>
       b.setAttribute("aria-pressed", String(b.dataset.product === id))
