@@ -1313,6 +1313,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let sideLayers = { front: [], back: [] };
   let sideActive = { front: null, back: null };
   let currentSide = "front";
+  let curVariantOpts = [];   // option values of the currently-selected variant (for per-variant back image)
   let layers = sideLayers.front;   // alias to the current side's layer array
   let activeLayerId = null;
   let layerSeq = 0;
@@ -1450,6 +1451,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const v = variants.find((vv) => (vv.options || []).join("~~") === selected.join("~~"));
       if (v) {
         shop.variantId = v.id;
+        curVariantOpts = v.options || [];   // track colour for per-variant back image
         const pr = document.querySelector("#pPrice"); if (pr && v.price) pr.textContent = v.price;
         const soldOut = !madeToOrder && !v.available;
         const orderable = !soldOut;
@@ -1712,9 +1714,27 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // Only needs "Enable back side"; a separate back image and the back fee are optional.
     return !!(S.enableBack && (product && product.uploadMode));
   }
+  // Find a back image for the current variant colour by matching a product image
+  // whose ALT TEXT contains the colour name AND the word "back" (e.g. alt "Red back").
+  function variantBackImage() {
+    const shop = window.DYN_SHOPIFY || {};
+    const imgs = shop.productImagesData || [];
+    if (!imgs.length || !curVariantOpts.length) return "";
+    for (let i = 0; i < curVariantOpts.length; i++) {
+      const val = String(curVariantOpts[i] || "").toLowerCase().trim();
+      if (!val) continue;
+      const hit = imgs.find(function (im) {
+        const a = String(im.alt || "").toLowerCase();
+        return a.indexOf("back") > -1 && a.indexOf(val) > -1;
+      });
+      if (hit && hit.url) return hit.url;
+    }
+    return "";
+  }
   function sideImage(side) {
     const S = window.DYN_SETTINGS || {};
-    return side === "back" ? (S.backImage || S.frontImage || product.image) : (S.frontImage || product.image);
+    if (side === "back") return variantBackImage() || S.backImage || S.frontImage || product.image;
+    return S.frontImage || product.image;
   }
   function sidePrint(side) {
     const S = window.DYN_SETTINGS || {};

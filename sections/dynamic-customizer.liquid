@@ -50,6 +50,7 @@
     "priceCents": {% if dyn_product %}{{ dyn_product.selected_or_first_available_variant.price | default: 0 }}{% else %}0{% endif %},
     "productMainImage": {% if dyn_product and dyn_product.featured_image %}{{ dyn_product.featured_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "productImages": [{% if dyn_product %}{% for img in dyn_product.images %}{{ img | image_url: width: 1400 | json }}{% unless forloop.last %},{% endunless %}{% endfor %}{% endif %}],
+    "productImagesData": [{% if dyn_product %}{% for img in dyn_product.images %}{ "url": {{ img | image_url: width: 1400 | json }}, "alt": {{ img.alt | default: '' | json }} }{% unless forloop.last %},{% endunless %}{% endfor %}{% endif %}],
     "rootUrl": {{ routes.root_url | default: '/' | json }},
     "productUrl": {% if dyn_product %}{{ dyn_product.url | json }}{% else %}""{% endif %},
     "productHandle": {% if dyn_product %}{{ dyn_product.handle | json }}{% else %}""{% endif %},
