@@ -76,15 +76,6 @@
     },
     "maskImage": {% if section.settings.mask_image %}{{ section.settings.mask_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "wrapCurve": {{ section.settings.wrap_curve | default: 50 }},
-    "mug3dModel": {{ section.settings.mug3d_model | default: '' | json }},
-    "mug3dArc": {{ section.settings.mug3d_arc | default: 200 }},
-    "mug3dRadius": {{ section.settings.mug3d_radius | default: 100 }},
-    "mug3dHeight": {{ section.settings.mug3d_height | default: 55 }},
-    "mug3dYOffset": {{ section.settings.mug3d_yoffset | default: 0 }},
-    "mug3dRotation": {{ section.settings.mug3d_rotation | default: 0 }},
-    "mug3dFlipY": {% if section.settings.mug3d_flipy %}true{% else %}false{% endif %},
-    "mug3dAutoRotate": {% if section.settings.mug3d_autorotate == false %}false{% else %}true{% endif %},
-    "mug3dTuner": {% if section.settings.mug3d_tuner %}true{% else %}false{% endif %},
     "enableBack": {% if section.settings.enable_back %}true{% else %}false{% endif %},
     "backImage": {% if section.settings.back_image %}{{ section.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "printBack": {
@@ -678,59 +669,6 @@ button { font-family: inherit; cursor: pointer; }
    photo. The flat image is hidden; its box + handles stay for dragging/resizing. */
 .wrap-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
 .engrave-frame.wrap-mode .up-img img { opacity: 0; }
-.mug3d-wrap { margin: 14px auto 2px; width: min(94%, 460px); }
-.mug3d-stage { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 22px;
-  background: radial-gradient(120% 120% at 50% 18%, #ffffff 0%, #f2f3f5 55%, #e7e9ee 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 10px 30px rgba(0,0,0,0.08); overflow: hidden;
-  touch-action: none; cursor: grab; }
-.mug3d-stage:active { cursor: grabbing; }
-.mug3d-stage canvas { display: block; }
-.mug3d-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  gap: 10px; font-size: 14px; color: #6e6e73; letter-spacing: -0.01em; }
-.mug3d-spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d2d2d7;
-  border-top-color: #1d1d1f; animation: mug3dspin 0.8s linear infinite; }
-@keyframes mug3dspin { to { transform: rotate(360deg); } }
-.mug3d-hint { margin: 8px 0 0; text-align: center; font-size: 12.5px; color: #86868b; letter-spacing: -0.01em; }
-/* 3D-only mode: the flat mug editor (with its printable area) is removed;
-   the mug becomes the whole experience with an upload pill + design sliders. */
-.engrave-sheet.mug3d-live .engrave-stage { position: absolute !important; left: -99999px !important; top: 0;
-  width: 440px; pointer-events: none; }
-.engrave-sheet.mug3d-live .mug3d-wrap { margin-top: 4px; }
-.mug3d-upload { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 4;
-  display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px 11px 15px; border: 0; border-radius: 980px;
-  background: #0071e3; color: #fff; font-weight: 600; font-size: 14px; letter-spacing: -0.01em; cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0,113,227,0.38); }
-.mug3d-upload:hover { background: #0077ed; }
-.mug3d-upload svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.mug3d-controls { margin-top: 14px; width: min(94%, 460px); margin-left: auto; margin-right: auto; display: grid; gap: 12px; }
-.mug3d-ctl { display: grid; grid-template-columns: 84px 1fr; align-items: center; gap: 12px; font-size: 13px; color: #1d1d1f; letter-spacing: -0.01em; }
-.mug3d-ctl > span { color: #6e6e73; }
-.mug3d-ctl input[type="range"] { width: 100%; accent-color: #0071e3; }
-.mug3d-replace { justify-self: start; margin-top: 2px; background: none; border: 0; color: #0071e3;
-  font-weight: 600; font-size: 13px; cursor: pointer; padding: 4px 0; }
-.mug3d-tuner { margin: 14px auto 0; width: min(94%, 460px); padding: 14px 16px; border-radius: 16px;
-  background: #fff8e6; border: 1px solid #f0dca0; box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
-.mug3d-tuner-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
-.mug3d-tuner-head strong { font-size: 14px; color: #7a5b00; letter-spacing: -0.01em; }
-.mug3d-tuner-head span { font-size: 11px; color: #a9852a; }
-.mug3d-tuner-row { display: grid; grid-template-columns: 100px 1fr 72px; align-items: center; gap: 10px; margin: 7px 0; font-size: 13px; color: #1d1d1f; }
-.mug3d-tuner-lbl { color: #6e6e73; }
-.mug3d-tuner-row input[type="range"] { width: 100%; accent-color: #b8860b; }
-.mug3d-tuner-numwrap { display: inline-flex; align-items: center; gap: 2px; }
-.mug3d-tuner-num { width: 48px; padding: 4px 5px; border: 1px solid #e0cf90; border-radius: 7px; background: #fffdf5;
-  font-size: 13px; font-variant-numeric: tabular-nums; color: #1d1d1f; text-align: right; -moz-appearance: textfield; }
-.mug3d-tuner-num:focus { outline: none; border-color: #b8860b; box-shadow: 0 0 0 2px rgba(184,134,11,0.18); }
-.mug3d-tuner-numwrap i { font-style: normal; color: #a9852a; font-size: 12px; }
-.mug3d-tuner-flip { grid-template-columns: 100px 1fr; }
-.mug3d-tuner-flip input { justify-self: start; width: 18px; height: 18px; accent-color: #b8860b; }
-.mug3d-tuner-out { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
-.mug3d-tuner-out code { flex: 1; font-size: 11.5px; color: #5c4600; background: #fffdf5; border: 1px solid #f0dca0;
-  border-radius: 8px; padding: 7px 9px; overflow-x: auto; white-space: nowrap; }
-.mug3d-tuner-out button { border: 0; border-radius: 8px; background: #b8860b; color: #fff; font-weight: 600;
-  font-size: 12px; padding: 7px 12px; cursor: pointer; }
-.mug3d-tuner-note { margin: 8px 0 0; font-size: 11.5px; color: #a9852a; line-height: 1.4; }
-.mug3d-error { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  padding: 18px; text-align: center; font-size: 13px; color: #86868b; }
 .up-img { display: block; line-height: 0; }
 .up-img img { display: block; width: 100%; height: auto; pointer-events: none; -webkit-user-drag: none;
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.18)); }
@@ -1111,17 +1049,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "paragraph", "content": "Makes the uploaded design curve around the mug like a real wrap. Set the product image to a mug photo, then upload a MASK below (same size as the mug photo) with the printable area painted WHITE and everything else transparent. The design shows only inside the white area and is warped onto the cylinder. Leave the mask empty for a normal flat print." },
     { "type": "image_picker", "id": "mask_image", "label": "Printable mask (white = printable)" },
     { "type": "range", "id": "wrap_curve", "label": "Wrap curvature", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 50, "info": "How strongly the design curves around the mug." },
-    { "type": "header", "content": "Live 3D mug preview (Sublimation)" },
-    { "type": "paragraph", "content": "Shows a real 3D mug the customer can spin and zoom, with their design wrapped on live. Upload your .glb model in Settings > Files, copy its URL, and paste it below. When set, the 3D preview replaces the flat wrap. Use the sliders to fit the print band to your model — nudge, save, and check on the storefront." },
-    { "type": "text", "id": "mug3d_model", "label": "3D model URL (.glb)", "info": "From Settings > Files. Leave empty to use the flat wrap instead." },
-    { "type": "range", "id": "mug3d_arc", "label": "Wrap coverage", "min": 40, "max": 320, "step": 5, "unit": "°", "default": 200, "info": "How far around the mug the print wraps." },
-    { "type": "range", "id": "mug3d_radius", "label": "Print radius fit", "min": 90, "max": 120, "step": 1, "unit": "%", "default": 100, "info": "Sit the print flush on the mug surface." },
-    { "type": "range", "id": "mug3d_height", "label": "Print band height", "min": 20, "max": 90, "step": 1, "unit": "%", "default": 55 },
-    { "type": "range", "id": "mug3d_yoffset", "label": "Print vertical position", "min": -50, "max": 50, "step": 1, "unit": "%", "default": 0 },
-    { "type": "range", "id": "mug3d_rotation", "label": "Print rotation around mug", "min": -180, "max": 180, "step": 5, "unit": "°", "default": 0 },
-    { "type": "checkbox", "id": "mug3d_flipy", "label": "Flip print vertically", "default": false, "info": "Turn on if the design appears upside-down." },
-    { "type": "checkbox", "id": "mug3d_autorotate", "label": "Gently spin the mug when idle", "default": true },
-    { "type": "checkbox", "id": "mug3d_tuner", "label": "Show 3D fit tuner (setup only)", "default": false, "info": "Adds live sliders inside the popup to position the print on the mug without reloading. Turn OFF before launch — or leave off and add ?mugfit=1 to the product URL instead." },
     { "type": "header", "content": "Back side (two-sided design)" },
     { "type": "paragraph", "content": "Let customers design a second (back) side for an extra fee. FEE: create a product in Shopify for the charge (e.g. \"Back print +$5\", £/$ set on that product), then paste its VARIANT id below — it's added to the cart automatically when the customer designs the back." },
     { "type": "checkbox", "id": "enable_back", "label": "Enable back side", "default": false },
