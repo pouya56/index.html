@@ -1,0 +1,306 @@
+{% comment %}
+  ============================================================================
+  Dynamic Cart — full-page cart that matches the Dynamic design system
+  ----------------------------------------------------------------------------
+  INSTALL:
+  1. Theme code editor > Sections > Add a new section > name it "dynamic-cart"
+     and REPLACE its contents with this whole file.
+  2. Online Store > Themes > Customize > switch the template dropdown (top) to
+     "Cart". Remove the default "Cart items" section, then Add section >
+     "Dynamic Cart". Save.
+  Renders the cart with Liquid (works with JS off), folds the back-print fee
+  into its item, shows the customer's design preview + an "Edit design" link,
+  and updates quantities / clears the cart live. No apps required.
+  ============================================================================
+{% endcomment %}
+
+<style>
+  .dyn-cart {
+    --bg: #ffffff; --bg-panel: #f5f5f7;
+    --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
+    --line: #d2d2d7; --accent: #0071e3; --danger: #c0392b;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-head: {% if section.settings.heading_font == 'sans' %}var(--font){% else %}"Cormorant Garamond", Georgia, "Times New Roman", Times, serif{% endif %};
+    font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased;
+    background: var(--bg);
+  }
+  .dyn-cart .dc-wrap { max-width: 1180px; margin: 0 auto; padding: 40px 22px 170px; }
+  .dyn-cart .dc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
+  .dyn-cart .dc-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(34px, 6vw, 56px);
+    line-height: 1.02; margin: 0; letter-spacing: -0.01em; }
+  .dyn-cart .dc-continue { color: var(--ink); font-size: 15px; text-decoration: none; border-bottom: 1px solid currentColor;
+    padding-bottom: 2px; white-space: nowrap; transition: opacity .16s; }
+  .dyn-cart .dc-continue:hover { opacity: 0.6; }
+
+  .dyn-cart .dc-colhead { display: grid; grid-template-columns: 1fr 170px 130px; gap: 16px;
+    padding: 0 0 16px; margin-top: 34px; border-bottom: 1px solid var(--line);
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .dyn-cart .dc-colhead span:nth-child(2) { text-align: center; }
+  .dyn-cart .dc-colhead span:nth-child(3) { text-align: right; }
+
+  .dyn-cart .dc-line { display: grid; grid-template-columns: 1fr 170px 130px; gap: 16px; align-items: start;
+    padding: 30px 0; border-bottom: 1px solid rgba(0,0,0,0.08); }
+  .dyn-cart .dc-line-product { display: flex; gap: 22px; min-width: 0; }
+  .dyn-cart .dc-line-img { width: 96px; height: 96px; border-radius: 14px; object-fit: cover;
+    background: var(--bg-panel); flex: none; }
+  .dyn-cart .dc-line-info { min-width: 0; }
+  .dyn-cart .dc-line-title { font-size: 19px; font-weight: 500; line-height: 1.25; }
+  .dyn-cart .dc-line-price { font-size: 14px; color: var(--ink-soft); margin-top: 4px; }
+  .dyn-cart .dc-line-opt { font-size: 14px; color: var(--ink-soft); margin-top: 6px; line-height: 1.4; }
+  .dyn-cart .dc-line-opt b { font-weight: 500; color: var(--ink); }
+  .dyn-cart .dc-line-fee { font-size: 13px; color: var(--ink-faint); margin-top: 8px; }
+  .dyn-cart .dc-line-actions { display: flex; gap: 16px; margin-top: 12px; }
+  .dyn-cart .dc-line-edit { color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none; }
+  .dyn-cart .dc-line-edit:hover { text-decoration: underline; }
+
+  .dyn-cart .dc-qtywrap { display: flex; justify-content: center; }
+  .dyn-cart .dc-qty { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; height: 44px; }
+  .dyn-cart .dc-qty button { width: 42px; height: 42px; border: none; background: transparent; font-size: 20px; line-height: 1;
+    cursor: pointer; color: var(--ink); border-radius: 999px; display: grid; place-items: center; transition: background .16s; }
+  .dyn-cart .dc-qty button:hover { background: rgba(0,0,0,0.05); }
+  .dyn-cart .dc-qty span { min-width: 30px; text-align: center; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .dyn-cart .dc-remove { background: none; border: none; color: var(--ink-faint); cursor: pointer; padding: 6px; margin-top: 2px;
+    display: grid; place-items: center; transition: color .16s; }
+  .dyn-cart .dc-remove:hover { color: var(--danger); }
+  .dyn-cart .dc-remove svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-cart .dc-qtywrap { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .dyn-cart .dc-line-total { text-align: right; font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; padding-top: 10px; }
+
+  .dyn-cart .dc-foot { margin-top: 46px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .dyn-cart .dc-subtotal { display: flex; align-items: baseline; gap: 18px; }
+  .dyn-cart .dc-subtotal .dc-sub-label { font-family: var(--font-head); font-size: 26px; font-weight: 500; }
+  .dyn-cart .dc-subtotal .dc-sub-amt { font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .dyn-cart .dc-tax { font-size: 13px; color: var(--ink-faint); margin: 2px 0 6px; }
+  .dyn-cart .dc-checkout { display: inline-flex; align-items: center; justify-content: center; min-width: 280px;
+    background: var(--ink); color: #fff; padding: 18px 40px; border: none; border-radius: 999px; cursor: pointer;
+    font-family: var(--font); font-weight: 600; font-size: 16px; text-decoration: none; transition: opacity .16s, transform .1s; }
+  .dyn-cart .dc-checkout:hover { opacity: 0.9; }
+  .dyn-cart .dc-checkout:active { transform: scale(0.99); }
+  .dyn-cart .dc-clear { background: none; border: none; color: var(--ink-faint); font-size: 13px; cursor: pointer;
+    margin-top: 6px; padding: 4px; transition: color .16s; }
+  .dyn-cart .dc-clear:hover { color: var(--danger); }
+
+  .dyn-cart .dc-empty { text-align: center; padding: 80px 20px; }
+  .dyn-cart .dc-empty p { font-size: 18px; color: var(--ink-soft); margin: 0 0 26px; }
+  .dyn-cart .dc-empty .dc-checkout { min-width: 0; }
+
+  @media (max-width: 720px) {
+    .dyn-cart .dc-colhead { display: none; }
+    .dyn-cart .dc-line { grid-template-columns: 1fr; gap: 18px; }
+    .dyn-cart .dc-line-img { width: 80px; height: 80px; }
+    .dyn-cart .dc-qtywrap { justify-content: flex-start; }
+    .dyn-cart .dc-line-total { text-align: left; padding-top: 0; font-size: 18px; }
+    .dyn-cart .dc-foot { align-items: stretch; }
+    .dyn-cart .dc-subtotal { justify-content: space-between; }
+    .dyn-cart .dc-checkout { width: 100%; }
+    .dyn-cart .dc-clear { align-self: center; }
+  }
+</style>
+
+<section class="dyn-cart" id="dynCart"
+  data-currency="{{ shop.currency }}"
+  data-cart-url="{{ routes.cart_url }}">
+  <div class="dc-wrap">
+    <div class="dc-head">
+      <h1>{{ section.settings.heading | default: 'Your cart' }}</h1>
+      <a class="dc-continue" href="{{ section.settings.continue_link | default: routes.all_products_collection_url }}">{{ section.settings.continue_label | default: 'Continue shopping' }}</a>
+    </div>
+
+    {% if cart.item_count == 0 %}
+      <div class="dc-empty">
+        <p>{{ section.settings.empty_text | default: 'Your cart is empty.' }}</p>
+        <a class="dc-checkout" href="{{ section.settings.continue_link | default: routes.all_products_collection_url }}">{{ section.settings.continue_label | default: 'Continue shopping' }}</a>
+      </div>
+    {% else %}
+      <div class="dc-colhead">
+        <span>Product</span><span>Quantity</span><span>Total</span>
+      </div>
+
+      <div class="dc-list" id="dcList">
+        {%- for item in cart.items -%}
+          {%- assign grp = item.properties["_grp"] -%}
+          {%- assign dstate = item.properties["_design_state"] -%}
+          {%- comment -%} Skip a standalone back-fee line — it's folded into its item below. {%- endcomment -%}
+          {%- if grp != blank and dstate == blank -%}{%- continue -%}{%- endif -%}
+
+          {%- comment -%} Find this item's folded fee (older single-line carts have none). {%- endcomment -%}
+          {%- assign fee_price = 0 -%}{%- assign fee_unit = 0 -%}{%- assign fee_title = '' -%}{%- assign fee_key = '' -%}
+          {%- if grp != blank -%}
+            {%- for f in cart.items -%}
+              {%- if f.properties["_grp"] == grp and f.properties["_design_state"] == blank -%}
+                {%- assign fee_price = f.final_line_price -%}{%- assign fee_unit = f.final_price -%}
+                {%- assign fee_title = f.product_title -%}{%- assign fee_key = f.key -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endif -%}
+          {%- assign line_total = item.final_line_price | plus: fee_price -%}
+
+          {%- comment -%} Prefer the customer's positioned design preview as the thumbnail. {%- endcomment -%}
+          {%- assign preview = '' -%}
+          {%- for p in item.properties -%}
+            {%- assign lname = p.first | downcase -%}
+            {%- if lname contains 'preview' or lname contains 'mockup' -%}
+              {%- assign pv = p.last -%}
+              {%- if pv contains 'http' or pv contains '/' -%}{%- assign preview = pv -%}{%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+
+          <div class="dc-line" data-key="{{ item.key }}"{% if fee_key != blank %} data-fee-key="{{ fee_key }}"{% endif %}
+            data-unit="{{ item.final_price }}" data-fee-unit="{{ fee_unit }}" data-qty="{{ item.quantity }}">
+            <div class="dc-line-product">
+              {%- if preview != blank -%}
+                <img class="dc-line-img" src="{{ preview }}" alt="" width="96" height="96" loading="lazy">
+              {%- elsif item.image -%}
+                <img class="dc-line-img" src="{{ item.image | image_url: width: 200 }}" alt="{{ item.title | escape }}" width="96" height="96" loading="lazy">
+              {%- else -%}
+                <span class="dc-line-img"></span>
+              {%- endif -%}
+              <div class="dc-line-info">
+                <div class="dc-line-title">{% if item.product.url %}<a href="{{ item.url }}" style="color:inherit;text-decoration:none">{{ item.product.title }}</a>{% else %}{{ item.product.title }}{% endif %}</div>
+                <div class="dc-line-price">{{ item.final_price | money }}{% if item.quantity > 1 %} each{% endif %}</div>
+                {%- for opt in item.options_with_values -%}
+                  {%- unless opt.value == 'Default Title' -%}
+                    <div class="dc-line-opt"><b>{{ opt.name }}:</b> {{ opt.value }}</div>
+                  {%- endunless -%}
+                {%- endfor -%}
+                {%- for p in item.properties -%}
+                  {%- assign pname = p.first -%}{%- assign pval = p.last -%}
+                  {%- assign firstchar = pname | slice: 0 -%}
+                  {%- unless pname == blank or pval == blank or firstchar == '_' -%}
+                    {%- assign lpv = pval | downcase -%}
+                    {%- unless lpv contains 'http' or lpv contains '/uploads' -%}
+                      <div class="dc-line-opt"><b>{{ pname }}:</b> {{ pval }}</div>
+                    {%- endunless -%}
+                  {%- endunless -%}
+                {%- endfor -%}
+                {%- if fee_title != blank -%}
+                  <div class="dc-line-fee">Includes {{ fee_title | downcase }} · {{ fee_price | money }}</div>
+                {%- endif -%}
+                {%- if dstate != blank and item.url != blank -%}
+                  <div class="dc-line-actions">
+                    <a class="dc-line-edit" href="{{ item.url }}{% if item.url contains '?' %}&{% else %}?{% endif %}edit={{ item.key | url_encode }}">Edit design</a>
+                  </div>
+                {%- endif -%}
+              </div>
+            </div>
+            <div class="dc-qtywrap">
+              <span class="dc-qty">
+                <button type="button" data-dec aria-label="Decrease quantity">&minus;</button>
+                <span class="dc-qty-val">{{ item.quantity }}</span>
+                <button type="button" data-inc aria-label="Increase quantity">+</button>
+              </span>
+              <button type="button" class="dc-remove" data-remove aria-label="Remove item">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg>
+              </button>
+            </div>
+            <div class="dc-line-total" data-total>{{ line_total | money }}</div>
+          </div>
+        {%- endfor -%}
+      </div>
+
+      <div class="dc-foot">
+        <div class="dc-subtotal">
+          <span class="dc-sub-label">{{ section.settings.subtotal_label | default: 'Estimated total' }}</span>
+          <span class="dc-sub-amt" id="dcSubtotal">{{ cart.items_subtotal_price | money_with_currency }}</span>
+        </div>
+        <p class="dc-tax">{{ section.settings.tax_note | default: 'Taxes, discounts and shipping calculated at checkout.' }}</p>
+        <a class="dc-checkout" href="/checkout">{{ section.settings.checkout_label | default: 'Check out' }}</a>
+        {% if section.settings.show_clear %}<button type="button" class="dc-clear" id="dcClear">{{ section.settings.clear_label | default: 'Clear cart' }}</button>{% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+(function () {
+  var root = document.getElementById("dynCart");
+  if (!root) return;
+  var list = document.getElementById("dcList");
+  var subEl = document.getElementById("dcSubtotal");
+  var currency = root.getAttribute("data-currency") || "USD";
+  var cartUrl = root.getAttribute("data-cart-url") || "/cart";
+  var inFlight = false, pending = null;
+
+  function money(cents) {
+    try { return new Intl.NumberFormat(undefined, { style: "currency", currency: currency }).format((cents || 0) / 100); }
+    catch (e) { return "$" + ((cents || 0) / 100).toFixed(2); }
+  }
+  function syncHeader() { try { if (window.DynamicHeader && window.DynamicHeader.refreshCart) window.DynamicHeader.refreshCart(); } catch (e) {} }
+
+  function recalc() {
+    var total = 0;
+    list.querySelectorAll(".dc-line").forEach(function (ln) {
+      var q = parseInt(ln.getAttribute("data-qty"), 10) || 0;
+      var unit = parseInt(ln.getAttribute("data-unit"), 10) || 0;
+      var feeUnit = parseInt(ln.getAttribute("data-fee-unit"), 10) || 0;
+      total += (unit + feeUnit) * q;
+    });
+    if (subEl) subEl.textContent = money(total);
+    if (!list.querySelector(".dc-line")) window.location.reload(); // cart emptied — show empty state
+  }
+
+  function send(updates) {
+    inFlight = true;
+    fetch("/cart/update.js", {
+      method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ updates: updates })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (cart) { if (subEl && cart && cart.items_subtotal_price != null && !pending) subEl.textContent = money(cart.items_subtotal_price); syncHeader(); })
+      .catch(function () { window.location.reload(); })
+      .then(function () { inFlight = false; if (pending) { var u = pending; pending = null; send(u); } });
+  }
+  function queue(updates) { if (inFlight) { pending = Object.assign(pending || {}, updates); } else { send(updates); } }
+
+  function setLine(ln, qty) {
+    var key = ln.getAttribute("data-key"), feeKey = ln.getAttribute("data-fee-key");
+    var updates = {}; updates[key] = qty; if (feeKey) updates[feeKey] = qty;
+    if (qty <= 0) { ln.remove(); recalc(); queue(updates); return; }
+    ln.setAttribute("data-qty", qty);
+    var valEl = ln.querySelector(".dc-qty-val"); if (valEl) valEl.textContent = qty;
+    var unit = parseInt(ln.getAttribute("data-unit"), 10) || 0;
+    var feeUnit = parseInt(ln.getAttribute("data-fee-unit"), 10) || 0;
+    var totalEl = ln.querySelector("[data-total]"); if (totalEl) totalEl.textContent = money((unit + feeUnit) * qty);
+    recalc(); queue(updates);
+  }
+
+  if (list) list.addEventListener("click", function (e) {
+    var ln = e.target.closest(".dc-line"); if (!ln) return;
+    var cur = parseInt(ln.getAttribute("data-qty"), 10) || 0;
+    if (e.target.closest("[data-remove]")) { setLine(ln, 0); return; }
+    if (e.target.closest("[data-inc]")) { setLine(ln, cur + 1); return; }
+    if (e.target.closest("[data-dec]")) { setLine(ln, Math.max(0, cur - 1)); return; }
+  });
+
+  var clearBtn = document.getElementById("dcClear");
+  if (clearBtn) clearBtn.addEventListener("click", function () {
+    if (!window.confirm("Remove all items from your cart?")) return;
+    fetch("/cart/clear.js", { method: "POST", headers: { "Accept": "application/json" } })
+      .then(function () { syncHeader(); window.location.reload(); })
+      .catch(function () { window.location.reload(); });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Cart",
+  "tag": "section",
+  "class": "dynamic-cart-section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Your cart" },
+    { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
+      "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
+    { "type": "text", "id": "continue_label", "label": "Continue-shopping label", "default": "Continue shopping" },
+    { "type": "url", "id": "continue_link", "label": "Continue-shopping link", "info": "Leave empty to link to all products." },
+    { "type": "text", "id": "subtotal_label", "label": "Subtotal label", "default": "Estimated total" },
+    { "type": "text", "id": "checkout_label", "label": "Checkout button label", "default": "Check out" },
+    { "type": "text", "id": "tax_note", "label": "Fine print under the total", "default": "Taxes, discounts and shipping calculated at checkout." },
+    { "type": "text", "id": "empty_text", "label": "Empty-cart message", "default": "Your cart is empty." },
+    { "type": "checkbox", "id": "show_clear", "label": "Show 'Clear cart' button", "default": true },
+    { "type": "text", "id": "clear_label", "label": "Clear-cart label", "default": "Clear cart" }
+  ],
+  "presets": [ { "name": "Dynamic Cart" } ],
+  "enabled_on": { "templates": ["cart"] }
+}
+{% endschema %}
