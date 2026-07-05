@@ -1737,7 +1737,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   // ---- Cylindrical mug wrap (Sublimation) ----------------------------------
   // Active when the merchant supplied a printable mask image. The design is
   // drawn cylindrically warped and clipped to the mask so it looks wrapped.
-  function wrapActive() { return !!(window.DYN_SETTINGS && window.DYN_SETTINGS.maskImage && product && product.uploadMode); }
+  function wrapActive() { return !mug3dActive() && !!(window.DYN_SETTINGS && window.DYN_SETTINGS.maskImage && product && product.uploadMode); }
+  // Active when the merchant supplied a .glb model URL — a real 3D mug preview
+  // supersedes the flat 2D wrap. Falls back to the flat wrap if the 3D engine
+  // is unavailable.
+  function mug3dActive() { return !!(window.DYN_SETTINGS && window.DYN_SETTINGS.mug3dModel && product && product.uploadMode && window.DynMug3D); }
   const _wrapImgCache = {};
   function wrapImg(src, onReady) {
     if (!src) return null;
@@ -1822,6 +1826,98 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     ctx.globalCompositeOperation = "destination-in";
     try { ctx.drawImage(mask, 0, 0, fr.width, fr.height); } catch (_) {}
     ctx.globalCompositeOperation = "source-over";
+  }
+
+  // ---- Live 3D mug preview -------------------------------------------------
+  let _mug3d = null;          // the DynMug3D viewer instance
+  let _mug3dPending = false;  // guards double-mount
+  let _mug3dRaf = 0;          // throttles texture refreshes to one per frame
+
+  function mug3dOpts() {
+    const S = window.DYN_SETTINGS || {};
+    return {
+      modelUrl: S.mug3dModel,
+      arcDeg: S.mug3dArc || 200,
+      radiusScale: (S.mug3dRadius || 102) / 100,
+      heightFrac: (S.mug3dHeight || 55) / 100,
+      yOffset: (S.mug3dYOffset || 0) / 100,
+      rotationDeg: S.mug3dRotation || 0,
+      flipY: !!S.mug3dFlipY,
+      autoRotate: S.mug3dAutoRotate !== false
+    };
+  }
+
+  function mountMug3D() {
+    const stage = q2("#mug3dStage");
+    if (!stage || _mug3d || _mug3dPending || !window.DynMug3D) return;
+    _mug3dPending = true;
+    const opts = mug3dOpts();
+    opts.onReady = function () {
+      _mug3dPending = false;
+      const load = q2("#mug3dLoading"); if (load) load.remove();
+      refreshMug3D();
+    };
+    opts.onError = function (err) {
+      _mug3dPending = false;
+      const load = q2("#mug3dLoading");
+      if (load) { load.className = "mug3d-error"; load.textContent = "3D preview couldn't load — you can still design normally."; }
+    };
+    try {
+      window.DynMug3D.create(stage, opts).then(function (v) { _mug3d = v; }).catch(function () {});
+    } catch (e) { _mug3dPending = false; }
+  }
+
+  function teardownMug3D() {
+    if (_mug3dRaf) { cancelAnimationFrame(_mug3dRaf); _mug3dRaf = 0; }
+    if (_mug3d) { try { _mug3d.dispose(); } catch (e) {} _mug3d = null; }
+    _mug3dPending = false;
+  }
+
+  // Draw the current side's layers onto a transparent canvas the size of the
+  // print band — this becomes the texture wrapped around the 3D mug. Reads the
+  // already-decoded <img> elements from the DOM so it stays synchronous.
+  function compositeMugTexture() {
+    const P = sidePrint(currentSide) || sidePrint("front") || {};
+    const bandW = Math.max(1, P.w != null ? P.w : 56);
+    const bandH = Math.max(1, P.h != null ? P.h : 40);
+    const TW = 1024, TH = Math.max(1, Math.round(TW * (bandH / bandW)));
+    const c = document.createElement("canvas"); c.width = TW; c.height = TH;
+    const ctx = c.getContext("2d");
+    (layers || []).forEach(function (layer) {
+      if (layer.kind === "text") {
+        if (!layer.text) return;
+        const fs = (layer.size / 100) * TW;
+        ctx.save();
+        ctx.translate((layer.x / 100) * TW, (layer.y / 100) * TH);
+        ctx.rotate((layer.rotate || 0) * Math.PI / 180);
+        ctx.font = "600 " + fs + "px 'DynEmoji', " + (layer.font || "sans-serif");
+        ctx.fillStyle = layer.color || "#1d1d1f";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        const lines = String(layer.text).split("\n"), lh = fs * 1.25, y0 = -((lines.length - 1) * lh) / 2;
+        lines.forEach(function (ln, i) { try { ctx.fillText(ln, 0, y0 + i * lh); } catch (_) {} });
+        ctx.restore();
+      } else if (layer.url) {
+        const el = layerEl(layer.id), im = el && el.querySelector("img");
+        if (!im || !im.complete || !(im.naturalWidth > 0)) return;
+        const w = TW * (layer.scale / 100), h = w * ((im.naturalHeight || 1) / (im.naturalWidth || 1));
+        ctx.save();
+        ctx.translate((layer.x / 100) * TW, (layer.y / 100) * TH);
+        ctx.rotate((layer.rotate || 0) * Math.PI / 180);
+        try { ctx.drawImage(im, -w / 2, -h / 2, w, h); } catch (_) {}
+        ctx.restore();
+      }
+    });
+    return c;
+  }
+
+  function refreshMug3D() {
+    if (!_mug3d) return;
+    if (_mug3dRaf) return;
+    _mug3dRaf = requestAnimationFrame(function () {
+      _mug3dRaf = 0;
+      if (!_mug3d) return;
+      try { _mug3d.setDesignCanvas(compositeMugTexture()); } catch (e) {}
+    });
   }
 
   function switchSide(side) {
@@ -1965,6 +2061,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (hint) hint.style.display = countKind("img") ? "none" : "";
     // Mug-wrap mode: draw the cylindrically warped design on the overlay canvas.
     if (wrapActive()) renderWrap();
+    // 3D mode: push the live design onto the mug texture.
+    if (_mug3d) refreshMug3D();
   }
   // Photo-only methods (e.g. DTF) allow just ONE design; others allow up to MAX_IMG.
   function maxImages() { return (product && product.photoOnly) ? 1 : MAX_IMG; }
@@ -2216,6 +2314,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                 '<span>Click to upload your design</span></button>' : '') +
             '</div>' +
           '</div></div>' +
+          // Live 3D preview — the customer spins/zooms the real mug with their design wrapped on.
+          (mug3dActive()
+            ? '<div class="mug3d-wrap"><div class="mug3d-stage" id="mug3dStage">' +
+                '<div class="mug3d-loading" id="mug3dLoading"><span class="mug3d-spin"></span>Loading 3D preview…</div>' +
+              '</div><p class="mug3d-hint">Drag to rotate · scroll to zoom</p></div>'
+            : '') +
           '<div class="up-controls">' +
             '<input type="file" data-file="design" accept=".png,.jpg,.jpeg,.svg,.pdf" hidden>' +
             // Photo-only has no compose bar — you upload by clicking the image above.
@@ -2302,6 +2406,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     });
     q2("#uploadApply").onclick = onUploadApply;
     renderUpEls();
+    if (mug3dActive()) mountMug3D();
   }
 
   // Wipe the canvas back to an empty Front side (both sides cleared, field empty).
@@ -2353,7 +2458,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         props["Sides"] = "Front + Back";
       }
       if (product && product.method) props["Print method"] = product.method;
-      const compF = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
+      // Front preview: use the live 3D mug render when the 3D preview is active,
+      // otherwise composite the flat mockup.
+      let compF = null;
+      if (mug3dActive() && _mug3d) { try { compF = await _mug3d.snapshot(); } catch (e) {} }
+      if (!compF) compF = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
       if (compF) { const cu = await uploadToCloudinary(dataURLtoBlob(compF), product.id + "-front.png"); if (cu) props["_preview_url"] = cu; }
       if (hasBackDesign) {
         const compB = await compositeSide(sideLayers.back, sideImage("back"), sidePrint("back"));
@@ -3231,6 +3340,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   function closeModal() {
     if (!modalOpen) return;
     modalOpen = false;
+    teardownMug3D();
     const rootEl = $("#modalRoot");
     const sheet = $(".modal-sheet");
     const scrim = $(".modal-scrim");

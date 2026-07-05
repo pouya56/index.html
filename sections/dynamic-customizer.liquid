@@ -76,6 +76,14 @@
     },
     "maskImage": {% if section.settings.mask_image %}{{ section.settings.mask_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "wrapCurve": {{ section.settings.wrap_curve | default: 50 }},
+    "mug3dModel": {{ section.settings.mug3d_model | default: '' | json }},
+    "mug3dArc": {{ section.settings.mug3d_arc | default: 200 }},
+    "mug3dRadius": {{ section.settings.mug3d_radius | default: 102 }},
+    "mug3dHeight": {{ section.settings.mug3d_height | default: 55 }},
+    "mug3dYOffset": {{ section.settings.mug3d_yoffset | default: 0 }},
+    "mug3dRotation": {{ section.settings.mug3d_rotation | default: 0 }},
+    "mug3dFlipY": {% if section.settings.mug3d_flipy %}true{% else %}false{% endif %},
+    "mug3dAutoRotate": {% if section.settings.mug3d_autorotate == false %}false{% else %}true{% endif %},
     "enableBack": {% if section.settings.enable_back %}true{% else %}false{% endif %},
     "backImage": {% if section.settings.back_image %}{{ section.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "printBack": {
@@ -669,6 +677,21 @@ button { font-family: inherit; cursor: pointer; }
    photo. The flat image is hidden; its box + handles stay for dragging/resizing. */
 .wrap-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
 .engrave-frame.wrap-mode .up-img img { opacity: 0; }
+.mug3d-wrap { margin: 14px auto 2px; width: min(94%, 460px); }
+.mug3d-stage { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 22px;
+  background: radial-gradient(120% 120% at 50% 18%, #ffffff 0%, #f2f3f5 55%, #e7e9ee 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 10px 30px rgba(0,0,0,0.08); overflow: hidden;
+  touch-action: none; cursor: grab; }
+.mug3d-stage:active { cursor: grabbing; }
+.mug3d-stage canvas { display: block; }
+.mug3d-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  gap: 10px; font-size: 14px; color: #6e6e73; letter-spacing: -0.01em; }
+.mug3d-spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d2d2d7;
+  border-top-color: #1d1d1f; animation: mug3dspin 0.8s linear infinite; }
+@keyframes mug3dspin { to { transform: rotate(360deg); } }
+.mug3d-hint { margin: 8px 0 0; text-align: center; font-size: 12.5px; color: #86868b; letter-spacing: -0.01em; }
+.mug3d-error { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: 18px; text-align: center; font-size: 13px; color: #86868b; }
 .up-img { display: block; line-height: 0; }
 .up-img img { display: block; width: 100%; height: auto; pointer-events: none; -webkit-user-drag: none;
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.18)); }
@@ -970,6 +993,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
 {% endraw %}
+<script src="{{ 'dynamic-mug-3d.js' | asset_url }}" defer></script>
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
 {%- comment -%} The Features panel lives in its own section: dynamic-features.liquid {%- endcomment -%}
@@ -1049,6 +1073,16 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "paragraph", "content": "Makes the uploaded design curve around the mug like a real wrap. Set the product image to a mug photo, then upload a MASK below (same size as the mug photo) with the printable area painted WHITE and everything else transparent. The design shows only inside the white area and is warped onto the cylinder. Leave the mask empty for a normal flat print." },
     { "type": "image_picker", "id": "mask_image", "label": "Printable mask (white = printable)" },
     { "type": "range", "id": "wrap_curve", "label": "Wrap curvature", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 50, "info": "How strongly the design curves around the mug." },
+    { "type": "header", "content": "Live 3D mug preview (Sublimation)" },
+    { "type": "paragraph", "content": "Shows a real 3D mug the customer can spin and zoom, with their design wrapped on live. Upload your .glb model in Settings > Files, copy its URL, and paste it below. When set, the 3D preview replaces the flat wrap. Use the sliders to fit the print band to your model — nudge, save, and check on the storefront." },
+    { "type": "text", "id": "mug3d_model", "label": "3D model URL (.glb)", "info": "From Settings > Files. Leave empty to use the flat wrap instead." },
+    { "type": "range", "id": "mug3d_arc", "label": "Wrap coverage", "min": 40, "max": 320, "step": 5, "unit": "°", "default": 200, "info": "How far around the mug the print wraps." },
+    { "type": "range", "id": "mug3d_radius", "label": "Print radius fit", "min": 90, "max": 120, "step": 1, "unit": "%", "default": 102, "info": "Sit the print flush on the mug surface." },
+    { "type": "range", "id": "mug3d_height", "label": "Print band height", "min": 20, "max": 90, "step": 1, "unit": "%", "default": 55 },
+    { "type": "range", "id": "mug3d_yoffset", "label": "Print vertical position", "min": -50, "max": 50, "step": 1, "unit": "%", "default": 0 },
+    { "type": "range", "id": "mug3d_rotation", "label": "Print rotation around mug", "min": -180, "max": 180, "step": 5, "unit": "°", "default": 0 },
+    { "type": "checkbox", "id": "mug3d_flipy", "label": "Flip print vertically", "default": false, "info": "Turn on if the design appears upside-down." },
+    { "type": "checkbox", "id": "mug3d_autorotate", "label": "Gently spin the mug when idle", "default": true },
     { "type": "header", "content": "Back side (two-sided design)" },
     { "type": "paragraph", "content": "Let customers design a second (back) side for an extra fee. FEE: create a product in Shopify for the charge (e.g. \"Back print +$5\", £/$ set on that product), then paste its VARIANT id below — it's added to the cart automatically when the customer designs the back." },
     { "type": "checkbox", "id": "enable_back", "label": "Enable back side", "default": false },
