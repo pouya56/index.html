@@ -2096,6 +2096,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const exampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.exampleImage) || "";
     const sampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.sampleImage) || "";
     const sampleCaption = (window.DYN_SETTINGS && window.DYN_SETTINGS.sampleCaption) || "How your finished product will look";
+    const sampleLabel = (window.DYN_SETTINGS && window.DYN_SETTINGS.sampleButtonLabel) || "See a finished sample";
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
     const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (photoOnly
       ? ("Click the image to upload your design, then drag, resize or rotate it on your " + noun + ".")
@@ -2130,10 +2131,22 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                 '<span>Click to upload your design</span></button>' : '') +
             '</div>' +
           '</div></div>' +
-          // Finished-product sample (not part of the print area) — shows customers the real result.
-          (sampleImg ? '<div class="engrave-sample"><img src="' + sampleImg + '" alt="Finished product example" loading="lazy">' +
-            (sampleCaption ? '<p class="engrave-sample-cap">' + escapeHtml(sampleCaption) + '</p>' : '') +
-          '</div>' : '') +
+          // Finished-product sample — a button that opens the photo in a popup (not in the print area).
+          (sampleImg ? '<div class="engrave-sample-row">' +
+              '<button type="button" class="sample-btn" id="sampleBtn">' +
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 15l5-4 4 3 3-2 6 5"/><circle cx="8.5" cy="9" r="1.4"/></svg>' +
+                '<span>' + escapeHtml(sampleLabel) + '</span>' +
+              '</button>' +
+            '</div>' +
+            '<div class="sample-lightbox" id="sampleLightbox" aria-hidden="true">' +
+              '<div class="sample-lightbox-scrim" data-sample-close></div>' +
+              '<figure class="sample-lightbox-fig">' +
+                '<button type="button" class="sample-lightbox-close" data-sample-close aria-label="Close">✕</button>' +
+                '<img src="' + sampleImg + '" alt="Finished product example">' +
+                (sampleCaption ? '<figcaption>' + escapeHtml(sampleCaption) + '</figcaption>' : '') +
+              '</figure>' +
+            '</div>'
+          : '') +
           '<div class="up-controls">' +
             '<input type="file" data-file="design" accept=".png,.jpg,.jpeg,.svg,.pdf" hidden>' +
             // Photo-only has no compose bar — you upload by clicking the image above.
@@ -2219,6 +2232,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (!e.target.closest(".up-el")) { activeLayerId = null; if (txt) txt.value = ""; renderUpEls(); }
     });
     q2("#uploadApply").onclick = onUploadApply;
+    // Finished-sample button → open/close the photo popup.
+    const sampleBtn = q2("#sampleBtn"), sampleLb = q2("#sampleLightbox");
+    if (sampleBtn && sampleLb) {
+      sampleBtn.onclick = function () { sampleLb.classList.add("open"); sampleLb.setAttribute("aria-hidden", "false"); };
+      const closeLb = function () { sampleLb.classList.remove("open"); sampleLb.setAttribute("aria-hidden", "true"); };
+      sampleLb.querySelectorAll("[data-sample-close]").forEach(function (el) { el.onclick = closeLb; });
+    }
     renderUpEls();
   }
 
