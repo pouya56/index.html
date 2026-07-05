@@ -203,11 +203,17 @@
 
   Viewer.prototype._buildDecal = function () {
     var THREE = this.THREE, o = this.opts, m = this._metrics || { radius: 0.66, height: 1.8, cy: 0 };
-    var arcDeg = num(o.arcDeg, 200);
-    var radiusScale = num(o.radiusScale, 1.02);
-    var heightFrac = num(o.heightFrac, 0.55);
-    var yOffset = num(o.yOffset, 0);
-    var rotationDeg = num(o.rotationDeg, 0);
+    // this.fit holds the current (live-tunable) fit values.
+    if (!this.fit) this.fit = {
+      arcDeg: num(o.arcDeg, 200), radiusScale: num(o.radiusScale, 1.02),
+      heightFrac: num(o.heightFrac, 0.55), yOffset: num(o.yOffset, 0),
+      rotationDeg: num(o.rotationDeg, 0), flipY: o.flipY === true
+    };
+    var arcDeg = this.fit.arcDeg;
+    var radiusScale = this.fit.radiusScale;
+    var heightFrac = this.fit.heightFrac;
+    var yOffset = this.fit.yOffset;
+    var rotationDeg = this.fit.rotationDeg;
 
     var r = m.radius * radiusScale;
     var bandH = m.height * heightFrac;
@@ -235,11 +241,36 @@
     if (this._designSource) this._applyDesign();
   };
 
+  Viewer.prototype._removeDecal = function () {
+    if (!this._decal) return;
+    try { this._model.remove(this._decal); } catch (e) {}
+    try { if (this._decal.geometry) this._decal.geometry.dispose(); } catch (e) {}
+    try { if (this._decal.material) { if (this._decal.material.map) this._decal.material.map.dispose(); this._decal.material.dispose(); } } catch (e) {}
+    this._decal = null; this._decalTex = null;
+  };
+
+  // Live-adjust the wrap fit (used by the in-popup tuner). Rebuilds the decal
+  // in place without reloading the model. Returns the current fit values.
+  Viewer.prototype.setFit = function (partial) {
+    if (!this.fit) this.fit = {};
+    if (partial) {
+      if (partial.arcDeg != null) this.fit.arcDeg = num(partial.arcDeg, this.fit.arcDeg);
+      if (partial.radiusScale != null) this.fit.radiusScale = num(partial.radiusScale, this.fit.radiusScale);
+      if (partial.heightFrac != null) this.fit.heightFrac = num(partial.heightFrac, this.fit.heightFrac);
+      if (partial.yOffset != null) this.fit.yOffset = num(partial.yOffset, this.fit.yOffset);
+      if (partial.rotationDeg != null) this.fit.rotationDeg = num(partial.rotationDeg, this.fit.rotationDeg);
+      if (partial.flipY != null) this.fit.flipY = !!partial.flipY;
+    }
+    if (this.THREE && this._model) { this._removeDecal(); this._buildDecal(); }
+    return this.fit;
+  };
+
   Viewer.prototype._makeTexture = function () {
     var THREE = this.THREE;
     var cv = document.createElement("canvas"); cv.width = 4; cv.height = 4;
     var tex = new THREE.CanvasTexture(cv);
-    tex.flipY = this.opts.flipY === false ? false : true;
+    var flip = this.fit ? this.fit.flipY : (this.opts.flipY === true);
+    tex.flipY = flip ? true : false;
     tex.wrapS = THREE.ClampToEdgeWrapping;
     tex.wrapT = THREE.ClampToEdgeWrapping;
     tex.anisotropy = this.renderer ? this.renderer.capabilities.getMaxAnisotropy() : 1;
@@ -329,7 +360,6 @@
     available: function () { return true; }
   };
 })();
-
 
 /* === Customizer app === */
 /* Dynamic Customizer — app JS (theme asset). Do not add Liquid here. */
@@ -2203,10 +2233,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     mug3dShowStatus("Loading 3D engine…", false);
     const opts = mug3dOpts();
     opts.onProgress = function () { mug3dShowStatus("Loading mug model…", false); };
-    opts.onReady = function () {
+    opts.onReady = function (viewer) {
       _mug3dPending = false;
+      if (viewer) _mug3d = viewer;   // available immediately (create resolves .then slightly later)
       const load = q2("#mug3dLoading"); if (load) load.remove();
       refreshMug3D();
+      if (mug3dTunerOn()) buildMug3DTuner();
     };
     opts.onError = function (err) {
       _mug3dPending = false;
@@ -2219,6 +2251,72 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     try {
       window.DynMug3D.create(stage, opts).then(function (v) { _mug3d = v; }).catch(function () {});
     } catch (e) { _mug3dPending = false; }
+  }
+
+  // The tuner is a merchant-only overlay: turn it on with the section checkbox
+  // OR by adding ?mugfit=1 to the product URL. Customers never see it.
+  function mug3dTunerOn() {
+    var byUrl = false;
+    try { byUrl = /[?&]mugfit(=1)?(&|$)/i.test(location.search || ""); } catch (e) {}
+    return !!(window.DYN_SETTINGS && window.DYN_SETTINGS.mug3dTuner) || byUrl;
+  }
+
+  function buildMug3DTuner() {
+    if (!_mug3d || q2("#mug3dTuner")) return;
+    const wrap = q2(".mug3d-wrap"); if (!wrap) return;
+    const S = window.DYN_SETTINGS || {};
+    // Rows: [label, id, min, max, step, initial, unit]
+    const rows = [
+      ["Wrap coverage", "arc", 40, 320, 5, (S.mug3dArc || 200), "°"],
+      ["Radius fit", "rad", 90, 120, 1, (S.mug3dRadius || 102), "%"],
+      ["Band height", "hgt", 20, 90, 1, (S.mug3dHeight || 55), "%"],
+      ["Vertical position", "yof", -50, 50, 1, (S.mug3dYOffset || 0), "%"],
+      ["Rotation", "rot", -180, 180, 5, (S.mug3dRotation || 0), "°"]
+    ];
+    let html = '<div class="mug3d-tuner-head"><strong>3D fit tuner</strong>' +
+      '<span>setup only — not shown to customers</span></div>';
+    rows.forEach(function (r) {
+      html += '<label class="mug3d-tuner-row"><span class="mug3d-tuner-lbl">' + r[0] + '</span>' +
+        '<input type="range" id="mt_' + r[1] + '" min="' + r[2] + '" max="' + r[3] + '" step="' + r[4] + '" value="' + r[5] + '">' +
+        '<output id="mto_' + r[1] + '">' + r[5] + r[6] + '</output></label>';
+    });
+    html += '<label class="mug3d-tuner-row mug3d-tuner-flip"><span class="mug3d-tuner-lbl">Flip vertically</span>' +
+      '<input type="checkbox" id="mt_flip"' + (S.mug3dFlipY ? " checked" : "") + '></label>';
+    html += '<div class="mug3d-tuner-out"><code id="mug3dTunerCode"></code>' +
+      '<button type="button" id="mug3dTunerCopy">Copy</button></div>' +
+      '<p class="mug3d-tuner-note">Dial it in here (live), then copy these into the section settings — or send them to me and I\'ll set them as defaults.</p>';
+    const box = document.createElement("div");
+    box.id = "mug3dTuner"; box.className = "mug3d-tuner";
+    box.innerHTML = html;
+    wrap.appendChild(box);
+
+    const val = function (id) { const el = q2("#mt_" + id); return el ? +el.value : 0; };
+    const apply = function () {
+      if (!_mug3d) return;
+      _mug3d.setFit({
+        arcDeg: val("arc"), radiusScale: val("rad") / 100, heightFrac: val("hgt") / 100,
+        yOffset: val("yof") / 100, rotationDeg: val("rot"), flipY: q2("#mt_flip").checked
+      });
+      refreshMug3D();
+      updateCode();
+    };
+    const updateCode = function () {
+      const c = q2("#mug3dTunerCode"); if (!c) return;
+      c.textContent = "Wrap " + val("arc") + "°  ·  Radius " + val("rad") + "%  ·  Height " + val("hgt") +
+        "%  ·  Vertical " + val("yof") + "%  ·  Rotation " + val("rot") + "°  ·  Flip " + (q2("#mt_flip").checked ? "on" : "off");
+    };
+    rows.forEach(function (r) {
+      const el = q2("#mt_" + r[1]), out = q2("#mto_" + r[1]);
+      if (!el) return;
+      el.addEventListener("input", function () { if (out) out.textContent = el.value + r[6]; apply(); });
+    });
+    const flip = q2("#mt_flip"); if (flip) flip.addEventListener("change", apply);
+    const copy = q2("#mug3dTunerCopy");
+    if (copy) copy.onclick = function () {
+      const t = (q2("#mug3dTunerCode") || {}).textContent || "";
+      try { navigator.clipboard.writeText(t); copy.textContent = "Copied ✓"; setTimeout(function () { copy.textContent = "Copy"; }, 1400); } catch (e) {}
+    };
+    updateCode();
   }
 
   function teardownMug3D() {
