@@ -2365,7 +2365,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     function grow() {
       if (input.tagName === "TEXTAREA") { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 132) + "px"; }
     }
-    const MAX_LINES = 3;
+    const MAX_LINES = 1; // one line per text box — add another box with +
     const LINE_UNITS = 20; // ~20 letters OR ~12 emoji per line
     function uUnit(ch) { return /\p{Extended_Pictographic}/u.test(ch) ? (LINE_UNITS / 12) : 1; }
     // Wrap the text into lines of at most LINE_UNITS "units" \u2014 a letter counts as 1,
@@ -2389,7 +2389,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
     function insert(ch) {
       const next = reflow(input.value + ch);
-      if (next === input.value) { toast("Up to " + MAX_LINES + " lines"); return; }
+      if (next === input.value) { toast(MAX_LINES === 1 ? "One line per box — add another with +" : "Up to " + MAX_LINES + " lines"); return; }
       input.value = next;
       sync(); grow();
       // Keep focus on the text field (cursor at the end) so the customer can
