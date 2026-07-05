@@ -53,7 +53,7 @@
     "rootUrl": {{ routes.root_url | default: '/' | json }},
     "productUrl": {% if dyn_product %}{{ dyn_product.url | json }}{% else %}""{% endif %},
     "productHandle": {% if dyn_product %}{{ dyn_product.handle | json }}{% else %}""{% endif %},
-    "variants": [{% if dyn_product %}{% for v in dyn_product.variants %}{ "id": {{ v.id }}, "title": {{ v.title | json }}, "available": {{ v.available }}, "price": {{ v.price | money | json }}, "options": {{ v.options | json }}, "image": {% if v.featured_image %}{{ v.featured_image | image_url: width: 120 | json }}{% else %}null{% endif %} }{% unless forloop.last %},{% endunless %}{% endfor %}{% endif %}],
+    "variants": [{% if dyn_product %}{% for v in dyn_product.variants %}{ "id": {{ v.id }}, "title": {{ v.title | json }}, "available": {{ v.available }}, "price": {{ v.price | money | json }}, "options": {{ v.options | json }}, "image": {% if v.featured_image %}{{ v.featured_image | image_url: width: 1400 | json }}{% else %}null{% endif %} }{% unless forloop.last %},{% endunless %}{% endfor %}{% endif %}],
     "options": [{% if dyn_product %}{% for o in dyn_product.options_with_values %}{ "name": {{ o.name | json }}, "values": {{ o.values | json }}, "swatches": [{% for v in o.values %}{ "value": {{ v | json }}, "color": {% if v.swatch and v.swatch.color %}{{ v.swatch.color | json }}{% else %}null{% endif %}, "image": {% if v.swatch and v.swatch.image %}{{ v.swatch.image | image_url: width: 80 | json }}{% else %}null{% endif %} }{% unless forloop.last %},{% endunless %}{% endfor %}] }{% unless forloop.last %},{% endunless %}{% endfor %}{% endif %}],
     "cartUrl": {{ routes.cart_url | default: '/cart' | json }},
     "cartCount": {{ cart.item_count | default: 0 }},
