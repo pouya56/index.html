@@ -2848,30 +2848,49 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const qty = Math.max(1, (store.get().quantity) || 1);
     const clean = {};
     Object.keys(properties || {}).forEach((k) => { if (properties[k]) clean[k] = properties[k]; });
-    // Extra lines (e.g. the "back print fee" product) added alongside the item.
-    const extra = (extraItems || []).filter((it) => it && it.id);
+    // Extra lines (e.g. the "back print fee" product). Accept a plain number, a
+    // number with spaces, or a full variant GID — we pull out the numeric id.
+    const extra = (extraItems || []).map((it) => {
+      if (!it || it.id == null) return null;
+      const m = String(it.id).match(/\d{4,}/);
+      return m ? Object.assign({}, it, { id: m[0] }) : null;
+    }).filter(Boolean);
     if (S.variantId) {
       try {
+        // 1) Add the main item on its own. This must succeed.
         const res = await fetch("/cart/add.js", {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ items: [{ id: S.variantId, quantity: qty, properties: clean }].concat(extra) }),
+          body: JSON.stringify({ items: [{ id: S.variantId, quantity: qty, properties: clean }] }),
         });
-        if (res.ok) {
-          // Prefer the header's cart drawer (it has "Edit design") so the customer
-          // sees ONE consistent cart. Fall back to the built-in drawer if the
-          // header section isn't on the page.
-          if (document.getElementById("hdCart") && window.DynamicHeader && window.DynamicHeader.openCart) {
-            window.DynamicHeader.openCart();
-          } else if (window.DynamicCart) {
-            await window.DynamicCart.refresh(); window.DynamicCart.open();
-          } else { window.location.href = "/cart"; }
-          return true;
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          console.warn("[Dynamic] /cart/add.js failed", err);
+          toast(err.description || "Couldn't add to bag");
+          return false;
         }
-        const err = await res.json().catch(() => ({}));
-        console.warn("[Dynamic] /cart/add.js failed", err);
-        toast(err.description || "Couldn't add to bag");
-        return false;
+        // 2) Add each extra line separately, so a bad fee variant NEVER blocks the
+        //    sale — the item is already in the cart; we just warn if the fee fails.
+        for (const it of extra) {
+          try {
+            const fr = await fetch("/cart/add.js", {
+              method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+              body: JSON.stringify({ items: [it] }),
+            });
+            if (!fr.ok) {
+              const fe = await fr.json().catch(() => ({}));
+              console.warn("[Dynamic] fee line add failed", it.id, fe);
+              toast("Added — but the back fee couldn't be applied (check the fee variant ID).");
+            }
+          } catch (e) { console.warn("[Dynamic] fee line error", e); }
+        }
+        // Prefer the header's cart drawer (it has "Edit design").
+        if (document.getElementById("hdCart") && window.DynamicHeader && window.DynamicHeader.openCart) {
+          window.DynamicHeader.openCart();
+        } else if (window.DynamicCart) {
+          await window.DynamicCart.refresh(); window.DynamicCart.open();
+        } else { window.location.href = "/cart"; }
+        return true;
       } catch (e) { console.warn("[Dynamic] cart error", e); }
     }
     window.Dynamic.lastOrder = { variantId: S.variantId || null, quantity: qty, properties: clean };
