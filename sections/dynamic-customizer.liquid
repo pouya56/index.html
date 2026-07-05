@@ -994,7 +994,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   const catalog = {
     uv: makeMethod("uv", "UV", "UV Print"),
     dtf: makeMethod("dtf", "DTF", "DTF Print", { photoOnly: true }),
-    sublimation: makeMethod("sublimation", "Sublimation", "Sublimation Print"),
+    // Sublimation behaves exactly like DTF: upload-only, one design, click the image.
+    sublimation: makeMethod("sublimation", "Sublimation", "Sublimation Print", { photoOnly: true }),
     engraving: makeMethod("engraving", "Engraving", "Engraving"),
   };
 
