@@ -95,6 +95,8 @@
     ],
     "engraveTitle": {{ section.settings.engrave_title | default: '' | json }},
     "engraveSub": {{ section.settings.engrave_sub | default: '' | json }},
+    "popupButtonLabel": {{ section.settings.popup_button_label | default: '' | json }},
+    "popupPlaceholder": {{ section.settings.popup_placeholder | default: '' | json }},
     "engrave": {
       "x": {{ section.settings.engrave_x | default: 50 }},
       "y": {{ section.settings.engrave_y | default: 56 }},
@@ -3275,6 +3277,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
     const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) ||
       ("Add photos and text — tap to select, then drag, resize or rotate each on your " + noun + ". Up to " + MAX_IMG + " of each.");
+    const eBtn = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "Add to Bag";
+    const ePlaceholder = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupPlaceholder) || "Add your text";
     const html =
       '<div class="modal-scrim" data-close></div>' +
       '<div class="modal-sheet engrave-sheet" role="dialog" aria-modal="true" aria-labelledby="engraveTitle">' +
@@ -3295,7 +3299,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               '<button type="button" class="ios-plus" data-drop="design" aria-label="Add a photo (PNG, JPG, SVG, PDF)" title="Add a photo">' +
                 '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
               '</button>' +
-              '<div class="ios-field"><textarea id="upText" class="engrave-input" maxlength="60" rows="1" placeholder="Add your text" autocomplete="off"></textarea></div>' +
+              '<div class="ios-field"><textarea id="upText" class="engrave-input" maxlength="60" rows="1" placeholder="' + escapeHtml(ePlaceholder) + '" autocomplete="off"></textarea></div>' +
               '<button type="button" class="kbd-arrow" id="kbdArrow" aria-label="Show keyboard" aria-expanded="false" title="Keyboard">' +
                 '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
               '</button>' +
@@ -3309,7 +3313,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         '<div class="modal-foot"><div class="price-breakdown"><div class="price-breakdown-toggle" style="cursor:default">' +
           '<span class="total">' + priceStr + '</span><span class="meta">' + escapeHtml((window.DYN_SETTINGS && window.DYN_SETTINGS.customPrintLabel) || "Custom print") + '</span></div></div>' +
           '<div class="foot-actions"><button class="btn btn-ghost" data-close>Cancel</button>' +
-          '<button class="btn btn-primary" id="uploadApply" disabled>Add to Bag</button></div></div>' +
+          '<button class="btn btn-primary" id="uploadApply" disabled>' + escapeHtml(eBtn) + '</button></div></div>' +
       '</div>';
     $("#modalRoot").innerHTML = html;
     wireUploadModal();
@@ -3437,7 +3441,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         closeModal(); toast(wasEditing ? "Design updated" : "Added to Bag");
       }
     } catch (e) { console.error(e); toast("Something went wrong"); }
-    finally { btn.disabled = false; btn.textContent = "Add to Bag"; }
+    finally { btn.disabled = false; btn.textContent = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "Add to Bag"; }
   }
 
   // ---- Edit an existing cart item's design ---------------------------------
@@ -4762,6 +4766,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     { "type": "header", "content": "Engraving popup" },
     { "type": "text", "id": "engrave_title", "label": "Popup title", "default": "Personalize your AirPods." },
     { "type": "textarea", "id": "engrave_sub", "label": "Popup subtitle", "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them." },
+    { "type": "text", "id": "popup_button_label", "label": "Popup button text", "info": "The primary button inside the popup.", "default": "Add to Bag" },
+    { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" },
     { "type": "header", "content": "File uploads (Cloudinary)" },
     { "type": "paragraph", "content": "Lets customers upload files that are saved to the order. Create a free Cloudinary account, add an UNSIGNED upload preset, then paste both below." },
     { "type": "text", "id": "cloudinary_cloud_name", "label": "Cloudinary cloud name" },
