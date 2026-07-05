@@ -2483,6 +2483,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let currentPricing;
   const uploadedAssets = [];
   let editingLineKey = null; // set when re-opening a saved cart item to edit its design
+  let editingGrp = null;     // the edited item's group token (links it to its back-fee line)
   // Multi-layer design: up to MAX_IMG images + MAX_TXT text boxes on the print area.
   // Each layer is selectable (tap), movable, resizable, rotatable and deletable.
   const MAX_IMG = 3, MAX_TXT = 3;
@@ -3508,28 +3509,40 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       ).filter((s2) => (s2.kind === "img" && s2.url) || (s2.kind === "text" && s2.text));
       const _state = { v: (window.DYN_SHOPIFY || {}).variantId || null, front: ser(sideLayers.front), back: ser(sideLayers.back) };
       if (_state.front.length || _state.back.length) props["_design_state"] = JSON.stringify(_state);
-      root.Dynamic.lastOrder = { properties: props };
-      $("#customizeSummary") && ($("#customizeSummary").textContent = "Design added");
       // If the back was designed, auto-add the "back print fee" product as a 2nd line.
+      // A shared group token links the item to its fee line so an edit can remove
+      // the OLD fee (avoids double-charging when re-editing a two-sided item).
       const extraItems = [];
       if (hasBackDesign && S.backFeeVariantId) {
+        const grp = "g" + Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36);
+        props["_grp"] = grp;
         const qty = Math.max(1, (store.get().quantity) || 1);
-        extraItems.push({ id: S.backFeeVariantId, quantity: qty, properties: { "For": (window.DYN_SHOPIFY || {}).productTitle || "custom item" } });
+        extraItems.push({ id: S.backFeeVariantId, quantity: qty, properties: { "For": (window.DYN_SHOPIFY || {}).productTitle || "custom item", "_grp": grp } });
       }
+      root.Dynamic.lastOrder = { properties: props };
+      $("#customizeSummary") && ($("#customizeSummary").textContent = "Design added");
       const ok = await submitToShopify(props, extraItems);
       if (ok) {
-        const wasEditing = !!editingLineKey;
-        // When editing an existing cart item, drop the original line so the edited
-        // one replaces it (we add the new line first, then remove the old key).
-        if (editingLineKey) {
-          try {
-            await fetch("/cart/change.js", {
-              method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
-              body: JSON.stringify({ id: editingLineKey, quantity: 0 })
-            });
-          } catch (e) {}
-          editingLineKey = null;
-        }
+        const wasEditing = !!(editingLineKey || editingGrp);
+        // When editing, drop the ORIGINAL item — and its old back-fee line if it had
+        // one (matched by the group token) — so the edited version replaces both.
+        // The just-added new lines carry a fresh token, so they're never removed here.
+        const oldGrp = editingGrp, oldKey = editingLineKey;
+        editingLineKey = null; editingGrp = null;
+        try {
+          const drop = async (id) => fetch("/cart/change.js", {
+            method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ id: id, quantity: 0 })
+          });
+          if (oldGrp) {
+            const cart = await (await fetch("/cart.js", { headers: { "Accept": "application/json" } })).json();
+            for (const it of (cart.items || [])) {
+              if (it.properties && it.properties._grp === oldGrp) await drop(it.key);
+            }
+          } else if (oldKey) {
+            await drop(oldKey);
+          }
+        } catch (e) {}
         if (window.DynamicCart && window.DynamicCart.refresh) { try { window.DynamicCart.refresh(); } catch (e) {} }
         closeModal(); toast(wasEditing ? "Design updated" : "Added to Bag");
       }
@@ -3565,6 +3578,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
 
     editingLineKey = key;
+    editingGrp = (line.properties && line.properties._grp) || null; // to remove its old back-fee line
     openModal();                 // builds & resets the upload modal
     setTimeout(() => applyEditState(state), 60); // restore after the modal is built
   }
