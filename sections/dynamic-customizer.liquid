@@ -66,7 +66,7 @@
   },
   "settings": {
     "customizerType": {{ section.settings.customizer_type | default: 'airpods' | json }},
-    "madeToOrder": {% if dyn_product.tags contains 'made-to-order' or dyn_product.tags contains 'made_to_order' %}true{% else %}false{% endif %},
+    "madeToOrder": {% if section.settings.made_to_order or dyn_product.tags contains 'made-to-order' or dyn_product.tags contains 'made_to_order' %}true{% else %}false{% endif %},
     "print": {
       "show": {% if section.settings.print_show %}true{% else %}false{% endif %},
       "x": {{ section.settings.print_x | default: 22 }},
@@ -4716,9 +4716,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         { "value": "pen", "label": "Pen \u2014 Side" },
         { "value": "upload", "label": "Upload design \u2014 shown on the product" }
       ] },
-    { "type": "paragraph", "content": "Made to order (per product): add the tag \"made-to-order\" to a product (Products → open the product → Tags) so its out-of-stock variations stay orderable instead of being crossed out — for print-on-demand / custom items. Products WITHOUT the tag show sold-out variations as unavailable. Also set that product's variants in Shopify to \"Continue selling when out of stock\"." },
     { "type": "header", "content": "Product details" },
     { "type": "product", "id": "product_ref", "label": "Product (non-product pages only)", "info": "Only used when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown." },
+    { "type": "checkbox", "id": "made_to_order", "label": "Made to order — always orderable", "default": false, "info": "ON: out-of-stock variations stay orderable (print-on-demand / custom). OFF: sold-out variations are crossed out. This applies to the product this section shows — since each product has its own template, tick it for the Mug and leave it off for the T-shirt. (You can instead tag a product \"made-to-order\".) Also set the product's variants to \"Continue selling when out of stock\" in Shopify." },
     { "type": "text", "id": "eyebrow", "label": "Eyebrow (small label above title)", "default": "AirPods Pro 3" },
     { "type": "text", "id": "price_note", "label": "Price note", "default": "Free shipping" },
     { "type": "text", "id": "model_label", "label": "Model / variant label", "default": "AirPods Pro 3" },
