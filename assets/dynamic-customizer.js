@@ -1741,7 +1741,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   // Active when the merchant supplied a .glb model URL — a real 3D mug preview
   // supersedes the flat 2D wrap. Falls back to the flat wrap if the 3D engine
   // is unavailable.
-  function mug3dActive() { return !!(window.DYN_SETTINGS && window.DYN_SETTINGS.mug3dModel && product && product.uploadMode && window.DynMug3D); }
+  // Configured = merchant set a model URL (stage should render, flat wrap off).
+  function mug3dConfigured() { return !!(window.DYN_SETTINGS && window.DYN_SETTINGS.mug3dModel && product && product.uploadMode); }
+  // Active = configured AND the 3D engine actually loaded and mounted.
+  function mug3dActive() { return mug3dConfigured() && !!window.DynMug3D; }
   const _wrapImgCache = {};
   function wrapImg(src, onReady) {
     if (!src) return null;
@@ -1847,11 +1850,25 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     };
   }
 
+  function mug3dShowStatus(msg, isError) {
+    const box = q2("#mug3dLoading") || q2("#mug3dStage .mug3d-error");
+    if (!box) return;
+    box.className = isError ? "mug3d-error" : "mug3d-loading";
+    box.textContent = msg;
+  }
+
   function mountMug3D() {
     const stage = q2("#mug3dStage");
-    if (!stage || _mug3d || _mug3dPending || !window.DynMug3D) return;
+    if (!stage || _mug3d || _mug3dPending) return;
+    if (!window.DynMug3D) {
+      // The engine file isn't on the page — almost always the asset wasn't created.
+      mug3dShowStatus("3D engine not loaded. In Shopify → Assets, create a file named “dynamic-mug-3d.js” and paste in the engine file.", true);
+      return;
+    }
     _mug3dPending = true;
+    mug3dShowStatus("Loading 3D engine…", false);
     const opts = mug3dOpts();
+    opts.onProgress = function () { mug3dShowStatus("Loading mug model…", false); };
     opts.onReady = function () {
       _mug3dPending = false;
       const load = q2("#mug3dLoading"); if (load) load.remove();
@@ -1859,8 +1876,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     };
     opts.onError = function (err) {
       _mug3dPending = false;
-      const load = q2("#mug3dLoading");
-      if (load) { load.className = "mug3d-error"; load.textContent = "3D preview couldn't load — you can still design normally."; }
+      try { if (window.console) console.error("[DynMug3D] load failed:", err); } catch (e) {}
+      var msg = (err && /load .*three|THREE/i.test(String(err.message || err)))
+        ? "3D engine scripts were blocked from loading (check your network/CSP). You can still design normally."
+        : "3D model couldn't load — check the .glb URL in the section settings. You can still design normally.";
+      mug3dShowStatus(msg, true);
     };
     try {
       window.DynMug3D.create(stage, opts).then(function (v) { _mug3d = v; }).catch(function () {});
@@ -2315,7 +2335,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             '</div>' +
           '</div></div>' +
           // Live 3D preview — the customer spins/zooms the real mug with their design wrapped on.
-          (mug3dActive()
+          (mug3dConfigured()
             ? '<div class="mug3d-wrap"><div class="mug3d-stage" id="mug3dStage">' +
                 '<div class="mug3d-loading" id="mug3dLoading"><span class="mug3d-spin"></span>Loading 3D preview…</div>' +
               '</div><p class="mug3d-hint">Drag to rotate · scroll to zoom</p></div>'
@@ -2406,7 +2426,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     });
     q2("#uploadApply").onclick = onUploadApply;
     renderUpEls();
-    if (mug3dActive()) mountMug3D();
+    if (mug3dConfigured()) mountMug3D();
   }
 
   // Wipe the canvas back to an empty Front side (both sides cleared, field empty).

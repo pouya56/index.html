@@ -26,30 +26,49 @@
 (function () {
   "use strict";
   var R = "0.128.0";
-  var CDN = "https://cdn.jsdelivr.net/npm/three@" + R;
-  var LIBS = [
-    CDN + "/build/three.min.js",
-    CDN + "/examples/js/loaders/GLTFLoader.js",
-    CDN + "/examples/js/controls/OrbitControls.js"
+  // Each lib lists mirror hosts tried in order — if one host is blocked by a
+  // store's CSP or is down, the next is tried. Merchants can also self-host by
+  // pre-loading THREE + GLTFLoader + OrbitControls before this script runs.
+  var HOSTS = [
+    "https://cdn.jsdelivr.net/npm/three@" + R,
+    "https://unpkg.com/three@" + R,
+    "https://cdn.jsdelivr.net/npm/three@" + R  // retry primary once
+  ];
+  var LIB_PATHS = [
+    "/build/three.min.js",
+    "/examples/js/loaders/GLTFLoader.js",
+    "/examples/js/controls/OrbitControls.js"
   ];
 
   var _libs = null;
-  function loadScript(src) {
+  function loadOne(src) {
     return new Promise(function (res, rej) {
-      var found = document.querySelector('script[data-m3d="' + src + '"]');
-      if (found) { if (found.dataset.done) return res(); found.addEventListener("load", res); found.addEventListener("error", rej); return; }
       var s = document.createElement("script");
-      s.src = src; s.async = false; s.setAttribute("data-m3d", src);
-      s.onload = function () { s.dataset.done = "1"; res(); };
-      s.onerror = function () { rej(new Error("Failed to load " + src)); };
+      s.src = src; s.async = false;
+      s.onload = function () { res(); };
+      s.onerror = function () { if (s.parentNode) s.parentNode.removeChild(s); rej(new Error("Failed to load " + src)); };
       document.head.appendChild(s);
     });
+  }
+  // Load a lib, checking `ready()` first (may already be present) and trying
+  // each mirror host until one succeeds.
+  async function loadLib(path, ready) {
+    if (ready && ready()) return;
+    var lastErr = null;
+    for (var i = 0; i < HOSTS.length; i++) {
+      try { await loadOne(HOSTS[i] + path); if (!ready || ready()) return; }
+      catch (e) { lastErr = e; }
+    }
+    if (ready && ready()) return;
+    throw lastErr || new Error("Could not load " + path);
   }
   function ensureLibs() {
     if (_libs) return _libs;
     _libs = (async function () {
-      for (var i = 0; i < LIBS.length; i++) { await loadScript(LIBS[i]); }
-      if (!window.THREE) throw new Error("THREE failed to initialise");
+      await loadLib(LIB_PATHS[0], function () { return !!window.THREE; });
+      await loadLib(LIB_PATHS[1], function () { return !!(window.THREE && window.THREE.GLTFLoader); });
+      await loadLib(LIB_PATHS[2], function () { return !!(window.THREE && window.THREE.OrbitControls); });
+      if (!window.THREE || !window.THREE.GLTFLoader) throw new Error("Failed to load three GLTFLoader");
       return window.THREE;
     })();
     return _libs;
