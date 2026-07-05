@@ -74,6 +74,19 @@
       "w": {{ section.settings.print_w | default: 56 }},
       "h": {{ section.settings.print_h | default: 40 }}
     },
+    "enableBack": {% if section.settings.enable_back %}true{% else %}false{% endif %},
+    "backImage": {% if section.settings.back_image %}{{ section.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
+    "printBack": {
+      "show": {% if section.settings.back_print_show %}true{% else %}false{% endif %},
+      "x": {{ section.settings.back_print_x | default: 22 }},
+      "y": {{ section.settings.back_print_y | default: 30 }},
+      "w": {{ section.settings.back_print_w | default: 56 }},
+      "h": {{ section.settings.back_print_h | default: 40 }}
+    },
+    "backFeeVariantId": {{ section.settings.back_fee_variant_id | default: '' | json }},
+    "backFeeMoney": {{ section.settings.back_fee_money | default: '' | json }},
+    "frontTabLabel": {{ section.settings.front_tab_label | default: '' | json }},
+    "backTabLabel": {{ section.settings.back_tab_label | default: '' | json }},
     "eyebrow": {{ section.settings.eyebrow | default: '' | json }},
     "title": {{ section.settings.title | default: '' | json }},
     "price": {{ section.settings.price | default: '' | json }},
@@ -616,6 +629,14 @@ button { font-family: inherit; cursor: pointer; }
 .engrave-head { text-align: center; padding: 20px 32px 2px; }
 .engrave-head h2 { font-size: clamp(24px, 3.6vw, 38px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.06; }
 .engrave-head p { max-width: 560px; margin: 10px auto 0; color: var(--ink-soft); font-size: 15px; line-height: 1.4; }
+/* Front / Back side tabs (shown only when the back side is enabled). */
+.side-tabs { display: flex; justify-content: center; gap: 8px; margin: 12px auto 0; }
+.side-tab { border: 1px solid var(--line); background: var(--bg); color: var(--ink-soft);
+  font: inherit; font-weight: 600; padding: 7px 20px; border-radius: 999px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; transition: background .15s ease, color .15s ease, border-color .15s ease; }
+.side-tab:hover { border-color: var(--ink-faint); }
+.side-tab.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.side-fee { font-size: 11px; font-weight: 600; opacity: 0.85; }
 .engrave-stage { background: var(--bg-panel); margin-top: 10px; padding: 10px 16px; display: grid; place-items: center; }
 .engrave-frame { position: relative; width: min(92%, 429px); container-type: inline-size; }
 .engrave-frame img { width: 100%; height: auto; display: block; }
@@ -2465,7 +2486,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   // Multi-layer design: up to MAX_IMG images + MAX_TXT text boxes on the print area.
   // Each layer is selectable (tap), movable, resizable, rotatable and deletable.
   const MAX_IMG = 3, MAX_TXT = 3;
-  let layers = [];        // { id, kind:"img"|"text", x, y, rotate, ...(img: scale,url,file,cloudUrl | text: size,font,color,text) }
+  // Two design sides (Front + Back). Each side keeps its own layers. `layers` always
+  // points to the side the customer is currently editing (swapped in switchSide).
+  let sideLayers = { front: [], back: [] };
+  let sideActive = { front: null, back: null };
+  let currentSide = "front";
+  let layers = sideLayers.front;   // alias to the current side's layer array
   let activeLayerId = null;
   let layerSeq = 0;
   // Two fonts only, matching Apple's engraving page: their system sans (SF Pro
@@ -2816,17 +2842,19 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   // Posts to Shopify's AJAX cart when a real variant is present; otherwise
   // logs a demo payload. `properties` become order line-item properties.
-  async function submitToShopify(properties) {
+  async function submitToShopify(properties, extraItems) {
     const S = window.DYN_SHOPIFY || {};
     const qty = Math.max(1, (store.get().quantity) || 1);
     const clean = {};
     Object.keys(properties || {}).forEach((k) => { if (properties[k]) clean[k] = properties[k]; });
+    // Extra lines (e.g. the "back print fee" product) added alongside the item.
+    const extra = (extraItems || []).filter((it) => it && it.id);
     if (S.variantId) {
       try {
         const res = await fetch("/cart/add.js", {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ items: [{ id: S.variantId, quantity: qty, properties: clean }] }),
+          body: JSON.stringify({ items: [{ id: S.variantId, quantity: qty, properties: clean }].concat(extra) }),
         });
         if (res.ok) {
           // Prefer the header's cart drawer (it has "Edit design") so the customer
@@ -2879,6 +2907,60 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   function activeTextLayer() { const l = activeLayer(); return (l && l.kind === "text") ? l : null; }
   function countKind(k) { return layers.filter(function (l) { return l.kind === k; }).length; }
   function layerEl(id) { return q2('#printArea .up-el[data-lid="' + id + '"]'); }
+
+  // ---- Two-sided (Front / Back) helpers ------------------------------------
+  // Back side is available only when the merchant turned it on AND supplied a back image.
+  function backEnabled() {
+    const S = window.DYN_SETTINGS || {};
+    return !!(S.enableBack && S.backImage && (product && product.uploadMode));
+  }
+  function sideImage(side) {
+    const S = window.DYN_SETTINGS || {};
+    return side === "back" ? (S.backImage || product.image) : product.image;
+  }
+  function sidePrint(side) {
+    const S = window.DYN_SETTINGS || {};
+    return (side === "back" ? S.printBack : S.print) || {};
+  }
+  // True when a side actually has a design on it (a real image or non-empty text).
+  function sideHasContent(side) {
+    return (sideLayers[side] || []).some(function (l) {
+      return (l.kind === "img" && l.url) || (l.kind === "text" && l.text);
+    });
+  }
+  // Position the print-area box + swap the mockup image for the given side.
+  function applyStageForSide(side) {
+    const pa = q2("#printArea"), P = sidePrint(side);
+    if (pa) {
+      pa.style.left = (P.x != null ? P.x : 22) + "%";
+      pa.style.top = (P.y != null ? P.y : 30) + "%";
+      pa.style.width = (P.w != null ? P.w : 56) + "%";
+      pa.style.height = (P.h != null ? P.h : 40) + "%";
+      pa.classList.toggle("outline", P.show !== false);
+    }
+    const img = q2(".engrave-frame > img"); if (img) img.src = sideImage(side) || "";
+  }
+  // Switch the editor to a side: rebuild that side's overlays and update the stage.
+  function switchSide(side) {
+    if (side === currentSide) return;
+    sideActive[currentSide] = activeLayerId;         // remember selection per side
+    // Tear down current overlays (state stays in the layer objects).
+    const pa = q2("#printArea");
+    if (pa) pa.querySelectorAll(".up-el").forEach(function (e) { e.remove(); });
+    currentSide = side;
+    layers = sideLayers[side];
+    activeLayerId = sideActive[side] || null;
+    applyStageForSide(side);
+    layers.forEach(function (l) { createLayerEl(l); });
+    // Reflect the side in the tabs + the shared text field.
+    document.querySelectorAll(".side-tab").forEach(function (t) {
+      t.classList.toggle("on", t.dataset.side === side);
+      t.setAttribute("aria-selected", String(t.dataset.side === side));
+    });
+    const al = activeTextLayer(), t = q2("#upText");
+    if (t) t.value = al ? (al.text || "") : "";
+    renderUpEls();
+  }
 
   // Remove empty (unfilled) text layers so they don't clutter the canvas/export.
   function pruneEmptyText(exceptId) {
@@ -3163,9 +3245,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     });
   }
 
-  // Flatten product + image + text into one mockup PNG (for the order).
-  function compositeUpload() {
+  // Flatten one side (product image + that side's layers) into a mockup PNG.
+  // `layersArr` = that side's layers, `imageUrl` = that side's product image,
+  // `P` = that side's printable-area rect. Returns null if there's nothing on it.
+  function compositeSide(layersArr, imageUrl, P) {
     return new Promise((resolve) => {
+      if (!layersArr || !layersArr.length || !imageUrl) { resolve(null); return; }
       const prod = new Image(); prod.crossOrigin = "anonymous";
       prod.onload = () => {
         const W = prod.naturalWidth || 900, H = prod.naturalHeight || 900;
@@ -3174,18 +3259,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         try { ctx.drawImage(prod, 0, 0, W, H); } catch (_) {}
         // The print area in image pixels; everything is drawn relative to it and
         // hard-clipped to it, so nothing prints outside the allowed box.
-        const P = (window.DYN_SETTINGS && window.DYN_SETTINGS.print) || {};
+        P = P || {};
         const aX = (P.x != null ? P.x : 22) / 100 * W, aY = (P.y != null ? P.y : 30) / 100 * H,
               aW = (P.w != null ? P.w : 56) / 100 * W, aH = (P.h != null ? P.h : 40) / 100 * H;
         ctx.save();
         ctx.beginPath(); ctx.rect(aX, aY, aW, aH); ctx.clip();
         // Preload every image layer, then paint all layers back-to-front (array
         // order) so text and images stack the same way they do on screen.
-        const imgLayers = layers.filter((l) => l.kind === "img" && l.url);
+        const imgLayers = layersArr.filter((l) => l.kind === "img" && l.url);
         const imgMap = {};
         let pending = imgLayers.length;
         const paint = () => {
-          layers.forEach((layer) => {
+          layersArr.forEach((layer) => {
             if (layer.kind === "text") {
               if (!layer.text) return;
               const fs = (layer.size / 100) * aW;
@@ -3223,13 +3308,19 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         });
       };
       prod.onerror = () => resolve(null);
-      prod.src = product.image;
+      prod.src = imageUrl;
     });
   }
 
   function buildUploadModal() {
-    // Start with an empty canvas — layers are added on demand (Add photo / Add text).
-    layers = []; activeLayerId = null; layerSeq = 0;
+    // Start with an empty canvas on both sides — layers are added on demand.
+    sideLayers = { front: [], back: [] };
+    sideActive = { front: null, back: null };
+    currentSide = "front";
+    layers = sideLayers.front; activeLayerId = null; layerSeq = 0;
+    const S = window.DYN_SETTINGS || {};
+    const hasBack = backEnabled();
+    const feeMoney = S.backFeeMoney || "";
     const noun = product.engraveNoun || (window.DYN_SHOPIFY && window.DYN_SHOPIFY.productTitle) || product.name || "product";
     const priceStr = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.priceMoney) || D.pricing.money(product.base);
     // Photo-only methods (e.g. DTF): customers just upload their design — no text field/keyboard.
@@ -3249,6 +3340,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         '<div class="engrave-scroll">' +
           '<div class="engrave-head"><h2 id="engraveTitle">' + escapeHtml(eTitle) + '</h2>' +
             '<p>' + escapeHtml(eSub) + '</p></div>' +
+          (hasBack
+            ? '<div class="side-tabs" role="tablist">' +
+                '<button type="button" class="side-tab on" data-side="front" role="tab" aria-selected="true">' + escapeHtml(S.frontTabLabel || "Front") + '</button>' +
+                '<button type="button" class="side-tab" data-side="back" role="tab" aria-selected="false">' + escapeHtml(S.backTabLabel || "Back") +
+                  (feeMoney ? '<span class="side-fee">+' + escapeHtml(feeMoney) + '</span>' : '') +
+                '</button>' +
+              '</div>'
+            : '') +
           '<div class="engrave-stage"><div class="engrave-frame">' +
             '<img src="' + (product.image || "") + '" alt="">' +
             '<div class="print-area" id="printArea">' +
@@ -3286,18 +3385,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   function wireUploadModal() {
     $("#modalRoot").querySelectorAll("[data-close]").forEach((b) => (b.onclick = closeModal));
-    // Place the printable area from the theme settings (per-product).
+    // Place the printable area + mockup image for the starting side (front).
     const pa = q2("#printArea");
     if (pa) {
-      const P = (window.DYN_SETTINGS && window.DYN_SETTINGS.print) || {};
-      pa.style.left = (P.x != null ? P.x : 22) + "%";
-      pa.style.top = (P.y != null ? P.y : 30) + "%";
-      pa.style.width = (P.w != null ? P.w : 56) + "%";
-      pa.style.height = (P.h != null ? P.h : 40) + "%";
-      pa.classList.toggle("outline", P.show !== false);
+      applyStageForSide(currentSide);
       // Merchant setup: add ?printsetup=1 to the URL to drag/resize the box.
       if (/[?&#]printsetup/i.test(location.search + location.hash)) enablePrintAreaSetup(pa);
     }
+    // Front / Back tabs.
+    document.querySelectorAll(".side-tab").forEach((t) => {
+      t.onclick = () => switchSide(t.dataset.side);
+    });
     const drop = q2('[data-drop="design"]'), input = q2('[data-file="design"]');
     async function accept(file) {
       if (file.size > 20 * 1024 * 1024) return toast("File is larger than 20 MB");
@@ -3360,43 +3458,65 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const btn = $("#uploadApply");
     btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Saving';
     try {
-      // Drop unfilled text boxes, then keep only real layers.
-      pruneEmptyText();
-      const imgLayers = layers.filter((l) => l.kind === "img" && l.url);
-      const txtLayers = layers.filter((l) => l.kind === "text" && l.text);
-      const props = {};
-      // Upload each image layer to Cloudinary (or reuse an already-uploaded URL).
-      for (const l of imgLayers) {
-        if (!l.cloudUrl) {
+      const S = window.DYN_SETTINGS || {};
+      // Drop unfilled text boxes on BOTH sides, then keep only real layers.
+      ["front", "back"].forEach((s) => {
+        sideLayers[s] = sideLayers[s].filter((l) => !(l.kind === "text" && !l.text));
+      });
+      layers = sideLayers[currentSide];
+      // Upload every image layer (both sides) to Cloudinary, reusing existing URLs.
+      async function ensureCloud(arr) {
+        for (const l of arr.filter((x) => x.kind === "img" && x.url)) {
+          if (l.cloudUrl) continue;
           if (l.file && l.file._cloudUrl) l.cloudUrl = l.file._cloudUrl;
           else if (l.file instanceof File) l.cloudUrl = await uploadToCloudinary(l.file, l.file.name);
           else if (/^https?:/i.test(l.url)) l.cloudUrl = l.url; // edited item: reuse existing URL
         }
       }
-      const designUrls = imgLayers.map((l) => l.cloudUrl).filter(Boolean);
-      if (designUrls.length) props["Design"] = designUrls.join(" , ");
-      if (txtLayers.length) props["Text"] = txtLayers.map((l) => l.text).join(" | ");
+      await ensureCloud(sideLayers.front); await ensureCloud(sideLayers.back);
+      const imgs = (s) => sideLayers[s].filter((l) => l.kind === "img" && l.url);
+      const txts = (s) => sideLayers[s].filter((l) => l.kind === "text" && l.text);
+      const hasBackDesign = !!(imgs("back").length || txts("back").length);
+      const props = {};
+      const fUrls = imgs("front").map((l) => l.cloudUrl).filter(Boolean);
+      if (fUrls.length) props["Design"] = fUrls.join(" , ");
+      if (txts("front").length) props["Text"] = txts("front").map((l) => l.text).join(" | ");
+      if (hasBackDesign) {
+        const bUrls = imgs("back").map((l) => l.cloudUrl).filter(Boolean);
+        if (bUrls.length) props["Back design"] = bUrls.join(" , ");
+        if (txts("back").length) props["Back text"] = txts("back").map((l) => l.text).join(" | ");
+        props["Sides"] = "Front + Back";
+      }
       // Record the print method (UV / DTF / Sublimation / Engraving) on the order.
       if (product && product.method) props["Print method"] = product.method;
-      const comp = await compositeUpload();
-      if (comp) { const cu = await uploadToCloudinary(dataURLtoBlob(comp), product.id + "-mockup.png"); if (cu) props["_preview_url"] = cu; }
-      props["Customized"] = [
-        imgLayers.length ? (imgLayers.length + " image" + (imgLayers.length > 1 ? "s" : "")) : null,
-        txtLayers.length ? (txtLayers.length + " text") : null
-      ].filter(Boolean).join(" + ") || "custom";
-      // Save the full layout (array of layers) so the customer can re-open this
-      // item and edit it later. Small JSON (URLs + numbers) — safe on the line item.
-      const _state = {
-        v: (window.DYN_SHOPIFY || {}).variantId || null,
-        layers: layers.map((l) => l.kind === "img"
-          ? { kind: "img", url: l.cloudUrl || l.url, x: l.x, y: l.y, scale: l.scale, rotate: l.rotate || 0 }
-          : { kind: "text", text: l.text, x: l.x, y: l.y, size: l.size, rotate: l.rotate || 0, font: l.font, color: l.color }
-        ).filter((s) => (s.kind === "img" && s.url) || (s.kind === "text" && s.text))
-      };
-      if (_state.layers.length) props["_design_state"] = JSON.stringify(_state);
+      // Mockup previews per side.
+      const compF = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
+      if (compF) { const cu = await uploadToCloudinary(dataURLtoBlob(compF), product.id + "-front.png"); if (cu) props["_preview_url"] = cu; }
+      if (hasBackDesign) {
+        const compB = await compositeSide(sideLayers.back, sideImage("back"), sidePrint("back"));
+        if (compB) { const cu = await uploadToCloudinary(dataURLtoBlob(compB), product.id + "-back.png"); if (cu) props["_preview_url_back"] = cu; }
+      }
+      const desc = (s) => [
+        imgs(s).length ? (imgs(s).length + " image" + (imgs(s).length > 1 ? "s" : "")) : null,
+        txts(s).length ? (txts(s).length + " text") : null
+      ].filter(Boolean).join(" + ");
+      props["Customized"] = ("Front: " + (desc("front") || "—")) + (hasBackDesign ? (" · Back: " + desc("back")) : "");
+      // Save the full layout (both sides) so the customer can re-open and edit it.
+      const ser = (arr) => arr.map((l) => l.kind === "img"
+        ? { kind: "img", url: l.cloudUrl || l.url, x: l.x, y: l.y, scale: l.scale, rotate: l.rotate || 0 }
+        : { kind: "text", text: l.text, x: l.x, y: l.y, size: l.size, rotate: l.rotate || 0, font: l.font, color: l.color }
+      ).filter((s2) => (s2.kind === "img" && s2.url) || (s2.kind === "text" && s2.text));
+      const _state = { v: (window.DYN_SHOPIFY || {}).variantId || null, front: ser(sideLayers.front), back: ser(sideLayers.back) };
+      if (_state.front.length || _state.back.length) props["_design_state"] = JSON.stringify(_state);
       root.Dynamic.lastOrder = { properties: props };
       $("#customizeSummary") && ($("#customizeSummary").textContent = "Design added");
-      const ok = await submitToShopify(props);
+      // If the back was designed, auto-add the "back print fee" product as a 2nd line.
+      const extraItems = [];
+      if (hasBackDesign && S.backFeeVariantId) {
+        const qty = Math.max(1, (store.get().quantity) || 1);
+        extraItems.push({ id: S.backFeeVariantId, quantity: qty, properties: { "For": (window.DYN_SHOPIFY || {}).productTitle || "custom item" } });
+      }
+      const ok = await submitToShopify(props, extraItems);
       if (ok) {
         const wasEditing = !!editingLineKey;
         // When editing an existing cart item, drop the original line so the edited
@@ -3451,14 +3571,30 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   function applyEditState(state) {
     if (!state) return;
-    // Clear the fresh canvas, then restore every saved layer.
-    layers.slice().forEach((l) => removeLayer(l.id));
-    layers = []; activeLayerId = null;
-    // New format: state.layers array. Legacy format: state.img / state.txt.
-    const list = Array.isArray(state.layers) ? state.layers
+    // Reset both sides, then restore. Supports the new two-sided format
+    // (state.front / state.back), the single-array format (state.layers), and
+    // the oldest single-element format (state.img / state.txt) → all as "front".
+    const pa = q2("#printArea"); if (pa) pa.querySelectorAll(".up-el").forEach((e) => e.remove());
+    sideLayers = { front: [], back: [] };
+    sideActive = { front: null, back: null };
+    currentSide = "front"; layers = sideLayers.front; activeLayerId = null;
+    const frontList = Array.isArray(state.front) ? state.front
+      : Array.isArray(state.layers) ? state.layers
       : [].concat(state.img ? [Object.assign({ kind: "img" }, state.img)] : [],
                   state.txt ? [Object.assign({ kind: "text" }, state.txt)] : []);
-    list.forEach((s) => {
+    const backList = Array.isArray(state.back) ? state.back : [];
+    // Build a layer object from saved state WITHOUT touching the DOM.
+    const buildData = (s) => {
+      if (s.kind === "img" && s.url) return { id: ++layerSeq, kind: "img", x: s.x, y: s.y, scale: s.scale, rotate: s.rotate || 0, url: s.url, file: { _cloudUrl: s.url, name: "edited-design" }, cloudUrl: s.url };
+      if (s.kind === "text" && s.text) return { id: ++layerSeq, kind: "text", x: s.x, y: s.y, size: s.size, rotate: s.rotate || 0, font: s.font, color: s.color, text: s.text };
+      return null;
+    };
+    // Back: data only (its overlays are built when the customer switches to it).
+    sideLayers.back = backList.map(buildData).filter(Boolean);
+    // Front is the visible side: build its layers with DOM via addImage/addText.
+    layers = sideLayers.front; currentSide = "front"; activeLayerId = null;
+    applyStageForSide("front");
+    frontList.forEach((s) => {
       if (s.kind === "img" && s.url) {
         addImageLayer(s.url, { _cloudUrl: s.url, name: "edited-design" },
           { x: s.x, y: s.y, scale: s.scale, rotate: s.rotate || 0, cloudUrl: s.url });
@@ -4751,7 +4887,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     { "type": "range", "id": "print_y", "label": "Area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },
     { "type": "range", "id": "print_w", "label": "Area width", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 56 },
     { "type": "range", "id": "print_h", "label": "Area height", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 40 },
-    { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes. Customers place, size and rotate each text/photo themselves.", "default": "#1d1d1f" }
+    { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes. Customers place, size and rotate each text/photo themselves.", "default": "#1d1d1f" },
+    { "type": "header", "content": "Back side (two-sided design)" },
+    { "type": "paragraph", "content": "Let customers design a second (back) side for an extra fee. FEE: create a product in Shopify for the charge (e.g. \"Back print +$5\", £/$ set on that product), then paste its VARIANT id below — it's added to the cart automatically when the customer designs the back." },
+    { "type": "checkbox", "id": "enable_back", "label": "Enable back side", "default": false },
+    { "type": "image_picker", "id": "back_image", "label": "Back image (mockup)", "info": "Photo of the product's back. Required for the back side to show." },
+    { "type": "text", "id": "back_fee_variant_id", "label": "Back fee — product VARIANT id", "info": "The numeric variant id of your fee product (e.g. 4123456789012). Added to the cart when the back is designed." },
+    { "type": "text", "id": "back_fee_money", "label": "Back fee — amount shown on the tab", "info": "Display only, e.g. $5. The real charge comes from the fee product above." },
+    { "type": "checkbox", "id": "back_print_show", "label": "Show the back printable-area outline", "default": true },
+    { "type": "range", "id": "back_print_x", "label": "Back area left", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 22 },
+    { "type": "range", "id": "back_print_y", "label": "Back area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },
+    { "type": "range", "id": "back_print_w", "label": "Back area width", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 56 },
+    { "type": "range", "id": "back_print_h", "label": "Back area height", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 40 },
+    { "type": "text", "id": "front_tab_label", "label": "Front tab label", "default": "Front" },
+    { "type": "text", "id": "back_tab_label", "label": "Back tab label", "default": "Back" }
   ],
   "presets": [
     { "name": "Dynamic Customizer" }
