@@ -1707,11 +1707,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   function backEnabled() {
     const S = window.DYN_SETTINGS || {};
-    return !!(S.enableBack && S.backImage && (product && product.uploadMode));
+    // Only needs the "Enable back side" toggle; a separate back image is optional
+    // (falls back to the front surface), and the back fee is optional too.
+    return !!(S.enableBack && (product && product.uploadMode));
   }
   function sideImage(side) {
     const S = window.DYN_SETTINGS || {};
-    return side === "back" ? (S.backImage || product.image) : (S.frontImage || product.image);
+    return side === "back" ? (S.backImage || S.frontImage || product.image) : (S.frontImage || product.image);
   }
   function sidePrint(side) {
     const S = window.DYN_SETTINGS || {};
