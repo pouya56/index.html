@@ -2265,32 +2265,35 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (!_mug3d || q2("#mug3dTuner")) return;
     const wrap = q2(".mug3d-wrap"); if (!wrap) return;
     const S = window.DYN_SETTINGS || {};
-    // Rows: [label, id, min, max, step, initial, unit]
+    // Rows: [label, id, sliderMin, sliderMax, step, initial, unit, typeMin, typeMax]
+    // The number field lets you TYPE any value (typeMin/typeMax are generous so
+    // you're not capped by the slider's comfortable range).
     const rows = [
-      ["Wrap coverage", "arc", 40, 320, 5, (S.mug3dArc || 200), "°"],
-      ["Radius fit", "rad", 90, 120, 1, (S.mug3dRadius || 102), "%"],
-      ["Band height", "hgt", 20, 90, 1, (S.mug3dHeight || 55), "%"],
-      ["Vertical position", "yof", -50, 50, 1, (S.mug3dYOffset || 0), "%"],
-      ["Rotation", "rot", -180, 180, 5, (S.mug3dRotation || 0), "°"]
+      ["Wrap coverage", "arc", 40, 320, 1, (S.mug3dArc || 200), "°", 1, 360],
+      ["Radius fit", "rad", 90, 120, 1, (S.mug3dRadius || 102), "%", 50, 300],
+      ["Band height", "hgt", 20, 90, 1, (S.mug3dHeight || 55), "%", 1, 300],
+      ["Vertical position", "yof", -50, 50, 1, (S.mug3dYOffset || 0), "%", -200, 200],
+      ["Rotation", "rot", -180, 180, 1, (S.mug3dRotation || 0), "°", -360, 360]
     ];
     let html = '<div class="mug3d-tuner-head"><strong>3D fit tuner</strong>' +
       '<span>setup only — not shown to customers</span></div>';
     rows.forEach(function (r) {
-      html += '<label class="mug3d-tuner-row"><span class="mug3d-tuner-lbl">' + r[0] + '</span>' +
+      html += '<div class="mug3d-tuner-row"><span class="mug3d-tuner-lbl">' + r[0] + '</span>' +
         '<input type="range" id="mt_' + r[1] + '" min="' + r[2] + '" max="' + r[3] + '" step="' + r[4] + '" value="' + r[5] + '">' +
-        '<output id="mto_' + r[1] + '">' + r[5] + r[6] + '</output></label>';
+        '<span class="mug3d-tuner-numwrap"><input type="number" class="mug3d-tuner-num" id="mtn_' + r[1] + '" min="' + r[7] + '" max="' + r[8] + '" step="' + r[4] + '" value="' + r[5] + '"><i>' + r[6] + '</i></span></div>';
     });
     html += '<label class="mug3d-tuner-row mug3d-tuner-flip"><span class="mug3d-tuner-lbl">Flip vertically</span>' +
       '<input type="checkbox" id="mt_flip"' + (S.mug3dFlipY ? " checked" : "") + '></label>';
     html += '<div class="mug3d-tuner-out"><code id="mug3dTunerCode"></code>' +
       '<button type="button" id="mug3dTunerCopy">Copy</button></div>' +
-      '<p class="mug3d-tuner-note">Dial it in here (live), then copy these into the section settings — or send them to me and I\'ll set them as defaults.</p>';
+      '<p class="mug3d-tuner-note">Type or drag any value — the mug updates live. Then copy these into the section settings, or send them to me and I\'ll set them as defaults.</p>';
     const box = document.createElement("div");
     box.id = "mug3dTuner"; box.className = "mug3d-tuner";
     box.innerHTML = html;
     wrap.appendChild(box);
 
-    const val = function (id) { const el = q2("#mt_" + id); return el ? +el.value : 0; };
+    // The number field is the source of truth (it accepts any typed value).
+    const val = function (id) { const el = q2("#mtn_" + id); const n = el ? parseFloat(el.value) : NaN; return isFinite(n) ? n : 0; };
     const apply = function () {
       if (!_mug3d) return;
       _mug3d.setFit({
@@ -2305,10 +2308,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       c.textContent = "Wrap " + val("arc") + "°  ·  Radius " + val("rad") + "%  ·  Height " + val("hgt") +
         "%  ·  Vertical " + val("yof") + "%  ·  Rotation " + val("rot") + "°  ·  Flip " + (q2("#mt_flip").checked ? "on" : "off");
     };
+    // Two-way sync: dragging the slider fills the number; typing the number
+    // moves the slider (clamped to its comfortable range) but applies as typed.
     rows.forEach(function (r) {
-      const el = q2("#mt_" + r[1]), out = q2("#mto_" + r[1]);
-      if (!el) return;
-      el.addEventListener("input", function () { if (out) out.textContent = el.value + r[6]; apply(); });
+      const slider = q2("#mt_" + r[1]), numEl = q2("#mtn_" + r[1]);
+      if (slider) slider.addEventListener("input", function () { if (numEl) numEl.value = slider.value; apply(); });
+      if (numEl) {
+        const onNum = function () {
+          const n = parseFloat(numEl.value);
+          if (isFinite(n) && slider) slider.value = Math.max(r[2], Math.min(r[3], n));
+          apply();
+        };
+        numEl.addEventListener("input", onNum);
+        numEl.addEventListener("change", onNum);
+      }
     });
     const flip = q2("#mt_flip"); if (flip) flip.addEventListener("change", apply);
     const copy = q2("#mug3dTunerCopy");
