@@ -1734,96 +1734,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const img = q2(".engrave-frame > img"); if (img) img.src = sideImage(side) || "";
   }
 
-  // ---- Cylindrical mug wrap (Sublimation) ----------------------------------
-  // Active when the merchant supplied a printable mask image. The design is
-  // drawn cylindrically warped and clipped to the mask so it looks wrapped.
-  function wrapActive() { return !!(window.DYN_SETTINGS && window.DYN_SETTINGS.maskImage && product && product.uploadMode); }
-  const _wrapImgCache = {};
-  function wrapImg(src, onReady) {
-    if (!src) return null;
-    const hit = _wrapImgCache[src];
-    if (hit) return hit.ok ? hit.img : null;
-    const im = new Image(); im.crossOrigin = "anonymous";
-    _wrapImgCache[src] = { img: im, ok: false };
-    im.onload = () => { _wrapImgCache[src].ok = true; if (onReady) onReady(); };
-    im.onerror = () => {}; im.src = src;
-    return null;
-  }
-  // Warp `design` (an already-scaled/rotated flat raster sized bw×bh) onto ctx at
-  // (bx,by,bw,bh) using a cylinder of the given curve (0..1).
-  function warpFlat(ctx, flat, bx, by, bw, bh, curve) {
-    const phi = curve * (Math.PI / 2) * 0.92 + 0.001, sinP = Math.sin(phi);
-    const N = Math.max(24, Math.min(200, Math.round(bw / 2)));
-    for (let s = 0; s < N; s++) {
-      const p0 = s / N, p1 = (s + 1) / N;
-      const u0 = 0.5 + Math.asin(Math.max(-1, Math.min(1, (2 * p0 - 1) * sinP))) / (2 * phi);
-      const u1 = 0.5 + Math.asin(Math.max(-1, Math.min(1, (2 * p1 - 1) * sinP))) / (2 * phi);
-      try { ctx.drawImage(flat, u0 * flat.width, 0, Math.max(0.4, (u1 - u0) * flat.width), flat.height, bx + p0 * bw, by, (p1 - p0) * bw, bh); } catch (_) {}
-    }
-  }
-  // Build the wrapped mockup at full product-image resolution (for the order).
-  function paintWrapMockup(ctx, canvas, layersArr, W, H, bx, by, bw, bh, resolve) {
-    const imgLayer = (layersArr || []).find((l) => l.kind === "img" && l.url);
-    const S = window.DYN_SETTINGS || {};
-    if (!imgLayer || !S.maskImage) { try { resolve(canvas.toDataURL("image/png")); } catch (e) { resolve(null); } return; }
-    const mask = new Image(); mask.crossOrigin = "anonymous";
-    const des = new Image(); des.crossOrigin = "anonymous";
-    let n = 0;
-    const done = () => {
-      if (++n < 2) return;
-      const flat = document.createElement("canvas");
-      flat.width = Math.max(1, Math.round(bw)); flat.height = Math.max(1, Math.round(bh));
-      const fx = flat.getContext("2d");
-      const w = (imgLayer.scale / 100) * bw, h = w * ((des.naturalHeight || 1) / (des.naturalWidth || 1));
-      fx.save(); fx.translate(imgLayer.x / 100 * bw, imgLayer.y / 100 * bh);
-      fx.rotate((imgLayer.rotate || 0) * Math.PI / 180);
-      try { fx.drawImage(des, -w / 2, -h / 2, w, h); } catch (_) {}
-      fx.restore();
-      const layerC = document.createElement("canvas"); layerC.width = W; layerC.height = H;
-      const lx = layerC.getContext("2d");
-      warpFlat(lx, flat, bx, by, bw, bh, (S.wrapCurve || 50) / 100);
-      lx.globalCompositeOperation = "destination-in";
-      try { lx.drawImage(mask, 0, 0, W, H); } catch (_) {}
-      lx.globalCompositeOperation = "source-over";
-      try { ctx.drawImage(layerC, 0, 0); } catch (_) {}
-      try { resolve(canvas.toDataURL("image/png")); } catch (e) { resolve(null); }
-    };
-    mask.onload = done; mask.onerror = done; mask.src = S.maskImage;
-    des.onload = done; des.onerror = done; des.src = imgLayer.cloudUrl || imgLayer.url;
-  }
-
-  // Live render of the wrapped design onto the overlay canvas in the editor.
-  function renderWrap() {
-    const cv = q2("#wrapCanvas"); if (!cv) return;
-    const frame = q2(".engrave-frame"); if (!frame) return;
-    const fr = frame.getBoundingClientRect();
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    cv.width = Math.max(1, Math.round(fr.width * dpr)); cv.height = Math.max(1, Math.round(fr.height * dpr));
-    cv.style.width = fr.width + "px"; cv.style.height = fr.height + "px";
-    const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, fr.width, fr.height);
-    const imgLayer = layers.find((l) => l.kind === "img" && l.url);
-    const mask = wrapImg((window.DYN_SETTINGS || {}).maskImage, renderWrap);
-    if (!imgLayer || !mask) return;
-    const design = wrapImg(imgLayer.url, renderWrap); if (!design) return;
-    const P = sidePrint("front");
-    const bx = (P.x != null ? P.x : 22) / 100 * fr.width, by = (P.y != null ? P.y : 30) / 100 * fr.height,
-          bw = (P.w != null ? P.w : 56) / 100 * fr.width, bh = (P.h != null ? P.h : 40) / 100 * fr.height;
-    // Flat raster of the design placed in the band.
-    const flat = document.createElement("canvas");
-    flat.width = Math.max(1, Math.round(bw)); flat.height = Math.max(1, Math.round(bh));
-    const fx = flat.getContext("2d");
-    const w = (imgLayer.scale / 100) * bw, h = w * ((design.naturalHeight || 1) / (design.naturalWidth || 1));
-    fx.save(); fx.translate(imgLayer.x / 100 * bw, imgLayer.y / 100 * bh);
-    fx.rotate((imgLayer.rotate || 0) * Math.PI / 180);
-    fx.drawImage(design, -w / 2, -h / 2, w, h); fx.restore();
-    warpFlat(ctx, flat, bx, by, bw, bh, ((window.DYN_SETTINGS || {}).wrapCurve || 50) / 100);
-    // Clip the whole overlay to the printable mask.
-    ctx.globalCompositeOperation = "destination-in";
-    try { ctx.drawImage(mask, 0, 0, fr.width, fr.height); } catch (_) {}
-    ctx.globalCompositeOperation = "source-over";
-  }
-
   function switchSide(side) {
     if (side === currentSide) return;
     sideActive[currentSide] = activeLayerId;         // remember selection per side
@@ -1964,7 +1874,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const hint = q2("#printHint");
     if (hint) hint.style.display = countKind("img") ? "none" : "";
     // Mug-wrap mode: draw the cylindrically warped design on the overlay canvas.
-    if (wrapActive()) renderWrap();
   }
   // Photo-only methods (e.g. DTF) allow just ONE design; others allow up to MAX_IMG.
   function maxImages() { return (product && product.photoOnly) ? 1 : MAX_IMG; }
@@ -2122,8 +2031,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         P = P || {};
         const aX = (P.x != null ? P.x : 22) / 100 * W, aY = (P.y != null ? P.y : 30) / 100 * H,
               aW = (P.w != null ? P.w : 56) / 100 * W, aH = (P.h != null ? P.h : 40) / 100 * H;
-        // Mug-wrap mockup: warp the design + clip to the printable mask.
-        if (wrapActive() && imageUrl === (product && product.image)) { paintWrapMockup(ctx, c, layersArr, W, H, aX, aY, aW, aH, resolve); return; }
         ctx.save();
         ctx.beginPath(); ctx.rect(aX, aY, aW, aH); ctx.clip();
         const imgLayers = layersArr.filter((l) => l.kind === "img" && l.url);
@@ -2204,9 +2111,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                 '</button>' +
               '</div>'
             : '') +
-          '<div class="engrave-stage"><div class="engrave-frame' + (wrapActive() ? ' wrap-mode' : '') + '">' +
+          '<div class="engrave-stage"><div class="engrave-frame">' +
             '<img src="' + (sideImage("front") || "") + '" alt="">' +
-            (wrapActive() ? '<canvas class="wrap-canvas" id="wrapCanvas"></canvas>' : '') +
             '<div class="print-area" id="printArea">' +
               '<span class="print-area-label">Print area</span>' +
               '<div class="up-guide up-guide-v" id="guideV"></div><div class="up-guide up-guide-h" id="guideH"></div>' +
