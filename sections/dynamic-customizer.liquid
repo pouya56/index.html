@@ -715,6 +715,11 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 .kbd-arrow.open svg { transform: rotate(180deg); }
 .engrave-input::placeholder { color: var(--ink-faint); letter-spacing: 0.14em; }
 .engrave-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+/* Photo-only methods (DTF): a simple "Upload your design" prompt, no text field. */
+.upload-cta { width: 100%; text-align: left; font: inherit; color: var(--ink-faint);
+  background: var(--bg); border: 1.5px dashed var(--line); border-radius: 999px;
+  padding: 13px 18px; cursor: pointer; transition: border-color .15s ease, color .15s ease; }
+.upload-cta:hover { border-color: var(--accent); color: var(--ink); }
 /* Fonts row + iPhone keyboard wrapper */
 .engrave-tools { display: flex; flex-direction: column; align-items: stretch; gap: 12px; margin: 14px 0 0; }
 .engrave-tools .up-fonts { justify-content: center; }
@@ -1006,18 +1011,19 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   // One customizer experience (upload: photos + text on a printable area), offered
   // as four print methods. They behave identically; the chosen method is recorded
   // on the order so fulfilment knows how to produce it.
-  function makeMethod(id, method, finish) {
-    return {
+  function makeMethod(id, method, finish, opts) {
+    return Object.assign({
       id: id, name: "Product", tagline: "Custom Product", description: "Upload your design.",
       method: method, base: 2000, uploadMode: true, image: DYNasset("airpods-pro-3.png"),
       colors: [{ id: "default", name: "Default", hex: "#ffffff" }], sizes: null,
       areas: [{ id: "design", label: "Design", rect: { x: 0.3, y: 0.3, w: 0.4, h: 0.4 }, surcharge: 0 }],
       finishes: [{ id: "standard", name: finish, surcharge: 0 }], addons: [],
-    };
+    }, opts || {});
   }
   const catalog = {
     uv: makeMethod("uv", "UV", "UV Print"),
-    dtf: makeMethod("dtf", "DTF", "DTF Print"),
+    // DTF is upload-only: customers just upload their design (no text/keyboard).
+    dtf: makeMethod("dtf", "DTF", "DTF Print", { photoOnly: true }),
     sublimation: makeMethod("sublimation", "Sublimation", "Sublimation Print"),
     engraving: makeMethod("engraving", "Engraving", "Engraving"),
   };
@@ -3223,11 +3229,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     layers = []; activeLayerId = null; layerSeq = 0;
     const noun = product.engraveNoun || (window.DYN_SHOPIFY && window.DYN_SHOPIFY.productTitle) || product.name || "product";
     const priceStr = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.priceMoney) || D.pricing.money(product.base);
+    // Photo-only methods (e.g. DTF): customers just upload their design — no text field/keyboard.
+    const photoOnly = !!(product && product.photoOnly);
     // Use the merchant's "Popup title" / "Popup subtitle" theme settings so the
-    // popup matches what they edit; fall back to a photos+text default if blank.
+    // popup matches what they edit; fall back to a sensible default if blank.
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
-    const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) ||
-      ("Add photos and text — tap to select, then drag, resize or rotate each on your " + noun + ". Up to " + MAX_IMG + " of each.");
+    const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (photoOnly
+      ? ("Upload your design, then drag, resize or rotate it on your " + noun + ". Up to " + MAX_IMG + " images.")
+      : ("Add photos and text — tap to select, then drag, resize or rotate each on your " + noun + ". Up to " + MAX_IMG + " of each."));
     const eBtn = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "Add to Bag";
     const ePlaceholder = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupPlaceholder) || "Add your text";
     const html =
@@ -3247,18 +3256,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           '<div class="up-controls">' +
             '<input type="file" data-file="design" accept=".png,.jpg,.jpeg,.svg,.pdf" hidden>' +
             '<div class="ios-compose">' +
-              '<button type="button" class="ios-plus" data-drop="design" aria-label="Add a photo (PNG, JPG, SVG, PDF)" title="Add a photo">' +
+              '<button type="button" class="ios-plus" data-drop="design" aria-label="Upload your design (PNG, JPG, SVG, PDF)" title="Upload your design">' +
                 '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
               '</button>' +
-              '<div class="ios-field"><textarea id="upText" class="engrave-input" maxlength="60" rows="1" placeholder="' + escapeHtml(ePlaceholder) + '" autocomplete="off"></textarea></div>' +
-              '<button type="button" class="kbd-arrow" id="kbdArrow" aria-label="Show keyboard" aria-expanded="false" title="Keyboard">' +
-                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
-              '</button>' +
-              '<button type="button" class="ios-plus" id="addTextBtn" aria-label="Add a text box" title="Add text">' +
-                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' +
-              '</button>' +
+              (photoOnly
+                ? '<div class="ios-field"><button type="button" class="upload-cta" data-drop="design">Upload your design</button></div>'
+                : '<div class="ios-field"><textarea id="upText" class="engrave-input" maxlength="60" rows="1" placeholder="' + escapeHtml(ePlaceholder) + '" autocomplete="off"></textarea></div>' +
+                  '<button type="button" class="kbd-arrow" id="kbdArrow" aria-label="Show keyboard" aria-expanded="false" title="Keyboard">' +
+                    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
+                  '</button>' +
+                  '<button type="button" class="ios-plus" id="addTextBtn" aria-label="Add a text box" title="Add text">' +
+                    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' +
+                  '</button>') +
             '</div>' +
-            '<div class="engrave-tools">' + kbdHtml() + '</div>' +
+            (photoOnly ? '' : '<div class="engrave-tools">' + kbdHtml() + '</div>') +
           '</div>' +
         '</div>' +
         '<div class="modal-foot"><div class="price-breakdown"><div class="price-breakdown-toggle" style="cursor:default">' +
@@ -3295,38 +3306,44 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (!layer) return;
       uploadToCloudinary(file, file.name).then((u) => { if (u) { file._cloudUrl = u; layer.cloudUrl = u; } });
     }
-    drop.onclick = () => input.click();
-    drop.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } };
+    // Every "Upload your design" trigger (paperclip + the photo-only CTA) opens the picker.
+    $("#modalRoot").querySelectorAll('[data-drop="design"]').forEach((d) => {
+      d.onclick = () => input.click();
+      d.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } };
+    });
     ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("drag"); }));
     ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("drag"); }));
     drop.addEventListener("drop", (e) => { if (e.dataTransfer.files[0]) accept(e.dataTransfer.files[0]); });
     input.onchange = (e) => { if (e.target.files[0]) accept(e.target.files[0]); input.value = ""; };
     const txt = q2("#upText");
-    // Typing (or the emoji picker) writes to the active text layer, auto-creating
-    // one on the first keystroke if none is selected.
-    const upSync = () => {
-      let l = activeTextLayer();
-      if (!l) {
-        if (!txt.value) return;
-        if (countKind("text") >= MAX_TXT) { toast("Up to " + MAX_TXT + " text boxes"); return; }
-        l = addTextLayer(); if (!l) return;
-      }
-      l.text = txt.value; renderUpEls();
-      // Shrink the text so it always stays inside the print area (never overflows).
-      const el = layerEl(l.id), area = q2("#printArea");
-      if (el && area && l.text) { fitInArea(el, area, l, "text"); renderUpEls(); }
-    };
-    txt.oninput = upSync;
-    // Native keyboard + emoji picker; the globe key cycles the font.
-    wireKbd(txt, upSync, (f) => { const l = activeTextLayer(); if (l) { l.font = f.stack; renderUpEls(); } });
-    setKbdFont(UPLOAD_FONTS[0].stack);
-    // "Add text" starts a fresh empty text box and focuses the field.
-    const addTextBtn = q2("#addTextBtn");
-    if (addTextBtn) addTextBtn.onclick = () => {
-      if (countKind("text") >= MAX_TXT) return toast("Up to " + MAX_TXT + " text boxes");
-      const l = addTextLayer(); if (!l) return;
-      if (txt) { txt.value = ""; try { txt.focus(); } catch (e) {} }
-    };
+    // Text UI is absent for photo-only methods (e.g. DTF) — only wire it when present.
+    if (txt) {
+      // Typing (or the emoji picker) writes to the active text layer, auto-creating
+      // one on the first keystroke if none is selected.
+      const upSync = () => {
+        let l = activeTextLayer();
+        if (!l) {
+          if (!txt.value) return;
+          if (countKind("text") >= MAX_TXT) { toast("Up to " + MAX_TXT + " text boxes"); return; }
+          l = addTextLayer(); if (!l) return;
+        }
+        l.text = txt.value; renderUpEls();
+        // Shrink the text so it always stays inside the print area (never overflows).
+        const el = layerEl(l.id), area = q2("#printArea");
+        if (el && area && l.text) { fitInArea(el, area, l, "text"); renderUpEls(); }
+      };
+      txt.oninput = upSync;
+      // Native keyboard + emoji picker; the globe key cycles the font.
+      wireKbd(txt, upSync, (f) => { const l = activeTextLayer(); if (l) { l.font = f.stack; renderUpEls(); } });
+      setKbdFont(UPLOAD_FONTS[0].stack);
+      // "Add text" starts a fresh empty text box and focuses the field.
+      const addTextBtn = q2("#addTextBtn");
+      if (addTextBtn) addTextBtn.onclick = () => {
+        if (countKind("text") >= MAX_TXT) return toast("Up to " + MAX_TXT + " text boxes");
+        const l = addTextLayer(); if (!l) return;
+        txt.value = ""; try { txt.focus(); } catch (e) {}
+      };
+    }
     // Tapping empty canvas deselects everything (and clears the shared field).
     const frame = q2(".engrave-frame");
     if (frame) frame.addEventListener("pointerdown", (e) => {
