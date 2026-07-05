@@ -88,6 +88,11 @@
       {{ section.settings.reassure_2 | default: '' | json }},
       {{ section.settings.reassure_3 | default: '' | json }}
     ],
+    "reassureIcons": [
+      {{ section.settings.reassure_1_icon | default: 'truck' | json }},
+      {{ section.settings.reassure_2_icon | default: 'clock' | json }},
+      {{ section.settings.reassure_3_icon | default: 'check' | json }}
+    ],
     "engraveTitle": {{ section.settings.engrave_title | default: '' | json }},
     "engraveSub": {{ section.settings.engrave_sub | default: '' | json }},
     "engrave": {
@@ -386,6 +391,7 @@ button { font-family: inherit; cursor: pointer; }
 .reassure { display: flex; gap: 26px; justify-content: center; margin-top: 34px; flex-wrap: wrap; }
 .reassure-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-faint); }
 .reassure-item svg { width: 16px; height: 16px; stroke: var(--ink-faint); }
+.reassure-ic { display: inline-flex; align-items: center; }
 
 /* ============================================================================
    APPLE-STYLE FULLSCREEN MODAL
@@ -941,15 +947,15 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
       <div class="reassure">
         <div class="reassure-item" data-reassure-item="0">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M3 7h13v8H3z" stroke-width="1.5"></path><path d="M16 10h3l2 3v2h-5" stroke-width="1.5"></path><circle cx="7" cy="17" r="1.6" stroke-width="1.5"></circle><circle cx="17" cy="17" r="1.6" stroke-width="1.5"></circle></svg>
+          <span class="reassure-ic" data-reassure-ic="0"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7h13v8H3z" stroke-width="1.5"></path><path d="M16 10h3l2 3v2h-5" stroke-width="1.5"></path><circle cx="7" cy="17" r="1.6" stroke-width="1.5"></circle><circle cx="17" cy="17" r="1.6" stroke-width="1.5"></circle></svg></span>
           <span data-reassure="0">Free delivery</span>
         </div>
         <div class="reassure-item" data-reassure-item="1">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 1 8 8" stroke-width="1.5"></path><path d="M12 8v4l3 2" stroke-width="1.5"></path></svg>
+          <span class="reassure-ic" data-reassure-ic="1"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 1 8 8" stroke-width="1.5"></path><path d="M12 8v4l3 2" stroke-width="1.5"></path></svg></span>
           <span data-reassure="1">Made in 3–5 days</span>
         </div>
         <div class="reassure-item" data-reassure-item="2">
-          <svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke-width="1.5"></path></svg>
+          <span class="reassure-ic" data-reassure-ic="2"><svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke-width="1.5"></path></svg></span>
           <span data-reassure="2">Free &amp; easy returns</span>
         </div>
       </div>
@@ -4395,14 +4401,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     setText("#pageAddCart", S.addcartLabel);
     const _shop = window.DYN_SHOPIFY || {};
     setText("#pPrice", _shop.priceMoney || S.price);
-    // Trust row under the buttons: override each label from settings; a blank
-    // field hides that item (and an all-blank row hides itself).
+    // Trust row under the buttons: override each label + icon from settings; a
+    // blank text field hides that item (and an all-blank row hides itself).
     const RZ = Array.isArray(S.reassure) ? S.reassure : [];
+    const RI = Array.isArray(S.reassureIcons) ? S.reassureIcons : [];
     let shownRz = 0;
     ["0", "1", "2"].forEach((i) => {
       const item = document.querySelector('[data-reassure-item="' + i + '"]');
       const span = document.querySelector('[data-reassure="' + i + '"]');
       if (!item || !span) return;
+      const ic = document.querySelector('[data-reassure-ic="' + i + '"]');
+      const iconKey = RI[+i];
+      if (ic && iconKey && TRUST_ICONS[iconKey]) {
+        ic.innerHTML = '<svg viewBox="0 0 24 24" fill="none">' + TRUST_ICONS[iconKey] + '</svg>';
+      }
       const val = RZ[+i];
       if (val === "") { item.style.display = "none"; }
       else { if (val != null) span.textContent = val; item.style.display = ""; shownRz++; }
@@ -4410,6 +4422,22 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const rzRow = document.querySelector(".reassure");
     if (rzRow) rzRow.style.display = shownRz ? "" : "none";
   }
+  // Pickable trust-row icons (drawn in the muted line style). Keys match the
+  // "Trust item icon" select options in the schema.
+  const TRUST_ICONS = {
+    truck: '<path d="M3 7h13v8H3z" stroke-width="1.5"></path><path d="M16 10h3l2 3v2h-5" stroke-width="1.5"></path><circle cx="7" cy="17" r="1.6" stroke-width="1.5"></circle><circle cx="17" cy="17" r="1.6" stroke-width="1.5"></circle>',
+    clock: '<circle cx="12" cy="12" r="8" stroke-width="1.5"></circle><path d="M12 8v4l3 2" stroke-width="1.5"></path>',
+    check: '<path d="m5 13 4 4 10-10" stroke-width="1.5"></path>',
+    shield: '<path d="M12 3l7 3v5c0 4-3 7-7 8-4-1-7-4-7-8V6l7-3Z" stroke-width="1.5"></path>',
+    returns: '<path d="M4 12a8 8 0 0 1 13.7-5.6L20 8" stroke-width="1.5"></path><path d="M20 3v5h-5" stroke-width="1.5"></path><path d="M20 12a8 8 0 0 1-13.7 5.6L4 16" stroke-width="1.5"></path><path d="M4 21v-5h5" stroke-width="1.5"></path>',
+    gift: '<rect x="4" y="9" width="16" height="11" rx="1" stroke-width="1.5"></rect><path d="M4 13h16M12 9v11" stroke-width="1.5"></path><path d="M12 9C10.3 9 8.5 8 8.5 6.2A2 2 0 0 1 12 5a2 2 0 0 1 3.5 1.2C15.5 8 13.7 9 12 9Z" stroke-width="1.5"></path>',
+    star: '<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8Z" stroke-width="1.5"></path>',
+    heart: '<path d="M12 20s-7-4.5-7-9a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 4.5-7 9-7 9Z" stroke-width="1.5"></path>',
+    tag: '<path d="M4 12V5a1 1 0 0 1 1-1h7l8 8-8 8-8-8Z" stroke-width="1.5"></path><circle cx="8.5" cy="8.5" r="1.2" stroke-width="1.5"></circle>',
+    leaf: '<path d="M5 19C5 11 11 5 19 5c0 8-6 14-14 14Z" stroke-width="1.5"></path><path d="M5 19c3-5 7-7 10-8" stroke-width="1.5"></path>',
+    lock: '<rect x="5" y="11" width="14" height="9" rx="1.5" stroke-width="1.5"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke-width="1.5"></path>',
+    badge: '<circle cx="12" cy="9" r="5" stroke-width="1.5"></circle><path d="M9 13.2 7.5 21l4.5-2.6L16.5 21 15 13.2" stroke-width="1.5"></path>'
+  };
 
   function loadProduct(id) {
     product = D.getProduct(id);
@@ -4672,28 +4700,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 </script>
 {% endraw %}
 
-{%- comment -%} Feature panel — editable via Blocks (Add block > Feature) {%- endcomment -%}
-{%- if section.settings.show_features and section.blocks.size > 0 -%}
-<style>
-  #shopify-section-{{ section.id }} .feature-cols { grid-template-columns: repeat({{ section.blocks.size | at_most: 4 }}, 1fr); }
-  @media (max-width: 860px) { #shopify-section-{{ section.id }} .feature-cols { grid-template-columns: 1fr; } }
-</style>
-<section class="feature-panel">
-  <div class="feature-inner">
-    {%- if section.settings.feature_title != blank -%}<h2 class="feature-title">{{ section.settings.feature_title }}</h2>{%- endif -%}
-    {%- if section.settings.feature_lead != blank -%}<p class="feature-lead">{{ section.settings.feature_lead }}</p>{%- endif -%}
-    <div class="feature-cols">
-      {%- for block in section.blocks -%}
-        <div class="feature-col" {{ block.shopify_attributes }}>
-          {%- if block.settings.icon -%}<img class="feature-ico" src="{{ block.settings.icon | image_url: width: 160 }}" width="{{ block.settings.icon.width }}" height="{{ block.settings.icon.height }}" alt="{{ block.settings.title | escape }}" loading="lazy">{%- endif -%}
-          {%- if block.settings.title != blank -%}<h3>{{ block.settings.title }}</h3>{%- endif -%}
-          {%- if block.settings.text != blank -%}<p>{{ block.settings.text }}</p>{%- endif -%}
-        </div>
-      {%- endfor -%}
-    </div>
-  </div>
-</section>
-{%- endif -%}
+{%- comment -%} The Features panel lives in its own section: dynamic-features.liquid {%- endcomment -%}
 
 {% schema %}
 {
@@ -4721,8 +4728,35 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     { "type": "header", "content": "Trust row (under the buttons)" },
     { "type": "paragraph", "content": "The three short reassurance items shown beneath the buttons. Leave a field blank to hide that item; clear all three to hide the whole row." },
     { "type": "text", "id": "reassure_1", "label": "Trust item 1", "default": "Free delivery" },
+    { "type": "select", "id": "reassure_1_icon", "label": "Trust item 1 icon", "default": "truck",
+      "options": [
+        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
+        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
+        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
+        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
+        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
+        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
+      ] },
     { "type": "text", "id": "reassure_2", "label": "Trust item 2", "default": "Made in 3–5 days" },
+    { "type": "select", "id": "reassure_2_icon", "label": "Trust item 2 icon", "default": "clock",
+      "options": [
+        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
+        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
+        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
+        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
+        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
+        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
+      ] },
     { "type": "text", "id": "reassure_3", "label": "Trust item 3", "default": "Free & easy returns" },
+    { "type": "select", "id": "reassure_3_icon", "label": "Trust item 3 icon", "default": "check",
+      "options": [
+        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
+        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
+        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
+        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
+        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
+        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
+      ] },
     { "type": "text", "id": "custom_print_label", "label": "Popup price caption", "info": "Small line under the price in the customizer popup.", "default": "Custom print" },
     { "type": "header", "content": "Engraving popup" },
     { "type": "text", "id": "engrave_title", "label": "Popup title", "default": "Personalize your AirPods." },
@@ -4738,34 +4772,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     { "type": "range", "id": "print_y", "label": "Area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },
     { "type": "range", "id": "print_w", "label": "Area width", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 56 },
     { "type": "range", "id": "print_h", "label": "Area height", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 40 },
-    { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes. Customers place, size and rotate each text/photo themselves.", "default": "#1d1d1f" },
-    { "type": "header", "content": "Feature section" },
-    { "type": "paragraph", "content": "Shows below the product. Add a column with \"Add block\" > Feature (up to 4)." },
-    { "type": "checkbox", "id": "show_features", "label": "Show feature section", "default": true },
-    { "type": "text", "id": "feature_title", "label": "Heading", "default": "Breakthrough hearing health experience." },
-    { "type": "textarea", "id": "feature_lead", "label": "Subheading", "default": "Take a scientifically validated Hearing Test in five minutes from the comfort of your home." }
+    { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes. Customers place, size and rotate each text/photo themselves.", "default": "#1d1d1f" }
   ],
-  "blocks": [
-    {
-      "type": "feature",
-      "name": "Feature",
-      "settings": [
-        { "type": "image_picker", "id": "icon", "label": "Icon" },
-        { "type": "text", "id": "title", "label": "Title", "default": "Feature title" },
-        { "type": "textarea", "id": "text", "label": "Text", "default": "Short description of this feature." }
-      ]
-    }
-  ],
-  "max_blocks": 4,
   "presets": [
-    {
-      "name": "Dynamic Customizer",
-      "blocks": [
-        { "type": "feature", "settings": { "title": "Hearing Test", "text": "Test your hearing in the comfort of your home." } },
-        { "type": "feature", "settings": { "title": "Hearing Aid", "text": "Clinical-grade support for perceived mild to moderate hearing loss." } },
-        { "type": "feature", "settings": { "title": "Hearing Protection", "text": "Helps prevent exposure to loud environmental noise." } }
-      ]
-    }
+    { "name": "Dynamic Customizer" }
   ]
 }
 {% endschema %}
