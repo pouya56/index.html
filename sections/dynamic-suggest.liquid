@@ -1,0 +1,332 @@
+{% comment %}
+  ============================================================================
+  Dynamic Suggest — Apple-style "Style. In a snap." accessory upsell page
+  ----------------------------------------------------------------------------
+  Shows AFTER a product is added, BEFORE the cart. A sticky bar shows the
+  just-added item with a "Review Bag" button; below it, a carousel of the
+  product's COMPLEMENTARY accessories (set up in Shopify's free "Search &
+  Discovery" app) with colour swatches and an Add button. Mix and match, then
+  Review Bag -> cart.
+
+  INSTALL:
+  1. Theme code editor > Sections > Add a new section > name it "dynamic-suggest"
+     and REPLACE its contents with this whole file.
+  2. Online Store > Pages > Add page. Title it e.g. "Style". On the right, set
+     its Theme template to a template that includes this section (or, in
+     Customize > pick the page > Add section > "Dynamic Suggest"). Save.
+  3. In the Dynamic Customizer section settings, paste this page's URL
+     (e.g. /pages/style) into "Suggestion page URL".
+  4. Install Shopify's free "Search & Discovery" app and, for each product, add
+     its Complementary products. Those are what appear here. (If a product has
+     none set, we fall back to related products so the page is never empty.)
+  ============================================================================
+{% endcomment %}
+
+<style>
+  .dyn-sug {
+    --bg: #f5f5f7; --card: #ffffff; --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
+    --line: #d2d2d7; --accent: #0071e3;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; background: var(--bg);
+    min-height: 100vh;
+  }
+  .dyn-sug .ds-topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 16px 24px; background: rgba(245,245,247,0.82);
+    -webkit-backdrop-filter: saturate(1.6) blur(18px); backdrop-filter: saturate(1.6) blur(18px);
+    border-bottom: 1px solid rgba(0,0,0,0.08); }
+  .dyn-sug .ds-top-item { display: flex; align-items: center; gap: 16px; min-width: 0; }
+  .dyn-sug .ds-top-item img { width: 60px; height: 60px; object-fit: contain; border-radius: 10px; background: #fff; flex: none; }
+  .dyn-sug .ds-top-txt { min-width: 0; }
+  .dyn-sug .ds-top-title { font-size: 17px; font-weight: 600; line-height: 1.2; }
+  .dyn-sug .ds-top-sub { font-size: 14px; color: var(--ink-soft); margin-top: 2px; }
+  .dyn-sug .ds-top-note { font-size: 14px; color: var(--ink-soft); }
+  .dyn-sug .ds-review { flex: none; background: var(--accent); color: #fff; border: none; cursor: pointer;
+    padding: 12px 26px; border-radius: 999px; font-family: var(--font); font-weight: 500; font-size: 16px;
+    text-decoration: none; transition: opacity .16s, transform .1s; }
+  .dyn-sug .ds-review:hover { opacity: .9; }
+  .dyn-sug .ds-review:active { transform: scale(.98); }
+
+  .dyn-sug .ds-hero { text-align: center; padding: 56px 24px 8px; }
+  .dyn-sug .ds-hero h1 { font-size: clamp(34px, 6vw, 56px); font-weight: 700; letter-spacing: -0.02em; margin: 0; line-height: 1.05; }
+  .dyn-sug .ds-hero p { font-size: clamp(17px, 2.4vw, 21px); color: var(--ink-soft); max-width: 640px; margin: 20px auto 0; line-height: 1.4; }
+
+  .dyn-sug .ds-carousel { position: relative; padding: 40px 0 24px; }
+  .dyn-sug .ds-track { display: flex; gap: 22px; overflow-x: auto; scroll-behavior: smooth; scroll-snap-type: x mandatory;
+    padding: 8px max(24px, calc((100vw - 1200px) / 2)) 8px; -ms-overflow-style: none; scrollbar-width: none; }
+  .dyn-sug .ds-track::-webkit-scrollbar { display: none; }
+  .dyn-sug .ds-loading { text-align: center; color: var(--ink-faint); padding: 40px; width: 100%; }
+
+  .dyn-sug .ds-card { scroll-snap-align: start; flex: 0 0 clamp(280px, 30vw, 360px); background: var(--card);
+    border-radius: 20px; padding: 26px 26px 30px; display: flex; flex-direction: column; }
+  .dyn-sug .ds-card-img { height: 260px; display: flex; align-items: center; justify-content: center; margin-bottom: 22px; }
+  .dyn-sug .ds-card-img img { max-width: 100%; max-height: 100%; object-fit: contain; transition: opacity .2s; }
+  .dyn-sug .ds-card-title { font-size: 21px; font-weight: 600; line-height: 1.2; margin: 0 0 12px; }
+  .dyn-sug .ds-card-title a { color: inherit; text-decoration: none; }
+  .dyn-sug .ds-card-desc { font-size: 15px; color: var(--ink-soft); line-height: 1.5; position: relative; }
+  .dyn-sug .ds-card-desc .ds-clip { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .dyn-sug .ds-card-desc.open .ds-clip { -webkit-line-clamp: unset; overflow: visible; }
+  .dyn-sug .ds-more { background: none; border: none; color: var(--accent); font: inherit; cursor: pointer; padding: 2px 0 0; }
+  .dyn-sug .ds-more:hover { text-decoration: underline; }
+  .dyn-sug .ds-card-color { font-size: 15px; color: var(--ink-soft); margin-top: 20px; }
+  .dyn-sug .ds-card-color b { color: var(--ink); font-weight: 500; }
+  .dyn-sug .ds-swatches { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+  .dyn-sug .ds-swatch { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; padding: 0;
+    border: 1px solid rgba(0,0,0,0.14); background-size: cover; background-position: center; position: relative;
+    box-shadow: inset 0 0 0 2px #fff; transition: transform .12s; }
+  .dyn-sug .ds-swatch:hover { transform: scale(1.08); }
+  .dyn-sug .ds-swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent), inset 0 0 0 2px #fff; }
+  .dyn-sug .ds-card-buy { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; }
+  .dyn-sug .ds-price { font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .dyn-sug .ds-add { background: var(--ink); color: #fff; border: none; cursor: pointer; padding: 11px 26px;
+    border-radius: 999px; font-family: var(--font); font-weight: 500; font-size: 15px; transition: opacity .16s, transform .1s, background .16s; }
+  .dyn-sug .ds-add:hover { opacity: .9; }
+  .dyn-sug .ds-add:active { transform: scale(.97); }
+  .dyn-sug .ds-add.added { background: #2b9348; }
+
+  .dyn-sug .ds-arrow { position: absolute; top: calc(50% - 40px); transform: translateY(-50%); z-index: 10;
+    width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer; background: rgba(210,210,215,0.9);
+    color: #1d1d1f; display: grid; place-items: center; box-shadow: 0 4px 16px rgba(0,0,0,0.12); transition: background .16s, opacity .16s; }
+  .dyn-sug .ds-arrow:hover { background: #c7c7cc; }
+  .dyn-sug .ds-arrow[disabled] { opacity: 0; pointer-events: none; }
+  .dyn-sug .ds-arrow svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-sug .ds-prev { left: 24px; } .dyn-sug .ds-next { right: 24px; }
+
+  .dyn-sug .ds-foot { text-align: center; padding: 24px 24px 80px; }
+  .dyn-sug .ds-foot .ds-review { display: inline-block; }
+  .dyn-sug .ds-skip { display: block; margin-top: 18px; color: var(--ink-soft); font-size: 15px; text-decoration: none; }
+  .dyn-sug .ds-skip:hover { color: var(--ink); }
+
+  @media (max-width: 640px) {
+    .dyn-sug .ds-topbar { padding: 12px 16px; }
+    .dyn-sug .ds-top-item img { width: 48px; height: 48px; }
+    .dyn-sug .ds-top-title { font-size: 15px; }
+    .dyn-sug .ds-review { padding: 10px 18px; font-size: 15px; }
+    .dyn-sug .ds-arrow { display: none; }
+    .dyn-sug .ds-card { flex-basis: 80vw; }
+  }
+</style>
+
+<section class="dyn-sug" id="dynSug"
+  data-currency="{{ shop.currency }}"
+  data-cart-url="{{ routes.cart_url }}"
+  data-limit="{{ section.settings.max_items | default: 12 }}">
+  <div class="ds-topbar" id="dsTop" hidden>
+    <div class="ds-top-item">
+      <img id="dsTopImg" src="" alt="">
+      <div class="ds-top-txt">
+        <div class="ds-top-title" id="dsTopTitle"></div>
+        <div class="ds-top-sub">{{ section.settings.bag_subtitle | default: 'One-time payment' }}</div>
+        <div class="ds-top-note" id="dsTopNote"></div>
+      </div>
+    </div>
+    <a class="ds-review" href="{{ routes.cart_url }}">{{ section.settings.review_label | default: 'Review Bag' }}</a>
+  </div>
+
+  <div class="ds-hero">
+    <h1>{{ section.settings.heading | default: 'Style. In a snap.' }}</h1>
+    <p>{{ section.settings.subheading | default: 'Add a MagSafe case, a wallet, or both. Mix and match to make your iPhone yours.' }}</p>
+  </div>
+
+  <div class="ds-carousel">
+    <button type="button" class="ds-arrow ds-prev" id="dsPrev" aria-label="Previous" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="ds-track" id="dsTrack">
+      <div class="ds-loading">Loading suggestions…</div>
+    </div>
+    <button type="button" class="ds-arrow ds-next" id="dsNext" aria-label="Next">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+
+  <div class="ds-foot">
+    <a class="ds-review" href="{{ routes.cart_url }}">{{ section.settings.review_label | default: 'Review Bag' }}</a>
+    <a class="ds-skip" href="{{ section.settings.continue_link | default: routes.all_products_collection_url }}">{{ section.settings.skip_label | default: 'No thanks, keep shopping' }}</a>
+  </div>
+</section>
+
+<script>
+(function () {
+  var root = document.getElementById("dynSug");
+  if (!root) return;
+  var track = document.getElementById("dsTrack");
+  var prevBtn = document.getElementById("dsPrev"), nextBtn = document.getElementById("dsNext");
+  var currency = root.getAttribute("data-currency") || "USD";
+  var cartUrl = root.getAttribute("data-cart-url") || "/cart";
+  var LIMIT = parseInt(root.getAttribute("data-limit"), 10) || 12;
+
+  var COLORS = {
+    black:"#1a1a1a", white:"#f4f4f4", "starlight":"#f6f2e9", silver:"#d8d9db", gray:"#8e8e93", grey:"#8e8e93",
+    "space gray":"#4a4a4c", "space grey":"#4a4a4c", graphite:"#3a3a3c", midnight:"#1c2430",
+    blue:"#2f6fdb", navy:"#1f2a44", teal:"#2aa9a0", green:"#3f9d5a", olive:"#6f7a49",
+    yellow:"#e8c33f", gold:"#e3c88f", orange:"#e8720c", sienna:"#8a5a3b", brown:"#7a4f33", tan:"#c9a37a",
+    red:"#d62f2f", pink:"#e98aa8", rose:"#e8b7b0", purple:"#7a5cc0", violet:"#6a5acd", lavender:"#b7a7d9",
+    beige:"#e3d5be", cream:"#efe7d5", clear:"#e7ecf0", stone:"#cfc7ba", sky:"#9fc3e8", lime:"#c6e04a"
+  };
+  function money(cents) {
+    try { return new Intl.NumberFormat(undefined, { style: "currency", currency: currency }).format((cents || 0) / 100); }
+    catch (e) { return "$" + ((cents || 0) / 100).toFixed(2); }
+  }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" })[c]; }); }
+  function syncHeader() { try { if (window.DynamicHeader && window.DynamicHeader.refreshCart) window.DynamicHeader.refreshCart(); } catch (e) {} }
+
+  function optNames(p) { return (p.options || []).map(function (o) { return typeof o === "string" ? o : (o.name || ""); }); }
+  function colorIndex(p) {
+    var names = optNames(p);
+    var i = names.findIndex(function (n) { return /colou?r/i.test(n); });
+    if (i >= 0) return i;
+    // fall back: an option whose values are mostly known colour names
+    for (var j = 0; j < names.length; j++) {
+      var vals = distinctVals(p, j);
+      if (vals.length > 1 && vals.filter(function (v) { return COLORS[String(v).toLowerCase().trim()]; }).length >= Math.ceil(vals.length / 2)) return j;
+    }
+    return -1;
+  }
+  function variantVal(v, idx) { return v["option" + (idx + 1)] != null ? v["option" + (idx + 1)] : (v.options ? v.options[idx] : null); }
+  function distinctVals(p, idx) {
+    var seen = {}, out = [];
+    (p.variants || []).forEach(function (v) { var val = variantVal(v, idx); if (val != null && !seen[val]) { seen[val] = 1; out.push(val); } });
+    return out;
+  }
+  function swatchStyle(v, name) {
+    var hex = COLORS[String(name).toLowerCase().trim()];
+    if (v && v.featured_image) return "background-image:url(" + (typeof v.featured_image === "string" ? v.featured_image : v.featured_image.src) + ")";
+    if (hex) return "background-color:" + hex;
+    return "background-color:#c7c7cc";
+  }
+  function firstAvail(list) { for (var i = 0; i < list.length; i++) { if (list[i].available) return list[i]; } return list[0]; }
+
+  function buildCard(p) {
+    var card = document.createElement("article");
+    card.className = "ds-card";
+    var cidx = colorIndex(p);
+    var mainImg = (typeof p.featured_image === "string" ? p.featured_image : (p.featured_image && p.featured_image.src)) || (p.images && p.images[0]) || "";
+    var chosen = firstAvail(p.variants || []) || { id: p.variants && p.variants[0] && p.variants[0].id, price: p.price };
+
+    // Group representative variant per colour value.
+    var swHtml = "", colorLabel = "";
+    if (cidx >= 0) {
+      var vals = distinctVals(p, cidx);
+      swHtml = vals.map(function (val, k) {
+        var rep = firstAvail((p.variants || []).filter(function (v) { return variantVal(v, cidx) === val; }));
+        var repImg = rep && (typeof rep.featured_image === "string" ? rep.featured_image : (rep.featured_image && rep.featured_image.src)) || "";
+        return '<button type="button" class="ds-swatch" role="radio" aria-pressed="' + (k === 0 ? "true" : "false") +
+          '" data-vid="' + (rep ? rep.id : "") + '" data-val="' + esc(val) + '" data-price="' + (rep ? rep.price : p.price) +
+          '" data-img="' + esc(repImg) + '" title="' + esc(val) + '" aria-label="' + esc(val) + '" style="' + swatchStyle(rep, val) + '"></button>';
+      }).join("");
+      var firstRep = firstAvail((p.variants || []).filter(function (v) { return variantVal(v, cidx) === vals[0]; }));
+      if (firstRep) chosen = firstRep;
+      colorLabel = '<div class="ds-card-color">' + esc((optNames(p)[cidx] || "Color")) + ' - <b class="ds-color-name">' + esc(vals[0]) + '</b></div>';
+    }
+
+    card.innerHTML =
+      '<div class="ds-card-img"><img src="' + esc(mainImg) + '" alt="' + esc(p.title) + '" loading="lazy"></div>' +
+      '<h3 class="ds-card-title"><a href="' + esc(p.url || "#") + '">' + esc(p.title) + '</a></h3>' +
+      (p.description ? '<div class="ds-card-desc"><span class="ds-clip">' + esc(stripHtml(p.description)) + '</span> <button type="button" class="ds-more">Show more</button></div>' : "") +
+      colorLabel +
+      (swHtml ? '<div class="ds-swatches" role="radiogroup">' + swHtml + "</div>" : "") +
+      '<div class="ds-card-buy"><span class="ds-price">' + money(chosen.price != null ? chosen.price : p.price) + "</span>" +
+      '<button type="button" class="ds-add" data-vid="' + (chosen.id || "") + '">Add</button></div>';
+
+    // Description expand
+    var more = card.querySelector(".ds-more");
+    if (more) more.addEventListener("click", function () {
+      var d = card.querySelector(".ds-card-desc"); var open = d.classList.toggle("open");
+      more.textContent = open ? "Show less" : "Show more";
+    });
+    // Swatch selection
+    var addBtn = card.querySelector(".ds-add");
+    card.querySelectorAll(".ds-swatch").forEach(function (sw) {
+      sw.addEventListener("click", function () {
+        card.querySelectorAll(".ds-swatch").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
+        sw.setAttribute("aria-pressed", "true");
+        var nm = card.querySelector(".ds-color-name"); if (nm) nm.textContent = sw.getAttribute("data-val");
+        var pr = card.querySelector(".ds-price"); if (pr) pr.textContent = money(parseInt(sw.getAttribute("data-price"), 10));
+        if (addBtn) addBtn.setAttribute("data-vid", sw.getAttribute("data-vid"));
+        var im = sw.getAttribute("data-img"); var mi = card.querySelector(".ds-card-img img");
+        if (im && mi) mi.src = im;
+        addBtn.classList.remove("added"); addBtn.textContent = "Add";
+      });
+    });
+    // Add to bag
+    if (addBtn) addBtn.addEventListener("click", function () {
+      var vid = addBtn.getAttribute("data-vid"); if (!vid) return;
+      addBtn.disabled = true;
+      fetch("/cart/add.js", {
+        method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ items: [{ id: parseInt(vid, 10), quantity: 1 }] })
+      }).then(function (r) { return r.json(); }).then(function () {
+        addBtn.classList.add("added"); addBtn.textContent = "Added ✓"; syncHeader();
+      }).catch(function () { addBtn.textContent = "Try again"; })
+        .then(function () { addBtn.disabled = false; });
+    });
+    return card;
+  }
+  function stripHtml(s) { var d = document.createElement("div"); d.innerHTML = s; return (d.textContent || d.innerText || "").trim(); }
+
+  function renderCards(products) {
+    track.innerHTML = "";
+    if (!products || !products.length) {
+      track.innerHTML = '<div class="ds-loading">No suggestions right now.</div>';
+      nextBtn.disabled = true; return;
+    }
+    products.forEach(function (p) { if (p && p.variants && p.variants.length) track.appendChild(buildCard(p)); });
+    updateArrows();
+  }
+  function updateArrows() {
+    var max = track.scrollWidth - track.clientWidth - 4;
+    prevBtn.disabled = track.scrollLeft <= 4;
+    nextBtn.disabled = track.scrollLeft >= max;
+  }
+  function scrollBy(dir) {
+    var card = track.querySelector(".ds-card");
+    var step = card ? (card.offsetWidth + 22) : 340;
+    track.scrollBy({ left: dir * step, behavior: "smooth" });
+  }
+  prevBtn.addEventListener("click", function () { scrollBy(-1); });
+  nextBtn.addEventListener("click", function () { scrollBy(1); });
+  track.addEventListener("scroll", updateArrows);
+  window.addEventListener("resize", updateArrows);
+
+  function fetchRecs(productId, intent) {
+    return fetch("/recommendations/products.json?product_id=" + productId + "&limit=" + LIMIT + "&intent=" + intent, { headers: { "Accept": "application/json" } })
+      .then(function (r) { return r.json(); }).then(function (d) { return (d && d.products) || []; }).catch(function () { return []; });
+  }
+
+  // 1) Read the most-recently-added cart item for the top bar + recommendation seed.
+  fetch("/cart.js", { headers: { "Accept": "application/json" } }).then(function (r) { return r.json(); }).then(function (cart) {
+    var items = (cart && cart.items) || [];
+    if (!items.length) { renderCards([]); return; }
+    var last = items[items.length - 1];
+    var top = document.getElementById("dsTop");
+    document.getElementById("dsTopImg").src = last.image || "";
+    document.getElementById("dsTopTitle").textContent = last.product_title || last.title || "";
+    document.getElementById("dsTopNote").textContent = money(last.final_line_price != null ? last.final_line_price : last.final_price);
+    top.hidden = false;
+    // 2) Complementary first (Search & Discovery); fall back to related so it's never empty.
+    fetchRecs(last.product_id, "complementary").then(function (list) {
+      if (list && list.length) return list;
+      return fetchRecs(last.product_id, "related");
+    }).then(renderCards);
+  }).catch(function () { renderCards([]); });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Suggest",
+  "tag": "section",
+  "class": "dynamic-suggest-section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Style. In a snap." },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Add a MagSafe case, a wallet, or both. Mix and match to make your iPhone yours." },
+    { "type": "text", "id": "bag_subtitle", "label": "Top-bar subtitle (under item name)", "default": "One-time payment" },
+    { "type": "text", "id": "review_label", "label": "Review-bag button label", "default": "Review Bag" },
+    { "type": "text", "id": "skip_label", "label": "Keep-shopping link label", "default": "No thanks, keep shopping" },
+    { "type": "url", "id": "continue_link", "label": "Keep-shopping link", "info": "Leave empty to link to all products." },
+    { "type": "range", "id": "max_items", "label": "Max suggestions", "min": 4, "max": 20, "step": 1, "default": 12 }
+  ],
+  "presets": [ { "name": "Dynamic Suggest" } ],
+  "enabled_on": { "templates": ["page"] }
+}
+{% endschema %}

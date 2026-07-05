@@ -1712,6 +1712,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             }
           } catch (e) { console.warn("[Dynamic] fee line error", e); }
         }
+        // Apple-style upsell: on a fresh add (not an edit), send the customer to
+        // the accessory suggestion page instead of opening the cart drawer.
+        const suggestUrl = (window.DYN_SETTINGS || {}).suggestUrl;
+        if (suggestUrl && !editingLineKey && !editingGrp) { window.location.href = suggestUrl; return true; }
         if (document.getElementById("hdCart") && window.DynamicHeader && window.DynamicHeader.openCart) {
           window.DynamicHeader.openCart();
         } else if (window.DynamicCart) {
