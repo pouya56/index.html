@@ -76,6 +76,12 @@
   }
 
   function num(v, d) { v = parseFloat(v); return isFinite(v) ? v : d; }
+  function median(arr) {
+    if (!arr.length) return 0;
+    var a = arr.slice().sort(function (x, y) { return x - y; });
+    var mid = a.length >> 1;
+    return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
+  }
 
   function Viewer(container, opts) {
     this.container = container;
@@ -186,12 +192,7 @@
             var nbox = new THREE.Box3().setFromObject(self._model);
             var nsize = new THREE.Vector3(); nbox.getSize(nsize);
             var ncenter = new THREE.Vector3(); nbox.getCenter(ncenter);
-            self._metrics = {
-              // body radius ≈ smaller horizontal half-extent (handle inflates the larger one)
-              radius: Math.min(nsize.x, nsize.z) / 2,
-              height: nsize.y,
-              cx: ncenter.x, cy: ncenter.y, cz: ncenter.z
-            };
+            self._metrics = self._fitBody(nbox, nsize, ncenter);
             resolve(gltf);
           } catch (e) { reject(e); }
         },
@@ -199,6 +200,41 @@
         function (err) { reject(err || new Error("GLTF load error")); }
       );
     });
+  };
+
+  // Estimate the mug BODY (ignoring the handle) by sampling mesh vertices in
+  // world space: the horizontal centre comes from the vertices around mid-height
+  // (a robust centre that isn't dragged sideways by the handle), and the radius
+  // from a high percentile of their distance to that centre (the handle is a few
+  // far outliers, so a percentile lands on the body surface).
+  Viewer.prototype._fitBody = function (nbox, nsize, ncenter) {
+    var THREE = this.THREE;
+    var fallback = { radius: Math.min(nsize.x, nsize.z) / 2, height: nsize.y, cx: ncenter.x, cy: ncenter.y, cz: ncenter.z };
+    try {
+      var yMid = ncenter.y, yHalf = nsize.y * 0.25;   // middle 50% of the height
+      var v = new THREE.Vector3();
+      var xs = [], zs = [];
+      var pts = [];
+      this._model.updateMatrixWorld(true);
+      this._model.traverse(function (o) {
+        if (!o.isMesh || !o.geometry || !o.geometry.attributes || !o.geometry.attributes.position) return;
+        var pos = o.geometry.attributes.position, mw = o.matrixWorld;
+        for (var i = 0; i < pos.count; i++) {
+          v.fromBufferAttribute(pos, i).applyMatrix4(mw);
+          if (Math.abs(v.y - yMid) > yHalf) continue;   // only the mid band
+          xs.push(v.x); zs.push(v.z); pts.push(v.x, v.z);
+        }
+      });
+      if (xs.length < 50) return fallback;
+      // Median centre — robust to the handle cluster on one side.
+      var cx = median(xs), cz = median(zs);
+      // Radius = 82nd percentile distance from centre (body surface, not handle).
+      var d = [];
+      for (var k = 0; k < pts.length; k += 2) d.push(Math.hypot(pts[k] - cx, pts[k + 1] - cz));
+      d.sort(function (a, b) { return a - b; });
+      var radius = d[Math.floor(d.length * 0.82)] || fallback.radius;
+      return { radius: radius, height: nsize.y, cx: cx, cy: ncenter.y, cz: cz };
+    } catch (e) { return fallback; }
   };
 
   Viewer.prototype._buildDecal = function () {
@@ -2288,8 +2324,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     html += '<label class="mug3d-tuner-row mug3d-tuner-flip"><span class="mug3d-tuner-lbl">Flip vertically</span>' +
       '<input type="checkbox" id="mt_flip"' + (S.mug3dFlipY ? " checked" : "") + '></label>';
     html += '<div class="mug3d-tuner-out"><code id="mug3dTunerCode"></code>' +
+      '<button type="button" id="mug3dTunerAuto">Auto-fit</button>' +
       '<button type="button" id="mug3dTunerCopy">Copy</button></div>' +
-      '<p class="mug3d-tuner-note">Type or drag any value — the mug updates live. Then copy these into the section settings, or send them to me and I\'ll set them as defaults.</p>';
+      '<p class="mug3d-tuner-note">Type or drag any value — the mug updates live. “Auto-fit” snaps to a flush baseline. Then copy these into the section settings, or send them to me and I\'ll set them as defaults.</p>';
     const box = document.createElement("div");
     box.id = "mug3dTuner"; box.className = "mug3d-tuner";
     box.innerHTML = html;
@@ -2327,6 +2364,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       }
     });
     const flip = q2("#mt_flip"); if (flip) flip.addEventListener("change", apply);
+    // Auto-fit: snap to a flush, centred baseline (the engine already centres on
+    // the mug body, so these values just sit the print on the surface).
+    const setRow = function (id, v) { const s = q2("#mt_" + id), n = q2("#mtn_" + id); if (s) s.value = v; if (n) n.value = v; };
+    const auto = q2("#mug3dTunerAuto");
+    if (auto) auto.onclick = function () {
+      setRow("arc", 220); setRow("rad", 100); setRow("hgt", 55); setRow("yof", 0); setRow("rot", 0);
+      const f = q2("#mt_flip"); if (f) f.checked = false;
+      apply();
+    };
     const copy = q2("#mug3dTunerCopy");
     if (copy) copy.onclick = function () {
       const t = (q2("#mug3dTunerCode") || {}).textContent || "";

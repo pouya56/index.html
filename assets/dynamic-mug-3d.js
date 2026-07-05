@@ -75,6 +75,12 @@
   }
 
   function num(v, d) { v = parseFloat(v); return isFinite(v) ? v : d; }
+  function median(arr) {
+    if (!arr.length) return 0;
+    var a = arr.slice().sort(function (x, y) { return x - y; });
+    var mid = a.length >> 1;
+    return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
+  }
 
   function Viewer(container, opts) {
     this.container = container;
@@ -185,12 +191,7 @@
             var nbox = new THREE.Box3().setFromObject(self._model);
             var nsize = new THREE.Vector3(); nbox.getSize(nsize);
             var ncenter = new THREE.Vector3(); nbox.getCenter(ncenter);
-            self._metrics = {
-              // body radius ≈ smaller horizontal half-extent (handle inflates the larger one)
-              radius: Math.min(nsize.x, nsize.z) / 2,
-              height: nsize.y,
-              cx: ncenter.x, cy: ncenter.y, cz: ncenter.z
-            };
+            self._metrics = self._fitBody(nbox, nsize, ncenter);
             resolve(gltf);
           } catch (e) { reject(e); }
         },
@@ -198,6 +199,41 @@
         function (err) { reject(err || new Error("GLTF load error")); }
       );
     });
+  };
+
+  // Estimate the mug BODY (ignoring the handle) by sampling mesh vertices in
+  // world space: the horizontal centre comes from the vertices around mid-height
+  // (a robust centre that isn't dragged sideways by the handle), and the radius
+  // from a high percentile of their distance to that centre (the handle is a few
+  // far outliers, so a percentile lands on the body surface).
+  Viewer.prototype._fitBody = function (nbox, nsize, ncenter) {
+    var THREE = this.THREE;
+    var fallback = { radius: Math.min(nsize.x, nsize.z) / 2, height: nsize.y, cx: ncenter.x, cy: ncenter.y, cz: ncenter.z };
+    try {
+      var yMid = ncenter.y, yHalf = nsize.y * 0.25;   // middle 50% of the height
+      var v = new THREE.Vector3();
+      var xs = [], zs = [];
+      var pts = [];
+      this._model.updateMatrixWorld(true);
+      this._model.traverse(function (o) {
+        if (!o.isMesh || !o.geometry || !o.geometry.attributes || !o.geometry.attributes.position) return;
+        var pos = o.geometry.attributes.position, mw = o.matrixWorld;
+        for (var i = 0; i < pos.count; i++) {
+          v.fromBufferAttribute(pos, i).applyMatrix4(mw);
+          if (Math.abs(v.y - yMid) > yHalf) continue;   // only the mid band
+          xs.push(v.x); zs.push(v.z); pts.push(v.x, v.z);
+        }
+      });
+      if (xs.length < 50) return fallback;
+      // Median centre — robust to the handle cluster on one side.
+      var cx = median(xs), cz = median(zs);
+      // Radius = 82nd percentile distance from centre (body surface, not handle).
+      var d = [];
+      for (var k = 0; k < pts.length; k += 2) d.push(Math.hypot(pts[k] - cx, pts[k + 1] - cz));
+      d.sort(function (a, b) { return a - b; });
+      var radius = d[Math.floor(d.length * 0.82)] || fallback.radius;
+      return { radius: radius, height: nsize.y, cx: cx, cy: ncenter.y, cz: cz };
+    } catch (e) { return fallback; }
   };
 
   Viewer.prototype._buildDecal = function () {
