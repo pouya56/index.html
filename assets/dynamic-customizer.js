@@ -1755,13 +1755,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   function labels() {
     const S = window.DYN_SETTINGS || {};
     return {
-      design: S.labelDesign || "Design",
-      backDesign: S.labelBackDesign || "Back design",
-      preview: S.labelPreview || "Preview",
-      backPreview: S.labelBackPreview || "Back preview",
+      design: S.labelDesign || "Print Front",
+      backDesign: S.labelBackDesign || "Print Back",
+      preview: S.labelPreview || "Preview Front",
+      backPreview: S.labelBackPreview || "Preview Back",
       text: S.labelText || "Text",
-      backText: S.labelBackText || "Back text",
-      fileName: S.labelFileName || "File name"
+      backText: S.labelBackText || "Back text"
     };
   }
   function slug(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40); }
@@ -2327,25 +2326,21 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       // Collect the raw design files + composed previews — Shopify hosts them for
       // free (attached as multipart line-item properties; no third-party host).
       const files = [];
-      const designNames = [];   // readable names shown on the order (Shopify hashes the actual link)
       const extOf = (fn) => { const m = String(fn || "").match(/\.[a-z0-9]{1,5}$/i); return m ? m[0] : ".png"; };
       async function collectFiles(side, label, sideName) {
         const arr = imgs(side);
         for (let i = 0; i < arr.length; i++) {
           const l = arr[i], name = label + (i ? " " + (i + 1) : "");
           const fname = base + "-" + sideName + (i ? "-" + (i + 1) : "") + extOf(l.file && l.file.name);
-          if (l.file instanceof File) { files.push({ name: name, file: l.file, filename: fname }); designNames.push(fname); }
+          if (l.file instanceof File) { files.push({ name: name, file: l.file, filename: fname }); }
           else if (/^https?:/i.test(String(l.cloudUrl || l.url || ""))) {
             const blob = await fetch(l.cloudUrl || l.url).then((r) => r.blob()).catch(() => null);
-            if (blob) { const fn = base + "-" + sideName + ".png"; files.push({ name: name, blob: blob, filename: fn }); designNames.push(fn); }
+            if (blob) files.push({ name: name, blob: blob, filename: base + "-" + sideName + ".png" });
           }
         }
       }
       await collectFiles("front", L.design, "front");
       if (hasBackDesign) await collectFiles("back", L.backDesign, "back");
-      // Shopify replaces the uploaded filename with a hash, so also show the intended
-      // readable name(s) as a visible line the merchant can rename the download to.
-      if (designNames.length) props[L.fileName] = designNames.join(" · ");
       // Composed preview = the product with the design in the customer's exact
       // position/size/rotation. Visible name so it shows on the order + cart.
       const compF = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
