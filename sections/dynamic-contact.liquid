@@ -1,0 +1,215 @@
+{% comment %}
+  ============================================================================
+  Dynamic Contact - premium contact page that matches the Dynamic design.
+  ----------------------------------------------------------------------------
+  INSTALL:
+  1. Edit code > Sections > Add a new section > name it "dynamic-contact" and
+     REPLACE its contents with this whole file. Save.
+  2. Online Store > Pages > Add page > title "Contact". In "Theme template"
+     pick "contact" (or "page.contact"). Save.
+     (If you don't see a contact template, create one: Edit code > Templates >
+      Add a new template > "page" > name it "contact", then in that template
+      add the "Dynamic Contact" section and remove the default page content.)
+  3. Add /pages/contact to your menu / hero apps grid.
+  Uses Shopify's built-in contact form - messages go to your store email.
+  No apps required.
+  ============================================================================
+{% endcomment %}
+
+<style>
+  .dyn-contact {
+    --bg: #ffffff; --bg-panel: #f5f5f7;
+    --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
+    --line: #d2d2d7; --accent: #0071e3; --danger: #c0392b; --ok: #1a7f37;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --serif: "Cormorant Garamond", Georgia, "Times New Roman", Times, serif;
+    font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased;
+    background: {{ section.settings.bg_color | default: '#f5f5f7' }};
+  }
+  .dyn-contact, .dyn-contact *, .dyn-contact *::before, .dyn-contact *::after { box-sizing: border-box; }
+  .dyn-contact .dct-wrap { max-width: 1120px; margin: 0 auto; padding: clamp(48px, 8vw, 96px) 22px; }
+
+  .dyn-contact .dct-head { text-align: center; max-width: 640px; margin: 0 auto clamp(32px, 5vw, 56px); }
+  .dyn-contact .dct-eyebrow { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 12px; }
+  .dyn-contact .dct-head h1 { font-family: {% if section.settings.heading_font == 'sans' %}var(--font){% else %}var(--serif){% endif %};
+    font-weight: 500; font-size: clamp(34px, 6vw, 60px); line-height: 1.03; letter-spacing: -0.01em; margin: 0; }
+  .dyn-contact .dct-intro { margin-top: 16px; font-size: 17px; line-height: 1.6; color: var(--ink-soft); }
+
+  .dyn-contact .dct-grid { display: grid; grid-template-columns: {% if section.settings.show_info %}0.85fr 1.15fr{% else %}1fr{% endif %}; gap: clamp(24px, 4vw, 48px); align-items: start; }
+  @media (max-width: 820px) { .dyn-contact .dct-grid { grid-template-columns: 1fr; } }
+
+  /* Contact info column */
+  .dyn-contact .dct-info { display: flex; flex-direction: column; gap: 8px; }
+  .dyn-contact .dct-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; }
+  .dyn-contact .dct-item:last-child { border-bottom: none; }
+  .dyn-contact a.dct-item { transition: opacity .16s; }
+  .dyn-contact a.dct-item:hover { opacity: 0.62; }
+  .dyn-contact .dct-ic { flex: none; width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
+    background: var(--bg); border: 1px solid var(--line); }
+  .dyn-contact .dct-ic svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-contact .dct-item > span + span { display: flex; flex-direction: column; }
+  .dyn-contact .dct-item-label { display: block; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); }
+  .dyn-contact .dct-item-value { display: block; font-size: 16px; margin-top: 3px; line-height: 1.4; }
+  .dyn-contact .dct-social { display: flex; gap: 10px; margin-top: 18px; }
+  .dyn-contact .dct-social a { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--bg); border: 1px solid var(--line); color: var(--ink); transition: transform .12s, background .16s; }
+  .dyn-contact .dct-social a:hover { background: var(--ink); color: #fff; }
+  .dyn-contact .dct-social svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Liquid-glass form card */
+  .dyn-contact .dct-card { position: relative; border-radius: 24px; padding: clamp(22px, 3vw, 34px);
+    background: rgba(255,255,255,0.55); -webkit-backdrop-filter: blur(24px) saturate(1.7); backdrop-filter: blur(24px) saturate(1.7);
+    border: 1px solid rgba(255,255,255,0.7); box-shadow: 0 20px 60px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.85); }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .dyn-contact .dct-card { background: #fff; border-color: var(--line); }
+  }
+  .dyn-contact .dct-card h2 { font-family: var(--serif); font-weight: 500; font-size: clamp(24px, 3vw, 30px); margin: 0 0 18px; }
+  .dyn-contact .dct-field { margin-bottom: 16px; }
+  .dyn-contact .dct-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 520px) { .dyn-contact .dct-row { grid-template-columns: 1fr; gap: 0; } }
+  .dyn-contact .dct-field label { display: block; font-size: 12.5px; color: var(--ink-faint); margin-bottom: 6px; }
+  .dyn-contact .dct-field input, .dyn-contact .dct-field textarea { width: 100%; font-family: var(--font); font-size: 15px; color: var(--ink);
+    background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.16); border-radius: 12px; padding: 12px 14px; outline: none;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); transition: border-color .14s, box-shadow .14s; }
+  .dyn-contact .dct-field textarea { min-height: 140px; resize: vertical; line-height: 1.5; }
+  .dyn-contact .dct-field input:focus, .dyn-contact .dct-field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.18); }
+  .dyn-contact .dct-field input::placeholder, .dyn-contact .dct-field textarea::placeholder { color: var(--ink-faint); }
+
+  .dyn-contact .dct-submit { width: 100%; height: 52px; border: none; border-radius: 999px; cursor: pointer;
+    background: var(--ink); color: #fff; font: 500 16px/1 var(--font); margin-top: 6px; transition: opacity .16s, transform .1s; }
+  .dyn-contact .dct-submit:hover { opacity: 0.9; }
+  .dyn-contact .dct-submit:active { transform: scale(0.99); }
+
+  .dyn-contact .dct-note { margin-top: 12px; font-size: 12.5px; color: var(--ink-faint); text-align: center; }
+  .dyn-contact .dct-banner { padding: 14px 16px; border-radius: 14px; font-size: 14.5px; line-height: 1.45; margin-bottom: 18px; }
+  .dyn-contact .dct-banner.ok { background: rgba(26,127,55,0.1); color: var(--ok); }
+  .dyn-contact .dct-banner.err { background: rgba(192,57,43,0.09); color: var(--danger); }
+  .dyn-contact .dct-banner.err ul { margin: 6px 0 0; padding-left: 18px; }
+</style>
+
+<section class="dyn-contact" id="dynContact">
+  <div class="dct-wrap">
+    <div class="dct-head">
+      {%- if section.settings.eyebrow != blank -%}<div class="dct-eyebrow">{{ section.settings.eyebrow }}</div>{%- endif -%}
+      <h1>{{ section.settings.heading | default: 'Get in touch' }}</h1>
+      {%- if section.settings.intro != blank -%}<div class="dct-intro">{{ section.settings.intro }}</div>{%- endif -%}
+    </div>
+
+    <div class="dct-grid">
+      {%- if section.settings.show_info -%}
+        <div class="dct-info">
+          {%- if section.settings.email != blank -%}
+            <a class="dct-item" href="mailto:{{ section.settings.email }}">
+              <span class="dct-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg></span>
+              <span><span class="dct-item-label">Email</span><span class="dct-item-value">{{ section.settings.email }}</span></span>
+            </a>
+          {%- endif -%}
+          {%- if section.settings.phone != blank -%}
+            <a class="dct-item" href="tel:{{ section.settings.phone | replace: ' ', '' }}">
+              <span class="dct-ic"><svg viewBox="0 0 24 24"><path d="M6 3h3l2 5-2 1.5a12 12 0 0 0 5.5 5.5L18 13l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg></span>
+              <span><span class="dct-item-label">Phone</span><span class="dct-item-value">{{ section.settings.phone }}</span></span>
+            </a>
+          {%- endif -%}
+          {%- if section.settings.address != blank -%}
+            <div class="dct-item">
+              <span class="dct-ic"><svg viewBox="0 0 24 24"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+              <span><span class="dct-item-label">Visit</span><span class="dct-item-value">{{ section.settings.address }}</span></span>
+            </div>
+          {%- endif -%}
+          {%- if section.settings.hours != blank -%}
+            <div class="dct-item">
+              <span class="dct-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+              <span><span class="dct-item-label">Hours</span><span class="dct-item-value">{{ section.settings.hours }}</span></span>
+            </div>
+          {%- endif -%}
+
+          {%- if section.settings.instagram_url != blank or section.settings.facebook_url != blank or section.settings.tiktok_url != blank -%}
+            <div class="dct-social">
+              {%- if section.settings.instagram_url != blank -%}
+                <a href="{{ section.settings.instagram_url }}" aria-label="Instagram" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1"/></svg></a>
+              {%- endif -%}
+              {%- if section.settings.facebook_url != blank -%}
+                <a href="{{ section.settings.facebook_url }}" aria-label="Facebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M14 8h2V5h-2a3 3 0 0 0-3 3v2H9v3h2v6h3v-6h2l1-3h-3V8a1 1 0 0 1 1-1Z"/></svg></a>
+              {%- endif -%}
+              {%- if section.settings.tiktok_url != blank -%}
+                <a href="{{ section.settings.tiktok_url }}" aria-label="TikTok" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M15 4c.5 2.5 2 4 4.5 4.3v3C17.8 11.2 16 10.6 15 9.7V15a5 5 0 1 1-5-5c.3 0 .7 0 1 .1v3.1A2 2 0 1 0 12 15V4Z"/></svg></a>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+
+      <div class="dct-card">
+        {%- if section.settings.form_heading != blank -%}<h2>{{ section.settings.form_heading }}</h2>{%- endif -%}
+        {%- form 'contact', id: 'dctForm' -%}
+          {%- if form.posted_successfully? -%}
+            <div class="dct-banner ok">{{ section.settings.success_message | default: "Thanks — your message is on its way. We'll get back to you soon." }}</div>
+          {%- endif -%}
+          {%- if form.errors -%}
+            <div class="dct-banner err">Please check the highlighted fields:{{ form.errors | default_errors }}</div>
+          {%- endif -%}
+
+          <div class="dct-row">
+            <div class="dct-field">
+              <label for="dctName">Name</label>
+              <input type="text" id="dctName" name="contact[name]" value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}" placeholder="Your name">
+            </div>
+            <div class="dct-field">
+              <label for="dctEmail">Email</label>
+              <input type="email" id="dctEmail" name="contact[email]" required value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}" placeholder="you@email.com">
+            </div>
+          </div>
+
+          <div class="dct-field">
+            <label for="dctPhone">Phone (optional)</label>
+            <input type="tel" id="dctPhone" name="contact[phone]" value="{{ form.phone }}" placeholder="+1 555 123 4567">
+          </div>
+
+          <div class="dct-field">
+            <label for="dctBody">Message</label>
+            <textarea id="dctBody" name="contact[body]" required placeholder="How can we help?">{{ form.body }}</textarea>
+          </div>
+
+          <button type="submit" class="dct-submit">{{ section.settings.button_label | default: 'Send message' }}</button>
+          {%- if section.settings.form_note != blank -%}<div class="dct-note">{{ section.settings.form_note }}</div>{%- endif -%}
+        {%- endform -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Dynamic Contact",
+  "tag": "section",
+  "settings": [
+    { "type": "header", "content": "Heading" },
+    { "type": "text", "id": "eyebrow", "label": "Small label above title", "default": "Contact" },
+    { "type": "text", "id": "heading", "label": "Title", "default": "Get in touch" },
+    { "type": "textarea", "id": "intro", "label": "Intro text", "default": "Questions about a custom order, your design, or an existing order? Send us a message and we'll reply within one business day." },
+    { "type": "select", "id": "heading_font", "label": "Title font", "default": "serif",
+      "options": [ { "value": "serif", "label": "Elegant serif" }, { "value": "sans", "label": "Modern sans" } ] },
+
+    { "type": "header", "content": "Contact details (left column)" },
+    { "type": "checkbox", "id": "show_info", "label": "Show contact details", "default": true },
+    { "type": "text", "id": "email", "label": "Email", "default": "hello@dynaeimic.com" },
+    { "type": "text", "id": "phone", "label": "Phone" },
+    { "type": "text", "id": "address", "label": "Address" },
+    { "type": "text", "id": "hours", "label": "Hours", "default": "Mon–Fri, 9am–6pm" },
+    { "type": "url", "id": "instagram_url", "label": "Instagram link" },
+    { "type": "url", "id": "facebook_url", "label": "Facebook link" },
+    { "type": "url", "id": "tiktok_url", "label": "TikTok link" },
+
+    { "type": "header", "content": "Form" },
+    { "type": "text", "id": "form_heading", "label": "Form heading", "default": "Send us a message" },
+    { "type": "text", "id": "button_label", "label": "Button text", "default": "Send message" },
+    { "type": "text", "id": "success_message", "label": "Success message", "default": "Thanks — your message is on its way. We'll get back to you soon." },
+    { "type": "text", "id": "form_note", "label": "Small note under the button", "default": "We never share your details." },
+
+    { "type": "header", "content": "Style" },
+    { "type": "color", "id": "bg_color", "label": "Background", "default": "#f5f5f7" }
+  ],
+  "presets": [ { "name": "Dynamic Contact" } ],
+  "enabled_on": { "templates": ["page", "index"] }
+}
+{% endschema %}
