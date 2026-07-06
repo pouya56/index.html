@@ -30,10 +30,10 @@
     font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; background: var(--bg);
     min-height: 100vh;
   }
-  .dyn-sug .ds-topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between;
-    gap: 16px; padding: 16px 24px; background: rgba(245,245,247,0.82);
+  .dyn-sug .ds-topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 16px 24px; background: rgba(245,245,247,0.92);
     -webkit-backdrop-filter: saturate(1.6) blur(18px); backdrop-filter: saturate(1.6) blur(18px);
-    border-bottom: 1px solid rgba(0,0,0,0.08); }
+    border-bottom: 1px solid rgba(0,0,0,0.08); box-shadow: 0 2px 14px rgba(0,0,0,0.06); }
   .dyn-sug .ds-top-item { display: flex; align-items: center; gap: 20px; min-width: 0; }
   .dyn-sug .ds-top-item img { width: 104px; height: 104px; object-fit: contain; border-radius: 14px; background: #fff; flex: none;
     box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
@@ -306,6 +306,10 @@
     document.getElementById("dsTopTitle").textContent = last.product_title || last.title || "";
     document.getElementById("dsTopNote").textContent = money(last.final_line_price != null ? last.final_line_price : last.final_price);
     top.hidden = false;
+    // The bar is position:fixed, so reserve its height below it (keep in sync on resize).
+    function reserveTopSpace() { root.style.paddingTop = top.offsetHeight + "px"; }
+    reserveTopSpace();
+    window.addEventListener("resize", reserveTopSpace);
     // 2) Complementary first (Search & Discovery); fall back to related so it's never empty.
     fetchRecs(last.product_id, "complementary").then(function (list) {
       if (list && list.length) return list;
