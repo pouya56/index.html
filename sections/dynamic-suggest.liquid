@@ -449,8 +449,9 @@
   document.addEventListener("click", function (e) {
     var ico = e.target.closest("[data-hd-cart]"); if (!ico) return;
     e.preventDefault(); e.stopImmediatePropagation();
-    try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) { window.scrollTo(0, 0); }
-    openPanel(true);
+    var willOpen = panel.hidden;                 // toggle: open if closed, close if open
+    if (willOpen) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) { window.scrollTo(0, 0); } }
+    openPanel(willOpen);
   }, true);
   panelList.addEventListener("click", function (e) {
     // Save an edited gift note (merge into the line's properties, update in place).
