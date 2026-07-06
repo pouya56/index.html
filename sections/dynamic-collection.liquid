@@ -68,14 +68,16 @@
   .dyn-col .dc-search-mag { position: absolute; left: 20px; z-index: 2; width: 20px; height: 20px; fill: none; stroke: var(--ink-faint);
     stroke-width: 2; stroke-linecap: round; pointer-events: none; }
   .dyn-col .dc-search-input { position: relative; z-index: 1; width: 100%; font-family: var(--font); font-size: 16px; color: var(--ink); background: var(--bg);
-    border: 1px solid var(--line); border-radius: 999px; padding: 15px 20px 15px 52px; box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+    border: 1px solid var(--line); border-radius: 999px; padding: 15px 56px 15px 52px; box-shadow: 0 8px 30px rgba(0,0,0,0.06);
     transition: border-color .16s, box-shadow .16s; }
   .dyn-col .dc-search-input::placeholder { color: var(--ink-faint); }
   .dyn-col .dc-search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 8px 30px rgba(0,0,0,0.06), 0 0 0 4px rgba(0,113,227,0.14); }
-  .dyn-col .dc-search.has-btn .dc-search-input { width: auto; flex: 1 1 auto; min-width: 0; }
-  .dyn-col .dc-search-btn { position: relative; z-index: 1; flex: 0 0 auto; align-self: stretch; margin-left: 8px; background: var(--ink); color: #fff;
-    border: none; border-radius: 999px; padding: 0 24px; font-family: var(--font); font-weight: 600; font-size: 15px; cursor: pointer; transition: opacity .16s; }
-  .dyn-col .dc-search-btn:hover { opacity: 0.9; }
+  /* ChatGPT-style round arrow button inside the bar */
+  .dyn-col .dc-search-go { position: absolute; right: 8px; top: 50%; margin-top: -19px; z-index: 2; width: 38px; height: 38px; border-radius: 50%;
+    background: var(--ink); color: #fff; border: none; display: grid; place-items: center; cursor: pointer; transition: opacity .16s, transform .1s; }
+  .dyn-col .dc-search-go:hover { opacity: 0.9; }
+  .dyn-col .dc-search-go:active { transform: scale(0.93); }
+  .dyn-col .dc-search-go svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
   /* Category tabs */
   .dyn-col .dc-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 28px auto 32px; max-width: 1040px; }
@@ -236,13 +238,13 @@
       </div>
     {%- else -%}
       {%- if section.settings.show_search -%}
-        <div class="dc-search{% if section.settings.show_search_button %} has-btn{% endif %}">
+        <div class="dc-search">
           <svg class="dc-search-mag" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="search" id="dcSearch" class="dc-search-input" autocomplete="off" aria-label="Search products"
             placeholder="{{ section.settings.search_placeholder | default: 'Search these products…' }}">
-          {%- if section.settings.show_search_button -%}
-            <button type="button" class="dc-search-btn" id="dcSearchBtn">{{ section.settings.search_button_label | default: 'Search' }}</button>
-          {%- endif -%}
+          <button type="button" class="dc-search-go" id="dcSearchGo" aria-label="Search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          </button>
         </div>
       {%- endif -%}
       {%- comment -%} Build the category tabs from product type or tag. {%- endcomment -%}
@@ -497,7 +499,7 @@
       window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
     });
   }
-  var searchBtn = document.getElementById("dcSearchBtn");
+  var searchBtn = document.getElementById("dcSearchGo");
   if (searchBtn) searchBtn.addEventListener("click", function () {
     var q = searchEl ? searchEl.value.trim() : "";
     if (resultsUrl) { if (q) window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q); }
@@ -609,8 +611,6 @@
     { "type": "checkbox", "id": "hide_until_search", "label": "Hide the grid until someone searches", "default": false, "info": "Great for the home page: only the search box shows; the products appear once the shopper types." },
     { "type": "url", "id": "results_page_url", "label": "Show results on another page (URL)", "info": "Optional. Paste your Shop page URL (e.g. /collections/shop). When set, pressing Enter here opens that page with the results instead of filtering in place. Leave empty to filter on this page." },
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search these products…" },
-    { "type": "checkbox", "id": "show_search_button", "label": "Show a Search button", "default": false, "info": "Adds a button next to the box for shoppers who don't press Enter." },
-    { "type": "text", "id": "search_button_label", "label": "Search button label", "default": "Search" },
 
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
     { "type": "paragraph", "content": "Four links, one in each corner. Only show when 'Hide grid until search' is on. Leave a label empty to hide that corner." },
