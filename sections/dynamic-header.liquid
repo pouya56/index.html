@@ -806,7 +806,23 @@
     // Cart drawer + wishlist.
     initCart();
     initWishlist();
+    portalDrawers();
     watchCartRequests();
+  }
+
+  // Move the drawers + their overlays to a body-level .dyn-hd container so they
+  // escape any theme wrapper's stacking context and always render above fixed
+  // page bars (e.g. the suggestion page top bar). Keeps the .dyn-hd class so the
+  // scoped styles + CSS vars still apply. Listeners move with the elements.
+  function portalDrawers() {
+    if (document.querySelector(".hd-portal")) return;
+    var portal = document.createElement("div");
+    portal.className = "dyn-hd hd-portal";
+    document.body.appendChild(portal);
+    ["hdCartOverlay", "hdCart", "hdWishOverlay", "hdWish"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) portal.appendChild(el);
+    });
   }
 
   // Keep the cart badge (and drawer) in sync no matter what code changes the
@@ -844,7 +860,7 @@
     toggle: function (item) { if (!item || item.id == null) return false; var l = wlRead(); var i = -1; l.forEach(function (x, k) { if (String(x.id) === String(item.id)) i = k; }); if (i >= 0) { l.splice(i, 1); wlWrite(l); return false; } l.unshift(item); wlWrite(l); return true; },
     count: function () { return wlRead().length; }
   };
-  root.DynamicHeader = { boot: boot, open: open, close: close, clean: clean, openCart: openCart, closeCart: closeCart, refreshCart: loadCart, openWishlist: openWish };
+  root.DynamicHeader = { boot: boot, open: open, close: close, clean: clean, openCart: openCart, closeCart: closeCart, refreshCart: loadCart, openWishlist: openWish, closeWishlist: closeWish };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })(window);
 </script>

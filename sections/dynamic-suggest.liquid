@@ -30,8 +30,9 @@
     font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; background: var(--bg);
     min-height: 100vh;
   }
-  /* Hide this fixed bar while the cart drawer is open so they don't overlap. */
-  html.dyn-drawer-open .dyn-sug .ds-topbar { display: none; }
+  /* While a drawer/wishlist is open, push this fixed bar into the background:
+     blurred and non-interactive (the drawer overlay dims it on top). */
+  html.dyn-drawer-open .dyn-sug .ds-topbar { filter: blur(3px); pointer-events: none; transition: filter .25s ease; }
   .dyn-sug .ds-topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(245,245,247,0.92);
     -webkit-backdrop-filter: saturate(1.6) blur(18px); backdrop-filter: saturate(1.6) blur(18px);
     border-bottom: 1px solid rgba(0,0,0,0.08); box-shadow: 0 2px 14px rgba(0,0,0,0.06); }
@@ -449,6 +450,7 @@
   document.addEventListener("click", function (e) {
     var ico = e.target.closest("[data-hd-cart]"); if (!ico) return;
     e.preventDefault(); e.stopImmediatePropagation();
+    try { if (window.DynamicHeader && window.DynamicHeader.closeWishlist) window.DynamicHeader.closeWishlist(); } catch (_) {}
     var willOpen = panel.hidden;                 // toggle: open if closed, close if open
     if (willOpen) { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) { window.scrollTo(0, 0); } }
     openPanel(willOpen);
