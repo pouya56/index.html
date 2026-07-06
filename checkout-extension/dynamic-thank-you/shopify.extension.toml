@@ -1,0 +1,36 @@
+# Dynamic - Thank-you page checkout UI extension
+# Deploy this with Shopify CLI as part of a Shopify app (see README.md).
+api_version = "2024-10"
+
+[[extensions]]
+name = "Dynamic Thank You"
+handle = "dynamic-thank-you"
+type = "ui_extension"
+
+  [[extensions.targeting]]
+  # Renders a movable block you place on the Thank-you page in the checkout editor.
+  module = "./src/ThankYou.jsx"
+  target = "purchase.thank-you.block.render"
+
+  # Merchant-editable settings (shown in Settings > Checkout > Customize > the block).
+  [extensions.settings]
+
+    [[extensions.settings.fields]]
+    key = "heading"
+    type = "single_line_text_field"
+    name = "Heading"
+
+    [[extensions.settings.fields]]
+    key = "message"
+    type = "multi_line_text_field"
+    name = "Message"
+
+    [[extensions.settings.fields]]
+    key = "button_label"
+    type = "single_line_text_field"
+    name = "Button label"
+
+    [[extensions.settings.fields]]
+    key = "button_url"
+    type = "single_line_text_field"
+    name = "Button URL (e.g. https://dynaeimic.com)"
