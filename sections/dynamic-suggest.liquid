@@ -440,7 +440,18 @@
   function openPanel(o) { panel.hidden = !o; toggle.setAttribute("aria-expanded", o ? "true" : "false"); }
   toggle.addEventListener("click", function () { openPanel(panel.hidden); });
   toggle.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPanel(panel.hidden); } });
-  document.addEventListener("click", function (e) { if (!panel.hidden && !panel.contains(e.target) && !toggle.contains(e.target)) openPanel(false); });
+  document.addEventListener("click", function (e) {
+    if (!panel.hidden && !panel.contains(e.target) && !toggle.contains(e.target)) openPanel(false);
+  });
+  // On the suggestion page the top-bar dropdown IS the cart, so the bottom-nav
+  // cart icon should open it (not the slide-out drawer). Capture on document so
+  // this runs before the header's own drawer-open handler and can preempt it.
+  document.addEventListener("click", function (e) {
+    var ico = e.target.closest("[data-hd-cart]"); if (!ico) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (_) { window.scrollTo(0, 0); }
+    openPanel(true);
+  }, true);
   panelList.addEventListener("click", function (e) {
     // Save an edited gift note (merge into the line's properties, update in place).
     var saveBtn = e.target.closest("[data-save-note]");
