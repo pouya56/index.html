@@ -154,8 +154,8 @@
 </section>
 
 {%- if gift_card and section.settings.show_qr -%}
-  {{ "shopify_common.js" | shopify_asset_url | script_tag }}
-  {{ "gift_card.js" | shopify_asset_url | script_tag }}
+  <script src="{{ 'shopify_common.js' | shopify_asset_url }}" defer="defer"></script>
+  <script src="{{ 'gift_card.js' | shopify_asset_url }}" defer="defer"></script>
 {%- endif -%}
 
 <script>
