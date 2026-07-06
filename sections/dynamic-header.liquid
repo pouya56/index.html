@@ -82,14 +82,14 @@
     filter: url(#gbLiquid); }
   .dyn-hd .gb-pill.is-liquid { box-shadow: inset 0 1px 1px rgba(255,255,255,0.95), inset 0 -7px 14px rgba(255,255,255,0.22),
       0 8px 26px rgba(0,0,0,0.2); }
-  /* Selected tab lifts above the frost so it reads through the lens */
-  .dyn-hd .gb-ico.is-active { color: #0a0a0d; }
-  .dyn-hd .gb-ico.is-active svg { stroke-width: 2.1; }
+  /* Selected tab sits ON TOP of the glass and turns blue */
+  .dyn-hd .gb-ico.is-active { color: var(--accent); }
+  .dyn-hd .gb-ico.is-active svg { stroke-width: 2.15; }
   @media (prefers-reduced-motion: reduce) { .dyn-hd .gb-pill-shine { filter: none; animation: none; } }
-  .dyn-hd .gb-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .dyn-hd .gb-side { position: relative; z-index: 2; display: flex; align-items: center; gap: 6px; min-width: 0; }
   .dyn-hd .gb-side.gb-right { justify-content: flex-end; }
   /* Logo in the middle of the bar */
-  .dyn-hd .gb-logo { display: flex; align-items: center; justify-content: center; text-decoration: none;
+  .dyn-hd .gb-logo { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; text-decoration: none;
     padding: 0 8px; }
   .dyn-hd .gb-logo img { height: 24px; width: auto; max-width: min(38vw, 150px); object-fit: contain; display: block; }
   .dyn-hd .gb-word { font-weight: 700; font-size: 15px; letter-spacing: 0.14em; color: var(--ink); white-space: nowrap; }
