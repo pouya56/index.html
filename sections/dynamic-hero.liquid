@@ -98,7 +98,12 @@
   .dyn-hero .dh-field input { width: 100%; height: 42px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px;
     background: #fff; color: var(--ink); font: 15px/1 var(--font); outline: none; transition: border-color .14s, box-shadow .14s; }
   .dyn-hero .dh-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
-  .dyn-hero .dh-login-form .dh-pop-btn { width: calc(100% - 8px); margin: 6px 4px 8px; cursor: pointer; border: none; font: 500 15px/1 var(--font); }
+  .dyn-hero .dh-login-form .dh-pop-btn { width: calc(100% - 8px); margin: 6px 4px 8px; cursor: pointer; border: none; font: 500 15px/1 var(--font);
+    min-height: 42px; transition: background .2s, opacity .2s; }
+  .dyn-hero .dh-pop-btn.is-loading { opacity: 0.65; cursor: default; }
+  .dyn-hero .dh-pop-btn.is-ok { background: #1a7f37; }
+  .dyn-hero .dh-pop-btn.is-err { background: var(--danger); }
+  .dyn-hero .dh-pop-btn svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
   .dyn-hero .dh-form-err { margin: 2px 6px 8px; padding: 8px 10px; border-radius: 10px; background: rgba(192,57,43,0.08);
     color: var(--danger); font-size: 12.5px; line-height: 1.35; }
   .dyn-hero .dh-form-err ul { margin: 0; padding-left: 16px; }
@@ -139,6 +144,7 @@
     background: var(--ink); color: #fff; border: none; display: grid; place-items: center; cursor: pointer; transition: opacity .16s, transform .1s; }
   .dyn-hero .dh-search-go:hover { opacity: 0.9; }
   .dyn-hero .dh-search-go:active { transform: scale(0.93); }
+  .dyn-hero .dh-search-go.is-ok { background: #1a7f37; transition: background .2s; }
   .dyn-hero .dh-search-go svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
   /* Category tabs */
@@ -628,6 +634,52 @@
     }
   }
 
+  // Login button feedback: verify the password against Shopify, then flash the
+  // button green with a ✓ on success or red with a ✕ on a wrong password.
+  var loginForm = root.querySelector(".dh-login-form");
+  if (loginForm) {
+    var loginBtn = loginForm.querySelector(".dh-pop-btn");
+    var loginBtnHTML = loginBtn ? loginBtn.innerHTML : "";
+    var OK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+    var X_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
+    function setLogin(state) {
+      if (!loginBtn) return;
+      loginBtn.classList.remove("is-ok", "is-err", "is-loading");
+      if (state === "loading") { loginBtn.classList.add("is-loading"); loginBtn.disabled = true; }
+      else if (state === "ok") { loginBtn.classList.add("is-ok"); loginBtn.innerHTML = OK_SVG; }
+      else if (state === "err") { loginBtn.classList.add("is-err"); loginBtn.innerHTML = X_SVG; loginBtn.disabled = false; }
+      else { loginBtn.disabled = false; loginBtn.innerHTML = loginBtnHTML; }
+    }
+    loginForm.addEventListener("submit", function (e) {
+      var email = loginForm.querySelector('input[name="customer[email]"]');
+      var pwd = loginForm.querySelector('input[name="customer[password]"]');
+      // Empty fields or passwordless accounts: let Shopify handle it normally.
+      if (!email || !email.value || !pwd || !pwd.value) return;
+      e.preventDefault();
+      if (loginBtn && loginBtn.dataset.busy) return;
+      if (loginBtn) loginBtn.dataset.busy = "1";
+      setLogin("loading");
+      var action = loginForm.getAttribute("action") || "/account/login";
+      fetch(action, { method: "POST", body: new FormData(loginForm), headers: { "Accept": "text/html" } })
+        .then(function (res) {
+          var url = res.url || "";
+          var stayedOnLogin = !res.redirected || url.indexOf("/account/login") >= 0 || url.indexOf("/account/register") >= 0;
+          if (!stayedOnLogin) {
+            setLogin("ok");
+            setTimeout(function () { window.location.href = url || "/account"; }, 720);
+          } else {
+            setLogin("err");
+            if (loginBtn) loginBtn.dataset.busy = "";
+            setTimeout(function () { setLogin("reset"); }, 1900);
+          }
+        })
+        .catch(function () {
+          if (loginBtn) loginBtn.dataset.busy = "";
+          loginForm.submit(); // network issue → fall back to a normal submit
+        });
+    });
+  }
+
   var grid = document.getElementById("dhGrid");
   var tabs = document.getElementById("dhTabs");
   var noRes = document.getElementById("dhNoResults");
@@ -700,25 +752,48 @@
   // Live search. Normally filters the on-page grid as the shopper types. If a
   // "results page" URL is set, Enter/submit opens that page with the query.
   var searchEl = document.getElementById("dhSearch");
+  var searchBtn = document.getElementById("dhSearchGo");
   var resultsUrl = (root.getAttribute("data-results-url") || "").trim();
+  var ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
+  var CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+  // Turn the search arrow green with a checkmark, then run cb (used before navigating).
+  function flashArrowOk(cb) {
+    if (!searchBtn) { if (cb) cb(); return; }
+    searchBtn.classList.add("is-ok");
+    searchBtn.innerHTML = CHECK_SVG;
+    if (cb) setTimeout(cb, 430);
+  }
+  function resetArrow() {
+    if (!searchBtn) return;
+    searchBtn.classList.remove("is-ok");
+    searchBtn.innerHTML = ARROW_SVG;
+  }
+  function runSearch(q) {
+    if (!q) return;
+    if (resultsUrl) {
+      flashArrowOk(function () {
+        window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
+      });
+    } else {
+      query = q.toLowerCase(); applyFilters();
+      flashArrowOk(null); setTimeout(resetArrow, 1300);
+      if (searchEl) searchEl.focus();
+    }
+  }
   if (searchEl) {
     searchEl.addEventListener("input", function () {
       if (resultsUrl) return; // redirect mode: don't filter here
       query = searchEl.value.trim().toLowerCase();
       applyFilters();
     });
-    if (resultsUrl) searchEl.addEventListener("keydown", function (e) {
+    searchEl.addEventListener("keydown", function (e) {
       if (e.key !== "Enter") return;
       e.preventDefault();
-      var q = searchEl.value.trim(); if (!q) return;
-      window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
+      runSearch(searchEl.value.trim());
     });
   }
-  var searchBtn = document.getElementById("dhSearchGo");
   if (searchBtn) searchBtn.addEventListener("click", function () {
-    var q = searchEl ? searchEl.value.trim() : "";
-    if (resultsUrl) { if (q) window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q); }
-    else { query = q.toLowerCase(); applyFilters(); if (searchEl) searchEl.focus(); }
+    runSearch(searchEl ? searchEl.value.trim() : "");
   });
 
   // Typing effect: cycle example phrases through the placeholder like a typewriter.
