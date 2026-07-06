@@ -271,8 +271,8 @@
           {%- assign img2 = blank -%}
           {%- if product.images.size > 1 -%}{%- assign img2 = product.images[1] -%}{%- endif -%}
 
-          {%- capture card_search -%}{{ product.title }} {{ product.type }} {% for t in product.tags %}{{ t }} {% endfor %}{%- endcapture -%}
-          <div class="dc-card" data-cat="{{ card_cat | strip }}" data-search="{{ card_search | downcase | strip | escape }}">
+          {%- capture card_search -%}{{ product.title }} {{ product.type }} {{ product.vendor }} {% for t in product.tags %}{{ t }} {% endfor %}{% for opt in product.options_with_values %}{{ opt.name }} {% for v in opt.values %}{{ v }} {% endfor %}{% endfor %}{%- endcapture -%}
+          <div class="dc-card" data-cat="{{ card_cat | strip }}" data-search="{{ card_search | downcase | strip_newlines | escape }}">
             <a class="dc-media" href="{{ product.url }}">
               <div class="dc-badges">
                 {%- if on_sale -%}
