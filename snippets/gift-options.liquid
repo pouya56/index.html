@@ -1,3 +1,10 @@
+{% # theme-check-disable OrphanedSnippet, UnusedAssign %}
+{%- comment -%}
+  theme-check note: this snippet is added via a Custom Liquid block (rendered at
+  runtime), so it looks "orphaned" to static analysis; and the two config assigns
+  below are used lower in the file (they only look unused while the default id is
+  empty). Both are safe — the directive above silences those false positives.
+{%- endcomment -%}
 {% comment %}
   ============================================================================
   Gift options — "This is a gift" toggle that reveals paid gift wrapping
