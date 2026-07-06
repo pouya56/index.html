@@ -16,7 +16,7 @@
 {% endcomment %}
 
 <style>
-  .dyn-col {
+  .dyn-hero {
     --bg: #ffffff; --bg-panel: #f5f5f7;
     --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
     --line: #d2d2d7; --accent: #0071e3; --danger: #c0392b;
@@ -27,193 +27,193 @@
     font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased;
     background: var(--bg-panel);
   }
-  .dyn-col, .dyn-col *, .dyn-col *::before, .dyn-col *::after { box-sizing: border-box; }
-  .dyn-col .dc-wrap { max-width: 1280px; margin: 0 auto; padding: 44px 22px 90px; }
+  .dyn-hero, .dyn-hero *, .dyn-hero *::before, .dyn-hero *::after { box-sizing: border-box; }
+  .dyn-hero .dh-wrap { max-width: 1280px; margin: 0 auto; padding: 44px 22px 90px; }
 
   /* Landing mode: logo + search fixed in the vertical middle; results flow below.
      No shrink / move / float — everything stays put. */
-  .dyn-col.dc-landing { min-height: 100svh; position: relative; }
-  .dyn-col.dc-landing .dc-wrap { padding-top: calc(46svh - 90px); }
+  .dyn-hero.dh-landing { min-height: 100svh; position: relative; }
+  .dyn-hero.dh-landing .dh-wrap { padding-top: calc(46svh - 90px); }
   /* Google-style corner links (home landing) */
-  .dyn-col.dc-landing .dc-corner { position: absolute; z-index: 4; font-size: 14px; color: var(--ink-soft); text-decoration: none;
+  .dyn-hero.dh-landing .dh-corner { position: absolute; z-index: 4; font-size: 14px; color: var(--ink-soft); text-decoration: none;
     padding: 6px 6px; transition: color .16s; }
-  .dyn-col.dc-landing .dc-corner:hover { color: var(--ink); }
-  .dyn-col.dc-landing .dc-corner-tl { top: 16px; left: 22px; }
-  .dyn-col.dc-landing .dc-corner-tr { top: 16px; right: 22px; }
-  .dyn-col.dc-landing .dc-corner-bl { bottom: 78px; left: 22px; }
-  .dyn-col.dc-landing .dc-corner-br { bottom: 78px; right: 22px; }
-  @media (max-width: 600px) { .dyn-col.dc-landing .dc-corner { font-size: 13px; } .dyn-col.dc-landing .dc-corner-bl, .dyn-col.dc-landing .dc-corner-br { bottom: 90px; } }
-  .dyn-col.dc-landing .dc-head .dc-head-logo { height: clamp(40px, 6.5vw, 60px); }
-  .dyn-col.dc-landing .dc-head .dc-head-video { max-height: clamp(120px, 30vh, 280px); max-width: min(88vw, 460px); }
-  .dyn-col.dc-landing .dc-head h1 { font-size: clamp(30px, 5vw, 46px); }
-  .dyn-col.dc-landing .dc-search { margin-top: 30px; margin-bottom: 30px; }
+  .dyn-hero.dh-landing .dh-corner:hover { color: var(--ink); }
+  .dyn-hero.dh-landing .dh-corner-tl { top: 16px; left: 22px; }
+  .dyn-hero.dh-landing .dh-corner-tr { top: 16px; right: 22px; }
+  .dyn-hero.dh-landing .dh-corner-bl { bottom: 78px; left: 22px; }
+  .dyn-hero.dh-landing .dh-corner-br { bottom: 78px; right: 22px; }
+  @media (max-width: 600px) { .dyn-hero.dh-landing .dh-corner { font-size: 13px; } .dyn-hero.dh-landing .dh-corner-bl, .dyn-hero.dh-landing .dh-corner-br { bottom: 90px; } }
+  .dyn-hero.dh-landing .dh-head .dh-head-logo { height: clamp(40px, 6.5vw, 60px); }
+  .dyn-hero.dh-landing .dh-head .dh-head-video { max-height: clamp(120px, 30vh, 280px); max-width: min(88vw, 460px); }
+  .dyn-hero.dh-landing .dh-head h1 { font-size: clamp(30px, 5vw, 46px); }
+  .dyn-hero.dh-landing .dh-search { margin-top: 30px; margin-bottom: 30px; }
 
-  .dyn-col .dc-head { text-align: center; max-width: 720px; margin: 0 auto; }
-  .dyn-col .dc-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(36px, 6vw, 60px);
+  .dyn-hero .dh-head { text-align: center; max-width: 720px; margin: 0 auto; }
+  .dyn-hero .dh-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(36px, 6vw, 60px);
     line-height: 1.02; margin: 0; letter-spacing: -0.01em; }
-  .dyn-col .dc-head .dc-desc { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 16px auto 0; max-width: 620px; }
-  .dyn-col .dc-head .dc-head-logo { height: clamp(30px, 5vw, 46px); width: auto; max-width: min(64vw, 260px); object-fit: contain; margin: 0 auto; display: block; }
-  .dyn-col .dc-head .dc-head-video { display: block; margin: 0 auto; width: auto; max-width: min(82vw, 360px);
+  .dyn-hero .dh-head .dh-desc { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 16px auto 0; max-width: 620px; }
+  .dyn-hero .dh-head .dh-head-logo { height: clamp(30px, 5vw, 46px); width: auto; max-width: min(64vw, 260px); object-fit: contain; margin: 0 auto; display: block; }
+  .dyn-hero .dh-head .dh-head-video { display: block; margin: 0 auto; width: auto; max-width: min(82vw, 360px);
     max-height: clamp(90px, 22vh, 220px); border-radius: 18px; object-fit: cover; background: transparent; }
 
   /* Live search box (filters the grid on this page) */
-  .dyn-col .dc-search { position: relative; display: flex; align-items: center; max-width: 560px; margin: 26px auto 0; }
+  .dyn-hero .dh-search { position: relative; display: flex; align-items: center; max-width: 560px; margin: 26px auto 0; }
   /* Siri-style animated glow on hover / focus */
-  .dyn-col .dc-search::before { content: ""; position: absolute; inset: -4px; border-radius: 999px; z-index: 0; pointer-events: none;
+  .dyn-hero .dh-search::before { content: ""; position: absolute; inset: -4px; border-radius: 999px; z-index: 0; pointer-events: none;
     background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff); background-size: 300% 100%;
-    animation: dcSiri 6s linear infinite; filter: blur(11px); opacity: 0; transition: opacity .35s ease; }
-  .dyn-col .dc-search:hover::before, .dyn-col .dc-search:focus-within::before { opacity: 0.95; }
-  @keyframes dcSiri { to { background-position: 300% 0; } }
-  @media (prefers-reduced-motion: reduce) { .dyn-col .dc-search::before { animation: none; } }
-  .dyn-col .dc-search-mag { position: absolute; left: 20px; z-index: 2; width: 20px; height: 20px; fill: none; stroke: var(--ink-faint);
+    animation: dhSiri 6s linear infinite; filter: blur(11px); opacity: 0; transition: opacity .35s ease; }
+  .dyn-hero .dh-search:hover::before, .dyn-hero .dh-search:focus-within::before { opacity: 0.95; }
+  @keyframes dhSiri { to { background-position: 300% 0; } }
+  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search::before { animation: none; } }
+  .dyn-hero .dh-search-mag { position: absolute; left: 20px; z-index: 2; width: 20px; height: 20px; fill: none; stroke: var(--ink-faint);
     stroke-width: 2; stroke-linecap: round; pointer-events: none; }
-  .dyn-col .dc-search-input { position: relative; z-index: 1; width: 100%; font-family: var(--font); font-size: 16px; color: var(--ink); background: var(--bg);
+  .dyn-hero .dh-search-input { position: relative; z-index: 1; width: 100%; font-family: var(--font); font-size: 16px; color: var(--ink); background: var(--bg);
     border: 1px solid var(--line); border-radius: 999px; padding: 15px 56px 15px 52px; box-shadow: 0 8px 30px rgba(0,0,0,0.06);
     transition: border-color .16s, box-shadow .16s; }
-  .dyn-col .dc-search-input::placeholder { color: var(--ink-faint); }
-  .dyn-col .dc-search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 8px 30px rgba(0,0,0,0.06), 0 0 0 4px rgba(0,113,227,0.14); }
+  .dyn-hero .dh-search-input::placeholder { color: var(--ink-faint); }
+  .dyn-hero .dh-search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 8px 30px rgba(0,0,0,0.06), 0 0 0 4px rgba(0,113,227,0.14); }
   /* ChatGPT-style round arrow button inside the bar */
-  .dyn-col .dc-search-go { position: absolute; right: 8px; top: 50%; margin-top: -19px; z-index: 2; width: 38px; height: 38px; border-radius: 50%;
+  .dyn-hero .dh-search-go { position: absolute; right: 8px; top: 50%; margin-top: -19px; z-index: 2; width: 38px; height: 38px; border-radius: 50%;
     background: var(--ink); color: #fff; border: none; display: grid; place-items: center; cursor: pointer; transition: opacity .16s, transform .1s; }
-  .dyn-col .dc-search-go:hover { opacity: 0.9; }
-  .dyn-col .dc-search-go:active { transform: scale(0.93); }
-  .dyn-col .dc-search-go svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-hero .dh-search-go:hover { opacity: 0.9; }
+  .dyn-hero .dh-search-go:active { transform: scale(0.93); }
+  .dyn-hero .dh-search-go svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
   /* Category tabs */
-  .dyn-col .dc-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 28px auto 32px; max-width: 1040px; }
+  .dyn-hero .dh-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 28px auto 32px; max-width: 1040px; }
 
   /* Text-pill tabs (auto mode, no images added) */
-  .dyn-col .dc-tabs.is-pills .dc-tab { border: none; background: transparent; font-family: var(--font); font-size: 14px; font-weight: 500;
+  .dyn-hero .dh-tabs.is-pills .dh-tab { border: none; background: transparent; font-family: var(--font); font-size: 14px; font-weight: 500;
     color: var(--ink-soft); padding: 9px 18px; border-radius: 999px; cursor: pointer; white-space: nowrap;
     transition: background .18s, color .18s; }
-  .dyn-col .dc-tabs.is-pills .dc-tab:hover { color: var(--ink); background: rgba(0,0,0,0.045); }
-  .dyn-col .dc-tabs.is-pills .dc-tab.is-active { background: var(--ink); color: #fff; }
+  .dyn-hero .dh-tabs.is-pills .dh-tab:hover { color: var(--ink); background: rgba(0,0,0,0.045); }
+  .dyn-hero .dh-tabs.is-pills .dh-tab.is-active { background: var(--ink); color: #fff; }
 
   /* Image tabs (Apple-style: picture + label, no box - tiles blend into the page) */
-  .dyn-col .dc-tabs-wrap { position: relative; display: flex; align-items: center; gap: 6px; margin: 28px auto 32px; max-width: 1040px; }
-  .dyn-col .dc-tabs.is-images { flex: 1 1 auto; gap: 20px; align-items: flex-start; flex-wrap: nowrap; justify-content: flex-start;
+  .dyn-hero .dh-tabs-wrap { position: relative; display: flex; align-items: center; gap: 6px; margin: 28px auto 32px; max-width: 1040px; }
+  .dyn-hero .dh-tabs.is-images { flex: 1 1 auto; gap: 20px; align-items: flex-start; flex-wrap: nowrap; justify-content: flex-start;
     overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; margin: 0; max-width: none; padding: 4px 2px; }
-  .dyn-col .dc-tabs.is-images.is-centered { justify-content: center; }
-  .dyn-col .dc-tabs.is-images::-webkit-scrollbar { display: none; }
-  .dyn-col .dc-tabs.is-images .dc-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 9px; border: none;
+  .dyn-hero .dh-tabs.is-images.is-centered { justify-content: center; }
+  .dyn-hero .dh-tabs.is-images::-webkit-scrollbar { display: none; }
+  .dyn-hero .dh-tabs.is-images .dh-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 9px; border: none;
     background: none; padding: 4px; cursor: pointer; font-family: var(--font); transition: transform .18s ease; }
-  .dyn-col .dc-tabs.is-images .dc-tab:hover { transform: translateY(-2px); }
-  .dyn-col .dc-tabs.is-images .dc-tab-img { width: 74px; height: 74px; border-radius: 16px; position: relative; background: transparent;
+  .dyn-hero .dh-tabs.is-images .dh-tab:hover { transform: translateY(-2px); }
+  .dyn-hero .dh-tabs.is-images .dh-tab-img { width: 74px; height: 74px; border-radius: 16px; position: relative; background: transparent;
     display: grid; place-items: center; }
-  .dyn-col .dc-tabs.is-images .dc-tab-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
-  .dyn-col .dc-tabs.is-images .dc-tab-init { font-size: 26px; font-weight: 600; color: var(--ink-soft); }
-  .dyn-col .dc-tabs.is-images .dc-tab-all svg { width: 30px; height: 30px; fill: var(--ink-faint); }
-  .dyn-col .dc-tabs.is-images .dc-tab-label { font-size: 13px; font-weight: 500; color: var(--ink-soft); white-space: nowrap; opacity: 0.55;
+  .dyn-hero .dh-tabs.is-images .dh-tab-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
+  .dyn-hero .dh-tabs.is-images .dh-tab-init { font-size: 26px; font-weight: 600; color: var(--ink-soft); }
+  .dyn-hero .dh-tabs.is-images .dh-tab-all svg { width: 30px; height: 30px; fill: var(--ink-faint); }
+  .dyn-hero .dh-tabs.is-images .dh-tab-label { font-size: 13px; font-weight: 500; color: var(--ink-soft); white-space: nowrap; opacity: 0.55;
     transition: color .18s, opacity .18s; }
-  .dyn-col .dc-tabs.is-images .dc-tab:hover .dc-tab-label { opacity: 1; color: var(--ink); }
-  .dyn-col .dc-tabs.is-images .dc-tab.is-active .dc-tab-label { color: var(--ink); font-weight: 600; opacity: 1; }
-  .dyn-col .dc-tabs.is-images .dc-tab::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: transparent; margin-top: -1px; }
-  .dyn-col .dc-tabs.is-images .dc-tab.is-active::after { background: var(--accent); }
+  .dyn-hero .dh-tabs.is-images .dh-tab:hover .dh-tab-label { opacity: 1; color: var(--ink); }
+  .dyn-hero .dh-tabs.is-images .dh-tab.is-active .dh-tab-label { color: var(--ink); font-weight: 600; opacity: 1; }
+  .dyn-hero .dh-tabs.is-images .dh-tab::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: transparent; margin-top: -1px; }
+  .dyn-hero .dh-tabs.is-images .dh-tab.is-active::after { background: var(--accent); }
 
   /* Scroll arrows (shown only when the tab row overflows) */
-  .dyn-col .dc-tabs-arrow { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line);
+  .dyn-hero .dh-tabs-arrow { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line);
     background: var(--bg); color: var(--ink); cursor: pointer; display: grid; place-items: center; transition: background .16s; }
-  .dyn-col .dc-tabs-arrow:hover { background: rgba(0,0,0,0.05); }
-  .dyn-col .dc-tabs-arrow svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .dyn-col .dc-tabs-arrow[hidden] { display: none; }
+  .dyn-hero .dh-tabs-arrow:hover { background: rgba(0,0,0,0.05); }
+  .dyn-hero .dh-tabs-arrow svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-hero .dh-tabs-arrow[hidden] { display: none; }
 
   /* Product shelf - horizontal scroller with left/right arrows */
-  .dyn-col .dc-shelf-wrap { position: relative; }
-  .dyn-col .dc-grid { display: flex; gap: 22px; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none;
+  .dyn-hero .dh-shelf-wrap { position: relative; }
+  .dyn-hero .dh-grid { display: flex; gap: 22px; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none;
     padding: 4px 2px 10px; scroll-snap-type: x proximity; }
-  .dyn-col .dc-grid::-webkit-scrollbar { display: none; }
-  .dyn-col .dc-grid .dc-card { flex: 0 0 calc((100% - (var(--cols) - 1) * 22px) / var(--cols)); min-width: 0; scroll-snap-align: start; }
+  .dyn-hero .dh-grid::-webkit-scrollbar { display: none; }
+  .dyn-hero .dh-grid .dh-card { flex: 0 0 calc((100% - (var(--cols) - 1) * 22px) / var(--cols)); min-width: 0; scroll-snap-align: start; }
 
-  .dyn-col .dc-shelf-arrow { position: absolute; top: 34%; transform: translateY(-50%); z-index: 5; width: 44px; height: 44px; border-radius: 50%;
+  .dyn-hero .dh-shelf-arrow { position: absolute; top: 34%; transform: translateY(-50%); z-index: 5; width: 44px; height: 44px; border-radius: 50%;
     border: 1px solid var(--line); background: rgba(255,255,255,0.94); color: var(--ink); cursor: pointer; display: grid; place-items: center;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12); transition: background .16s, transform .16s; }
-  .dyn-col .dc-shelf-arrow:hover { background: #fff; }
-  .dyn-col .dc-shelf-arrow.dc-prev { left: -8px; }
-  .dyn-col .dc-shelf-arrow.dc-next { right: -8px; }
-  .dyn-col .dc-shelf-arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .dyn-col .dc-shelf-arrow[hidden] { display: none; }
+  .dyn-hero .dh-shelf-arrow:hover { background: #fff; }
+  .dyn-hero .dh-shelf-arrow.dh-prev { left: -8px; }
+  .dyn-hero .dh-shelf-arrow.dh-next { right: -8px; }
+  .dyn-hero .dh-shelf-arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-hero .dh-shelf-arrow[hidden] { display: none; }
 
   /* Entrance animation - cards start hidden, JS reveals them with a stagger.
      <noscript> below restores visibility when JS is off. */
-  .dyn-col .dc-grid .dc-card { opacity: 0; transform: translateX(-22px); will-change: opacity, transform; }
-  .dyn-col .dc-grid .dc-card.in { opacity: 1; transform: none;
+  .dyn-hero .dh-grid .dh-card { opacity: 0; transform: translateX(-22px); will-change: opacity, transform; }
+  .dyn-hero .dh-grid .dh-card.in { opacity: 1; transform: none;
     transition: opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
   @media (prefers-reduced-motion: reduce) {
-    .dyn-col .dc-grid .dc-card { opacity: 1 !important; transform: none !important; transition: none !important; }
+    .dyn-hero .dh-grid .dh-card { opacity: 1 !important; transform: none !important; transition: none !important; }
   }
 
-  .dyn-col .dc-card { background: var(--bg); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;
+  .dyn-hero .dh-card { background: var(--bg); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;
     box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-  .dyn-col .dc-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 16px 40px rgba(0,0,0,0.08); }
-  .dyn-col .dc-card, .dyn-col .dc-card.in { transition: opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1), box-shadow .2s ease; }
-  .dyn-col .dc-media { position: relative; display: block; aspect-ratio: var(--ratio); background: #fff; overflow: hidden; }
-  .dyn-col .dc-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .35s ease, transform .5s ease; }
-  .dyn-col .dc-media .dc-ph { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--bg-panel); }
-  .dyn-col .dc-media .dc-img-2 { opacity: 0; }
-  .dyn-col .dc-card:hover .dc-media .dc-img-2 { opacity: 1; }
-  .dyn-col .dc-card:hover .dc-media .dc-img-1.has-2 { opacity: 0; }
-  .dyn-col .dc-card:hover .dc-media img { transform: scale(1.04); }
-  .dyn-col .dc-badges { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
-  .dyn-col .dc-badge { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; padding: 5px 10px;
+  .dyn-hero .dh-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 16px 40px rgba(0,0,0,0.08); }
+  .dyn-hero .dh-card, .dyn-hero .dh-card.in { transition: opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1), box-shadow .2s ease; }
+  .dyn-hero .dh-media { position: relative; display: block; aspect-ratio: var(--ratio); background: #fff; overflow: hidden; }
+  .dyn-hero .dh-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .35s ease, transform .5s ease; }
+  .dyn-hero .dh-media .dh-ph { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--bg-panel); }
+  .dyn-hero .dh-media .dh-img-2 { opacity: 0; }
+  .dyn-hero .dh-card:hover .dh-media .dh-img-2 { opacity: 1; }
+  .dyn-hero .dh-card:hover .dh-media .dh-img-1.has-2 { opacity: 0; }
+  .dyn-hero .dh-card:hover .dh-media img { transform: scale(1.04); }
+  .dyn-hero .dh-badges { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
+  .dyn-hero .dh-badge { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; padding: 5px 10px;
     border-radius: 999px; background: var(--ink); color: #fff; }
-  .dyn-col .dc-badge.dc-badge-sale { background: var(--danger); }
-  .dyn-col .dc-badge.dc-badge-soldout { background: #fff; color: var(--ink-soft); box-shadow: inset 0 0 0 1px var(--line); }
+  .dyn-hero .dh-badge.dh-badge-sale { background: var(--danger); }
+  .dyn-hero .dh-badge.dh-badge-soldout { background: #fff; color: var(--ink-soft); box-shadow: inset 0 0 0 1px var(--line); }
 
-  .dyn-col .dc-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-  .dyn-col .dc-vendor { font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); }
-  .dyn-col .dc-title { font-size: 15.5px; font-weight: 500; line-height: 1.3; margin: 0; }
-  .dyn-col .dc-title a { color: inherit; text-decoration: none; }
-  .dyn-col .dc-title a:hover { color: var(--accent); }
-  .dyn-col .dc-price { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; font-variant-numeric: tabular-nums; }
-  .dyn-col .dc-price .dc-now { font-size: 15px; font-weight: 500; }
-  .dyn-col .dc-price .dc-was { font-size: 13px; color: var(--ink-faint); text-decoration: line-through; }
-  .dyn-col .dc-price .dc-now.on-sale { color: var(--danger); }
+  .dyn-hero .dh-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .dyn-hero .dh-vendor { font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); }
+  .dyn-hero .dh-title { font-size: 15.5px; font-weight: 500; line-height: 1.3; margin: 0; }
+  .dyn-hero .dh-title a { color: inherit; text-decoration: none; }
+  .dyn-hero .dh-title a:hover { color: var(--accent); }
+  .dyn-hero .dh-price { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .dyn-hero .dh-price .dh-now { font-size: 15px; font-weight: 500; }
+  .dyn-hero .dh-price .dh-was { font-size: 13px; color: var(--ink-faint); text-decoration: line-through; }
+  .dyn-hero .dh-price .dh-now.on-sale { color: var(--danger); }
 
-  .dyn-col .dc-swatches { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; min-height: 20px; }
-  .dyn-col .dc-swatch { width: 18px; height: 18px; border-radius: 50%; padding: 0; border: none; cursor: pointer;
+  .dyn-hero .dh-swatches { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; min-height: 20px; }
+  .dyn-hero .dh-swatch { width: 18px; height: 18px; border-radius: 50%; padding: 0; border: none; cursor: pointer;
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15); transition: transform .14s; }
-  .dyn-col .dc-swatch:hover { transform: scale(1.15); }
-  .dyn-col .dc-swatch-more { font-size: 12px; color: var(--ink-faint); align-self: center; }
+  .dyn-hero .dh-swatch:hover { transform: scale(1.15); }
+  .dyn-hero .dh-swatch-more { font-size: 12px; color: var(--ink-faint); align-self: center; }
 
-  .dyn-col .dc-noresults { display: none; text-align: center; padding: 60px 20px; color: var(--ink-soft); font-size: 16px; }
-  .dyn-col .dc-empty { text-align: center; padding: 80px 20px; background: var(--bg); border-radius: 22px;
+  .dyn-hero .dh-noresults { display: none; text-align: center; padding: 60px 20px; color: var(--ink-soft); font-size: 16px; }
+  .dyn-hero .dh-empty { text-align: center; padding: 80px 20px; background: var(--bg); border-radius: 22px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 12px 34px rgba(0,0,0,0.05); }
-  .dyn-col .dc-empty p { font-size: 18px; color: var(--ink-soft); margin: 0 0 26px; }
-  .dyn-col .dc-empty a { display: inline-flex; background: var(--ink); color: #fff; padding: 14px 30px; border-radius: 999px;
+  .dyn-hero .dh-empty p { font-size: 18px; color: var(--ink-soft); margin: 0 0 26px; }
+  .dyn-hero .dh-empty a { display: inline-flex; background: var(--ink); color: #fff; padding: 14px 30px; border-radius: 999px;
     font-weight: 600; text-decoration: none; }
 
-  @media (max-width: 1100px) { .dyn-col .dc-grid .dc-card { flex-basis: calc((100% - 2 * 22px) / 3); } }
+  @media (max-width: 1100px) { .dyn-hero .dh-grid .dh-card { flex-basis: calc((100% - 2 * 22px) / 3); } }
   @media (max-width: 800px)  {
-    .dyn-col .dc-grid { gap: 16px; }
-    .dyn-col .dc-grid .dc-card { flex-basis: calc((100% - 16px) / 2); }
-    .dyn-col .dc-shelf-arrow { display: none; }
-    .dyn-col .dc-tabs { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    .dyn-hero .dh-grid { gap: 16px; }
+    .dyn-hero .dh-grid .dh-card { flex-basis: calc((100% - 16px) / 2); }
+    .dyn-hero .dh-shelf-arrow { display: none; }
+    .dyn-hero .dh-tabs { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch;
       scrollbar-width: none; padding-bottom: 4px; }
-    .dyn-col .dc-tabs::-webkit-scrollbar { display: none; }
-    .dyn-col .dc-tabs.is-images .dc-tab { flex: 0 0 auto; }
+    .dyn-hero .dh-tabs::-webkit-scrollbar { display: none; }
+    .dyn-hero .dh-tabs.is-images .dh-tab { flex: 0 0 auto; }
   }
-  @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-grid .dc-card { flex-basis: 78%; } .dyn-col .dc-body { padding: 12px 12px 14px; } }
+  @media (max-width: 460px)  { .dyn-hero .dh-grid { gap: 12px; } .dyn-hero .dh-grid .dh-card { flex-basis: 78%; } .dyn-hero .dh-body { padding: 12px 12px 14px; } }
 </style>
 
 {%- assign coll = section.settings.collection | default: collection -%}
 {%- if coll == blank and collection != blank -%}{%- assign coll = collection -%}{%- endif -%}
 {%- assign cat_source = section.settings.category_source | default: 'type' -%}
 
-<section class="dyn-col{% if section.settings.hide_until_search %} dc-landing{% endif %}" id="dynCol"
+<section class="dyn-hero{% if section.settings.hide_until_search %} dh-landing{% endif %}" id="dynHero"
   data-currency="{{ shop.currency }}"
   data-cat-source="{{ cat_source }}"
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
   data-results-url="{{ section.settings.results_page_url }}">
   {%- if section.settings.hide_until_search -%}
-    {%- if section.settings.corner_tl_label != blank -%}<a class="dc-corner dc-corner-tl" href="{{ section.settings.corner_tl_url | default: '#' }}">{{ section.settings.corner_tl_label }}</a>{%- endif -%}
-    {%- if section.settings.corner_tr_label != blank -%}<a class="dc-corner dc-corner-tr" href="{{ section.settings.corner_tr_url | default: '#' }}">{{ section.settings.corner_tr_label }}</a>{%- endif -%}
-    {%- if section.settings.corner_bl_label != blank -%}<a class="dc-corner dc-corner-bl" href="{{ section.settings.corner_bl_url | default: '#' }}">{{ section.settings.corner_bl_label }}</a>{%- endif -%}
-    {%- if section.settings.corner_br_label != blank -%}<a class="dc-corner dc-corner-br" href="{{ section.settings.corner_br_url | default: '#' }}">{{ section.settings.corner_br_label }}</a>{%- endif -%}
+    {%- if section.settings.corner_tl_label != blank -%}<a class="dh-corner dh-corner-tl" href="{{ section.settings.corner_tl_url | default: '#' }}">{{ section.settings.corner_tl_label }}</a>{%- endif -%}
+    {%- if section.settings.corner_tr_label != blank -%}<a class="dh-corner dh-corner-tr" href="{{ section.settings.corner_tr_url | default: '#' }}">{{ section.settings.corner_tr_label }}</a>{%- endif -%}
+    {%- if section.settings.corner_bl_label != blank -%}<a class="dh-corner dh-corner-bl" href="{{ section.settings.corner_bl_url | default: '#' }}">{{ section.settings.corner_bl_label }}</a>{%- endif -%}
+    {%- if section.settings.corner_br_label != blank -%}<a class="dh-corner dh-corner-br" href="{{ section.settings.corner_br_url | default: '#' }}">{{ section.settings.corner_br_label }}</a>{%- endif -%}
   {%- endif -%}
-  <div class="dc-wrap">
-    <div class="dc-head">
+  <div class="dh-wrap">
+    <div class="dh-head">
       {%- if section.settings.head_video != blank -%}
-        <video class="dc-head-video" autoplay muted playsinline preload="metadata"
+        <video class="dh-head-video" autoplay muted playsinline preload="metadata"
           {% if section.settings.head_video.preview_image %}poster="{{ section.settings.head_video.preview_image | image_url: width: 800 }}"{% endif %}>
           {%- for source in section.settings.head_video.sources -%}
             {%- if source.format == 'mp4' -%}<source src="{{ source.url }}" type="{{ source.mime_type }}">{%- endif -%}
@@ -221,29 +221,29 @@
         </video>
       {%- elsif section.settings.heading_logo != blank -%}
         {%- assign hlw = section.settings.heading_logo.width | times: 56 | divided_by: section.settings.heading_logo.height -%}
-        <img class="dc-head-logo" src="{{ section.settings.heading_logo | image_url: width: 700 }}" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56">
+        <img class="dh-head-logo" src="{{ section.settings.heading_logo | image_url: width: 700 }}" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56">
       {%- else -%}
         <h1>{{ section.settings.heading | default: coll.title | default: 'Store' }}</h1>
       {%- endif -%}
       {%- if section.settings.show_description and coll.description != blank -%}
-        <div class="dc-desc">{{ coll.description | strip_html | truncatewords: 40 }}</div>
+        <div class="dh-desc">{{ coll.description | strip_html | truncatewords: 40 }}</div>
       {%- endif -%}
     </div>
 
     {%- assign prods = coll.products -%}
     {%- if prods.size == 0 -%}
-      <div class="dc-empty">
+      <div class="dh-empty">
         <p>{{ section.settings.empty_text | default: 'Nothing here yet.' }}</p>
         <a href="{{ routes.all_products_collection_url }}">{{ section.settings.empty_link_label | default: 'Browse all products' }}</a>
       </div>
     {%- else -%}
       {%- if section.settings.show_search -%}
-        <div class="dc-search">
-          <svg class="dc-search-mag" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="search" id="dcSearch" class="dc-search-input" autocomplete="off" aria-label="Search products"
+        <div class="dh-search">
+          <svg class="dh-search-mag" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="dhSearch" class="dh-search-input" autocomplete="off" aria-label="Search products"
             data-typing="{{ section.settings.search_examples | escape }}"
             placeholder="{{ section.settings.search_placeholder | default: 'Search these products…' }}">
-          <button type="button" class="dc-search-go" id="dcSearchGo" aria-label="Search">
+          <button type="button" class="dh-search-go" id="dhSearchGo" aria-label="Search">
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
           </button>
         </div>
@@ -260,44 +260,44 @@
 
       {%- if section.settings.show_tabs and section.blocks.size > 0 -%}
         {%- comment -%} Image tabs: merchant-defined blocks with an uploaded picture per category. {%- endcomment -%}
-        <div class="dc-tabs-wrap" id="dcTabsWrap">
-        <button type="button" class="dc-tabs-arrow dc-prev" id="dcPrev" aria-label="Scroll categories left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <div class="dc-tabs is-images" id="dcTabs" role="tablist">
+        <div class="dh-tabs-wrap" id="dhTabsWrap">
+        <button type="button" class="dh-tabs-arrow dh-prev" id="dhPrev" aria-label="Scroll categories left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="dh-tabs is-images" id="dhTabs" role="tablist">
           {%- if section.settings.show_all_tab -%}
-          <button type="button" class="dc-tab is-active" data-cat="__all" role="tab" aria-selected="true">
-            <span class="dc-tab-img dc-tab-all">
+          <button type="button" class="dh-tab is-active" data-cat="__all" role="tab" aria-selected="true">
+            <span class="dh-tab-img dh-tab-all">
               {%- if section.settings.all_image != blank -%}
                 <img src="{{ section.settings.all_image | image_url: width: 200 }}" alt="{{ section.settings.all_label | default: 'All' | escape }}" width="68" height="68" loading="lazy">
               {%- else -%}
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
               {%- endif -%}
             </span>
-            <span class="dc-tab-label">{{ section.settings.all_label | default: 'All' }}</span>
+            <span class="dh-tab-label">{{ section.settings.all_label | default: 'All' }}</span>
           </button>
           {%- endif -%}
           {%- for block in section.blocks -%}
             {%- assign cv = block.settings.category_value -%}
             {%- assign first_active = false -%}
             {%- if section.settings.show_all_tab == false and forloop.first -%}{%- assign first_active = true -%}{%- endif -%}
-            <button type="button" class="dc-tab{% if first_active %} is-active{% endif %}" data-cat="{{ cv | handle }}" role="tab" aria-selected="{% if first_active %}true{% else %}false{% endif %}" {{ block.shopify_attributes }}>
-              <span class="dc-tab-img">
+            <button type="button" class="dh-tab{% if first_active %} is-active{% endif %}" data-cat="{{ cv | handle }}" role="tab" aria-selected="{% if first_active %}true{% else %}false{% endif %}" {{ block.shopify_attributes }}>
+              <span class="dh-tab-img">
                 {%- if block.settings.image != blank -%}
                   <img src="{{ block.settings.image | image_url: width: 200 }}" alt="{{ block.settings.label | escape }}" width="68" height="68" loading="lazy">
                 {%- else -%}
-                  <span class="dc-tab-init">{{ block.settings.label | default: cv | slice: 0 | upcase }}</span>
+                  <span class="dh-tab-init">{{ block.settings.label | default: cv | slice: 0 | upcase }}</span>
                 {%- endif -%}
               </span>
-              <span class="dc-tab-label">{{ block.settings.label | default: cv }}</span>
+              <span class="dh-tab-label">{{ block.settings.label | default: cv }}</span>
             </button>
           {%- endfor -%}
         </div>
-        <button type="button" class="dc-tabs-arrow dc-next" id="dcNext" aria-label="Scroll categories right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <button type="button" class="dh-tabs-arrow dh-next" id="dhNext" aria-label="Scroll categories right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
         </div>
       {%- elsif section.settings.show_tabs and real_cats != blank -%}
         {%- comment -%} Auto text-pill tabs from product type / tag. {%- endcomment -%}
-        <div class="dc-tabs is-pills" id="dcTabs" role="tablist">
+        <div class="dh-tabs is-pills" id="dhTabs" role="tablist">
           {%- if section.settings.show_all_tab -%}
-          <button type="button" class="dc-tab is-active" data-cat="__all" role="tab" aria-selected="true">{{ section.settings.all_label | default: 'All' }}</button>
+          <button type="button" class="dh-tab is-active" data-cat="__all" role="tab" aria-selected="true">{{ section.settings.all_label | default: 'All' }}</button>
           {%- endif -%}
           {%- assign shown_i = 0 -%}
           {%- for c in cats -%}
@@ -305,15 +305,15 @@
               {%- assign shown_i = shown_i | plus: 1 -%}
               {%- assign first_active = false -%}
               {%- if section.settings.show_all_tab == false and shown_i == 1 -%}{%- assign first_active = true -%}{%- endif -%}
-              <button type="button" class="dc-tab{% if first_active %} is-active{% endif %}" data-cat="{{ c | handle }}" role="tab" aria-selected="{% if first_active %}true{% else %}false{% endif %}">{{ c }}</button>
+              <button type="button" class="dh-tab{% if first_active %} is-active{% endif %}" data-cat="{{ c | handle }}" role="tab" aria-selected="{% if first_active %}true{% else %}false{% endif %}">{{ c }}</button>
             {%- endunless -%}
           {%- endfor -%}
         </div>
       {%- endif -%}
 
-      <div class="dc-shelf-wrap" id="dcShelfWrap">
-      <button type="button" class="dc-shelf-arrow dc-prev" id="dcGridPrev" aria-label="Scroll products left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div class="dc-grid" id="dcGrid">
+      <div class="dh-shelf-wrap" id="dhShelfWrap">
+      <button type="button" class="dh-shelf-arrow dh-prev" id="dhGridPrev" aria-label="Scroll products left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="dh-grid" id="dhGrid">
         {%- assign hide_tag = section.settings.hide_tag | default: 'hidden' -%}
         {%- for product in prods limit: section.settings.max_products -%}
           {%- if product.tags contains hide_tag -%}{%- continue -%}{%- endif -%}
@@ -330,34 +330,34 @@
           {%- if product.images.size > 1 -%}{%- assign img2 = product.images[1] -%}{%- endif -%}
 
           {%- capture card_search -%}{{ product.title }} {{ product.type }} {{ product.vendor }} {% for t in product.tags %}{{ t }} {% endfor %}{% for opt in product.options_with_values %}{{ opt.name }} {% for v in opt.values %}{{ v }} {% endfor %}{% endfor %}{%- endcapture -%}
-          <div class="dc-card" data-cat="{{ card_cat | strip }}" data-search="{{ card_search | downcase | strip_newlines | escape }}">
-            <a class="dc-media" href="{{ product.url }}">
-              <div class="dc-badges">
+          <div class="dh-card" data-cat="{{ card_cat | strip }}" data-search="{{ card_search | downcase | strip_newlines | escape }}">
+            <a class="dh-media" href="{{ product.url }}">
+              <div class="dh-badges">
                 {%- if on_sale -%}
                   {%- assign pct = product.compare_at_price | minus: product.price | times: 100.0 | divided_by: product.compare_at_price | round -%}
-                  <span class="dc-badge dc-badge-sale">Save {{ pct }}%</span>
+                  <span class="dh-badge dh-badge-sale">Save {{ pct }}%</span>
                 {%- endif -%}
-                {%- unless product.available -%}<span class="dc-badge dc-badge-soldout">Sold out</span>{%- endunless -%}
+                {%- unless product.available -%}<span class="dh-badge dh-badge-soldout">Sold out</span>{%- endunless -%}
               </div>
               {%- if product.featured_image -%}
-                <img class="dc-img-1{% if img2 != blank %} has-2{% endif %}" src="{{ product.featured_image | image_url: width: 600 }}"
+                <img class="dh-img-1{% if img2 != blank %} has-2{% endif %}" src="{{ product.featured_image | image_url: width: 600 }}"
                   alt="{{ product.featured_image.alt | default: product.title | escape }}" width="600" height="600" loading="lazy">
                 {%- if img2 != blank -%}
-                  <img class="dc-img-2" src="{{ img2 | image_url: width: 600 }}" alt="" width="600" height="600" loading="lazy" aria-hidden="true">
+                  <img class="dh-img-2" src="{{ img2 | image_url: width: 600 }}" alt="" width="600" height="600" loading="lazy" aria-hidden="true">
                 {%- endif -%}
               {%- else -%}
-                {{ 'product-1' | placeholder_svg_tag: 'dc-img-1 dc-ph' }}
+                {{ 'product-1' | placeholder_svg_tag: 'dh-img-1 dh-ph' }}
               {%- endif -%}
             </a>
 
-            <div class="dc-body">
+            <div class="dh-body">
               {%- if section.settings.show_vendor and product.vendor != blank -%}
-                <div class="dc-vendor">{{ product.vendor }}</div>
+                <div class="dh-vendor">{{ product.vendor }}</div>
               {%- endif -%}
-              <h3 class="dc-title"><a href="{{ product.url }}">{{ product.title }}</a></h3>
-              <div class="dc-price">
-                <span class="dc-now{% if on_sale %} on-sale{% endif %}">{{ product.price | money }}</span>
-                {%- if on_sale -%}<span class="dc-was">{{ product.compare_at_price | money }}</span>{%- endif -%}
+              <h3 class="dh-title"><a href="{{ product.url }}">{{ product.title }}</a></h3>
+              <div class="dh-price">
+                <span class="dh-now{% if on_sale %} on-sale{% endif %}">{{ product.price | money }}</span>
+                {%- if on_sale -%}<span class="dh-was">{{ product.compare_at_price | money }}</span>{%- endif -%}
               </div>
 
               {%- if section.settings.show_swatches -%}
@@ -367,7 +367,7 @@
                   {%- if on contains 'color' or on contains 'colour' -%}{%- assign color_opt = o -%}{%- endif -%}
                 {%- endfor -%}
                 {%- if color_opt != blank -%}
-                  <div class="dc-swatches">
+                  <div class="dh-swatches">
                     {%- assign shown = 0 -%}
                     {%- assign cidx = color_opt.position | minus: 1 -%}
                     {%- for val in color_opt.values -%}
@@ -377,13 +377,13 @@
                           {%- assign optval = v.options[cidx] -%}
                           {%- if optval == val and v.image -%}{%- assign vimg = v.image | image_url: width: 600 -%}{%- break -%}{%- endif -%}
                         {%- endfor -%}
-                        <button type="button" class="dc-swatch" data-color="{{ val | escape }}" data-img="{{ vimg }}"
+                        <button type="button" class="dh-swatch" data-color="{{ val | escape }}" data-img="{{ vimg }}"
                           title="{{ val | escape }}" aria-label="{{ val | escape }}"></button>
                         {%- assign shown = shown | plus: 1 -%}
                       {%- endif -%}
                     {%- endfor -%}
                     {%- assign extra = color_opt.values.size | minus: 5 -%}
-                    {%- if extra > 0 -%}<span class="dc-swatch-more">+{{ extra }}</span>{%- endif -%}
+                    {%- if extra > 0 -%}<span class="dh-swatch-more">+{{ extra }}</span>{%- endif -%}
                   </div>
                 {%- endif -%}
               {%- endif -%}
@@ -391,41 +391,41 @@
           </div>
         {%- endfor -%}
       </div>
-      <button type="button" class="dc-shelf-arrow dc-next" id="dcGridNext" aria-label="Scroll products right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <button type="button" class="dh-shelf-arrow dh-next" id="dhGridNext" aria-label="Scroll products right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
-      <div class="dc-noresults" id="dcNoResults">Nothing in this category yet.</div>
+      <div class="dh-noresults" id="dhNoResults">Nothing in this category yet.</div>
     {%- endif -%}
   </div>
 </section>
 
 <noscript>
-  <style>.dyn-col .dc-grid .dc-card { opacity: 1 !important; transform: none !important; }</style>
+  <style>.dyn-hero .dh-grid .dh-card { opacity: 1 !important; transform: none !important; }</style>
 </noscript>
 
 <script>
 (function () {
-  var root = document.getElementById("dynCol");
+  var root = document.getElementById("dynHero");
   if (!root) return;
 
   // Head video: play once and stop (no loop).
-  var headVid = root.querySelector(".dc-head-video");
+  var headVid = root.querySelector(".dh-head-video");
   if (headVid) {
     headVid.loop = false; headVid.muted = true;
     var hp = headVid.play(); if (hp && hp.catch) hp.catch(function () {});
   }
 
-  var grid = document.getElementById("dcGrid");
-  var tabs = document.getElementById("dcTabs");
-  var noRes = document.getElementById("dcNoResults");
-  var tabsWrap = document.getElementById("dcTabsWrap");
-  var shelfWrap = document.getElementById("dcShelfWrap");
+  var grid = document.getElementById("dhGrid");
+  var tabs = document.getElementById("dhTabs");
+  var noRes = document.getElementById("dhNoResults");
+  var tabsWrap = document.getElementById("dhTabsWrap");
+  var shelfWrap = document.getElementById("dhShelfWrap");
   var hideUntilSearch = root.getAttribute("data-hide-until-search") === "true";
   if (!grid) return;
-  var cards = Array.prototype.slice.call(grid.querySelectorAll(".dc-card"));
+  var cards = Array.prototype.slice.call(grid.querySelectorAll(".dh-card"));
 
   // How many cards are visible at once (for a per-row left->right sweep).
   function colCount() {
-    var first = grid.querySelector(".dc-card");
+    var first = grid.querySelector(".dh-card");
     if (!first) return 1;
     var cw = first.getBoundingClientRect().width + 22; // card + gap
     var n = Math.round(grid.clientWidth / cw);
@@ -449,7 +449,7 @@
   var query = "";
   function applyFilters() {
     // Landing mode: shrink + raise the logo/search once the shopper searches.
-    if (hideUntilSearch) root.classList.toggle("dc-searching", query.length > 0);
+    if (hideUntilSearch) root.classList.toggle("dh-searching", query.length > 0);
     // Home-page mode: keep the tabs + grid hidden until the shopper searches.
     if (hideUntilSearch && query.length === 0) {
       if (tabsWrap) tabsWrap.style.display = "none";
@@ -476,8 +476,8 @@
   }
 
   if (tabs) tabs.addEventListener("click", function (e) {
-    var btn = e.target.closest(".dc-tab"); if (!btn) return;
-    tabs.querySelectorAll(".dc-tab").forEach(function (b) { b.classList.remove("is-active"); b.setAttribute("aria-selected", "false"); });
+    var btn = e.target.closest(".dh-tab"); if (!btn) return;
+    tabs.querySelectorAll(".dh-tab").forEach(function (b) { b.classList.remove("is-active"); b.setAttribute("aria-selected", "false"); });
     btn.classList.add("is-active"); btn.setAttribute("aria-selected", "true");
     try { btn.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch (x) {}
     currentCat = btn.getAttribute("data-cat"); applyFilters();
@@ -485,7 +485,7 @@
 
   // Live search. Normally filters the on-page grid as the shopper types. If a
   // "results page" URL is set, Enter/submit opens that page with the query.
-  var searchEl = document.getElementById("dcSearch");
+  var searchEl = document.getElementById("dhSearch");
   var resultsUrl = (root.getAttribute("data-results-url") || "").trim();
   if (searchEl) {
     searchEl.addEventListener("input", function () {
@@ -500,7 +500,7 @@
       window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
     });
   }
-  var searchBtn = document.getElementById("dcSearchGo");
+  var searchBtn = document.getElementById("dhSearchGo");
   if (searchBtn) searchBtn.addEventListener("click", function () {
     var q = searchEl ? searchEl.value.trim() : "";
     if (resultsUrl) { if (q) window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q); }
@@ -547,8 +547,8 @@
   }
 
   // Scroll arrows: appear only when the image-tab row overflows; hide at ends.
-  var prev = document.getElementById("dcPrev");
-  var next = document.getElementById("dcNext");
+  var prev = document.getElementById("dhPrev");
+  var next = document.getElementById("dhNext");
   if (tabs && tabs.classList.contains("is-images")) {
     var updateArrows = function () {
       var overflow = tabs.scrollWidth - tabs.clientWidth > 2;
@@ -567,8 +567,8 @@
   }
 
   // Product shelf arrows: scroll the grid horizontally; hide at ends / when it fits.
-  var gPrev = document.getElementById("dcGridPrev");
-  var gNext = document.getElementById("dcGridNext");
+  var gPrev = document.getElementById("dhGridPrev");
+  var gNext = document.getElementById("dhGridNext");
   function updateGridArrows() {
     var overflow = grid.scrollWidth - grid.clientWidth > 2;
     var atStart = grid.scrollLeft <= 2;
@@ -593,7 +593,7 @@
   }
 
   // Initial load: reveal the active tab's products (works whether or not the All tab exists).
-  var activeBtn = tabs ? tabs.querySelector(".dc-tab.is-active") : null;
+  var activeBtn = tabs ? tabs.querySelector(".dh-tab.is-active") : null;
   currentCat = activeBtn ? activeBtn.getAttribute("data-cat") : "__all";
   applyFilters();
 
@@ -619,9 +619,9 @@
     return "#c7c7cc";
   }
   cards.forEach(function (card) {
-    var img1 = card.querySelector(".dc-media .dc-img-1");
+    var img1 = card.querySelector(".dh-media .dh-img-1");
     var baseSrc = img1 ? img1.getAttribute("src") : "";
-    card.querySelectorAll(".dc-swatch").forEach(function (sw) {
+    card.querySelectorAll(".dh-swatch").forEach(function (sw) {
       sw.style.background = colorFor(sw.getAttribute("data-color"));
       var vimg = sw.getAttribute("data-img");
       if (vimg && img1) sw.addEventListener("mouseenter", function () { img1.src = vimg; });
@@ -633,7 +633,7 @@
 
 {% schema %}
 {
-  "name": "Dynamic Collection",
+  "name": "Dynamic Hero",
   "tag": "section",
   "class": "dynamic-collection-section",
   "settings": [
@@ -648,7 +648,7 @@
 
     { "type": "header", "content": "Search box" },
     { "type": "checkbox", "id": "show_search", "label": "Show live search box", "default": true, "info": "Filters the products already on this page as the shopper types — no page reload." },
-    { "type": "checkbox", "id": "hide_until_search", "label": "Hide the grid until someone searches", "default": false, "info": "Great for the home page: only the search box shows; the products appear once the shopper types." },
+    { "type": "checkbox", "id": "hide_until_search", "label": "Hide the grid until someone searches", "default": true, "info": "Great for the home page: only the search box shows; the products appear once the shopper types." },
     { "type": "url", "id": "results_page_url", "label": "Show results on another page (URL)", "info": "Optional. Paste your Shop page URL (e.g. /collections/shop). When set, pressing Enter here opens that page with the results instead of filtering in place. Leave empty to filter on this page." },
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search these products…" },
     { "type": "textarea", "id": "search_examples", "label": "Typing examples", "info": "One phrase per line. They type out in the search box one after another. Clear to turn the effect off.", "default": "I'm shopping for my wife.\nI'm looking for a birthday gift.\nI need a gift for my mom.\nI'm shopping for my dad.\nI want a gift for my best friend.\nI'm buying a gift for my boyfriend.\nI need an anniversary gift.\nI'm shopping for my daughter.\nI want something personalized.\nI'm looking for a unique gift.\nI need a Christmas gift.\nI'm shopping for a coworker.\nI want a custom mug.\nI'm shopping for myself.\nI'm not sure what to buy." },
@@ -699,7 +699,9 @@
     ]}
   ],
   "max_blocks": 12,
-  "presets": [ { "name": "Dynamic Collection" } ],
-  "enabled_on": { "templates": ["collection", "list-collections", "index"] }
+  "presets": [
+    { "name": "Dynamic Hero", "settings": { "hide_until_search": true, "show_search": true, "show_tabs": true } }
+  ],
+  "enabled_on": { "templates": ["index"] }
 }
 {% endschema %}
