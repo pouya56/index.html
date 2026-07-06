@@ -204,14 +204,14 @@
 {%- if coll == blank and collection != blank -%}{%- assign coll = collection -%}{%- endif -%}
 {%- assign cat_source = section.settings.category_source | default: 'type' -%}
 
-<section class="dyn-hero{% if section.settings.hide_until_search %} dh-landing{% endif %}" id="dynHero"
+<section class="dyn-hero dh-landing" id="dynHero"
   data-currency="{{ shop.currency }}"
   data-cat-source="{{ cat_source }}"
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
   data-results-url="{{ section.settings.results_page_url }}">
-  {%- if section.settings.hide_until_search -%}
-    {%- assign corner_pos = 'tl,tr,bl,br' | split: ',' -%}
-    {%- for pos in corner_pos -%}
+  {%- comment -%} Corner links (hero landing look is always on for this section). {%- endcomment -%}
+  {%- assign corner_pos = 'tl,tr,bl,br' | split: ',' -%}
+  {%- for pos in corner_pos -%}
       {%- assign cnt = 0 -%}
       {%- capture corner_links -%}
         {%- for block in section.blocks -%}
@@ -245,8 +245,7 @@
         {%- endfor -%}
       {%- endcapture -%}
       {%- if corner_links != blank -%}<div class="dh-corner-group dh-corner-{{ pos }}">{{ corner_links }}</div>{%- endif -%}
-    {%- endfor -%}
-  {%- endif -%}
+  {%- endfor -%}
   <div class="dh-wrap">
     <div class="dh-head">
       {%- if section.settings.head_video != blank -%}
@@ -696,7 +695,7 @@
 
     { "type": "header", "content": "Search box" },
     { "type": "checkbox", "id": "show_search", "label": "Show live search box", "default": true, "info": "Filters the products already on this page as the shopper types — no page reload." },
-    { "type": "checkbox", "id": "hide_until_search", "label": "Hide the grid until someone searches", "default": true, "info": "Great for the home page: only the search box shows; the products appear once the shopper types." },
+    { "type": "checkbox", "id": "hide_until_search", "label": "Hide the grid until someone searches", "default": true, "info": "Only matters if 'Show product grid & tabs' is on: the products stay hidden until the shopper types. The hero is always full-screen either way." },
     { "type": "url", "id": "results_page_url", "label": "Show results on another page (URL)", "info": "Optional. Paste your Shop page URL (e.g. /collections/shop). When set, pressing Enter here opens that page with the results instead of filtering in place. Leave empty to filter on this page." },
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search these products…" },
     { "type": "textarea", "id": "search_examples", "label": "Typing examples", "info": "One phrase per line. They type out in the search box one after another. Clear to turn the effect off.", "default": "I'm shopping for my wife.\nI'm looking for a birthday gift.\nI need a gift for my mom.\nI'm shopping for my dad.\nI want a gift for my best friend.\nI'm buying a gift for my boyfriend.\nI need an anniversary gift.\nI'm shopping for my daughter.\nI want something personalized.\nI'm looking for a unique gift.\nI need a Christmas gift.\nI'm shopping for a coworker.\nI want a custom mug.\nI'm shopping for myself.\nI'm not sure what to buy." },
