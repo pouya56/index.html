@@ -196,7 +196,8 @@
 <section class="dyn-col{% if section.settings.hide_until_search %} dc-landing{% endif %}" id="dynCol"
   data-currency="{{ shop.currency }}"
   data-cat-source="{{ cat_source }}"
-  data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}">
+  data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
+  data-results-url="{{ section.settings.results_page_url }}">
   {%- if section.settings.hide_until_search -%}
     {%- if section.settings.corner_tl_label != blank -%}<a class="dc-corner dc-corner-tl" href="{{ section.settings.corner_tl_url | default: '#' }}">{{ section.settings.corner_tl_label }}</a>{%- endif -%}
     {%- if section.settings.corner_tr_label != blank -%}<a class="dc-corner dc-corner-tr" href="{{ section.settings.corner_tr_url | default: '#' }}">{{ section.settings.corner_tr_label }}</a>{%- endif -%}
@@ -472,12 +473,23 @@
     currentCat = btn.getAttribute("data-cat"); applyFilters();
   });
 
-  // Live search: filter the on-page grid as the shopper types (no navigation).
+  // Live search. Normally filters the on-page grid as the shopper types. If a
+  // "results page" URL is set, Enter/submit opens that page with the query.
   var searchEl = document.getElementById("dcSearch");
-  if (searchEl) searchEl.addEventListener("input", function () {
-    query = searchEl.value.trim().toLowerCase();
-    applyFilters();
-  });
+  var resultsUrl = (root.getAttribute("data-results-url") || "").trim();
+  if (searchEl) {
+    searchEl.addEventListener("input", function () {
+      if (resultsUrl) return; // redirect mode: don't filter here
+      query = searchEl.value.trim().toLowerCase();
+      applyFilters();
+    });
+    if (resultsUrl) searchEl.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      var q = searchEl.value.trim(); if (!q) return;
+      window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
+    });
+  }
 
   // Scroll arrows: appear only when the image-tab row overflows; hide at ends.
   var prev = document.getElementById("dcPrev");
@@ -514,6 +526,16 @@
   if (gNext) gNext.addEventListener("click", function () { grid.scrollBy({ left: gStep(), behavior: "smooth" }); });
   grid.addEventListener("scroll", updateGridArrows, { passive: true });
   window.addEventListener("resize", updateGridArrows);
+
+  // If this page was opened with a ?q= query (e.g. from the home search),
+  // prefill the box and filter to those results — unless this page itself
+  // redirects elsewhere.
+  if (!resultsUrl) {
+    try {
+      var urlQ = new URLSearchParams(window.location.search).get("q");
+      if (urlQ) { if (searchEl) searchEl.value = urlQ; query = urlQ.trim().toLowerCase(); }
+    } catch (e) {}
+  }
 
   // Initial load: reveal the active tab's products (works whether or not the All tab exists).
   var activeBtn = tabs ? tabs.querySelector(".dc-tab.is-active") : null;
@@ -572,6 +594,7 @@
     { "type": "header", "content": "Search box" },
     { "type": "checkbox", "id": "show_search", "label": "Show live search box", "default": true, "info": "Filters the products already on this page as the shopper types — no page reload." },
     { "type": "checkbox", "id": "hide_until_search", "label": "Hide the grid until someone searches", "default": false, "info": "Great for the home page: only the search box shows; the products appear once the shopper types." },
+    { "type": "url", "id": "results_page_url", "label": "Show results on another page (URL)", "info": "Optional. Paste your Shop page URL (e.g. /collections/shop). When set, pressing Enter here opens that page with the results instead of filtering in place. Leave empty to filter on this page." },
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search these products…" },
 
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
