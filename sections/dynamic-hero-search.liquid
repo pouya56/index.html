@@ -177,7 +177,8 @@
     var mine = ++seq;
     var url = "/search/suggest.json?q=" + encodeURIComponent(q) +
       "&resources[type]=product&resources[limit]=" + LIMIT +
-      "&resources[options][unavailable_products]=last";
+      "&resources[options][unavailable_products]=last" +
+      "&resources[options][fields]=title,product_type,variants.title,vendor,tag";
     fetch(url, { headers: { "Accept": "application/json" } })
       .then(function (r) { return r.json(); })
       .then(function (d) {

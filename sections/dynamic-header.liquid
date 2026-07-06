@@ -419,7 +419,8 @@
     var seq = ++reqSeq;
     state("Searching…");
     var url = "/search/suggest.json?q=" + encodeURIComponent(terms.join(" ")) +
-      "&resources[type]=product&resources[limit]=8&resources[options][unavailable_products]=last";
+      "&resources[type]=product&resources[limit]=8&resources[options][unavailable_products]=last" +
+      "&resources[options][fields]=title,product_type,variants.title,vendor,tag";
     fetch(url, { headers: { "Accept": "application/json" } })
       .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
       .then(function (data) {
