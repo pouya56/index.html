@@ -595,12 +595,16 @@
     cartOverlay.classList.add("open");
     cartEl.classList.add("open"); cartEl.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
+    // Flag on <html> so other sections (e.g. the suggestion page's fixed top bar)
+    // can hide themselves and not clash with the open drawer.
+    document.documentElement.classList.add("dyn-drawer-open");
   }
   function closeCart() {
     if (!cartEl) return;
     cartOverlay.classList.remove("open");
     cartEl.classList.remove("open"); cartEl.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
+    document.documentElement.classList.remove("dyn-drawer-open");
   }
   function initCart() {
     cartEl = document.getElementById("hdCart");

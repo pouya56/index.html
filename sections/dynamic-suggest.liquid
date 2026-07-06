@@ -30,6 +30,8 @@
     font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; background: var(--bg);
     min-height: 100vh;
   }
+  /* Hide this fixed bar while the cart drawer is open so they don't overlap. */
+  html.dyn-drawer-open .dyn-sug .ds-topbar { display: none; }
   .dyn-sug .ds-topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(245,245,247,0.92);
     -webkit-backdrop-filter: saturate(1.6) blur(18px); backdrop-filter: saturate(1.6) blur(18px);
     border-bottom: 1px solid rgba(0,0,0,0.08); box-shadow: 0 2px 14px rgba(0,0,0,0.06); }
