@@ -2169,6 +2169,55 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     });
   }
 
+  // Gift options block for the customizer popup (matches the Dynamic design).
+  function giftHtml() {
+    const g = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
+    if (!g.enabled) return "";
+    const wrapId = String(g.wrapVariantId || "").trim();
+    const wrapMoney = g.wrapMoney || "";
+    const toggleLabel = g.toggleLabel || "This is a gift";
+    const wrapLabel = g.wrapLabel || "Add gift wrapping";
+    const noteLabel = g.noteLabel || "Add a gift note (optional)";
+    const css =
+      '<style>' +
+      '.dc-gift{--gi:#1d1d1f;--gs:#6e6e73;--gf:#86868b;--gl:#d2d2d7;--gp:#f5f5f7;--ga:#0071e3;' +
+        'margin:18px 20px 0;font-family:inherit;color:var(--gi)}' +
+      '.dc-gift *{box-sizing:border-box}' +
+      '.dc-gift-toggle{display:inline-flex;align-items:center;gap:12px;cursor:pointer;user-select:none}' +
+      '.dc-gift-toggle-input{position:absolute;opacity:0;width:0;height:0}' +
+      '.dc-gift-track{position:relative;width:46px;height:28px;border-radius:999px;background:rgba(0,0,0,.16);transition:background .2s;flex:none}' +
+      '.dc-gift-knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}' +
+      '.dc-gift-toggle-input:checked+.dc-gift-track{background:var(--gi)}' +
+      '.dc-gift-toggle-input:checked+.dc-gift-track .dc-gift-knob{transform:translateX(18px)}' +
+      '.dc-gift-label{font-size:15px;font-weight:500}' +
+      '.dc-gift-panel{margin-top:14px;padding:16px 18px;background:var(--gp);border:1px solid var(--gl);border-radius:14px;display:grid;gap:14px}' +
+      '.dc-gift-row{display:flex;align-items:center;gap:11px;cursor:pointer;font-size:15px}' +
+      '.dc-gift-check{width:19px;height:19px;accent-color:var(--gi);flex:none;cursor:pointer;margin:0}' +
+      '.dc-gift-note-h{display:block;font-size:14px;font-weight:500;margin-bottom:8px}' +
+      '.dc-gift-note-input{width:100%;resize:vertical;min-height:70px;padding:11px 13px;font-family:inherit;font-size:15px;line-height:1.45;color:var(--gi);background:#fff;border:1px solid var(--gl);border-radius:12px;transition:border-color .16s,box-shadow .16s}' +
+      '.dc-gift-note-input::placeholder{color:var(--gf)}' +
+      '.dc-gift-note-input:focus{outline:none;border-color:var(--ga);box-shadow:0 0 0 3px rgba(0,113,227,.15)}' +
+      '.dc-gift-note-input:disabled{opacity:.55}' +
+      '.dc-gift-count{margin-top:8px;text-align:right;font-size:12px;color:var(--gf);font-variant-numeric:tabular-nums}' +
+      '</style>';
+    const wrapRow = wrapId
+      ? '<label class="dc-gift-row"><input type="checkbox" id="giftWrap" class="dc-gift-check">' +
+        '<span>' + escapeHtml(wrapLabel) + (wrapMoney ? ' — <strong>' + escapeHtml(wrapMoney) + '</strong>' : '') + '</span></label>'
+      : "";
+    return css +
+      '<div class="dc-gift" id="giftBlock">' +
+        '<label class="dc-gift-toggle"><input type="checkbox" id="giftIsGift" class="dc-gift-toggle-input">' +
+          '<span class="dc-gift-track"><span class="dc-gift-knob"></span></span>' +
+          '<span class="dc-gift-label">🎁 ' + escapeHtml(toggleLabel) + '</span></label>' +
+        '<div class="dc-gift-panel" id="giftPanel" hidden>' +
+          wrapRow +
+          '<div class="dc-gift-note"><label class="dc-gift-note-h" for="giftNote">' + escapeHtml(noteLabel) + '</label>' +
+          '<textarea id="giftNote" class="dc-gift-note-input" maxlength="250" rows="3" placeholder="Write your message…" disabled></textarea>' +
+          '<div class="dc-gift-count"><span id="giftCount">0</span>/250</div></div>' +
+        '</div>' +
+      '</div>';
+  }
+
   function buildUploadModal() {
     sideLayers = { front: [], back: [] };
     sideActive = { front: null, back: null };
@@ -2234,6 +2283,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               '<div class="engrave-tools">' + kbdHtml() + '</div>') +
           '</div>' +
         '</div>' +
+        giftHtml() +
         '<div class="modal-foot"><div class="price-breakdown"><div class="price-breakdown-toggle" style="cursor:default">' +
           '<span class="total">' + priceStr + '</span><span class="meta">' + escapeHtml((window.DYN_SETTINGS && window.DYN_SETTINGS.customPrintLabel) || "Custom print") + '</span></div></div>' +
           '<div class="foot-actions"><button class="btn btn-ghost" data-close>Cancel</button>' +
@@ -2300,6 +2350,19 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (!e.target.closest(".up-el")) { activeLayerId = null; if (txt) txt.value = ""; renderUpEls(); }
     });
     q2("#uploadApply").onclick = onUploadApply;
+    // Gift options: reveal panel on toggle, live note counter.
+    const giftIsGift = q2("#giftIsGift");
+    if (giftIsGift) {
+      const giftPanel = q2("#giftPanel"), giftNote = q2("#giftNote"), giftCount = q2("#giftCount"), giftWrap = q2("#giftWrap");
+      const syncGift = () => {
+        const on = giftIsGift.checked;
+        if (giftPanel) giftPanel.hidden = !on;
+        if (giftNote) giftNote.disabled = !on;
+        if (!on && giftWrap) giftWrap.checked = false;
+      };
+      giftIsGift.onchange = syncGift; syncGift();
+      if (giftNote && giftCount) { const c = () => (giftCount.textContent = String(giftNote.value.length)); giftNote.oninput = c; c(); }
+    }
     renderUpEls();
   }
 
@@ -2403,6 +2466,21 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         props["_grp"] = grp;
         const qty = Math.max(1, (store.get().quantity) || 1);
         extraItems.push({ id: S.backFeeVariantId, quantity: qty, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "custom item", "_grp": grp } });
+      }
+      // Gift options: flag the item as a gift, attach the note, and add gift
+      // wrapping as its own line item (same reliable pattern as the back fee).
+      const gift = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
+      const giftOnEl = $("#giftIsGift");
+      if (gift.enabled && giftOnEl && giftOnEl.checked) {
+        props["Gift"] = "Yes";
+        const noteEl = $("#giftNote");
+        if (noteEl && noteEl.value.trim()) props["Gift note"] = noteEl.value.trim();
+        const wrapEl = $("#giftWrap");
+        const wrapId = String(gift.wrapVariantId || "").match(/\d{4,}/);
+        if (wrapEl && wrapEl.checked && wrapId) {
+          const gq = Math.max(1, (store.get().quantity) || 1);
+          extraItems.push({ id: wrapId[0], quantity: gq, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "item", "Gift wrapping": "Yes" } });
+        }
       }
       root.Dynamic.lastOrder = { properties: props };
       $("#customizeSummary") && ($("#customizeSummary").textContent = "Design added");
