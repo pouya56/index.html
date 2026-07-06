@@ -293,9 +293,8 @@
     <div class="hd-cart-foot" id="hdCartFoot" hidden>
       <div class="hd-cart-subtotal"><span>Subtotal</span><span id="hdCartSubtotal">—</span></div>
       <p class="hd-cart-note">Shipping &amp; taxes calculated at checkout.</p>
-      <a class="hd-cart-checkout" href="{{ section.settings.precheckout_url | default: '/checkout' }}">Checkout</a>
+      <a class="hd-cart-checkout" href="{{ section.settings.precheckout_url | default: routes.cart_url }}">Review Bag</a>
       <div class="hd-cart-links">
-        <a class="hd-cart-view" id="hdCartView" href="{{ routes.cart_url }}">View full cart</a>
         <button type="button" class="hd-cart-clear" id="hdCartClear">Clear cart</button>
       </div>
     </div>
@@ -592,9 +591,6 @@
     cartSub = document.getElementById("hdCartSubtotal");
     var cartTabs = document.querySelectorAll("[data-hd-cart]");
     if (!cartEl || !cartTabs.length) { if (cartEl) cartEl.remove(); if (cartOverlay) cartOverlay.remove(); return; }
-
-    var view = document.getElementById("hdCartView");
-    if (view) view.href = H().cartUrl || "/cart";
 
     var clearBtn = document.getElementById("hdCartClear");
     if (clearBtn) clearBtn.addEventListener("click", function () {
