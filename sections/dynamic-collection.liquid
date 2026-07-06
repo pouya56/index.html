@@ -30,6 +30,20 @@
   .dyn-col, .dyn-col *, .dyn-col *::before, .dyn-col *::after { box-sizing: border-box; }
   .dyn-col .dc-wrap { max-width: 1280px; margin: 0 auto; padding: 44px 22px 90px; }
 
+  /* Landing mode: logo + search centered on a full-height page; shrink to the
+     top once the shopper searches. */
+  .dyn-col.dc-landing { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; transition: justify-content .4s ease; }
+  .dyn-col.dc-landing .dc-wrap { width: 100%; transition: padding .4s ease; }
+  .dyn-col.dc-landing.dc-searching { min-height: auto; justify-content: flex-start; }
+  .dyn-col.dc-landing.dc-searching .dc-wrap { padding-top: 26px; }
+  .dyn-col.dc-landing .dc-head-logo { transition: height .38s cubic-bezier(.2,.7,.2,1); }
+  .dyn-col.dc-landing.dc-searching .dc-head .dc-head-logo { height: clamp(28px, 4.5vw, 40px); }
+  .dyn-col.dc-landing .dc-head h1 { transition: font-size .38s cubic-bezier(.2,.7,.2,1); }
+  .dyn-col.dc-landing.dc-searching .dc-head h1 { font-size: clamp(24px, 4vw, 34px); }
+  .dyn-col.dc-landing .dc-search { transition: max-width .38s ease, margin-top .38s ease; }
+  .dyn-col.dc-landing:not(.dc-searching) .dc-search { margin-top: 34px; }
+  .dyn-col.dc-landing.dc-searching .dc-search { max-width: 480px; margin-top: 6px; margin-bottom: 34px; }
+
   .dyn-col .dc-head { text-align: center; max-width: 720px; margin: 0 auto; }
   .dyn-col .dc-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(36px, 6vw, 60px);
     line-height: 1.02; margin: 0; letter-spacing: -0.01em; }
@@ -166,7 +180,7 @@
 {%- if coll == blank and collection != blank -%}{%- assign coll = collection -%}{%- endif -%}
 {%- assign cat_source = section.settings.category_source | default: 'type' -%}
 
-<section class="dyn-col" id="dynCol"
+<section class="dyn-col{% if section.settings.hide_until_search %} dc-landing{% endif %}" id="dynCol"
   data-currency="{{ shop.currency }}"
   data-cat-source="{{ cat_source }}"
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}">
@@ -389,6 +403,8 @@
   var currentCat = "__all";
   var query = "";
   function applyFilters() {
+    // Landing mode: shrink + raise the logo/search once the shopper searches.
+    if (hideUntilSearch) root.classList.toggle("dc-searching", query.length > 0);
     // Home-page mode: keep the tabs + grid hidden until the shopper searches.
     if (hideUntilSearch && query.length === 0) {
       if (tabsWrap) tabsWrap.style.display = "none";
