@@ -1452,11 +1452,29 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         else if (sidesFront) selected[sidesIdx] = sidesFront;   // start on the base (front-only) price
       }
     }
-    // Expose a resolver so the "Add to Bag" step can pick the front-only or
-    // front+back variant that matches the customer's other choices (colour/size).
-    _sidesResolve = (sidesIdx < 0) ? null : function (hasBack) {
+    // Single-line-item gift wrapping: if the product has a "Gift wrapping" option
+    // (e.g. No / Yes at a higher price), we hide it and drive it from the gift
+    // toggle — so wrapping rides on the SAME line item, not a separate charge.
+    const giftCfg = DS.gift || {};
+    const giftName = String(giftCfg.wrapOption || "").trim().toLowerCase();
+    let giftIdx = -1, giftNo = "", giftYes = "";
+    if (giftName) {
+      giftIdx = options.findIndex((o) => String(o.name || "").trim().toLowerCase() === giftName);
+      if (giftIdx >= 0) {
+        const gvals = options[giftIdx].values || [];
+        const findG = (want) => gvals.find((v) => String(v).trim().toLowerCase() === String(want).trim().toLowerCase()) || "";
+        giftYes = findG(giftCfg.wrappedValue || "Yes") || "";
+        giftNo = findG(giftCfg.unwrappedValue || "No") || gvals.find((v) => v !== giftYes) || gvals[0] || "";
+        if (!giftYes) giftIdx = -1;                 // no wrapped value — fall back to the legacy fee line
+        else if (giftNo) selected[giftIdx] = giftNo; // start unwrapped (base price)
+      }
+    }
+    // Resolver picks the variant matching the customer's colour/size with the
+    // hidden Print-sides and Gift-wrapping options forced by their choices.
+    _sidesResolve = (sidesIdx < 0 && giftIdx < 0) ? null : function (hasBack, giftOn) {
       const want = selected.slice();
-      want[sidesIdx] = hasBack ? sidesBoth : (sidesFront || want[sidesIdx]);
+      if (sidesIdx >= 0) want[sidesIdx] = hasBack ? sidesBoth : (sidesFront || want[sidesIdx]);
+      if (giftIdx >= 0) want[giftIdx] = giftOn ? giftYes : (giftNo || want[giftIdx]);
       return variants.find((vv) => (vv.options || []).join("~~") === want.join("~~")) || null;
     };
 
@@ -1467,7 +1485,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     function refreshAvail() {
       modelGroup.querySelectorAll(".pill, .swatch").forEach((b) => {
         const oi = parseInt(b.dataset.oi, 10);
-        if (oi === sidesIdx) return;
+        if (oi === sidesIdx || oi === giftIdx) return;
         const oos = !madeToOrder && !valueInStock(oi, b.dataset.val);
         b.classList.toggle("soldout", oos);
         b.title = oos ? b.dataset.val + " — Out of stock" : b.dataset.val;
@@ -1523,7 +1541,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
 
     modelGroup.innerHTML = options.map((o, oi) => {
-      if (oi === sidesIdx) return "";   // auto-managed by the customizer — hidden from the picker
+      if (oi === sidesIdx || oi === giftIdx) return "";   // auto-managed by the customizer — hidden from the picker
       const label = '<div class="opt-label"' + (oi ? ' style="margin-top:16px"' : '') + '>' + escapeHtml(o.name) +
         ' <span class="opt-val" data-oi="' + oi + '">' + escapeHtml(selected[oi] || "") + '</span></div>';
       if (isColorOption(o, oi)) {
@@ -2173,7 +2191,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   function giftHtml() {
     const g = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
     if (!g.enabled) return "";
-    const wrapId = String(g.wrapVariantId || "").trim();
+    // Wrapping is offered when either a variant option is mapped (one line item)
+    // or the legacy separate-fee variant id is set.
+    const wrapId = (String(g.wrapOption || "").trim() || String(g.wrapVariantId || "").trim());
     const wrapMoney = g.wrapMoney || "";
     const toggleLabel = g.toggleLabel || "This is a gift";
     const wrapLabel = g.wrapLabel || "Add gift wrapping";
@@ -2465,10 +2485,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       ).filter((s2) => s2.kind === "img" || (s2.kind === "text" && s2.text));
       const _state = { v: (window.DYN_SHOPIFY || {}).variantId || null, front: ser(sideLayers.front), back: ser(sideLayers.back) };
       if (_state.front.length || _state.back.length) props["_design_state"] = JSON.stringify(_state);
-      // Single-line-item pricing: pick the front+back variant (higher price) so
-      // the back charge rides on the same line. Only if the merchant mapped a
-      // "Print sides" option; otherwise fall back to the separate fee line.
-      const sidesVariant = (typeof _sidesResolve === "function" && _sidesResolve) ? _sidesResolve(hasBackDesign) : null;
+      // Single-line-item pricing: pick the variant (higher price) that matches the
+      // customer's choices with Print-sides (back design) and Gift-wrapping (toggle)
+      // forced — so both charges ride on the SAME line item.
+      const gift = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
+      const giftOnEl = $("#giftIsGift");
+      const giftOn = !!(gift.enabled && giftOnEl && giftOnEl.checked);
+      const sidesVariant = (typeof _sidesResolve === "function" && _sidesResolve) ? _sidesResolve(hasBackDesign, giftOn) : null;
       const extraItems = [];
       if (!sidesVariant && hasBackDesign && S.backFeeVariantId) {
         const grp = "g" + Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36);
@@ -2476,19 +2499,21 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         const qty = Math.max(1, (store.get().quantity) || 1);
         extraItems.push({ id: S.backFeeVariantId, quantity: qty, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "custom item", "_grp": grp } });
       }
-      // Gift options: flag the item as a gift, attach the note, and add gift
-      // wrapping as its own line item (same reliable pattern as the back fee).
-      const gift = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
-      const giftOnEl = $("#giftIsGift");
-      if (gift.enabled && giftOnEl && giftOnEl.checked) {
+      // Gift options: flag the item as a gift and attach the note. The wrapping
+      // charge now rides on the resolved variant above (one line item). Only if
+      // the merchant hasn't mapped a "Gift wrapping" option do we fall back to the
+      // legacy separate wrapping line (wrapVariantId).
+      if (giftOn) {
         props["Gift"] = "Yes";
         const noteEl = $("#giftNote");
         if (noteEl && noteEl.value.trim()) props["Gift note"] = noteEl.value.trim();
-        // The toggle being on IS the wrapping choice — add the wrapping line item.
-        const wrapId = String(gift.wrapVariantId || "").match(/\d{4,}/);
-        if (wrapId) {
-          const gq = Math.max(1, (store.get().quantity) || 1);
-          extraItems.push({ id: wrapId[0], quantity: gq, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "item", "Gift wrapping": "Yes" } });
+        const usedGiftVariant = sidesVariant && String(gift.wrapOption || "").trim() !== "";
+        if (!usedGiftVariant) {
+          const wrapId = String(gift.wrapVariantId || "").match(/\d{4,}/);
+          if (wrapId) {
+            const gq = Math.max(1, (store.get().quantity) || 1);
+            extraItems.push({ id: wrapId[0], quantity: gq, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "item", "Gift wrapping": "Yes" } });
+          }
         }
       }
       root.Dynamic.lastOrder = { properties: props };
