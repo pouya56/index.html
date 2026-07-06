@@ -206,7 +206,7 @@
   <div class="dc-wrap">
     <div class="dc-head">
       {%- if section.settings.head_video != blank -%}
-        <video class="dc-head-video" autoplay muted loop playsinline preload="metadata"
+        <video class="dc-head-video" autoplay muted playsinline preload="metadata"
           {% if section.settings.head_video.preview_image %}poster="{{ section.settings.head_video.preview_image | image_url: width: 800 }}"{% endif %}>
           {%- for source in section.settings.head_video.sources -%}
             {%- if source.format == 'mp4' -%}<source src="{{ source.url }}" type="{{ source.mime_type }}">{%- endif -%}
@@ -396,11 +396,10 @@
   var root = document.getElementById("dynCol");
   if (!root) return;
 
-  // Head video: force a reliable loop (some browsers/encodings ignore `loop`).
+  // Head video: play once and stop (no loop).
   var headVid = root.querySelector(".dc-head-video");
   if (headVid) {
-    headVid.loop = true; headVid.muted = true;
-    headVid.addEventListener("ended", function () { try { headVid.currentTime = 0; headVid.play(); } catch (e) {} });
+    headVid.loop = false; headVid.muted = true;
     var hp = headVid.play(); if (hp && hp.catch) hp.catch(function () {});
   }
 
