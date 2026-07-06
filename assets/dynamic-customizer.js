@@ -2192,6 +2192,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-toggle-input:checked+.dc-gift-track .dc-gift-knob{transform:translateX(20px)}' +
       '.dc-gift-label{font-size:15px;font-weight:500}' +
       '.dc-gift-panel{margin-top:14px;padding:16px 18px;background:var(--gp);border:1px solid var(--gl);border-radius:14px;display:grid;gap:14px}' +
+      '.dc-gift-panel[hidden]{display:none}' +
       '.dc-gift-row{display:flex;align-items:center;gap:11px;cursor:pointer;font-size:15px}' +
       '.dc-gift-check{width:19px;height:19px;accent-color:var(--gi);flex:none;cursor:pointer;margin:0}' +
       '.dc-gift-note-h{display:block;font-size:14px;font-weight:500;margin-bottom:8px}' +
