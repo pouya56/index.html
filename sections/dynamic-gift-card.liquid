@@ -42,6 +42,8 @@
     background:radial-gradient(circle,rgba(255,255,255,0.10),transparent 62%); pointer-events:none; }
   .dyn-gc .gc-card-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; }
   .dyn-gc .gc-brand { font-weight:600; letter-spacing:0.02em; font-size:16px; }
+  .dyn-gc .gc-logo { height:26px; width:auto; max-width:170px; object-fit:contain; display:block; }
+  .dyn-gc .gc-logo.is-inverted { filter:brightness(0) invert(1); }
   .dyn-gc .gc-chip { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.7); }
   .dyn-gc .gc-balance { position:relative; z-index:1; }
   .dyn-gc .gc-balance .gc-for { font-size:13px; color:rgba(255,255,255,0.82); margin-bottom:10px; }
@@ -116,7 +118,11 @@
 
       <div class="gc-card">
         <div class="gc-card-top">
-          <span class="gc-brand">{{ shop.name }}</span>
+          {%- if section.settings.logo != blank -%}
+            <img class="gc-logo{% if section.settings.logo_invert %} is-inverted{% endif %}" src="{{ section.settings.logo | image_url: width: 320 }}" alt="{{ shop.name | escape }}" height="26" loading="lazy">
+          {%- else -%}
+            <span class="gc-brand">{{ shop.name }}</span>
+          {%- endif -%}
           <span class="gc-chip">Gift Card</span>
         </div>
         <div class="gc-balance">
@@ -214,6 +220,8 @@
     { "type": "text", "id": "heading", "label": "Heading", "default": "You’ve got a gift" },
     { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
+    { "type": "image_picker", "id": "logo", "label": "Logo on the card", "info": "Shows on the dark gift-card visual. Upload a white/light version, or turn on 'Make logo white' below. Leave empty to show your store name as text." },
+    { "type": "checkbox", "id": "logo_invert", "label": "Make logo white", "default": false, "info": "Turns a dark/black logo white so it shows on the dark card." },
     { "type": "text", "id": "subheading", "label": "Subheading", "default": "Redeem it online at checkout — just enter the code or scan the QR." },
     { "type": "checkbox", "id": "show_message", "label": "Show gift message (if the buyer added one)", "default": true },
     { "type": "checkbox", "id": "show_qr", "label": "Show QR code", "default": true },
