@@ -1,0 +1,53 @@
+{% comment %}
+  ============================================================================
+  Header (minimal) - removes the top logo / top navigation.
+  ----------------------------------------------------------------------------
+  Your site logo, search, cart and wishlist all live in the "Dynamic Header"
+  glass bar (the floating bar). This built-in header therefore renders nothing,
+  so the duplicate DYNAEIMIC logo at the TOP of the page disappears while the
+  bottom bar stays exactly as-is.
+
+  INSTALL (important - paste into the RIGHT file):
+  1. Edit code > Sections. Find the header file that does NOT start with
+     "dynamic-" - it is almost certainly "header.liquid" (the one that draws the
+     top logo). Not sure which? In Customize, click the top logo in the preview;
+     the left panel highlights its section - open that section's file.
+  2. BACK UP FIRST: select all of that file, copy it into a note so you can
+     revert if needed.
+  3. Select all in that file, delete, paste THIS whole file, and Save.
+  The top logo/nav is gone. To bring the old header back, paste your backup.
+
+  Optional: type an announcement in the section settings to show a slim bar at
+  the very top; leave it empty to show nothing at all.
+  ============================================================================
+{% endcomment %}
+
+{%- if section.settings.announcement != blank -%}
+  <div class="dyn-slim-bar">
+    {%- if section.settings.announcement_link != blank -%}
+      <a href="{{ section.settings.announcement_link }}">{{ section.settings.announcement }}</a>
+    {%- else -%}
+      <span>{{ section.settings.announcement }}</span>
+    {%- endif -%}
+  </div>
+  <style>
+    .dyn-slim-bar { background: {{ section.settings.bar_bg | default: '#1d1d1f' }}; color: {{ section.settings.bar_text | default: '#ffffff' }};
+      text-align: center; font: 500 13px/1 -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      letter-spacing: 0.02em; padding: 10px 16px; }
+    .dyn-slim-bar a { color: inherit; text-decoration: none; }
+    .dyn-slim-bar a:hover { text-decoration: underline; }
+  </style>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    { "type": "header", "content": "Top bar (optional)" },
+    { "type": "text", "id": "announcement", "label": "Announcement text", "info": "Leave empty to show nothing at the top (removes the old logo/nav)." },
+    { "type": "url", "id": "announcement_link", "label": "Announcement link" },
+    { "type": "color", "id": "bar_bg", "label": "Bar background", "default": "#1d1d1f" },
+    { "type": "color", "id": "bar_text", "label": "Bar text", "default": "#ffffff" }
+  ]
+}
+{% endschema %}
