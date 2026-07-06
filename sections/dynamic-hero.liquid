@@ -33,7 +33,8 @@
   /* Landing mode: logo + search fixed in the vertical middle; results flow below.
      No shrink / move / float — everything stays put. */
   .dyn-hero.dh-landing { min-height: 100svh; position: relative; }
-  .dyn-hero.dh-landing .dh-wrap { padding-top: calc(46svh - 90px - 0.5in); }
+  .dyn-hero.dh-landing .dh-wrap { min-height: 100svh; display: flex; flex-direction: column; justify-content: center;
+    padding-top: 4vh; padding-bottom: 24vh; }
   /* Google-style corner links (home landing) — horizontal row per corner */
   .dyn-hero.dh-landing .dh-corner-group { position: absolute; z-index: 4; display: flex; flex-direction: row; align-items: center; gap: 20px; }
   .dyn-hero.dh-landing .dh-corner-tl { top: 20px; left: 26px; justify-content: flex-start; }
