@@ -426,6 +426,12 @@
       .then(function (data) {
         if (seq !== reqSeq) return;
         var products = (data && data.resources && data.resources.results && data.resources.results.products) || [];
+        products = products.filter(function (p) {
+          var t = (p && p.title ? p.title : "").toLowerCase();
+          if (t.indexOf("back print") >= 0) return false;
+          if (p && Array.isArray(p.tags) && p.tags.indexOf("hidden") >= 0) return false;
+          return true;
+        });
         render(products, terms);
       })
       .catch(function () { if (seq === reqSeq) state("Search is unavailable right now. Please try again."); });

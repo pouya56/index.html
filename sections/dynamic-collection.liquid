@@ -239,7 +239,9 @@
       <div class="dc-shelf-wrap" id="dcShelfWrap">
       <button type="button" class="dc-shelf-arrow dc-prev" id="dcGridPrev" aria-label="Scroll products left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div class="dc-grid" id="dcGrid">
+        {%- assign hide_tag = section.settings.hide_tag | default: 'hidden' -%}
         {%- for product in prods limit: section.settings.max_products -%}
+          {%- if product.tags contains hide_tag -%}{%- continue -%}{%- endif -%}
           {%- assign on_sale = false -%}
           {%- if product.compare_at_price > product.price -%}{%- assign on_sale = true -%}{%- endif -%}
 
@@ -477,6 +479,7 @@
       "info": "The shelf scrolls sideways with arrows to reveal the rest." },
     { "type": "range", "id": "max_products", "min": 8, "max": 50, "step": 2, "label": "Max products shown", "default": 48,
       "info": "Tabs filter this loaded set instantly. Raise it if a category looks short." },
+    { "type": "text", "id": "hide_tag", "label": "Hide products with this tag", "default": "hidden", "info": "Products with this tag (e.g. the internal back-print add-on) are hidden from the grid." },
     { "type": "select", "id": "image_ratio", "label": "Image shape", "default": "natural",
       "options": [ { "value": "natural", "label": "Natural (tall)" }, { "value": "portrait", "label": "Portrait" }, { "value": "square", "label": "Square" }, { "value": "landscape", "label": "Landscape" } ] },
 

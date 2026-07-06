@@ -87,7 +87,8 @@
 
 <section class="dyn-hs{% if section.settings.bg_image %} is-image{% endif %}" id="dynHeroSearch"
   data-search-url="{{ routes.search_url | default: '/search' }}"
-  data-limit="{{ section.settings.results_limit | default: 6 }}">
+  data-limit="{{ section.settings.results_limit | default: 6 }}"
+  data-hide-terms="{{ section.settings.hide_terms | default: 'back print' | escape }}">
   {%- if section.settings.bg_image -%}
     <img class="hs-bg" src="{{ section.settings.bg_image | image_url: width: 2200 }}" alt="" loading="lazy"
       width="{{ section.settings.bg_image.width }}" height="{{ section.settings.bg_image.height }}">
@@ -149,6 +150,13 @@
   var chips = document.getElementById("hsChips");
   var searchUrl = root.getAttribute("data-search-url") || "/search";
   var LIMIT = parseInt(root.getAttribute("data-limit"), 10) || 6;
+  var HIDE = (root.getAttribute("data-hide-terms") || "").toLowerCase().split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+  function isHidden(p) {
+    var t = (p && p.title ? p.title : "").toLowerCase();
+    for (var i = 0; i < HIDE.length; i++) { if (t.indexOf(HIDE[i]) >= 0) return true; }
+    if (p && Array.isArray(p.tags) && p.tags.indexOf("hidden") >= 0) return true;
+    return false;
+  }
   var debounceT = 0, seq = 0;
 
   function go(q) { if (!q) return; window.location.href = searchUrl + "?q=" + encodeURIComponent(q) + "&type=product&options%5Bprefix%5D=last"; }
@@ -184,6 +192,7 @@
       .then(function (d) {
         if (mine !== seq) return;
         var products = (d && d.resources && d.resources.results && d.resources.results.products) || [];
+        products = products.filter(function (p) { return !isHidden(p); });
         render(products, q);
       })
       .catch(function () { if (mine === seq) resultsEl.classList.remove("open"); });
@@ -228,6 +237,7 @@
     { "type": "text", "id": "placeholder", "label": "Search box placeholder", "default": "Describe a gift… “something for my dad”" },
     { "type": "text", "id": "button_label", "label": "Button label", "default": "Search" },
     { "type": "range", "id": "results_limit", "min": 3, "max": 10, "step": 1, "label": "Live previews shown", "default": 6 },
+    { "type": "text", "id": "hide_terms", "label": "Hide previews containing (comma-separated)", "default": "back print", "info": "Product names to hide from previews, e.g. the internal back-print add-on." },
     { "type": "range", "id": "height", "min": 50, "max": 100, "step": 2, "label": "Section height (vh)", "default": 86 },
     { "type": "image_picker", "id": "bg_image", "label": "Background image (optional)", "info": "Leave empty for a clean light hero. With an image, text turns white over a dark overlay." },
     { "type": "header", "content": "Prompt chips (quick starts)" },

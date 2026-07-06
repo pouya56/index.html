@@ -105,12 +105,19 @@
     </div>
 
     {%- if search.performed -%}
+      {%- assign hide_tag = section.settings.hide_tag | default: 'hidden' -%}
       {%- if search.results_count > 0 -%}
-        <p class="se-count"><b>{{ search.results_count }}</b> {% if search.results_count == 1 %}result{% else %}results{% endif %} for &ldquo;{{ search.terms }}&rdquo;</p>
-
         {%- paginate search.results by section.settings.per_page -%}
+          {%- comment -%} Count only visible (non-hidden) products on this page. {%- endcomment -%}
+          {%- assign vis = 0 -%}
+          {%- for item in search.results -%}
+            {%- unless item.object_type == 'product' and item.tags contains hide_tag -%}{%- assign vis = vis | plus: 1 -%}{%- endunless -%}
+          {%- endfor -%}
+          {%- if vis > 0 -%}
+          <p class="se-count"><b>{{ vis }}</b> {% if vis == 1 %}result{% else %}results{% endif %} for &ldquo;{{ search.terms }}&rdquo;</p>
           <div class="se-grid">
             {%- for item in search.results -%}
+              {%- if item.object_type == 'product' and item.tags contains hide_tag -%}{%- continue -%}{%- endif -%}
               {%- if item.object_type == 'product' -%}
                 {%- assign on_sale = false -%}
                 {%- if item.compare_at_price > item.price -%}{%- assign on_sale = true -%}{%- endif -%}
@@ -171,6 +178,13 @@
               {%- if paginate.next -%}<a href="{{ paginate.next.url }}" aria-label="Next">&rsaquo;</a>{%- endif -%}
             </nav>
           {%- endif -%}
+          {%- else -%}
+            <div class="se-empty">
+              <p>No results for &ldquo;{{ search.terms }}&rdquo;.</p>
+              <p class="se-empty-sub">{{ section.settings.empty_text | default: 'Check the spelling or try a different word.' }}</p>
+              <a href="{{ routes.all_products_collection_url }}">{{ section.settings.empty_link_label | default: 'Browse all products' }}</a>
+            </div>
+          {%- endif -%}
         {%- endpaginate -%}
       {%- else -%}
         <div class="se-empty">
@@ -195,6 +209,7 @@
     { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
     { "type": "text", "id": "placeholder", "label": "Search box placeholder", "default": "Search products…" },
+    { "type": "text", "id": "hide_tag", "label": "Hide products with this tag", "default": "hidden", "info": "Products carrying this tag (e.g. the internal back-print add-on) are never shown in results." },
     { "type": "select", "id": "search_types", "label": "Search in", "default": "product",
       "options": [ { "value": "product", "label": "Products only" }, { "value": "product,page,article", "label": "Products, pages & blog posts" } ] },
     { "type": "range", "id": "columns", "min": 2, "max": 5, "step": 1, "label": "Columns (desktop)", "default": 4 },
