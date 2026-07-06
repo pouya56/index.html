@@ -732,12 +732,14 @@
     wishOverlay.classList.add("open");
     wishEl.classList.add("open"); wishEl.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
+    document.documentElement.classList.add("dyn-drawer-open"); // hide clashing fixed bars (e.g. suggestion page)
   }
   function closeWish() {
     if (!wishEl) return;
     wishOverlay.classList.remove("open");
     wishEl.classList.remove("open"); wishEl.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
+    document.documentElement.classList.remove("dyn-drawer-open");
   }
   function initWishlist() {
     wishEl = document.getElementById("hdWish");
