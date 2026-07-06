@@ -15,6 +15,10 @@
   ============================================================================
 {% endcomment %}
 
+{%- comment -%} Optionally hide the whole header on the home page. {%- endcomment -%}
+{%- assign hide_header = false -%}
+{%- if section.settings.hide_on_home and request.page_type == 'index' -%}{%- assign hide_header = true -%}{%- endif -%}
+{%- unless hide_header -%}
 <script type="application/json" id="dyn-header-config">
 {
   "rootUrl": {{ routes.root_url | default: '/' | json }},
@@ -872,12 +876,15 @@
 })(window);
 </script>
 {% endraw %}
+{%- endunless -%}
 
 {% schema %}
 {
   "name": "Dynamic Header",
   "tag": "section",
   "settings": [
+    { "type": "header", "content": "Visibility" },
+    { "type": "checkbox", "id": "hide_on_home", "label": "Hide on the home page", "default": false, "info": "The header disappears on the home page (where the hero already shows your logo + search) but stays on every other page." },
     { "type": "header", "content": "Logo" },
     { "type": "image_picker", "id": "logo_image", "label": "Logo image (leave blank to show the wordmark below)" },
     { "type": "text", "id": "brand_text", "label": "Wordmark (shown when no logo image)", "default": "DYNAEIMIC" },
