@@ -117,6 +117,16 @@
   .dyn-hd .hd-line-remove { background: none; border: none; color: var(--ink-faint); font-size: 12px; cursor: pointer;
     text-decoration: underline; padding: 0; }
   .dyn-hd .hd-line-remove:hover { color: var(--ink); }
+  .dyn-hd .hd-note { margin-top: 9px; }
+  .dyn-hd .hd-note-input { width: 100%; resize: vertical; min-height: 40px; padding: 8px 10px; font-family: var(--font);
+    font-size: 13px; line-height: 1.4; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 9px;
+    transition: border-color .16s, box-shadow .16s; }
+  .dyn-hd .hd-note-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+  .dyn-hd .hd-note-foot { display: flex; align-items: center; gap: 8px; margin-top: 5px; min-height: 18px; }
+  .dyn-hd .hd-note-save { background: var(--ink); color: #fff; border: none; cursor: pointer; padding: 5px 13px;
+    border-radius: 999px; font-family: var(--font); font-weight: 500; font-size: 12px; }
+  .dyn-hd .hd-note-save:hover { opacity: .9; }
+  .dyn-hd .hd-note-ok { color: #2b9348; font-size: 12px; font-weight: 500; }
   .dyn-hd .hd-cart-foot { border-top: 1px solid rgba(0,0,0,0.08); padding: 18px 22px calc(18px + env(safe-area-inset-bottom)); }
   .dyn-hd .hd-cart-subtotal { display: flex; justify-content: space-between; align-items: baseline; font-size: 16px;
     font-weight: 600; margin-bottom: 6px; }
@@ -494,6 +504,15 @@
       var grp = it.properties && it.properties._grp;
       var fee = (grp && !isFee(it)) ? feeByGrp[grp] : null;
       var feeNote = fee ? '<div class="hd-line-fee">+ ' + esc(fee.product_title) + " · " + cartMoney(fee.final_line_price) + "</div>" : "";
+      // Editable gift note for gift items (they carry a "Gift" or "Gift note" prop).
+      var isGiftItem = it.properties && (it.properties.hasOwnProperty("Gift note") || it.properties.Gift);
+      var noteVal = (it.properties && it.properties["Gift note"]) || "";
+      var noteHtml = isGiftItem
+        ? '<div class="hd-note" data-note-key="' + esc(it.key) + '">' +
+            '<textarea class="hd-note-input" maxlength="250" rows="2" placeholder="Add a gift note…">' + esc(noteVal) + '</textarea>' +
+            '<div class="hd-note-foot"><button type="button" class="hd-note-save" data-save-note hidden>Save note</button>' +
+            '<span class="hd-note-ok" hidden>Saved</span></div></div>'
+        : "";
       return '<div class="hd-line" data-key="' + esc(it.key) + '"' + (fee ? ' data-fee-key="' + esc(fee.key) + '"' : "") + ">" +
         (img ? '<img class="hd-line-img" src="' + img + '" alt="" width="66" height="66" loading="lazy">' : '<span class="hd-line-img"></span>') +
         '<div class="hd-line-main">' +
@@ -507,7 +526,7 @@
             "</span>" +
             editLink +
             '<button type="button" class="hd-line-remove" data-remove>Remove</button>' +
-          "</div>" +
+          "</div>" + noteHtml +
         "</div></div>";
     }).join("");
     if (cartSub) cartSub.textContent = cartMoney(cart.items_subtotal_price != null ? cart.items_subtotal_price : cart.total_price);
@@ -626,7 +645,37 @@
         if (next === cur) return;
         updates[key] = next; if (feeKey) updates[feeKey] = next;
         applyUpdates(updates);
+        return;
       }
+      // Save an edited gift note: merge into the line's properties and update it
+      // in place via /cart/change.js, then re-render the drawer (the key changes).
+      if (e.target.closest("[data-save-note]")) {
+        var box = e.target.closest(".hd-note"); var nkey = box.getAttribute("data-note-key");
+        var val = box.querySelector(".hd-note-input").value;
+        var save = box.querySelector(".hd-note-save"); if (save) { save.disabled = true; save.textContent = "Saving…"; }
+        fetch("/cart.js", { headers: { "Accept": "application/json" } })
+          .then(function (r) { return r.json(); })
+          .then(function (cart) {
+            var itm = (cart.items || []).filter(function (i) { return i.key === nkey; })[0]; if (!itm) throw 0;
+            var props = {}; for (var pk in (itm.properties || {})) props[pk] = itm.properties[pk];
+            props["Gift note"] = val;
+            return fetch("/cart/change.js", {
+              method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+              body: JSON.stringify({ id: nkey, quantity: itm.quantity, properties: props })
+            });
+          })
+          .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+          .then(function () { loadCart(); })
+          .catch(function () { if (save) { save.disabled = false; save.textContent = "Save note"; } loadCart(); });
+      }
+    });
+
+    // Reveal Save + note as the customer types in a gift note.
+    cartBody.addEventListener("input", function (e) {
+      var ta = e.target.closest(".hd-note-input"); if (!ta) return;
+      var box = ta.closest(".hd-note");
+      var save = box.querySelector(".hd-note-save"); if (save) save.hidden = false;
+      var ok = box.querySelector(".hd-note-ok"); if (ok) ok.hidden = true;
     });
 
     loadCart(); // set the badge count on page load
