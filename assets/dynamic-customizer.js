@@ -2185,10 +2185,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift *{box-sizing:border-box}' +
       '.dc-gift-toggle{display:inline-flex;align-items:center;gap:12px;cursor:pointer;user-select:none}' +
       '.dc-gift-toggle-input{position:absolute;opacity:0;width:0;height:0}' +
-      '.dc-gift-track{position:relative;width:46px;height:28px;border-radius:999px;background:rgba(0,0,0,.16);transition:background .2s;flex:none}' +
-      '.dc-gift-knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}' +
-      '.dc-gift-toggle-input:checked+.dc-gift-track{background:var(--gi)}' +
-      '.dc-gift-toggle-input:checked+.dc-gift-track .dc-gift-knob{transform:translateX(18px)}' +
+      '.dc-gift-track{position:relative;width:50px;height:30px;border-radius:999px;flex:none;background:rgba(120,120,128,.22);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:inset 0 1px 3px rgba(0,0,0,.18),inset 0 0 0 1px rgba(255,255,255,.22);transition:background .28s,box-shadow .28s}' +
+      '.dc-gift-track::before{content:"";position:absolute;left:2px;right:2px;top:1px;height:45%;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0));pointer-events:none}' +
+      '.dc-gift-knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#fff,#eef0f2);box-shadow:0 2px 5px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.9);transition:transform .28s cubic-bezier(.4,1.25,.5,1)}' +
+      '.dc-gift-toggle-input:checked+.dc-gift-track{background:linear-gradient(180deg,rgba(76,222,128,.92),rgba(40,199,84,.92));-webkit-backdrop-filter:blur(8px) saturate(1.5);backdrop-filter:blur(8px) saturate(1.5);box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -2px 4px rgba(0,90,35,.28),0 2px 9px rgba(52,199,89,.5),inset 0 0 0 1px rgba(255,255,255,.28)}' +
+      '.dc-gift-toggle-input:checked+.dc-gift-track .dc-gift-knob{transform:translateX(20px)}' +
       '.dc-gift-label{font-size:15px;font-weight:500}' +
       '.dc-gift-panel{margin-top:14px;padding:16px 18px;background:var(--gp);border:1px solid var(--gl);border-radius:14px;display:grid;gap:14px}' +
       '.dc-gift-row{display:flex;align-items:center;gap:11px;cursor:pointer;font-size:15px}' +
@@ -2208,7 +2209,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '<div class="dc-gift" id="giftBlock">' +
         '<label class="dc-gift-toggle"><input type="checkbox" id="giftIsGift" class="dc-gift-toggle-input">' +
           '<span class="dc-gift-track"><span class="dc-gift-knob"></span></span>' +
-          '<span class="dc-gift-label">🎁 ' + escapeHtml(toggleLabel) + '</span></label>' +
+          '<span class="dc-gift-label">' + escapeHtml(toggleLabel) + '</span></label>' +
         '<div class="dc-gift-panel" id="giftPanel" hidden>' +
           wrapRow +
           '<div class="dc-gift-note"><label class="dc-gift-note-h" for="giftNote">' + escapeHtml(noteLabel) + '</label>' +
