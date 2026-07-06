@@ -52,16 +52,17 @@
   .dyn-col .dc-tabs.is-images.is-centered { justify-content: center; }
   .dyn-col .dc-tabs.is-images::-webkit-scrollbar { display: none; }
   .dyn-col .dc-tabs.is-images .dc-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 9px; border: none;
-    background: none; padding: 4px; cursor: pointer; font-family: var(--font); opacity: 0.55; transition: opacity .18s ease, transform .18s ease; }
-  .dyn-col .dc-tabs.is-images .dc-tab:hover { opacity: 1; transform: translateY(-2px); }
-  .dyn-col .dc-tabs.is-images .dc-tab.is-active { opacity: 1; }
+    background: none; padding: 4px; cursor: pointer; font-family: var(--font); transition: transform .18s ease; }
+  .dyn-col .dc-tabs.is-images .dc-tab:hover { transform: translateY(-2px); }
   .dyn-col .dc-tabs.is-images .dc-tab-img { width: 74px; height: 74px; border-radius: 16px; overflow: hidden; background: transparent;
     display: grid; place-items: center; }
   .dyn-col .dc-tabs.is-images .dc-tab-img img { width: 100%; height: 100%; object-fit: cover; }
   .dyn-col .dc-tabs.is-images .dc-tab-init { font-size: 26px; font-weight: 600; color: var(--ink-soft); }
   .dyn-col .dc-tabs.is-images .dc-tab-all svg { width: 30px; height: 30px; fill: var(--ink-faint); }
-  .dyn-col .dc-tabs.is-images .dc-tab-label { font-size: 13px; font-weight: 500; color: var(--ink-soft); white-space: nowrap; transition: color .18s; }
-  .dyn-col .dc-tabs.is-images .dc-tab.is-active .dc-tab-label { color: var(--ink); font-weight: 600; }
+  .dyn-col .dc-tabs.is-images .dc-tab-label { font-size: 13px; font-weight: 500; color: var(--ink-soft); white-space: nowrap; opacity: 0.55;
+    transition: color .18s, opacity .18s; }
+  .dyn-col .dc-tabs.is-images .dc-tab:hover .dc-tab-label { opacity: 1; color: var(--ink); }
+  .dyn-col .dc-tabs.is-images .dc-tab.is-active .dc-tab-label { color: var(--ink); font-weight: 600; opacity: 1; }
 
   /* Scroll arrows (shown only when the tab row overflows) */
   .dyn-col .dc-tabs-arrow { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line);
