@@ -65,12 +65,15 @@
   .dyn-sug .ds-cart-foot { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 18px;
     border-top: 1px solid rgba(0,0,0,0.08); font-weight: 600; font-size: 15px; }
   .dyn-sug .ds-top-item { display: flex; align-items: center; gap: 20px; min-width: 0; }
-  .dyn-sug .ds-top-thumbs { display: flex; align-items: center; gap: 8px; flex: none; }
-  .dyn-sug .ds-top-thumb { width: 58px; height: 58px; object-fit: contain; border-radius: 12px; background: #fff; flex: none;
-    border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 1px 6px rgba(0,0,0,0.07); padding: 4px; }
-  .dyn-sug .ds-top-more { width: 58px; height: 58px; border-radius: 12px; background: #e6e6eb; color: var(--ink); flex: none;
-    display: grid; place-items: center; font-weight: 600; font-size: 16px; text-decoration: none; border: 1px solid rgba(0,0,0,0.06);
-    transition: background .16s; }
+  .dyn-sug .ds-top-thumbs { display: flex; align-items: center; gap: 10px; flex: none; }
+  /* Instagram-Story look: gradient ring, white gap, round avatar. */
+  .dyn-sug .ds-story { flex: none; padding: 3px; border-radius: 50%; display: inline-flex;
+    background: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5); }
+  .dyn-sug .ds-top-thumb { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; background: #fff;
+    border: 2px solid #fff; display: block; }
+  .dyn-sug .ds-top-more { width: 64px; height: 64px; border-radius: 50%; background: #e6e6eb; color: var(--ink); flex: none;
+    display: grid; place-items: center; font-weight: 600; font-size: 16px; text-decoration: none; border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #d7d7dd; transition: background .16s; }
   .dyn-sug .ds-top-more:hover { background: #d7d7dd; }
   .dyn-sug .ds-top-txt { min-width: 0; }
   .dyn-sug .ds-top-title { font-size: 22px; font-weight: 600; line-height: 1.2; }
@@ -134,8 +137,10 @@
 
   @media (max-width: 640px) {
     .dyn-sug .ds-top-inner { padding: 12px 18px; }
-    .dyn-sug .ds-top-thumb, .dyn-sug .ds-top-more { width: 44px; height: 44px; border-radius: 10px; font-size: 14px; }
-    .dyn-sug .ds-top-thumbs { gap: 6px; }
+    .dyn-sug .ds-top-thumb { width: 40px; height: 40px; }
+    .dyn-sug .ds-top-more { width: 48px; height: 48px; font-size: 14px; }
+    .dyn-sug .ds-story { padding: 2px; }
+    .dyn-sug .ds-top-thumbs { gap: 7px; }
     .dyn-sug .ds-cart-panel { left: 18px; }
     .dyn-sug .ds-top-item { gap: 12px; }
     .dyn-sug .ds-top-title { font-size: 15px; }
@@ -357,10 +362,11 @@
     // Thumbnails + overflow box (the box now just opens the dropdown).
     thumbs.innerHTML = "";
     items.slice(0, MAX_THUMBS).forEach(function (it) {
+      var wrap = document.createElement("span"); wrap.className = "ds-story";
       var im = document.createElement("img");
       im.className = "ds-top-thumb"; im.src = it.image || ""; im.alt = ""; im.title = it.product_title || it.title || "";
-      im.width = 58; im.height = 58; im.loading = "lazy";
-      thumbs.appendChild(im);
+      im.width = 54; im.height = 54; im.loading = "lazy";
+      wrap.appendChild(im); thumbs.appendChild(wrap);
     });
     var extra = items.length - MAX_THUMBS;
     if (extra > 0) { var more = document.createElement("span"); more.className = "ds-top-more"; more.textContent = "+" + extra; thumbs.appendChild(more); }
