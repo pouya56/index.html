@@ -380,6 +380,15 @@
 (function () {
   var root = document.getElementById("dynCol");
   if (!root) return;
+
+  // Head video: force a reliable loop (some browsers/encodings ignore `loop`).
+  var headVid = root.querySelector(".dc-head-video");
+  if (headVid) {
+    headVid.loop = true; headVid.muted = true;
+    headVid.addEventListener("ended", function () { try { headVid.currentTime = 0; headVid.play(); } catch (e) {} });
+    var hp = headVid.play(); if (hp && hp.catch) hp.catch(function () {});
+  }
+
   var grid = document.getElementById("dcGrid");
   var tabs = document.getElementById("dcTabs");
   var noRes = document.getElementById("dcNoResults");
