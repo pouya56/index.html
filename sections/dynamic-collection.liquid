@@ -1,0 +1,328 @@
+{% comment %}
+  ============================================================================
+  Dynamic Collection - product grid that matches the Dynamic design system
+  ----------------------------------------------------------------------------
+  INSTALL:
+  1. Theme code editor > Sections > Add a new section > name it
+     "dynamic-collection" and REPLACE its contents with this whole file.
+  2. Online Store > Themes > Customize > switch the template dropdown (top) to
+     "Collection" (or "Collections list"). Remove the default product-grid
+     section, then Add section > "Dynamic Collection". Save.
+  Renders the collection with Liquid (works with JS off): serif title, optional
+  description, sort control, responsive product cards with image hover-swap,
+  sale badges, colour swatches, and native pagination. No apps required.
+  Cards link to the product page so shoppers can personalise before adding.
+  ============================================================================
+{% endcomment %}
+
+<style>
+  .dyn-col {
+    --bg: #ffffff; --bg-panel: #f5f5f7;
+    --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
+    --line: #d2d2d7; --accent: #0071e3; --danger: #c0392b;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-head: {% if section.settings.heading_font == 'sans' %}var(--font){% else %}"Cormorant Garamond", Georgia, "Times New Roman", Times, serif{% endif %};
+    --cols: {{ section.settings.columns | default: 4 }};
+    --ratio: {% case section.settings.image_ratio %}{% when 'square' %}1{% when 'portrait' %}0.8{% when 'landscape' %}1.3{% else %}0.85{% endcase %};
+    font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased;
+    background: var(--bg-panel);
+  }
+  .dyn-col, .dyn-col *, .dyn-col *::before, .dyn-col *::after { box-sizing: border-box; }
+  .dyn-col .dc-wrap { max-width: 1280px; margin: 0 auto; padding: 44px 22px 90px; }
+
+  .dyn-col .dc-head { text-align: center; max-width: 720px; margin: 0 auto 8px; }
+  .dyn-col .dc-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(36px, 6vw, 60px);
+    line-height: 1.02; margin: 0; letter-spacing: -0.01em; }
+  .dyn-col .dc-head .dc-desc { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 16px auto 0; max-width: 620px; }
+
+  .dyn-col .dc-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    margin: 30px 0 22px; }
+  .dyn-col .dc-count { font-size: 14px; color: var(--ink-faint); }
+  .dyn-col .dc-sort { display: flex; align-items: center; gap: 9px; }
+  .dyn-col .dc-sort label { font-size: 13px; color: var(--ink-faint); }
+  .dyn-col .dc-sort .dc-select { position: relative; }
+  .dyn-col .dc-sort select { appearance: none; -webkit-appearance: none; font-family: var(--font); font-size: 14px; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 10px 38px 10px 16px; cursor: pointer;
+    transition: border-color .16s; }
+  .dyn-col .dc-sort select:hover { border-color: var(--ink-faint); }
+  .dyn-col .dc-sort select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+  .dyn-col .dc-sort .dc-select svg { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px;
+    pointer-events: none; fill: none; stroke: var(--ink-soft); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .dyn-col .dc-grid { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 22px; }
+
+  .dyn-col .dc-card { background: var(--bg); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04); transition: box-shadow .2s ease, transform .2s ease; }
+  .dyn-col .dc-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 16px 40px rgba(0,0,0,0.08); transform: translateY(-3px); }
+  .dyn-col .dc-media { position: relative; display: block; aspect-ratio: var(--ratio); background: var(--bg-panel); overflow: hidden; }
+  .dyn-col .dc-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .35s ease, transform .5s ease; }
+  .dyn-col .dc-media .dc-img-2 { opacity: 0; }
+  .dyn-col .dc-card:hover .dc-media .dc-img-2 { opacity: 1; }
+  .dyn-col .dc-card:hover .dc-media .dc-img-1.has-2 { opacity: 0; }
+  .dyn-col .dc-card:hover .dc-media img { transform: scale(1.04); }
+  .dyn-col .dc-badges { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
+  .dyn-col .dc-badge { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; padding: 5px 10px;
+    border-radius: 999px; background: var(--ink); color: #fff; }
+  .dyn-col .dc-badge.dc-badge-sale { background: var(--danger); }
+  .dyn-col .dc-badge.dc-badge-soldout { background: #fff; color: var(--ink-soft); box-shadow: inset 0 0 0 1px var(--line); }
+
+  .dyn-col .dc-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .dyn-col .dc-vendor { font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); }
+  .dyn-col .dc-title { font-size: 15.5px; font-weight: 500; line-height: 1.3; margin: 0; }
+  .dyn-col .dc-title a { color: inherit; text-decoration: none; }
+  .dyn-col .dc-title a:hover { color: var(--accent); }
+  .dyn-col .dc-price { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .dyn-col .dc-price .dc-now { font-size: 15px; font-weight: 500; }
+  .dyn-col .dc-price .dc-was { font-size: 13px; color: var(--ink-faint); text-decoration: line-through; }
+  .dyn-col .dc-price .dc-now.on-sale { color: var(--danger); }
+
+  .dyn-col .dc-swatches { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; min-height: 20px; }
+  .dyn-col .dc-swatch { width: 18px; height: 18px; border-radius: 50%; padding: 0; border: none; cursor: pointer;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15); transition: transform .14s; }
+  .dyn-col .dc-swatch:hover { transform: scale(1.15); }
+  .dyn-col .dc-swatch-more { font-size: 12px; color: var(--ink-faint); align-self: center; }
+
+  .dyn-col .dc-cta { margin-top: auto; padding-top: 14px; }
+  .dyn-col .dc-cta a { display: block; text-align: center; background: var(--bg-panel); color: var(--ink); border-radius: 999px;
+    padding: 11px 16px; font-size: 14px; font-weight: 600; text-decoration: none; transition: background .16s, color .16s; }
+  .dyn-col .dc-cta a:hover { background: var(--ink); color: #fff; }
+
+  .dyn-col .dc-empty { text-align: center; padding: 80px 20px; background: var(--bg); border-radius: 22px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 12px 34px rgba(0,0,0,0.05); }
+  .dyn-col .dc-empty p { font-size: 18px; color: var(--ink-soft); margin: 0 0 26px; }
+  .dyn-col .dc-empty a { display: inline-flex; background: var(--ink); color: #fff; padding: 14px 30px; border-radius: 999px;
+    font-weight: 600; text-decoration: none; }
+
+  .dyn-col .dc-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 48px; }
+  .dyn-col .dc-pagination a, .dyn-col .dc-pagination span { min-width: 42px; height: 42px; display: inline-flex; align-items: center;
+    justify-content: center; padding: 0 12px; border-radius: 999px; font-size: 14px; text-decoration: none; color: var(--ink); transition: background .16s; }
+  .dyn-col .dc-pagination a:hover { background: rgba(0,0,0,0.06); }
+  .dyn-col .dc-pagination .dc-pg-current { background: var(--ink); color: #fff; }
+  .dyn-col .dc-pagination .dc-pg-gap { color: var(--ink-faint); min-width: auto; }
+
+  @media (max-width: 1100px) { .dyn-col .dc-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+  @media (max-width: 800px)  { .dyn-col .dc-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; } }
+  @media (max-width: 460px)  { .dyn-col .dc-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+    .dyn-col .dc-body { padding: 12px 12px 14px; } .dyn-col .dc-cta a { padding: 10px 12px; } }
+</style>
+
+{%- assign coll = section.settings.collection | default: collection -%}
+{%- if coll == blank and collection != blank -%}{%- assign coll = collection -%}{%- endif -%}
+
+<section class="dyn-col" id="dynCol"
+  data-currency="{{ shop.currency }}"
+  data-money-format="{{ shop.money_format | escape }}">
+  <div class="dc-wrap">
+    <div class="dc-head">
+      <h1>{{ section.settings.heading | default: coll.title | default: 'All products' }}</h1>
+      {%- if section.settings.show_description and coll.description != blank -%}
+        <div class="dc-desc">{{ coll.description | strip_html | truncatewords: 40 }}</div>
+      {%- endif -%}
+    </div>
+
+    {%- paginate coll.products by section.settings.per_page -%}
+      {%- if coll.products.size == 0 -%}
+        <div class="dc-empty">
+          <p>{{ section.settings.empty_text | default: 'Nothing here yet.' }}</p>
+          <a href="{{ routes.all_products_collection_url }}">{{ section.settings.empty_link_label | default: 'Browse all products' }}</a>
+        </div>
+      {%- else -%}
+        <div class="dc-toolbar">
+          <span class="dc-count">{{ coll.products_count }} {% if coll.products_count == 1 %}product{% else %}products{% endif %}</span>
+          {%- if section.settings.show_sort -%}
+            {%- assign default_sort = coll.sort_by | default: coll.default_sort_by -%}
+            <form method="get" class="dc-sort" id="dcSortForm">
+              <label for="dcSort">Sort by</label>
+              <span class="dc-select">
+                <select name="sort_by" id="dcSort">
+                  {%- for opt in coll.sort_options -%}
+                    <option value="{{ opt.value }}"{% if opt.value == default_sort %} selected{% endif %}>{{ opt.name }}</option>
+                  {%- endfor -%}
+                </select>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </form>
+          {%- endif -%}
+        </div>
+
+        <div class="dc-grid" id="dcGrid">
+          {%- for product in coll.products -%}
+            {%- assign on_sale = false -%}
+            {%- if product.compare_at_price > product.price -%}{%- assign on_sale = true -%}{%- endif -%}
+
+            {%- comment -%} Second image for hover swap. {%- endcomment -%}
+            {%- assign img2 = blank -%}
+            {%- if product.images.size > 1 -%}{%- assign img2 = product.images[1] -%}{%- endif -%}
+
+            <div class="dc-card">
+              <a class="dc-media" href="{{ product.url }}">
+                <div class="dc-badges">
+                  {%- if on_sale -%}
+                    {%- assign pct = product.compare_at_price | minus: product.price | times: 100.0 | divided_by: product.compare_at_price | round -%}
+                    <span class="dc-badge dc-badge-sale">Save {{ pct }}%</span>
+                  {%- endif -%}
+                  {%- unless product.available -%}<span class="dc-badge dc-badge-soldout">Sold out</span>{%- endunless -%}
+                </div>
+                {%- if product.featured_image -%}
+                  <img class="dc-img-1{% if img2 != blank %} has-2{% endif %}" src="{{ product.featured_image | image_url: width: 600 }}"
+                    alt="{{ product.featured_image.alt | default: product.title | escape }}" width="600" height="600" loading="lazy">
+                  {%- if img2 != blank -%}
+                    <img class="dc-img-2" src="{{ img2 | image_url: width: 600 }}" alt="" width="600" height="600" loading="lazy" aria-hidden="true">
+                  {%- endif -%}
+                {%- else -%}
+                  <img class="dc-img-1" src="{{ 'product-1' | placeholder_svg_tag }}" alt="">
+                {%- endif -%}
+              </a>
+
+              <div class="dc-body">
+                {%- if section.settings.show_vendor and product.vendor != blank -%}
+                  <div class="dc-vendor">{{ product.vendor }}</div>
+                {%- endif -%}
+                <h3 class="dc-title"><a href="{{ product.url }}">{{ product.title }}</a></h3>
+                <div class="dc-price">
+                  <span class="dc-now{% if on_sale %} on-sale{% endif %}">{{ product.price | money }}</span>
+                  {%- if on_sale -%}<span class="dc-was">{{ product.compare_at_price | money }}</span>{%- endif -%}
+                </div>
+
+                {%- if section.settings.show_swatches -%}
+                  {%- assign color_opt = blank -%}
+                  {%- for o in product.options_with_values -%}
+                    {%- assign on = o.name | downcase -%}
+                    {%- if on contains 'color' or on contains 'colour' -%}{%- assign color_opt = o -%}{%- endif -%}
+                  {%- endfor -%}
+                  {%- if color_opt != blank -%}
+                    <div class="dc-swatches" data-opt-pos="{{ color_opt.position }}">
+                      {%- assign shown = 0 -%}
+                      {%- for val in color_opt.values -%}
+                        {%- if shown < 5 -%}
+                          {%- comment -%} Find a variant image for this colour value (for hover swap). {%- endcomment -%}
+                          {%- assign vimg = '' -%}
+                          {%- for v in product.variants -%}
+                            {%- assign optval = v.options[color_opt.position | minus: 1] -%}
+                            {%- if optval == val and v.image -%}{%- assign vimg = v.image | image_url: width: 600 -%}{%- break -%}{%- endif -%}
+                          {%- endfor -%}
+                          <button type="button" class="dc-swatch" data-color="{{ val | escape }}" data-img="{{ vimg }}"
+                            title="{{ val | escape }}" aria-label="{{ val | escape }}"></button>
+                          {%- assign shown = shown | plus: 1 -%}
+                        {%- endif -%}
+                      {%- endfor -%}
+                      {%- assign extra = color_opt.values.size | minus: 5 -%}
+                      {%- if extra > 0 -%}<span class="dc-swatch-more">+{{ extra }}</span>{%- endif -%}
+                    </div>
+                  {%- endif -%}
+                {%- endif -%}
+
+                <div class="dc-cta">
+                  <a href="{{ product.url }}">{{ section.settings.button_label | default: 'View' }}</a>
+                </div>
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+
+        {%- if paginate.pages > 1 -%}
+          <nav class="dc-pagination" role="navigation" aria-label="Pagination">
+            {%- if paginate.previous -%}<a href="{{ paginate.previous.url }}" aria-label="Previous">&lsaquo;</a>{%- endif -%}
+            {%- for part in paginate.parts -%}
+              {%- if part.is_link -%}
+                <a href="{{ part.url }}">{{ part.title }}</a>
+              {%- elsif part.title == current_page -%}
+                <span class="dc-pg-current">{{ part.title }}</span>
+              {%- else -%}
+                {%- if part.title == '&hellip;' -%}<span class="dc-pg-gap">&hellip;</span>{%- else -%}<span class="dc-pg-current">{{ part.title }}</span>{%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if paginate.next -%}<a href="{{ paginate.next.url }}" aria-label="Next">&rsaquo;</a>{%- endif -%}
+          </nav>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endpaginate -%}
+  </div>
+</section>
+
+<script>
+(function () {
+  var root = document.getElementById("dynCol");
+  if (!root) return;
+
+  // Sort control: submit on change but preserve any existing query params.
+  var sortSel = document.getElementById("dcSort");
+  if (sortSel) sortSel.addEventListener("change", function () {
+    var url = new URL(window.location.href);
+    url.searchParams.set("sort_by", sortSel.value);
+    url.searchParams.delete("page");
+    window.location.href = url.toString();
+  });
+
+  // Colour swatches: paint the dots from a small name->colour map and, on hover,
+  // swap the card's image to that colour's variant image.
+  var MAP = {
+    black:"#1d1d1f", white:"#f5f5f7", grey:"#8e8e93", gray:"#8e8e93", silver:"#c7c7cc",
+    red:"#d0021b", crimson:"#b00020", maroon:"#7b1e1e", orange:"#f5820d", amber:"#ffb300",
+    yellow:"#f7c948", gold:"#c9a227", green:"#2b9348", olive:"#7a7a2e", teal:"#008080",
+    blue:"#0071e3", navy:"#1b2a4a", "sky blue":"#4aa8e0", "light blue":"#8ec6ef",
+    purple:"#7b2ff7", violet:"#8f00ff", pink:"#ff5c8a", "hot pink":"#ff2d78", rose:"#e75480",
+    brown:"#7a4b2b", tan:"#d2b48c", beige:"#e8dcc4", cream:"#f4efe1", ivory:"#fffff0",
+    khaki:"#c3b091", charcoal:"#36454f", "off white":"#efefe9", natural:"#e8e0d0",
+    burgundy:"#800020", mustard:"#d4a017", mint:"#a8e6cf", lavender:"#b57edc", coral:"#ff7f50",
+    turquoise:"#40e0d0", indigo:"#4b0082", magenta:"#d0208a"
+  };
+  function colorFor(name) {
+    var n = (name || "").trim().toLowerCase();
+    if (MAP[n]) return MAP[n];
+    var words = n.split(/[\s/]+/);
+    for (var i = words.length - 1; i >= 0; i--) { if (MAP[words[i]]) return MAP[words[i]]; }
+    // CSS may understand it directly (e.g. "tomato"); test it.
+    var t = new Option().style; t.color = ""; t.color = n; if (t.color !== "") return n;
+    return "#c7c7cc";
+  }
+  root.querySelectorAll(".dc-card").forEach(function (card) {
+    var img1 = card.querySelector(".dc-media .dc-img-1");
+    var baseSrc = img1 ? img1.getAttribute("src") : "";
+    card.querySelectorAll(".dc-swatch").forEach(function (sw) {
+      sw.style.background = colorFor(sw.getAttribute("data-color"));
+      var vimg = sw.getAttribute("data-img");
+      if (vimg && img1) {
+        sw.addEventListener("mouseenter", function () { img1.src = vimg; });
+      }
+    });
+    if (img1) card.addEventListener("mouseleave", function () { if (baseSrc) img1.src = baseSrc; });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Collection",
+  "tag": "section",
+  "class": "dynamic-collection-section",
+  "settings": [
+    { "type": "header", "content": "Content" },
+    { "type": "collection", "id": "collection", "label": "Collection", "info": "Leave empty on a Collection template to use the current collection automatically." },
+    { "type": "text", "id": "heading", "label": "Heading override", "info": "Leave empty to use the collection title." },
+    { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
+      "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
+    { "type": "checkbox", "id": "show_description", "label": "Show collection description", "default": true },
+
+    { "type": "header", "content": "Grid" },
+    { "type": "range", "id": "columns", "min": 2, "max": 5, "step": 1, "label": "Columns (desktop)", "default": 4 },
+    { "type": "range", "id": "per_page", "min": 8, "max": 48, "step": 4, "label": "Products per page", "default": 24 },
+    { "type": "select", "id": "image_ratio", "label": "Image shape", "default": "natural",
+      "options": [ { "value": "natural", "label": "Natural (tall)" }, { "value": "portrait", "label": "Portrait" }, { "value": "square", "label": "Square" }, { "value": "landscape", "label": "Landscape" } ] },
+
+    { "type": "header", "content": "Card" },
+    { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": false },
+    { "type": "checkbox", "id": "show_swatches", "label": "Show colour swatches", "default": true },
+    { "type": "text", "id": "button_label", "label": "Card button label", "default": "View" },
+
+    { "type": "header", "content": "Toolbar" },
+    { "type": "checkbox", "id": "show_sort", "label": "Show sort dropdown", "default": true },
+
+    { "type": "header", "content": "Empty state" },
+    { "type": "text", "id": "empty_text", "label": "Empty message", "default": "Nothing here yet." },
+    { "type": "text", "id": "empty_link_label", "label": "Empty button label", "default": "Browse all products" }
+  ],
+  "presets": [ { "name": "Dynamic Collection" } ],
+  "enabled_on": { "templates": ["collection", "list-collections", "index"] }
+}
+{% endschema %}
