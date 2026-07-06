@@ -249,6 +249,7 @@
         </div>
       {%- endif -%}
       {%- comment -%} Build the category tabs from product type or tag. {%- endcomment -%}
+      {%- if section.settings.show_grid -%}
       {%- if cat_source == 'tag' -%}
         {%- assign cats = coll.all_tags -%}
       {%- else -%}
@@ -394,6 +395,7 @@
       <button type="button" class="dh-shelf-arrow dh-next" id="dhGridNext" aria-label="Scroll products right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
       <div class="dh-noresults" id="dhNoResults">Nothing in this category yet.</div>
+      {%- endif -%}
     {%- endif -%}
   </div>
 </section>
@@ -420,8 +422,7 @@
   var tabsWrap = document.getElementById("dhTabsWrap");
   var shelfWrap = document.getElementById("dhShelfWrap");
   var hideUntilSearch = root.getAttribute("data-hide-until-search") === "true";
-  if (!grid) return;
-  var cards = Array.prototype.slice.call(grid.querySelectorAll(".dh-card"));
+  var cards = grid ? Array.prototype.slice.call(grid.querySelectorAll(".dh-card")) : [];
 
   // How many cards are visible at once (for a per-row left->right sweep).
   function colCount() {
@@ -450,6 +451,7 @@
   function applyFilters() {
     // Landing mode: shrink + raise the logo/search once the shopper searches.
     if (hideUntilSearch) root.classList.toggle("dh-searching", query.length > 0);
+    if (!grid) return; // grid removed from the hero — nothing to filter here
     // Home-page mode: keep the tabs + grid hidden until the shopper searches.
     if (hideUntilSearch && query.length === 0) {
       if (tabsWrap) tabsWrap.style.display = "none";
@@ -570,6 +572,7 @@
   var gPrev = document.getElementById("dhGridPrev");
   var gNext = document.getElementById("dhGridNext");
   function updateGridArrows() {
+    if (!grid) return;
     var overflow = grid.scrollWidth - grid.clientWidth > 2;
     var atStart = grid.scrollLeft <= 2;
     var atEnd = grid.scrollLeft >= (grid.scrollWidth - grid.clientWidth - 2);
@@ -579,8 +582,10 @@
   var gStep = function () { return Math.max(220, grid.clientWidth * 0.8); };
   if (gPrev) gPrev.addEventListener("click", function () { grid.scrollBy({ left: -gStep(), behavior: "smooth" }); });
   if (gNext) gNext.addEventListener("click", function () { grid.scrollBy({ left: gStep(), behavior: "smooth" }); });
-  grid.addEventListener("scroll", updateGridArrows, { passive: true });
-  window.addEventListener("resize", updateGridArrows);
+  if (grid) {
+    grid.addEventListener("scroll", updateGridArrows, { passive: true });
+    window.addEventListener("resize", updateGridArrows);
+  }
 
   // If this page was opened with a ?q= query (e.g. from the home search),
   // prefill the box and filter to those results — unless this page itself
@@ -665,7 +670,8 @@
     { "type": "url", "id": "corner_br_url", "label": "Bottom-right link" },
 
     { "type": "header", "content": "Category tabs" },
-    { "type": "checkbox", "id": "show_tabs", "label": "Show category tabs", "default": true, "info": "Turn off to hide the category row (e.g. on the home page)." },
+    { "type": "checkbox", "id": "show_grid", "label": "Show product grid & category tabs", "default": false, "info": "Off = pure search hero (just the logo/video + search bar). Turn on to show the category tabs and product cards under the search." },
+    { "type": "checkbox", "id": "show_tabs", "label": "Show category tabs", "default": true, "info": "Only applies when the product grid above is shown." },
     { "type": "select", "id": "category_source", "label": "Build tabs from", "default": "type",
       "options": [ { "value": "type", "label": "Product type" }, { "value": "tag", "label": "Product tag" } ],
       "info": "Used for AUTO text tabs and for matching products to your image tabs. Set each product's Product type (or tag) in its admin page. Add image tabs below for the Apple-style picture tabs." },
