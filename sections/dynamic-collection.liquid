@@ -45,20 +45,30 @@
   .dyn-col .dc-tabs.is-pills .dc-tab:hover { color: var(--ink); background: rgba(0,0,0,0.045); }
   .dyn-col .dc-tabs.is-pills .dc-tab.is-active { background: var(--ink); color: #fff; }
 
-  /* Image tabs (Apple-style: picture + label) */
-  .dyn-col .dc-tabs.is-images { gap: 18px; align-items: flex-start; }
-  .dyn-col .dc-tabs.is-images .dc-tab { display: flex; flex-direction: column; align-items: center; gap: 9px; border: none; background: none;
-    padding: 6px 4px; cursor: pointer; font-family: var(--font); }
-  .dyn-col .dc-tabs.is-images .dc-tab-img { width: 68px; height: 68px; border-radius: 18px; overflow: hidden; background: var(--bg);
-    box-shadow: inset 0 0 0 1px var(--line); display: grid; place-items: center; transition: box-shadow .18s ease, transform .18s ease; }
+  /* Image tabs (Apple-style: picture + label, no box - tiles blend into the page) */
+  .dyn-col .dc-tabs-wrap { position: relative; display: flex; align-items: center; gap: 6px; margin: 28px auto 32px; max-width: 1040px; }
+  .dyn-col .dc-tabs.is-images { flex: 1 1 auto; gap: 20px; align-items: flex-start; flex-wrap: nowrap; justify-content: flex-start;
+    overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; margin: 0; max-width: none; padding: 4px 2px; }
+  .dyn-col .dc-tabs.is-images.is-centered { justify-content: center; }
+  .dyn-col .dc-tabs.is-images::-webkit-scrollbar { display: none; }
+  .dyn-col .dc-tabs.is-images .dc-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 9px; border: none;
+    background: none; padding: 4px; cursor: pointer; font-family: var(--font); opacity: 0.55; transition: opacity .18s ease, transform .18s ease; }
+  .dyn-col .dc-tabs.is-images .dc-tab:hover { opacity: 1; transform: translateY(-2px); }
+  .dyn-col .dc-tabs.is-images .dc-tab.is-active { opacity: 1; }
+  .dyn-col .dc-tabs.is-images .dc-tab-img { width: 74px; height: 74px; border-radius: 16px; overflow: hidden; background: transparent;
+    display: grid; place-items: center; }
   .dyn-col .dc-tabs.is-images .dc-tab-img img { width: 100%; height: 100%; object-fit: cover; }
-  .dyn-col .dc-tabs.is-images .dc-tab-init { font-size: 24px; font-weight: 600; color: var(--ink-soft); }
-  .dyn-col .dc-tabs.is-images .dc-tab-all { background: var(--bg-panel); }
-  .dyn-col .dc-tabs.is-images .dc-tab-all svg { width: 26px; height: 26px; fill: var(--ink-soft); }
-  .dyn-col .dc-tabs.is-images .dc-tab:hover .dc-tab-img { transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--line), 0 8px 20px rgba(0,0,0,0.08); }
+  .dyn-col .dc-tabs.is-images .dc-tab-init { font-size: 26px; font-weight: 600; color: var(--ink-soft); }
+  .dyn-col .dc-tabs.is-images .dc-tab-all svg { width: 30px; height: 30px; fill: var(--ink-faint); }
   .dyn-col .dc-tabs.is-images .dc-tab-label { font-size: 13px; font-weight: 500; color: var(--ink-soft); white-space: nowrap; transition: color .18s; }
-  .dyn-col .dc-tabs.is-images .dc-tab.is-active .dc-tab-img { box-shadow: 0 0 0 2px var(--accent); }
   .dyn-col .dc-tabs.is-images .dc-tab.is-active .dc-tab-label { color: var(--ink); font-weight: 600; }
+
+  /* Scroll arrows (shown only when the tab row overflows) */
+  .dyn-col .dc-tabs-arrow { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line);
+    background: var(--bg); color: var(--ink); cursor: pointer; display: grid; place-items: center; transition: background .16s; }
+  .dyn-col .dc-tabs-arrow:hover { background: rgba(0,0,0,0.05); }
+  .dyn-col .dc-tabs-arrow svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-col .dc-tabs-arrow[hidden] { display: none; }
 
   .dyn-col .dc-grid { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 22px; }
 
@@ -161,6 +171,8 @@
 
       {%- if section.blocks.size > 0 -%}
         {%- comment -%} Image tabs: merchant-defined blocks with an uploaded picture per category. {%- endcomment -%}
+        <div class="dc-tabs-wrap" id="dcTabsWrap">
+        <button type="button" class="dc-tabs-arrow dc-prev" id="dcPrev" aria-label="Scroll categories left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
         <div class="dc-tabs is-images" id="dcTabs" role="tablist">
           <button type="button" class="dc-tab is-active" data-cat="__all" role="tab" aria-selected="true">
             <span class="dc-tab-img dc-tab-all">
@@ -185,6 +197,8 @@
               <span class="dc-tab-label">{{ block.settings.label | default: cv }}</span>
             </button>
           {%- endfor -%}
+        </div>
+        <button type="button" class="dc-tabs-arrow dc-next" id="dcNext" aria-label="Scroll categories right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
         </div>
       {%- elsif real_cats != blank -%}
         {%- comment -%} Auto text-pill tabs from product type / tag. {%- endcomment -%}
@@ -334,6 +348,26 @@
     try { btn.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch (x) {}
     filterTo(btn.getAttribute("data-cat"));
   });
+
+  // Scroll arrows: appear only when the image-tab row overflows; hide at ends.
+  var prev = document.getElementById("dcPrev");
+  var next = document.getElementById("dcNext");
+  if (tabs && tabs.classList.contains("is-images")) {
+    var updateArrows = function () {
+      var overflow = tabs.scrollWidth - tabs.clientWidth > 2;
+      tabs.classList.toggle("is-centered", !overflow);
+      var atStart = tabs.scrollLeft <= 2;
+      var atEnd = tabs.scrollLeft >= (tabs.scrollWidth - tabs.clientWidth - 2);
+      if (prev) prev.hidden = !overflow || atStart;
+      if (next) next.hidden = !overflow || atEnd;
+    };
+    var step = function () { return Math.max(180, tabs.clientWidth * 0.7); };
+    if (prev) prev.addEventListener("click", function () { tabs.scrollBy({ left: -step(), behavior: "smooth" }); });
+    if (next) next.addEventListener("click", function () { tabs.scrollBy({ left: step(), behavior: "smooth" }); });
+    tabs.addEventListener("scroll", updateArrows, { passive: true });
+    window.addEventListener("resize", updateArrows);
+    updateArrows();
+  }
 
   // Initial reveal on load.
   reveal(cards);
