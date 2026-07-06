@@ -260,15 +260,8 @@
 
       <div class="gb-side gb-left">{{ left_html }}</div>
 
-      <a class="gb-logo" href="{{ section.settings.logo_link | default: routes.root_url }}" aria-label="{{ shop.name | escape }} — Home">
-        {%- if section.settings.logo_image -%}
-          <img src="{{ section.settings.logo_image | image_url: width: 400 }}"
-            width="{{ section.settings.logo_image.width }}" height="{{ section.settings.logo_image.height }}"
-            alt="{{ shop.name | escape }}">
-        {%- else -%}
-          <span class="gb-word brand-word">{{ section.settings.brand_text | default: 'DYNAEIMIC' }}</span>
-        {%- endif -%}
-      </a>
+      {%- comment -%} Logo removed - empty center slot keeps the bar's left/right tabs in place. {%- endcomment -%}
+      <span class="gb-logo" aria-hidden="true"></span>
 
       <div class="gb-side gb-right">{{ right_html }}</div>
     </div>
