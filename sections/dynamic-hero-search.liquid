@@ -111,9 +111,25 @@
       <div class="hs-results" id="hsResults" role="listbox" aria-label="Product suggestions"></div>
     </div>
 
+    {%- comment -%} Auto chips from a collection's product tags, else the manual chips. {%- endcomment -%}
+    {%- assign auto_chips = false -%}
+    {%- if section.settings.auto_chips and section.settings.chips_collection != blank and section.settings.chips_collection.all_tags.size > 0 -%}{%- assign auto_chips = true -%}{%- endif -%}
     {%- assign has_chips = false -%}
     {%- if section.settings.chip_1 != blank or section.settings.chip_2 != blank or section.settings.chip_3 != blank or section.settings.chip_4 != blank -%}{%- assign has_chips = true -%}{%- endif -%}
-    {%- if has_chips -%}
+
+    {%- if auto_chips -%}
+      <div class="hs-chips" id="hsChips">
+        {%- assign shown = 0 -%}
+        {%- for t in section.settings.chips_collection.all_tags -%}
+          {%- unless t contains '-' or t contains '_' -%}
+            {%- if shown < section.settings.chips_count -%}
+              <button type="button" class="hs-chip">{{ t | capitalize }}</button>
+              {%- assign shown = shown | plus: 1 -%}
+            {%- endif -%}
+          {%- endunless -%}
+        {%- endfor -%}
+      </div>
+    {%- elsif has_chips -%}
       <div class="hs-chips" id="hsChips">
         {%- if section.settings.chip_1 != blank -%}<button type="button" class="hs-chip">{{ section.settings.chip_1 }}</button>{%- endif -%}
         {%- if section.settings.chip_2 != blank -%}<button type="button" class="hs-chip">{{ section.settings.chip_2 }}</button>{%- endif -%}
@@ -214,6 +230,9 @@
     { "type": "range", "id": "height", "min": 50, "max": 100, "step": 2, "label": "Section height (vh)", "default": 86 },
     { "type": "image_picker", "id": "bg_image", "label": "Background image (optional)", "info": "Leave empty for a clean light hero. With an image, text turns white over a dark overlay." },
     { "type": "header", "content": "Prompt chips (quick starts)" },
+    { "type": "checkbox", "id": "auto_chips", "label": "Auto-build chips from product tags", "default": false, "info": "When on, chips are generated from the collection's product tags below (tags with - or _, like made-to-order, are skipped). The manual chips below are used when this is off." },
+    { "type": "collection", "id": "chips_collection", "label": "Collection for auto chips" },
+    { "type": "range", "id": "chips_count", "min": 3, "max": 10, "step": 1, "label": "Number of auto chips", "default": 6 },
     { "type": "text", "id": "chip_1", "label": "Chip 1", "default": "A gift for dad" },
     { "type": "text", "id": "chip_2", "label": "Chip 2", "default": "Something minimalist" },
     { "type": "text", "id": "chip_3", "label": "Chip 3", "default": "Birthday under $30" },
