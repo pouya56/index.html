@@ -4,7 +4,8 @@
   an orphaned snippet. This guarded render is never executed (if false) but makes
   the reference visible to static analysis, clearing the OrphanedSnippet warning.
 {%- endcomment -%}
-{%- if false -%}{% render 'gift-options' %}{%- endif -%}
+{%- assign gift_ref = false -%}
+{%- if gift_ref -%}{% render 'gift-options' %}{%- endif -%}
 {% comment %}
   ============================================================================
   Dynamic Customizer — AirPods Pro 3 engraving experience
