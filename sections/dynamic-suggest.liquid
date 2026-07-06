@@ -131,9 +131,10 @@
   .dyn-sug .ds-prev { left: 24px; } .dyn-sug .ds-next { right: 24px; }
 
   .dyn-sug .ds-foot { text-align: center; padding: 24px 24px 80px; }
-  .dyn-sug .ds-foot .ds-review { display: inline-block; }
-  .dyn-sug .ds-skip { display: block; margin-top: 18px; color: var(--ink-soft); font-size: 15px; text-decoration: none; }
-  .dyn-sug .ds-skip:hover { color: var(--ink); }
+  .dyn-sug .ds-shop { display: inline-flex; align-items: center; justify-content: center; min-width: 220px;
+    background: transparent; color: var(--ink); padding: 15px 40px; border: 1px solid var(--line); border-radius: 999px;
+    font-family: var(--font); font-weight: 500; font-size: 16px; text-decoration: none; transition: background .16s, border-color .16s; }
+  .dyn-sug .ds-shop:hover { background: #ececf0; border-color: #c7c7cc; }
 
   @media (max-width: 640px) {
     .dyn-sug .ds-top-inner { padding: 12px 18px; }
@@ -189,8 +190,7 @@
   </div>
 
   <div class="ds-foot">
-    <a class="ds-review" href="{{ section.settings.checkout_url | default: '/checkout' }}">{{ section.settings.checkout_label | default: 'Check out' }}</a>
-    <a class="ds-skip" href="{{ routes.cart_url }}">{{ section.settings.review_label | default: 'Review Bag' }}</a>
+    <a class="ds-shop" href="{{ section.settings.shop_url | default: routes.all_products_collection_url }}">{{ section.settings.shop_label | default: 'Shop more' }}</a>
   </div>
 </section>
 
@@ -444,9 +444,10 @@
     { "type": "text", "id": "heading", "label": "Heading", "default": "Style. In a snap." },
     { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Add a MagSafe case, a wallet, or both. Mix and match to make your iPhone yours." },
     { "type": "text", "id": "bag_subtitle", "label": "Top-bar subtitle (under item name)", "default": "One-time payment" },
-    { "type": "text", "id": "checkout_label", "label": "Checkout button label", "default": "Check out" },
-    { "type": "url", "id": "checkout_url", "label": "Checkout button link", "info": "Leave empty to go to the standard checkout (/checkout)." },
-    { "type": "text", "id": "review_label", "label": "Back-to-bag link label", "default": "Review Bag" },
+    { "type": "text", "id": "checkout_label", "label": "Top-bar checkout button label", "default": "Check out" },
+    { "type": "url", "id": "checkout_url", "label": "Top-bar checkout link", "info": "Leave empty to go to the standard checkout (/checkout)." },
+    { "type": "text", "id": "shop_label", "label": "Bottom 'Shop more' button label", "default": "Shop more" },
+    { "type": "url", "id": "shop_url", "label": "'Shop more' link", "info": "Where the bottom button goes. Leave empty to link to all products." },
     { "type": "range", "id": "max_items", "label": "Max suggestions", "min": 4, "max": 20, "step": 1, "default": 12 }
   ],
   "presets": [ { "name": "Dynamic Suggest" } ],
