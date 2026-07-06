@@ -1,9 +1,10 @@
-{% # theme-check-disable OrphanedSnippet, UnusedAssign %}
+{% # theme-check-disable UnusedAssign %}
 {%- comment -%}
-  theme-check note: this snippet is added via a Custom Liquid block (rendered at
-  runtime), so it looks "orphaned" to static analysis; and the two config assigns
-  below are used lower in the file (they only look unused while the default id is
-  empty). Both are safe — the directive above silences those false positives.
+  theme-check note: the two config assigns below ARE used lower in the file; they
+  only look unused while the default wrap id is empty, so we silence UnusedAssign.
+  The "OrphanedSnippet" warning (this snippet is added via a runtime Custom Liquid
+  block, invisible to static analysis) can't be silenced inline — it's handled in
+  the theme's .theme-check.yml instead.
 {%- endcomment -%}
 {% comment %}
   ============================================================================

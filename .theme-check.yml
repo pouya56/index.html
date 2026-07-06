@@ -1,0 +1,9 @@
+# Theme-check configuration.
+# Keeps all the recommended checks on, with one targeted exception:
+# gift-options.liquid is added to product pages through a Custom Liquid block
+# (rendered at runtime), so static analysis can't see the reference and wrongly
+# reports it as an orphaned snippet. Ignore that one check for that one file.
+extends: theme-check:recommended
+OrphanedSnippet:
+  ignore:
+    - snippets/gift-options.liquid
