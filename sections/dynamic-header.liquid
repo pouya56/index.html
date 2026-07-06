@@ -52,6 +52,7 @@
   .dyn-hd .glass-bar { position: fixed; left: 0; right: 0; bottom: max(16px, env(safe-area-inset-bottom));
     z-index: 9980; display: flex; justify-content: center; padding: 0 16px; pointer-events: none; }
   .dyn-hd .glass-bar-inner {
+    position: relative;
     pointer-events: auto; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
     gap: 8px; padding: 8px 16px; border-radius: 999px;
     background: rgba(255, 255, 255, 0.42);
@@ -59,6 +60,32 @@
     border: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   }
+
+  /* Liquid-glass selection pill: a lens that slides + stretches between tabs. */
+  .dyn-hd .gb-pill {
+    position: absolute; left: 0; top: 0; width: 54px; height: 46px; border-radius: 999px;
+    pointer-events: none; z-index: 1; box-sizing: border-box;
+    background: linear-gradient(177deg, rgba(255,255,255,0.62), rgba(255,255,255,0.16));
+    -webkit-backdrop-filter: blur(3px) brightness(1.14) saturate(1.55) contrast(1.03);
+    backdrop-filter: blur(3px) brightness(1.14) saturate(1.55) contrast(1.03);
+    border: 1px solid rgba(255,255,255,0.72);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.95), inset 0 -7px 14px rgba(255,255,255,0.22),
+      inset 0 8px 14px rgba(255,255,255,0.14), 0 6px 18px rgba(0,0,0,0.14);
+    transform: translate(0,0); will-change: transform, width; overflow: hidden;
+  }
+  /* Top specular sheen */
+  .dyn-hd .gb-pill::before { content: ""; position: absolute; left: 8px; right: 8px; top: 2px; height: 42%;
+    border-radius: 999px; background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0)); opacity: .85; }
+  /* Refraction shimmer — turbulence displaces this moving light streak */
+  .dyn-hd .gb-pill-shine { position: absolute; inset: -30%; border-radius: inherit; mix-blend-mode: screen; opacity: .75;
+    background: linear-gradient(115deg, rgba(255,255,255,0) 34%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 66%);
+    filter: url(#gbLiquid); }
+  .dyn-hd .gb-pill.is-liquid { box-shadow: inset 0 1px 1px rgba(255,255,255,0.95), inset 0 -7px 14px rgba(255,255,255,0.22),
+      0 8px 26px rgba(0,0,0,0.2); }
+  /* Selected tab lifts above the frost so it reads through the lens */
+  .dyn-hd .gb-ico.is-active { color: #0a0a0d; }
+  .dyn-hd .gb-ico.is-active svg { stroke-width: 2.1; }
+  @media (prefers-reduced-motion: reduce) { .dyn-hd .gb-pill-shine { filter: none; animation: none; } }
   .dyn-hd .gb-side { display: flex; align-items: center; gap: 6px; min-width: 0; }
   .dyn-hd .gb-side.gb-right { justify-content: flex-end; }
   /* Logo in the middle of the bar */
@@ -201,10 +228,23 @@
 </style>
 
 <div class="dyn-hd">
+  <!-- Liquid-glass filter defs: turbulence displacement (light refraction) + gooey merge -->
+  <svg class="gb-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="gbLiquid" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.009 0.014" numOctaves="2" seed="7" result="noise">
+          <animate attributeName="baseFrequency" dur="14s" values="0.009 0.014;0.013 0.010;0.009 0.014" repeatCount="indefinite"></animate>
+        </feTurbulence>
+        <feGaussianBlur in="noise" stdDeviation="1.1" result="sn"></feGaussianBlur>
+        <feDisplacementMap in="SourceGraphic" in2="sn" scale="16" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+    </defs>
+  </svg>
   <!-- Centered site logo -->
   <!-- Frosted-glass bar with the LOGO in the middle and tabs on each side. Each icon = a Block. -->
   <nav class="glass-bar" aria-label="Main">
     <div class="glass-bar-inner">
+      <span class="gb-pill" aria-hidden="true"><span class="gb-pill-shine"></span></span>
       {%- assign left_html = '' -%}
       {%- assign right_html = '' -%}
       {%- for block in section.blocks -%}
@@ -277,6 +317,80 @@
       <div class="gb-side gb-right">{{ right_html }}</div>
     </div>
   </nav>
+
+  <script>
+  (function () {
+    function init() {
+      var bar = document.querySelector(".dyn-hd .glass-bar-inner");
+      if (!bar) return;
+      var pill = bar.querySelector(".gb-pill");
+      var tabs = Array.prototype.slice.call(bar.querySelectorAll(".gb-ico"));
+      if (!pill || !tabs.length) return;
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var cur = null, settleT = null, clearT = null;
+
+      function geo(tab) {
+        var r = tab.getBoundingClientRect(), b = bar.getBoundingClientRect();
+        return { l: r.left - b.left, t: r.top - b.top, w: r.width, h: r.height };
+      }
+      function paint(g) {
+        pill.style.width = g.w + "px"; pill.style.height = g.h + "px";
+        pill.style.transform = "translate(" + g.l + "px," + g.t + "px)";
+      }
+      function activate(tab) { tabs.forEach(function (t) { t.classList.toggle("is-active", t === tab); }); }
+      function jump(tab) {
+        var g = geo(tab); cur = g; pill.style.transition = "none"; paint(g);
+        pill.getBoundingClientRect(); activate(tab);
+      }
+      // Directional liquid morph: stretch to bridge old+new, then spring onto the target.
+      function slide(tab) {
+        if (!cur || reduce) { jump(tab); return; }
+        var g = geo(tab), from = cur;
+        var bl = Math.min(from.l, g.l), br = Math.max(from.l + from.w, g.l + g.w);
+        clearTimeout(settleT); clearTimeout(clearT);
+        pill.classList.add("is-liquid");
+        pill.style.transition = "transform .18s cubic-bezier(.4,0,.2,1), width .18s cubic-bezier(.4,0,.2,1), height .3s ease";
+        pill.style.width = (br - bl) + "px"; pill.style.height = g.h + "px";
+        pill.style.transform = "translate(" + bl + "px," + g.t + "px)";
+        activate(tab);
+        settleT = setTimeout(function () {
+          pill.style.transition = "transform .46s cubic-bezier(.34,1.5,.5,1), width .46s cubic-bezier(.34,1.5,.5,1), height .3s ease";
+          paint(g); cur = g;
+          clearT = setTimeout(function () { pill.classList.remove("is-liquid"); }, 480);
+        }, 140);
+      }
+
+      // Which tab is active on load: match the current path, else the first tab.
+      var path = (location.pathname || "/").replace(/\/+$/, "") || "/";
+      var start = null;
+      tabs.forEach(function (t) {
+        try { var p = (new URL(t.href, location.origin).pathname).replace(/\/+$/, "") || "/"; if (!start && p === path) start = t; } catch (e) {}
+      });
+      if (!start) start = tabs[0];
+      jump(start);
+
+      tabs.forEach(function (t) {
+        var isAction = t.hasAttribute("data-hd-cart") || t.hasAttribute("data-hd-search") || t.hasAttribute("data-hd-wishlist");
+        t.addEventListener("click", function (e) {
+          if (isAction) { slide(t); return; } // overlay handlers run; just animate
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+          var href = t.getAttribute("href");
+          if (!href || href.charAt(0) === "#") { slide(t); return; }
+          e.preventDefault(); slide(t);
+          setTimeout(function () { location.href = href; }, reduce ? 0 : 360);
+        });
+      });
+
+      var raf;
+      window.addEventListener("resize", function () {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(function () { jump(bar.querySelector(".gb-ico.is-active") || start); });
+      });
+      window.addEventListener("load", function () { jump(bar.querySelector(".gb-ico.is-active") || start); });
+    }
+    if (document.readyState !== "loading") init(); else document.addEventListener("DOMContentLoaded", init);
+  })();
+  </script>
 
   <!-- Glass search overlay: natural-language product finder -->
   <div class="search-overlay" id="hdSearchOverlay" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Search">
