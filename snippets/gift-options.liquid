@@ -1,0 +1,170 @@
+{% comment %}
+  ============================================================================
+  Gift options — "This is a gift" toggle that reveals paid gift wrapping
+  (a separate line item) + a free 250-char gift note (a line item property).
+  ----------------------------------------------------------------------------
+  SETUP (once):
+  1. Products > Add product. Name it "Gift Wrapping", set its price to 8.00,
+     set it to "Don't track quantity", and (optional) hide it from all sales
+     channels EXCEPT the online store so nobody browses to it directly. Save.
+  2. On that product, open the variant (or the "Edit" under the price) and copy
+     the numeric VARIANT ID from the URL. It looks like:
+       .../products/12345?variant=98765432101   <- the 98765432101 part
+  3. Paste that number into `gift_wrap_variant_id` below. Set `gift_wrap_price`
+     (in cents) to match, e.g. 800 for $8.00.
+  4. Add this snippet to the product page (see the chat steps).
+  Leave gift_wrap_variant_id empty to show ONLY the note (no wrapping option).
+  ============================================================================
+{% endcomment %}
+
+{%- assign gift_wrap_variant_id = '' -%}
+{%- assign gift_wrap_price = 800 -%}
+
+<div class="gift-options" data-gift-options data-wrap-id="{{ gift_wrap_variant_id }}">
+  <label class="gift-toggle">
+    <input type="checkbox" class="gift-toggle-input" data-gift-is-gift>
+    <span class="gift-toggle-track"><span class="gift-toggle-knob"></span></span>
+    <span class="gift-toggle-label">🎁 This is a gift</span>
+  </label>
+
+  <div class="gift-panel" data-gift-panel hidden>
+    {%- if gift_wrap_variant_id != blank -%}
+      <label class="gift-row">
+        <input type="checkbox" class="gift-check" data-gift-wrap>
+        <span class="gift-row-text">Add gift wrapping — <strong>{{ gift_wrap_price | money }}</strong></span>
+      </label>
+    {%- endif -%}
+
+    <div class="gift-note-field">
+      <label class="gift-note-heading" for="giftNoteInput">Add a gift note (optional)</label>
+      <textarea id="giftNoteInput" class="gift-note-input" name="properties[Gift note]"
+        maxlength="250" rows="3" placeholder="Write your message…" data-gift-note disabled></textarea>
+      <div class="gift-note-count"><span data-gift-count>0</span>/250</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .gift-options { margin: 1.5rem 0; font-family: inherit; color: inherit; }
+  .gift-options *, .gift-options *::before, .gift-options *::after { box-sizing: border-box; }
+
+  /* iOS-style toggle for "This is a gift" */
+  .gift-options .gift-toggle { display: inline-flex; align-items: center; gap: 0.7rem; cursor: pointer; user-select: none; }
+  .gift-options .gift-toggle-input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .gift-options .gift-toggle-track { position: relative; width: 44px; height: 26px; border-radius: 999px;
+    background: rgba(18,18,18,0.18); transition: background .2s ease; flex: none; }
+  .gift-options .gift-toggle-knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: transform .2s ease; }
+  .gift-options .gift-toggle-input:checked + .gift-toggle-track { background: #1d1d1f; }
+  .gift-options .gift-toggle-input:checked + .gift-toggle-track .gift-toggle-knob { transform: translateX(18px); }
+  .gift-options .gift-toggle-input:focus-visible + .gift-toggle-track { outline: 2px solid currentColor; outline-offset: 2px; }
+  .gift-options .gift-toggle-label { font-size: 0.95rem; font-weight: 500; letter-spacing: 0.01em; }
+
+  .gift-options .gift-panel { margin-top: 1rem; padding: 1rem 1.1rem; border: 1px solid rgba(18,18,18,0.14);
+    border-radius: 10px; display: grid; gap: 1rem; }
+
+  .gift-options .gift-row { display: flex; align-items: center; gap: 0.65rem; cursor: pointer; font-size: 0.95rem; }
+  .gift-options .gift-check { width: 18px; height: 18px; accent-color: #1d1d1f; flex: none; cursor: pointer; margin: 0; }
+  .gift-options .gift-row-text strong { font-weight: 600; }
+
+  .gift-options .gift-note-heading { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.45rem; }
+  .gift-options .gift-note-input { width: 100%; resize: vertical; min-height: 68px; padding: 0.7rem 0.8rem;
+    font-family: inherit; font-size: 0.95rem; color: inherit; background: transparent;
+    border: 1px solid rgba(18,18,18,0.2); border-radius: 8px; transition: border-color .16s ease; }
+  .gift-options .gift-note-input:focus { outline: none; border-color: rgba(18,18,18,0.55); }
+  .gift-options .gift-note-input:disabled { opacity: 0.55; }
+  .gift-options .gift-note-count { margin-top: 0.35rem; text-align: right; font-size: 0.8rem; opacity: 0.6;
+    font-variant-numeric: tabular-nums; }
+
+  @media (prefers-color-scheme: dark) {
+    .gift-options .gift-toggle-track { background: rgba(255,255,255,0.28); }
+    .gift-options .gift-toggle-input:checked + .gift-toggle-track { background: #fff; }
+    .gift-options .gift-toggle-input:checked + .gift-toggle-track .gift-toggle-knob { background: #1d1d1f; }
+    .gift-options .gift-panel { border-color: rgba(255,255,255,0.18); }
+    .gift-options .gift-note-input { border-color: rgba(255,255,255,0.25); }
+  }
+</style>
+
+<script>
+(function () {
+  var box = document.querySelector("[data-gift-options]");
+  if (!box || box.dataset.giftBound) return;
+  box.dataset.giftBound = "1";
+
+  var wrapId = (box.getAttribute("data-wrap-id") || "").trim();
+  var isGift = box.querySelector("[data-gift-is-gift]");
+  var panel  = box.querySelector("[data-gift-panel]");
+  var wrap   = box.querySelector("[data-gift-wrap]");   // may be null if no wrap product set
+  var note   = box.querySelector("[data-gift-note]");
+  var count  = box.querySelector("[data-gift-count]");
+
+  // The product's add-to-cart form (works whether this snippet sits inside or
+  // outside the form — we look it up rather than relying on placement).
+  var form = box.closest('form[action*="/cart/add"]') ||
+             document.querySelector('product-form form[action*="/cart/add"], form[action*="/cart/add"]');
+
+  function syncCount() { if (count) count.textContent = String(note.value.length); }
+  note.addEventListener("input", syncCount); syncCount();
+
+  function togglePanel() {
+    var on = isGift.checked;
+    panel.hidden = !on;
+    note.disabled = !on;                 // disabled fields never submit (no stale note)
+    if (!on && wrap) wrap.checked = false;
+  }
+  isGift.addEventListener("change", togglePanel); togglePanel();
+
+  if (!form) return; // no product form found — the note still works if placed inside a form
+
+  // When it's a gift we take over the add so we can attach the note AND add the
+  // wrapping as its own line item in a single, reliable /cart/add.js call.
+  // Listen on `document` in the CAPTURE phase: an ancestor's capture handler
+  // always runs before the form's own submit handler, so stopImmediatePropagation
+  // here reliably preempts the theme (no double-add).
+  document.addEventListener("submit", function (e) {
+    if (e.target !== form) return;       // only our product form
+    if (!isGift.checked) return;         // not a gift → let the theme add normally
+    var idEl = form.querySelector('[name="id"]');
+    if (!idEl || !idEl.value) return;    // no variant selected → let the theme handle/validate
+    e.preventDefault(); e.stopImmediatePropagation();
+
+    var qtyEl = form.querySelector('[name="quantity"]');
+    var qty = Math.max(1, parseInt(qtyEl && qtyEl.value, 10) || 1);
+
+    // Preserve any other line item properties already on the form (other apps).
+    var props = {};
+    form.querySelectorAll('[name^="properties["]').forEach(function (inp) {
+      if (inp.disabled) return;
+      if ((inp.type === "checkbox" || inp.type === "radio") && !inp.checked) return;
+      var m = inp.name.match(/^properties\[(.+)\]$/);
+      if (m && String(inp.value).trim() !== "") props[m[1]] = inp.value;
+    });
+    if (note.value.trim()) props["Gift note"] = note.value.trim();
+    props["Gift"] = "Yes";               // flags the item as a gift on the order/packing slip
+
+    var items = [{ id: idEl.value, quantity: qty, properties: props }];
+    if (wrap && wrap.checked && wrapId) {
+      var title = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.productTitle) || document.title || "item";
+      items.push({ id: parseInt(wrapId, 10), quantity: 1, properties: { "_For": title, "Gift wrapping": "Yes" } });
+    }
+
+    var btn = form.querySelector('[type="submit"]');
+    if (btn) { btn.setAttribute("aria-busy", "true"); btn.classList.add("loading"); }
+
+    fetch("/cart/add.js", {
+      method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ items: items })
+    })
+      .then(function (r) { if (!r.ok) return r.json().then(function (x) { throw x; }); return r.json(); })
+      .then(function () {
+        if (window.DynamicHeader && window.DynamicHeader.openCart) window.DynamicHeader.openCart();
+        else window.location.href = "/cart";
+      })
+      .catch(function (err) {
+        console.warn("[gift-options] add failed", err);
+        alert((err && err.description) || "Sorry — couldn't add this to your cart.");
+      })
+      .then(function () { if (btn) { btn.removeAttribute("aria-busy"); btn.classList.remove("loading"); } });
+  }, true); // capture phase so we run before the theme's own submit handler
+})();
+</script>
