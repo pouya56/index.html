@@ -41,6 +41,8 @@
   .dyn-hero.dh-landing .dh-corner-tr { top: 20px; right: 26px; justify-content: flex-end; }
   .dyn-hero.dh-landing .dh-corner-bl { bottom: 22px; left: 26px; justify-content: flex-start; }
   .dyn-hero.dh-landing .dh-corner-br { bottom: 22px; right: 26px; justify-content: flex-end; }
+  .dyn-hero.dh-landing .dh-copyright { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 4;
+    font-size: 12px; color: var(--ink-faint); letter-spacing: 0.01em; white-space: nowrap; pointer-events: none; }
   .dyn-hero.dh-landing .dh-corner-link { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; line-height: 1;
     color: var(--ink-soft); text-decoration: none; padding: 4px 2px; transition: color .16s; white-space: nowrap; }
   .dyn-hero.dh-landing .dh-corner-link:hover { color: var(--ink); }
@@ -476,6 +478,9 @@
       {%- capture corner_group -%}{{ corner_links }}{{ corner_extra }}{%- endcapture -%}
       {%- if corner_group != blank -%}<div class="dh-corner-group dh-corner-{{ pos }}">{{ corner_group }}</div>{%- endif -%}
   {%- endfor -%}
+  {%- if section.settings.copyright_text != blank -%}
+    <div class="dh-copyright">{{ section.settings.copyright_text }}</div>
+  {%- endif -%}
   <div class="dh-wrap">
     <div class="dh-head">
       {%- if section.settings.head_video != blank -%}
@@ -1045,10 +1050,12 @@
     { "type": "textarea", "id": "search_examples", "label": "Typing examples", "info": "One phrase per line. They type out in the search box one after another. Clear to turn the effect off.", "default": "I'm shopping for my wife.\nI'm looking for a birthday gift.\nI need a gift for my mom.\nI'm shopping for my dad.\nI want a gift for my best friend.\nI'm buying a gift for my boyfriend.\nI need an anniversary gift.\nI'm shopping for my daughter.\nI want something personalized.\nI'm looking for a unique gift.\nI need a Christmas gift.\nI'm shopping for a coworker.\nI want a custom mug.\nI'm shopping for myself.\nI'm not sure what to buy." },
 
     { "type": "header", "content": "Buttons under the search (Google-style)" },
-    { "type": "checkbox", "id": "show_hero_buttons", "label": "Show the two glass buttons", "default": true },
+    { "type": "checkbox", "id": "show_hero_buttons", "label": "Show the two glass buttons", "default": false },
     { "type": "text", "id": "btn1_label", "label": "Left button text", "default": "Search", "info": "Runs the search with whatever is typed." },
     { "type": "text", "id": "btn2_label", "label": "Right button text", "default": "Shop all" },
     { "type": "url", "id": "btn2_url", "label": "Right button link", "info": "Defaults to all products." },
+
+    { "type": "text", "id": "copyright_text", "label": "Bottom copyright text", "default": "© 2026, Dynaeimic", "info": "Small centered text at the very bottom. Clear to hide." },
 
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
     { "type": "paragraph", "content": "Add 'Corner link' blocks below (button at the bottom of this panel). Up to 4 per corner, laid out in a row like Google's homepage, each with an optional icon." },
