@@ -36,8 +36,13 @@
   .dyn-sug .ds-top-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
     gap: 16px; padding: 18px 32px; }
   .dyn-sug .ds-top-item { display: flex; align-items: center; gap: 20px; min-width: 0; }
-  .dyn-sug .ds-top-item img { width: 104px; height: 104px; object-fit: contain; border-radius: 14px; background: #fff; flex: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+  .dyn-sug .ds-top-thumbs { display: flex; align-items: center; gap: 8px; flex: none; }
+  .dyn-sug .ds-top-thumb { width: 58px; height: 58px; object-fit: contain; border-radius: 12px; background: #fff; flex: none;
+    border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 1px 6px rgba(0,0,0,0.07); padding: 4px; }
+  .dyn-sug .ds-top-more { width: 58px; height: 58px; border-radius: 12px; background: #e6e6eb; color: var(--ink); flex: none;
+    display: grid; place-items: center; font-weight: 600; font-size: 16px; text-decoration: none; border: 1px solid rgba(0,0,0,0.06);
+    transition: background .16s; }
+  .dyn-sug .ds-top-more:hover { background: #d7d7dd; }
   .dyn-sug .ds-top-txt { min-width: 0; }
   .dyn-sug .ds-top-title { font-size: 22px; font-weight: 600; line-height: 1.2; }
   .dyn-sug .ds-top-sub { font-size: 15px; color: var(--ink-soft); margin-top: 3px; }
@@ -100,7 +105,9 @@
 
   @media (max-width: 640px) {
     .dyn-sug .ds-top-inner { padding: 12px 18px; }
-    .dyn-sug .ds-top-item img { width: 48px; height: 48px; }
+    .dyn-sug .ds-top-thumb, .dyn-sug .ds-top-more { width: 44px; height: 44px; border-radius: 10px; font-size: 14px; }
+    .dyn-sug .ds-top-thumbs { gap: 6px; }
+    .dyn-sug .ds-top-item { gap: 12px; }
     .dyn-sug .ds-top-title { font-size: 15px; }
     .dyn-sug .ds-review { padding: 10px 18px; font-size: 15px; }
     .dyn-sug .ds-arrow { display: none; }
@@ -115,9 +122,7 @@
   <div class="ds-topbar" id="dsTop" hidden>
     <div class="ds-top-inner">
       <div class="ds-top-item">
-        {%- # theme-check-disable RemoteAsset -%}
-        <img id="dsTopImg" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" width="60" height="60">
-        {%- # theme-check-enable RemoteAsset -%}
+        <div class="ds-top-thumbs" id="dsTopThumbs"></div>
         <div class="ds-top-txt">
           <div class="ds-top-title" id="dsTopTitle"></div>
           <div class="ds-top-sub">{{ section.settings.bag_subtitle | default: 'One-time payment' }}</div>
@@ -299,15 +304,32 @@
       .then(function (r) { return r.json(); }).then(function (d) { return (d && d.products) || []; }).catch(function () { return []; });
   }
 
-  // 1) Read the most-recently-added cart item for the top bar + recommendation seed.
+  // 1) Read the cart: show a thumbnail per item (last-added first), + a "+N" box
+  //    linking to the full cart when there are more than 5.
+  var MAX_THUMBS = window.innerWidth < 640 ? 3 : 5;
   fetch("/cart.js", { headers: { "Accept": "application/json" } }).then(function (r) { return r.json(); }).then(function (cart) {
-    var items = (cart && cart.items) || [];
+    var items = ((cart && cart.items) || []).slice().reverse(); // newest first
     if (!items.length) { renderCards([]); return; }
-    var last = items[items.length - 1];
+    var last = items[0];
     var top = document.getElementById("dsTop");
-    document.getElementById("dsTopImg").src = last.image || "";
-    document.getElementById("dsTopTitle").textContent = last.product_title || last.title || "";
-    document.getElementById("dsTopNote").textContent = money(last.final_line_price != null ? last.final_line_price : last.final_price);
+    var thumbs = document.getElementById("dsTopThumbs");
+    thumbs.innerHTML = "";
+    items.slice(0, MAX_THUMBS).forEach(function (it) {
+      var im = document.createElement("img");
+      im.className = "ds-top-thumb"; im.src = it.image || ""; im.alt = ""; im.title = it.product_title || it.title || "";
+      im.width = 58; im.height = 58; im.loading = "lazy";
+      thumbs.appendChild(im);
+    });
+    var extra = items.length - MAX_THUMBS;
+    if (extra > 0) {
+      var more = document.createElement("a");
+      more.className = "ds-top-more"; more.href = cartUrl; more.textContent = "+" + extra;
+      more.title = "View all " + items.length + " items"; more.setAttribute("aria-label", more.title);
+      thumbs.appendChild(more);
+    }
+    var count = (cart && cart.item_count != null) ? cart.item_count : items.length;
+    document.getElementById("dsTopTitle").textContent = count === 1 ? (last.product_title || last.title || "") : (count + " items in your bag");
+    document.getElementById("dsTopNote").textContent = money(cart.items_subtotal_price != null ? cart.items_subtotal_price : cart.total_price);
     top.hidden = false;
     // The bar is position:fixed, so reserve its height below it (keep in sync on resize).
     function reserveTopSpace() { root.style.paddingTop = top.offsetHeight + "px"; }
