@@ -1,6 +1,0 @@
-# Turn off the OrphanedSnippet check.
-# gift-options.liquid is added to product pages through a Custom Liquid block
-# (rendered at runtime), so theme-check can't see the reference and wrongly
-# reports it as orphaned. All other checks stay on.
-OrphanedSnippet:
-  enabled: false

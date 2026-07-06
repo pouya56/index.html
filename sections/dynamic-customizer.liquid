@@ -1,3 +1,10 @@
+{%- comment -%}
+  gift-options.liquid is added to product pages via a Custom Liquid block
+  (rendered at runtime), so theme-check can't see the reference and flags it as
+  an orphaned snippet. This guarded render is never executed (if false) but makes
+  the reference visible to static analysis, clearing the OrphanedSnippet warning.
+{%- endcomment -%}
+{%- if false -%}{% render 'gift-options' %}{%- endif -%}
 {% comment %}
   ============================================================================
   Dynamic Customizer — AirPods Pro 3 engraving experience
