@@ -90,6 +90,9 @@
     font-family: var(--font); color: var(--ink); }
   /* Shadow only while open, so the off-screen drawer doesn't bleed onto the page edge. */
   .dyn-hd .hd-cart.open { transform: none; box-shadow: -20px 0 60px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.7); }
+  /* Wishlist slides in from the LEFT (cart stays on the right). */
+  .dyn-hd #hdWish { right: auto; left: 0; border-left: none; border-right: 1px solid rgba(255,255,255,0.6); transform: translateX(-100%); }
+  .dyn-hd #hdWish.open { transform: none; box-shadow: 20px 0 60px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.7); }
   .dyn-hd .hd-cart-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 22px;
     border-bottom: 1px solid rgba(0,0,0,0.08); }
   .dyn-hd .hd-cart-head h3 { font-size: 19px; font-weight: 600; margin: 0; }
