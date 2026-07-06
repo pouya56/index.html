@@ -30,23 +30,13 @@
   .dyn-col, .dyn-col *, .dyn-col *::before, .dyn-col *::after { box-sizing: border-box; }
   .dyn-col .dc-wrap { max-width: 1280px; margin: 0 auto; padding: 44px 22px 90px; }
 
-  /* Landing mode: logo + search centered on a full-height page; shrink to the
-     top once the shopper searches. */
-  .dyn-col.dc-landing { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; transition: justify-content .4s ease; }
-  .dyn-col.dc-landing .dc-wrap { width: 100%; transition: padding .4s ease; }
-  .dyn-col.dc-landing.dc-searching { justify-content: flex-start; }
-  .dyn-col.dc-landing.dc-searching .dc-wrap { padding-top: 26px; }
-  .dyn-col.dc-landing .dc-head-logo { transition: height .38s cubic-bezier(.2,.7,.2,1); }
-  /* Big + gently floating when centered; 50% smaller once it rises to the top. */
-  .dyn-col.dc-landing:not(.dc-searching) .dc-head .dc-head-logo { height: clamp(44px, 7vw, 64px); animation: dcFloat 4.5s ease-in-out infinite; }
-  .dyn-col.dc-landing.dc-searching .dc-head .dc-head-logo { height: clamp(22px, 3.5vw, 32px); }
-  @keyframes dcFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
-  @media (prefers-reduced-motion: reduce) { .dyn-col.dc-landing .dc-head-logo { animation: none; } }
-  .dyn-col.dc-landing .dc-head h1 { transition: font-size .38s cubic-bezier(.2,.7,.2,1); }
-  .dyn-col.dc-landing.dc-searching .dc-head h1 { font-size: clamp(24px, 4vw, 34px); }
-  .dyn-col.dc-landing .dc-search { transition: max-width .38s ease, margin-top .38s ease; }
-  .dyn-col.dc-landing:not(.dc-searching) .dc-search { margin-top: 34px; }
-  .dyn-col.dc-landing.dc-searching .dc-search { max-width: 480px; margin-top: 6px; margin-bottom: 34px; }
+  /* Landing mode: logo + search fixed in the vertical middle; results flow below.
+     No shrink / move / float — everything stays put. */
+  .dyn-col.dc-landing { min-height: 100svh; }
+  .dyn-col.dc-landing .dc-wrap { padding-top: calc(46svh - 90px); }
+  .dyn-col.dc-landing .dc-head .dc-head-logo { height: clamp(40px, 6.5vw, 60px); }
+  .dyn-col.dc-landing .dc-head h1 { font-size: clamp(30px, 5vw, 46px); }
+  .dyn-col.dc-landing .dc-search { margin-top: 30px; margin-bottom: 30px; }
 
   .dyn-col .dc-head { text-align: center; max-width: 720px; margin: 0 auto; }
   .dyn-col .dc-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(36px, 6vw, 60px);
