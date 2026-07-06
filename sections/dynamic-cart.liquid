@@ -54,9 +54,9 @@
   /* Collapsible per-item details */
   .dyn-cart .dc-details { margin-top: 7px; }
   .dyn-cart .dc-details > summary { list-style: none; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
-    font-size: 12.5px; font-weight: 500; color: var(--ink-soft); user-select: none; }
+    font-size: 12.5px; font-weight: 600; color: var(--accent); user-select: none; }
   .dyn-cart .dc-details > summary::-webkit-details-marker { display: none; }
-  .dyn-cart .dc-details > summary:hover { color: var(--ink); }
+  .dyn-cart .dc-details > summary:hover { opacity: 0.75; }
   .dyn-cart .dc-details > summary .dc-chev { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2;
     stroke-linecap: round; stroke-linejoin: round; transition: transform .18s ease; }
   .dyn-cart .dc-details[open] > summary .dc-chev { transform: rotate(180deg); }
@@ -103,15 +103,15 @@
     font-size: 18px; font-weight: 500; color: var(--ink); }
   .dyn-cart .dc-sum-total .dc-sub-amt { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
   .dyn-cart .dc-tax { font-size: 12.5px; color: var(--ink-faint); line-height: 1.45; margin: 12px 0 16px; }
-  .dyn-cart .dc-checkout { display: flex; align-items: center; justify-content: center; width: 100%;
-    background: var(--ink); color: #fff; padding: 16px 30px; border: none; border-radius: 999px; cursor: pointer;
-    font-family: var(--font); font-weight: 600; font-size: 16px; text-decoration: none; transition: opacity .16s, transform .1s; }
+  .dyn-cart .dc-checkout { display: flex; align-items: center; justify-content: center; width: 100%; max-width: 300px; margin-left: auto;
+    background: var(--ink); color: #fff; padding: 14px 30px; border: none; border-radius: 999px; cursor: pointer;
+    font-family: var(--font); font-weight: 600; font-size: 15px; text-decoration: none; transition: opacity .16s, transform .1s; }
   .dyn-cart .dc-checkout:hover { opacity: 0.9; }
   .dyn-cart .dc-checkout:active { transform: scale(0.99); }
-  .dyn-cart .dc-secure { display: flex; align-items: center; justify-content: center; gap: 6px;
+  .dyn-cart .dc-secure { display: flex; align-items: center; justify-content: center; gap: 6px; max-width: 300px; margin-left: auto;
     margin-top: 13px; font-size: 12.5px; color: var(--ink-faint); }
   .dyn-cart .dc-secure svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.7; }
-  .dyn-cart .dc-clear { display: block; width: 100%; background: none; border: none; color: var(--ink-faint); font-size: 13px; cursor: pointer;
+  .dyn-cart .dc-clear { display: block; width: 100%; max-width: 300px; margin-left: auto; background: none; border: none; color: var(--ink-faint); font-size: 13px; cursor: pointer;
     margin-top: 14px; padding: 4px; transition: color .16s; }
   .dyn-cart .dc-clear:hover { color: var(--danger); }
 
@@ -127,7 +127,7 @@
     .dyn-cart .dc-line-product { grid-area: product; }
     .dyn-cart .dc-line-total { grid-area: total; }
     .dyn-cart .dc-qtywrap { grid-area: qty; justify-content: flex-start; }
-    .dyn-cart .dc-summary { max-width: none; }
+    .dyn-cart .dc-checkout, .dyn-cart .dc-secure, .dyn-cart .dc-clear { max-width: none; margin-left: 0; }
   }
 </style>
 
