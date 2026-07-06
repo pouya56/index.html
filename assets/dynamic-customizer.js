@@ -2201,17 +2201,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-note-input:disabled{opacity:.55}' +
       '.dc-gift-count{margin-top:8px;text-align:right;font-size:12px;color:var(--gf);font-variant-numeric:tabular-nums}' +
       '</style>';
-    const wrapRow = wrapId
-      ? '<label class="dc-gift-row"><input type="checkbox" id="giftWrap" class="dc-gift-check">' +
-        '<span>' + escapeHtml(wrapLabel) + (wrapMoney ? ' — <strong>' + escapeHtml(wrapMoney) + '</strong>' : '') + '</span></label>'
-      : "";
+    // The toggle IS the gift-wrapping switch when a wrap product is set
+    // (turning it on adds the $8 wrapping); otherwise it's a plain gift toggle.
+    const label = wrapId
+      ? escapeHtml(wrapLabel) + (wrapMoney ? ' — <strong>' + escapeHtml(wrapMoney) + '</strong>' : '')
+      : escapeHtml(toggleLabel);
     return css +
       '<div class="dc-gift" id="giftBlock">' +
         '<label class="dc-gift-toggle"><input type="checkbox" id="giftIsGift" class="dc-gift-toggle-input">' +
           '<span class="dc-gift-track"><span class="dc-gift-knob"></span></span>' +
-          '<span class="dc-gift-label">' + escapeHtml(toggleLabel) + '</span></label>' +
+          '<span class="dc-gift-label">' + label + '</span></label>' +
         '<div class="dc-gift-panel" id="giftPanel" hidden>' +
-          wrapRow +
           '<div class="dc-gift-note"><label class="dc-gift-note-h" for="giftNote">' + escapeHtml(noteLabel) + '</label>' +
           '<textarea id="giftNote" class="dc-gift-note-input" maxlength="250" rows="3" placeholder="Write your message…" disabled></textarea>' +
           '<div class="dc-gift-count"><span id="giftCount">0</span>/250</div></div>' +
@@ -2364,12 +2364,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const giftIsGift = mount.querySelector("#giftIsGift");
     if (!giftIsGift) return;
     const giftPanel = mount.querySelector("#giftPanel"), giftNote = mount.querySelector("#giftNote");
-    const giftCount = mount.querySelector("#giftCount"), giftWrap = mount.querySelector("#giftWrap");
+    const giftCount = mount.querySelector("#giftCount");
     const syncGift = () => {
       const on = giftIsGift.checked;
       if (giftPanel) giftPanel.hidden = !on;
       if (giftNote) giftNote.disabled = !on;
-      if (!on && giftWrap) giftWrap.checked = false;
     };
     giftIsGift.onchange = syncGift; syncGift();
     if (giftNote && giftCount) { const c = () => (giftCount.textContent = String(giftNote.value.length)); giftNote.oninput = c; c(); }
@@ -2484,9 +2483,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         props["Gift"] = "Yes";
         const noteEl = $("#giftNote");
         if (noteEl && noteEl.value.trim()) props["Gift note"] = noteEl.value.trim();
-        const wrapEl = $("#giftWrap");
+        // The toggle being on IS the wrapping choice — add the wrapping line item.
         const wrapId = String(gift.wrapVariantId || "").match(/\d{4,}/);
-        if (wrapEl && wrapEl.checked && wrapId) {
+        if (wrapId) {
           const gq = Math.max(1, (store.get().quantity) || 1);
           extraItems.push({ id: wrapId[0], quantity: gq, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "item", "Gift wrapping": "Yes" } });
         }

@@ -32,17 +32,10 @@
   <label class="gift-toggle">
     <input type="checkbox" class="gift-toggle-input" data-gift-is-gift>
     <span class="gift-toggle-track"><span class="gift-toggle-knob"></span></span>
-    <span class="gift-toggle-label">This is a gift</span>
+    <span class="gift-toggle-label">{% if gift_wrap_variant_id != blank %}Add gift wrapping — <strong>{{ gift_wrap_price | money }}</strong>{% else %}This is a gift{% endif %}</span>
   </label>
 
   <div class="gift-panel" data-gift-panel hidden>
-    {%- if gift_wrap_variant_id != blank -%}
-      <label class="gift-row">
-        <input type="checkbox" class="gift-check" data-gift-wrap>
-        <span class="gift-row-text">Add gift wrapping — <strong>{{ gift_wrap_price | money }}</strong></span>
-      </label>
-    {%- endif -%}
-
     <div class="gift-note-field">
       <label class="gift-note-heading" for="giftNoteInput">Add a gift note (optional)</label>
       <textarea id="giftNoteInput" class="gift-note-input" name="properties[Gift note]"
@@ -109,9 +102,8 @@
   box.dataset.giftBound = "1";
 
   var wrapId = (box.getAttribute("data-wrap-id") || "").trim();
-  var isGift = box.querySelector("[data-gift-is-gift]");
+  var isGift = box.querySelector("[data-gift-is-gift]");   // the toggle = "Add gift wrapping"
   var panel  = box.querySelector("[data-gift-panel]");
-  var wrap   = box.querySelector("[data-gift-wrap]");   // may be null if no wrap product set
   var note   = box.querySelector("[data-gift-note]");
   var count  = box.querySelector("[data-gift-count]");
 
@@ -127,7 +119,6 @@
     var on = isGift.checked;
     panel.hidden = !on;
     note.disabled = !on;                 // disabled fields never submit (no stale note)
-    if (!on && wrap) wrap.checked = false;
   }
   isGift.addEventListener("change", togglePanel); togglePanel();
 
@@ -160,7 +151,8 @@
     props["Gift"] = "Yes";               // flags the item as a gift on the order/packing slip
 
     var items = [{ id: idEl.value, quantity: qty, properties: props }];
-    if (wrap && wrap.checked && wrapId) {
+    // Toggle on IS the wrapping choice — add the wrapping line item when configured.
+    if (wrapId) {
       var title = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.productTitle) || document.title || "item";
       items.push({ id: parseInt(wrapId, 10), quantity: 1, properties: { "_For": title, "Gift wrapping": "Yes" } });
     }
