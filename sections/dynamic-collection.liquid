@@ -36,12 +36,29 @@
   .dyn-col .dc-head .dc-desc { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 16px auto 0; max-width: 620px; }
 
   /* Category tabs */
-  .dyn-col .dc-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 28px auto 30px; max-width: 980px; }
-  .dyn-col .dc-tab { border: none; background: transparent; font-family: var(--font); font-size: 14px; font-weight: 500;
+  .dyn-col .dc-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 28px auto 32px; max-width: 1040px; }
+
+  /* Text-pill tabs (auto mode, no images added) */
+  .dyn-col .dc-tabs.is-pills .dc-tab { border: none; background: transparent; font-family: var(--font); font-size: 14px; font-weight: 500;
     color: var(--ink-soft); padding: 9px 18px; border-radius: 999px; cursor: pointer; white-space: nowrap;
     transition: background .18s, color .18s; }
-  .dyn-col .dc-tab:hover { color: var(--ink); background: rgba(0,0,0,0.045); }
-  .dyn-col .dc-tab.is-active { background: var(--ink); color: #fff; }
+  .dyn-col .dc-tabs.is-pills .dc-tab:hover { color: var(--ink); background: rgba(0,0,0,0.045); }
+  .dyn-col .dc-tabs.is-pills .dc-tab.is-active { background: var(--ink); color: #fff; }
+
+  /* Image tabs (Apple-style: picture + label) */
+  .dyn-col .dc-tabs.is-images { gap: 18px; align-items: flex-start; }
+  .dyn-col .dc-tabs.is-images .dc-tab { display: flex; flex-direction: column; align-items: center; gap: 9px; border: none; background: none;
+    padding: 6px 4px; cursor: pointer; font-family: var(--font); }
+  .dyn-col .dc-tabs.is-images .dc-tab-img { width: 68px; height: 68px; border-radius: 18px; overflow: hidden; background: var(--bg);
+    box-shadow: inset 0 0 0 1px var(--line); display: grid; place-items: center; transition: box-shadow .18s ease, transform .18s ease; }
+  .dyn-col .dc-tabs.is-images .dc-tab-img img { width: 100%; height: 100%; object-fit: cover; }
+  .dyn-col .dc-tabs.is-images .dc-tab-init { font-size: 24px; font-weight: 600; color: var(--ink-soft); }
+  .dyn-col .dc-tabs.is-images .dc-tab-all { background: var(--bg-panel); }
+  .dyn-col .dc-tabs.is-images .dc-tab-all svg { width: 26px; height: 26px; fill: var(--ink-soft); }
+  .dyn-col .dc-tabs.is-images .dc-tab:hover .dc-tab-img { transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--line), 0 8px 20px rgba(0,0,0,0.08); }
+  .dyn-col .dc-tabs.is-images .dc-tab-label { font-size: 13px; font-weight: 500; color: var(--ink-soft); white-space: nowrap; transition: color .18s; }
+  .dyn-col .dc-tabs.is-images .dc-tab.is-active .dc-tab-img { box-shadow: 0 0 0 2px var(--accent); }
+  .dyn-col .dc-tabs.is-images .dc-tab.is-active .dc-tab-label { color: var(--ink); font-weight: 600; }
 
   .dyn-col .dc-grid { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 22px; }
 
@@ -105,6 +122,7 @@
     .dyn-col .dc-tabs { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch;
       scrollbar-width: none; padding-bottom: 4px; }
     .dyn-col .dc-tabs::-webkit-scrollbar { display: none; }
+    .dyn-col .dc-tabs.is-images .dc-tab { flex: 0 0 auto; }
   }
   @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-body { padding: 12px 12px 14px; } .dyn-col .dc-cta a { padding: 10px 12px; } }
 </style>
@@ -141,8 +159,36 @@
       {%- assign real_cats = '' -%}
       {%- for c in cats -%}{%- if c != blank -%}{%- assign real_cats = real_cats | append: '1' -%}{%- endif -%}{%- endfor -%}
 
-      {%- if real_cats != blank -%}
-        <div class="dc-tabs" id="dcTabs" role="tablist">
+      {%- if section.blocks.size > 0 -%}
+        {%- comment -%} Image tabs: merchant-defined blocks with an uploaded picture per category. {%- endcomment -%}
+        <div class="dc-tabs is-images" id="dcTabs" role="tablist">
+          <button type="button" class="dc-tab is-active" data-cat="__all" role="tab" aria-selected="true">
+            <span class="dc-tab-img dc-tab-all">
+              {%- if section.settings.all_image != blank -%}
+                <img src="{{ section.settings.all_image | image_url: width: 200 }}" alt="{{ section.settings.all_label | default: 'All' | escape }}" width="68" height="68" loading="lazy">
+              {%- else -%}
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+              {%- endif -%}
+            </span>
+            <span class="dc-tab-label">{{ section.settings.all_label | default: 'All' }}</span>
+          </button>
+          {%- for block in section.blocks -%}
+            {%- assign cv = block.settings.category_value -%}
+            <button type="button" class="dc-tab" data-cat="{{ cv | handle }}" role="tab" aria-selected="false" {{ block.shopify_attributes }}>
+              <span class="dc-tab-img">
+                {%- if block.settings.image != blank -%}
+                  <img src="{{ block.settings.image | image_url: width: 200 }}" alt="{{ block.settings.label | escape }}" width="68" height="68" loading="lazy">
+                {%- else -%}
+                  <span class="dc-tab-init">{{ block.settings.label | default: cv | slice: 0 | upcase }}</span>
+                {%- endif -%}
+              </span>
+              <span class="dc-tab-label">{{ block.settings.label | default: cv }}</span>
+            </button>
+          {%- endfor -%}
+        </div>
+      {%- elsif real_cats != blank -%}
+        {%- comment -%} Auto text-pill tabs from product type / tag. {%- endcomment -%}
+        <div class="dc-tabs is-pills" id="dcTabs" role="tablist">
           <button type="button" class="dc-tab is-active" data-cat="__all" role="tab" aria-selected="true">{{ section.settings.all_label | default: 'All' }}</button>
           {%- for c in cats -%}
             {%- unless c == blank -%}
@@ -342,8 +388,9 @@
     { "type": "header", "content": "Category tabs" },
     { "type": "select", "id": "category_source", "label": "Build tabs from", "default": "type",
       "options": [ { "value": "type", "label": "Product type" }, { "value": "tag", "label": "Product tag" } ],
-      "info": "Tabs are created from every product type (or tag) in the collection. Set product types/tags in each product's admin page. If products have none, tabs are hidden." },
+      "info": "Used for AUTO text tabs and for matching products to your image tabs. Set each product's Product type (or tag) in its admin page. Add image tabs below for the Apple-style picture tabs." },
     { "type": "text", "id": "all_label", "label": "First tab label", "default": "All" },
+    { "type": "image_picker", "id": "all_image", "label": "First tab image (optional)", "info": "Shown on the 'All' tab when you add image tabs below. Leave empty for a grid icon." },
 
     { "type": "header", "content": "Grid" },
     { "type": "range", "id": "columns", "min": 2, "max": 5, "step": 1, "label": "Columns (desktop)", "default": 4 },
@@ -361,6 +408,15 @@
     { "type": "text", "id": "empty_text", "label": "Empty message", "default": "Nothing here yet." },
     { "type": "text", "id": "empty_link_label", "label": "Empty button label", "default": "Browse all products" }
   ],
+  "blocks": [
+    { "type": "tab", "name": "Image category tab", "settings": [
+      { "type": "text", "id": "label", "label": "Tab label", "default": "Category" },
+      { "type": "text", "id": "category_value", "label": "Filters products where Type =",
+        "info": "Type the exact Product type value of the items for this tab, e.g. Drinkware. (If 'Build tabs from' is set to Tag, enter the tag instead.)" },
+      { "type": "image_picker", "id": "image", "label": "Tab image" }
+    ]}
+  ],
+  "max_blocks": 12,
   "presets": [ { "name": "Dynamic Collection" } ],
   "enabled_on": { "templates": ["collection", "list-collections", "index"] }
 }
