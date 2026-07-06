@@ -354,7 +354,13 @@
   function reserveTopSpace() { root.style.paddingTop = top.offsetHeight + "px"; }
 
   function paintCart(cart) {
-    var items = ((cart && cart.items) || []).slice().reverse(); // newest first
+    var allItems = ((cart && cart.items) || []).slice().reverse(); // newest first
+    // Fold add-on lines (gift wrapping / back-print fee) into their item: any line
+    // with _grp + _For is an add-on; attach it to the item sharing that _grp.
+    var isFee = function (it) { return !!(it.properties && it.properties._grp && it.properties._For); };
+    var feeByGrp = {};
+    allItems.forEach(function (it) { if (isFee(it)) feeByGrp[it.properties._grp] = it; });
+    var items = allItems.filter(function (it) { return !isFee(it); });
     var count = (cart && cart.item_count != null) ? cart.item_count : items.length;
     var subtotal = (cart && cart.items_subtotal_price != null) ? cart.items_subtotal_price : (cart && cart.total_price) || 0;
     // Thumbnails + overflow box (the box now just opens the dropdown).
@@ -379,15 +385,19 @@
         var canEdit = it.properties && it.properties._design_state && it.url;
         var editUrl = canEdit ? (it.url + (it.url.indexOf("?") >= 0 ? "&" : "?") + "edit=" + encodeURIComponent(it.key)) : "";
         var editHtml = canEdit ? '<a class="ds-cart-redit" href="' + esc(editUrl) + '">Edit design</a>' : "";
-        return '<div class="ds-cart-row" data-key="' + esc(it.key) + '">' +
+        // Folded add-on (e.g. gift wrapping) → combined price + a small note.
+        var fee = (it.properties && it.properties._grp) ? feeByGrp[it.properties._grp] : null;
+        var lineTotal = (it.final_line_price || 0) + (fee ? (fee.final_line_price || 0) : 0);
+        var feeNote = fee ? '<div class="ds-cart-rvar">Includes ' + esc((fee.product_title || "add-on").toLowerCase()) + " · " + money(fee.final_line_price) + "</div>" : "";
+        return '<div class="ds-cart-row" data-key="' + esc(it.key) + '"' + (fee ? ' data-fee-key="' + esc(fee.key) + '"' : "") + ">" +
           '<img src="' + esc(it.image || "") + '" alt="" loading="lazy">' +
-          '<div class="ds-cart-rmeta"><div class="ds-cart-rtitle">' + esc(it.product_title || it.title || "") + "</div>" + variant +
+          '<div class="ds-cart-rmeta"><div class="ds-cart-rtitle">' + esc(it.product_title || it.title || "") + "</div>" + variant + feeNote +
             '<div class="ds-cart-rctrls">' +
               '<span class="ds-cart-rqty"><button type="button" data-dec aria-label="Decrease">−</button><span>' + it.quantity + '</span><button type="button" data-inc aria-label="Increase">+</button></span>' +
               editHtml +
             "</div>" +
           "</div>" +
-          '<div class="ds-cart-rright"><div class="ds-cart-rprice">' + money(it.final_line_price) + "</div>" +
+          '<div class="ds-cart-rright"><div class="ds-cart-rprice">' + money(lineTotal) + "</div>" +
             '<button type="button" class="ds-cart-rremove" data-remove>Remove</button></div>' +
         "</div>";
       }).join("");
@@ -396,12 +406,13 @@
     reserveTopSpace();
   }
 
-  // Change one line, then repaint from the returned cart. (The header badge stays
-  // in sync on its own because it watches cart requests.)
-  function changeLine(key, qty) {
-    return fetch("/cart/change.js", {
+  // Change a line (and its folded add-on line, if any) in one /cart/update.js
+  // call, then repaint. The header badge stays in sync via its request watcher.
+  function changeLine(key, qty, feeKey) {
+    var updates = {}; updates[key] = qty; if (feeKey) updates[feeKey] = qty;
+    return fetch("/cart/update.js", {
       method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({ id: key, quantity: qty })
+      body: JSON.stringify({ updates: updates })
     }).then(function (r) { return r.json(); }).then(function (cart) { paintCart(cart); return cart; }).catch(function () {});
   }
 
@@ -413,9 +424,10 @@
     var row = e.target.closest(".ds-cart-row"); if (!row) return;
     var key = row.getAttribute("data-key");
     var cur = parseInt(row.querySelector(".ds-cart-rqty span").textContent, 10) || 0;
-    if (e.target.closest("[data-remove]")) changeLine(key, 0);
-    else if (e.target.closest("[data-inc]")) changeLine(key, cur + 1);
-    else if (e.target.closest("[data-dec]")) changeLine(key, Math.max(0, cur - 1));
+    var feeKey = row.getAttribute("data-fee-key");
+    if (e.target.closest("[data-remove]")) changeLine(key, 0, feeKey);
+    else if (e.target.closest("[data-inc]")) changeLine(key, cur + 1, feeKey);
+    else if (e.target.closest("[data-dec]")) changeLine(key, Math.max(0, cur - 1), feeKey);
   });
 
   // Load the cart, paint the bar, then fetch recommendations from the newest item.

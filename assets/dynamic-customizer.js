@@ -2512,7 +2512,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           const wrapId = String(gift.wrapVariantId || "").match(/\d{4,}/);
           if (wrapId) {
             const gq = Math.max(1, (store.get().quantity) || 1);
-            extraItems.push({ id: wrapId[0], quantity: gq, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "item", "Gift wrapping": "Yes" } });
+            // Share a _grp with the item so the cart display folds the wrapping
+            // line into it (shows as one item with a combined price).
+            let grp = props["_grp"];
+            if (!grp) { grp = "g" + Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36); props["_grp"] = grp; }
+            extraItems.push({ id: wrapId[0], quantity: gq, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "item", "_grp": grp, "Gift wrapping": "Yes" } });
           }
         }
       }
