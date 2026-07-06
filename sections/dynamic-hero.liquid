@@ -134,11 +134,24 @@
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search::before { animation: none; } }
   .dyn-hero .dh-search-mag { position: absolute; left: 20px; z-index: 2; width: 20px; height: 20px; fill: none; stroke: var(--ink-faint);
     stroke-width: 2; stroke-linecap: round; pointer-events: none; }
-  .dyn-hero .dh-search-input { position: relative; z-index: 1; width: 100%; font-family: var(--font); font-size: 16px; color: var(--ink); background: var(--bg);
-    border: 1px solid var(--line); border-radius: 999px; padding: 15px 56px 15px 52px; box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  /* Liquid-glass search field */
+  .dyn-hero .dh-search-input { position: relative; z-index: 1; width: 100%; font-family: var(--font); font-size: 16px; color: var(--ink);
+    background: rgba(255,255,255,0.5); -webkit-backdrop-filter: blur(20px) saturate(1.7) brightness(1.05); backdrop-filter: blur(20px) saturate(1.7) brightness(1.05);
+    border: 1px solid rgba(255,255,255,0.65); border-radius: 999px; padding: 15px 56px 15px 52px;
+    box-shadow: 0 10px 34px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.85), inset 0 -7px 16px rgba(255,255,255,0.2);
     transition: border-color .16s, box-shadow .16s; }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .dyn-hero .dh-search-input { background: #fff; border-color: var(--line); }
+  }
   .dyn-hero .dh-search-input::placeholder { color: var(--ink-faint); }
-  .dyn-hero .dh-search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 8px 30px rgba(0,0,0,0.06), 0 0 0 4px rgba(0,113,227,0.14); }
+  .dyn-hero .dh-search-input:focus { outline: none; border-color: rgba(255,255,255,0.9);
+    box-shadow: 0 10px 34px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.9), 0 0 0 4px rgba(0,113,227,0.14); }
+  /* Glass: top specular highlight + a shimmering diagonal light streak (refraction) */
+  .dyn-hero .dh-search-input { background-image: linear-gradient(177deg, rgba(255,255,255,0.55), rgba(255,255,255,0) 46%); }
+  .dyn-hero .dh-search::after { content: ""; position: absolute; inset: 1px; z-index: 1; pointer-events: none; border-radius: 999px;
+    background: linear-gradient(112deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 60%);
+    mix-blend-mode: screen; opacity: 0.65; filter: url(#dhLiquid); }
+  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search::after { filter: none; } }
   /* ChatGPT-style round arrow button inside the bar */
   .dyn-hero .dh-search-go { position: absolute; right: 8px; top: 50%; margin-top: -19px; z-index: 2; width: 38px; height: 38px; border-radius: 50%;
     background: var(--ink); color: #fff; border: none; display: grid; place-items: center; cursor: pointer; transition: opacity .16s, transform .1s; }
@@ -272,6 +285,18 @@
   data-cat-source="{{ cat_source }}"
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
   data-results-url="{{ section.settings.results_page_url }}">
+  {%- comment -%} Liquid-glass refraction filter used by the search bar sheen. {%- endcomment -%}
+  <svg class="dh-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="dhLiquid" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.013" numOctaves="2" seed="5" result="noise">
+          <animate attributeName="baseFrequency" dur="16s" values="0.008 0.013;0.012 0.009;0.008 0.013" repeatCount="indefinite"></animate>
+        </feTurbulence>
+        <feGaussianBlur in="noise" stdDeviation="1.1" result="sn"></feGaussianBlur>
+        <feDisplacementMap in="SourceGraphic" in2="sn" scale="12" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+    </defs>
+  </svg>
   {%- comment -%} Corner links (hero landing look is always on for this section). {%- endcomment -%}
   {%- assign corner_pos = 'tl,tr,bl,br' | split: ',' -%}
   {%- for pos in corner_pos -%}
