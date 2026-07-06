@@ -35,14 +35,19 @@
   .dyn-hero.dh-landing { min-height: 100svh; position: relative; }
   .dyn-hero.dh-landing .dh-wrap { padding-top: calc(46svh - 90px); }
   /* Google-style corner links (home landing) */
-  .dyn-hero.dh-landing .dh-corner { position: absolute; z-index: 4; font-size: 14px; color: var(--ink-soft); text-decoration: none;
-    padding: 6px 6px; transition: color .16s; }
-  .dyn-hero.dh-landing .dh-corner:hover { color: var(--ink); }
-  .dyn-hero.dh-landing .dh-corner-tl { top: 16px; left: 22px; }
-  .dyn-hero.dh-landing .dh-corner-tr { top: 16px; right: 22px; }
-  .dyn-hero.dh-landing .dh-corner-bl { bottom: 78px; left: 22px; }
-  .dyn-hero.dh-landing .dh-corner-br { bottom: 78px; right: 22px; }
-  @media (max-width: 600px) { .dyn-hero.dh-landing .dh-corner { font-size: 13px; } .dyn-hero.dh-landing .dh-corner-bl, .dyn-hero.dh-landing .dh-corner-br { bottom: 90px; } }
+  .dyn-hero.dh-landing .dh-corner-group { position: absolute; z-index: 4; display: flex; flex-direction: column; gap: 4px; }
+  .dyn-hero.dh-landing .dh-corner-tl { top: 16px; left: 22px; align-items: flex-start; }
+  .dyn-hero.dh-landing .dh-corner-tr { top: 16px; right: 22px; align-items: flex-end; }
+  .dyn-hero.dh-landing .dh-corner-bl { bottom: 78px; left: 22px; align-items: flex-start; flex-direction: column-reverse; }
+  .dyn-hero.dh-landing .dh-corner-br { bottom: 78px; right: 22px; align-items: flex-end; flex-direction: column-reverse; }
+  .dyn-hero.dh-landing .dh-corner-link { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; line-height: 1;
+    color: var(--ink-soft); text-decoration: none; padding: 5px 4px; transition: color .16s; white-space: nowrap; }
+  .dyn-hero.dh-landing .dh-corner-link:hover { color: var(--ink); }
+  .dyn-hero.dh-landing .dh-corner-link.is-icononly { padding: 6px; }
+  .dyn-hero.dh-landing .dh-corner-ic { display: inline-flex; }
+  .dyn-hero.dh-landing .dh-corner-link svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
+  .dyn-hero.dh-landing img.dh-corner-ic { width: 18px; height: 18px; object-fit: contain; }
+  @media (max-width: 600px) { .dyn-hero.dh-landing .dh-corner-link { font-size: 13px; } .dyn-hero.dh-landing .dh-corner-bl, .dyn-hero.dh-landing .dh-corner-br { bottom: 90px; } }
   .dyn-hero.dh-landing .dh-head .dh-head-logo { height: clamp(40px, 6.5vw, 60px); }
   .dyn-hero.dh-landing .dh-head .dh-head-video { max-height: clamp(120px, 30vh, 280px); max-width: min(88vw, 460px); }
   .dyn-hero.dh-landing .dh-head h1 { font-size: clamp(30px, 5vw, 46px); }
@@ -205,10 +210,42 @@
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
   data-results-url="{{ section.settings.results_page_url }}">
   {%- if section.settings.hide_until_search -%}
-    {%- if section.settings.corner_tl_label != blank -%}<a class="dh-corner dh-corner-tl" href="{{ section.settings.corner_tl_url | default: '#' }}">{{ section.settings.corner_tl_label }}</a>{%- endif -%}
-    {%- if section.settings.corner_tr_label != blank -%}<a class="dh-corner dh-corner-tr" href="{{ section.settings.corner_tr_url | default: '#' }}">{{ section.settings.corner_tr_label }}</a>{%- endif -%}
-    {%- if section.settings.corner_bl_label != blank -%}<a class="dh-corner dh-corner-bl" href="{{ section.settings.corner_bl_url | default: '#' }}">{{ section.settings.corner_bl_label }}</a>{%- endif -%}
-    {%- if section.settings.corner_br_label != blank -%}<a class="dh-corner dh-corner-br" href="{{ section.settings.corner_br_url | default: '#' }}">{{ section.settings.corner_br_label }}</a>{%- endif -%}
+    {%- assign corner_pos = 'tl,tr,bl,br' | split: ',' -%}
+    {%- for pos in corner_pos -%}
+      {%- assign cnt = 0 -%}
+      {%- capture corner_links -%}
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'corner_link' and block.settings.corner == pos and cnt < 3 -%}
+            {%- assign cnt = cnt | plus: 1 -%}
+            <a class="dh-corner-link{% if block.settings.icon_only %} is-icononly{% endif %}" href="{{ block.settings.url | default: '#' }}"{% if block.settings.icon_only %} aria-label="{{ block.settings.label | escape }}"{% endif %} {{ block.shopify_attributes }}>
+              {%- if block.settings.icon_image != blank -%}
+                {%- assign iw = block.settings.icon_image.width | times: 18 | divided_by: block.settings.icon_image.height -%}
+                <img class="dh-corner-ic" src="{{ block.settings.icon_image | image_url: width: 54 }}" alt="" width="{{ iw }}" height="18">
+              {%- elsif block.settings.icon != 'none' -%}
+                <span class="dh-corner-ic" aria-hidden="true">
+                {%- case block.settings.icon -%}
+                  {%- when 'account' -%}<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+                  {%- when 'cart' -%}<svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1.6"/><circle cx="18" cy="21" r="1.6"/><path d="M2 3h3l2.5 13h11l2-8H6"/></svg>
+                  {%- when 'bag' -%}<svg viewBox="0 0 24 24"><path d="M6 8h12l1 12H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+                  {%- when 'heart' -%}<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-9.5-9A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 9.5 5c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                  {%- when 'search' -%}<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  {%- when 'info' -%}<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8"/></svg>
+                  {%- when 'help' -%}<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
+                  {%- when 'phone' -%}<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8 9.6a16 16 0 0 0 6 6l1.2-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></svg>
+                  {%- when 'mail' -%}<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+                  {%- when 'home' -%}<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+                  {%- when 'star' -%}<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8L6.6 19.6l1-6L3.3 9.4l6-.9z"/></svg>
+                  {%- when 'location' -%}<svg viewBox="0 0 24 24"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                {%- endcase -%}
+                </span>
+              {%- endif -%}
+              {%- unless block.settings.icon_only -%}<span class="dh-corner-txt">{{ block.settings.label }}</span>{%- endunless -%}
+            </a>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endcapture -%}
+      {%- if corner_links != blank -%}<div class="dh-corner-group dh-corner-{{ pos }}">{{ corner_links }}</div>{%- endif -%}
+    {%- endfor -%}
   {%- endif -%}
   <div class="dh-wrap">
     <div class="dh-head">
@@ -259,7 +296,10 @@
       {%- assign real_cats = '' -%}
       {%- for c in cats -%}{%- if c != blank -%}{%- assign real_cats = real_cats | append: '1' -%}{%- endif -%}{%- endfor -%}
 
-      {%- if section.settings.show_tabs and section.blocks.size > 0 -%}
+      {%- assign tab_count = 0 -%}
+      {%- for b in section.blocks -%}{%- if b.type == 'tab' -%}{%- assign tab_count = tab_count | plus: 1 -%}{%- endif -%}{%- endfor -%}
+
+      {%- if section.settings.show_tabs and tab_count > 0 -%}
         {%- comment -%} Image tabs: merchant-defined blocks with an uploaded picture per category. {%- endcomment -%}
         <div class="dh-tabs-wrap" id="dhTabsWrap">
         <button type="button" class="dh-tabs-arrow dh-prev" id="dhPrev" aria-label="Scroll categories left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -276,10 +316,13 @@
             <span class="dh-tab-label">{{ section.settings.all_label | default: 'All' }}</span>
           </button>
           {%- endif -%}
+          {%- assign tab_i = 0 -%}
           {%- for block in section.blocks -%}
+            {%- unless block.type == 'tab' -%}{%- continue -%}{%- endunless -%}
+            {%- assign tab_i = tab_i | plus: 1 -%}
             {%- assign cv = block.settings.category_value -%}
             {%- assign first_active = false -%}
-            {%- if section.settings.show_all_tab == false and forloop.first -%}{%- assign first_active = true -%}{%- endif -%}
+            {%- if section.settings.show_all_tab == false and tab_i == 1 -%}{%- assign first_active = true -%}{%- endif -%}
             <button type="button" class="dh-tab{% if first_active %} is-active{% endif %}" data-cat="{{ cv | handle }}" role="tab" aria-selected="{% if first_active %}true{% else %}false{% endif %}" {{ block.shopify_attributes }}>
               <span class="dh-tab-img">
                 {%- if block.settings.image != blank -%}
@@ -659,15 +702,7 @@
     { "type": "textarea", "id": "search_examples", "label": "Typing examples", "info": "One phrase per line. They type out in the search box one after another. Clear to turn the effect off.", "default": "I'm shopping for my wife.\nI'm looking for a birthday gift.\nI need a gift for my mom.\nI'm shopping for my dad.\nI want a gift for my best friend.\nI'm buying a gift for my boyfriend.\nI need an anniversary gift.\nI'm shopping for my daughter.\nI want something personalized.\nI'm looking for a unique gift.\nI need a Christmas gift.\nI'm shopping for a coworker.\nI want a custom mug.\nI'm shopping for myself.\nI'm not sure what to buy." },
 
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
-    { "type": "paragraph", "content": "Four links, one in each corner. Only show when 'Hide grid until search' is on. Leave a label empty to hide that corner." },
-    { "type": "text", "id": "corner_tl_label", "label": "Top-left label", "default": "About" },
-    { "type": "url", "id": "corner_tl_url", "label": "Top-left link" },
-    { "type": "text", "id": "corner_tr_label", "label": "Top-right label", "default": "Log in" },
-    { "type": "url", "id": "corner_tr_url", "label": "Top-right link" },
-    { "type": "text", "id": "corner_bl_label", "label": "Bottom-left label", "default": "Contact" },
-    { "type": "url", "id": "corner_bl_url", "label": "Bottom-left link" },
-    { "type": "text", "id": "corner_br_label", "label": "Bottom-right label", "default": "Terms" },
-    { "type": "url", "id": "corner_br_url", "label": "Bottom-right link" },
+    { "type": "paragraph", "content": "Add 'Corner link' blocks below (button at the bottom of this panel). Up to 3 per corner, each with an optional icon. They only show when 'Hide grid until search' is on." },
 
     { "type": "header", "content": "Category tabs" },
     { "type": "checkbox", "id": "show_grid", "label": "Show product grid & category tabs", "default": false, "info": "Off = pure search hero (just the logo/video + search bar). Turn on to show the category tabs and product cards under the search." },
@@ -697,6 +732,35 @@
     { "type": "text", "id": "empty_link_label", "label": "Empty button label", "default": "Browse all products" }
   ],
   "blocks": [
+    { "type": "corner_link", "name": "Corner link", "settings": [
+      { "type": "select", "id": "corner", "label": "Which corner", "default": "tl",
+        "options": [
+          { "value": "tl", "label": "Top-left" },
+          { "value": "tr", "label": "Top-right" },
+          { "value": "bl", "label": "Bottom-left" },
+          { "value": "br", "label": "Bottom-right" }
+        ], "info": "Up to 3 links per corner; extras beyond 3 are ignored." },
+      { "type": "text", "id": "label", "label": "Text", "default": "Link" },
+      { "type": "url", "id": "url", "label": "Link" },
+      { "type": "select", "id": "icon", "label": "Icon", "default": "none",
+        "options": [
+          { "value": "none", "label": "No icon" },
+          { "value": "account", "label": "Account (person)" },
+          { "value": "cart", "label": "Cart" },
+          { "value": "bag", "label": "Shopping bag" },
+          { "value": "heart", "label": "Heart / wishlist" },
+          { "value": "search", "label": "Search" },
+          { "value": "info", "label": "Info" },
+          { "value": "help", "label": "Help (question)" },
+          { "value": "phone", "label": "Phone" },
+          { "value": "mail", "label": "Email" },
+          { "value": "home", "label": "Home" },
+          { "value": "star", "label": "Star" },
+          { "value": "location", "label": "Location pin" }
+        ] },
+      { "type": "image_picker", "id": "icon_image", "label": "Custom icon (optional)", "info": "Overrides the icon above. A small square image works best." },
+      { "type": "checkbox", "id": "icon_only", "label": "Show icon only (hide the text)", "default": false }
+    ]},
     { "type": "tab", "name": "Image category tab", "settings": [
       { "type": "text", "id": "label", "label": "Tab label", "default": "Category" },
       { "type": "text", "id": "category_value", "label": "Filters products where Type =",
@@ -704,9 +768,16 @@
       { "type": "image_picker", "id": "image", "label": "Tab image" }
     ]}
   ],
-  "max_blocks": 12,
+  "max_blocks": 20,
   "presets": [
-    { "name": "Dynamic Hero", "settings": { "hide_until_search": true, "show_search": true, "show_tabs": true } }
+    { "name": "Dynamic Hero", "settings": { "hide_until_search": true, "show_search": true, "show_tabs": true },
+      "blocks": [
+        { "type": "corner_link", "settings": { "corner": "tl", "label": "About", "icon": "info" } },
+        { "type": "corner_link", "settings": { "corner": "tr", "label": "Account", "icon": "account" } },
+        { "type": "corner_link", "settings": { "corner": "bl", "label": "Contact", "icon": "mail" } },
+        { "type": "corner_link", "settings": { "corner": "br", "label": "Cart", "icon": "cart" } }
+      ]
+    }
   ],
   "enabled_on": { "templates": ["index"] }
 }
