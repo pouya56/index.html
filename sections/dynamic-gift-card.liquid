@@ -44,12 +44,18 @@
   .dyn-gc .gc-brand { font-weight:600; letter-spacing:0.02em; font-size:16px; }
   .dyn-gc .gc-chip { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.7); }
   .dyn-gc .gc-balance { position:relative; z-index:1; }
+  .dyn-gc .gc-balance .gc-for { font-size:13px; color:rgba(255,255,255,0.82); margin-bottom:10px; }
   .dyn-gc .gc-balance .gc-amt { font-size:44px; font-weight:600; letter-spacing:-0.02em; line-height:1; font-variant-numeric:tabular-nums; }
   .dyn-gc .gc-balance .gc-amt-label { font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.65); margin-bottom:8px; }
   .dyn-gc .gc-card-foot { position:relative; z-index:1; font-size:13px; color:rgba(255,255,255,0.7); display:flex; justify-content:space-between; align-items:flex-end; gap:12px; }
 
   .dyn-gc .gc-status { text-align:center; margin:18px 0 0; font-size:14px; font-weight:600; padding:10px 14px; border-radius:12px; }
   .dyn-gc .gc-status.is-expired { background:#fdecea; color:var(--danger); }
+
+  .dyn-gc .gc-message { background:#fff; border-radius:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05),0 12px 34px rgba(0,0,0,0.05);
+    margin-top:20px; padding:24px 28px; text-align:center; }
+  .dyn-gc .gc-message .gc-quote { width:24px; height:24px; fill:none; stroke:var(--ink-faint); stroke-width:1.6; margin:0 auto 10px; display:block; }
+  .dyn-gc .gc-message p { font-family:var(--serif); font-style:italic; font-size:21px; line-height:1.5; color:var(--ink); margin:0; }
 
   /* Code + QR panel */
   .dyn-gc .gc-panel { background:#fff; border-radius:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05),0 12px 34px rgba(0,0,0,0.05);
@@ -88,9 +94,18 @@
 </style>
 
 <section class="dyn-gc" id="dynGc">
+  {%- comment -%} Recipient name + gift message, when the card carries them. {%- endcomment -%}
+  {%- assign gc_name = '' -%}{%- assign gc_msg = '' -%}
+  {%- if gift_card -%}
+    {%- if gift_card.recipient.nickname != blank -%}{%- assign gc_name = gift_card.recipient.nickname -%}
+    {%- elsif gift_card.recipient.name != blank -%}{%- assign gc_name = gift_card.recipient.name -%}
+    {%- elsif gift_card.customer.first_name != blank -%}{%- assign gc_name = gift_card.customer.first_name -%}
+    {%- endif -%}
+    {%- if section.settings.show_message -%}{%- assign gc_msg = gift_card.message -%}{%- endif -%}
+  {%- endif -%}
   <div class="gc-wrap">
     <div class="gc-head">
-      <p class="gc-eyebrow">{{ section.settings.eyebrow | default: 'A gift for you' }}</p>
+      <p class="gc-eyebrow">{% if gc_name != blank %}For {{ gc_name }}{% else %}{{ section.settings.eyebrow | default: 'A gift for you' }}{% endif %}</p>
       <h1>{{ section.settings.heading | default: 'You’ve got a gift' }}</h1>
       {%- if section.settings.subheading != blank -%}<p>{{ section.settings.subheading }}</p>{%- endif -%}
     </div>
@@ -105,6 +120,7 @@
           <span class="gc-chip">Gift Card</span>
         </div>
         <div class="gc-balance">
+          {%- if gc_name != blank -%}<div class="gc-for">For {{ gc_name }}</div>{%- endif -%}
           <div class="gc-amt-label">Balance</div>
           <div class="gc-amt">{{ gift_card.balance | money }}</div>
         </div>
@@ -117,6 +133,13 @@
       {%- if gc_dead -%}
         <div class="gc-status is-expired">
           {% if gift_card.expired %}This gift card has expired.{% else %}This gift card is no longer active.{% endif %}
+        </div>
+      {%- endif -%}
+
+      {%- if gc_msg != blank -%}
+        <div class="gc-message">
+          <svg class="gc-quote" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2v3H5m10-11h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2v3h-2"/></svg>
+          <p>{{ gc_msg | newline_to_br }}</p>
         </div>
       {%- endif -%}
 
@@ -192,6 +215,7 @@
     { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
     { "type": "text", "id": "subheading", "label": "Subheading", "default": "Redeem it online at checkout — just enter the code or scan the QR." },
+    { "type": "checkbox", "id": "show_message", "label": "Show gift message (if the buyer added one)", "default": true },
     { "type": "checkbox", "id": "show_qr", "label": "Show QR code", "default": true },
     { "type": "text", "id": "shop_label", "label": "Shop button label", "default": "Start shopping" },
     { "type": "url", "id": "shop_url", "label": "Shop button link", "info": "Leave empty to link to all products." },
