@@ -32,8 +32,17 @@
 
   /* Landing mode: logo + search fixed in the vertical middle; results flow below.
      No shrink / move / float — everything stays put. */
-  .dyn-col.dc-landing { min-height: 100svh; }
+  .dyn-col.dc-landing { min-height: 100svh; position: relative; }
   .dyn-col.dc-landing .dc-wrap { padding-top: calc(46svh - 90px); }
+  /* Google-style corner links (home landing) */
+  .dyn-col.dc-landing .dc-corner { position: absolute; z-index: 4; font-size: 14px; color: var(--ink-soft); text-decoration: none;
+    padding: 6px 6px; transition: color .16s; }
+  .dyn-col.dc-landing .dc-corner:hover { color: var(--ink); }
+  .dyn-col.dc-landing .dc-corner-tl { top: 16px; left: 22px; }
+  .dyn-col.dc-landing .dc-corner-tr { top: 16px; right: 22px; }
+  .dyn-col.dc-landing .dc-corner-bl { bottom: 78px; left: 22px; }
+  .dyn-col.dc-landing .dc-corner-br { bottom: 78px; right: 22px; }
+  @media (max-width: 600px) { .dyn-col.dc-landing .dc-corner { font-size: 13px; } .dyn-col.dc-landing .dc-corner-bl, .dyn-col.dc-landing .dc-corner-br { bottom: 90px; } }
   .dyn-col.dc-landing .dc-head .dc-head-logo { height: clamp(40px, 6.5vw, 60px); }
   .dyn-col.dc-landing .dc-head .dc-head-video { max-height: clamp(120px, 30vh, 280px); max-width: min(88vw, 460px); }
   .dyn-col.dc-landing .dc-head h1 { font-size: clamp(30px, 5vw, 46px); }
@@ -188,6 +197,12 @@
   data-currency="{{ shop.currency }}"
   data-cat-source="{{ cat_source }}"
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}">
+  {%- if section.settings.hide_until_search -%}
+    {%- if section.settings.corner_tl_label != blank -%}<a class="dc-corner dc-corner-tl" href="{{ section.settings.corner_tl_url | default: '#' }}">{{ section.settings.corner_tl_label }}</a>{%- endif -%}
+    {%- if section.settings.corner_tr_label != blank -%}<a class="dc-corner dc-corner-tr" href="{{ section.settings.corner_tr_url | default: '#' }}">{{ section.settings.corner_tr_label }}</a>{%- endif -%}
+    {%- if section.settings.corner_bl_label != blank -%}<a class="dc-corner dc-corner-bl" href="{{ section.settings.corner_bl_url | default: '#' }}">{{ section.settings.corner_bl_label }}</a>{%- endif -%}
+    {%- if section.settings.corner_br_label != blank -%}<a class="dc-corner dc-corner-br" href="{{ section.settings.corner_br_url | default: '#' }}">{{ section.settings.corner_br_label }}</a>{%- endif -%}
+  {%- endif -%}
   <div class="dc-wrap">
     <div class="dc-head">
       {%- if section.settings.head_video != blank -%}
@@ -559,6 +574,17 @@
     { "type": "checkbox", "id": "show_search", "label": "Show live search box", "default": true, "info": "Filters the products already on this page as the shopper types — no page reload." },
     { "type": "checkbox", "id": "hide_until_search", "label": "Hide the grid until someone searches", "default": false, "info": "Great for the home page: only the search box shows; the products appear once the shopper types." },
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search these products…" },
+
+    { "type": "header", "content": "Home corners (Google-style, landing only)" },
+    { "type": "paragraph", "content": "Four links, one in each corner. Only show when 'Hide grid until search' is on. Leave a label empty to hide that corner." },
+    { "type": "text", "id": "corner_tl_label", "label": "Top-left label", "default": "About" },
+    { "type": "url", "id": "corner_tl_url", "label": "Top-left link" },
+    { "type": "text", "id": "corner_tr_label", "label": "Top-right label", "default": "Log in" },
+    { "type": "url", "id": "corner_tr_url", "label": "Top-right link" },
+    { "type": "text", "id": "corner_bl_label", "label": "Bottom-left label", "default": "Contact" },
+    { "type": "url", "id": "corner_bl_url", "label": "Bottom-left link" },
+    { "type": "text", "id": "corner_br_label", "label": "Bottom-right label", "default": "Terms" },
+    { "type": "url", "id": "corner_br_url", "label": "Bottom-right link" },
 
     { "type": "header", "content": "Category tabs" },
     { "type": "checkbox", "id": "show_tabs", "label": "Show category tabs", "default": true, "info": "Turn off to hide the category row (e.g. on the home page)." },
