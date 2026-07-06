@@ -32,7 +32,7 @@
 
   /* Landing mode: logo + search fixed in the vertical middle; results flow below.
      No shrink / move / float — everything stays put. */
-  .dyn-hero.dh-landing { height: 100svh; min-height: 520px; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  .dyn-hero.dh-landing { --media-w: min(86vw, 500px); height: 100svh; min-height: 520px; position: relative; display: flex; flex-direction: column; overflow: hidden; }
   .dyn-hero.dh-landing .dh-wrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center;
     padding-top: 4vh; padding-bottom: 18vh; }
   /* Google-style corner links (home landing) — horizontal row per corner */
@@ -126,9 +126,9 @@
   .dyn-hero .dh-form-links a { font-size: 11px; white-space: nowrap; color: var(--ink-soft); text-decoration: none; }
   .dyn-hero .dh-form-links a:hover { color: var(--ink); text-decoration: underline; }
   .dyn-hero.dh-landing .dh-head .dh-head-logo { height: clamp(40px, 6.5vw, 60px); }
-  .dyn-hero.dh-landing .dh-head .dh-head-video { max-height: clamp(120px, 30vh, 280px); max-width: min(88vw, 460px); }
+  .dyn-hero.dh-landing .dh-head .dh-head-video { max-height: clamp(120px, 30vh, 280px); max-width: var(--media-w); }
   .dyn-hero.dh-landing .dh-head h1 { font-size: clamp(30px, 5vw, 46px); }
-  .dyn-hero.dh-landing .dh-search { width: min(784px, 100%); margin-top: 30px; margin-bottom: 30px; }
+  .dyn-hero.dh-landing .dh-search { width: min(96vw, 750px); margin-top: 30px; margin-bottom: 30px; }
 
   .dyn-hero .dh-head { text-align: center; max-width: 720px; margin: 0 auto; }
   .dyn-hero .dh-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(36px, 6vw, 60px);
