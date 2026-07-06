@@ -167,7 +167,8 @@
 
 <section class="dyn-col" id="dynCol"
   data-currency="{{ shop.currency }}"
-  data-cat-source="{{ cat_source }}">
+  data-cat-source="{{ cat_source }}"
+  data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}">
   <div class="dc-wrap">
     <div class="dc-head">
       <h1>{{ section.settings.heading | default: coll.title | default: 'Store' }}</h1>
@@ -351,6 +352,9 @@
   var grid = document.getElementById("dcGrid");
   var tabs = document.getElementById("dcTabs");
   var noRes = document.getElementById("dcNoResults");
+  var tabsWrap = document.getElementById("dcTabsWrap");
+  var shelfWrap = document.getElementById("dcShelfWrap");
+  var hideUntilSearch = root.getAttribute("data-hide-until-search") === "true";
   if (!grid) return;
   var cards = Array.prototype.slice.call(grid.querySelectorAll(".dc-card"));
 
@@ -379,6 +383,16 @@
   var currentCat = "__all";
   var query = "";
   function applyFilters() {
+    // Home-page mode: keep the tabs + grid hidden until the shopper searches.
+    if (hideUntilSearch && query.length === 0) {
+      if (tabsWrap) tabsWrap.style.display = "none";
+      if (shelfWrap) shelfWrap.style.display = "none";
+      if (noRes) noRes.style.display = "none";
+      return;
+    }
+    if (tabsWrap) tabsWrap.style.display = "";
+    if (shelfWrap) shelfWrap.style.display = "";
+
     var visible = [];
     cards.forEach(function (c) {
       var cc = " " + (c.getAttribute("data-cat") || "") + " ";
@@ -499,6 +513,7 @@
 
     { "type": "header", "content": "Search box" },
     { "type": "checkbox", "id": "show_search", "label": "Show live search box", "default": true, "info": "Filters the products already on this page as the shopper types — no page reload." },
+    { "type": "checkbox", "id": "hide_until_search", "label": "Hide the grid until someone searches", "default": false, "info": "Great for the home page: only the search box shows; the products appear once the shopper types." },
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search these products…" },
 
     { "type": "header", "content": "Category tabs" },
