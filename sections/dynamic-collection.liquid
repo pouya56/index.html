@@ -1,17 +1,17 @@
 {% comment %}
   ============================================================================
-  Dynamic Collection - product grid that matches the Dynamic design system
+  Dynamic Collection - Apple-Store-style tabbed product grid
   ----------------------------------------------------------------------------
   INSTALL:
   1. Theme code editor > Sections > Add a new section > name it
      "dynamic-collection" and REPLACE its contents with this whole file.
   2. Online Store > Themes > Customize > switch the template dropdown (top) to
-     "Collection" (or "Collections list"). Remove the default product-grid
-     section, then Add section > "Dynamic Collection". Save.
-  Renders the collection with Liquid (works with JS off): serif title, optional
-  description, sort control, responsive product cards with image hover-swap,
-  sale badges, colour swatches, and native pagination. No apps required.
-  Cards link to the product page so shoppers can personalise before adding.
+     "Collection". Remove the default product-grid section, then
+     Add section > "Dynamic Collection". Save.
+  Category tabs sit at the top (built from product type or tag). Selecting a
+  tab filters instantly and the grid re-reveals with a left-to-right cascade.
+  Works with JS off (all products show, no animation). Cards link to the
+  product page so shoppers personalise before adding. No apps required.
   ============================================================================
 {% endcomment %}
 
@@ -30,30 +30,34 @@
   .dyn-col, .dyn-col *, .dyn-col *::before, .dyn-col *::after { box-sizing: border-box; }
   .dyn-col .dc-wrap { max-width: 1280px; margin: 0 auto; padding: 44px 22px 90px; }
 
-  .dyn-col .dc-head { text-align: center; max-width: 720px; margin: 0 auto 8px; }
+  .dyn-col .dc-head { text-align: center; max-width: 720px; margin: 0 auto; }
   .dyn-col .dc-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(36px, 6vw, 60px);
     line-height: 1.02; margin: 0; letter-spacing: -0.01em; }
   .dyn-col .dc-head .dc-desc { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 16px auto 0; max-width: 620px; }
 
-  .dyn-col .dc-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-    margin: 30px 0 22px; }
-  .dyn-col .dc-count { font-size: 14px; color: var(--ink-faint); }
-  .dyn-col .dc-sort { display: flex; align-items: center; gap: 9px; }
-  .dyn-col .dc-sort label { font-size: 13px; color: var(--ink-faint); }
-  .dyn-col .dc-sort .dc-select { position: relative; }
-  .dyn-col .dc-sort select { appearance: none; -webkit-appearance: none; font-family: var(--font); font-size: 14px; color: var(--ink);
-    background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 10px 38px 10px 16px; cursor: pointer;
-    transition: border-color .16s; }
-  .dyn-col .dc-sort select:hover { border-color: var(--ink-faint); }
-  .dyn-col .dc-sort select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
-  .dyn-col .dc-sort .dc-select svg { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px;
-    pointer-events: none; fill: none; stroke: var(--ink-soft); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  /* Category tabs */
+  .dyn-col .dc-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 28px auto 30px; max-width: 980px; }
+  .dyn-col .dc-tab { border: none; background: transparent; font-family: var(--font); font-size: 14px; font-weight: 500;
+    color: var(--ink-soft); padding: 9px 18px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+    transition: background .18s, color .18s; }
+  .dyn-col .dc-tab:hover { color: var(--ink); background: rgba(0,0,0,0.045); }
+  .dyn-col .dc-tab.is-active { background: var(--ink); color: #fff; }
 
   .dyn-col .dc-grid { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 22px; }
 
+  /* Entrance animation - cards start hidden, JS reveals them with a stagger.
+     <noscript> below restores visibility when JS is off. */
+  .dyn-col .dc-grid .dc-card { opacity: 0; transform: translateX(-22px); will-change: opacity, transform; }
+  .dyn-col .dc-grid .dc-card.in { opacity: 1; transform: none;
+    transition: opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
+  @media (prefers-reduced-motion: reduce) {
+    .dyn-col .dc-grid .dc-card { opacity: 1 !important; transform: none !important; transition: none !important; }
+  }
+
   .dyn-col .dc-card { background: var(--bg); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04); transition: box-shadow .2s ease, transform .2s ease; }
-  .dyn-col .dc-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 16px 40px rgba(0,0,0,0.08); transform: translateY(-3px); }
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  .dyn-col .dc-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 16px 40px rgba(0,0,0,0.08); }
+  .dyn-col .dc-card, .dyn-col .dc-card.in { transition: opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1), box-shadow .2s ease; }
   .dyn-col .dc-media { position: relative; display: block; aspect-ratio: var(--ratio); background: var(--bg-panel); overflow: hidden; }
   .dyn-col .dc-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .35s ease, transform .5s ease; }
   .dyn-col .dc-media .dc-ph { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--bg-panel); }
@@ -88,176 +92,208 @@
     padding: 11px 16px; font-size: 14px; font-weight: 600; text-decoration: none; transition: background .16s, color .16s; }
   .dyn-col .dc-cta a:hover { background: var(--ink); color: #fff; }
 
+  .dyn-col .dc-noresults { display: none; text-align: center; padding: 60px 20px; color: var(--ink-soft); font-size: 16px; }
   .dyn-col .dc-empty { text-align: center; padding: 80px 20px; background: var(--bg); border-radius: 22px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 12px 34px rgba(0,0,0,0.05); }
   .dyn-col .dc-empty p { font-size: 18px; color: var(--ink-soft); margin: 0 0 26px; }
   .dyn-col .dc-empty a { display: inline-flex; background: var(--ink); color: #fff; padding: 14px 30px; border-radius: 999px;
     font-weight: 600; text-decoration: none; }
 
-  .dyn-col .dc-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 48px; }
-  .dyn-col .dc-pagination a, .dyn-col .dc-pagination span { min-width: 42px; height: 42px; display: inline-flex; align-items: center;
-    justify-content: center; padding: 0 12px; border-radius: 999px; font-size: 14px; text-decoration: none; color: var(--ink); transition: background .16s; }
-  .dyn-col .dc-pagination a:hover { background: rgba(0,0,0,0.06); }
-  .dyn-col .dc-pagination .dc-pg-current { background: var(--ink); color: #fff; }
-  .dyn-col .dc-pagination .dc-pg-gap { color: var(--ink-faint); min-width: auto; }
-
   @media (max-width: 1100px) { .dyn-col .dc-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
-  @media (max-width: 800px)  { .dyn-col .dc-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; } }
-  @media (max-width: 460px)  { .dyn-col .dc-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
-    .dyn-col .dc-body { padding: 12px 12px 14px; } .dyn-col .dc-cta a { padding: 10px 12px; } }
+  @media (max-width: 800px)  {
+    .dyn-col .dc-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+    .dyn-col .dc-tabs { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; padding-bottom: 4px; }
+    .dyn-col .dc-tabs::-webkit-scrollbar { display: none; }
+  }
+  @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-body { padding: 12px 12px 14px; } .dyn-col .dc-cta a { padding: 10px 12px; } }
 </style>
 
 {%- assign coll = section.settings.collection | default: collection -%}
 {%- if coll == blank and collection != blank -%}{%- assign coll = collection -%}{%- endif -%}
+{%- assign cat_source = section.settings.category_source | default: 'type' -%}
 
 <section class="dyn-col" id="dynCol"
   data-currency="{{ shop.currency }}"
-  data-money-format="{{ shop.money_format | escape }}">
+  data-cat-source="{{ cat_source }}">
   <div class="dc-wrap">
     <div class="dc-head">
-      <h1>{{ section.settings.heading | default: coll.title | default: 'All products' }}</h1>
+      <h1>{{ section.settings.heading | default: coll.title | default: 'Store' }}</h1>
       {%- if section.settings.show_description and coll.description != blank -%}
         <div class="dc-desc">{{ coll.description | strip_html | truncatewords: 40 }}</div>
       {%- endif -%}
     </div>
 
-    {%- paginate coll.products by section.settings.per_page -%}
-      {%- if coll.products.size == 0 -%}
-        <div class="dc-empty">
-          <p>{{ section.settings.empty_text | default: 'Nothing here yet.' }}</p>
-          <a href="{{ routes.all_products_collection_url }}">{{ section.settings.empty_link_label | default: 'Browse all products' }}</a>
-        </div>
+    {%- assign prods = coll.products -%}
+    {%- if prods.size == 0 -%}
+      <div class="dc-empty">
+        <p>{{ section.settings.empty_text | default: 'Nothing here yet.' }}</p>
+        <a href="{{ routes.all_products_collection_url }}">{{ section.settings.empty_link_label | default: 'Browse all products' }}</a>
+      </div>
+    {%- else -%}
+      {%- comment -%} Build the category tabs from product type or tag. {%- endcomment -%}
+      {%- if cat_source == 'tag' -%}
+        {%- assign cats = coll.all_tags -%}
       {%- else -%}
-        <div class="dc-toolbar">
-          <span class="dc-count">{{ coll.products_count }} {% if coll.products_count == 1 %}product{% else %}products{% endif %}</span>
-          {%- if section.settings.show_sort -%}
-            {%- assign default_sort = coll.sort_by | default: coll.default_sort_by -%}
-            <form method="get" class="dc-sort" id="dcSortForm">
-              <label for="dcSort">Sort by</label>
-              <span class="dc-select">
-                <select name="sort_by" id="dcSort">
-                  {%- for opt in coll.sort_options -%}
-                    <option value="{{ opt.value }}"{% if opt.value == default_sort %} selected{% endif %}>{{ opt.name }}</option>
-                  {%- endfor -%}
-                </select>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-            </form>
-          {%- endif -%}
-        </div>
+        {%- assign cats = coll.all_types -%}
+      {%- endif -%}
 
-        <div class="dc-grid" id="dcGrid">
-          {%- for product in coll.products -%}
-            {%- assign on_sale = false -%}
-            {%- if product.compare_at_price > product.price -%}{%- assign on_sale = true -%}{%- endif -%}
+      {%- assign real_cats = '' -%}
+      {%- for c in cats -%}{%- if c != blank -%}{%- assign real_cats = real_cats | append: '1' -%}{%- endif -%}{%- endfor -%}
 
-            {%- comment -%} Second image for hover swap. {%- endcomment -%}
-            {%- assign img2 = blank -%}
-            {%- if product.images.size > 1 -%}{%- assign img2 = product.images[1] -%}{%- endif -%}
-
-            <div class="dc-card">
-              <a class="dc-media" href="{{ product.url }}">
-                <div class="dc-badges">
-                  {%- if on_sale -%}
-                    {%- assign pct = product.compare_at_price | minus: product.price | times: 100.0 | divided_by: product.compare_at_price | round -%}
-                    <span class="dc-badge dc-badge-sale">Save {{ pct }}%</span>
-                  {%- endif -%}
-                  {%- unless product.available -%}<span class="dc-badge dc-badge-soldout">Sold out</span>{%- endunless -%}
-                </div>
-                {%- if product.featured_image -%}
-                  <img class="dc-img-1{% if img2 != blank %} has-2{% endif %}" src="{{ product.featured_image | image_url: width: 600 }}"
-                    alt="{{ product.featured_image.alt | default: product.title | escape }}" width="600" height="600" loading="lazy">
-                  {%- if img2 != blank -%}
-                    <img class="dc-img-2" src="{{ img2 | image_url: width: 600 }}" alt="" width="600" height="600" loading="lazy" aria-hidden="true">
-                  {%- endif -%}
-                {%- else -%}
-                  {{ 'product-1' | placeholder_svg_tag: 'dc-img-1 dc-ph' }}
-                {%- endif -%}
-              </a>
-
-              <div class="dc-body">
-                {%- if section.settings.show_vendor and product.vendor != blank -%}
-                  <div class="dc-vendor">{{ product.vendor }}</div>
-                {%- endif -%}
-                <h3 class="dc-title"><a href="{{ product.url }}">{{ product.title }}</a></h3>
-                <div class="dc-price">
-                  <span class="dc-now{% if on_sale %} on-sale{% endif %}">{{ product.price | money }}</span>
-                  {%- if on_sale -%}<span class="dc-was">{{ product.compare_at_price | money }}</span>{%- endif -%}
-                </div>
-
-                {%- if section.settings.show_swatches -%}
-                  {%- assign color_opt = blank -%}
-                  {%- for o in product.options_with_values -%}
-                    {%- assign on = o.name | downcase -%}
-                    {%- if on contains 'color' or on contains 'colour' -%}{%- assign color_opt = o -%}{%- endif -%}
-                  {%- endfor -%}
-                  {%- if color_opt != blank -%}
-                    <div class="dc-swatches" data-opt-pos="{{ color_opt.position }}">
-                      {%- assign shown = 0 -%}
-                      {%- assign cidx = color_opt.position | minus: 1 -%}
-                      {%- for val in color_opt.values -%}
-                        {%- if shown < 5 -%}
-                          {%- comment -%} Find a variant image for this colour value (for hover swap). {%- endcomment -%}
-                          {%- assign vimg = '' -%}
-                          {%- for v in product.variants -%}
-                            {%- assign optval = v.options[cidx] -%}
-                            {%- if optval == val and v.image -%}{%- assign vimg = v.image | image_url: width: 600 -%}{%- break -%}{%- endif -%}
-                          {%- endfor -%}
-                          <button type="button" class="dc-swatch" data-color="{{ val | escape }}" data-img="{{ vimg }}"
-                            title="{{ val | escape }}" aria-label="{{ val | escape }}"></button>
-                          {%- assign shown = shown | plus: 1 -%}
-                        {%- endif -%}
-                      {%- endfor -%}
-                      {%- assign extra = color_opt.values.size | minus: 5 -%}
-                      {%- if extra > 0 -%}<span class="dc-swatch-more">+{{ extra }}</span>{%- endif -%}
-                    </div>
-                  {%- endif -%}
-                {%- endif -%}
-
-                <div class="dc-cta">
-                  <a href="{{ product.url }}">{{ section.settings.button_label | default: 'View' }}</a>
-                </div>
-              </div>
-            </div>
+      {%- if real_cats != blank -%}
+        <div class="dc-tabs" id="dcTabs" role="tablist">
+          <button type="button" class="dc-tab is-active" data-cat="__all" role="tab" aria-selected="true">{{ section.settings.all_label | default: 'All' }}</button>
+          {%- for c in cats -%}
+            {%- unless c == blank -%}
+              <button type="button" class="dc-tab" data-cat="{{ c | handle }}" role="tab" aria-selected="false">{{ c }}</button>
+            {%- endunless -%}
           {%- endfor -%}
         </div>
-
-        {%- if paginate.pages > 1 -%}
-          <nav class="dc-pagination" role="navigation" aria-label="Pagination">
-            {%- if paginate.previous -%}<a href="{{ paginate.previous.url }}" aria-label="Previous">&lsaquo;</a>{%- endif -%}
-            {%- for part in paginate.parts -%}
-              {%- if part.is_link -%}
-                <a href="{{ part.url }}">{{ part.title }}</a>
-              {%- elsif part.title == paginate.current_page -%}
-                <span class="dc-pg-current" aria-current="page">{{ part.title }}</span>
-              {%- else -%}
-                <span class="dc-pg-gap">{{ part.title }}</span>
-              {%- endif -%}
-            {%- endfor -%}
-            {%- if paginate.next -%}<a href="{{ paginate.next.url }}" aria-label="Next">&rsaquo;</a>{%- endif -%}
-          </nav>
-        {%- endif -%}
       {%- endif -%}
-    {%- endpaginate -%}
+
+      <div class="dc-grid" id="dcGrid">
+        {%- for product in prods limit: section.settings.max_products -%}
+          {%- assign on_sale = false -%}
+          {%- if product.compare_at_price > product.price -%}{%- assign on_sale = true -%}{%- endif -%}
+
+          {%- if cat_source == 'tag' -%}
+            {%- capture card_cat -%}{% for tag in product.tags %}{{ tag | handle }} {% endfor %}{%- endcapture -%}
+          {%- else -%}
+            {%- assign card_cat = product.type | handle -%}
+          {%- endif -%}
+
+          {%- assign img2 = blank -%}
+          {%- if product.images.size > 1 -%}{%- assign img2 = product.images[1] -%}{%- endif -%}
+
+          <div class="dc-card" data-cat="{{ card_cat | strip }}">
+            <a class="dc-media" href="{{ product.url }}">
+              <div class="dc-badges">
+                {%- if on_sale -%}
+                  {%- assign pct = product.compare_at_price | minus: product.price | times: 100.0 | divided_by: product.compare_at_price | round -%}
+                  <span class="dc-badge dc-badge-sale">Save {{ pct }}%</span>
+                {%- endif -%}
+                {%- unless product.available -%}<span class="dc-badge dc-badge-soldout">Sold out</span>{%- endunless -%}
+              </div>
+              {%- if product.featured_image -%}
+                <img class="dc-img-1{% if img2 != blank %} has-2{% endif %}" src="{{ product.featured_image | image_url: width: 600 }}"
+                  alt="{{ product.featured_image.alt | default: product.title | escape }}" width="600" height="600" loading="lazy">
+                {%- if img2 != blank -%}
+                  <img class="dc-img-2" src="{{ img2 | image_url: width: 600 }}" alt="" width="600" height="600" loading="lazy" aria-hidden="true">
+                {%- endif -%}
+              {%- else -%}
+                {{ 'product-1' | placeholder_svg_tag: 'dc-img-1 dc-ph' }}
+              {%- endif -%}
+            </a>
+
+            <div class="dc-body">
+              {%- if section.settings.show_vendor and product.vendor != blank -%}
+                <div class="dc-vendor">{{ product.vendor }}</div>
+              {%- endif -%}
+              <h3 class="dc-title"><a href="{{ product.url }}">{{ product.title }}</a></h3>
+              <div class="dc-price">
+                <span class="dc-now{% if on_sale %} on-sale{% endif %}">{{ product.price | money }}</span>
+                {%- if on_sale -%}<span class="dc-was">{{ product.compare_at_price | money }}</span>{%- endif -%}
+              </div>
+
+              {%- if section.settings.show_swatches -%}
+                {%- assign color_opt = blank -%}
+                {%- for o in product.options_with_values -%}
+                  {%- assign on = o.name | downcase -%}
+                  {%- if on contains 'color' or on contains 'colour' -%}{%- assign color_opt = o -%}{%- endif -%}
+                {%- endfor -%}
+                {%- if color_opt != blank -%}
+                  <div class="dc-swatches">
+                    {%- assign shown = 0 -%}
+                    {%- assign cidx = color_opt.position | minus: 1 -%}
+                    {%- for val in color_opt.values -%}
+                      {%- if shown < 5 -%}
+                        {%- assign vimg = '' -%}
+                        {%- for v in product.variants -%}
+                          {%- assign optval = v.options[cidx] -%}
+                          {%- if optval == val and v.image -%}{%- assign vimg = v.image | image_url: width: 600 -%}{%- break -%}{%- endif -%}
+                        {%- endfor -%}
+                        <button type="button" class="dc-swatch" data-color="{{ val | escape }}" data-img="{{ vimg }}"
+                          title="{{ val | escape }}" aria-label="{{ val | escape }}"></button>
+                        {%- assign shown = shown | plus: 1 -%}
+                      {%- endif -%}
+                    {%- endfor -%}
+                    {%- assign extra = color_opt.values.size | minus: 5 -%}
+                    {%- if extra > 0 -%}<span class="dc-swatch-more">+{{ extra }}</span>{%- endif -%}
+                  </div>
+                {%- endif -%}
+              {%- endif -%}
+
+              <div class="dc-cta">
+                <a href="{{ product.url }}">{{ section.settings.button_label | default: 'View' }}</a>
+              </div>
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+      <div class="dc-noresults" id="dcNoResults">Nothing in this category yet.</div>
+    {%- endif -%}
   </div>
 </section>
+
+<noscript>
+  <style>.dyn-col .dc-grid .dc-card { opacity: 1 !important; transform: none !important; }</style>
+</noscript>
 
 <script>
 (function () {
   var root = document.getElementById("dynCol");
   if (!root) return;
+  var grid = document.getElementById("dcGrid");
+  var tabs = document.getElementById("dcTabs");
+  var noRes = document.getElementById("dcNoResults");
+  if (!grid) return;
+  var cards = Array.prototype.slice.call(grid.querySelectorAll(".dc-card"));
 
-  // Sort control: submit on change but preserve any existing query params.
-  var sortSel = document.getElementById("dcSort");
-  if (sortSel) sortSel.addEventListener("change", function () {
-    var url = new URL(window.location.href);
-    url.searchParams.set("sort_by", sortSel.value);
-    url.searchParams.delete("page");
-    window.location.href = url.toString();
+  // How many columns the grid currently shows (for a per-row left->right sweep).
+  function colCount() {
+    var t = getComputedStyle(grid).gridTemplateColumns;
+    var n = t ? t.split(" ").filter(Boolean).length : 1;
+    return n || 1;
+  }
+
+  // Reveal the given cards with a left-to-right, row-by-row cascade.
+  function reveal(visible) {
+    var cols = colCount();
+    visible.forEach(function (c) { c.classList.remove("in"); c.style.transitionDelay = "0ms"; });
+    void grid.offsetWidth; // force reflow so removing/re-adding .in restarts the transition
+    visible.forEach(function (c, i) {
+      var col = i % cols, rowN = Math.floor(i / cols);
+      c.style.transitionDelay = (col * 55 + rowN * 60) + "ms";
+      c.classList.add("in");
+    });
+  }
+
+  function filterTo(cat) {
+    var visible = [];
+    cards.forEach(function (c) {
+      var cc = " " + (c.getAttribute("data-cat") || "") + " ";
+      var match = cat === "__all" || cc.indexOf(" " + cat + " ") >= 0;
+      c.style.display = match ? "" : "none";
+      if (match) visible.push(c);
+    });
+    if (noRes) noRes.style.display = visible.length ? "none" : "block";
+    reveal(visible);
+  }
+
+  if (tabs) tabs.addEventListener("click", function (e) {
+    var btn = e.target.closest(".dc-tab"); if (!btn) return;
+    tabs.querySelectorAll(".dc-tab").forEach(function (b) { b.classList.remove("is-active"); b.setAttribute("aria-selected", "false"); });
+    btn.classList.add("is-active"); btn.setAttribute("aria-selected", "true");
+    try { btn.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch (x) {}
+    filterTo(btn.getAttribute("data-cat"));
   });
 
-  // Colour swatches: paint the dots from a small name->colour map and, on hover,
-  // swap the card's image to that colour's variant image.
+  // Initial reveal on load.
+  reveal(cards);
+
+  // Colour swatches: paint the dots from a name->colour map; hovering a dot
+  // swaps the card image to that colour's variant photo.
   var MAP = {
     black:"#1d1d1f", white:"#f5f5f7", grey:"#8e8e93", gray:"#8e8e93", silver:"#c7c7cc",
     red:"#d0021b", crimson:"#b00020", maroon:"#7b1e1e", orange:"#f5820d", amber:"#ffb300",
@@ -274,19 +310,16 @@
     if (MAP[n]) return MAP[n];
     var words = n.split(/[\s/]+/);
     for (var i = words.length - 1; i >= 0; i--) { if (MAP[words[i]]) return MAP[words[i]]; }
-    // CSS may understand it directly (e.g. "tomato"); test it.
     var t = new Option().style; t.color = ""; t.color = n; if (t.color !== "") return n;
     return "#c7c7cc";
   }
-  root.querySelectorAll(".dc-card").forEach(function (card) {
+  cards.forEach(function (card) {
     var img1 = card.querySelector(".dc-media .dc-img-1");
     var baseSrc = img1 ? img1.getAttribute("src") : "";
     card.querySelectorAll(".dc-swatch").forEach(function (sw) {
       sw.style.background = colorFor(sw.getAttribute("data-color"));
       var vimg = sw.getAttribute("data-img");
-      if (vimg && img1) {
-        sw.addEventListener("mouseenter", function () { img1.src = vimg; });
-      }
+      if (vimg && img1) sw.addEventListener("mouseenter", function () { img1.src = vimg; });
     });
     if (img1) card.addEventListener("mouseleave", function () { if (baseSrc) img1.src = baseSrc; });
   });
@@ -306,9 +339,16 @@
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
     { "type": "checkbox", "id": "show_description", "label": "Show collection description", "default": true },
 
+    { "type": "header", "content": "Category tabs" },
+    { "type": "select", "id": "category_source", "label": "Build tabs from", "default": "type",
+      "options": [ { "value": "type", "label": "Product type" }, { "value": "tag", "label": "Product tag" } ],
+      "info": "Tabs are created from every product type (or tag) in the collection. Set product types/tags in each product's admin page. If products have none, tabs are hidden." },
+    { "type": "text", "id": "all_label", "label": "First tab label", "default": "All" },
+
     { "type": "header", "content": "Grid" },
     { "type": "range", "id": "columns", "min": 2, "max": 5, "step": 1, "label": "Columns (desktop)", "default": 4 },
-    { "type": "range", "id": "per_page", "min": 8, "max": 48, "step": 4, "label": "Products per page", "default": 24 },
+    { "type": "range", "id": "max_products", "min": 8, "max": 50, "step": 2, "label": "Max products shown", "default": 48,
+      "info": "Tabs filter this loaded set instantly. Raise it if a category looks short." },
     { "type": "select", "id": "image_ratio", "label": "Image shape", "default": "natural",
       "options": [ { "value": "natural", "label": "Natural (tall)" }, { "value": "portrait", "label": "Portrait" }, { "value": "square", "label": "Square" }, { "value": "landscape", "label": "Landscape" } ] },
 
@@ -316,9 +356,6 @@
     { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": false },
     { "type": "checkbox", "id": "show_swatches", "label": "Show colour swatches", "default": true },
     { "type": "text", "id": "button_label", "label": "Card button label", "default": "View" },
-
-    { "type": "header", "content": "Toolbar" },
-    { "type": "checkbox", "id": "show_sort", "label": "Show sort dropdown", "default": true },
 
     { "type": "header", "content": "Empty state" },
     { "type": "text", "id": "empty_text", "label": "Empty message", "default": "Nothing here yet." },
