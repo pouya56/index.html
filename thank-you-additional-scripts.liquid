@@ -1,0 +1,81 @@
+<!--
+  ============================================================================
+  Dynamic - Thank-you / Order-status page block
+  ----------------------------------------------------------------------------
+  WHERE TO PASTE (no Shopify Plus needed):
+  Shopify admin > Settings > Checkout > scroll to "Order status page" >
+  "Additional scripts" box > paste this whole file > Save.
+  It shows on the Thank-you page (right after payment) and the Order-status
+  page. Uses Liquid order variables, so it greets the customer by name and
+  shows their order number. Matches the Dynamic design system.
+  NOTE: if your store is on Checkout Extensibility, the "Additional scripts"
+  box may be gone - tell me and I'll switch this to a checkout UI extension.
+  ============================================================================
+-->
+<style>
+  #dyn-ty, #dyn-ty * , #dyn-ty *::before, #dyn-ty *::after { box-sizing: border-box; }
+  #dyn-ty {
+    --ink:#1d1d1f; --ink-soft:#6e6e73; --ink-faint:#86868b; --line:#e3e3e6;
+    --accent:#0071e3; --panel:#f5f5f7;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Cormorant Garamond",Georgia,"Times New Roman",Times,serif;
+    display:block; font-family:var(--font); color:var(--ink); -webkit-font-smoothing:antialiased; margin:22px 0 8px;
+  }
+  #dyn-ty .ty-card { background:#fff; border:1px solid var(--line); border-radius:20px; padding:34px 30px 30px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04),0 14px 40px rgba(0,0,0,0.06); max-width:600px; margin:0 auto; text-align:center; }
+  #dyn-ty .ty-check { width:60px; height:60px; border-radius:50%; background:var(--accent); display:grid; place-items:center;
+    margin:0 auto 18px; }
+  #dyn-ty .ty-check svg { width:30px; height:30px; fill:none; stroke:#fff; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+  #dyn-ty .ty-title { font-family:var(--serif); font-weight:500; font-size:34px; line-height:1.05; letter-spacing:-0.01em; margin:0 0 8px; }
+  #dyn-ty .ty-order { font-size:14px; color:var(--ink-faint); margin:0 0 18px; }
+  #dyn-ty .ty-order b { color:var(--ink); font-weight:600; }
+  #dyn-ty .ty-msg { font-size:16px; line-height:1.6; color:var(--ink-soft); margin:0 auto 24px; max-width:460px; }
+
+  #dyn-ty .ty-steps { display:grid; gap:14px; text-align:left; max-width:440px; margin:0 auto 26px; }
+  #dyn-ty .ty-step { display:flex; gap:14px; align-items:flex-start; }
+  #dyn-ty .ty-step-n { flex:0 0 auto; width:28px; height:28px; border-radius:50%; background:var(--panel); color:var(--ink);
+    font-size:13px; font-weight:600; display:grid; place-items:center; }
+  #dyn-ty .ty-step-t { font-size:15px; font-weight:600; line-height:1.3; }
+  #dyn-ty .ty-step-d { font-size:13.5px; color:var(--ink-soft); line-height:1.45; margin-top:2px; }
+
+  #dyn-ty .ty-cta { display:inline-flex; align-items:center; justify-content:center; background:var(--ink); color:#fff;
+    text-decoration:none; font-weight:600; font-size:15px; padding:14px 34px; border-radius:999px; transition:opacity .16s; }
+  #dyn-ty .ty-cta:hover { opacity:.9; }
+  #dyn-ty .ty-help { font-size:13px; color:var(--ink-faint); margin:18px 0 0; }
+  #dyn-ty .ty-help a { color:var(--accent); text-decoration:none; }
+  @media (max-width:520px){ #dyn-ty .ty-card{ padding:28px 20px 24px; } #dyn-ty .ty-title{ font-size:29px; } }
+</style>
+
+{% assign ty_first = checkout.customer.first_name | default: checkout.billing_address.first_name | default: '' %}
+
+<div id="dyn-ty">
+  <div class="ty-card">
+    <div class="ty-check" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 class="ty-title">Thank you{% if ty_first != '' %}, {{ ty_first }}{% endif %}.</h2>
+    <p class="ty-order">Order <b>#{{ checkout.order_number }}</b> is confirmed. A receipt is on its way to your inbox.</p>
+    <p class="ty-msg">Every piece is made to order, just for you. We'll start crafting your order now and email you the moment it ships.</p>
+
+    <div class="ty-steps">
+      <div class="ty-step">
+        <span class="ty-step-n">1</span>
+        <div><div class="ty-step-t">We craft your order</div>
+          <div class="ty-step-d">Your personalized items are printed and made to order over the next few days.</div></div>
+      </div>
+      <div class="ty-step">
+        <span class="ty-step-n">2</span>
+        <div><div class="ty-step-t">Shipping confirmation</div>
+          <div class="ty-step-d">You'll get an email with tracking as soon as your order leaves us.</div></div>
+      </div>
+      <div class="ty-step">
+        <span class="ty-step-n">3</span>
+        <div><div class="ty-step-t">It arrives</div>
+          <div class="ty-step-d">Unwrap something made just the way you designed it.</div></div>
+      </div>
+    </div>
+
+    <a class="ty-cta" href="{{ shop.url }}">Continue shopping</a>
+    <p class="ty-help">Questions about your order? <a href="mailto:{{ shop.email }}">Contact us</a>.</p>
+  </div>
+</div>
