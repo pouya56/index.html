@@ -33,8 +33,37 @@
   .dyn-sug .ds-topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(245,245,247,0.92);
     -webkit-backdrop-filter: saturate(1.6) blur(18px); backdrop-filter: saturate(1.6) blur(18px);
     border-bottom: 1px solid rgba(0,0,0,0.08); box-shadow: 0 2px 14px rgba(0,0,0,0.06); }
-  .dyn-sug .ds-top-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
+  .dyn-sug .ds-top-inner { position: relative; max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
     gap: 16px; padding: 18px 32px; }
+  .dyn-sug .ds-top-item { cursor: pointer; border-radius: 12px; }
+  .dyn-sug .ds-top-caret { width: 20px; height: 20px; fill: none; stroke: var(--ink-soft); stroke-width: 2.2; stroke-linecap: round;
+    stroke-linejoin: round; flex: none; margin-left: 2px; transition: transform .2s; }
+  .dyn-sug .ds-top-item[aria-expanded="true"] .ds-top-caret { transform: rotate(180deg); }
+
+  .dyn-sug .ds-cart-panel { position: absolute; top: calc(100% + 6px); left: 32px; width: min(440px, calc(100vw - 48px));
+    background: #fff; border-radius: 16px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 18px 50px rgba(0,0,0,0.22);
+    overflow: hidden; z-index: 120; }
+  .dyn-sug .ds-cart-list { max-height: min(58vh, 460px); overflow-y: auto; padding: 4px 16px; }
+  .dyn-sug .ds-cart-empty2 { padding: 26px; text-align: center; color: var(--ink-faint); font-size: 14px; }
+  .dyn-sug .ds-cart-row { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+  .dyn-sug .ds-cart-row:last-child { border-bottom: none; }
+  .dyn-sug .ds-cart-row img { width: 50px; height: 50px; border-radius: 8px; object-fit: contain; background: #f5f5f7;
+    border: 1px solid rgba(0,0,0,0.06); flex: none; padding: 3px; }
+  .dyn-sug .ds-cart-rmeta { flex: 1; min-width: 0; }
+  .dyn-sug .ds-cart-rtitle { font-size: 14px; font-weight: 500; line-height: 1.25; }
+  .dyn-sug .ds-cart-rvar { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .dyn-sug .ds-cart-rqty { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; margin-top: 8px; }
+  .dyn-sug .ds-cart-rqty button { width: 26px; height: 26px; border: none; background: transparent; cursor: pointer; font-size: 15px;
+    line-height: 1; color: var(--ink); border-radius: 999px; }
+  .dyn-sug .ds-cart-rqty button:hover { background: rgba(0,0,0,0.05); }
+  .dyn-sug .ds-cart-rqty span { min-width: 22px; text-align: center; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .dyn-sug .ds-cart-rright { text-align: right; flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .dyn-sug .ds-cart-rprice { font-size: 14px; font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .dyn-sug .ds-cart-rremove { background: none; border: none; color: var(--ink-faint); cursor: pointer; font-size: 12px;
+    text-decoration: underline; padding: 0; }
+  .dyn-sug .ds-cart-rremove:hover { color: #c0392b; }
+  .dyn-sug .ds-cart-foot { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 18px;
+    border-top: 1px solid rgba(0,0,0,0.08); font-weight: 600; font-size: 15px; }
   .dyn-sug .ds-top-item { display: flex; align-items: center; gap: 20px; min-width: 0; }
   .dyn-sug .ds-top-thumbs { display: flex; align-items: center; gap: 8px; flex: none; }
   .dyn-sug .ds-top-thumb { width: 58px; height: 58px; object-fit: contain; border-radius: 12px; background: #fff; flex: none;
@@ -107,6 +136,7 @@
     .dyn-sug .ds-top-inner { padding: 12px 18px; }
     .dyn-sug .ds-top-thumb, .dyn-sug .ds-top-more { width: 44px; height: 44px; border-radius: 10px; font-size: 14px; }
     .dyn-sug .ds-top-thumbs { gap: 6px; }
+    .dyn-sug .ds-cart-panel { left: 18px; }
     .dyn-sug .ds-top-item { gap: 12px; }
     .dyn-sug .ds-top-title { font-size: 15px; }
     .dyn-sug .ds-review { padding: 10px 18px; font-size: 15px; }
@@ -121,15 +151,20 @@
   data-limit="{{ section.settings.max_items | default: 12 }}">
   <div class="ds-topbar" id="dsTop" hidden>
     <div class="ds-top-inner">
-      <div class="ds-top-item">
+      <div class="ds-top-item" id="dsTopToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="dsCartPanel" title="Show all items">
         <div class="ds-top-thumbs" id="dsTopThumbs"></div>
         <div class="ds-top-txt">
           <div class="ds-top-title" id="dsTopTitle"></div>
           <div class="ds-top-sub">{{ section.settings.bag_subtitle | default: 'One-time payment' }}</div>
           <div class="ds-top-note" id="dsTopNote"></div>
         </div>
+        <svg class="ds-top-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <a class="ds-review" href="{{ section.settings.checkout_url | default: '/checkout' }}">{{ section.settings.checkout_label | default: 'Check out' }}</a>
+      <div class="ds-cart-panel" id="dsCartPanel" hidden>
+        <div class="ds-cart-list" id="dsCartList"></div>
+        <div class="ds-cart-foot"><span>Subtotal</span><span id="dsPanelSub"></span></div>
+      </div>
     </div>
   </div>
 
@@ -304,15 +339,22 @@
       .then(function (r) { return r.json(); }).then(function (d) { return (d && d.products) || []; }).catch(function () { return []; });
   }
 
-  // 1) Read the cart: show a thumbnail per item (last-added first), + a "+N" box
-  //    linking to the full cart when there are more than 5.
+  // Top-bar mini-cart. Thumbnails (newest first, capped) + a "+N" box that opens
+  // a dropdown listing EVERY item, with quantity and remove — no trip to /cart.
   var MAX_THUMBS = window.innerWidth < 640 ? 3 : 5;
-  fetch("/cart.js", { headers: { "Accept": "application/json" } }).then(function (r) { return r.json(); }).then(function (cart) {
+  var top = document.getElementById("dsTop");
+  var thumbs = document.getElementById("dsTopThumbs");
+  var toggle = document.getElementById("dsTopToggle");
+  var panel = document.getElementById("dsCartPanel");
+  var panelList = document.getElementById("dsCartList");
+  var panelSub = document.getElementById("dsPanelSub");
+  function reserveTopSpace() { root.style.paddingTop = top.offsetHeight + "px"; }
+
+  function paintCart(cart) {
     var items = ((cart && cart.items) || []).slice().reverse(); // newest first
-    if (!items.length) { renderCards([]); return; }
-    var last = items[0];
-    var top = document.getElementById("dsTop");
-    var thumbs = document.getElementById("dsTopThumbs");
+    var count = (cart && cart.item_count != null) ? cart.item_count : items.length;
+    var subtotal = (cart && cart.items_subtotal_price != null) ? cart.items_subtotal_price : (cart && cart.total_price) || 0;
+    // Thumbnails + overflow box (the box now just opens the dropdown).
     thumbs.innerHTML = "";
     items.slice(0, MAX_THUMBS).forEach(function (it) {
       var im = document.createElement("img");
@@ -321,21 +363,59 @@
       thumbs.appendChild(im);
     });
     var extra = items.length - MAX_THUMBS;
-    if (extra > 0) {
-      var more = document.createElement("a");
-      more.className = "ds-top-more"; more.href = cartUrl; more.textContent = "+" + extra;
-      more.title = "View all " + items.length + " items"; more.setAttribute("aria-label", more.title);
-      thumbs.appendChild(more);
+    if (extra > 0) { var more = document.createElement("span"); more.className = "ds-top-more"; more.textContent = "+" + extra; thumbs.appendChild(more); }
+    document.getElementById("dsTopTitle").textContent = count === 1 ? (items[0].product_title || items[0].title || "") : (count + " items in your bag");
+    document.getElementById("dsTopNote").textContent = money(subtotal);
+    // Dropdown list — one row per item.
+    if (!items.length) { panelList.innerHTML = '<div class="ds-cart-empty2">Your bag is empty.</div>'; }
+    else {
+      panelList.innerHTML = items.map(function (it) {
+        var variant = (it.variant_title && it.variant_title !== "Default Title") ? '<div class="ds-cart-rvar">' + esc(it.variant_title) + "</div>" : "";
+        return '<div class="ds-cart-row" data-key="' + esc(it.key) + '">' +
+          '<img src="' + esc(it.image || "") + '" alt="" loading="lazy">' +
+          '<div class="ds-cart-rmeta"><div class="ds-cart-rtitle">' + esc(it.product_title || it.title || "") + "</div>" + variant +
+            '<span class="ds-cart-rqty"><button type="button" data-dec aria-label="Decrease">−</button><span>' + it.quantity + '</span><button type="button" data-inc aria-label="Increase">+</button></span>' +
+          "</div>" +
+          '<div class="ds-cart-rright"><div class="ds-cart-rprice">' + money(it.final_line_price) + "</div>" +
+            '<button type="button" class="ds-cart-rremove" data-remove>Remove</button></div>' +
+        "</div>";
+      }).join("");
     }
-    var count = (cart && cart.item_count != null) ? cart.item_count : items.length;
-    document.getElementById("dsTopTitle").textContent = count === 1 ? (last.product_title || last.title || "") : (count + " items in your bag");
-    document.getElementById("dsTopNote").textContent = money(cart.items_subtotal_price != null ? cart.items_subtotal_price : cart.total_price);
+    panelSub.textContent = money(subtotal);
+    reserveTopSpace();
+  }
+
+  // Change one line, then repaint from the returned cart. (The header badge stays
+  // in sync on its own because it watches cart requests.)
+  function changeLine(key, qty) {
+    return fetch("/cart/change.js", {
+      method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ id: key, quantity: qty })
+    }).then(function (r) { return r.json(); }).then(function (cart) { paintCart(cart); return cart; }).catch(function () {});
+  }
+
+  function openPanel(o) { panel.hidden = !o; toggle.setAttribute("aria-expanded", o ? "true" : "false"); }
+  toggle.addEventListener("click", function () { openPanel(panel.hidden); });
+  toggle.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPanel(panel.hidden); } });
+  document.addEventListener("click", function (e) { if (!panel.hidden && !panel.contains(e.target) && !toggle.contains(e.target)) openPanel(false); });
+  panelList.addEventListener("click", function (e) {
+    var row = e.target.closest(".ds-cart-row"); if (!row) return;
+    var key = row.getAttribute("data-key");
+    var cur = parseInt(row.querySelector(".ds-cart-rqty span").textContent, 10) || 0;
+    if (e.target.closest("[data-remove]")) changeLine(key, 0);
+    else if (e.target.closest("[data-inc]")) changeLine(key, cur + 1);
+    else if (e.target.closest("[data-dec]")) changeLine(key, Math.max(0, cur - 1));
+  });
+
+  // Load the cart, paint the bar, then fetch recommendations from the newest item.
+  fetch("/cart.js", { headers: { "Accept": "application/json" } }).then(function (r) { return r.json(); }).then(function (cart) {
+    var items = (cart && cart.items) || [];
+    if (!items.length) { renderCards([]); return; }
+    paintCart(cart);
     top.hidden = false;
-    // The bar is position:fixed, so reserve its height below it (keep in sync on resize).
-    function reserveTopSpace() { root.style.paddingTop = top.offsetHeight + "px"; }
     reserveTopSpace();
     window.addEventListener("resize", reserveTopSpace);
-    // 2) Complementary first (Search & Discovery); fall back to related so it's never empty.
+    var last = items[items.length - 1];
     fetchRecs(last.product_id, "complementary").then(function (list) {
       if (list && list.length) return list;
       return fetchRecs(last.product_id, "related");
