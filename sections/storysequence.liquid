@@ -297,7 +297,6 @@
     {% when 'toon' %}
     <section class="ds-toon" data-toon data-scale="{{ block.settings.toon_size | divided_by: 100.0 }}" data-reveal="{{ block.settings.toon_reveal_style }}" style="--toon-bg:{{ block.settings.toon1_bg }}">
       <div class="ds-toon-ghost"><span style="font-size:calc(clamp(90px,28vw,380px) * var(--ds-head-scale,1))">{{ block.settings.toon_ghost }}</span></div>
-      {% if block.settings.toon_brand != blank %}<div class="ds-toon-brand">{{ block.settings.toon_brand }}</div>{% endif %}
       <div class="ds-toon-stage">
         {%- for o in (1..10) -%}
           {%- for n in (1..10) -%}
