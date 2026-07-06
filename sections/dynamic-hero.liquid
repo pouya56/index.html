@@ -34,20 +34,20 @@
      No shrink / move / float — everything stays put. */
   .dyn-hero.dh-landing { min-height: 100svh; position: relative; }
   .dyn-hero.dh-landing .dh-wrap { padding-top: calc(46svh - 90px); }
-  /* Google-style corner links (home landing) */
-  .dyn-hero.dh-landing .dh-corner-group { position: absolute; z-index: 4; display: flex; flex-direction: column; gap: 4px; }
-  .dyn-hero.dh-landing .dh-corner-tl { top: 16px; left: 22px; align-items: flex-start; }
-  .dyn-hero.dh-landing .dh-corner-tr { top: 16px; right: 22px; align-items: flex-end; }
-  .dyn-hero.dh-landing .dh-corner-bl { bottom: 78px; left: 22px; align-items: flex-start; flex-direction: column-reverse; }
-  .dyn-hero.dh-landing .dh-corner-br { bottom: 78px; right: 22px; align-items: flex-end; flex-direction: column-reverse; }
+  /* Google-style corner links (home landing) — horizontal row per corner */
+  .dyn-hero.dh-landing .dh-corner-group { position: absolute; z-index: 4; display: flex; flex-direction: row; align-items: center; gap: 20px; }
+  .dyn-hero.dh-landing .dh-corner-tl { top: 20px; left: 26px; justify-content: flex-start; }
+  .dyn-hero.dh-landing .dh-corner-tr { top: 20px; right: 26px; justify-content: flex-end; }
+  .dyn-hero.dh-landing .dh-corner-bl { bottom: 22px; left: 26px; justify-content: flex-start; }
+  .dyn-hero.dh-landing .dh-corner-br { bottom: 22px; right: 26px; justify-content: flex-end; }
   .dyn-hero.dh-landing .dh-corner-link { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; line-height: 1;
-    color: var(--ink-soft); text-decoration: none; padding: 5px 4px; transition: color .16s; white-space: nowrap; }
+    color: var(--ink-soft); text-decoration: none; padding: 4px 2px; transition: color .16s; white-space: nowrap; }
   .dyn-hero.dh-landing .dh-corner-link:hover { color: var(--ink); }
-  .dyn-hero.dh-landing .dh-corner-link.is-icononly { padding: 6px; }
+  .dyn-hero.dh-landing .dh-corner-link.is-icononly { padding: 5px; }
   .dyn-hero.dh-landing .dh-corner-ic { display: inline-flex; }
   .dyn-hero.dh-landing .dh-corner-link svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
   .dyn-hero.dh-landing img.dh-corner-ic { width: 18px; height: 18px; object-fit: contain; }
-  @media (max-width: 600px) { .dyn-hero.dh-landing .dh-corner-link { font-size: 13px; } .dyn-hero.dh-landing .dh-corner-bl, .dyn-hero.dh-landing .dh-corner-br { bottom: 90px; } }
+  @media (max-width: 700px) { .dyn-hero.dh-landing .dh-corner-group { gap: 14px; } .dyn-hero.dh-landing .dh-corner-link { font-size: 13px; } }
   .dyn-hero.dh-landing .dh-head .dh-head-logo { height: clamp(40px, 6.5vw, 60px); }
   .dyn-hero.dh-landing .dh-head .dh-head-video { max-height: clamp(120px, 30vh, 280px); max-width: min(88vw, 460px); }
   .dyn-hero.dh-landing .dh-head h1 { font-size: clamp(30px, 5vw, 46px); }
@@ -215,7 +215,7 @@
       {%- assign cnt = 0 -%}
       {%- capture corner_links -%}
         {%- for block in section.blocks -%}
-          {%- if block.type == 'corner_link' and block.settings.corner == pos and cnt < 3 -%}
+          {%- if block.type == 'corner_link' and block.settings.corner == pos and cnt < 4 -%}
             {%- assign cnt = cnt | plus: 1 -%}
             <a class="dh-corner-link{% if block.settings.icon_only %} is-icononly{% endif %}" href="{{ block.settings.url | default: '#' }}"{% if block.settings.icon_only %} aria-label="{{ block.settings.label | escape }}"{% endif %} {{ block.shopify_attributes }}>
               {%- if block.settings.icon_image != blank -%}
@@ -701,7 +701,7 @@
     { "type": "textarea", "id": "search_examples", "label": "Typing examples", "info": "One phrase per line. They type out in the search box one after another. Clear to turn the effect off.", "default": "I'm shopping for my wife.\nI'm looking for a birthday gift.\nI need a gift for my mom.\nI'm shopping for my dad.\nI want a gift for my best friend.\nI'm buying a gift for my boyfriend.\nI need an anniversary gift.\nI'm shopping for my daughter.\nI want something personalized.\nI'm looking for a unique gift.\nI need a Christmas gift.\nI'm shopping for a coworker.\nI want a custom mug.\nI'm shopping for myself.\nI'm not sure what to buy." },
 
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
-    { "type": "paragraph", "content": "Add 'Corner link' blocks below (button at the bottom of this panel). Up to 3 per corner, each with an optional icon. They only show when 'Hide grid until search' is on." },
+    { "type": "paragraph", "content": "Add 'Corner link' blocks below (button at the bottom of this panel). Up to 4 per corner, laid out in a row like Google's homepage, each with an optional icon." },
 
     { "type": "header", "content": "Category tabs" },
     { "type": "checkbox", "id": "show_grid", "label": "Show product grid & category tabs", "default": false, "info": "Off = pure search hero (just the logo/video + search bar). Turn on to show the category tabs and product cards under the search." },
@@ -738,7 +738,7 @@
           { "value": "tr", "label": "Top-right" },
           { "value": "bl", "label": "Bottom-left" },
           { "value": "br", "label": "Bottom-right" }
-        ], "info": "Up to 3 links per corner; extras beyond 3 are ignored." },
+        ], "info": "Up to 4 links per corner; extras beyond 4 are ignored." },
       { "type": "text", "id": "label", "label": "Text", "default": "Link" },
       { "type": "url", "id": "url", "label": "Link" },
       { "type": "select", "id": "icon", "label": "Icon", "default": "none",
@@ -767,14 +767,19 @@
       { "type": "image_picker", "id": "image", "label": "Tab image" }
     ]}
   ],
-  "max_blocks": 20,
+  "max_blocks": 24,
   "presets": [
     { "name": "Dynamic Hero", "settings": { "hide_until_search": true, "show_search": true, "show_tabs": true },
       "blocks": [
-        { "type": "corner_link", "settings": { "corner": "tl", "label": "About", "icon": "info" } },
+        { "type": "corner_link", "settings": { "corner": "tl", "label": "About" } },
+        { "type": "corner_link", "settings": { "corner": "tl", "label": "Store" } },
+        { "type": "corner_link", "settings": { "corner": "tr", "label": "Wishlist", "icon": "heart" } },
         { "type": "corner_link", "settings": { "corner": "tr", "label": "Account", "icon": "account" } },
-        { "type": "corner_link", "settings": { "corner": "bl", "label": "Contact", "icon": "mail" } },
-        { "type": "corner_link", "settings": { "corner": "br", "label": "Cart", "icon": "cart" } }
+        { "type": "corner_link", "settings": { "corner": "tr", "label": "Cart", "icon": "cart" } },
+        { "type": "corner_link", "settings": { "corner": "bl", "label": "Contact" } },
+        { "type": "corner_link", "settings": { "corner": "bl", "label": "Help" } },
+        { "type": "corner_link", "settings": { "corner": "br", "label": "Privacy" } },
+        { "type": "corner_link", "settings": { "corner": "br", "label": "Terms" } }
       ]
     }
   ],
