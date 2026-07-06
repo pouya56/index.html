@@ -65,6 +65,16 @@
   .dyn-sug .ds-cart-rremove { background: none; border: none; color: var(--ink-faint); cursor: pointer; font-size: 12px;
     text-decoration: underline; padding: 0; }
   .dyn-sug .ds-cart-rremove:hover { color: #c0392b; }
+  .dyn-sug .ds-cart-rnote { margin-top: 9px; }
+  .dyn-sug .ds-note-in { width: 100%; resize: vertical; min-height: 38px; padding: 7px 10px; font-family: var(--font);
+    font-size: 13px; line-height: 1.4; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 9px;
+    transition: border-color .16s, box-shadow .16s; }
+  .dyn-sug .ds-note-in:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+  .dyn-sug .ds-note-ft { display: flex; align-items: center; gap: 8px; margin-top: 5px; min-height: 16px; }
+  .dyn-sug .ds-note-sv { background: var(--ink); color: #fff; border: none; cursor: pointer; padding: 5px 13px;
+    border-radius: 999px; font-family: var(--font); font-weight: 500; font-size: 12px; }
+  .dyn-sug .ds-note-sv:hover { opacity: .9; }
+  .dyn-sug .ds-note-ok2 { color: #2b9348; font-size: 12px; font-weight: 500; }
   .dyn-sug .ds-cart-foot { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 18px;
     border-top: 1px solid rgba(0,0,0,0.08); font-weight: 600; font-size: 15px; }
   .dyn-sug .ds-top-item { display: flex; align-items: center; gap: 20px; min-width: 0; }
@@ -389,13 +399,22 @@
         var fee = (it.properties && it.properties._grp) ? feeByGrp[it.properties._grp] : null;
         var lineTotal = (it.final_line_price || 0) + (fee ? (fee.final_line_price || 0) : 0);
         var feeNote = fee ? '<div class="ds-cart-rvar">Includes ' + esc((fee.product_title || "add-on").toLowerCase()) + " · " + money(fee.final_line_price) + "</div>" : "";
+        // Editable gift note for gift items (carry a Gift / Gift note property).
+        var isGiftItem = it.properties && (it.properties.hasOwnProperty("Gift note") || it.properties.Gift);
+        var noteVal = (it.properties && it.properties["Gift note"]) || "";
+        var noteHtml = isGiftItem
+          ? '<div class="ds-cart-rnote" data-note-key="' + esc(it.key) + '">' +
+              '<textarea class="ds-note-in" maxlength="250" rows="2" placeholder="Add a gift note…">' + esc(noteVal) + '</textarea>' +
+              '<div class="ds-note-ft"><button type="button" class="ds-note-sv" data-save-note hidden>Save note</button>' +
+              '<span class="ds-note-ok2" hidden>Saved</span></div></div>'
+          : "";
         return '<div class="ds-cart-row" data-key="' + esc(it.key) + '"' + (fee ? ' data-fee-key="' + esc(fee.key) + '"' : "") + ">" +
           '<img src="' + esc(it.image || "") + '" alt="" loading="lazy">' +
           '<div class="ds-cart-rmeta"><div class="ds-cart-rtitle">' + esc(it.product_title || it.title || "") + "</div>" + variant + feeNote +
             '<div class="ds-cart-rctrls">' +
               '<span class="ds-cart-rqty"><button type="button" data-dec aria-label="Decrease">−</button><span>' + it.quantity + '</span><button type="button" data-inc aria-label="Increase">+</button></span>' +
               editHtml +
-            "</div>" +
+            "</div>" + noteHtml +
           "</div>" +
           '<div class="ds-cart-rright"><div class="ds-cart-rprice">' + money(lineTotal) + "</div>" +
             '<button type="button" class="ds-cart-rremove" data-remove>Remove</button></div>' +
@@ -421,6 +440,28 @@
   toggle.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPanel(panel.hidden); } });
   document.addEventListener("click", function (e) { if (!panel.hidden && !panel.contains(e.target) && !toggle.contains(e.target)) openPanel(false); });
   panelList.addEventListener("click", function (e) {
+    // Save an edited gift note (merge into the line's properties, update in place).
+    var saveBtn = e.target.closest("[data-save-note]");
+    if (saveBtn) {
+      var nbox = saveBtn.closest(".ds-cart-rnote"); var nkey = nbox.getAttribute("data-note-key");
+      var nval = nbox.querySelector(".ds-note-in").value;
+      saveBtn.disabled = true; saveBtn.textContent = "Saving…";
+      fetch("/cart.js", { headers: { "Accept": "application/json" } })
+        .then(function (r) { return r.json(); })
+        .then(function (cart) {
+          var itm = (cart.items || []).filter(function (i) { return i.key === nkey; })[0]; if (!itm) throw 0;
+          var props = {}; for (var pk in (itm.properties || {})) props[pk] = itm.properties[pk];
+          props["Gift note"] = nval;
+          return fetch("/cart/change.js", {
+            method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ id: nkey, quantity: itm.quantity, properties: props })
+          });
+        })
+        .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+        .then(function (cart) { paintCart(cart); })
+        .catch(function () { fetch("/cart.js", { headers: { "Accept": "application/json" } }).then(function (r) { return r.json(); }).then(paintCart); });
+      return;
+    }
     var row = e.target.closest(".ds-cart-row"); if (!row) return;
     var key = row.getAttribute("data-key");
     var cur = parseInt(row.querySelector(".ds-cart-rqty span").textContent, 10) || 0;
@@ -428,6 +469,11 @@
     if (e.target.closest("[data-remove]")) changeLine(key, 0, feeKey);
     else if (e.target.closest("[data-inc]")) changeLine(key, cur + 1, feeKey);
     else if (e.target.closest("[data-dec]")) changeLine(key, Math.max(0, cur - 1), feeKey);
+  });
+  // Reveal Save as the customer edits a note.
+  panelList.addEventListener("input", function (e) {
+    var ta = e.target.closest(".ds-note-in"); if (!ta) return;
+    var sv = ta.closest(".ds-cart-rnote").querySelector(".ds-note-sv"); if (sv) sv.hidden = false;
   });
 
   // Load the cart, paint the bar, then fetch recommendations from the newest item.
