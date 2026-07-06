@@ -241,6 +241,7 @@
         <div class="dc-search">
           <svg class="dc-search-mag" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="search" id="dcSearch" class="dc-search-input" autocomplete="off" aria-label="Search products"
+            data-typing="{{ section.settings.search_examples | escape }}"
             placeholder="{{ section.settings.search_placeholder | default: 'Search these products…' }}">
           <button type="button" class="dc-search-go" id="dcSearchGo" aria-label="Search">
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
@@ -506,6 +507,45 @@
     else { query = q.toLowerCase(); applyFilters(); if (searchEl) searchEl.focus(); }
   });
 
+  // Typing effect: cycle example phrases through the placeholder like a typewriter.
+  // Pauses while the shopper is focused or has typed something; resumes when empty.
+  if (searchEl) {
+    var typeRaw = (searchEl.getAttribute("data-typing") || "").trim();
+    var phrases = typeRaw.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (phrases.length && !reduce) {
+      var restPh = searchEl.getAttribute("placeholder") || "";
+      var pi = 0, ci = 0, deleting = false, paused = false, timer = null;
+      var tick = function () {
+        if (paused) return;
+        var word = phrases[pi];
+        if (!deleting) {
+          ci++;
+          searchEl.setAttribute("placeholder", word.slice(0, ci));
+          if (ci >= word.length) { deleting = true; timer = setTimeout(tick, 1600); return; }
+          timer = setTimeout(tick, 55);
+        } else {
+          ci--;
+          searchEl.setAttribute("placeholder", word.slice(0, ci));
+          if (ci <= 0) { deleting = false; pi = (pi + 1) % phrases.length; timer = setTimeout(tick, 350); return; }
+          timer = setTimeout(tick, 28);
+        }
+      };
+      var stopType = function () {
+        paused = true; if (timer) { clearTimeout(timer); timer = null; }
+        searchEl.setAttribute("placeholder", restPh);
+      };
+      var startType = function () {
+        if (!paused || searchEl.value) return;
+        paused = false; pi = 0; ci = 0; deleting = false; tick();
+      };
+      searchEl.addEventListener("focus", stopType);
+      searchEl.addEventListener("blur", function () { if (!searchEl.value) startType(); });
+      searchEl.addEventListener("input", function () { if (searchEl.value) stopType(); });
+      if (document.activeElement !== searchEl) tick();
+    }
+  }
+
   // Scroll arrows: appear only when the image-tab row overflows; hide at ends.
   var prev = document.getElementById("dcPrev");
   var next = document.getElementById("dcNext");
@@ -611,6 +651,7 @@
     { "type": "checkbox", "id": "hide_until_search", "label": "Hide the grid until someone searches", "default": false, "info": "Great for the home page: only the search box shows; the products appear once the shopper types." },
     { "type": "url", "id": "results_page_url", "label": "Show results on another page (URL)", "info": "Optional. Paste your Shop page URL (e.g. /collections/shop). When set, pressing Enter here opens that page with the results instead of filtering in place. Leave empty to filter on this page." },
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search these products…" },
+    { "type": "textarea", "id": "search_examples", "label": "Typing examples", "info": "One phrase per line. They type out in the search box one after another. Clear to turn the effect off.", "default": "I'm shopping for my wife.\nI'm looking for a birthday gift.\nI need a gift for my mom.\nI'm shopping for my dad.\nI want a gift for my best friend.\nI'm buying a gift for my boyfriend.\nI need an anniversary gift.\nI'm shopping for my daughter.\nI want something personalized.\nI'm looking for a unique gift.\nI need a Christmas gift.\nI'm shopping for a coworker.\nI want a custom mug.\nI'm shopping for myself.\nI'm not sure what to buy." },
 
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
     { "type": "paragraph", "content": "Four links, one in each corner. Only show when 'Hide grid until search' is on. Leave a label empty to hide that corner." },
