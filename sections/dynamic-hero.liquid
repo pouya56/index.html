@@ -48,6 +48,44 @@
   .dyn-hero.dh-landing .dh-corner-link svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
   .dyn-hero.dh-landing img.dh-corner-ic { width: 18px; height: 18px; object-fit: contain; }
   @media (max-width: 700px) { .dyn-hero.dh-landing .dh-corner-group { gap: 14px; } .dyn-hero.dh-landing .dh-corner-link { font-size: 13px; } }
+
+  /* Account button + apps grid (top-right) with dropdown menus */
+  .dyn-hero .dh-menu { position: relative; display: inline-flex; }
+  .dyn-hero .dh-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+    border-radius: 50%; border: none; background: transparent; color: var(--ink-soft); cursor: pointer; padding: 0;
+    transition: background .16s, color .16s; }
+  .dyn-hero .dh-icon-btn:hover { background: rgba(0,0,0,0.06); color: var(--ink); }
+  .dyn-hero .dh-apps-btn svg { width: 22px; height: 22px; fill: currentColor; }
+  .dyn-hero .dh-acct-ic { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+  .dyn-hero .dh-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; display: block; }
+  .dyn-hero .dh-avatar-initial { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+    border-radius: 50%; background: var(--accent); color: #fff; font: 600 14px/1 var(--font); }
+  .dyn-hero .dh-acct-menu .dh-icon-btn { width: 42px; height: 42px; }
+
+  .dyn-hero .dh-pop { position: absolute; top: calc(100% + 10px); right: 0; z-index: 30; min-width: 220px;
+    background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    animation: dhPop .14s ease; }
+  @keyframes dhPop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .dyn-hero .dh-pop[hidden] { display: none; }
+  .dyn-hero .dh-pop-title { font-size: 13px; color: var(--ink-faint); padding: 6px 10px 8px; }
+  .dyn-hero .dh-pop-link { display: block; padding: 9px 10px; border-radius: 10px; font-size: 14px; color: var(--ink);
+    text-decoration: none; transition: background .14s; }
+  .dyn-hero .dh-pop-link:hover { background: var(--bg-panel); }
+  .dyn-hero .dh-pop-btn { display: block; text-align: center; margin: 2px 4px 6px; padding: 10px 14px; border-radius: 999px;
+    background: var(--ink); color: #fff; font-size: 14px; font-weight: 500; text-decoration: none; transition: opacity .14s; }
+  .dyn-hero .dh-pop-btn:hover { opacity: .9; }
+  .dyn-hero .dh-pop-empty { font-size: 13px; color: var(--ink-faint); padding: 10px; max-width: 240px; }
+  .dyn-hero .dh-apps-pop { min-width: 280px; }
+  .dyn-hero .dh-apps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .dyn-hero .dh-app { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 12px 6px; border-radius: 12px;
+    text-decoration: none; color: var(--ink); transition: background .14s; }
+  .dyn-hero .dh-app:hover { background: var(--bg-panel); }
+  .dyn-hero .dh-app-ic { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; }
+  .dyn-hero .dh-app-ic img { width: 34px; height: 34px; object-fit: contain; }
+  .dyn-hero .dh-app-init { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px;
+    border-radius: 10px; background: var(--bg-panel); color: var(--ink-soft); font: 600 15px/1 var(--font); }
+  .dyn-hero .dh-app-label { font-size: 12px; color: var(--ink-soft); text-align: center; line-height: 1.2; }
+  @media (prefers-color-scheme: dark) { }
   .dyn-hero.dh-landing .dh-head .dh-head-logo { height: clamp(40px, 6.5vw, 60px); }
   .dyn-hero.dh-landing .dh-head .dh-head-video { max-height: clamp(120px, 30vh, 280px); max-width: min(88vw, 460px); }
   .dyn-hero.dh-landing .dh-head h1 { font-size: clamp(30px, 5vw, 46px); }
@@ -244,7 +282,71 @@
           {%- endif -%}
         {%- endfor -%}
       {%- endcapture -%}
-      {%- if corner_links != blank -%}<div class="dh-corner-group dh-corner-{{ pos }}">{{ corner_links }}</div>{%- endif -%}
+      {%- capture corner_extra -%}
+        {%- if pos == 'tr' -%}
+          {%- if section.settings.show_apps -%}
+            <div class="dh-menu dh-apps-menu">
+              <button type="button" class="dh-icon-btn dh-apps-btn" aria-haspopup="true" aria-expanded="false" aria-label="{{ section.settings.apps_title | default: 'Apps' | escape }}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="5" r="1.6"/><circle cx="12" cy="5" r="1.6"/><circle cx="19" cy="5" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/><circle cx="5" cy="19" r="1.6"/><circle cx="12" cy="19" r="1.6"/><circle cx="19" cy="19" r="1.6"/></svg>
+              </button>
+              <div class="dh-pop dh-apps-pop" hidden>
+                {%- if section.settings.apps_title != blank -%}<div class="dh-pop-title">{{ section.settings.apps_title }}</div>{%- endif -%}
+                {%- assign app_n = 0 -%}
+                {%- for block in section.blocks -%}{%- if block.type == 'app_link' -%}{%- assign app_n = app_n | plus: 1 -%}{%- endif -%}{%- endfor -%}
+                {%- if app_n > 0 -%}
+                  <div class="dh-apps-grid">
+                    {%- for block in section.blocks -%}
+                      {%- if block.type == 'app_link' -%}
+                        <a class="dh-app" href="{{ block.settings.url | default: '#' }}" {{ block.shopify_attributes }}>
+                          <span class="dh-app-ic">
+                            {%- if block.settings.image != blank -%}
+                              {%- assign aiw = block.settings.image.width | times: 30 | divided_by: block.settings.image.height -%}
+                              <img src="{{ block.settings.image | image_url: width: 90 }}" alt="" width="{{ aiw }}" height="30">
+                            {%- else -%}
+                              <span class="dh-app-init">{{ block.settings.label | default: '?' | slice: 0 | upcase }}</span>
+                            {%- endif -%}
+                          </span>
+                          <span class="dh-app-label">{{ block.settings.label }}</span>
+                        </a>
+                      {%- endif -%}
+                    {%- endfor -%}
+                  </div>
+                {%- else -%}
+                  <div class="dh-pop-empty">Add “App link” blocks in the theme editor to fill this menu.</div>
+                {%- endif -%}
+              </div>
+            </div>
+          {%- endif -%}
+          {%- if section.settings.show_account -%}
+            <div class="dh-menu dh-acct-menu">
+              <button type="button" class="dh-icon-btn dh-acct-btn" aria-haspopup="true" aria-expanded="false" aria-label="Account">
+                {%- if section.settings.account_avatar != blank -%}
+                  {%- assign avw = section.settings.account_avatar.width | times: 30 | divided_by: section.settings.account_avatar.height -%}
+                  <img class="dh-avatar" src="{{ section.settings.account_avatar | image_url: width: 90 }}" alt="Account" width="{{ avw }}" height="30">
+                {%- elsif customer -%}
+                  <span class="dh-avatar dh-avatar-initial" aria-hidden="true">{{ customer.first_name | default: customer.email | slice: 0 | upcase }}</span>
+                {%- else -%}
+                  <svg class="dh-acct-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5"/><circle cx="12" cy="10" r="3.4"/><path d="M5.6 19.2a7 7 0 0 1 12.8 0"/></svg>
+                {%- endif -%}
+              </button>
+              <div class="dh-pop dh-acct-pop" hidden>
+                {%- if customer -%}
+                  <div class="dh-pop-title">Hi, {{ customer.first_name | default: 'there' }}</div>
+                  <a class="dh-pop-link" href="{{ routes.account_url }}">My account</a>
+                  <a class="dh-pop-link" href="{{ routes.account_url }}">Orders</a>
+                  <a class="dh-pop-link" href="{{ routes.account_logout_url }}">Log out</a>
+                {%- else -%}
+                  <div class="dh-pop-title">Welcome</div>
+                  <a class="dh-pop-btn" href="{{ section.settings.login_url | default: routes.account_login_url }}">Log in</a>
+                  <a class="dh-pop-link" href="{{ section.settings.register_url | default: routes.account_register_url }}">Create account</a>
+                {%- endif -%}
+              </div>
+            </div>
+          {%- endif -%}
+        {%- endif -%}
+      {%- endcapture -%}
+      {%- capture corner_group -%}{{ corner_links }}{{ corner_extra }}{%- endcapture -%}
+      {%- if corner_group != blank -%}<div class="dh-corner-group dh-corner-{{ pos }}">{{ corner_group }}</div>{%- endif -%}
   {%- endfor -%}
   <div class="dh-wrap">
     <div class="dh-head">
@@ -456,6 +558,32 @@
   if (headVid) {
     headVid.loop = false; headVid.muted = true;
     var hp = headVid.play(); if (hp && hp.catch) hp.catch(function () {});
+  }
+
+  // Dropdown menus: account login + apps grid. Click to toggle; outside/Esc closes.
+  var menus = Array.prototype.slice.call(root.querySelectorAll(".dh-menu"));
+  function closeMenus(except) {
+    menus.forEach(function (m) {
+      if (m === except) return;
+      var b = m.querySelector(".dh-icon-btn"), p = m.querySelector(".dh-pop");
+      if (p) p.hidden = true; if (b) b.setAttribute("aria-expanded", "false");
+    });
+  }
+  menus.forEach(function (m) {
+    var btn = m.querySelector(".dh-icon-btn"), pop = m.querySelector(".dh-pop");
+    if (!btn || !pop) return;
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var willOpen = pop.hidden;
+      closeMenus(m);
+      pop.hidden = !willOpen;
+      btn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+    });
+    pop.addEventListener("click", function (e) { e.stopPropagation(); });
+  });
+  if (menus.length) {
+    document.addEventListener("click", function () { closeMenus(null); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenus(null); });
   }
 
   var grid = document.getElementById("dhGrid");
@@ -703,6 +831,16 @@
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
     { "type": "paragraph", "content": "Add 'Corner link' blocks below (button at the bottom of this panel). Up to 4 per corner, laid out in a row like Google's homepage, each with an optional icon." },
 
+    { "type": "header", "content": "Account button (top-right)" },
+    { "type": "checkbox", "id": "show_account", "label": "Show account button", "default": true, "info": "Apple-style person icon. Clicking opens a small login menu. When a customer is logged in it shows their initial + account links." },
+    { "type": "image_picker", "id": "account_avatar", "label": "Avatar photo (optional)", "info": "Shown instead of the person icon. Per-customer photos need a separate app; this is a single store-wide photo for now." },
+    { "type": "url", "id": "login_url", "label": "Log in link", "info": "Defaults to your store's /account/login." },
+    { "type": "url", "id": "register_url", "label": "Create account link", "info": "Defaults to your store's /account/register." },
+
+    { "type": "header", "content": "Apps grid (top-right, 9 dots)" },
+    { "type": "checkbox", "id": "show_apps", "label": "Show 9-dot apps menu", "default": true, "info": "Clicking opens a grid dropdown. Fill it by adding 'App link' blocks at the bottom of this panel." },
+    { "type": "text", "id": "apps_title", "label": "Apps menu title" },
+
     { "type": "header", "content": "Category tabs" },
     { "type": "checkbox", "id": "show_grid", "label": "Show product grid & category tabs", "default": false, "info": "Off = pure search hero (just the logo/video + search bar). Turn on to show the category tabs and product cards under the search." },
     { "type": "checkbox", "id": "show_tabs", "label": "Show category tabs", "default": true, "info": "Only applies when the product grid above is shown." },
@@ -760,6 +898,11 @@
       { "type": "image_picker", "id": "icon_image", "label": "Custom icon (optional)", "info": "Overrides the icon above. A small square image works best." },
       { "type": "checkbox", "id": "icon_only", "label": "Show icon only (hide the text)", "default": false }
     ]},
+    { "type": "app_link", "name": "App link", "settings": [
+      { "type": "text", "id": "label", "label": "Name", "default": "App" },
+      { "type": "url", "id": "url", "label": "Link" },
+      { "type": "image_picker", "id": "image", "label": "Icon image (optional)", "info": "A small square icon works best. Leave empty to show the first letter." }
+    ]},
     { "type": "tab", "name": "Image category tab", "settings": [
       { "type": "text", "id": "label", "label": "Tab label", "default": "Category" },
       { "type": "text", "id": "category_value", "label": "Filters products where Type =",
@@ -767,7 +910,7 @@
       { "type": "image_picker", "id": "image", "label": "Tab image" }
     ]}
   ],
-  "max_blocks": 24,
+  "max_blocks": 30,
   "presets": [
     { "name": "Dynamic Hero", "settings": { "hide_until_search": true, "show_search": true, "show_tabs": true },
       "blocks": [
