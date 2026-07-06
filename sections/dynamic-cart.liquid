@@ -25,36 +25,52 @@
     background: var(--bg-panel);
   }
   .dyn-cart, .dyn-cart *, .dyn-cart *::before, .dyn-cart *::after { box-sizing: border-box; }
-  .dyn-cart .dc-wrap { max-width: 1180px; margin: 0 auto; padding: 40px 22px 90px; }
-  .dyn-cart .dc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; margin-bottom: 26px; }
-  .dyn-cart .dc-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(34px, 6vw, 56px);
+  .dyn-cart .dc-wrap { max-width: 1000px; margin: 0 auto; padding: 40px 22px 90px; }
+  .dyn-cart .dc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+  .dyn-cart .dc-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(32px, 5vw, 50px);
     line-height: 1.02; margin: 0; letter-spacing: -0.01em; }
   .dyn-cart .dc-continue { color: var(--ink); font-size: 15px; text-decoration: none; border-bottom: 1px solid currentColor;
     padding-bottom: 2px; white-space: nowrap; transition: opacity .16s; }
   .dyn-cart .dc-continue:hover { opacity: 0.6; }
 
-  .dyn-cart .dc-grid { display: grid; grid-template-columns: minmax(0,1fr) 360px; gap: 24px; align-items: start; }
-
   .dyn-cart .dc-card { background: var(--bg); border-radius: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 12px 34px rgba(0,0,0,0.05);
-    padding: 8px 28px; }
-  .dyn-cart .dc-colhead { display: grid; grid-template-columns: 1fr 150px 108px; gap: 16px;
-    padding: 20px 0 16px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+    padding: 4px 26px; }
+  .dyn-cart .dc-colhead { display: grid; grid-template-columns: 1fr 140px 100px; gap: 16px;
+    padding: 18px 0 14px; font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
   .dyn-cart .dc-colhead span:nth-child(2) { text-align: center; }
   .dyn-cart .dc-colhead span:nth-child(3) { text-align: right; }
 
-  .dyn-cart .dc-line { display: grid; grid-template-columns: 1fr 150px 108px; gap: 16px; align-items: start;
-    padding: 26px 0; border-top: 1px solid rgba(0,0,0,0.08); }
+  .dyn-cart .dc-line { display: grid; grid-template-columns: 1fr 140px 100px; gap: 16px; align-items: center;
+    padding: 16px 0; border-top: 1px solid rgba(0,0,0,0.08); }
   .dyn-cart .dc-line:first-child { border-top: none; }
-  .dyn-cart .dc-line-product { display: flex; gap: 20px; min-width: 0; }
-  .dyn-cart .dc-line-img { width: 92px; height: 92px; border-radius: 14px; object-fit: cover;
+  .dyn-cart .dc-line-product { display: flex; gap: 16px; min-width: 0; align-items: center; }
+  .dyn-cart .dc-line-img { width: 62px; height: 62px; border-radius: 12px; object-fit: cover;
     background: var(--bg-panel); flex: none; }
   .dyn-cart .dc-line-info { min-width: 0; }
-  .dyn-cart .dc-line-title { font-size: 18px; font-weight: 500; line-height: 1.25; }
-  .dyn-cart .dc-line-price { font-size: 14px; color: var(--ink-soft); margin-top: 4px; }
-  .dyn-cart .dc-line-opt { font-size: 14px; color: var(--ink-soft); margin-top: 6px; line-height: 1.4; }
+  .dyn-cart .dc-line-title { font-size: 16px; font-weight: 500; line-height: 1.25; }
+  .dyn-cart .dc-line-title a { color: inherit; text-decoration: none; }
+  .dyn-cart .dc-line-price { font-size: 13.5px; color: var(--ink-soft); margin-top: 2px; }
+
+  /* Collapsible per-item details */
+  .dyn-cart .dc-details { margin-top: 7px; }
+  .dyn-cart .dc-details > summary { list-style: none; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+    font-size: 12.5px; font-weight: 500; color: var(--ink-soft); user-select: none; }
+  .dyn-cart .dc-details > summary::-webkit-details-marker { display: none; }
+  .dyn-cart .dc-details > summary:hover { color: var(--ink); }
+  .dyn-cart .dc-details > summary .dc-chev { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round; transition: transform .18s ease; }
+  .dyn-cart .dc-details[open] > summary .dc-chev { transform: rotate(180deg); }
+  .dyn-cart .dc-details-body { padding-top: 10px; }
+  .dyn-cart .dc-line-opt { font-size: 13.5px; color: var(--ink-soft); margin-top: 4px; line-height: 1.4; }
+  .dyn-cart .dc-line-opt b { font-weight: 500; color: var(--ink); }
+  .dyn-cart .dc-line-fee { font-size: 13px; color: var(--ink-faint); margin-top: 8px; }
+  .dyn-cart .dc-line-actions { display: flex; gap: 16px; margin-top: 10px; }
+  .dyn-cart .dc-line-edit { color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none; }
+  .dyn-cart .dc-line-edit:hover { text-decoration: underline; }
+
   .dyn-cart .dc-note { margin-top: 10px; max-width: 420px; }
   .dyn-cart .dc-note-h { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft); margin-bottom: 5px; }
-  .dyn-cart .dc-note-input { width: 100%; resize: vertical; min-height: 54px; padding: 9px 11px; font-family: var(--font);
+  .dyn-cart .dc-note-input { width: 100%; resize: vertical; min-height: 52px; padding: 9px 11px; font-family: var(--font);
     font-size: 14px; line-height: 1.45; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 10px;
     transition: border-color .16s, box-shadow .16s; }
   .dyn-cart .dc-note-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
@@ -64,44 +80,39 @@
     padding: 6px 16px; border-radius: 999px; font-family: var(--font); font-weight: 500; font-size: 13px; }
   .dyn-cart .dc-note-save:hover { opacity: .9; }
   .dyn-cart .dc-note-ok { color: #2b9348; font-weight: 500; }
-  .dyn-cart .dc-line-opt b { font-weight: 500; color: var(--ink); }
-  .dyn-cart .dc-line-fee { font-size: 13px; color: var(--ink-faint); margin-top: 8px; }
-  .dyn-cart .dc-line-actions { display: flex; gap: 16px; margin-top: 12px; }
-  .dyn-cart .dc-line-edit { color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none; }
-  .dyn-cart .dc-line-edit:hover { text-decoration: underline; }
 
   .dyn-cart .dc-qtywrap { display: flex; align-items: center; justify-content: center; gap: 6px; }
-  .dyn-cart .dc-qty { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; height: 42px; }
-  .dyn-cart .dc-qty button { width: 40px; height: 40px; border: none; background: transparent; font-size: 20px; line-height: 1;
+  .dyn-cart .dc-qty { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; height: 38px; }
+  .dyn-cart .dc-qty button { width: 36px; height: 36px; border: none; background: transparent; font-size: 19px; line-height: 1;
     cursor: pointer; color: var(--ink); border-radius: 999px; display: grid; place-items: center; transition: background .16s; }
   .dyn-cart .dc-qty button:hover { background: rgba(0,0,0,0.05); }
-  .dyn-cart .dc-qty span { min-width: 26px; text-align: center; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .dyn-cart .dc-qty span { min-width: 24px; text-align: center; font-size: 15px; font-variant-numeric: tabular-nums; }
   .dyn-cart .dc-remove { background: none; border: none; color: var(--ink-faint); cursor: pointer; padding: 6px;
     display: grid; place-items: center; transition: color .16s; }
   .dyn-cart .dc-remove:hover { color: var(--danger); }
-  .dyn-cart .dc-remove svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .dyn-cart .dc-line-total { text-align: right; font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; padding-top: 9px; }
+  .dyn-cart .dc-remove svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-cart .dc-line-total { text-align: right; font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; }
 
-  /* Sticky order summary */
+  /* Order summary - bottom of the page, aligned right */
   .dyn-cart .dc-summary { background: var(--bg); border-radius: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 12px 34px rgba(0,0,0,0.05);
-    padding: 26px 26px 28px; position: sticky; top: 22px; }
-  .dyn-cart .dc-summary h2 { font-family: var(--font-head); font-weight: 500; font-size: 26px; margin: 0 0 18px; letter-spacing: -0.01em; }
+    padding: 24px 26px 26px; margin: 22px 0 0 auto; max-width: 400px; width: 100%; }
+  .dyn-cart .dc-summary h2 { font-family: var(--font-head); font-weight: 500; font-size: 24px; margin: 0 0 14px; letter-spacing: -0.01em; }
   .dyn-cart .dc-sum-row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
-    padding: 11px 0; font-size: 15px; color: var(--ink-soft); }
-  .dyn-cart .dc-sum-row.dc-sum-total { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 16px;
+    padding: 9px 0; font-size: 15px; color: var(--ink-soft); }
+  .dyn-cart .dc-sum-row.dc-sum-total { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 15px;
     font-size: 18px; font-weight: 500; color: var(--ink); }
   .dyn-cart .dc-sum-total .dc-sub-amt { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .dyn-cart .dc-tax { font-size: 12.5px; color: var(--ink-faint); line-height: 1.45; margin: 12px 0 18px; }
+  .dyn-cart .dc-tax { font-size: 12.5px; color: var(--ink-faint); line-height: 1.45; margin: 12px 0 16px; }
   .dyn-cart .dc-checkout { display: flex; align-items: center; justify-content: center; width: 100%;
-    background: var(--ink); color: #fff; padding: 17px 30px; border: none; border-radius: 999px; cursor: pointer;
+    background: var(--ink); color: #fff; padding: 16px 30px; border: none; border-radius: 999px; cursor: pointer;
     font-family: var(--font); font-weight: 600; font-size: 16px; text-decoration: none; transition: opacity .16s, transform .1s; }
   .dyn-cart .dc-checkout:hover { opacity: 0.9; }
   .dyn-cart .dc-checkout:active { transform: scale(0.99); }
   .dyn-cart .dc-secure { display: flex; align-items: center; justify-content: center; gap: 6px;
-    margin-top: 14px; font-size: 12.5px; color: var(--ink-faint); }
+    margin-top: 13px; font-size: 12.5px; color: var(--ink-faint); }
   .dyn-cart .dc-secure svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.7; }
   .dyn-cart .dc-clear { display: block; width: 100%; background: none; border: none; color: var(--ink-faint); font-size: 13px; cursor: pointer;
-    margin-top: 16px; padding: 4px; transition: color .16s; }
+    margin-top: 14px; padding: 4px; transition: color .16s; }
   .dyn-cart .dc-clear:hover { color: var(--danger); }
 
   .dyn-cart .dc-empty { text-align: center; padding: 70px 20px; background: var(--bg); border-radius: 22px;
@@ -109,17 +120,14 @@
   .dyn-cart .dc-empty p { font-size: 18px; color: var(--ink-soft); margin: 0 0 26px; }
   .dyn-cart .dc-empty .dc-checkout { width: auto; display: inline-flex; }
 
-  @media (max-width: 900px) {
-    .dyn-cart .dc-grid { grid-template-columns: 1fr; }
-    .dyn-cart .dc-summary { position: static; }
-  }
   @media (max-width: 720px) {
-    .dyn-cart .dc-card { padding: 6px 18px; border-radius: 18px; }
+    .dyn-cart .dc-card { padding: 4px 16px; border-radius: 18px; }
     .dyn-cart .dc-colhead { display: none; }
-    .dyn-cart .dc-line { grid-template-columns: 1fr; gap: 16px; padding: 22px 0; }
-    .dyn-cart .dc-line-img { width: 80px; height: 80px; }
-    .dyn-cart .dc-qtywrap { justify-content: flex-start; }
-    .dyn-cart .dc-line-total { text-align: left; padding-top: 0; font-size: 18px; }
+    .dyn-cart .dc-line { grid-template-columns: 1fr auto; grid-template-areas: "product total" "qty qty"; row-gap: 12px; padding: 18px 0; }
+    .dyn-cart .dc-line-product { grid-area: product; }
+    .dyn-cart .dc-line-total { grid-area: total; }
+    .dyn-cart .dc-qtywrap { grid-area: qty; justify-content: flex-start; }
+    .dyn-cart .dc-summary { max-width: none; }
   }
 </style>
 
@@ -138,131 +146,136 @@
         <a class="dc-checkout" href="{{ section.settings.continue_link | default: routes.all_products_collection_url }}">{{ section.settings.continue_label | default: 'Continue shopping' }}</a>
       </div>
     {% else %}
-      <div class="dc-grid">
-        <div class="dc-main">
-          <div class="dc-card">
-            <div class="dc-colhead">
-              <span>Product</span><span>Quantity</span><span>Total</span>
-            </div>
-
-            <div class="dc-list" id="dcList">
-              {%- for item in cart.items -%}
-                {%- assign grp = item.properties["_grp"] -%}
-                {%- assign dstate = item.properties["_design_state"] -%}
-                {%- comment -%} Skip a standalone back-fee line - it's folded into its item below. {%- endcomment -%}
-                {%- if grp != blank and dstate == blank -%}{%- continue -%}{%- endif -%}
-
-                {%- comment -%} Find this item's folded fee (older single-line carts have none). {%- endcomment -%}
-                {%- assign fee_price = 0 -%}{%- assign fee_unit = 0 -%}{%- assign fee_title = '' -%}{%- assign fee_key = '' -%}
-                {%- if grp != blank -%}
-                  {%- for f in cart.items -%}
-                    {%- if f.properties["_grp"] == grp and f.properties["_design_state"] == blank -%}
-                      {%- assign fee_price = f.final_line_price -%}{%- assign fee_unit = f.final_price -%}
-                      {%- assign fee_title = f.product_title -%}{%- assign fee_key = f.key -%}
-                    {%- endif -%}
-                  {%- endfor -%}
-                {%- endif -%}
-                {%- assign line_total = item.final_line_price | plus: fee_price -%}
-
-                {%- comment -%} Prefer the customer's positioned design preview as the thumbnail. {%- endcomment -%}
-                {%- assign preview = '' -%}
-                {%- for p in item.properties -%}
-                  {%- assign lname = p.first | downcase -%}
-                  {%- if lname contains 'preview' or lname contains 'mockup' -%}
-                    {%- assign pv = p.last -%}
-                    {%- if pv contains 'http' or pv contains '/' -%}{%- assign preview = pv -%}{%- endif -%}
-                  {%- endif -%}
-                {%- endfor -%}
-
-                <div class="dc-line" data-key="{{ item.key }}"{% if fee_key != blank %} data-fee-key="{{ fee_key }}"{% endif %}
-                  data-unit="{{ item.final_price }}" data-fee-unit="{{ fee_unit }}" data-qty="{{ item.quantity }}">
-                  <div class="dc-line-product">
-                    {%- if preview != blank -%}
-                      <img class="dc-line-img" src="{{ preview }}" alt="" width="92" height="92" loading="lazy">
-                    {%- elsif item.image -%}
-                      <img class="dc-line-img" src="{{ item.image | image_url: width: 200 }}" alt="{{ item.title | escape }}" width="92" height="92" loading="lazy">
-                    {%- else -%}
-                      <span class="dc-line-img"></span>
-                    {%- endif -%}
-                    <div class="dc-line-info">
-                      <div class="dc-line-title">{% if item.product.url %}<a href="{{ item.url }}" style="color:inherit;text-decoration:none">{{ item.product.title }}</a>{% else %}{{ item.product.title }}{% endif %}</div>
-                      <div class="dc-line-price">{{ item.final_price | money }}{% if item.quantity > 1 %} each{% endif %}</div>
-                      {%- for opt in item.options_with_values -%}
-                        {%- unless opt.value == 'Default Title' -%}
-                          <div class="dc-line-opt"><b>{{ opt.name }}:</b> {{ opt.value }}</div>
-                        {%- endunless -%}
-                      {%- endfor -%}
-                      {%- for p in item.properties -%}
-                        {%- assign pname = p.first -%}{%- assign pval = p.last -%}
-                        {%- assign firstchar = pname | slice: 0 -%}
-                        {%- unless pname == blank or firstchar == '_' -%}
-                          {%- if pname == 'Gift note' -%}
-                            <div class="dc-note" data-note-key="{{ item.key }}">
-                              <label class="dc-note-h">Gift note</label>
-                              <textarea class="dc-note-input" maxlength="250" rows="2" placeholder="Write your message…">{{ pval }}</textarea>
-                              <div class="dc-note-foot"><span class="dc-note-count">{{ pval | size }}</span>/250
-                                <button type="button" class="dc-note-save" data-save-note hidden>Save</button>
-                                <span class="dc-note-ok" hidden>Saved</span></div>
-                            </div>
-                          {%- elsif pval != blank -%}
-                            {%- assign lpv = pval | downcase -%}
-                            {%- unless lpv contains 'http' or lpv contains '/uploads' -%}
-                              <div class="dc-line-opt"><b>{{ pname }}:</b> {{ pval }}</div>
-                            {%- endunless -%}
-                          {%- endif -%}
-                        {%- endunless -%}
-                      {%- endfor -%}
-                      {%- if fee_title != blank -%}
-                        <div class="dc-line-fee">Includes {{ fee_title | downcase }} - {{ fee_price | money }}</div>
-                      {%- endif -%}
-                      {%- if dstate != blank and item.url != blank -%}
-                        <div class="dc-line-actions">
-                          <a class="dc-line-edit" href="{{ item.url }}{% if item.url contains '?' %}&{% else %}?{% endif %}edit={{ item.key | url_encode }}">Edit design</a>
-                        </div>
-                      {%- endif -%}
-                    </div>
-                  </div>
-                  <div class="dc-qtywrap">
-                    <span class="dc-qty">
-                      <button type="button" data-dec aria-label="Decrease quantity">&minus;</button>
-                      <span class="dc-qty-val">{{ item.quantity }}</span>
-                      <button type="button" data-inc aria-label="Increase quantity">+</button>
-                    </span>
-                    <button type="button" class="dc-remove" data-remove aria-label="Remove item">
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg>
-                    </button>
-                  </div>
-                  <div class="dc-line-total" data-total>{{ line_total | money }}</div>
-                </div>
-              {%- endfor -%}
-            </div>
-          </div>
+      <div class="dc-card">
+        <div class="dc-colhead">
+          <span>Product</span><span>Quantity</span><span>Total</span>
         </div>
 
-        <aside class="dc-side">
-          <div class="dc-summary">
-            <h2>Order summary</h2>
-            <div class="dc-sum-row">
-              <span>Subtotal</span>
-              <span class="dc-sub-amt" id="dcSubtotal">{{ cart.items_subtotal_price | money_with_currency }}</span>
+        <div class="dc-list" id="dcList">
+          {%- for item in cart.items -%}
+            {%- assign grp = item.properties["_grp"] -%}
+            {%- assign dstate = item.properties["_design_state"] -%}
+            {%- comment -%} Skip a standalone back-fee line - it's folded into its item below. {%- endcomment -%}
+            {%- if grp != blank and dstate == blank -%}{%- continue -%}{%- endif -%}
+
+            {%- comment -%} Find this item's folded fee (older single-line carts have none). {%- endcomment -%}
+            {%- assign fee_price = 0 -%}{%- assign fee_unit = 0 -%}{%- assign fee_title = '' -%}{%- assign fee_key = '' -%}
+            {%- if grp != blank -%}
+              {%- for f in cart.items -%}
+                {%- if f.properties["_grp"] == grp and f.properties["_design_state"] == blank -%}
+                  {%- assign fee_price = f.final_line_price -%}{%- assign fee_unit = f.final_price -%}
+                  {%- assign fee_title = f.product_title -%}{%- assign fee_key = f.key -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
+            {%- assign line_total = item.final_line_price | plus: fee_price -%}
+
+            {%- comment -%} Prefer the customer's positioned design preview as the thumbnail. {%- endcomment -%}
+            {%- assign preview = '' -%}
+            {%- for p in item.properties -%}
+              {%- assign lname = p.first | downcase -%}
+              {%- if lname contains 'preview' or lname contains 'mockup' -%}
+                {%- assign pv = p.last -%}
+                {%- if pv contains 'http' or pv contains '/' -%}{%- assign preview = pv -%}{%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+
+            {%- comment -%} Build the collapsible details body; only render the dropdown if it has content. {%- endcomment -%}
+            {%- capture details -%}
+              {%- for opt in item.options_with_values -%}
+                {%- unless opt.value == 'Default Title' -%}
+                  <div class="dc-line-opt"><b>{{ opt.name }}:</b> {{ opt.value }}</div>
+                {%- endunless -%}
+              {%- endfor -%}
+              {%- for p in item.properties -%}
+                {%- assign pname = p.first -%}{%- assign pval = p.last -%}
+                {%- assign firstchar = pname | slice: 0 -%}
+                {%- unless pname == blank or firstchar == '_' -%}
+                  {%- if pname == 'Gift note' -%}
+                    <div class="dc-note" data-note-key="{{ item.key }}">
+                      <label class="dc-note-h">Gift note</label>
+                      <textarea class="dc-note-input" maxlength="250" rows="2" placeholder="Write your message…">{{ pval }}</textarea>
+                      <div class="dc-note-foot"><span class="dc-note-count">{{ pval | size }}</span>/250
+                        <button type="button" class="dc-note-save" data-save-note hidden>Save</button>
+                        <span class="dc-note-ok" hidden>Saved</span></div>
+                    </div>
+                  {%- elsif pval != blank -%}
+                    {%- assign lpv = pval | downcase -%}
+                    {%- unless lpv contains 'http' or lpv contains '/uploads' -%}
+                      <div class="dc-line-opt"><b>{{ pname }}:</b> {{ pval }}</div>
+                    {%- endunless -%}
+                  {%- endif -%}
+                {%- endunless -%}
+              {%- endfor -%}
+              {%- if fee_title != blank -%}
+                <div class="dc-line-fee">Includes {{ fee_title | downcase }} - {{ fee_price | money }}</div>
+              {%- endif -%}
+              {%- if dstate != blank and item.url != blank -%}
+                <div class="dc-line-actions">
+                  <a class="dc-line-edit" href="{{ item.url }}{% if item.url contains '?' %}&{% else %}?{% endif %}edit={{ item.key | url_encode }}">Edit design</a>
+                </div>
+              {%- endif -%}
+            {%- endcapture -%}
+            {%- assign details_trim = details | strip -%}
+
+            <div class="dc-line" data-key="{{ item.key }}"{% if fee_key != blank %} data-fee-key="{{ fee_key }}"{% endif %}
+              data-unit="{{ item.final_price }}" data-fee-unit="{{ fee_unit }}" data-qty="{{ item.quantity }}">
+              <div class="dc-line-product">
+                {%- if preview != blank -%}
+                  <img class="dc-line-img" src="{{ preview }}" alt="" width="62" height="62" loading="lazy">
+                {%- elsif item.image -%}
+                  <img class="dc-line-img" src="{{ item.image | image_url: width: 160 }}" alt="{{ item.title | escape }}" width="62" height="62" loading="lazy">
+                {%- else -%}
+                  <span class="dc-line-img"></span>
+                {%- endif -%}
+                <div class="dc-line-info">
+                  <div class="dc-line-title">{% if item.product.url %}<a href="{{ item.url }}">{{ item.product.title }}</a>{% else %}{{ item.product.title }}{% endif %}</div>
+                  <div class="dc-line-price">{{ item.final_price | money }}{% if item.quantity > 1 %} each{% endif %}</div>
+                  {%- if details_trim != blank -%}
+                    <details class="dc-details">
+                      <summary><span>Details</span><svg class="dc-chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary>
+                      <div class="dc-details-body">{{ details }}</div>
+                    </details>
+                  {%- endif -%}
+                </div>
+              </div>
+              <div class="dc-qtywrap">
+                <span class="dc-qty">
+                  <button type="button" data-dec aria-label="Decrease quantity">&minus;</button>
+                  <span class="dc-qty-val">{{ item.quantity }}</span>
+                  <button type="button" data-inc aria-label="Increase quantity">+</button>
+                </span>
+                <button type="button" class="dc-remove" data-remove aria-label="Remove item">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg>
+                </button>
+              </div>
+              <div class="dc-line-total" data-total>{{ line_total | money }}</div>
             </div>
-            <div class="dc-sum-row">
-              <span>Shipping</span>
-              <span>Calculated at checkout</span>
-            </div>
-            <div class="dc-sum-row dc-sum-total">
-              <span>{{ section.settings.subtotal_label | default: 'Estimated total' }}</span>
-              <span class="dc-sub-amt" id="dcSubtotalTotal">{{ cart.items_subtotal_price | money }}</span>
-            </div>
-            <p class="dc-tax">{{ section.settings.tax_note | default: 'Taxes, discounts and shipping calculated at checkout.' }}</p>
-            <a class="dc-checkout" href="{{ section.settings.precheckout_url | default: '/checkout' }}">{{ section.settings.checkout_label | default: 'Check out' }}</a>
-            <div class="dc-secure">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-              Secure checkout
-            </div>
-            {% if section.settings.show_clear %}<button type="button" class="dc-clear" id="dcClear">{{ section.settings.clear_label | default: 'Clear cart' }}</button>{% endif %}
-          </div>
-        </aside>
+          {%- endfor -%}
+        </div>
+      </div>
+
+      <div class="dc-summary">
+        <h2>Order summary</h2>
+        <div class="dc-sum-row">
+          <span>Subtotal</span>
+          <span class="dc-sub-amt" id="dcSubtotal">{{ cart.items_subtotal_price | money_with_currency }}</span>
+        </div>
+        <div class="dc-sum-row">
+          <span>Shipping</span>
+          <span>Calculated at checkout</span>
+        </div>
+        <div class="dc-sum-row dc-sum-total">
+          <span>{{ section.settings.subtotal_label | default: 'Estimated total' }}</span>
+          <span class="dc-sub-amt" id="dcSubtotalTotal">{{ cart.items_subtotal_price | money }}</span>
+        </div>
+        <p class="dc-tax">{{ section.settings.tax_note | default: 'Taxes, discounts and shipping calculated at checkout.' }}</p>
+        <a class="dc-checkout" href="{{ section.settings.precheckout_url | default: '/checkout' }}">{{ section.settings.checkout_label | default: 'Check out' }}</a>
+        <div class="dc-secure">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          Secure checkout
+        </div>
+        {% if section.settings.show_clear %}<button type="button" class="dc-clear" id="dcClear">{{ section.settings.clear_label | default: 'Clear cart' }}</button>{% endif %}
       </div>
     {% endif %}
   </div>
@@ -324,6 +337,7 @@
   }
 
   if (list) list.addEventListener("click", function (e) {
+    if (e.target.closest(".dc-details > summary")) return; // let the dropdown toggle
     var ln = e.target.closest(".dc-line"); if (!ln) return;
     var cur = parseInt(ln.getAttribute("data-qty"), 10) || 0;
     if (e.target.closest("[data-remove]")) { setLine(ln, 0); return; }
