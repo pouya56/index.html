@@ -752,6 +752,33 @@
     // Cart drawer + wishlist.
     initCart();
     initWishlist();
+    watchCartRequests();
+  }
+
+  // Keep the cart badge (and drawer) in sync no matter what code changes the
+  // cart — including Shopify's native cart page, which removes/updates items
+  // without calling us. We watch any request to the cart endpoints and refresh
+  // afterwards. Debounced so a burst of calls triggers just one reload.
+  function watchCartRequests() {
+    if (window.__hdCartWatch) return; window.__hdCartWatch = true;
+    var reCart = /\/cart\/(add|change|update|clear)(\.js)?(\?|$)/i;
+    var t = null;
+    var bump = function () { clearTimeout(t); t = setTimeout(function () { loadCart(); }, 80); };
+    if (window.fetch) {
+      var of = window.fetch;
+      window.fetch = function (input) {
+        var url = (typeof input === "string") ? input : (input && input.url) || "";
+        var pr = of.apply(this, arguments);
+        if (reCart.test(url)) { pr.then(bump).catch(function () {}); }
+        return pr;
+      };
+    }
+    var oo = XMLHttpRequest.prototype.open, os = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function (m, url) { this.__hdUrl = url || ""; return oo.apply(this, arguments); };
+    XMLHttpRequest.prototype.send = function () {
+      if (reCart.test(this.__hdUrl || "")) this.addEventListener("load", bump);
+      return os.apply(this, arguments);
+    };
   }
 
   // Shared wishlist API other sections (the product page) can call.
