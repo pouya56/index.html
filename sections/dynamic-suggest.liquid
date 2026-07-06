@@ -30,10 +30,11 @@
     font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; background: var(--bg);
     min-height: 100vh;
   }
-  .dyn-sug .ds-topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between;
-    gap: 16px; padding: 16px 24px; background: rgba(245,245,247,0.92);
+  .dyn-sug .ds-topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(245,245,247,0.92);
     -webkit-backdrop-filter: saturate(1.6) blur(18px); backdrop-filter: saturate(1.6) blur(18px);
     border-bottom: 1px solid rgba(0,0,0,0.08); box-shadow: 0 2px 14px rgba(0,0,0,0.06); }
+  .dyn-sug .ds-top-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 18px 32px; }
   .dyn-sug .ds-top-item { display: flex; align-items: center; gap: 20px; min-width: 0; }
   .dyn-sug .ds-top-item img { width: 104px; height: 104px; object-fit: contain; border-radius: 14px; background: #fff; flex: none;
     box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
@@ -98,7 +99,7 @@
   .dyn-sug .ds-skip:hover { color: var(--ink); }
 
   @media (max-width: 640px) {
-    .dyn-sug .ds-topbar { padding: 12px 16px; }
+    .dyn-sug .ds-top-inner { padding: 12px 18px; }
     .dyn-sug .ds-top-item img { width: 48px; height: 48px; }
     .dyn-sug .ds-top-title { font-size: 15px; }
     .dyn-sug .ds-review { padding: 10px 18px; font-size: 15px; }
@@ -112,17 +113,19 @@
   data-cart-url="{{ routes.cart_url }}"
   data-limit="{{ section.settings.max_items | default: 12 }}">
   <div class="ds-topbar" id="dsTop" hidden>
-    <div class="ds-top-item">
-      {%- # theme-check-disable RemoteAsset -%}
-      <img id="dsTopImg" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" width="60" height="60">
-      {%- # theme-check-enable RemoteAsset -%}
-      <div class="ds-top-txt">
-        <div class="ds-top-title" id="dsTopTitle"></div>
-        <div class="ds-top-sub">{{ section.settings.bag_subtitle | default: 'One-time payment' }}</div>
-        <div class="ds-top-note" id="dsTopNote"></div>
+    <div class="ds-top-inner">
+      <div class="ds-top-item">
+        {%- # theme-check-disable RemoteAsset -%}
+        <img id="dsTopImg" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" width="60" height="60">
+        {%- # theme-check-enable RemoteAsset -%}
+        <div class="ds-top-txt">
+          <div class="ds-top-title" id="dsTopTitle"></div>
+          <div class="ds-top-sub">{{ section.settings.bag_subtitle | default: 'One-time payment' }}</div>
+          <div class="ds-top-note" id="dsTopNote"></div>
+        </div>
       </div>
+      <a class="ds-review" href="{{ section.settings.checkout_url | default: '/checkout' }}">{{ section.settings.checkout_label | default: 'Check out' }}</a>
     </div>
-    <a class="ds-review" href="{{ section.settings.checkout_url | default: '/checkout' }}">{{ section.settings.checkout_label | default: 'Check out' }}</a>
   </div>
 
   <div class="ds-hero">
