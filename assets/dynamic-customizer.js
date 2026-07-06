@@ -2181,7 +2181,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const css =
       '<style>' +
       '.dc-gift{--gi:#1d1d1f;--gs:#6e6e73;--gf:#86868b;--gl:#d2d2d7;--gp:#f5f5f7;--ga:#0071e3;' +
-        'margin:18px 20px 0;font-family:inherit;color:var(--gi)}' +
+        'margin:20px 0 0;font-family:inherit;color:var(--gi)}' +
       '.dc-gift *{box-sizing:border-box}' +
       '.dc-gift-toggle{display:inline-flex;align-items:center;gap:12px;cursor:pointer;user-select:none}' +
       '.dc-gift-toggle-input{position:absolute;opacity:0;width:0;height:0}' +
@@ -2284,7 +2284,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               '<div class="engrave-tools">' + kbdHtml() + '</div>') +
           '</div>' +
         '</div>' +
-        giftHtml() +
         '<div class="modal-foot"><div class="price-breakdown"><div class="price-breakdown-toggle" style="cursor:default">' +
           '<span class="total">' + priceStr + '</span><span class="meta">' + escapeHtml((window.DYN_SETTINGS && window.DYN_SETTINGS.customPrintLabel) || "Custom print") + '</span></div></div>' +
           '<div class="foot-actions"><button class="btn btn-ghost" data-close>Cancel</button>' +
@@ -2351,20 +2350,29 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (!e.target.closest(".up-el")) { activeLayerId = null; if (txt) txt.value = ""; renderUpEls(); }
     });
     q2("#uploadApply").onclick = onUploadApply;
-    // Gift options: reveal panel on toggle, live note counter.
-    const giftIsGift = q2("#giftIsGift");
-    if (giftIsGift) {
-      const giftPanel = q2("#giftPanel"), giftNote = q2("#giftNote"), giftCount = q2("#giftCount"), giftWrap = q2("#giftWrap");
-      const syncGift = () => {
-        const on = giftIsGift.checked;
-        if (giftPanel) giftPanel.hidden = !on;
-        if (giftNote) giftNote.disabled = !on;
-        if (!on && giftWrap) giftWrap.checked = false;
-      };
-      giftIsGift.onchange = syncGift; syncGift();
-      if (giftNote && giftCount) { const c = () => (giftCount.textContent = String(giftNote.value.length)); giftNote.oninput = c; c(); }
-    }
     renderUpEls();
+  }
+
+  // Mount the gift options on the PRODUCT PAGE (under Quantity) and wire the
+  // toggle → note reveal + live counter. The selections are read at Add to Bag.
+  function mountGiftOptions() {
+    const mount = document.getElementById("giftMount");
+    if (!mount) return;
+    const html = giftHtml();
+    mount.innerHTML = html;
+    if (!html) return;
+    const giftIsGift = mount.querySelector("#giftIsGift");
+    if (!giftIsGift) return;
+    const giftPanel = mount.querySelector("#giftPanel"), giftNote = mount.querySelector("#giftNote");
+    const giftCount = mount.querySelector("#giftCount"), giftWrap = mount.querySelector("#giftWrap");
+    const syncGift = () => {
+      const on = giftIsGift.checked;
+      if (giftPanel) giftPanel.hidden = !on;
+      if (giftNote) giftNote.disabled = !on;
+      if (!on && giftWrap) giftWrap.checked = false;
+    };
+    giftIsGift.onchange = syncGift; syncGift();
+    if (giftNote && giftCount) { const c = () => (giftCount.textContent = String(giftNote.value.length)); giftNote.oninput = c; c(); }
   }
 
   // Wipe the canvas back to an empty Front side (both sides cleared, field empty).
@@ -3575,6 +3583,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (modalOpen) refreshPricing();
     }
     $("#customizeBtn").onclick = openModal;
+    mountGiftOptions();
     wireWishButton();
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && modalOpen) { closeModal(); return; }
