@@ -456,12 +456,11 @@
           /* Search bar acts as a solid shelf. Recomputed each frame so it stays
              aligned if the layout shifts. */
           function shelves() {
-            // Which element the boxes rest on differs by device:
-            //  - Desktop: the search bar is the shelf.
-            //  - Phone: the buttons under the search bar are the shelf (the
-            //    search bar itself stays open so boxes can roam with the tilt).
+            // Desktop: the search bar is a shelf boxes rest on.
+            // Phone: no shelf at all — boxes just fall to the bottom.
+            if (isTouch) return [];
             var out = [], hr = host.getBoundingClientRect();
-            var el = root.querySelector(isTouch ? ".dh-hero-btns" : ".dh-search");
+            var el = root.querySelector(".dh-search");
             if (el) {
               var r = el.getBoundingClientRect();
               if (r.width >= 4 && r.height >= 4) {
