@@ -95,6 +95,13 @@
   .dyn-col .dc-search-go:hover { opacity: 0.9; }
   .dyn-col .dc-search-go:active { transform: scale(0.93); }
   .dyn-col .dc-search-go svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  /* Link buttons under the search bar */
+  .dyn-col .dc-hero-btns { display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+  .dyn-col .dc-gbtn { display: inline-flex; align-items: center; justify-content: center; min-width: 150px; height: 46px; padding: 0 24px;
+    border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 500 15px/1 var(--font);
+    text-decoration: none; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: background .16s, box-shadow .16s, transform .1s; }
+  .dyn-col .dc-gbtn:hover { background: var(--bg-panel); box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+  .dyn-col .dc-gbtn:active { transform: scale(0.98); }
 
   /* Category tabs */
   .dyn-col .dc-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 28px auto 32px; max-width: 1040px; }
@@ -281,6 +288,14 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
           </button>
         </div>
+        {%- assign show_b1 = false -%}{%- if section.settings.show_btn1 and section.settings.btn1_label != blank -%}{%- assign show_b1 = true -%}{%- endif -%}
+        {%- assign show_b2 = false -%}{%- if section.settings.show_btn2 and section.settings.btn2_label != blank -%}{%- assign show_b2 = true -%}{%- endif -%}
+        {%- if show_b1 or show_b2 -%}
+          <div class="dc-hero-btns">
+            {%- if show_b1 -%}<a class="dc-gbtn" href="{{ section.settings.btn1_url | default: '#' }}">{{ section.settings.btn1_label }}</a>{%- endif -%}
+            {%- if show_b2 -%}<a class="dc-gbtn" href="{{ section.settings.btn2_url | default: '#' }}">{{ section.settings.btn2_label }}</a>{%- endif -%}
+          </div>
+        {%- endif -%}
       {%- endif -%}
       {%- comment -%} Build the category tabs from product type or tag. {%- endcomment -%}
       {%- if cat_source == 'tag' -%}
@@ -769,6 +784,14 @@
     { "type": "header", "content": "Card" },
     { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": false },
     { "type": "checkbox", "id": "show_swatches", "label": "Show colour swatches", "default": true },
+
+    { "type": "header", "content": "Buttons under the search" },
+    { "type": "checkbox", "id": "show_btn1", "label": "Show button 1", "default": false },
+    { "type": "text", "id": "btn1_label", "label": "Button 1 text", "default": "Shop all" },
+    { "type": "url", "id": "btn1_url", "label": "Button 1 link" },
+    { "type": "checkbox", "id": "show_btn2", "label": "Show button 2", "default": false },
+    { "type": "text", "id": "btn2_label", "label": "Button 2 text", "default": "Contact us" },
+    { "type": "url", "id": "btn2_url", "label": "Button 2 link" },
 
     { "type": "header", "content": "Back button" },
     { "type": "checkbox", "id": "show_back", "label": "Show back button (top-left)", "default": true },
