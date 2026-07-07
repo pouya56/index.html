@@ -87,6 +87,10 @@
     transition: border-color .16s, box-shadow .16s, padding .3s ease, font-size .3s ease; }
   .dyn-col .dc-search:focus-within .dc-search-input,
   .dyn-col .dc-search:has(.dc-search-input:not(:placeholder-shown)) .dc-search-input { font-size: 16px; padding: 15px 56px 15px 52px; }
+  /* No arrow button: tighten the right padding */
+  .dyn-col .dc-search.dc-nogo .dc-search-input { padding-right: 22px; }
+  .dyn-col .dc-search.dc-nogo:focus-within .dc-search-input,
+  .dyn-col .dc-search.dc-nogo:has(.dc-search-input:not(:placeholder-shown)) .dc-search-input { padding-right: 26px; }
   .dyn-col .dc-search-input::placeholder { color: var(--ink-faint); }
   .dyn-col .dc-search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 8px 30px rgba(0,0,0,0.06), 0 0 0 4px rgba(0,113,227,0.14); }
   /* ChatGPT-style round arrow button inside the bar */
@@ -279,14 +283,16 @@
       </div>
     {%- else -%}
       {%- if section.settings.show_search -%}
-        <div class="dc-search">
+        <div class="dc-search{% unless section.settings.show_search_button %} dc-nogo{% endunless %}">
           <svg class="dc-search-mag" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="search" id="dcSearch" class="dc-search-input" autocomplete="off" aria-label="Search products"
             data-typing="{{ section.settings.search_examples | escape }}"
             placeholder="{{ section.settings.search_placeholder | default: 'Search these products…' }}">
+          {%- if section.settings.show_search_button -%}
           <button type="button" class="dc-search-go" id="dcSearchGo" aria-label="Search">
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
           </button>
+          {%- endif -%}
         </div>
         {%- assign show_b1 = false -%}{%- if section.settings.show_btn1 and section.settings.btn1_label != blank -%}{%- assign show_b1 = true -%}{%- endif -%}
         {%- assign show_b2 = false -%}{%- if section.settings.show_btn2 and section.settings.btn2_label != blank -%}{%- assign show_b2 = true -%}{%- endif -%}
@@ -750,6 +756,7 @@
     { "type": "checkbox", "id": "hide_until_search", "label": "Hide the grid until someone searches", "default": false, "info": "Great for the home page: only the search box shows; the products appear once the shopper types." },
     { "type": "url", "id": "results_page_url", "label": "Show results on another page (URL)", "info": "Optional. Paste your Shop page URL (e.g. /collections/shop). When set, pressing Enter here opens that page with the results instead of filtering in place. Leave empty to filter on this page." },
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search these products…" },
+    { "type": "checkbox", "id": "show_search_button", "label": "Show the arrow button inside the search bar", "default": true },
     { "type": "textarea", "id": "search_examples", "label": "Typing examples", "info": "One phrase per line. They type out in the search box one after another. Clear to turn the effect off.", "default": "I'm shopping for my wife.\nI'm looking for a birthday gift.\nI need a gift for my mom.\nI'm shopping for my dad.\nI want a gift for my best friend.\nI'm buying a gift for my boyfriend.\nI need an anniversary gift.\nI'm shopping for my daughter.\nI want something personalized.\nI'm looking for a unique gift.\nI need a Christmas gift.\nI'm shopping for a coworker.\nI want a custom mug.\nI'm shopping for myself.\nI'm not sure what to buy." },
 
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
