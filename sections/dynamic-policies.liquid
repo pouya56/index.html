@@ -1,0 +1,187 @@
+{% comment %}
+  ============================================================================
+  Dynamic Policies - a Google-style "Privacy & Terms" hub with a LEFT tab list.
+  ----------------------------------------------------------------------------
+  Pulls every policy you enabled in Settings > Policies (Privacy, Terms, Refund,
+  Shipping, Contact information, Legal notice) and shows them as tabs on the
+  left; clicking a tab swaps the content on the right - no page reload.
+
+  INSTALL:
+  1. Edit code > Sections > Add a new section > name it "dynamic-policies" and
+     REPLACE its contents with this whole file. Save.
+  2. Online Store > Pages > Add page > title "Privacy & Terms". Save.
+  3. Customize > (open that page) > Add section > "Dynamic Policies". Remove the
+     default page content. Save.
+  4. Link to /pages/privacy-terms (or whatever the page handle is) from your menu
+     or the hero apps grid. To open a specific tab, add #<handle>, e.g.
+     /pages/privacy-terms#privacy-policy
+  ============================================================================
+{% endcomment %}
+
+<style>
+  .dyn-pol {
+    --bg: #ffffff; --bg-panel: #f5f5f7;
+    --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
+    --line: #e3e3e8; --accent: #0071e3;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --serif: "Cormorant Garamond", Georgia, "Times New Roman", Times, serif;
+    font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased;
+    background: {{ section.settings.bg_color | default: '#ffffff' }};
+  }
+  .dyn-pol, .dyn-pol *, .dyn-pol *::before, .dyn-pol *::after { box-sizing: border-box; }
+  .dyn-pol .dp-wrap { max-width: 1180px; margin: 0 auto; padding: clamp(36px, 6vw, 72px) 22px clamp(60px, 8vw, 100px); }
+
+  .dyn-pol .dp-head { border-bottom: 1px solid var(--line); padding-bottom: clamp(20px, 3vw, 32px); margin-bottom: clamp(24px, 4vw, 44px); }
+  .dyn-pol .dp-eyebrow { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
+  .dyn-pol .dp-head h1 { font-family: {% if section.settings.heading_font == 'sans' %}var(--font){% else %}var(--serif){% endif %};
+    font-weight: 500; font-size: clamp(32px, 5.5vw, 54px); line-height: 1.03; letter-spacing: -0.01em; margin: 0; }
+  .dyn-pol .dp-head p { margin: 14px 0 0; font-size: 16px; line-height: 1.6; color: var(--ink-soft); max-width: 720px; }
+
+  .dyn-pol .dp-layout { display: grid; grid-template-columns: 260px 1fr; gap: clamp(28px, 5vw, 64px); align-items: start; }
+  @media (max-width: 860px) { .dyn-pol .dp-layout { grid-template-columns: 1fr; gap: 22px; } }
+
+  /* Left tab rail (desktop) */
+  .dyn-pol .dp-nav { position: sticky; top: 20px; }
+  @media (max-width: 860px) { .dyn-pol .dp-nav { position: static; } }
+  .dyn-pol .dp-tabs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  @media (max-width: 860px) {
+    .dyn-pol .dp-tabs { flex-direction: row; overflow-x: auto; gap: 8px; padding-bottom: 6px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .dyn-pol .dp-tabs::-webkit-scrollbar { display: none; }
+  }
+  .dyn-pol .dp-tab { display: block; width: 100%; text-align: left; border: none; background: transparent; cursor: pointer;
+    font: 500 15px/1.35 var(--font); color: var(--ink-soft); padding: 11px 14px; border-radius: 12px; white-space: nowrap;
+    transition: background .15s, color .15s; }
+  .dyn-pol .dp-tab:hover { background: var(--bg-panel); color: var(--ink); }
+  .dyn-pol .dp-tab.is-active { background: var(--ink); color: #fff; }
+  @media (max-width: 860px) {
+    .dyn-pol .dp-tab { border: 1px solid var(--line); padding: 9px 15px; border-radius: 999px; font-size: 14px; }
+    .dyn-pol .dp-tab.is-active { border-color: var(--ink); }
+  }
+
+  /* Right content */
+  .dyn-pol .dp-panel { display: none; animation: dpFade .25s ease; }
+  .dyn-pol .dp-panel.is-active { display: block; }
+  @keyframes dpFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .dyn-pol .dp-panel h2 { font-family: var(--serif); font-weight: 500; font-size: clamp(26px, 3.4vw, 38px); margin: 0 0 6px; }
+  .dyn-pol .dp-updated { font-size: 13px; color: var(--ink-faint); margin-bottom: 24px; }
+
+  /* Rich-text styling for the policy body */
+  .dyn-pol .dp-rte { font-size: 16px; line-height: 1.75; color: #35353b; max-width: 760px; }
+  .dyn-pol .dp-rte h1, .dyn-pol .dp-rte h2, .dyn-pol .dp-rte h3, .dyn-pol .dp-rte h4 { font-family: var(--font); color: var(--ink);
+    font-weight: 600; line-height: 1.3; margin: 32px 0 12px; }
+  .dyn-pol .dp-rte h1 { font-size: 24px; } .dyn-pol .dp-rte h2 { font-size: 21px; } .dyn-pol .dp-rte h3 { font-size: 18px; }
+  .dyn-pol .dp-rte p { margin: 0 0 16px; }
+  .dyn-pol .dp-rte ul, .dyn-pol .dp-rte ol { margin: 0 0 16px; padding-left: 22px; }
+  .dyn-pol .dp-rte li { margin-bottom: 8px; }
+  .dyn-pol .dp-rte a { color: var(--accent); text-decoration: none; }
+  .dyn-pol .dp-rte a:hover { text-decoration: underline; }
+  .dyn-pol .dp-rte strong { color: var(--ink); }
+  .dyn-pol .dp-rte hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
+  .dyn-pol .dp-rte table { width: 100%; border-collapse: collapse; margin: 0 0 16px; font-size: 15px; }
+  .dyn-pol .dp-rte th, .dyn-pol .dp-rte td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
+
+  .dyn-pol .dp-empty { padding: 48px 0; color: var(--ink-soft); font-size: 16px; }
+  .dyn-pol .dp-empty code { background: var(--bg-panel); padding: 2px 6px; border-radius: 6px; font-size: 14px; }
+</style>
+
+<section class="dyn-pol" id="dynPolicies">
+  <div class="dp-wrap">
+    <div class="dp-head">
+      {%- if section.settings.eyebrow != blank -%}<div class="dp-eyebrow">{{ section.settings.eyebrow }}</div>{%- endif -%}
+      <h1>{{ section.settings.heading | default: 'Dynaeimic Privacy & Terms' }}</h1>
+      {%- if section.settings.intro != blank -%}<p>{{ section.settings.intro }}</p>{%- endif -%}
+    </div>
+
+    {%- comment -%} Count enabled policies first so we can show a helpful message if none exist. {%- endcomment -%}
+    {%- assign pol_count = 0 -%}
+    {%- for policy in shop.policies -%}{%- if policy != blank and policy.body != blank -%}{%- assign pol_count = pol_count | plus: 1 -%}{%- endif -%}{%- endfor -%}
+
+    {%- if pol_count > 0 -%}
+      <div class="dp-layout">
+        <nav class="dp-nav" aria-label="Policies">
+          <ul class="dp-tabs" role="tablist">
+            {%- assign shown = 0 -%}
+            {%- for policy in shop.policies -%}
+              {%- if policy != blank and policy.body != blank -%}
+                {%- assign shown = shown | plus: 1 -%}
+                {%- assign phandle = policy.url | split: '/policies/' | last -%}
+                <li role="presentation">
+                  <button type="button" class="dp-tab{% if shown == 1 %} is-active{% endif %}" role="tab"
+                    data-target="pol-{{ phandle }}" aria-selected="{% if shown == 1 %}true{% else %}false{% endif %}">{{ policy.title }}</button>
+                </li>
+              {%- endif -%}
+            {%- endfor -%}
+          </ul>
+        </nav>
+
+        <div class="dp-panels">
+          {%- assign shown2 = 0 -%}
+          {%- for policy in shop.policies -%}
+            {%- if policy != blank and policy.body != blank -%}
+              {%- assign shown2 = shown2 | plus: 1 -%}
+              {%- assign phandle = policy.url | split: '/policies/' | last -%}
+              <article class="dp-panel{% if shown2 == 1 %} is-active{% endif %}" id="pol-{{ phandle }}" role="tabpanel">
+                <h2>{{ policy.title }}</h2>
+                <div class="dp-rte">{{ policy.body }}</div>
+              </article>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      </div>
+    {%- else -%}
+      <div class="dp-empty">No policies are published yet. Add them in <strong>Shopify admin → Settings → Policies</strong>, then they'll appear here automatically. You can also link directly to <code>/policies/privacy-policy</code> etc.</div>
+    {%- endif -%}
+  </div>
+</section>
+
+<script>
+(function () {
+  var root = document.getElementById("dynPolicies");
+  if (!root) return;
+  var tabs = Array.prototype.slice.call(root.querySelectorAll(".dp-tab"));
+  var panels = Array.prototype.slice.call(root.querySelectorAll(".dp-panel"));
+  if (!tabs.length) return;
+
+  function show(id, push) {
+    var found = false;
+    panels.forEach(function (p) { var on = p.id === id; p.classList.toggle("is-active", on); if (on) found = true; });
+    tabs.forEach(function (t) {
+      var on = t.getAttribute("data-target") === id;
+      t.classList.toggle("is-active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      if (on) { try { t.scrollIntoView({ inline: "center", block: "nearest" }); } catch (e) {} }
+    });
+    if (found && push) { try { history.replaceState(null, "", "#" + id.replace(/^pol-/, "")); } catch (e) {} }
+    return found;
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () {
+      show(t.getAttribute("data-target"), true);
+      root.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  // Open the tab named in the URL hash (e.g. #privacy-policy), else the first one.
+  var h = (location.hash || "").replace(/^#/, "");
+  if (h) { show("pol-" + h, false); }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Policies",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "Shows every policy from Settings → Policies as left-hand tabs (Google-style). Enable/edit the actual text in Shopify admin → Settings → Policies." },
+    { "type": "text", "id": "eyebrow", "label": "Small label above title", "default": "Legal" },
+    { "type": "text", "id": "heading", "label": "Title", "default": "Dynaeimic Privacy & Terms" },
+    { "type": "textarea", "id": "intro", "label": "Intro text", "default": "Everything about how we handle your orders, your data, and your rights — all in one place." },
+    { "type": "select", "id": "heading_font", "label": "Title font", "default": "serif",
+      "options": [ { "value": "serif", "label": "Elegant serif" }, { "value": "sans", "label": "Modern sans" } ] },
+    { "type": "color", "id": "bg_color", "label": "Background", "default": "#ffffff" }
+  ],
+  "presets": [ { "name": "Dynamic Policies" } ],
+  "enabled_on": { "templates": ["page", "index"] }
+}
+{% endschema %}
