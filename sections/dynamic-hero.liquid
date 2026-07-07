@@ -426,11 +426,15 @@
             var bx = cursorX + r;
             cursorX += 2 * r + 4;
             placed++;
+            // Weight factor: bigger boxes feel heavier. 110px is the neutral
+            // size (weight 1); it scales up/down from there and drives gravity,
+            // throw strength, hop height and drag lag.
+            var wf = Math.max(0.6, Math.min(3, size / 110));
             bodies.push({
               x: Math.min(bx, w - r), y: h - r - 4,
               vx: 0, vy: 0,
               a: (Math.random() - 0.5) * 0.15, av: 0,
-              r: r, size: size, m: r * r, spr: sprite, held: false
+              r: r, size: size, m: r * r, wf: wf, spr: sprite, held: false, rest: 0
             });
           }
 
@@ -486,10 +490,29 @@
             for (i = 0; i < bodies.length; i++) {
               b = bodies[i];
               if (b.held) continue;
-              b.vx += gravX * dt; b.vy += gravY * dt;
+              // Heavier (bigger) boxes get a touch more gravity so they drop
+              // with more weight.
+              var gm = 0.85 + 0.2 * b.wf;
+              b.vx += gravX * dt * gm; b.vy += gravY * dt * gm;
               b.vx *= 0.9995; b.vy *= 0.9995;
               b.x += b.vx * dt; b.y += b.vy * dt;
               b.a += b.av * dt; b.av *= 0.99;
+
+              /* Once a box has basically stopped, count it as "resting" and very
+                 slowly rotate it upright (bow up) so it stands straight on the
+                 floor. Heavier boxes settle a little sooner. */
+              var speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+              if (speed < 45 && Math.abs(b.av) < 1.4) {
+                b.rest = Math.min(1, b.rest + dt * 1.2);
+              } else {
+                b.rest = 0;
+              }
+              if (b.rest > 0.15) {
+                var twoPi = Math.PI * 2;
+                var target = Math.round(b.a / twoPi) * twoPi;   // nearest upright
+                b.a += (target - b.a) * Math.min(1, dt * 0.7);  // very slow righting
+                b.av *= 0.5;
+              }
             }
             for (var pass = 0; pass < 5; pass++) {
               for (i = 0; i < bodies.length; i++) {
@@ -610,8 +633,12 @@
             if (!held) return;
             var q = pos(e), nx = q.x + grabOff.x, ny = q.y + grabOff.y;
             var t = e.timeStamp || (lastT + 16), dt = Math.max(0.001, (t - lastT) / 1000);
-            throwVX = (nx - held.x) / dt; throwVY = (ny - held.y) / dt;
-            held.x = nx; held.y = ny; lastP = q; lastT = t;
+            // Heavier boxes lag behind the finger (follow a fraction of the way)
+            // so they feel weighty to drag; light boxes track almost exactly.
+            var follow = Math.min(1, 0.45 + 0.5 / held.wf);
+            var px = held.x + (nx - held.x) * follow, py = held.y + (ny - held.y) * follow;
+            throwVX = (px - held.x) / dt; throwVY = (py - held.y) / dt;
+            held.x = px; held.y = py; lastP = q; lastT = t;
             if (downQ) { var mx = q.x - downQ.x, my = q.y - downQ.y; moved = Math.max(moved, Math.sqrt(mx * mx + my * my)); }
           }, { passive: true });
           function release(e) {
@@ -620,15 +647,18 @@
             var elapsed = ((e && e.timeStamp) || (downT + 999)) - downT;
             /* A quick tap/click that barely moved = make the box hop (works on
                desktop and phone). A drag always throws it. */
+            b.rest = 0;
             if (moved < 12 && elapsed < 500) {
-              var jumpV = Math.sqrt(2 * GRAV * 260);      // ~260px hop, scales with gravity
+              // Heavier boxes hop lower — harder to get off the ground.
+              var jumpV = Math.sqrt(2 * GRAV * 260) * (0.55 + 0.45 / b.wf);
               b.vy = -jumpV;
               b.vx = (Math.random() - 0.5) * jumpV * 0.35; // slight sideways kick
               b.av = (Math.random() - 0.5) * 6;            // playful spin
             } else {
-              var cap = 3200;
-              b.vx = Math.max(-cap, Math.min(cap, throwVX));
-              b.vy = Math.max(-cap, Math.min(cap, throwVY));
+              // Heavier boxes throw slower and cap lower, so they feel weighty.
+              var cap = 3600 / b.wf, tf = 0.6 + 0.4 / b.wf;
+              b.vx = Math.max(-cap, Math.min(cap, throwVX * tf));
+              b.vy = Math.max(-cap, Math.min(cap, throwVY * tf));
               b.av = Math.max(-8, Math.min(8, throwVX / b.r));
             }
           }
