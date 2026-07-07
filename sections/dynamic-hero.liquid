@@ -33,6 +33,9 @@
   /* Landing mode: logo + search fixed in the vertical middle; results flow below.
      No shrink / move / float — everything stays put. */
   .dyn-hero.dh-landing { --media-w: min(86vw, 500px); height: 100svh; min-height: 520px; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  /* Floating gift-box game overlay (physics canvas draws boxes on top; clicks pass through to the page) */
+  .dyn-hero .dh-game { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
+  .dyn-hero .dh-game canvas { display: block; }
   .dyn-hero.dh-landing .dh-wrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center;
     padding-top: 4vh; padding-bottom: calc(18vh + 1in); }
   /* Google-style corner links (home landing) — horizontal row per corner */
@@ -341,6 +344,125 @@
       </filter>
     </defs>
   </svg>
+  {%- comment -%} Floating gift-box physics game. {%- endcomment -%}
+  {%- if section.settings.show_gift_game -%}
+    {%- assign gitems = '' -%}
+    {%- assign gcap = 0 -%}
+    {%- for block in section.blocks -%}
+      {%- if block.type == 'giftbox' and block.settings.image != blank and gcap < 5 -%}
+        {%- assign gcap = gcap | plus: 1 -%}
+        {%- capture gitem -%}{"url":{{ block.settings.image | image_url: width: 600 | json }},"size":{{ block.settings.size | default: 90 }},"count":{{ block.settings.count | default: 2 }}}{%- endcapture -%}
+        {%- if gitems == '' -%}{%- assign gitems = gitem -%}{%- else -%}{%- assign gitems = gitems | append: ',' | append: gitem -%}{%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if gitems != '' -%}
+      <div class="dh-game" id="dhGame" aria-hidden="true"></div>
+      <script type="application/json" id="dhGameData">{"boxes":[{{ gitems }}],"gravity":{{ section.settings.game_gravity | default: 1 }}}</script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js" defer></script>
+      <script>
+      (function () {
+        function boot() {
+          var host = document.getElementById("dhGame");
+          var dataEl = document.getElementById("dhGameData");
+          var root = document.getElementById("dynHero");
+          if (!host || !dataEl || !root) return;
+          if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+          var data; try { data = JSON.parse(dataEl.textContent); } catch (e) { return; }
+          if (!data.boxes || !data.boxes.length) return;
+
+          (function wait() {
+            if (!window.Matter) { return setTimeout(wait, 80); }
+            var M = window.Matter;
+            var w = host.clientWidth, h = host.clientHeight;
+            var engine = M.Engine.create(); engine.world.gravity.y = data.gravity || 1;
+            var render = M.Render.create({ element: host, engine: engine, options: { width: w, height: h, wireframes: false, background: "transparent", pixelRatio: window.devicePixelRatio || 1 } });
+            render.canvas.style.pointerEvents = "none"; render.canvas.style.display = "block";
+            M.Render.run(render);
+            M.Runner.run(M.Runner.create(), engine);
+            var world = engine.world, bodies = [], walls = [];
+
+            function makeWalls() {
+              walls.forEach(function (b) { M.World.remove(world, b); }); walls = [];
+              var t = 300;
+              walls.push(M.Bodies.rectangle(w / 2, h + t / 2, w + 800, t, { isStatic: true }));
+              walls.push(M.Bodies.rectangle(-t / 2, h / 2, t, h * 4, { isStatic: true }));
+              walls.push(M.Bodies.rectangle(w + t / 2, h / 2, t, h * 4, { isStatic: true }));
+              var se = root.querySelector(".dh-search");
+              if (se) {
+                var r = se.getBoundingClientRect(), hr = host.getBoundingClientRect();
+                walls.push(M.Bodies.rectangle(r.left - hr.left + r.width / 2, r.top - hr.top + r.height / 2, r.width, r.height, { isStatic: true, chamfer: { radius: r.height / 2 }, render: { visible: false } }));
+              }
+              M.World.add(world, walls);
+            }
+            makeWalls();
+
+            function cutout(url, cb) {
+              var img = new Image(); img.crossOrigin = "anonymous";
+              img.onload = function () {
+                try {
+                  var c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
+                  var x = c.getContext("2d"); x.drawImage(img, 0, 0);
+                  var d = x.getImageData(0, 0, c.width, c.height), p = d.data, i;
+                  for (i = 0; i < p.length; i += 4) {
+                    var mx = Math.max(p[i], p[i + 1], p[i + 2]);
+                    if (mx < 26) { p[i + 3] = 0; } else if (mx < 62) { p[i + 3] = Math.min(p[i + 3], (mx - 26) * 7); }
+                  }
+                  x.putImageData(d, 0, 0);
+                  cb(c.toDataURL("image/png"), img.naturalWidth, img.naturalHeight);
+                } catch (e) { cb(url, img.naturalWidth || 200, img.naturalHeight || 200); }
+              };
+              img.onerror = function () { cb(null); };
+              img.src = url;
+            }
+
+            var total = 0;
+            data.boxes.forEach(function (b) {
+              cutout(b.url, function (tex, iw, ih) {
+                if (!tex) return;
+                var size = Math.max(40, Math.min(220, b.size || 90));
+                var scale = size / iw;
+                var count = Math.max(1, Math.min(6, b.count || 2));
+                for (var k = 0; k < count && total < 20; k++) {
+                  total++;
+                  var bx = M.Bodies.rectangle(50 + Math.random() * Math.max(1, w - 100), -40 - Math.random() * 200, size * 0.8, size * 0.8, {
+                    restitution: 0.35, friction: 0.28, frictionAir: 0.006, chamfer: { radius: 8 },
+                    render: { sprite: { texture: tex, xScale: scale, yScale: scale } }
+                  });
+                  M.World.add(world, bx); bodies.push(bx);
+                }
+              });
+            });
+
+            function pt(e) { var hr = host.getBoundingClientRect(); return { x: e.clientX - hr.left, y: e.clientY - hr.top }; }
+            var drag = null;
+            root.addEventListener("pointerdown", function (e) {
+              if (e.button && e.button !== 0) return;
+              var q = pt(e), hits = M.Query.point(bodies, q);
+              if (!hits.length) return;
+              var body = hits[hits.length - 1];
+              M.Sleeping.set(body, false);
+              drag = M.Constraint.create({ pointA: { x: q.x, y: q.y }, bodyB: body, pointB: { x: q.x - body.position.x, y: q.y - body.position.y }, stiffness: 0.16, damping: 0.12, length: 0, render: { visible: false } });
+              M.World.add(world, drag);
+              e.preventDefault(); try { root.setPointerCapture(e.pointerId); } catch (x) {}
+            }, true);
+            window.addEventListener("pointermove", function (e) { if (drag) drag.pointA = pt(e); }, { passive: true });
+            window.addEventListener("pointerup", function () { if (drag) { M.World.remove(world, drag); drag = null; } });
+
+            var rt; window.addEventListener("resize", function () {
+              clearTimeout(rt); rt = setTimeout(function () {
+                w = host.clientWidth; h = host.clientHeight;
+                render.canvas.width = w * (window.devicePixelRatio || 1); render.canvas.height = h * (window.devicePixelRatio || 1);
+                render.options.width = w; render.options.height = h; render.bounds.max.x = w; render.bounds.max.y = h;
+                makeWalls();
+              }, 200);
+            });
+          })();
+        }
+        if (document.readyState !== "loading") boot(); else document.addEventListener("DOMContentLoaded", boot);
+      })();
+      </script>
+    {%- endif -%}
+  {%- endif -%}
   {%- comment -%} Corner links (hero landing look is always on for this section). {%- endcomment -%}
   {%- assign corner_pos = 'tl,tr,bl,br' | split: ',' -%}
   {%- for pos in corner_pos -%}
@@ -1129,6 +1251,10 @@
 
     { "type": "text", "id": "copyright_text", "label": "Bottom copyright text", "default": "© 2026, Dynaeimic", "info": "Small centered text at the very bottom. Clear to hide." },
 
+    { "type": "header", "content": "Floating gift game 🎁" },
+    { "type": "checkbox", "id": "show_gift_game", "label": "Turn on the floating-box game", "default": false, "info": "Add up to 5 'Gift box' blocks below (button at the bottom). Shoppers can grab, throw and stack them with the mouse. They rest on the search bar and floor. The black background of each photo is removed automatically." },
+    { "type": "range", "id": "game_gravity", "min": 0.2, "max": 1.6, "step": 0.1, "label": "Gravity", "default": 1, "info": "Lower = floaty & slow, higher = they drop fast." },
+
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
     { "type": "paragraph", "content": "Add 'Corner link' blocks below (button at the bottom of this panel). Up to 4 per corner, laid out in a row like Google's homepage, each with an optional icon." },
 
@@ -1237,6 +1363,11 @@
       { "type": "text", "id": "category_value", "label": "Filters products where Type =",
         "info": "Type the exact Product type value of the items for this tab, e.g. Drinkware. (If 'Build tabs from' is set to Tag, enter the tag instead.)" },
       { "type": "image_picker", "id": "image", "label": "Tab image" }
+    ]},
+    { "type": "giftbox", "name": "Gift box 🎁", "settings": [
+      { "type": "image_picker", "id": "image", "label": "Box photo", "info": "Photo of a gift box. A black background is removed automatically. Up to 5 gift boxes." },
+      { "type": "range", "id": "size", "min": 40, "max": 200, "step": 5, "label": "Size (px)", "default": 95 },
+      { "type": "range", "id": "count", "min": 1, "max": 6, "step": 1, "label": "How many of this box", "default": 2 }
     ]}
   ],
   "max_blocks": 30,
