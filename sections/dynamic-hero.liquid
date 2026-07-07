@@ -496,11 +496,32 @@
 
           function draw() {
             ctx.clearRect(0, 0, w, h);
-            for (var i = 0; i < bodies.length; i++) {
-              var b = bodies[i];
-              if (!b.spr) continue;
+            var i, b;
+            /* Contact shadow on the floor under each box — grounds them so they
+               read as solid 3D objects rather than flat stickers. It grows and
+               fades as the box lifts off the floor. */
+            for (i = 0; i < bodies.length; i++) {
+              b = bodies[i]; if (!b.spr) continue;
+              var gap = Math.max(0, h - (b.y + b.r));
+              var t = Math.max(0, 1 - gap / (b.r * 4.5));
+              if (t <= 0.02) continue;
+              ctx.save();
+              ctx.globalAlpha = 0.30 * t;
+              ctx.fillStyle = "#000";
+              ctx.beginPath();
+              ctx.ellipse(b.x, h - 4, b.r * (1.35 + (1 - t) * 0.9), b.r * 0.34, 0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
+            }
+            /* Sprites, each with a soft self drop-shadow for depth. */
+            for (i = 0; i < bodies.length; i++) {
+              b = bodies[i]; if (!b.spr) continue;
               ctx.save();
               ctx.translate(b.x, b.y); ctx.rotate(b.a);
+              ctx.shadowColor = "rgba(0,0,0,0.34)";
+              ctx.shadowBlur = b.size * 0.14;
+              ctx.shadowOffsetX = b.size * 0.03;
+              ctx.shadowOffsetY = b.size * 0.10;
               ctx.drawImage(b.spr, -b.size / 2, -b.size / 2, b.size, b.size);
               ctx.restore();
             }
