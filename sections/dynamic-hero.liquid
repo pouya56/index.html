@@ -414,24 +414,6 @@
              eased toward tgtGX/tgtGY each frame. */
           var gravX = 0, gravY = GRAV, tgtGX = 0, tgtGY = GRAV;
           var tiltOn = false, shakeCd = 0;
-          /* Parallax 3D tilt for the hero content (video, search bar, buttons)
-             on phones. baseBeta/baseGamma is the neutral holding angle captured
-             on the first reading; tgtRX/tgtRY are the eased target tilt. */
-          var baseBeta = null, baseGamma = null;
-          var tgtRX = 0, tgtRY = 0, curRX = 0, curRY = 0;
-          var pxLayers = null;
-          function parallaxLayers() {
-            if (pxLayers) return pxLayers;
-            pxLayers = [];
-            // Only the video/heading gets the 3D tilt; the search bar and the
-            // buttons under it stay flat.
-            var defs = [[".dh-head", 1]];
-            for (var i = 0; i < defs.length; i++) {
-              var el = root.querySelector(defs[i][0]);
-              if (el) { el.style.transition = "transform .12s ease-out"; el.style.willChange = "transform"; pxLayers.push({ el: el, d: defs[i][1] }); }
-            }
-            return pxLayers;
-          }
           var placed = 0; // how many boxes already placed, laid out along the floor
           var cursorX = 0; // running x position so boxes sit side by side
 
@@ -465,18 +447,17 @@
           /* Search bar acts as a solid shelf. Recomputed each frame so it stays
              aligned if the layout shifts. */
           function shelves() {
-            // The search bar and the buttons under it act as solid shelves that
-            // boxes rest on. On phones the screen is short, so keeping them solid
-            // traps the boxes in the bottom half — disable them there and let the
-            // boxes roam the whole screen with the tilt.
-            if (isTouch) return [];
-            var out = [], hr = host.getBoundingClientRect(), sels = [".dh-search", ".dh-hero-btns"];
-            for (var i = 0; i < sels.length; i++) {
-              var el = root.querySelector(sels[i]);
-              if (!el) continue;
+            // Which element the boxes rest on differs by device:
+            //  - Desktop: the search bar is the shelf.
+            //  - Phone: the buttons under the search bar are the shelf (the
+            //    search bar itself stays open so boxes can roam with the tilt).
+            var out = [], hr = host.getBoundingClientRect();
+            var el = root.querySelector(isTouch ? ".dh-hero-btns" : ".dh-search");
+            if (el) {
               var r = el.getBoundingClientRect();
-              if (r.width < 4 || r.height < 4) continue;
-              out.push({ x: r.left - hr.left + r.width / 2, y: r.top - hr.top + r.height / 2, w: r.width, h: r.height });
+              if (r.width >= 4 && r.height >= 4) {
+                out.push({ x: r.left - hr.left + r.width / 2, y: r.top - hr.top + r.height / 2, w: r.width, h: r.height });
+              }
             }
             return out;
           }
@@ -615,15 +596,6 @@
             if (m > 1) { rx /= m; ry /= m; }
             tgtGX = rx * GRAV; tgtGY = ry * GRAV;
             tiltOn = true;
-
-            /* Visual 3D parallax: measure how far the phone has tilted from the
-               neutral holding angle and turn that into a small card-tilt. */
-            var bDeg = (e.beta || 0), gDeg = (e.gamma || 0);
-            if (baseBeta === null) { baseBeta = bDeg; baseGamma = gDeg; }
-            var dB = bDeg - baseBeta, dG = gDeg - baseGamma;
-            var clamp = function (v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); };
-            tgtRX = clamp(-dB * 0.4, -10, 10);   // front/back tilt -> rotateX
-            tgtRY = clamp(dG * 0.4, -10, 10);    // left/right tilt -> rotateY
           }
           function onMotion(e) {
             var a = e.accelerationIncludingGravity; if (!a) return;
@@ -752,20 +724,7 @@
             var guard = 0;
             while (acc >= FIXED && guard < 8) { step(FIXED); acc -= FIXED; guard++; }
             draw();
-            if (tiltOn) applyParallax(dt);
             requestAnimationFrame(frame);
-          }
-
-          function applyParallax(dt) {
-            curRX += (tgtRX - curRX) * Math.min(1, dt * 8);
-            curRY += (tgtRY - curRY) * Math.min(1, dt * 8);
-            var layers = parallaxLayers();
-            for (var i = 0; i < layers.length; i++) {
-              var L = layers[i], d = L.d;
-              // deeper layers (video) shift and lift a touch more than shallow ones (buttons)
-              var tx = curRY * d * 1.4, ty = -curRX * d * 1.4, tz = d * 26;
-              L.el.style.transform = "perspective(900px) translate3d(" + tx.toFixed(2) + "px," + ty.toFixed(2) + "px,0) rotateX(" + (curRX * d).toFixed(2) + "deg) rotateY(" + (curRY * d).toFixed(2) + "deg) translateZ(" + tz.toFixed(1) + "px)";
-            }
           }
 
           var tries = 0;
