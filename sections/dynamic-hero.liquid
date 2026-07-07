@@ -287,7 +287,13 @@
   .dyn-hero .dh-swatch:hover { transform: scale(1.15); }
   .dyn-hero .dh-swatch-more { font-size: 12px; color: var(--ink-faint); align-self: center; }
 
-  .dyn-hero .dh-noresults { display: none; text-align: center; padding: 60px 20px; color: var(--ink-soft); font-size: 16px; }
+  .dyn-hero .dh-noresults { display: none; text-align: center; padding: 54px 20px 40px; color: var(--ink-soft); }
+  .dyn-hero .dh-nr-title { font-size: 20px; font-weight: 600; color: var(--ink); margin: 0 0 8px; }
+  .dyn-hero .dh-nr-msg { font-size: 15.5px; line-height: 1.55; margin: 0 auto 20px; max-width: 420px; }
+  .dyn-hero .dh-nr-btn { display: inline-flex; align-items: center; height: 46px; padding: 0 26px; border-radius: 999px;
+    background: var(--ink); color: #fff; font-size: 15px; font-weight: 500; text-decoration: none; transition: opacity .16s, transform .1s; }
+  .dyn-hero .dh-nr-btn:hover { opacity: 0.9; }
+  .dyn-hero .dh-nr-btn:active { transform: scale(0.98); }
   .dyn-hero .dh-empty { text-align: center; padding: 80px 20px; background: var(--bg); border-radius: 22px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 12px 34px rgba(0,0,0,0.05); }
   .dyn-hero .dh-empty p { font-size: 18px; color: var(--ink-soft); margin: 0 0 26px; }
@@ -683,7 +689,11 @@
       </div>
       <button type="button" class="dh-shelf-arrow dh-next" id="dhGridNext" aria-label="Scroll products right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
-      <div class="dh-noresults" id="dhNoResults">Nothing in this category yet.</div>
+      <div class="dh-noresults" id="dhNoResults">
+        <p class="dh-nr-title">{{ section.settings.noresults_title | default: 'No matches — yet.' }}</p>
+        <p class="dh-nr-msg">{{ section.settings.noresults_message | default: "Can't find what you're looking for? Tell us what you had in mind — we might still be able to make it." }}</p>
+        <a class="dh-nr-btn" href="{{ section.settings.noresults_url | default: '/pages/contact' }}">{{ section.settings.noresults_link_label | default: 'Contact us' }}</a>
+      </div>
       {%- endif -%}
     {%- endif -%}
   </div>
@@ -1101,7 +1111,13 @@
 
     { "type": "header", "content": "Empty state" },
     { "type": "text", "id": "empty_text", "label": "Empty message", "default": "Nothing here yet." },
-    { "type": "text", "id": "empty_link_label", "label": "Empty button label", "default": "Browse all products" }
+    { "type": "text", "id": "empty_link_label", "label": "Empty button label", "default": "Browse all products" },
+
+    { "type": "header", "content": "No search results" },
+    { "type": "text", "id": "noresults_title", "label": "Title", "default": "No matches — yet." },
+    { "type": "textarea", "id": "noresults_message", "label": "Message", "default": "Can't find what you're looking for? Tell us what you had in mind — we might still be able to make it." },
+    { "type": "text", "id": "noresults_link_label", "label": "Button text", "default": "Contact us" },
+    { "type": "url", "id": "noresults_url", "label": "Button link", "info": "Defaults to /pages/contact." }
   ],
   "blocks": [
     { "type": "corner_link", "name": "Corner link", "settings": [
