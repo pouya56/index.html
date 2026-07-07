@@ -568,123 +568,43 @@
             }
           }
 
-          /* ===== Phone motion controls =====
-             On touch devices the box behaviour changes: instead of tap-to-jump,
-             the boxes follow the phone's real-world orientation (tilt/flip the
-             phone and they fall the new "down"), and shaking scatters them.
-             Requires a one-time permission on iOS, requested on first touch. */
+          /* Touch detection — used to pick which element is the box shelf and to
+             suppress the click that would otherwise open a link under a box. */
           var isTouch = false;
           try { isTouch = window.matchMedia && window.matchMedia("(pointer: coarse)").matches; } catch (e) {}
-          var hasMotion = ("DeviceOrientationEvent" in window) || ("DeviceMotionEvent" in window);
-          var DEG = Math.PI / 180, motionOn = false, lastMag = null;
 
-          function onOrient(e) {
-            if (e.beta == null && e.gamma == null) return;
-            var beta = (e.beta || 0) * DEG, gamma = (e.gamma || 0) * DEG;
-            // Project real-world "down" onto the screen plane.
-            var gx = Math.sin(gamma);
-            var gy = Math.sin(beta) * Math.cos(gamma);
-            // Compensate for the screen's own rotation (portrait/landscape).
-            var ang = 0;
-            try {
-              if (screen.orientation && typeof screen.orientation.angle === "number") ang = screen.orientation.angle;
-              else if (typeof window.orientation === "number") ang = window.orientation;
-            } catch (x) {}
-            var a = -ang * DEG, ca = Math.cos(a), sa = Math.sin(a);
-            var rx = gx * ca - gy * sa, ry = gx * sa + gy * ca;
-            var m = Math.sqrt(rx * rx + ry * ry);
-            if (m > 1) { rx /= m; ry /= m; }
-            tgtGX = rx * GRAV; tgtGY = ry * GRAV;
-            tiltOn = true;
-          }
-          function onMotion(e) {
-            var a = e.accelerationIncludingGravity; if (!a) return;
-            var mag = Math.sqrt((a.x || 0) * (a.x || 0) + (a.y || 0) * (a.y || 0) + (a.z || 0) * (a.z || 0));
-            if (lastMag != null) {
-              var jolt = Math.abs(mag - lastMag);
-              if (jolt > 16 && shakeCd <= 0) {   // a real shake, not a gentle move
-                shakeCd = 0.5;
-                for (var i = 0; i < bodies.length; i++) {
-                  var b = bodies[i]; if (b.held) continue;
-                  b.vx += (Math.random() - 0.5) * 1600;
-                  b.vy += (Math.random() - 0.5) * 1600 - 400;
-                  b.av += (Math.random() - 0.5) * 12;
-                }
-              }
-            }
-            lastMag = mag;
-          }
-          var DOE = window.DeviceOrientationEvent, DME = window.DeviceMotionEvent;
-          var needsPerm = (DOE && typeof DOE.requestPermission === "function") || (DME && typeof DME.requestPermission === "function");
-          var motionBtn = null;
-
-          function grant() {
-            if (motionOn) return;
-            motionOn = true;
-            window.addEventListener("deviceorientation", onOrient);
-            window.addEventListener("devicemotion", onMotion);
-            if (motionBtn && motionBtn.parentNode) motionBtn.parentNode.removeChild(motionBtn);
-          }
-          /* iOS: request the two permissions ONE AT A TIME. Requesting both at
-             once (Promise.all) makes Safari reject the second and nothing turns
-             on — that was the bug. */
-          var reqPending = false;
-          function requestPerm() {
-            if (motionOn || reqPending) return;
-            reqPending = true;
-            var reqO = DOE && typeof DOE.requestPermission === "function";
-            var reqM = DME && typeof DME.requestPermission === "function";
-            function done() { reqPending = false; grant(); }
-            function doMotion() {
-              if (reqM) { DME.requestPermission().then(done).catch(done); }
-              else done();
-            }
-            if (reqO) {
-              DOE.requestPermission().then(function (res) {
-                if (res === "granted") doMotion(); else reqPending = false;
-              }).catch(function () { reqPending = false; });
-            } else { doMotion(); }
-          }
-          function enableMotion() {
-            if (motionOn || !hasMotion) return;
-            if (needsPerm) requestPerm(); else grant();
-          }
-
-          /* On iPhones the OS only shows its "Allow Motion" prompt in response
-             to a real tap on a control, so add a small button for that. Android
-             and older browsers just start straight away. */
-          if (isTouch && hasMotion) {
-            if (needsPerm) {
-              motionBtn = document.createElement("button");
-              motionBtn.type = "button";
-              motionBtn.className = "dh-motion-btn";
-              motionBtn.textContent = "Tap to play";
-              motionBtn.addEventListener("click", function (ev) { ev.preventDefault(); ev.stopPropagation(); requestPerm(); });
-              root.appendChild(motionBtn);
-            } else {
-              grant();
-            }
-          }
-
-          /* Mouse / touch grab + throw. */
+          /* Mouse / touch grab + throw. Works the same on desktop and phone:
+             drag to throw, quick tap to make a box hop. */
           function pos(e) { var hr = host.getBoundingClientRect(); return { x: e.clientX - hr.left, y: e.clientY - hr.top }; }
           var held = null, grabOff = null, lastP = null, lastT = 0, throwVX = 0, throwVY = 0;
-          var downQ = null, downT = 0, moved = 0;
+          var downQ = null, downT = 0, moved = 0, swallowClick = false;
           root.addEventListener("pointerdown", function (e) {
-            if (motionBtn && e.target === motionBtn) return;   // let the button handle its own tap
-            if (isTouch) enableMotion();   // first touch also unlocks the sensors (iOS)
+            swallowClick = false;
             if (e.button && e.button !== 0) return;
             var q = pos(e), best = null, bd = 1e9;
             for (var i = bodies.length - 1; i >= 0; i--) {
               var b = bodies[i], dx = b.x - q.x, dy = b.y - q.y, d = dx * dx + dy * dy;
-              if (d < b.r * b.r && d < bd) { bd = d; best = b; break; }
+              // Grab anywhere on the visible box (a touch wider than the physics
+              // circle) so finger taps near the edge still catch it — and don't
+              // fall through to a link sitting underneath on small screens.
+              var hitR = b.size * 0.55;
+              if (d < hitR * hitR && d < bd) { bd = d; best = b; break; }
             }
-            if (!best) return;
+            if (!best) return;   // tapped empty space -> let links etc. work normally
+            /* A box was grabbed: on a small phone the boxes sit on top of the
+               corner links (Privacy, etc.), so swallow the click that follows so
+               the link underneath is NOT opened by mistake. */
+            swallowClick = true;
             held = best; held.held = true; held.vx = held.vy = held.av = 0;
             grabOff = { x: held.x - q.x, y: held.y - q.y };
             lastP = q; lastT = e.timeStamp || 0; throwVX = throwVY = 0;
             downQ = q; downT = e.timeStamp || 0; moved = 0;
             e.preventDefault(); try { root.setPointerCapture(e.pointerId); } catch (x) {}
+          }, true);
+          /* Runs in the capture phase before the link's own handler, so it can
+             cancel the navigation when the tap was really on a box. */
+          root.addEventListener("click", function (e) {
+            if (swallowClick) { e.preventDefault(); e.stopPropagation(); swallowClick = false; }
           }, true);
           window.addEventListener("pointermove", function (e) {
             if (!held) return;
@@ -698,10 +618,9 @@
             if (!held) return;
             var b = held; held.held = false; held = null;
             var elapsed = ((e && e.timeStamp) || (downT + 999)) - downT;
-            /* On desktop a quick tap/click that barely moved = make the box
-               JUMP. On phones the jump is replaced by tilt/shake motion, so a
-               tap there just releases the box. A drag always throws. */
-            if (!isTouch && moved < 12 && elapsed < 500) {
+            /* A quick tap/click that barely moved = make the box hop (works on
+               desktop and phone). A drag always throws it. */
+            if (moved < 12 && elapsed < 500) {
               var jumpV = Math.sqrt(2 * GRAV * 260);      // ~260px hop, scales with gravity
               b.vy = -jumpV;
               b.vx = (Math.random() - 0.5) * jumpV * 0.35; // slight sideways kick
@@ -1534,7 +1453,7 @@
     { "type": "text", "id": "copyright_text", "label": "Bottom copyright text", "default": "© 2026, Dynaeimic", "info": "Small centered text at the very bottom. Clear to hide." },
 
     { "type": "header", "content": "Floating gift game 🎁" },
-    { "type": "checkbox", "id": "show_gift_game", "label": "Turn on the floating-box game", "default": false, "info": "Add up to 5 'Gift box' blocks below (Add block button at the bottom), each with its own PNG image and size. Boxes rest in a row on the bottom-left. On desktop: drag to throw, click to make a box jump. On phones: tilt the phone to roll the boxes (flip it and they go to the top) and shake to scatter them (needs the visitor to allow motion access the first time on iPhone)." },
+    { "type": "checkbox", "id": "show_gift_game", "label": "Turn on the floating-box game", "default": false, "info": "Add up to 5 'Gift box' blocks below (Add block button at the bottom), each with its own PNG image and size. Boxes rest in a row on the bottom-left. On desktop and phone: drag to throw a box, tap to make it hop. No permissions needed." },
     { "type": "range", "id": "game_gravity", "min": 0.2, "max": 1.6, "step": 0.1, "label": "Gravity", "default": 1, "info": "Lower = floaty & slow, higher = they drop fast." },
 
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
