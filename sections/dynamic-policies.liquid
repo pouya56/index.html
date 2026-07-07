@@ -31,6 +31,10 @@
   .dyn-pol, .dyn-pol *, .dyn-pol *::before, .dyn-pol *::after { box-sizing: border-box; }
   .dyn-pol .dp-wrap { max-width: 1180px; margin: 0 auto; padding: clamp(36px, 6vw, 72px) 22px clamp(60px, 8vw, 100px); }
 
+  .dyn-pol .dp-brand { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; color: var(--ink);
+    margin-bottom: clamp(22px, 3.5vw, 36px); }
+  .dyn-pol .dp-brand-logo { height: 30px; width: auto; display: block; object-fit: contain; }
+  .dyn-pol .dp-brand-txt { font-size: 14px; color: var(--ink-soft); letter-spacing: 0.02em; white-space: nowrap; }
   .dyn-pol .dp-head { border-bottom: 1px solid var(--line); padding-bottom: clamp(20px, 3vw, 32px); margin-bottom: clamp(24px, 4vw, 44px); }
   .dyn-pol .dp-eyebrow { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
   .dyn-pol .dp-head h1 { font-family: {% if section.settings.heading_font == 'sans' %}var(--font){% else %}var(--serif){% endif %};
@@ -86,6 +90,15 @@
 
 <section class="dyn-pol" id="dynPolicies">
   <div class="dp-wrap">
+    {%- if section.settings.logo_image != blank or section.settings.brand_text != blank -%}
+      <a class="dp-brand" href="{{ section.settings.brand_link | default: routes.root_url }}">
+        {%- if section.settings.logo_image != blank -%}
+          {%- assign lw = section.settings.logo_image.width | times: 30 | divided_by: section.settings.logo_image.height -%}
+          <img class="dp-brand-logo" src="{{ section.settings.logo_image | image_url: width: 240 }}" alt="{{ shop.name | escape }}" width="{{ lw }}" height="30">
+        {%- endif -%}
+        {%- if section.settings.brand_text != blank -%}<span class="dp-brand-txt">{{ section.settings.brand_text }}</span>{%- endif -%}
+      </a>
+    {%- endif -%}
     <div class="dp-head">
       {%- if section.settings.eyebrow != blank -%}<div class="dp-eyebrow">{{ section.settings.eyebrow }}</div>{%- endif -%}
       <h1>{{ section.settings.heading | default: 'Dynaeimic Privacy & Terms' }}</h1>
@@ -174,6 +187,11 @@
   "tag": "section",
   "settings": [
     { "type": "paragraph", "content": "Shows every policy from Settings → Policies as left-hand tabs (Google-style). Enable/edit the actual text in Shopify admin → Settings → Policies." },
+    { "type": "header", "content": "Top-left brand" },
+    { "type": "image_picker", "id": "logo_image", "label": "Logo" },
+    { "type": "text", "id": "brand_text", "label": "Small text next to logo", "default": "Privacy & Terms" },
+    { "type": "url", "id": "brand_link", "label": "Logo links to (defaults to home)" },
+    { "type": "header", "content": "Heading" },
     { "type": "text", "id": "eyebrow", "label": "Small label above title", "default": "Legal" },
     { "type": "text", "id": "heading", "label": "Title", "default": "Dynaeimic Privacy & Terms" },
     { "type": "textarea", "id": "intro", "label": "Intro text", "default": "Everything about how we handle your orders, your data, and your rights — all in one place." },
