@@ -192,36 +192,6 @@
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dyn-hero .dh-gbtn { background: #fff; border-color: var(--line); } }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-gbtn::after { filter: none; } }
 
-  /* Fluffy gift-box button that pops open on click */
-  .dyn-hero .dh-giftwrap { text-align: center; margin-top: 22px; }
-  .dyn-hero .dh-gift { --fur: #fbfbfd; --fur2: #e7e7ee; --rib: #7d1122; --rib2: #a01e35; --rib-hi: #c23350;
-    position: relative; width: 150px; height: 160px; background: none; border: none; cursor: pointer; padding: 0; display: inline-block;
-    transition: transform .12s ease; }
-  .dyn-hero .dh-gift:active { transform: scale(.97); }
-  .dyn-hero .dh-gift-glow { position: absolute; left: 50%; top: 42px; width: 84px; height: 38px; transform: translateX(-50%);
-    border-radius: 50%; background: radial-gradient(closest-side, rgba(255,240,180,.95), rgba(255,240,180,0)); opacity: 0; transition: opacity .3s; filter: blur(4px); }
-  .dyn-hero .dh-gift-box { position: absolute; inset: 0; top: 26px; }
-  .dyn-hero .dh-gift-body { position: absolute; left: 8px; right: 8px; top: 40px; bottom: 6px; border-radius: 14px;
-    background: radial-gradient(120% 90% at 50% 0%, var(--fur), var(--fur2));
-    box-shadow: 0 18px 30px rgba(0,0,0,.18), inset 0 -10px 20px rgba(0,0,0,.06); filter: url(#dhFur); }
-  .dyn-hero .dh-gift-lid { position: absolute; left: 0; right: 0; top: 20px; height: 46px; border-radius: 14px;
-    background: radial-gradient(120% 120% at 50% 30%, #fff, var(--fur2));
-    box-shadow: 0 8px 16px rgba(0,0,0,.16), inset 0 -6px 12px rgba(0,0,0,.05); filter: url(#dhFur); transform-origin: 50% 90%;
-    transition: transform .5s cubic-bezier(.34,1.5,.5,1), opacity .5s; z-index: 3; }
-  .dyn-hero .dh-gift .rib-v { position: absolute; left: 50%; transform: translateX(-50%); width: 26px; top: 0; bottom: 0;
-    background: linear-gradient(90deg, var(--rib) 0%, var(--rib-hi) 50%, var(--rib) 100%); }
-  .dyn-hero .dh-gift-body .rib-v { border-radius: 0 0 4px 4px; box-shadow: inset 0 0 6px rgba(0,0,0,.25); }
-  .dyn-hero .dh-gift .rib-h { position: absolute; left: 8px; right: 8px; top: 52%; height: 22px; transform: translateY(-50%);
-    background: linear-gradient(180deg, var(--rib) 0%, var(--rib-hi) 50%, var(--rib) 100%); box-shadow: inset 0 0 6px rgba(0,0,0,.25); }
-  .dyn-hero .dh-gift-bow { position: absolute; left: 50%; top: -2px; transform: translateX(-50%); width: 92px; height: 52px; z-index: 4;
-    transition: transform .5s cubic-bezier(.34,1.5,.5,1), opacity .5s; filter: drop-shadow(0 4px 5px rgba(0,0,0,.25)); }
-  .dyn-hero .dh-gift-bow svg { width: 100%; height: 100%; display: block; }
-  .dyn-hero .dh-gift.is-open .dh-gift-lid { transform: translateY(-54px) rotate(-14deg); }
-  .dyn-hero .dh-gift.is-open .dh-gift-bow { transform: translateX(-50%) translateY(-66px) rotate(-14deg); }
-  .dyn-hero .dh-gift.is-open .dh-gift-glow { opacity: 1; }
-  .dyn-hero .dh-gift-label { margin-top: 10px; font-weight: 600; font-size: 15px; color: var(--ink); }
-  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-gift-body, .dyn-hero .dh-gift-lid { filter: none; } }
-
   /* Category tabs */
   .dyn-hero .dh-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 28px auto 32px; max-width: 1040px; }
 
@@ -369,7 +339,6 @@
         <feGaussianBlur in="noise" stdDeviation="1.1" result="sn"></feGaussianBlur>
         <feDisplacementMap in="SourceGraphic" in2="sn" scale="12" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
       </filter>
-      <filter id="dhFur" x="-18%" y="-18%" width="136%" height="136%"><feTurbulence type="fractalNoise" baseFrequency="0.75 0.45" numOctaves="2" seed="4" result="n"></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap></filter>
     </defs>
   </svg>
   {%- comment -%} Corner links (hero landing look is always on for this section). {%- endcomment -%}
@@ -574,19 +543,6 @@
           <div class="dh-hero-btns">
             {%- if section.settings.show_btn1 -%}<button type="button" class="dh-gbtn" id="dhBtnSearch">{{ section.settings.btn1_label | default: 'Search' }}</button>{%- endif -%}
             {%- if section.settings.show_btn2 -%}<a class="dh-gbtn" href="{{ section.settings.btn2_url | default: routes.all_products_collection_url }}">{{ section.settings.btn2_label | default: 'Shop all' }}</a>{%- endif -%}
-          </div>
-        {%- endif -%}
-        {%- if section.settings.show_giftbox -%}
-          <div class="dh-giftwrap">
-            <button type="button" class="dh-gift" id="dhGift" data-url="{{ section.settings.giftbox_url }}" aria-label="{{ section.settings.giftbox_label | default: 'Open your gift' | escape }}">
-              <span class="dh-gift-glow"></span>
-              <span class="dh-gift-box">
-                <span class="dh-gift-body"><span class="rib-v"></span><span class="rib-h"></span></span>
-                <span class="dh-gift-lid"><span class="rib-v"></span></span>
-              </span>
-              <span class="dh-gift-bow"><svg viewBox="0 0 100 58" aria-hidden="true"><defs><linearGradient id="dhBowG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a01e35"/><stop offset=".5" stop-color="#c23350"/><stop offset="1" stop-color="#7d1122"/></linearGradient></defs><path d="M48 40 L40 57 L50 50 Z" fill="#7d1122"/><path d="M52 40 L60 57 L50 50 Z" fill="#7d1122"/><path d="M50 34 C 30 8, 3 15, 11 33 C 3 50, 36 52, 50 36 Z" fill="url(#dhBowG)"/><path d="M50 34 C 70 8, 97 15, 89 33 C 97 50, 64 52, 50 36 Z" fill="url(#dhBowG)"/><rect x="43" y="27" width="14" height="19" rx="5" fill="url(#dhBowG)"/></svg></span>
-            </button>
-            {%- if section.settings.giftbox_label != blank -%}<div class="dh-gift-label">{{ section.settings.giftbox_label }}</div>{%- endif -%}
           </div>
         {%- endif -%}
       {%- endif -%}
@@ -1014,17 +970,6 @@
     if (q) { runSearch(q); } else if (searchEl) { searchEl.focus(); }
   });
 
-  // Gift-box button: click once to open (lid pops off), then it goes to the link.
-  var gift = document.getElementById("dhGift");
-  if (gift) {
-    var giftUrl = (gift.getAttribute("data-url") || "").trim();
-    gift.addEventListener("click", function () {
-      if (gift.classList.contains("is-open")) { if (giftUrl) window.location.href = giftUrl; return; }
-      gift.classList.add("is-open");
-      if (giftUrl) setTimeout(function () { window.location.href = giftUrl; }, 850);
-    });
-  }
-
   // Typing effect: cycle example phrases through the placeholder like a typewriter.
   // Pauses while the shopper is focused or has typed something; resumes when empty.
   if (searchEl) {
@@ -1181,10 +1126,6 @@
     { "type": "checkbox", "id": "show_btn2", "label": "Show the 'Shop' button", "default": false },
     { "type": "text", "id": "btn2_label", "label": "Shop button text", "default": "Shop all" },
     { "type": "url", "id": "btn2_url", "label": "Shop button link", "info": "Defaults to all products." },
-    { "type": "header", "content": "Gift-box button" },
-    { "type": "checkbox", "id": "show_giftbox", "label": "Show the fluffy gift-box button", "default": false, "info": "Click it and the box pops open, then goes to your link." },
-    { "type": "text", "id": "giftbox_label", "label": "Label under the box", "default": "Open your gift" },
-    { "type": "url", "id": "giftbox_url", "label": "Opens (link)", "info": "Where it goes after the box opens. Leave empty to just open." },
 
     { "type": "text", "id": "copyright_text", "label": "Bottom copyright text", "default": "© 2026, Dynaeimic", "info": "Small centered text at the very bottom. Clear to hide." },
 
