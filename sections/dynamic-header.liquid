@@ -307,7 +307,7 @@
 
       <div class="gb-side gb-left">{{ left_html }}</div>
 
-      <a class="gb-logo" href="{{ section.settings.logo_link | default: routes.root_url }}" aria-label="{{ shop.name | escape }} — Home">
+      {%- capture logo_inner -%}
         {%- if section.settings.logo_image -%}
           <img src="{{ section.settings.logo_image | image_url: width: 400 }}"
             width="{{ section.settings.logo_image.width }}" height="{{ section.settings.logo_image.height }}"
@@ -315,7 +315,12 @@
         {%- else -%}
           <span class="gb-word brand-word">{{ section.settings.brand_text | default: 'DYNAEIMIC' }}</span>
         {%- endif -%}
-      </a>
+      {%- endcapture -%}
+      {%- if section.settings.logo_link != blank -%}
+        <a class="gb-logo" href="{{ section.settings.logo_link }}" aria-label="{{ shop.name | escape }}">{{ logo_inner }}</a>
+      {%- else -%}
+        <span class="gb-logo">{{ logo_inner }}</span>
+      {%- endif -%}
 
       <div class="gb-side gb-right">{{ right_html }}</div>
     </div>
