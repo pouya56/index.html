@@ -516,9 +516,9 @@
                 var twoPi = Math.PI * 2;
                 var target = Math.round(b.a / twoPi) * twoPi;   // nearest upright
                 var diff = target - b.a;
-                // Only stand the box up if it is already within 20° of upright;
+                // Only stand the box up if it is already within 45° of upright;
                 // if it landed more tilted than that, leave it as it fell.
-                if (Math.abs(diff) <= 0.349) {
+                if (Math.abs(diff) <= 0.785) {
                   // Rotate toward upright at a slow, capped speed so it tips up
                   // gently instead of snapping, easing out as it nears vertical.
                   var stepA = diff * Math.min(1, dt * 0.35);
