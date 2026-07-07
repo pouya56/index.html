@@ -399,17 +399,30 @@
             function cutout(url, cb) {
               var img = new Image(); img.crossOrigin = "anonymous";
               img.onload = function () {
+                var iw = img.naturalWidth, ih = img.naturalHeight;
                 try {
-                  var c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
+                  var c = document.createElement("canvas"); c.width = iw; c.height = ih;
                   var x = c.getContext("2d"); x.drawImage(img, 0, 0);
-                  var d = x.getImageData(0, 0, c.width, c.height), p = d.data, i;
+                  var d = x.getImageData(0, 0, iw, ih), p = d.data, i;
+                  var idx = function (ix, iy) { return (iy * iw + ix) * 4; };
+                  // If the image already has a transparent background, use it exactly as-is.
+                  var corners = [idx(0, 0), idx(iw - 1, 0), idx(0, ih - 1), idx(iw - 1, ih - 1)];
+                  var alreadyCut = corners.some(function (o) { return p[o + 3] < 245; });
+                  if (alreadyCut) { cb(url, iw, ih); return; }
+                  // Otherwise sample the corner colour (the real background) and key THAT out.
+                  var br = 0, bg = 0, bb = 0, k;
+                  for (k = 0; k < corners.length; k++) { br += p[corners[k]]; bg += p[corners[k] + 1]; bb += p[corners[k] + 2]; }
+                  br /= 4; bg /= 4; bb /= 4;
+                  var tol = 62, feather = 46;
                   for (i = 0; i < p.length; i += 4) {
-                    var mx = Math.max(p[i], p[i + 1], p[i + 2]);
-                    if (mx < 26) { p[i + 3] = 0; } else if (mx < 62) { p[i + 3] = Math.min(p[i + 3], (mx - 26) * 7); }
+                    var dr = p[i] - br, dg = p[i + 1] - bg, db = p[i + 2] - bb;
+                    var dist = Math.sqrt(dr * dr + dg * dg + db * db);
+                    if (dist < tol) { p[i + 3] = 0; }
+                    else if (dist < tol + feather) { p[i + 3] = Math.min(p[i + 3], (dist - tol) / feather * 255); }
                   }
                   x.putImageData(d, 0, 0);
-                  cb(c.toDataURL("image/png"), img.naturalWidth, img.naturalHeight);
-                } catch (e) { cb(url, img.naturalWidth || 200, img.naturalHeight || 200); }
+                  cb(c.toDataURL("image/png"), iw, ih);
+                } catch (e) { cb(url, iw || 200, ih || 200); }
               };
               img.onerror = function () { cb(null); };
               img.src = url;
@@ -1365,7 +1378,7 @@
       { "type": "image_picker", "id": "image", "label": "Tab image" }
     ]},
     { "type": "giftbox", "name": "Gift box 🎁", "settings": [
-      { "type": "image_picker", "id": "image", "label": "Box photo", "info": "Photo of a gift box. A black background is removed automatically. Up to 5 gift boxes." },
+      { "type": "image_picker", "id": "image", "label": "Box photo", "info": "Photo of the object. Transparent PNGs are used as-is; a solid background (black, white, etc.) is removed automatically. Up to 5 gift boxes." },
       { "type": "range", "id": "size", "min": 40, "max": 200, "step": 5, "label": "Size (px)", "default": 95 },
       { "type": "range", "id": "count", "min": 1, "max": 6, "step": 1, "label": "How many of this box", "default": 2 }
     ]}
