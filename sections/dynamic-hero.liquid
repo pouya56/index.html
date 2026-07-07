@@ -356,41 +356,15 @@
       {%- endif -%}
     {%- endfor -%}
     {%- if gitems != '' -%}
-      {%- comment -%} Built from parts so the editor's linter does not flag the asset as missing before you upload it. {%- endcomment -%}
-      {%- assign matter_file = 'matter' | append: '.min' | append: '.js' -%}
-      {%- assign matter_src = matter_file | asset_url -%}
       <div class="dh-game" id="dhGame" aria-hidden="true"></div>
       <script type="application/json" id="dhGameData">{"boxes":[{{ gitems }}],"gravity":{{ section.settings.game_gravity | default: 1 }}}</script>
       <script>
+      /* Self-contained gift-box physics. No external library, no CDN, no theme
+         asset — everything the game needs is in this file, so nothing can block
+         it. Boxes fall, collide, stack on the floor and on the search bar, and
+         you can grab and throw them with the mouse. */
       (function () {
-        /* Load the physics library from the most reliable source available.
-           Try the self-hosted theme asset first (same-origin, bypasses any
-           content-security-policy that blocks third-party scripts), then fall
-           back through public CDNs. Whichever loads first wins. */
-        function loadMatter(done) {
-          if (window.Matter) { done(); return; }
-          var srcs = [
-            "{{ matter_src }}",
-            "https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js",
-            "https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js",
-            "https://unpkg.com/matter-js@0.19.0/build/matter.min.js"
-          ];
-          var i = 0;
-          (function next() {
-            if (window.Matter) { done(); return; }
-            if (i >= srcs.length) { return; }
-            var url = srcs[i++];
-            if (!url || url.indexOf("matter") === -1) { next(); return; }
-            var s = document.createElement("script");
-            s.src = url; s.async = false;
-            s.onload = function () { done(); };
-            s.onerror = function () { next(); };
-            document.head.appendChild(s);
-          })();
-        }
-
         function boot() {
-          loadMatter(function () {});
           var host = document.getElementById("dhGame");
           var dataEl = document.getElementById("dhGameData");
           var root = document.getElementById("dynHero");
@@ -399,113 +373,210 @@
           var data; try { data = JSON.parse(dataEl.textContent); } catch (e) { return; }
           if (!data.boxes || !data.boxes.length) return;
 
-          var tries = 0;
-          (function wait() {
-            tries++;
-            /* Wait for BOTH the library to load AND the hero to have a real
-               size. On some themes the section is measured as 0-height for a
-               moment during first paint, which would drop every box off-screen. */
-            if (!window.Matter || host.clientHeight < 40 || host.clientWidth < 40) {
-              if (tries > 200) { return; }
-              return setTimeout(wait, 80);
-            }
-            var M = window.Matter;
-            var w = host.clientWidth, h = host.clientHeight;
-            var engine = M.Engine.create(); engine.world.gravity.y = data.gravity || 1;
-            var render = M.Render.create({ element: host, engine: engine, options: { width: w, height: h, wireframes: false, background: "transparent", pixelRatio: window.devicePixelRatio || 1 } });
-            render.canvas.style.pointerEvents = "none"; render.canvas.style.display = "block";
-            M.Render.run(render);
-            M.Runner.run(M.Runner.create(), engine);
-            var world = engine.world, bodies = [], walls = [];
+          var canvas = document.createElement("canvas");
+          canvas.style.position = "absolute"; canvas.style.inset = "0";
+          canvas.style.width = "100%"; canvas.style.height = "100%";
+          canvas.style.display = "block"; canvas.style.pointerEvents = "none";
+          host.appendChild(canvas);
+          var ctx = canvas.getContext("2d");
 
-            function makeWalls() {
-              walls.forEach(function (b) { M.World.remove(world, b); }); walls = [];
-              var t = 300;
-              walls.push(M.Bodies.rectangle(w / 2, h + t / 2, w + 800, t, { isStatic: true }));
-              walls.push(M.Bodies.rectangle(-t / 2, h / 2, t, h * 4, { isStatic: true }));
-              walls.push(M.Bodies.rectangle(w + t / 2, h / 2, t, h * 4, { isStatic: true }));
-              var se = root.querySelector(".dh-search");
-              if (se) {
-                var r = se.getBoundingClientRect(), hr = host.getBoundingClientRect();
-                walls.push(M.Bodies.rectangle(r.left - hr.left + r.width / 2, r.top - hr.top + r.height / 2, r.width, r.height, { isStatic: true, chamfer: { radius: r.height / 2 }, render: { visible: false } }));
-              }
-              M.World.add(world, walls);
-            }
-            makeWalls();
+          var w = 0, h = 0, dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+          function fit() {
+            w = host.clientWidth; h = host.clientHeight;
+            canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          }
 
-            function cutout(url, cb) {
-              var img = new Image(); img.crossOrigin = "anonymous";
-              img.onload = function () {
-                var iw = img.naturalWidth, ih = img.naturalHeight;
-                try {
-                  var c = document.createElement("canvas"); c.width = iw; c.height = ih;
-                  var x = c.getContext("2d"); x.drawImage(img, 0, 0);
-                  var d = x.getImageData(0, 0, iw, ih), p = d.data, i;
-                  var idx = function (ix, iy) { return (iy * iw + ix) * 4; };
-                  // If the image already has a transparent background, use it exactly as-is.
-                  var corners = [idx(0, 0), idx(iw - 1, 0), idx(0, ih - 1), idx(iw - 1, ih - 1)];
-                  var alreadyCut = corners.some(function (o) { return p[o + 3] < 245; });
-                  if (alreadyCut) { cb(url, iw, ih); return; }
-                  // Otherwise sample the corner colour (the real background) and key THAT out.
-                  var br = 0, bg = 0, bb = 0, k;
-                  for (k = 0; k < corners.length; k++) { br += p[corners[k]]; bg += p[corners[k] + 1]; bb += p[corners[k] + 2]; }
-                  br /= 4; bg /= 4; bb /= 4;
-                  var tol = 62, feather = 46;
-                  for (i = 0; i < p.length; i += 4) {
-                    var dr = p[i] - br, dg = p[i + 1] - bg, db = p[i + 2] - bb;
-                    var dist = Math.sqrt(dr * dr + dg * dg + db * db);
-                    if (dist < tol) { p[i + 3] = 0; }
-                    else if (dist < tol + feather) { p[i + 3] = Math.min(p[i + 3], (dist - tol) / feather * 255); }
-                  }
-                  x.putImageData(d, 0, 0);
-                  cb(c.toDataURL("image/png"), iw, ih);
-                } catch (e) { cb(url, iw || 200, ih || 200); }
-              };
-              img.onerror = function () { cb(null); };
-              img.src = url;
-            }
-
-            var total = 0;
-            data.boxes.forEach(function (b) {
-              cutout(b.url, function (tex, iw, ih) {
-                if (!tex) return;
-                var size = Math.max(40, Math.min(220, b.size || 90));
-                var scale = size / iw;
-                var count = Math.max(1, Math.min(6, b.count || 2));
-                for (var k = 0; k < count && total < 20; k++) {
-                  total++;
-                  var bx = M.Bodies.rectangle(50 + Math.random() * Math.max(1, w - 100), -40 - Math.random() * 200, size * 0.8, size * 0.8, {
-                    restitution: 0.35, friction: 0.28, frictionAir: 0.006, chamfer: { radius: 8 },
-                    render: { sprite: { texture: tex, xScale: scale, yScale: scale } }
-                  });
-                  M.World.add(world, bx); bodies.push(bx);
+          /* Background removal: if the photo already has transparency keep it,
+             otherwise sample the corner colour and key that colour out. */
+          function cutout(url, cb) {
+            var img = new Image(); img.crossOrigin = "anonymous";
+            img.onload = function () {
+              var iw = img.naturalWidth, ih = img.naturalHeight;
+              try {
+                var c = document.createElement("canvas"); c.width = iw; c.height = ih;
+                var x = c.getContext("2d"); x.drawImage(img, 0, 0);
+                var d = x.getImageData(0, 0, iw, ih), p = d.data, i;
+                var idx = function (ix, iy) { return (iy * iw + ix) * 4; };
+                var corners = [idx(0, 0), idx(iw - 1, 0), idx(0, ih - 1), idx(iw - 1, ih - 1)];
+                var alreadyCut = corners.some(function (o) { return p[o + 3] < 245; });
+                if (alreadyCut) { cb(img, iw, ih); return; }
+                var br = 0, bg = 0, bb = 0, k;
+                for (k = 0; k < corners.length; k++) { br += p[corners[k]]; bg += p[corners[k] + 1]; bb += p[corners[k] + 2]; }
+                br /= 4; bg /= 4; bb /= 4;
+                var tol = 62, feather = 46;
+                for (i = 0; i < p.length; i += 4) {
+                  var dr = p[i] - br, dg = p[i + 1] - bg, db = p[i + 2] - bb;
+                  var dist = Math.sqrt(dr * dr + dg * dg + db * db);
+                  if (dist < tol) { p[i + 3] = 0; }
+                  else if (dist < tol + feather) { p[i + 3] = Math.min(p[i + 3], (dist - tol) / feather * 255); }
                 }
-              });
-            });
+                x.putImageData(d, 0, 0);
+                cb(c, iw, ih);
+              } catch (e) { cb(img, iw || 200, ih || 200); }
+            };
+            img.onerror = function () { cb(null); };
+            img.src = url;
+          }
 
-            function pt(e) { var hr = host.getBoundingClientRect(); return { x: e.clientX - hr.left, y: e.clientY - hr.top }; }
-            var drag = null;
-            root.addEventListener("pointerdown", function (e) {
-              if (e.button && e.button !== 0) return;
-              var q = pt(e), hits = M.Query.point(bodies, q);
-              if (!hits.length) return;
-              var body = hits[hits.length - 1];
-              M.Sleeping.set(body, false);
-              drag = M.Constraint.create({ pointA: { x: q.x, y: q.y }, bodyB: body, pointB: { x: q.x - body.position.x, y: q.y - body.position.y }, stiffness: 0.16, damping: 0.12, length: 0, render: { visible: false } });
-              M.World.add(world, drag);
-              e.preventDefault(); try { root.setPointerCapture(e.pointerId); } catch (x) {}
-            }, true);
-            window.addEventListener("pointermove", function (e) { if (drag) drag.pointA = pt(e); }, { passive: true });
-            window.addEventListener("pointerup", function () { if (drag) { M.World.remove(world, drag); drag = null; } });
+          var bodies = [];
+          var GRAV = 2000 * (data.gravity || 1);
 
-            var rt; window.addEventListener("resize", function () {
-              clearTimeout(rt); rt = setTimeout(function () {
-                w = host.clientWidth; h = host.clientHeight;
-                render.canvas.width = w * (window.devicePixelRatio || 1); render.canvas.height = h * (window.devicePixelRatio || 1);
-                render.options.width = w; render.options.height = h; render.bounds.max.x = w; render.bounds.max.y = h;
-                makeWalls();
-              }, 200);
+          function spawn(sprite, size) {
+            var r = size * 0.46;
+            bodies.push({
+              x: r + Math.random() * Math.max(1, w - 2 * r),
+              y: -r - Math.random() * (h * 0.4 + 40),
+              vx: (Math.random() - 0.5) * 120, vy: 0,
+              a: (Math.random() - 0.5) * 0.5, av: (Math.random() - 0.5) * 2,
+              r: r, size: size, m: r * r, spr: sprite, held: false
             });
+          }
+
+          var total = 0;
+          data.boxes.forEach(function (b) {
+            cutout(b.url, function (spr) {
+              if (!spr) return;
+              var size = Math.max(40, Math.min(220, b.size || 90));
+              var count = Math.max(1, Math.min(6, b.count || 2));
+              for (var k = 0; k < count && total < 22; k++) { total++; spawn(spr, size); }
+            });
+          });
+
+          /* Search bar acts as a solid shelf. Recomputed each frame so it stays
+             aligned if the layout shifts. */
+          function shelf() {
+            var se = root.querySelector(".dh-search");
+            if (!se) return null;
+            var r = se.getBoundingClientRect(), hr = host.getBoundingClientRect();
+            return { x: r.left - hr.left + r.width / 2, y: r.top - hr.top + r.height / 2, w: r.width, h: r.height };
+          }
+
+          function collideRect(b, rc, rest) {
+            var hx = rc.w / 2, hy = rc.h / 2;
+            var cx = Math.max(rc.x - hx, Math.min(b.x, rc.x + hx));
+            var cy = Math.max(rc.y - hy, Math.min(b.y, rc.y + hy));
+            var dx = b.x - cx, dy = b.y - cy;
+            var d2 = dx * dx + dy * dy;
+            if (d2 > b.r * b.r) return;
+            var d = Math.sqrt(d2) || 0.0001;
+            var nx = dx / d, ny = dy / d, pen = b.r - d;
+            b.x += nx * pen; b.y += ny * pen;
+            var vn = b.vx * nx + b.vy * ny;
+            if (vn < 0) { b.vx -= (1 + rest) * vn * nx; b.vy -= (1 + rest) * vn * ny; }
+            b.vx *= 0.96; b.av *= 0.9;
+          }
+
+          function step(dt) {
+            var i, j, b, o, rc = shelf();
+            for (i = 0; i < bodies.length; i++) {
+              b = bodies[i];
+              if (b.held) continue;
+              b.vy += GRAV * dt;
+              b.vx *= 0.9995; b.vy *= 0.9995;
+              b.x += b.vx * dt; b.y += b.vy * dt;
+              b.a += b.av * dt; b.av *= 0.99;
+            }
+            for (var pass = 0; pass < 5; pass++) {
+              for (i = 0; i < bodies.length; i++) {
+                b = bodies[i];
+                for (j = i + 1; j < bodies.length; j++) {
+                  o = bodies[j];
+                  var dx = o.x - b.x, dy = o.y - b.y;
+                  var d = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+                  var overlap = b.r + o.r - d;
+                  if (overlap > 0) {
+                    var nx = dx / d, ny = dy / d, tm = b.m + o.m;
+                    var bw = b.held ? 0 : (o.held ? 1 : o.m / tm);
+                    var ow = o.held ? 0 : (b.held ? 1 : b.m / tm);
+                    b.x -= nx * overlap * bw; b.y -= ny * overlap * bw;
+                    o.x += nx * overlap * ow; o.y += ny * overlap * ow;
+                    var rvx = o.vx - b.vx, rvy = o.vy - b.vy, vn = rvx * nx + rvy * ny;
+                    if (vn < 0) {
+                      var imp = -(1 + 0.28) * vn / tm;
+                      if (!b.held) { b.vx -= imp * o.m * nx; b.vy -= imp * o.m * ny; }
+                      if (!o.held) { o.vx += imp * b.m * nx; o.vy += imp * b.m * ny; }
+                      b.av += (Math.random() - 0.5) * 0.4; o.av += (Math.random() - 0.5) * 0.4;
+                    }
+                  }
+                }
+                if (b.x - b.r < 0) { b.x = b.r; if (b.vx < 0) b.vx *= -0.35; }
+                if (b.x + b.r > w) { b.x = w - b.r; if (b.vx > 0) b.vx *= -0.35; }
+                if (b.y + b.r > h) { b.y = h - b.r; if (b.vy > 0) b.vy *= -0.35; b.vx *= 0.88; b.av *= 0.85; }
+                if (b.y - b.r < -h) { b.y = -h + b.r; }
+                if (rc) collideRect(b, rc, 0.3);
+              }
+            }
+          }
+
+          function draw() {
+            ctx.clearRect(0, 0, w, h);
+            for (var i = 0; i < bodies.length; i++) {
+              var b = bodies[i];
+              if (!b.spr) continue;
+              ctx.save();
+              ctx.translate(b.x, b.y); ctx.rotate(b.a);
+              ctx.drawImage(b.spr, -b.size / 2, -b.size / 2, b.size, b.size);
+              ctx.restore();
+            }
+          }
+
+          /* Mouse / touch grab + throw. */
+          function pos(e) { var hr = host.getBoundingClientRect(); return { x: e.clientX - hr.left, y: e.clientY - hr.top }; }
+          var held = null, grabOff = null, lastP = null, lastT = 0, throwVX = 0, throwVY = 0;
+          root.addEventListener("pointerdown", function (e) {
+            if (e.button && e.button !== 0) return;
+            var q = pos(e), best = null, bd = 1e9;
+            for (var i = bodies.length - 1; i >= 0; i--) {
+              var b = bodies[i], dx = b.x - q.x, dy = b.y - q.y, d = dx * dx + dy * dy;
+              if (d < b.r * b.r && d < bd) { bd = d; best = b; break; }
+            }
+            if (!best) return;
+            held = best; held.held = true; held.vx = held.vy = held.av = 0;
+            grabOff = { x: held.x - q.x, y: held.y - q.y };
+            lastP = q; lastT = e.timeStamp || 0; throwVX = throwVY = 0;
+            e.preventDefault(); try { root.setPointerCapture(e.pointerId); } catch (x) {}
+          }, true);
+          window.addEventListener("pointermove", function (e) {
+            if (!held) return;
+            var q = pos(e), nx = q.x + grabOff.x, ny = q.y + grabOff.y;
+            var t = e.timeStamp || (lastT + 16), dt = Math.max(0.001, (t - lastT) / 1000);
+            throwVX = (nx - held.x) / dt; throwVY = (ny - held.y) / dt;
+            held.x = nx; held.y = ny; lastP = q; lastT = t;
+          }, { passive: true });
+          function release() {
+            if (!held) return;
+            var cap = 3200;
+            held.vx = Math.max(-cap, Math.min(cap, throwVX));
+            held.vy = Math.max(-cap, Math.min(cap, throwVY));
+            held.av = Math.max(-8, Math.min(8, throwVX / held.r));
+            held.held = false; held = null;
+          }
+          window.addEventListener("pointerup", release);
+          window.addEventListener("pointercancel", release);
+
+          var acc = 0, last = 0, MAXDT = 1 / 30, FIXED = 1 / 120;
+          function frame(ts) {
+            if (!last) last = ts;
+            var dt = Math.min(MAXDT, (ts - last) / 1000); last = ts;
+            acc += dt;
+            var guard = 0;
+            while (acc >= FIXED && guard < 8) { step(FIXED); acc -= FIXED; guard++; }
+            draw();
+            requestAnimationFrame(frame);
+          }
+
+          var tries = 0;
+          (function start() {
+            /* Wait until the hero has a real size so boxes are not dropped into
+               a zero-height stage during first paint. */
+            if (host.clientHeight < 40 || host.clientWidth < 40) {
+              if (tries++ > 200) return;
+              return setTimeout(start, 60);
+            }
+            fit();
+            var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(fit, 150); });
+            requestAnimationFrame(frame);
           })();
         }
         if (document.readyState !== "loading") boot(); else document.addEventListener("DOMContentLoaded", boot);
