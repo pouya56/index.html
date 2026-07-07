@@ -422,7 +422,7 @@
           data.boxes.forEach(function (b) {
             cutout(b.url, function (spr) {
               if (!spr) return;
-              var size = Math.max(40, Math.min(220, b.size || 90));
+              var size = Math.max(40, Math.min(400, b.size || 90));
               var count = Math.max(1, Math.min(6, b.count || 2));
               for (var k = 0; k < count && total < 22; k++) { total++; spawn(spr, size); }
             });
@@ -1358,7 +1358,7 @@
     { "type": "text", "id": "copyright_text", "label": "Bottom copyright text", "default": "© 2026, Dynaeimic", "info": "Small centered text at the very bottom. Clear to hide." },
 
     { "type": "header", "content": "Floating gift game 🎁" },
-    { "type": "checkbox", "id": "show_gift_game", "label": "Turn on the floating-box game", "default": false, "info": "Add up to 5 'Gift box' blocks below (button at the bottom). Shoppers can grab, throw and stack them with the mouse. They rest on the search bar and floor. The black background of each photo is removed automatically." },
+    { "type": "checkbox", "id": "show_gift_game", "label": "Turn on the floating-box game", "default": false, "info": "Add up to 5 'Gift box' blocks below (Add block button at the bottom), each with its own PNG image and size. Boxes rest in a row on the bottom-left; shoppers can grab, throw and stack them with the mouse." },
     { "type": "range", "id": "game_gravity", "min": 0.2, "max": 1.6, "step": 0.1, "label": "Gravity", "default": 1, "info": "Lower = floaty & slow, higher = they drop fast." },
 
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
@@ -1471,9 +1471,9 @@
       { "type": "image_picker", "id": "image", "label": "Tab image" }
     ]},
     { "type": "giftbox", "name": "Gift box 🎁", "settings": [
-      { "type": "image_picker", "id": "image", "label": "Box photo", "info": "Photo of the object. Transparent PNGs are used as-is; a solid background (black, white, etc.) is removed automatically. Up to 5 gift boxes." },
-      { "type": "range", "id": "size", "min": 40, "max": 200, "step": 5, "label": "Size (px)", "default": 95 },
-      { "type": "range", "id": "count", "min": 1, "max": 6, "step": 1, "label": "How many of this box", "default": 2 }
+      { "type": "image_picker", "id": "image", "label": "Box image (PNG)", "info": "Upload a transparent PNG. It is used exactly as provided — no processing. Add up to 5 of these blocks for 5 different images." },
+      { "type": "range", "id": "size", "min": 40, "max": 400, "step": 5, "label": "Size (px)", "default": 110, "info": "Resize this image. Bigger number = bigger box." },
+      { "type": "range", "id": "count", "min": 1, "max": 6, "step": 1, "label": "How many of this box", "default": 1, "info": "Leave at 1 for a single box, or increase to drop several copies of the same image." }
     ]}
   ],
   "max_blocks": 30,
