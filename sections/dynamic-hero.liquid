@@ -421,23 +421,22 @@
 
           var bodies = [];
           var GRAV = 2000 * (data.gravity || 1);
-          var stackN = 0; // how many boxes already placed, so new ones pile up
+          var placed = 0; // how many boxes already placed, laid out along the floor
+          var cursorX = 0; // running x position so boxes sit side by side
 
           function spawn(sprite, size) {
             var r = size * 0.46;
-            // Stack the boxes in the bottom-left corner: a couple of columns
-            // built upward from the floor, each box dropped just above its slot
-            // so it settles into the pile instead of raining across the screen.
-            var perCol = 4;
-            var col = Math.floor(stackN / perCol);
-            var row = stackN % perCol;
-            stackN++;
-            var bx = r + 6 + col * (2 * r + 4) + (Math.random() - 0.5) * 6;
-            var by = h - r - 4 - row * (2 * r + 2);
+            // Lay the boxes in a single row along the floor on the left-hand
+            // side, sitting side by side (not stacked). They start right on the
+            // floor so they simply rest there.
+            if (placed === 0) cursorX = r + 6;
+            var bx = cursorX + r;
+            cursorX += 2 * r + 4;
+            placed++;
             bodies.push({
-              x: Math.min(bx, w - r), y: by - 30,
+              x: Math.min(bx, w - r), y: h - r - 4,
               vx: 0, vy: 0,
-              a: (Math.random() - 0.5) * 0.25, av: (Math.random() - 0.5) * 0.6,
+              a: (Math.random() - 0.5) * 0.15, av: 0,
               r: r, size: size, m: r * r, spr: sprite, held: false
             });
           }
