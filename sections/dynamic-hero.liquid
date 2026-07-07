@@ -497,31 +497,42 @@
           function draw() {
             ctx.clearRect(0, 0, w, h);
             var i, b;
-            /* Contact shadow on the floor under each box — grounds them so they
-               read as solid 3D objects rather than flat stickers. It grows and
-               fades as the box lifts off the floor. */
+            /* Soft contact shadow on the floor under each box. Built from a
+               radial gradient (dark in the middle, fading to fully transparent
+               at the edge) and squashed into an ellipse, so it has no hard rim.
+               As a box lifts off the floor the shadow spreads wider, softens,
+               and fades away — the way a real cast shadow behaves. */
             for (i = 0; i < bodies.length; i++) {
               b = bodies[i]; if (!b.spr) continue;
-              var gap = Math.max(0, h - (b.y + b.r));
-              var t = Math.max(0, 1 - gap / (b.r * 4.5));
-              if (t <= 0.02) continue;
+              var bottom = b.y + b.r;
+              var gap = Math.max(0, h - bottom);
+              var lift = Math.min(1, gap / (b.r * 5));   // 0 on the floor, 1 high up
+              var t = 1 - lift;                          // strength fades with height
+              if (t <= 0.03) continue;
+              var rx = b.r * (1.05 + lift * 1.5);        // spreads out as it rises
+              var ry = rx * 0.3;
+              var a = 0.42 * t * t;                      // softer, fades fast with height
               ctx.save();
-              ctx.globalAlpha = 0.30 * t;
-              ctx.fillStyle = "#000";
-              ctx.beginPath();
-              ctx.ellipse(b.x, h - 4, b.r * (1.35 + (1 - t) * 0.9), b.r * 0.34, 0, 0, Math.PI * 2);
-              ctx.fill();
+              ctx.translate(b.x, h - 2);
+              ctx.scale(1, ry / rx);
+              var g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+              g.addColorStop(0, "rgba(0,0,0," + a.toFixed(3) + ")");
+              g.addColorStop(0.45, "rgba(0,0,0," + (a * 0.5).toFixed(3) + ")");
+              g.addColorStop(1, "rgba(0,0,0,0)");
+              ctx.fillStyle = g;
+              ctx.beginPath(); ctx.arc(0, 0, rx, 0, Math.PI * 2); ctx.fill();
               ctx.restore();
             }
-            /* Sprites, each with a soft self drop-shadow for depth. */
+            /* Sprites, with a gentle, wide self drop-shadow for volume. Kept
+               subtle so the floor shadow does the grounding, not a hard halo. */
             for (i = 0; i < bodies.length; i++) {
               b = bodies[i]; if (!b.spr) continue;
               ctx.save();
               ctx.translate(b.x, b.y); ctx.rotate(b.a);
-              ctx.shadowColor = "rgba(0,0,0,0.34)";
-              ctx.shadowBlur = b.size * 0.14;
-              ctx.shadowOffsetX = b.size * 0.03;
-              ctx.shadowOffsetY = b.size * 0.10;
+              ctx.shadowColor = "rgba(0,0,0,0.22)";
+              ctx.shadowBlur = b.size * 0.2;
+              ctx.shadowOffsetX = b.size * 0.02;
+              ctx.shadowOffsetY = b.size * 0.06;
               ctx.drawImage(b.spr, -b.size / 2, -b.size / 2, b.size, b.size);
               ctx.restore();
             }
