@@ -414,6 +414,22 @@
              eased toward tgtGX/tgtGY each frame. */
           var gravX = 0, gravY = GRAV, tgtGX = 0, tgtGY = GRAV;
           var tiltOn = false, shakeCd = 0;
+          /* Parallax 3D tilt for the hero content (video, search bar, buttons)
+             on phones. baseBeta/baseGamma is the neutral holding angle captured
+             on the first reading; tgtRX/tgtRY are the eased target tilt. */
+          var baseBeta = null, baseGamma = null;
+          var tgtRX = 0, tgtRY = 0, curRX = 0, curRY = 0;
+          var pxLayers = null;
+          function parallaxLayers() {
+            if (pxLayers) return pxLayers;
+            pxLayers = [];
+            var defs = [[".dh-head", 1], [".dh-search", 0.62], [".dh-hero-btns", 0.42]];
+            for (var i = 0; i < defs.length; i++) {
+              var el = root.querySelector(defs[i][0]);
+              if (el) { el.style.transition = "transform .12s ease-out"; el.style.willChange = "transform"; pxLayers.push({ el: el, d: defs[i][1] }); }
+            }
+            return pxLayers;
+          }
           var placed = 0; // how many boxes already placed, laid out along the floor
           var cursorX = 0; // running x position so boxes sit side by side
 
@@ -447,6 +463,10 @@
           /* Search bar acts as a solid shelf. Recomputed each frame so it stays
              aligned if the layout shifts. */
           function shelf() {
+            // On phones the screen is short, so treating the search bar as a
+            // solid shelf traps the boxes in the bottom half. Disable it there
+            // and let boxes roam the whole screen with the tilt.
+            if (isTouch) return null;
             var se = root.querySelector(".dh-search");
             if (!se) return null;
             var r = se.getBoundingClientRect(), hr = host.getBoundingClientRect();
@@ -587,6 +607,15 @@
             if (m > 1) { rx /= m; ry /= m; }
             tgtGX = rx * GRAV; tgtGY = ry * GRAV;
             tiltOn = true;
+
+            /* Visual 3D parallax: measure how far the phone has tilted from the
+               neutral holding angle and turn that into a small card-tilt. */
+            var bDeg = (e.beta || 0), gDeg = (e.gamma || 0);
+            if (baseBeta === null) { baseBeta = bDeg; baseGamma = gDeg; }
+            var dB = bDeg - baseBeta, dG = gDeg - baseGamma;
+            var clamp = function (v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); };
+            tgtRX = clamp(-dB * 0.4, -10, 10);   // front/back tilt -> rotateX
+            tgtRY = clamp(dG * 0.4, -10, 10);    // left/right tilt -> rotateY
           }
           function onMotion(e) {
             var a = e.accelerationIncludingGravity; if (!a) return;
@@ -649,7 +678,7 @@
               motionBtn = document.createElement("button");
               motionBtn.type = "button";
               motionBtn.className = "dh-motion-btn";
-              motionBtn.textContent = "🎁 Tap to play";
+              motionBtn.textContent = "Tap to play";
               motionBtn.addEventListener("click", function (ev) { ev.preventDefault(); ev.stopPropagation(); requestPerm(); });
               root.appendChild(motionBtn);
             } else {
@@ -715,7 +744,20 @@
             var guard = 0;
             while (acc >= FIXED && guard < 8) { step(FIXED); acc -= FIXED; guard++; }
             draw();
+            if (tiltOn) applyParallax(dt);
             requestAnimationFrame(frame);
+          }
+
+          function applyParallax(dt) {
+            curRX += (tgtRX - curRX) * Math.min(1, dt * 8);
+            curRY += (tgtRY - curRY) * Math.min(1, dt * 8);
+            var layers = parallaxLayers();
+            for (var i = 0; i < layers.length; i++) {
+              var L = layers[i], d = L.d;
+              // deeper layers (video) shift and lift a touch more than shallow ones (buttons)
+              var tx = curRY * d * 1.4, ty = -curRX * d * 1.4, tz = d * 26;
+              L.el.style.transform = "perspective(900px) translate3d(" + tx.toFixed(2) + "px," + ty.toFixed(2) + "px,0) rotateX(" + (curRX * d).toFixed(2) + "deg) rotateY(" + (curRY * d).toFixed(2) + "deg) translateZ(" + tz.toFixed(1) + "px)";
+            }
           }
 
           var tries = 0;
