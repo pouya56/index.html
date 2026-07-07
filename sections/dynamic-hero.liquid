@@ -867,6 +867,9 @@
     tabs.querySelectorAll(".dh-tab").forEach(function (b) { b.classList.remove("is-active"); b.setAttribute("aria-selected", "false"); });
     btn.classList.add("is-active"); btn.setAttribute("aria-selected", "true");
     try { btn.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch (x) {}
+    // Clicking a tab clears the search and just opens that category.
+    if (searchEl) searchEl.value = "";
+    query = "";
     currentCat = btn.getAttribute("data-cat"); applyFilters();
   });
 
