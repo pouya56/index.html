@@ -398,6 +398,11 @@
 
           var bodies = [];
           var GRAV = 2000 * (data.gravity || 1);
+          /* Live gravity vector (screen space, y-down). Defaults to straight
+             down; on phones the tilt of the device steers it. gravX/gravY are
+             eased toward tgtGX/tgtGY each frame. */
+          var gravX = 0, gravY = GRAV, tgtGX = 0, tgtGY = GRAV;
+          var tiltOn = false, shakeCd = 0;
           var placed = 0; // how many boxes already placed, laid out along the floor
           var cursorX = 0; // running x position so boxes sit side by side
 
@@ -454,10 +459,14 @@
 
           function step(dt) {
             var i, j, b, o, rc = shelf();
+            if (shakeCd > 0) shakeCd -= dt;
+            // Ease the live gravity toward its target (phone tilt moves the target).
+            gravX += (tgtGX - gravX) * Math.min(1, dt * 6);
+            gravY += (tgtGY - gravY) * Math.min(1, dt * 6);
             for (i = 0; i < bodies.length; i++) {
               b = bodies[i];
               if (b.held) continue;
-              b.vy += GRAV * dt;
+              b.vx += gravX * dt; b.vy += gravY * dt;
               b.vx *= 0.9995; b.vy *= 0.9995;
               b.x += b.vx * dt; b.y += b.vy * dt;
               b.a += b.av * dt; b.av *= 0.99;
@@ -488,7 +497,8 @@
                 if (b.x - b.r < 0) { b.x = b.r; if (b.vx < 0) b.vx *= -0.35; }
                 if (b.x + b.r > w) { b.x = w - b.r; if (b.vx > 0) b.vx *= -0.35; }
                 if (b.y + b.r > h) { b.y = h - b.r; if (b.vy > 0) b.vy *= -0.35; b.vx *= 0.88; b.av *= 0.85; }
-                if (b.y - b.r < -h) { b.y = -h + b.r; }
+                if (tiltOn) { if (b.y - b.r < 0) { b.y = b.r; if (b.vy < 0) b.vy *= -0.35; b.vx *= 0.88; b.av *= 0.85; } }
+                else if (b.y - b.r < -h) { b.y = -h + b.r; }
                 if (rc) collideRect(b, rc, 0.3);
               }
             }
@@ -538,11 +548,75 @@
             }
           }
 
+          /* ===== Phone motion controls =====
+             On touch devices the box behaviour changes: instead of tap-to-jump,
+             the boxes follow the phone's real-world orientation (tilt/flip the
+             phone and they fall the new "down"), and shaking scatters them.
+             Requires a one-time permission on iOS, requested on first touch. */
+          var isTouch = false;
+          try { isTouch = window.matchMedia && window.matchMedia("(pointer: coarse)").matches; } catch (e) {}
+          var hasMotion = ("DeviceOrientationEvent" in window) || ("DeviceMotionEvent" in window);
+          var DEG = Math.PI / 180, motionOn = false, lastMag = null;
+
+          function onOrient(e) {
+            if (e.beta == null && e.gamma == null) return;
+            var beta = (e.beta || 0) * DEG, gamma = (e.gamma || 0) * DEG;
+            // Project real-world "down" onto the screen plane.
+            var gx = Math.sin(gamma);
+            var gy = Math.sin(beta) * Math.cos(gamma);
+            // Compensate for the screen's own rotation (portrait/landscape).
+            var ang = 0;
+            try {
+              if (screen.orientation && typeof screen.orientation.angle === "number") ang = screen.orientation.angle;
+              else if (typeof window.orientation === "number") ang = window.orientation;
+            } catch (x) {}
+            var a = -ang * DEG, ca = Math.cos(a), sa = Math.sin(a);
+            var rx = gx * ca - gy * sa, ry = gx * sa + gy * ca;
+            var m = Math.sqrt(rx * rx + ry * ry);
+            if (m > 1) { rx /= m; ry /= m; }
+            tgtGX = rx * GRAV; tgtGY = ry * GRAV;
+            tiltOn = true;
+          }
+          function onMotion(e) {
+            var a = e.accelerationIncludingGravity; if (!a) return;
+            var mag = Math.sqrt((a.x || 0) * (a.x || 0) + (a.y || 0) * (a.y || 0) + (a.z || 0) * (a.z || 0));
+            if (lastMag != null) {
+              var jolt = Math.abs(mag - lastMag);
+              if (jolt > 16 && shakeCd <= 0) {   // a real shake, not a gentle move
+                shakeCd = 0.5;
+                for (var i = 0; i < bodies.length; i++) {
+                  var b = bodies[i]; if (b.held) continue;
+                  b.vx += (Math.random() - 0.5) * 1600;
+                  b.vy += (Math.random() - 0.5) * 1600 - 400;
+                  b.av += (Math.random() - 0.5) * 12;
+                }
+              }
+            }
+            lastMag = mag;
+          }
+          function enableMotion() {
+            if (motionOn || !hasMotion) return;
+            function attach() {
+              motionOn = true;
+              window.addEventListener("deviceorientation", onOrient);
+              window.addEventListener("devicemotion", onMotion);
+            }
+            var needO = typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function";
+            var needM = typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function";
+            if (needO || needM) {
+              var reqs = [];
+              if (needO) reqs.push(DeviceOrientationEvent.requestPermission());
+              if (needM) reqs.push(DeviceMotionEvent.requestPermission());
+              Promise.all(reqs).then(attach).catch(function () {});
+            } else { attach(); }
+          }
+
           /* Mouse / touch grab + throw. */
           function pos(e) { var hr = host.getBoundingClientRect(); return { x: e.clientX - hr.left, y: e.clientY - hr.top }; }
           var held = null, grabOff = null, lastP = null, lastT = 0, throwVX = 0, throwVY = 0;
           var downQ = null, downT = 0, moved = 0;
           root.addEventListener("pointerdown", function (e) {
+            if (isTouch) enableMotion();   // first touch unlocks the sensors (iOS)
             if (e.button && e.button !== 0) return;
             var q = pos(e), best = null, bd = 1e9;
             for (var i = bodies.length - 1; i >= 0; i--) {
@@ -568,9 +642,10 @@
             if (!held) return;
             var b = held; held.held = false; held = null;
             var elapsed = ((e && e.timeStamp) || (downT + 999)) - downT;
-            /* A quick tap/click that barely moved = make the box JUMP. A drag
-               that moved the box = throw it with the drag velocity. */
-            if (moved < 12 && elapsed < 500) {
+            /* On desktop a quick tap/click that barely moved = make the box
+               JUMP. On phones the jump is replaced by tilt/shake motion, so a
+               tap there just releases the box. A drag always throws. */
+            if (!isTouch && moved < 12 && elapsed < 500) {
               var jumpV = Math.sqrt(2 * GRAV * 260);      // ~260px hop, scales with gravity
               b.vy = -jumpV;
               b.vx = (Math.random() - 0.5) * jumpV * 0.35; // slight sideways kick
@@ -1403,7 +1478,7 @@
     { "type": "text", "id": "copyright_text", "label": "Bottom copyright text", "default": "© 2026, Dynaeimic", "info": "Small centered text at the very bottom. Clear to hide." },
 
     { "type": "header", "content": "Floating gift game 🎁" },
-    { "type": "checkbox", "id": "show_gift_game", "label": "Turn on the floating-box game", "default": false, "info": "Add up to 5 'Gift box' blocks below (Add block button at the bottom), each with its own PNG image and size. Boxes rest in a row on the bottom-left; shoppers can grab, throw and stack them with the mouse." },
+    { "type": "checkbox", "id": "show_gift_game", "label": "Turn on the floating-box game", "default": false, "info": "Add up to 5 'Gift box' blocks below (Add block button at the bottom), each with its own PNG image and size. Boxes rest in a row on the bottom-left. On desktop: drag to throw, click to make a box jump. On phones: tilt the phone to roll the boxes (flip it and they go to the top) and shake to scatter them (needs the visitor to allow motion access the first time on iPhone)." },
     { "type": "range", "id": "game_gravity", "min": 0.2, "max": 1.6, "step": 0.1, "label": "Gravity", "default": 1, "info": "Lower = floaty & slow, higher = they drop fast." },
 
     { "type": "header", "content": "Home corners (Google-style, landing only)" },
