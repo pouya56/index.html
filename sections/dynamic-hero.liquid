@@ -423,7 +423,9 @@
           function parallaxLayers() {
             if (pxLayers) return pxLayers;
             pxLayers = [];
-            var defs = [[".dh-head", 1], [".dh-search", 0.62], [".dh-hero-btns", 0.42]];
+            // Only the video/heading gets the 3D tilt; the search bar and the
+            // buttons under it stay flat.
+            var defs = [[".dh-head", 1]];
             for (var i = 0; i < defs.length; i++) {
               var el = root.querySelector(defs[i][0]);
               if (el) { el.style.transition = "transform .12s ease-out"; el.style.willChange = "transform"; pxLayers.push({ el: el, d: defs[i][1] }); }
@@ -462,15 +464,21 @@
 
           /* Search bar acts as a solid shelf. Recomputed each frame so it stays
              aligned if the layout shifts. */
-          function shelf() {
-            // On phones the screen is short, so treating the search bar as a
-            // solid shelf traps the boxes in the bottom half. Disable it there
-            // and let boxes roam the whole screen with the tilt.
-            if (isTouch) return null;
-            var se = root.querySelector(".dh-search");
-            if (!se) return null;
-            var r = se.getBoundingClientRect(), hr = host.getBoundingClientRect();
-            return { x: r.left - hr.left + r.width / 2, y: r.top - hr.top + r.height / 2, w: r.width, h: r.height };
+          function shelves() {
+            // The search bar and the buttons under it act as solid shelves that
+            // boxes rest on. On phones the screen is short, so keeping them solid
+            // traps the boxes in the bottom half — disable them there and let the
+            // boxes roam the whole screen with the tilt.
+            if (isTouch) return [];
+            var out = [], hr = host.getBoundingClientRect(), sels = [".dh-search", ".dh-hero-btns"];
+            for (var i = 0; i < sels.length; i++) {
+              var el = root.querySelector(sels[i]);
+              if (!el) continue;
+              var r = el.getBoundingClientRect();
+              if (r.width < 4 || r.height < 4) continue;
+              out.push({ x: r.left - hr.left + r.width / 2, y: r.top - hr.top + r.height / 2, w: r.width, h: r.height });
+            }
+            return out;
           }
 
           function collideRect(b, rc, rest) {
@@ -489,7 +497,7 @@
           }
 
           function step(dt) {
-            var i, j, b, o, rc = shelf();
+            var i, j, b, o, s, rcs = shelves();
             if (shakeCd > 0) shakeCd -= dt;
             // Ease the live gravity toward its target (phone tilt moves the target).
             gravX += (tgtGX - gravX) * Math.min(1, dt * 6);
@@ -530,7 +538,7 @@
                 if (b.y + b.r > h) { b.y = h - b.r; if (b.vy > 0) b.vy *= -0.35; b.vx *= 0.88; b.av *= 0.85; }
                 if (tiltOn) { if (b.y - b.r < 0) { b.y = b.r; if (b.vy < 0) b.vy *= -0.35; b.vx *= 0.88; b.av *= 0.85; } }
                 else if (b.y - b.r < -h) { b.y = -h + b.r; }
-                if (rc) collideRect(b, rc, 0.3);
+                for (s = 0; s < rcs.length; s++) collideRect(b, rcs[s], 0.3);
               }
             }
           }
