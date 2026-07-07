@@ -358,10 +358,36 @@
     {%- if gitems != '' -%}
       <div class="dh-game" id="dhGame" aria-hidden="true"></div>
       <script type="application/json" id="dhGameData">{"boxes":[{{ gitems }}],"gravity":{{ section.settings.game_gravity | default: 1 }}}</script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js" defer></script>
       <script>
       (function () {
+        /* Load the physics library from the most reliable source available.
+           Try the self-hosted theme asset first (same-origin, bypasses any
+           content-security-policy that blocks third-party scripts), then fall
+           back through public CDNs. Whichever loads first wins. */
+        function loadMatter(done) {
+          if (window.Matter) { done(); return; }
+          var srcs = [
+            "{{ 'matter.min.js' | asset_url }}",
+            "https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js",
+            "https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js",
+            "https://unpkg.com/matter-js@0.19.0/build/matter.min.js"
+          ];
+          var i = 0;
+          (function next() {
+            if (window.Matter) { done(); return; }
+            if (i >= srcs.length) { return; }
+            var url = srcs[i++];
+            if (!url || url.indexOf("matter") === -1) { next(); return; }
+            var s = document.createElement("script");
+            s.src = url; s.async = false;
+            s.onload = function () { done(); };
+            s.onerror = function () { next(); };
+            document.head.appendChild(s);
+          })();
+        }
+
         function boot() {
+          loadMatter(function () {});
           var host = document.getElementById("dhGame");
           var dataEl = document.getElementById("dhGameData");
           var root = document.getElementById("dynHero");
@@ -370,8 +396,16 @@
           var data; try { data = JSON.parse(dataEl.textContent); } catch (e) { return; }
           if (!data.boxes || !data.boxes.length) return;
 
+          var tries = 0;
           (function wait() {
-            if (!window.Matter) { return setTimeout(wait, 80); }
+            tries++;
+            /* Wait for BOTH the library to load AND the hero to have a real
+               size. On some themes the section is measured as 0-height for a
+               moment during first paint, which would drop every box off-screen. */
+            if (!window.Matter || host.clientHeight < 40 || host.clientWidth < 40) {
+              if (tries > 200) { return; }
+              return setTimeout(wait, 80);
+            }
             var M = window.Matter;
             var w = host.clientWidth, h = host.clientHeight;
             var engine = M.Engine.create(); engine.world.gravity.y = data.gravity || 1;
