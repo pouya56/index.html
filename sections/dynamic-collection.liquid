@@ -26,7 +26,15 @@
     --ratio: {% case section.settings.image_ratio %}{% when 'square' %}1{% when 'portrait' %}0.8{% when 'landscape' %}1.3{% else %}0.85{% endcase %};
     font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased;
     background: {{ section.settings.page_bg | default: '#f5f5f7' }};
+    position: relative;
   }
+  /* Back-to-home button, top-left */
+  .dyn-col .dc-back { position: absolute; top: 16px; left: 16px; z-index: 6; width: 42px; height: 42px; border-radius: 50%;
+    display: grid; place-items: center; background: var(--bg); border: 1px solid var(--line); color: var(--ink);
+    text-decoration: none; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: background .16s, transform .1s, box-shadow .16s; }
+  .dyn-col .dc-back:hover { background: var(--bg-panel); box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+  .dyn-col .dc-back:active { transform: scale(0.93); }
+  .dyn-col .dc-back svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .dyn-col, .dyn-col *, .dyn-col *::before, .dyn-col *::after { box-sizing: border-box; }
   /* Paint the whole page the same soft grey so there's no white strip below the grid.
      (This style only loads on pages that use this section.) */
@@ -225,6 +233,11 @@
   data-cat-source="{{ cat_source }}"
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
   data-results-url="{{ section.settings.results_page_url }}">
+  {%- if section.settings.show_back -%}
+    <a class="dc-back" href="{{ section.settings.back_url | default: routes.root_url }}" aria-label="Back to home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </a>
+  {%- endif -%}
   {%- if section.settings.hide_until_search -%}
     {%- if section.settings.corner_tl_label != blank -%}<a class="dc-corner dc-corner-tl" href="{{ section.settings.corner_tl_url | default: '#' }}">{{ section.settings.corner_tl_label }}</a>{%- endif -%}
     {%- if section.settings.corner_tr_label != blank -%}<a class="dc-corner dc-corner-tr" href="{{ section.settings.corner_tr_url | default: '#' }}">{{ section.settings.corner_tr_label }}</a>{%- endif -%}
@@ -756,6 +769,10 @@
     { "type": "header", "content": "Card" },
     { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": false },
     { "type": "checkbox", "id": "show_swatches", "label": "Show colour swatches", "default": true },
+
+    { "type": "header", "content": "Back button" },
+    { "type": "checkbox", "id": "show_back", "label": "Show back button (top-left)", "default": true },
+    { "type": "url", "id": "back_url", "label": "Back button goes to", "info": "Defaults to your home page." },
 
     { "type": "header", "content": "Style" },
     { "type": "color", "id": "page_bg", "label": "Page background", "default": "#f5f5f7", "info": "Fills the whole page so there's no white strip below the grid." },
