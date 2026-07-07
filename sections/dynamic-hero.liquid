@@ -830,6 +830,42 @@
     });
   }
 
+  // Typo-tolerant matching (Levenshtein edit distance) so small misspellings still match.
+  function lev(a, b) {
+    var m = a.length, n = b.length; if (!m) return n; if (!n) return m;
+    var d = [], i, j;
+    for (i = 0; i <= m; i++) { d[i] = []; d[i][0] = i; }
+    for (j = 0; j <= n; j++) d[0][j] = j;
+    for (i = 1; i <= m; i++) {
+      for (j = 1; j <= n; j++) {
+        var cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+        if (i > 1 && j > 1 && a.charCodeAt(i - 1) === b.charCodeAt(j - 2) && a.charCodeAt(i - 2) === b.charCodeAt(j - 1)) {
+          d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1); // adjacent transposition (e.g. "mgu" -> "mug")
+        }
+      }
+    }
+    return d[m][n];
+  }
+  function wordHit(q, words) {
+    var tol = q.length <= 5 ? 1 : (q.length <= 8 ? 2 : 3);
+    for (var k = 0; k < words.length; k++) {
+      var w = words[k]; if (!w) continue;
+      if (w.indexOf(q) >= 0) return true;
+      if (q.length < 3) continue;
+      if (lev(q, w) <= tol) return true;
+      if (w.length > q.length && lev(q, w.slice(0, q.length)) <= tol) return true;
+    }
+    return false;
+  }
+  function queryMatch(query, text) {
+    if (!query) return true;
+    if (text.indexOf(query) >= 0) return true;
+    var qw = query.split(/\s+/), tw = text.split(/\s+/), i;
+    for (i = 0; i < qw.length; i++) { if (qw[i] && !wordHit(qw[i], tw)) return false; }
+    return true;
+  }
+
   // Combined filter: current category tab AND the live search query.
   var currentCat = "__all";
   var query = "";
@@ -856,7 +892,7 @@
     cards.forEach(function (c) {
       var cc = " " + (c.getAttribute("data-cat") || "") + " ";
       var okCat = currentCat === "__all" || cc.indexOf(" " + currentCat + " ") >= 0;
-      var okQ = !query || (c.getAttribute("data-search") || "").indexOf(query) >= 0;
+      var okQ = !query || queryMatch(query, c.getAttribute("data-search") || "");
       var match = searching ? okQ : okCat;
       c.style.display = match ? "" : "none";
       if (match) visible.push(c);
