@@ -511,14 +511,17 @@
                 var twoPi = Math.PI * 2;
                 var target = Math.round(b.a / twoPi) * twoPi;   // nearest upright
                 var diff = target - b.a;
-                // Rotate toward upright at a slow, capped speed so it tips up
-                // gently instead of snapping. ~0.35 rad/s ≈ 20°/s, easing out
-                // as it nears vertical.
-                var stepA = diff * Math.min(1, dt * 0.35);
-                var cap = 0.35 * dt;
-                if (stepA > cap) stepA = cap; else if (stepA < -cap) stepA = -cap;
-                b.a += stepA;
-                b.av *= 0.5;
+                // Only stand the box up if it is already within 20° of upright;
+                // if it landed more tilted than that, leave it as it fell.
+                if (Math.abs(diff) <= 0.349) {
+                  // Rotate toward upright at a slow, capped speed so it tips up
+                  // gently instead of snapping, easing out as it nears vertical.
+                  var stepA = diff * Math.min(1, dt * 0.35);
+                  var cap = 0.35 * dt;
+                  if (stepA > cap) stepA = cap; else if (stepA < -cap) stepA = -cap;
+                  b.a += stepA;
+                  b.av *= 0.5;
+                }
               }
             }
             for (var pass = 0; pass < 5; pass++) {
