@@ -36,6 +36,17 @@
   /* Floating gift-box game overlay (physics canvas draws boxes on top; clicks pass through to the page) */
   .dyn-hero .dh-game { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
   .dyn-hero .dh-game canvas { display: block; }
+  .dyn-hero .dh-motion-btn {
+    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+    z-index: 7; -webkit-appearance: none; appearance: none; cursor: pointer;
+    padding: 10px 18px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.28); -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4); color: var(--ink, #1d1d1f);
+    font: 600 14px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: 0.01em; box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+    animation: dhMotionPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes dhMotionPulse { 0%,100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.06); } }
   .dyn-hero.dh-landing .dh-wrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center;
     padding-top: 4vh; padding-bottom: calc(18vh + 1in); }
   /* Google-style corner links (home landing) — horizontal row per corner */
@@ -594,21 +605,56 @@
             }
             lastMag = mag;
           }
+          var DOE = window.DeviceOrientationEvent, DME = window.DeviceMotionEvent;
+          var needsPerm = (DOE && typeof DOE.requestPermission === "function") || (DME && typeof DME.requestPermission === "function");
+          var motionBtn = null;
+
+          function grant() {
+            if (motionOn) return;
+            motionOn = true;
+            window.addEventListener("deviceorientation", onOrient);
+            window.addEventListener("devicemotion", onMotion);
+            if (motionBtn && motionBtn.parentNode) motionBtn.parentNode.removeChild(motionBtn);
+          }
+          /* iOS: request the two permissions ONE AT A TIME. Requesting both at
+             once (Promise.all) makes Safari reject the second and nothing turns
+             on — that was the bug. */
+          var reqPending = false;
+          function requestPerm() {
+            if (motionOn || reqPending) return;
+            reqPending = true;
+            var reqO = DOE && typeof DOE.requestPermission === "function";
+            var reqM = DME && typeof DME.requestPermission === "function";
+            function done() { reqPending = false; grant(); }
+            function doMotion() {
+              if (reqM) { DME.requestPermission().then(done).catch(done); }
+              else done();
+            }
+            if (reqO) {
+              DOE.requestPermission().then(function (res) {
+                if (res === "granted") doMotion(); else reqPending = false;
+              }).catch(function () { reqPending = false; });
+            } else { doMotion(); }
+          }
           function enableMotion() {
             if (motionOn || !hasMotion) return;
-            function attach() {
-              motionOn = true;
-              window.addEventListener("deviceorientation", onOrient);
-              window.addEventListener("devicemotion", onMotion);
+            if (needsPerm) requestPerm(); else grant();
+          }
+
+          /* On iPhones the OS only shows its "Allow Motion" prompt in response
+             to a real tap on a control, so add a small button for that. Android
+             and older browsers just start straight away. */
+          if (isTouch && hasMotion) {
+            if (needsPerm) {
+              motionBtn = document.createElement("button");
+              motionBtn.type = "button";
+              motionBtn.className = "dh-motion-btn";
+              motionBtn.textContent = "🎁 Tap to play";
+              motionBtn.addEventListener("click", function (ev) { ev.preventDefault(); ev.stopPropagation(); requestPerm(); });
+              root.appendChild(motionBtn);
+            } else {
+              grant();
             }
-            var needO = typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function";
-            var needM = typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function";
-            if (needO || needM) {
-              var reqs = [];
-              if (needO) reqs.push(DeviceOrientationEvent.requestPermission());
-              if (needM) reqs.push(DeviceMotionEvent.requestPermission());
-              Promise.all(reqs).then(attach).catch(function () {});
-            } else { attach(); }
           }
 
           /* Mouse / touch grab + throw. */
@@ -616,7 +662,8 @@
           var held = null, grabOff = null, lastP = null, lastT = 0, throwVX = 0, throwVY = 0;
           var downQ = null, downT = 0, moved = 0;
           root.addEventListener("pointerdown", function (e) {
-            if (isTouch) enableMotion();   // first touch unlocks the sensors (iOS)
+            if (motionBtn && e.target === motionBtn) return;   // let the button handle its own tap
+            if (isTouch) enableMotion();   // first touch also unlocks the sensors (iOS)
             if (e.button && e.button !== 0) return;
             var q = pos(e), best = null, bd = 1e9;
             for (var i = bodies.length - 1; i >= 0; i--) {
