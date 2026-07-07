@@ -541,6 +541,7 @@
           /* Mouse / touch grab + throw. */
           function pos(e) { var hr = host.getBoundingClientRect(); return { x: e.clientX - hr.left, y: e.clientY - hr.top }; }
           var held = null, grabOff = null, lastP = null, lastT = 0, throwVX = 0, throwVY = 0;
+          var downQ = null, downT = 0, moved = 0;
           root.addEventListener("pointerdown", function (e) {
             if (e.button && e.button !== 0) return;
             var q = pos(e), best = null, bd = 1e9;
@@ -552,6 +553,7 @@
             held = best; held.held = true; held.vx = held.vy = held.av = 0;
             grabOff = { x: held.x - q.x, y: held.y - q.y };
             lastP = q; lastT = e.timeStamp || 0; throwVX = throwVY = 0;
+            downQ = q; downT = e.timeStamp || 0; moved = 0;
             e.preventDefault(); try { root.setPointerCapture(e.pointerId); } catch (x) {}
           }, true);
           window.addEventListener("pointermove", function (e) {
@@ -560,14 +562,25 @@
             var t = e.timeStamp || (lastT + 16), dt = Math.max(0.001, (t - lastT) / 1000);
             throwVX = (nx - held.x) / dt; throwVY = (ny - held.y) / dt;
             held.x = nx; held.y = ny; lastP = q; lastT = t;
+            if (downQ) { var mx = q.x - downQ.x, my = q.y - downQ.y; moved = Math.max(moved, Math.sqrt(mx * mx + my * my)); }
           }, { passive: true });
-          function release() {
+          function release(e) {
             if (!held) return;
-            var cap = 3200;
-            held.vx = Math.max(-cap, Math.min(cap, throwVX));
-            held.vy = Math.max(-cap, Math.min(cap, throwVY));
-            held.av = Math.max(-8, Math.min(8, throwVX / held.r));
-            held.held = false; held = null;
+            var b = held; held.held = false; held = null;
+            var elapsed = ((e && e.timeStamp) || (downT + 999)) - downT;
+            /* A quick tap/click that barely moved = make the box JUMP. A drag
+               that moved the box = throw it with the drag velocity. */
+            if (moved < 12 && elapsed < 500) {
+              var jumpV = Math.sqrt(2 * GRAV * 260);      // ~260px hop, scales with gravity
+              b.vy = -jumpV;
+              b.vx = (Math.random() - 0.5) * jumpV * 0.35; // slight sideways kick
+              b.av = (Math.random() - 0.5) * 6;            // playful spin
+            } else {
+              var cap = 3200;
+              b.vx = Math.max(-cap, Math.min(cap, throwVX));
+              b.vy = Math.max(-cap, Math.min(cap, throwVY));
+              b.av = Math.max(-8, Math.min(8, throwVX / b.r));
+            }
           }
           window.addEventListener("pointerup", release);
           window.addEventListener("pointercancel", release);
