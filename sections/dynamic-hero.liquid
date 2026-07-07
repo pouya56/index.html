@@ -277,9 +277,14 @@
   .dyn-hero .dh-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .35s ease, transform .5s ease; }
   .dyn-hero .dh-media .dh-ph { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--bg-panel); }
   .dyn-hero .dh-media .dh-img-2 { opacity: 0; }
-  .dyn-hero .dh-card:hover .dh-media .dh-img-2 { opacity: 1; }
-  .dyn-hero .dh-card:hover .dh-media .dh-img-1.has-2 { opacity: 0; }
-  .dyn-hero .dh-card:hover .dh-media img { transform: scale(1.04); }
+  /* Only swap to the 2nd image on true hover devices (mouse). On touch this
+     avoids the iOS "first tap shows hover, second tap opens" problem, so a
+     single tap opens the product. */
+  @media (hover: hover) and (pointer: fine) {
+    .dyn-hero .dh-card:hover .dh-media .dh-img-2 { opacity: 1; }
+    .dyn-hero .dh-card:hover .dh-media .dh-img-1.has-2 { opacity: 0; }
+    .dyn-hero .dh-card:hover .dh-media img { transform: scale(1.04); }
+  }
   .dyn-hero .dh-badges { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
   .dyn-hero .dh-badge { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; padding: 5px 10px;
     border-radius: 999px; background: var(--ink); color: #fff; }
