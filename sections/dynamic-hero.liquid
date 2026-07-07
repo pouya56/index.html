@@ -679,6 +679,12 @@
           }
           window.addEventListener("pointerup", release);
           window.addEventListener("pointercancel", release);
+          /* While a box is being dragged, stop the phone from scrolling the page
+             (a non-passive touchmove is the only reliable way to cancel the
+             native pan). When no box is held, scrolling works normally. */
+          window.addEventListener("touchmove", function (e) {
+            if (held) { e.preventDefault(); }
+          }, { passive: false });
 
           var acc = 0, last = 0, MAXDT = 1 / 30, FIXED = 1 / 120;
           function frame(ts) {
