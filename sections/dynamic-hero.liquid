@@ -847,12 +847,17 @@
     if (tabsWrap) tabsWrap.style.display = "";
     if (shelfWrap) shelfWrap.style.display = "";
 
+    // When searching, look across ALL categories (ignore the tab); otherwise show the active tab.
+    var searching = query.length > 0;
+    if (tabs) tabs.querySelectorAll(".dh-tab").forEach(function (b) {
+      b.classList.toggle("is-active", searching ? b.getAttribute("data-cat") === "__all" : b.getAttribute("data-cat") === currentCat);
+    });
     var visible = [];
     cards.forEach(function (c) {
       var cc = " " + (c.getAttribute("data-cat") || "") + " ";
       var okCat = currentCat === "__all" || cc.indexOf(" " + currentCat + " ") >= 0;
       var okQ = !query || (c.getAttribute("data-search") || "").indexOf(query) >= 0;
-      var match = okCat && okQ;
+      var match = searching ? okQ : okCat;
       c.style.display = match ? "" : "none";
       if (match) visible.push(c);
     });
