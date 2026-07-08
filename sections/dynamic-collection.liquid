@@ -193,6 +193,7 @@
   .dyn-col .dc-badge.dc-badge-soldout { background: #fff; color: var(--ink-soft); box-shadow: inset 0 0 0 1px var(--line); }
   .dyn-col .dc-badge.dc-badge-best { background: linear-gradient(180deg, #caa14a, #b3841f); color: #fff; display: inline-flex; align-items: center; gap: 4px; }
   .dyn-col .dc-badge.dc-badge-best svg { width: 11px; height: 11px; fill: currentColor; }
+  .dyn-col .dc-badge.dc-badge-new { background: #1a7f37; color: #fff; }
 
   .dyn-col .dc-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
   .dyn-col .dc-vendor { font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); }
@@ -394,6 +395,18 @@
             {%- if bs_top > 0 and forloop.index <= bs_top -%}{%- assign is_best = true -%}{%- endif -%}
           {%- endif -%}
 
+          {%- comment -%} New badge: shows for a set number of days after the product was published, then disappears on its own. {%- endcomment -%}
+          {%- assign is_new = false -%}
+          {%- if section.settings.show_new -%}
+            {%- assign new_days = section.settings.new_days | default: 14 -%}
+            {%- assign now_s = 'now' | date: '%s' | plus: 0 -%}
+            {%- assign pub_s = product.published_at | date: '%s' | plus: 0 -%}
+            {%- if pub_s > 0 -%}
+              {%- assign age_days = now_s | minus: pub_s | divided_by: 86400 -%}
+              {%- if age_days <= new_days -%}{%- assign is_new = true -%}{%- endif -%}
+            {%- endif -%}
+          {%- endif -%}
+
           {%- if cat_source == 'tag' -%}
             {%- capture card_cat -%}{% for tag in product.tags %}{{ tag | handle }} {% endfor %}{%- endcapture -%}
           {%- else -%}
@@ -407,6 +420,9 @@
           <div class="dc-card" data-cat="{{ card_cat | strip }}" data-search="{{ card_search | downcase | strip_newlines | escape }}">
             <a class="dc-media" href="{{ product.url }}">
               <div class="dc-badges">
+                {%- if is_new -%}
+                  <span class="dc-badge dc-badge-new">{{ section.settings.new_label | default: 'New' }}</span>
+                {%- endif -%}
                 {%- if is_best -%}
                   <span class="dc-badge dc-badge-best"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8L6.6 19.6l1-6L3.3 9.4l6-.9z"/></svg>{{ section.settings.bestseller_label | default: 'Best seller' }}</span>
                 {%- endif -%}
@@ -819,6 +835,11 @@
     { "type": "text", "id": "bestseller_label", "label": "Badge text", "default": "Best seller" },
     { "type": "text", "id": "bestseller_tag", "label": "Show badge on products tagged", "default": "bestseller", "info": "In Shopify admin, add this tag (e.g. bestseller) to any product you want badged. Not case-sensitive." },
     { "type": "range", "id": "bestseller_top", "min": 0, "max": 12, "step": 1, "label": "Or auto-badge the top N products", "default": 0, "info": "0 = off. If set, the first N products get the badge — use this when the collection is sorted by ‘Best selling’ so it's automatic (no tagging needed)." },
+
+    { "type": "header", "content": "New arrivals badge 🆕" },
+    { "type": "checkbox", "id": "show_new", "label": "Show “New” badge", "default": true },
+    { "type": "text", "id": "new_label", "label": "Badge text", "default": "New" },
+    { "type": "range", "id": "new_days", "min": 1, "max": 90, "step": 1, "label": "Show as new for (days)", "default": 14, "info": "The badge shows automatically for this many days after a product is published, then disappears on its own — no tagging needed." },
 
     { "type": "header", "content": "Buttons under the search" },
     { "type": "checkbox", "id": "show_btn1", "label": "Show button 1", "default": false },
