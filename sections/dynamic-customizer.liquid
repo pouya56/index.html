@@ -468,12 +468,35 @@ button { font-family: inherit; cursor: pointer; }
 .ig-rating { display: flex; align-items: center; gap: 6px; margin: 10px 0 2px; font-size: 13px; color: var(--ink-faint); }
 .ig-rating .ig-rstars { color: #f5b301; letter-spacing: 1px; font-size: 14px; }
 .ig-reviews-panel { margin-top: 16px; }
-.ig-rv-list { display: flex; flex-direction: column; gap: 13px; }
-.ig-rv { font-size: 14px; line-height: 1.45; color: var(--ink); }
-.ig-rv b { font-weight: 600; margin-right: 6px; }
-.ig-rv .ig-rvstars { color: #f5b301; font-size: 12px; letter-spacing: 1px; margin-left: 2px; }
-.ig-rv .ig-rvtime { display: block; font-size: 11px; color: var(--ink-faint); margin-top: 3px; }
-.ig-rv-verified { color: #1a7f37; font-size: 11px; font-weight: 600; margin-left: 6px; }
+.ig-rv-list { display: flex; flex-direction: column; gap: 16px; }
+.ig-rv { display: flex; gap: 11px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: var(--ink); }
+.ig-rv-av { width: 38px; height: 38px; flex: none; border-radius: 50%; padding: 2px; display: flex;
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+.ig-rv-av > span { width: 100%; height: 100%; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 15px; color: var(--ink); }
+.ig-rv-av-sm { width: 30px; height: 30px; }
+.ig-rv-av-sm > span { font-size: 13px; }
+.ig-rv-main { flex: 1 1 auto; min-width: 0; }
+.ig-rv-cbody b { font-weight: 600; margin-right: 5px; }
+.ig-rv .ig-rvstars { color: #f5b301; font-size: 12px; letter-spacing: 1px; margin: 0 5px; }
+.ig-rv-verified { color: #1a7f37; font-size: 11px; font-weight: 600; margin-right: 5px; }
+.ig-rv-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 5px; font-size: 12px; color: var(--ink-faint); font-weight: 600; }
+.ig-rv-meta button { border: 0; background: none; padding: 0; font: inherit; font-size: 12px; font-weight: 600; color: var(--ink-faint); cursor: pointer; }
+.ig-rv-meta button:hover { color: var(--ink); }
+.ig-rv-like { flex: none; border: 0; background: none; cursor: pointer; padding: 3px; color: var(--ink-faint); align-self: flex-start; margin-top: 3px; }
+.ig-rv-like svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; display: block; }
+.ig-rv-like:active { transform: scale(0.85); }
+.ig-rv-like.is-on { color: #ed4956; }
+.ig-rv-like.is-on svg { fill: #ed4956; stroke: #ed4956; }
+.ig-rv-viewreplies { border: 0; background: none; padding: 7px 0 0; font: inherit; font-size: 12px; font-weight: 600; color: var(--ink-faint); cursor: pointer; }
+.ig-rv-viewreplies:hover { color: var(--ink); }
+.ig-rv-replies { margin-top: 11px; display: flex; flex-direction: column; gap: 12px; }
+.ig-rv-reply { gap: 9px; }
+.ig-rv-replyform { display: flex; gap: 8px; margin-top: 9px; }
+.ig-rv-replyinput { flex: 1 1 auto; min-width: 0; border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; font: inherit; font-size: 13px; background: var(--bg); color: var(--ink); }
+.ig-rv-replyinput:focus { outline: none; border-color: var(--accent); }
+.ig-rv-replysend { flex: none; border: 0; border-radius: 999px; padding: 0 15px; background: var(--ink); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ig-rv-verified + .ig-rvstars { margin-left: 0; }
+.ig-rv-hint { font-size: 12.5px; color: var(--ink-faint); margin-bottom: 8px; }
 .ig-rv-gate { font-size: 13.5px; color: var(--ink-soft); padding: 6px 0; }
 .ig-rv-gate a { color: var(--accent); text-decoration: none; }
 .ig-rv-gate a:hover { text-decoration: underline; }
@@ -1117,6 +1140,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
               <button type="button" class="ig-star-pick" data-v="4" aria-label="4 stars">&#9733;</button>
               <button type="button" class="ig-star-pick" data-v="5" aria-label="5 stars">&#9733;</button>
             </div>
+            <div class="ig-rv-hint" id="igStarHint">Tap a star to rate, then write your review.</div>
             <input class="ig-rv-name" id="igRvName" type="text" placeholder="Your name (optional)" maxlength="60" autocomplete="name">
             <textarea class="ig-rv-text" id="igRvText" placeholder="Share your thoughts about this product…" maxlength="800" rows="2"></textarea>
             <input class="ig-rv-hp" id="igRvHp" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -1225,82 +1249,131 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   window.addEventListener("storage", function (e) { if (e.key === WL_KEY) paintSave(); });
   paintSave();
 
-  /* ===== Custom reviews (stored in your Firebase, shared by all visitors) ===== */
+  /* ===== Custom reviews — Instagram-style comments (stored in your Firebase) ===== */
   var ratingEl = document.getElementById("igRating");
   var listEl = document.getElementById("igRvList"), moreBtn = document.getElementById("igRvMore");
   var form = document.getElementById("igRvForm"), nameEl = document.getElementById("igRvName"), textEl = document.getElementById("igRvText");
   var hpEl = document.getElementById("igRvHp"), submitBtn = document.getElementById("igRvSubmit"), rvNote = document.getElementById("igRvNote");
-  var starWrap = document.getElementById("igStarsPick");
+  var starWrap = document.getElementById("igStarsPick"), starHint = document.getElementById("igStarHint");
   var RVDONE_KEY = "dyn_rvdone_" + handle;
-  var reviews = [], expanded = false, pickRating = 5, panelOpen = false;
+  var reviews = [], expanded = false, pickRating = 0, panelOpen = false;
   var canReview = !cfg.verifiedOnly || cfg.purchased === true;
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function stars(n) { n = Math.max(0, Math.min(5, Math.round(n))); return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n); }
-  function ago(t) { if (!t) return ""; var s = Math.floor((Date.now() - t) / 1000); if (s < 60) return "just now"; var m = Math.floor(s / 60); if (m < 60) return m + "m ago"; var h = Math.floor(m / 60); if (h < 24) return h + "h ago"; var d = Math.floor(h / 24); if (d < 7) return d + "d ago"; return Math.floor(d / 7) + "w ago"; }
+  function ago(t) { if (!t) return ""; var s = Math.floor((Date.now() - t) / 1000); if (s < 60) return "just now"; var m = Math.floor(s / 60); if (m < 60) return m + "m"; var h = Math.floor(m / 60); if (h < 24) return h + "h"; var d = Math.floor(h / 24); if (d < 7) return d + "d"; return Math.floor(d / 7) + "w"; }
+  function initial(name) { name = (name || "").trim(); return name ? name.charAt(0).toUpperCase() : "?"; }
+  function fbGet(path) { return fetch(fb + path).then(function (r) { return r.json(); }).catch(function () { return null; }); }
+  function fbIncPath(path, delta) { if (!fb) return; try { fetch(fb + path + ".json", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ".sv": { "increment": delta } }) }).catch(function () {}); } catch (e) {} }
+  function rvById(id) { for (var i = 0; i < reviews.length; i++) { if (reviews[i].id === id) return reviews[i]; } return null; }
+  function likedReview(id) { return jget("dyn_rvlk_" + handle + "_" + id, false) === true; }
 
   function rvLoad() {
     if (!fb) { render(); return; }
-    try {
-      fetch(fb + "/reviews/" + encodeURIComponent(handle) + ".json").then(function (r) { return r.json(); }).then(function (d) {
-        var out = [];
-        if (d && typeof d === "object") { for (var k in d) { if (d.hasOwnProperty(k) && d[k]) { var r = d[k]; out.push({ name: r.name || "Anonymous", rating: parseInt(r.rating, 10) || 5, text: r.text || "", t: parseInt(r.t, 10) || 0, v: r.v ? 1 : 0 }); } } }
-        out.sort(function (a, b) { return b.t - a.t; });
-        reviews = out; render();
-      }).catch(function () { render(); });
-    } catch (e) { render(); }
+    var h = encodeURIComponent(handle);
+    Promise.all([fbGet("/reviews/" + h + ".json"), fbGet("/review_likes/" + h + ".json"), fbGet("/review_replies/" + h + ".json")]).then(function (res) {
+      var d = res[0] || {}, lk = res[1] || {}, rp = res[2] || {}, out = [];
+      for (var k in d) {
+        if (!d.hasOwnProperty(k) || !d[k]) continue;
+        var r = d[k], reps = [], rpo = rp[k] || {};
+        for (var rk in rpo) { if (rpo.hasOwnProperty(rk) && rpo[rk]) reps.push({ id: rk, name: rpo[rk].name || "Anonymous", text: rpo[rk].text || "", t: parseInt(rpo[rk].t, 10) || 0 }); }
+        reps.sort(function (a, b) { return a.t - b.t; });
+        out.push({ id: k, name: r.name || "Anonymous", rating: parseInt(r.rating, 10) || 5, text: r.text || "", t: parseInt(r.t, 10) || 0, v: r.v ? 1 : 0, likes: parseInt(lk[k], 10) || 0, replies: reps });
+      }
+      out.sort(function (a, b) { return b.t - a.t; });
+      reviews = out; render();
+    }).catch(function () { render(); });
+  }
+
+  function replyHTML(rp) {
+    return '<div class="ig-rv ig-rv-reply"><div class="ig-rv-av ig-rv-av-sm"><span>' + esc(initial(rp.name)) + '</span></div>' +
+      '<div class="ig-rv-main"><div class="ig-rv-cbody"><b>' + esc(rp.name) + '</b>' + esc(rp.text) + '</div>' +
+      '<div class="ig-rv-meta"><span>' + ago(rp.t) + '</span></div></div></div>';
+  }
+  function cardHTML(r) {
+    var vb = r.v ? '<span class="ig-rv-verified">✓ Verified</span>' : '';
+    var on = likedReview(r.id), reps = r.replies || [];
+    var toggle = reps.length ? '<button type="button" class="ig-rv-viewreplies" data-id="' + r.id + '">— View replies (' + reps.length + ')</button>' : '';
+    return '<div class="ig-rv" data-id="' + r.id + '">' +
+      '<div class="ig-rv-av"><span>' + esc(initial(r.name)) + '</span></div>' +
+      '<div class="ig-rv-main">' +
+        '<div class="ig-rv-cbody"><b>' + esc(r.name) + '</b>' + vb + '<span class="ig-rvstars">' + stars(r.rating) + '</span> ' + esc(r.text) + '</div>' +
+        '<div class="ig-rv-meta">' +
+          '<span>' + ago(r.t) + '</span>' +
+          '<span class="ig-rv-likes">' + (r.likes === 1 ? '1 like' : r.likes + ' likes') + '</span>' +
+          '<button type="button" class="ig-rv-reply-btn" data-id="' + r.id + '">Reply</button>' +
+        '</div>' +
+        toggle +
+        '<div class="ig-rv-replies" data-id="' + r.id + '" hidden>' + reps.map(replyHTML).join("") + '</div>' +
+        '<form class="ig-rv-replyform" data-id="' + r.id + '" hidden><input class="ig-rv-replyinput" type="text" placeholder="Add a reply…" maxlength="300"><button type="submit" class="ig-rv-replysend">Send</button></form>' +
+      '</div>' +
+      '<button type="button" class="ig-rv-like' + (on ? ' is-on' : '') + '" data-id="' + r.id + '" aria-label="Like this review"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.7 9 1.6 5.6 4.6 4.6 7 3.8 9.3 5 12 8c2.7-3 5-4.2 7.4-3.4 3 1 3.9 4.4 2.6 7.1C19.5 16.3 12 21 12 21Z"/></svg></button>' +
+    '</div>';
   }
   function render() {
     var n = reviews.length;
     commentCount.textContent = n > 0 ? n : "";
-    if (n) {
-      var sum = 0; reviews.forEach(function (r) { sum += r.rating; });
-      var avg = sum / n;
-      ratingEl.hidden = false;
-      ratingEl.innerHTML = '<span class="ig-rstars">' + stars(avg) + '</span> ' + avg.toFixed(1) + ' · ' + n + (n === 1 ? ' review' : ' reviews');
-    } else { ratingEl.hidden = true; }
+    if (n) { var sum = 0; reviews.forEach(function (r) { sum += r.rating; }); var avg = sum / n; ratingEl.hidden = false; ratingEl.innerHTML = '<span class="ig-rstars">' + stars(avg) + '</span> ' + avg.toFixed(1) + ' · ' + n + (n === 1 ? ' review' : ' reviews'); }
+    else { ratingEl.hidden = true; }
     var show = expanded ? reviews : reviews.slice(0, 3);
-    if (!n) { listEl.innerHTML = '<div class="ig-rv-empty">No reviews yet — be the first to review this product!</div>'; }
-    else {
-      listEl.innerHTML = show.map(function (r) {
-        var vb = r.v ? '<span class="ig-rv-verified">✓ Verified</span>' : '';
-        return '<div class="ig-rv"><b>' + esc(r.name) + '</b><span class="ig-rvstars">' + stars(r.rating) + '</span>' + vb + esc(r.text) + (r.t ? '<span class="ig-rvtime">' + ago(r.t) + '</span>' : '') + '</div>';
-      }).join("");
-    }
-    if (n > 3) { moreBtn.hidden = false; moreBtn.textContent = expanded ? "Show less" : ("View all " + n + " reviews"); } else { moreBtn.hidden = true; }
+    listEl.innerHTML = n ? show.map(cardHTML).join("") : '<div class="ig-rv-empty">No reviews yet — be the first to review this product!</div>';
+    moreBtn.hidden = n <= 3; moreBtn.textContent = expanded ? "Show less" : ("View all " + n + " reviews");
   }
   moreBtn.addEventListener("click", function () { expanded = !expanded; render(); });
 
-  /* Star picker */
+  /* Like a review, reply to it, view replies — all delegated. */
+  function toggleReviewLike(id) {
+    var rev = rvById(id); if (!rev) return;
+    var key = "dyn_rvlk_" + handle + "_" + id, now = !likedReview(id);
+    jset(key, now); rev.likes += now ? 1 : -1; if (rev.likes < 0) rev.likes = 0;
+    fbIncPath("/review_likes/" + encodeURIComponent(handle) + "/" + id, now ? 1 : -1);
+    render();
+  }
+  listEl.addEventListener("click", function (e) {
+    var lk = e.target.closest && e.target.closest(".ig-rv-like");
+    if (lk) { toggleReviewLike(lk.getAttribute("data-id")); return; }
+    var rb = e.target.closest && e.target.closest(".ig-rv-reply-btn");
+    if (rb) { var f = listEl.querySelector('.ig-rv-replyform[data-id="' + rb.getAttribute("data-id") + '"]'); if (f) { f.hidden = !f.hidden; if (!f.hidden) { var inp = f.querySelector("input"); if (inp) inp.focus(); } } return; }
+    var vr = e.target.closest && e.target.closest(".ig-rv-viewreplies");
+    if (vr) { var id = vr.getAttribute("data-id"), rp = listEl.querySelector('.ig-rv-replies[data-id="' + id + '"]'), rev = rvById(id); if (rp && rev) { rp.hidden = !rp.hidden; vr.textContent = (rp.hidden ? "— View replies (" : "— Hide replies (") + rev.replies.length + ")"; } return; }
+  });
+  listEl.addEventListener("submit", function (e) {
+    var f = e.target; if (!f.classList || !f.classList.contains("ig-rv-replyform")) return;
+    e.preventDefault();
+    if (!fb) return;
+    var id = f.getAttribute("data-id"), inp = f.querySelector("input"), text = (inp.value || "").trim();
+    if (text.length < 1) return;
+    var reply = { name: (cfg.loggedIn && cfg.customerName) ? cfg.customerName : "Guest", text: text.slice(0, 300), t: Date.now() };
+    fetch(fb + "/review_replies/" + encodeURIComponent(handle) + "/" + id + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(reply) })
+      .then(function (r) { return r.json(); }).then(function (res) {
+        if (res && res.name) { var rev = rvById(id); if (rev) { rev.replies.push({ id: res.name, name: reply.name, text: reply.text, t: reply.t }); } render(); var rp2 = listEl.querySelector('.ig-rv-replies[data-id="' + id + '"]'); if (rp2) rp2.hidden = false; }
+      }).catch(function () {});
+  });
+
+  /* Write-a-review form: pick a star first, then the text field appears. */
   function paintStars() { Array.prototype.forEach.call(starWrap.children, function (b, i) { b.classList.toggle("on", i < pickRating); }); }
-  Array.prototype.forEach.call(starWrap.children, function (b) { b.addEventListener("click", function () { pickRating = parseInt(b.getAttribute("data-v"), 10) || 5; paintStars(); }); });
+  function revealForm() { if (nameEl) nameEl.style.display = ""; textEl.style.display = ""; submitBtn.style.display = ""; if (starHint) starHint.style.display = "none"; try { textEl.focus(); } catch (e) {} }
+  if (nameEl) nameEl.style.display = "none"; textEl.style.display = "none"; submitBtn.style.display = "none";
+  Array.prototype.forEach.call(starWrap.children, function (b) { b.addEventListener("click", function () { pickRating = parseInt(b.getAttribute("data-v"), 10) || 5; paintStars(); revealForm(); }); });
   paintStars();
 
   function note(msg, ok) { rvNote.textContent = msg; rvNote.style.color = ok === false ? "#c0392b" : "#1a7f37"; rvNote.hidden = false; }
-
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-    if (hpEl && hpEl.value) return;                 // honeypot: silently drop bots
+    if (hpEl && hpEl.value) return;
+    if (pickRating < 1) { note("Please tap a star to rate first.", false); return; }
     if (jget(RVDONE_KEY, false)) { note("You’ve already reviewed this product. Thank you!", false); return; }
     var text = (textEl.value || "").trim();
     if (text.length < 3) { note("Please write a little more.", false); textEl.focus(); return; }
     if (!fb) { note("Reviews need the Firebase link set up first.", false); return; }
     var review = { name: (nameEl.value || "").trim().slice(0, 60) || "Anonymous", rating: pickRating, text: text.slice(0, 800), t: Date.now(), v: cfg.purchased ? 1 : 0 };
     submitBtn.disabled = true; submitBtn.textContent = "Posting…";
-    try {
-      fetch(fb + "/reviews/" + encodeURIComponent(handle) + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(review) })
-        .then(function (r) { return r.json(); })
-        .then(function (res) {
-          submitBtn.disabled = false; submitBtn.textContent = "Post review";
-          if (res && res.name) {
-            jset(RVDONE_KEY, true);
-            reviews.unshift(review); expanded = false; render();
-            textEl.value = ""; pickRating = 5; paintStars();
-            note("Thanks! Your review is posted.");
-          } else { note("Couldn’t post right now — please try again.", false); }
-        })
-        .catch(function () { submitBtn.disabled = false; submitBtn.textContent = "Post review"; note("Couldn’t post right now — please try again.", false); });
-    } catch (x) { submitBtn.disabled = false; submitBtn.textContent = "Post review"; note("Couldn’t post right now — please try again.", false); }
+    fetch(fb + "/reviews/" + encodeURIComponent(handle) + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(review) })
+      .then(function (r) { return r.json(); }).then(function (res) {
+        submitBtn.disabled = false; submitBtn.textContent = "Post review";
+        if (res && res.name) { jset(RVDONE_KEY, true); reviews.unshift({ id: res.name, name: review.name, rating: review.rating, text: review.text, t: review.t, v: review.v, likes: 0, replies: [] }); expanded = false; render(); textEl.value = ""; note("Thanks! Your review is posted."); }
+        else { note("Couldn’t post right now — please try again.", false); }
+      }).catch(function () { submitBtn.disabled = false; submitBtn.textContent = "Post review"; note("Couldn’t post right now — please try again.", false); });
   });
 
   /* Comment icon — reveal / hide the reviews (we control rendering, so hiding
