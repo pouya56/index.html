@@ -164,12 +164,27 @@
 }
 </script>
 
+{%- comment -%} Verified buyer check: has the logged-in customer ordered this product? {%- endcomment -%}
+{%- assign dyn_purchased = false -%}
+{%- if customer and dyn_product -%}
+  {%- for order in customer.orders -%}
+    {%- for li in order.line_items -%}
+      {%- if li.product_id == dyn_product.id -%}{%- assign dyn_purchased = true -%}{%- break -%}{%- endif -%}
+    {%- endfor -%}
+    {%- if dyn_purchased -%}{%- break -%}{%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
 <script type="application/json" id="dyn-social-config">
 {
   "show": {% if section.settings.show_social %}true{% else %}false{% endif %},
   "likeBase": {{ section.settings.like_base | default: 0 }},
   "shareBase": {{ section.settings.share_base | default: 0 }},
   "fbUrl": {{ section.settings.firebase_db_url | default: 'https://dynaeimic-social-default-rtdb.firebaseio.com' | json }},
+  "verifiedOnly": {% if section.settings.reviews_verified_only %}true{% else %}false{% endif %},
+  "loggedIn": {% if customer %}true{% else %}false{% endif %},
+  "purchased": {% if dyn_purchased %}true{% else %}false{% endif %},
+  "customerName": {{ customer.name | default: '' | json }},
+  "loginUrl": {{ routes.account_login_url | default: '/account/login' | json }},
   "handle": {% if dyn_product %}{{ dyn_product.handle | json }}{% else %}"product"{% endif %},
   "title": {% if dyn_product %}{{ dyn_product.title | json }}{% else %}""{% endif %},
   "url": {% if dyn_product %}{{ dyn_product.url | json }}{% else %}""{% endif %},
@@ -458,6 +473,10 @@ button { font-family: inherit; cursor: pointer; }
 .ig-rv b { font-weight: 600; margin-right: 6px; }
 .ig-rv .ig-rvstars { color: #f5b301; font-size: 12px; letter-spacing: 1px; margin-left: 2px; }
 .ig-rv .ig-rvtime { display: block; font-size: 11px; color: var(--ink-faint); margin-top: 3px; }
+.ig-rv-verified { color: #1a7f37; font-size: 11px; font-weight: 600; margin-left: 6px; }
+.ig-rv-gate { font-size: 13.5px; color: var(--ink-soft); padding: 6px 0; }
+.ig-rv-gate a { color: var(--accent); text-decoration: none; }
+.ig-rv-gate a:hover { text-decoration: underline; }
 .ig-rv-empty { font-size: 14px; color: var(--ink-faint); }
 .ig-rv-more { margin-top: 10px; border: 0; background: none; color: var(--ink-faint); font: inherit; font-size: 13px; cursor: pointer; padding: 4px 0; }
 .ig-rv-more:hover { color: var(--ink); }
@@ -1214,6 +1233,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   var starWrap = document.getElementById("igStarsPick");
   var RVDONE_KEY = "dyn_rvdone_" + handle;
   var reviews = [], expanded = false, pickRating = 5, panelOpen = false;
+  var canReview = !cfg.verifiedOnly || cfg.purchased === true;
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function stars(n) { n = Math.max(0, Math.min(5, Math.round(n))); return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n); }
@@ -1224,7 +1244,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     try {
       fetch(fb + "/reviews/" + encodeURIComponent(handle) + ".json").then(function (r) { return r.json(); }).then(function (d) {
         var out = [];
-        if (d && typeof d === "object") { for (var k in d) { if (d.hasOwnProperty(k) && d[k]) { var r = d[k]; out.push({ name: r.name || "Anonymous", rating: parseInt(r.rating, 10) || 5, text: r.text || "", t: parseInt(r.t, 10) || 0 }); } } }
+        if (d && typeof d === "object") { for (var k in d) { if (d.hasOwnProperty(k) && d[k]) { var r = d[k]; out.push({ name: r.name || "Anonymous", rating: parseInt(r.rating, 10) || 5, text: r.text || "", t: parseInt(r.t, 10) || 0, v: r.v ? 1 : 0 }); } } }
         out.sort(function (a, b) { return b.t - a.t; });
         reviews = out; render();
       }).catch(function () { render(); });
@@ -1243,7 +1263,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     if (!n) { listEl.innerHTML = '<div class="ig-rv-empty">No reviews yet — be the first to review this product!</div>'; }
     else {
       listEl.innerHTML = show.map(function (r) {
-        return '<div class="ig-rv"><b>' + esc(r.name) + '</b><span class="ig-rvstars">' + stars(r.rating) + '</span>' + esc(r.text) + (r.t ? '<span class="ig-rvtime">' + ago(r.t) + '</span>' : '') + '</div>';
+        var vb = r.v ? '<span class="ig-rv-verified">✓ Verified</span>' : '';
+        return '<div class="ig-rv"><b>' + esc(r.name) + '</b><span class="ig-rvstars">' + stars(r.rating) + '</span>' + vb + esc(r.text) + (r.t ? '<span class="ig-rvtime">' + ago(r.t) + '</span>' : '') + '</div>';
       }).join("");
     }
     if (n > 3) { moreBtn.hidden = false; moreBtn.textContent = expanded ? "Show less" : ("View all " + n + " reviews"); } else { moreBtn.hidden = true; }
@@ -1264,7 +1285,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     var text = (textEl.value || "").trim();
     if (text.length < 3) { note("Please write a little more.", false); textEl.focus(); return; }
     if (!fb) { note("Reviews need the Firebase link set up first.", false); return; }
-    var review = { name: (nameEl.value || "").trim().slice(0, 60) || "Anonymous", rating: pickRating, text: text.slice(0, 800), t: Date.now() };
+    var review = { name: (nameEl.value || "").trim().slice(0, 60) || "Anonymous", rating: pickRating, text: text.slice(0, 800), t: Date.now(), v: cfg.purchased ? 1 : 0 };
     submitBtn.disabled = true; submitBtn.textContent = "Posting…";
     try {
       fetch(fb + "/reviews/" + encodeURIComponent(handle) + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(review) })
@@ -1290,6 +1311,15 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     commentBtn.setAttribute("aria-expanded", panelOpen ? "true" : "false");
     if (panelOpen) { try { panel.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} }
   });
+
+  /* Verified-buyers gate: hide the form unless this shopper is allowed to review. */
+  if (!canReview) {
+    form.style.display = "none";
+    var gate = document.createElement("div"); gate.className = "ig-rv-gate";
+    if (!cfg.loggedIn) { gate.innerHTML = 'Only verified buyers can review. <a href="' + esc(cfg.loginUrl || "/account/login") + '">Log in</a> to your account to leave one.'; }
+    else { gate.textContent = "Only customers who bought this product can review it."; }
+    panel.appendChild(gate);
+  } else if (cfg.customerName && nameEl) { nameEl.value = cfg.customerName; }
 
   render(); rvLoad();
   document.addEventListener("visibilitychange", function () { if (!document.hidden) rvLoad(); });
@@ -1359,6 +1389,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "header", "content": "Reviews / social ⭐" },
     { "type": "paragraph", "content": "An Instagram-style action bar appears under the trust badges: Like, Comment, Share and Save (wishlist), with the count next to each icon. The Comment count and the reviews shown when you tap it come from Judge.me (make sure Judge.me is installed and its widget is enabled). Like and Share counts are numbers you set below." },
     { "type": "checkbox", "id": "show_social", "label": "Show the Instagram action bar", "default": true },
+    { "type": "checkbox", "id": "reviews_verified_only", "label": "Only verified buyers can review", "default": true, "info": "When on, only a shopper who is logged in AND has ordered this product can write a review (reviews are marked “Verified”). Turn off to let anyone review." },
     { "type": "number", "id": "like_base", "label": "Like count (starting number)", "default": 144 },
     { "type": "number", "id": "share_base", "label": "Share count (starting number, 0 = hide)", "default": 0 },
     { "type": "text", "id": "firebase_db_url", "label": "Firebase database URL (for REAL shared counts)", "info": "Optional. Paste your Firebase Realtime Database URL (e.g. https://your-project-default-rtdb.firebaseio.com) to make Likes and Shares real numbers shared across all visitors, counting up from the starting numbers above. Leave blank to just use the numbers above." },
