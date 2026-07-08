@@ -452,6 +452,14 @@ button { font-family: inherit; cursor: pointer; }
 .ig-jdgm-badge { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .ig-reviews-panel { margin-top: 18px; }
 .ig-noreviews { font-size: 14px; color: var(--ink-faint); padding: 6px 0 2px; }
+/* Tidy Judge.me's widget so it matches the store look once moved up here. */
+.ig-reviews-panel .jdgm-rev-widg__title { font-size: 19px; font-weight: 600; text-align: left; letter-spacing: -0.01em; }
+.ig-reviews-panel .jdgm-rev-widg__summary { text-align: left; }
+.ig-reviews-panel .jdgm-write-rev-link,
+.ig-reviews-panel .jdgm-all-reviews__button,
+.ig-reviews-panel .jdgm-btn { background: var(--ink) !important; border-color: var(--ink) !important; color: #fff !important;
+  border-radius: 999px !important; font-weight: 600 !important; letter-spacing: 0 !important; }
+.ig-reviews-panel .jdgm-star { color: #f5b301 !important; }
 
 .modal-root { position: fixed; inset: 0; z-index: 9990; display: none; }
 
@@ -1172,21 +1180,32 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
      loads the widget when it comes into view, so revealing it triggers the
      load. A placeholder shows only while the widget is genuinely empty, and it
      is cleared the instant Judge.me fills the widget (watched live). */
-  /* Find Judge.me's review widget wherever it ends up on the page (our own
-     placeholder container, or a Judge.me app block placed elsewhere). */
+  /* Judge.me renders its review widget as its own block lower on the page.
+     Move that rendered widget up into our panel (right under the action bar)
+     so the reviews sit with the Instagram bar instead of at the bottom. */
   function jdgmEl() { return document.querySelector(".jdgm-rev-widg, .jdgm-review-widget, .jdgm-all-reviews-rating"); }
-  function jdgmHasContent() { var w = jdgmEl(); return !!(w && (w.children.length > 0 || (w.textContent || "").trim().length > 0)); }
-  function updatePlaceholder() {
-    var ph = panel.querySelector(".ig-noreviews");
-    if (jdgmHasContent()) { if (ph) ph.parentNode.removeChild(ph); }
-    else if (!ph) { ph = document.createElement("div"); ph.className = "ig-noreviews"; ph.textContent = "No reviews yet — be the first to review this product!"; panel.appendChild(ph); }
+  var relocated = false;
+  function moveJdgmIn() {
+    if (relocated) return;
+    var all = document.querySelectorAll(".jdgm-review-widget, .jdgm-rev-widg");
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (!panel.contains(el) && (el.children.length > 0 || (el.textContent || "").trim())) {
+        panel.innerHTML = ""; panel.appendChild(el); relocated = true; return;
+      }
+    }
   }
-  var t0 = 0; (function watch() { updatePlaceholder(); if (t0++ < 40) setTimeout(watch, 500); })();
+  function setPlaceholder() {
+    var ph = panel.querySelector(".ig-noreviews");
+    var loaded = relocated && (panel.textContent || "").trim().length > 0;
+    if (loaded) { if (ph) ph.parentNode.removeChild(ph); }
+    else if (!ph) { ph = document.createElement("div"); ph.className = "ig-noreviews"; ph.textContent = "Loading reviews…"; panel.appendChild(ph); }
+  }
+  var t0 = 0; (function watch() { moveJdgmIn(); setPlaceholder(); if (t0++ < 60) setTimeout(watch, 400); })();
 
-  /* Comment icon — scroll to the reviews (wherever Judge.me rendered them). */
+  /* Comment icon — scroll to the reviews (now under the action bar). */
   commentBtn.addEventListener("click", function () {
-    var w = jdgmEl() || panel;
-    try { w.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
+    try { panel.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
   });
 
   /* Real review count from Judge.me for the comment icon. */
