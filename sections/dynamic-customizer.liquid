@@ -1121,6 +1121,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       }).catch(function () {});
     } catch (e) {}
   }
+  /* Re-check the shared count when the page regains focus, so a like made on
+     another device shows up without a full manual reload. */
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) fbLoad(); });
+  window.addEventListener("focus", fbLoad);
 
   /* Like — starting number + real likes (Firebase) or this device's like. */
   function liked() { return jget(LK_KEY, false) === true; }
