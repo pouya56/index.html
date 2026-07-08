@@ -511,18 +511,6 @@ button { font-family: inherit; cursor: pointer; }
 .ig-rv-replyinput:focus { outline: none; border-color: var(--accent); }
 .ig-rv-replysend { flex: none; border: 0; border-radius: 999px; padding: 0 15px; background: var(--ink); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .ig-rv-verified + .ig-rvstars { margin-left: 0; }
-/* Edit / delete controls + inline editor */
-.ig-rv-meta .ig-rv-del, .ig-rv-meta .ig-rv-repdel { color: #c0392b; }
-.ig-rv-meta .ig-rv-del:hover, .ig-rv-meta .ig-rv-repdel:hover { color: #a52d22; }
-.ig-rv-edited { color: var(--ink-faint); font-weight: 400; font-size: 12px; }
-.ig-rv-editform { margin-top: 7px; }
-.ig-rv-editinput { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; font: inherit; font-size: 14px; background: var(--bg); color: var(--ink); resize: vertical; min-height: 40px; box-sizing: border-box; }
-.ig-rv-editinput:focus { outline: none; border-color: var(--accent); }
-.ig-rv-editbtns { display: flex; gap: 8px; margin-top: 7px; }
-.ig-rv-editsave { border: 0; border-radius: 999px; padding: 6px 16px; background: var(--ink); color: #fff; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
-.ig-rv-editsave:hover { opacity: .9; }
-.ig-rv-editcancel { border: 0; background: none; color: var(--ink-faint); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 6px 4px; }
-.ig-rv-editcancel:hover { color: var(--ink); }
 .ig-rv-hint { font-size: 12.5px; color: var(--ink-faint); margin-bottom: 8px; }
 .ig-rv-gate { font-size: 13.5px; color: var(--ink-soft); padding: 6px 0; }
 .ig-rv-gate a { color: var(--accent); text-decoration: none; }
@@ -1305,7 +1293,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   var hpEl = document.getElementById("igRvHp"), submitBtn = document.getElementById("igRvSubmit"), rvNote = document.getElementById("igRvNote");
   var starWrap = document.getElementById("igStarsPick"), starHint = document.getElementById("igStarHint"), chosenEl = document.getElementById("igRvChosen"), boxEl = document.getElementById("igRvBox");
   var RVDONE_KEY = "dyn_rvdone_" + handle;
-  var reviews = [], expanded = false, pickRating = 0, panelOpen = false, repliesOpen = {}, editing = null;
+  var reviews = [], expanded = false, pickRating = 0, panelOpen = false, repliesOpen = {};
   /* Only customers who bought this product can write a star review (once). Anyone
      signed in can still REPLY to reviews. Buyers get the green ✓ Verified badge. */
   var canReview = cfg.loggedIn === true && cfg.purchased === true;
@@ -1371,23 +1359,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   function rvById(id) { for (var i = 0; i < reviews.length; i++) { if (reviews[i].id === id) return reviews[i]; } return null; }
   function likedReview(id) { return jget("dyn_rvlk_" + handle + "_" + id, false) === true; }
 
-  /* Ownership: this device remembers which review / replies IT posted, so the
-     author can edit or delete their own. The owner (admin) can delete anything. */
-  var MINE_RV = "dyn_rvmine_" + handle, MINE_REP = "dyn_repmine_" + handle;
-  function myReviewId() { return jget(MINE_RV, ""); }
-  function isMyReview(id) { return !!id && myReviewId() === id; }
-  function myReplyIds() { var a = jget(MINE_REP, []); return Array.isArray(a) ? a : []; }
-  function isMyReply(id) { return myReplyIds().indexOf(id) !== -1; }
-  function addMyReply(id) { var a = myReplyIds(); if (a.indexOf(id) === -1) { a.push(id); jset(MINE_REP, a); } }
-  function rmMyReply(id) { jset(MINE_REP, myReplyIds().filter(function (x) { return x !== id; })); }
-  function fbDelete(path) { if (!fb) return; try { fetch(fb + path + ".json", { method: "DELETE" }).catch(function () {}); } catch (e) {} }
-  function fbPatch(path, obj) { if (!fb) return; try { fetch(fb + path + ".json", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(obj) }).catch(function () {}); } catch (e) {} }
-  function editorHTML(id, kind, revId, text) {
-    return '<form class="ig-rv-editform" data-id="' + id + '" data-kind="' + kind + '" data-rev="' + (revId || "") + '">' +
-      '<textarea class="ig-rv-editinput" maxlength="' + (kind === "reply" ? 300 : 800) + '">' + esc(text) + '</textarea>' +
-      '<div class="ig-rv-editbtns"><button type="submit" class="ig-rv-editsave">Save</button><button type="button" class="ig-rv-editcancel">Cancel</button></div></form>';
-  }
-
   function rvLoad() {
     if (!fb) { render(); return; }
     var h = encodeURIComponent(handle);
@@ -1396,54 +1367,37 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       for (var k in d) {
         if (!d.hasOwnProperty(k) || !d[k]) continue;
         var r = d[k], reps = [], rpo = rp[k] || {};
-        for (var rk in rpo) { if (rpo.hasOwnProperty(rk) && rpo[rk]) reps.push({ id: rk, name: rpo[rk].name || "Anonymous", text: rpo[rk].text || "", t: parseInt(rpo[rk].t, 10) || 0, a: rpo[rk].admin ? 1 : 0, e: rpo[rk].e ? 1 : 0 }); }
+        for (var rk in rpo) { if (rpo.hasOwnProperty(rk) && rpo[rk]) reps.push({ id: rk, name: rpo[rk].name || "Anonymous", text: rpo[rk].text || "", t: parseInt(rpo[rk].t, 10) || 0, a: rpo[rk].admin ? 1 : 0 }); }
         reps.sort(function (a, b) { return a.t - b.t; });
-        out.push({ id: k, name: r.name || "Anonymous", rating: parseInt(r.rating, 10) || 5, text: r.text || "", t: parseInt(r.t, 10) || 0, v: r.v ? 1 : 0, e: r.e ? 1 : 0, likes: parseInt(lk[k], 10) || 0, replies: reps });
+        out.push({ id: k, name: r.name || "Anonymous", rating: parseInt(r.rating, 10) || 5, text: r.text || "", t: parseInt(r.t, 10) || 0, v: r.v ? 1 : 0, likes: parseInt(lk[k], 10) || 0, replies: reps });
       }
       out.sort(function (a, b) { return b.t - a.t; });
       reviews = out; render();
     }).catch(function () { render(); });
   }
 
-  function replyHTML(rp, revId) {
+  function replyHTML(rp) {
     var owner = rp.a ? 1 : 0;
     var badge = owner ? '<span class="ig-owner-badge" title="Store owner" aria-label="Store owner">' + OWNER_SVG + '</span>' : '';
-    var mine = isMyReply(rp.id), canDel = isAdmin || mine, canEdit = mine, main;
-    if (editing && editing.kind === "reply" && editing.id === rp.id) {
-      main = '<div class="ig-rv-cbody"><b>' + esc(rp.name) + '</b>' + badge + '</div>' + editorHTML(rp.id, "reply", revId, rp.text);
-    } else {
-      main = '<div class="ig-rv-cbody"><b>' + esc(rp.name) + '</b>' + badge + esc(rp.text) + (rp.e ? ' <span class="ig-rv-edited">· edited</span>' : '') + '</div>' +
-        '<div class="ig-rv-meta"><span>' + ago(rp.t) + '</span>' +
-          (canEdit ? '<button type="button" class="ig-rv-repedit" data-id="' + rp.id + '" data-rev="' + revId + '">Edit</button>' : '') +
-          (canDel ? '<button type="button" class="ig-rv-repdel" data-id="' + rp.id + '" data-rev="' + revId + '">Delete</button>' : '') +
-        '</div>';
-    }
     return '<div class="ig-rv ig-rv-reply' + (owner ? ' is-owner-reply' : '') + '"><div class="ig-rv-av ig-rv-av-sm' + (owner ? ' ig-av-owner' : '') + '">' + AV_SVG + '</div>' +
-      '<div class="ig-rv-main">' + main + '</div></div>';
+      '<div class="ig-rv-main"><div class="ig-rv-cbody"><b>' + esc(rp.name) + '</b>' + badge + esc(rp.text) + '</div>' +
+      '<div class="ig-rv-meta"><span>' + ago(rp.t) + '</span></div></div></div>';
   }
   function cardHTML(r) {
     var vb = r.v ? '<span class="ig-rv-verified">✓ Purchased</span>' : '';
     var on = likedReview(r.id), reps = r.replies || [], repsOpen = !!repliesOpen[r.id];
-    var mine = isMyReview(r.id), canDel = isAdmin || mine, canEdit = mine, main;
     var toggle = reps.length ? '<button type="button" class="ig-rv-viewreplies" data-id="' + r.id + '">— ' + (repsOpen ? 'Hide' : 'View') + ' replies (' + reps.length + ')</button>' : '';
-    if (editing && editing.kind === "review" && editing.id === r.id) {
-      main = '<div class="ig-rv-cbody"><b>' + esc(r.name) + '</b>' + vb + '<span class="ig-rvstars">' + stars(r.rating) + '</span></div>' + editorHTML(r.id, "review", null, r.text);
-    } else {
-      main = '<div class="ig-rv-cbody"><b>' + esc(r.name) + '</b>' + vb + '<span class="ig-rvstars">' + stars(r.rating) + '</span> ' + esc(r.text) + (r.e ? ' <span class="ig-rv-edited">· edited</span>' : '') + '</div>' +
+    return '<div class="ig-rv" data-id="' + r.id + '">' +
+      '<div class="ig-rv-av">' + AV_SVG + '</div>' +
+      '<div class="ig-rv-main">' +
+        '<div class="ig-rv-cbody"><b>' + esc(r.name) + '</b>' + vb + '<span class="ig-rvstars">' + stars(r.rating) + '</span> ' + esc(r.text) + '</div>' +
         '<div class="ig-rv-meta">' +
           '<span>' + ago(r.t) + '</span>' +
           '<span class="ig-rv-likes">' + (r.likes === 1 ? '1 like' : r.likes + ' likes') + '</span>' +
           '<button type="button" class="ig-rv-reply-btn" data-id="' + r.id + '">Reply</button>' +
-          (canEdit ? '<button type="button" class="ig-rv-edit" data-id="' + r.id + '">Edit</button>' : '') +
-          (canDel ? '<button type="button" class="ig-rv-del" data-id="' + r.id + '">Delete</button>' : '') +
-        '</div>';
-    }
-    return '<div class="ig-rv" data-id="' + r.id + '">' +
-      '<div class="ig-rv-av">' + AV_SVG + '</div>' +
-      '<div class="ig-rv-main">' +
-        main +
+        '</div>' +
         toggle +
-        '<div class="ig-rv-replies" data-id="' + r.id + '"' + (repsOpen ? '' : ' hidden') + '>' + reps.map(function (rp) { return replyHTML(rp, r.id); }).join("") + '</div>' +
+        '<div class="ig-rv-replies" data-id="' + r.id + '"' + (repsOpen ? '' : ' hidden') + '>' + reps.map(replyHTML).join("") + '</div>' +
         '<form class="ig-rv-replyform" data-id="' + r.id + '" hidden><input class="ig-rv-replyinput" type="text" placeholder="' + (isAdmin ? ("Reply as " + esc(cfg.adminName || "the store")) : "Add a reply…") + '" maxlength="300"><button type="submit" class="ig-rv-replysend">Send</button></form>' +
       '</div>' +
       '<button type="button" class="ig-rv-like' + (on ? ' is-on' : '') + '" data-id="' + r.id + '" aria-label="Like this review"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.7 9 1.6 5.6 4.6 4.6 7 3.8 9.3 5 12 8c2.7-3 5-4.2 7.4-3.4 3 1 3.9 4.4 2.6 7.1C19.5 16.3 12 21 12 21Z"/></svg></button>' +
@@ -1468,65 +1422,16 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     fbIncPath("/review_likes/" + encodeURIComponent(handle) + "/" + id, now ? 1 : -1);
     render();
   }
-  /* Delete / edit — owner can delete anything; authors can edit + delete their own. */
-  function focusEditor() { var ta = listEl.querySelector(".ig-rv-editinput"); if (ta) { try { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } catch (e) {} } }
-  function deleteReview(id) {
-    var rev = rvById(id); if (!rev) return;
-    if (!window.confirm("Delete this review? This can’t be undone.")) return;
-    var h = encodeURIComponent(handle);
-    fbDelete("/reviews/" + h + "/" + id); fbDelete("/review_likes/" + h + "/" + id); fbDelete("/review_replies/" + h + "/" + id);
-    reviews = reviews.filter(function (x) { return x.id !== id; });
-    if (isMyReview(id)) { jset(MINE_RV, ""); jset(RVDONE_KEY, false); }
-    editing = null; render();
-  }
-  function deleteReply(revId, id) {
-    var rev = rvById(revId); if (!rev) return;
-    if (!window.confirm("Delete this reply?")) return;
-    fbDelete("/review_replies/" + encodeURIComponent(handle) + "/" + revId + "/" + id);
-    rev.replies = rev.replies.filter(function (x) { return x.id !== id; });
-    rmMyReply(id); editing = null; render();
-  }
-  function saveEdit(kind, revId, id, txt) {
-    var h = encodeURIComponent(handle);
-    if (kind === "review") {
-      var rev = rvById(id); if (!rev) return; txt = txt.slice(0, 800);
-      fbPatch("/reviews/" + h + "/" + id, { text: txt, e: 1 }); rev.text = txt; rev.e = 1;
-    } else {
-      var rv2 = rvById(revId); if (!rv2) return; var rep = null, i;
-      for (i = 0; i < rv2.replies.length; i++) { if (rv2.replies[i].id === id) { rep = rv2.replies[i]; break; } }
-      if (!rep) return; txt = txt.slice(0, 300);
-      fbPatch("/review_replies/" + h + "/" + revId + "/" + id, { text: txt, e: 1 }); rep.text = txt; rep.e = 1;
-    }
-    editing = null; render();
-  }
   listEl.addEventListener("click", function (e) {
     var lk = e.target.closest && e.target.closest(".ig-rv-like");
     if (lk) { toggleReviewLike(lk.getAttribute("data-id")); return; }
-    var edb = e.target.closest && e.target.closest(".ig-rv-edit");
-    if (edb) { editing = { id: edb.getAttribute("data-id"), kind: "review" }; render(); focusEditor(); return; }
-    var redb = e.target.closest && e.target.closest(".ig-rv-repedit");
-    if (redb) { editing = { id: redb.getAttribute("data-id"), kind: "reply", rev: redb.getAttribute("data-rev") }; render(); focusEditor(); return; }
-    var ecb = e.target.closest && e.target.closest(".ig-rv-editcancel");
-    if (ecb) { editing = null; render(); return; }
-    var delb = e.target.closest && e.target.closest(".ig-rv-del");
-    if (delb) { deleteReview(delb.getAttribute("data-id")); return; }
-    var rdelb = e.target.closest && e.target.closest(".ig-rv-repdel");
-    if (rdelb) { deleteReply(rdelb.getAttribute("data-rev"), rdelb.getAttribute("data-id")); return; }
     var rb = e.target.closest && e.target.closest(".ig-rv-reply-btn");
     if (rb) { var f = listEl.querySelector('.ig-rv-replyform[data-id="' + rb.getAttribute("data-id") + '"]'); if (f) { f.hidden = !f.hidden; if (!f.hidden) { var inp = f.querySelector("input"); if (inp) inp.focus(); } } return; }
     var vr = e.target.closest && e.target.closest(".ig-rv-viewreplies");
     if (vr) { var id = vr.getAttribute("data-id"), rp = listEl.querySelector('.ig-rv-replies[data-id="' + id + '"]'), rev = rvById(id); if (rp && rev) { var show = rp.hidden; rp.hidden = !show; repliesOpen[id] = show; vr.textContent = "— " + (show ? "Hide" : "View") + " replies (" + rev.replies.length + ")"; } return; }
   });
   listEl.addEventListener("submit", function (e) {
-    var f = e.target; if (!f.classList) return;
-    if (f.classList.contains("ig-rv-editform")) {
-      e.preventDefault();
-      var eid = f.getAttribute("data-id"), kind = f.getAttribute("data-kind"), erev = f.getAttribute("data-rev");
-      var ta = f.querySelector(".ig-rv-editinput"), etxt = (ta.value || "").trim();
-      if (etxt.length < 1) { editing = null; render(); return; }
-      saveEdit(kind, erev, eid, etxt); return;
-    }
-    if (!f.classList.contains("ig-rv-replyform")) return;
+    var f = e.target; if (!f.classList || !f.classList.contains("ig-rv-replyform")) return;
     e.preventDefault();
     if (!fb) return;
     var id = f.getAttribute("data-id"), inp = f.querySelector("input"), text = (inp.value || "").trim();
@@ -1535,7 +1440,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     if (isAdmin) reply.admin = 1;
     fetch(fb + "/review_replies/" + encodeURIComponent(handle) + "/" + id + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(reply) })
       .then(function (r) { return r.json(); }).then(function (res) {
-        if (res && res.name) { addMyReply(res.name); var rev = rvById(id); if (rev) { rev.replies.push({ id: res.name, name: reply.name, text: reply.text, t: reply.t, a: isAdmin ? 1 : 0 }); } repliesOpen[id] = true; render(); }
+        if (res && res.name) { var rev = rvById(id); if (rev) { rev.replies.push({ id: res.name, name: reply.name, text: reply.text, t: reply.t, a: isAdmin ? 1 : 0 }); } repliesOpen[id] = true; render(); }
       }).catch(function () {});
   });
 
@@ -1573,7 +1478,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     fetch(fb + "/reviews/" + encodeURIComponent(handle) + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(review) })
       .then(function (r) { return r.json(); }).then(function (res) {
         submitBtn.disabled = false;
-        if (res && res.name) { jset(RVDONE_KEY, true); jset(MINE_RV, res.name); reviews.unshift({ id: res.name, name: review.name, rating: review.rating, text: review.text, t: review.t, v: review.v, e: 0, likes: 0, replies: [] }); expanded = false; render(); textEl.value = ""; autoGrow(); note("Thanks! Your review is posted."); }
+        if (res && res.name) { jset(RVDONE_KEY, true); reviews.unshift({ id: res.name, name: review.name, rating: review.rating, text: review.text, t: review.t, v: review.v, likes: 0, replies: [] }); expanded = false; render(); textEl.value = ""; autoGrow(); note("Thanks! Your review is posted."); }
         else { note("Couldn’t post right now — please try again.", false); }
       }).catch(function () { submitBtn.disabled = false; note("Couldn’t post right now — please try again.", false); });
   });
