@@ -1285,7 +1285,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   var starWrap = document.getElementById("igStarsPick"), starHint = document.getElementById("igStarHint"), chosenEl = document.getElementById("igRvChosen"), boxEl = document.getElementById("igRvBox");
   var RVDONE_KEY = "dyn_rvdone_" + handle;
   var reviews = [], expanded = false, pickRating = 0, panelOpen = false, repliesOpen = {};
-  var canReview = !cfg.verifiedOnly || cfg.purchased === true;
+  /* Anyone signed in can review. If "strict" (verifiedOnly) is on, a purchase is
+     also required. Buyers always get the green ✓ Verified badge either way. */
+  var canReview = cfg.loggedIn === true && (!cfg.verifiedOnly || cfg.purchased === true);
 
   /* ===== Owner (admin) mode =====
      Lets YOU — the store owner — reply to reviews with a distinct blue check,
@@ -1474,11 +1476,12 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     if (panelOpen) { try { panel.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} }
   });
 
-  /* Verified-buyers gate: hide the form unless this shopper is allowed to review. */
+  /* Review gate: reviewers must be signed in (so we have a real name and can
+     badge buyers). In strict mode a purchase is also required. */
   if (!canReview) {
     form.style.display = "none";
     var gate = document.createElement("div"); gate.className = "ig-rv-gate";
-    if (!cfg.loggedIn) { gate.innerHTML = 'Only verified buyers can review. <a href="' + esc(cfg.loginUrl || "/account/login") + '">Log in</a> to your account to leave one.'; }
+    if (!cfg.loggedIn) { gate.innerHTML = 'Please <a href="' + esc(cfg.loginUrl || "/account/login") + '">log in</a> to your account to leave a review.'; }
     else { gate.textContent = "Only customers who bought this product can review it."; }
     panel.appendChild(gate);
   }
@@ -1552,7 +1555,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "header", "content": "Reviews / social ⭐" },
     { "type": "paragraph", "content": "An Instagram-style action bar appears under the trust badges: Like, Comment, Share and Save (wishlist), with the count next to each icon. The Comment count and the reviews shown when you tap it come from Judge.me (make sure Judge.me is installed and its widget is enabled). Like and Share counts are numbers you set below." },
     { "type": "checkbox", "id": "show_social", "label": "Show the Instagram action bar", "default": true },
-    { "type": "checkbox", "id": "reviews_verified_only", "label": "Only verified buyers can review", "default": true, "info": "When on, only a shopper who is logged in AND has ordered this product can write a review (reviews are marked “Verified”). Turn off to let anyone review." },
+    { "type": "checkbox", "id": "reviews_verified_only", "label": "Strict: only buyers can review", "default": false, "info": "Reviewers must always be signed in. When OFF (recommended), any signed-in shopper can leave a review, and those who bought this product get a green ✓ Verified badge. When ON, only shoppers who bought this product can review at all." },
     { "type": "number", "id": "like_base", "label": "Like count (starting number)", "default": 144 },
     { "type": "number", "id": "share_base", "label": "Share count (starting number, 0 = hide)", "default": 0 },
     { "type": "text", "id": "firebase_db_url", "label": "Firebase database URL (for REAL shared counts)", "info": "Optional. Paste your Firebase Realtime Database URL (e.g. https://your-project-default-rtdb.firebaseio.com) to make Likes and Shares real numbers shared across all visitors, counting up from the starting numbers above. Leave blank to just use the numbers above." },
