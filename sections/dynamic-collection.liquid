@@ -210,6 +210,14 @@
   .dyn-col .dc-save.just-saved { animation: dcSavePop .34s ease; }
   @keyframes dcSavePop { 0% { transform: scale(1); } 40% { transform: scale(1.28); } 100% { transform: scale(1); } }
 
+  /* Badges are clickable to filter the grid; a chip shows the active filter. */
+  .dyn-col .dc-badges .dc-badge { cursor: pointer; }
+  .dyn-col .dc-badge-chip { display: flex; align-items: center; gap: 8px; width: max-content; margin: 0 auto 16px;
+    padding: 6px 8px 6px 15px; border-radius: 999px; background: var(--bg-panel); color: var(--ink); font-size: 13.5px; font-weight: 500; }
+  .dyn-col .dc-badge-chip-x { border: 0; cursor: pointer; width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(0,0,0,0.08); color: var(--ink-soft); font-size: 11px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+  .dyn-col .dc-badge-chip-x:hover { background: rgba(0,0,0,0.14); color: var(--ink); }
+
   /* macOS "traffic-light" style: on desktop the badges collapse to small
      coloured dots and expand into liquid-glass pills when the card is hovered.
      Touch devices keep the full labels (no hover). */
@@ -457,7 +465,7 @@
           {%- if product.images.size > 1 -%}{%- assign img2 = product.images[1] -%}{%- endif -%}
 
           {%- capture card_search -%}{{ product.title }} {{ product.type }} {{ product.vendor }} {% for t in product.tags %}{{ t }} {% endfor %}{% for opt in product.options_with_values %}{{ opt.name }} {% for v in opt.values %}{{ v }} {% endfor %}{% endfor %}{%- endcapture -%}
-          <div class="dc-card" data-cat="{{ card_cat | strip }}" data-search="{{ card_search | downcase | strip_newlines | escape }}">
+          <div class="dc-card" data-cat="{{ card_cat | strip }}" data-flags="{% if is_new %}new {% endif %}{% if is_best %}best {% endif %}{% if on_sale %}sale {% endif %}" data-search="{{ card_search | downcase | strip_newlines | escape }}">
             <div class="dc-media-wrap">
             <a class="dc-media" href="{{ product.url }}">
               <div class="dc-badges">
@@ -631,6 +639,9 @@
   // Combined filter: current category tab AND the live search query.
   var currentCat = "__all";
   var query = "";
+  var badgeFilter = null; // 'new' | 'best' | 'sale' — clicking a badge filters to it
+  var badgeLabels = { "new": "New", "best": "Best sellers", "sale": "On sale" };
+  var badgeChip = null, badgeChipTxt = null;
   function applyFilters() {
     // Landing mode: shrink + raise the logo/search once the shopper searches.
     if (hideUntilSearch) root.classList.toggle("dc-searching", query.length > 0);
@@ -655,10 +666,20 @@
       var cc = " " + (c.getAttribute("data-cat") || "") + " ";
       var okCat = currentCat === "__all" || cc.indexOf(" " + currentCat + " ") >= 0;
       var okQ = !query || queryMatch(query, c.getAttribute("data-search") || "");
-      var match = searching ? okQ : okCat;
+      var match;
+      if (badgeFilter) {
+        var fl = " " + (c.getAttribute("data-flags") || "") + " ";
+        match = fl.indexOf(" " + badgeFilter + " ") >= 0 && okQ;
+      } else {
+        match = searching ? okQ : okCat;
+      }
       c.style.display = match ? "" : "none";
       if (match) visible.push(c);
     });
+    if (badgeChip) {
+      if (badgeFilter) { badgeChip.hidden = false; if (badgeChipTxt) badgeChipTxt.textContent = badgeLabels[badgeFilter] || badgeFilter; }
+      else { badgeChip.hidden = true; }
+    }
     if (noRes) noRes.style.display = visible.length ? "none" : "block";
     grid.scrollLeft = 0;
     reveal(visible);
@@ -673,8 +694,36 @@
     // Clicking a tab clears the search and just opens that category.
     if (searchEl) searchEl.value = "";
     query = "";
+    badgeFilter = null;
     currentCat = btn.getAttribute("data-cat"); applyFilters();
   });
+
+  // A small chip appears while a badge filter is active, so the shopper can clear it.
+  (function () {
+    var anchor = shelfWrap || tabsWrap || grid;
+    if (!anchor || !anchor.parentNode) return;
+    badgeChip = document.createElement("div");
+    badgeChip.className = "dc-badge-chip"; badgeChip.hidden = true;
+    badgeChip.innerHTML = '<span class="dc-badge-chip-txt"></span><button type="button" class="dc-badge-chip-x" aria-label="Clear filter">&#10005;</button>';
+    anchor.parentNode.insertBefore(badgeChip, anchor);
+    badgeChipTxt = badgeChip.querySelector(".dc-badge-chip-txt");
+    badgeChip.querySelector(".dc-badge-chip-x").addEventListener("click", function () { badgeFilter = null; applyFilters(); });
+  })();
+
+  // Clicking a badge on a card filters the grid to that badge instead of opening the product.
+  if (grid) grid.addEventListener("click", function (e) {
+    var badge = e.target.closest ? e.target.closest(".dc-badge") : null;
+    if (!badge) return;
+    var flag = badge.classList.contains("dc-badge-new") ? "new"
+             : badge.classList.contains("dc-badge-best") ? "best"
+             : badge.classList.contains("dc-badge-sale") ? "sale" : null;
+    if (!flag) return;
+    e.preventDefault(); e.stopPropagation();
+    badgeFilter = (badgeFilter === flag) ? null : flag;
+    if (searchEl) searchEl.value = "";
+    query = ""; currentCat = "__all";
+    applyFilters();
+  }, true);
 
   // Live search. Normally filters the on-page grid as the shopper types. If a
   // "results page" URL is set, Enter/submit opens that page with the query.
@@ -684,6 +733,7 @@
     searchEl.addEventListener("input", function () {
       if (resultsUrl) return; // redirect mode: don't filter here
       query = searchEl.value.trim().toLowerCase();
+      if (query) badgeFilter = null; // typing takes over from a badge filter
       applyFilters();
     });
     if (resultsUrl) searchEl.addEventListener("keydown", function (e) {
