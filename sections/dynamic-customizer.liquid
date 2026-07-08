@@ -1065,7 +1065,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         <div class="ig-note" id="igNote" hidden></div>
         {% endraw %}
         {%- comment -%} Judge.me review widget (app-embed picks up this tag) — shown only when the comment icon is clicked. The review count is read from it for the comment icon. {%- endcomment -%}
-        <div class="ig-reviews-panel" id="igReviewsPanel" hidden>{% if dyn_product %}<div class="jdgm-widget jdgm-review-widget" data-id="{{ dyn_product.id }}"></div>{% endif %}</div>
+        <div class="ig-reviews-panel" id="igReviewsPanel">{% if dyn_product %}<div class="jdgm-widget jdgm-review-widget" data-id="{{ dyn_product.id }}"></div>{% endif %}</div>
         {% raw %}
       </section>
     </section>
@@ -1187,13 +1187,13 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     try { if (w) { new MutationObserver(updatePlaceholder).observe(w, { childList: true, subtree: true }); } } catch (e) {}
     var t = 0; (function poll() { updatePlaceholder(); if (t++ < 40) setTimeout(poll, 500); })();
   }
+  /* Reviews are always rendered (so Judge.me reliably loads them); the comment
+     icon smoothly scrolls down to them. */
   commentBtn.addEventListener("click", function () {
     if (!panel) return;
-    var open = panel.hidden;
-    panel.hidden = !open;
-    commentBtn.setAttribute("aria-expanded", open ? "true" : "false");
-    if (open) { try { panel.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {} watchWidget(); }
+    try { panel.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
   });
+  watchWidget(); // show a placeholder until Judge.me fills the widget, then clear it
 
   /* Real review count from Judge.me, shown next to the comment icon. Judge.me
      sets data-number-of-reviews on its widget once it has loaded. */
