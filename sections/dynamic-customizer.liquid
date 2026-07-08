@@ -1172,37 +1172,29 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
      loads the widget when it comes into view, so revealing it triggers the
      load. A placeholder shows only while the widget is genuinely empty, and it
      is cleared the instant Judge.me fills the widget (watched live). */
-  var widgetWatched = false;
-  function widgetContent() { var w = panel.querySelector(".jdgm-review-widget, .jdgm-rev-widg"); return w && (w.children.length > 0 || (w.textContent || "").trim().length > 0); }
+  /* Find Judge.me's review widget wherever it ends up on the page (our own
+     placeholder container, or a Judge.me app block placed elsewhere). */
+  function jdgmEl() { return document.querySelector(".jdgm-rev-widg, .jdgm-review-widget, .jdgm-all-reviews-rating"); }
+  function jdgmHasContent() { var w = jdgmEl(); return !!(w && (w.children.length > 0 || (w.textContent || "").trim().length > 0)); }
   function updatePlaceholder() {
     var ph = panel.querySelector(".ig-noreviews");
-    if (widgetContent()) { if (ph) ph.parentNode.removeChild(ph); }
+    if (jdgmHasContent()) { if (ph) ph.parentNode.removeChild(ph); }
     else if (!ph) { ph = document.createElement("div"); ph.className = "ig-noreviews"; ph.textContent = "No reviews yet — be the first to review this product!"; panel.appendChild(ph); }
   }
-  function watchWidget() {
-    if (widgetWatched) { updatePlaceholder(); return; }
-    widgetWatched = true;
-    var w = panel.querySelector(".jdgm-review-widget");
-    updatePlaceholder();
-    try { if (w) { new MutationObserver(updatePlaceholder).observe(w, { childList: true, subtree: true }); } } catch (e) {}
-    var t = 0; (function poll() { updatePlaceholder(); if (t++ < 40) setTimeout(poll, 500); })();
-  }
-  /* Reviews are always rendered (so Judge.me reliably loads them); the comment
-     icon smoothly scrolls down to them. */
-  commentBtn.addEventListener("click", function () {
-    if (!panel) return;
-    try { panel.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
-  });
-  watchWidget(); // show a placeholder until Judge.me fills the widget, then clear it
+  var t0 = 0; (function watch() { updatePlaceholder(); if (t0++ < 40) setTimeout(watch, 500); })();
 
-  /* Real review count from Judge.me, shown next to the comment icon. Judge.me
-     sets data-number-of-reviews on its widget once it has loaded. */
+  /* Comment icon — scroll to the reviews (wherever Judge.me rendered them). */
+  commentBtn.addEventListener("click", function () {
+    var w = jdgmEl() || panel;
+    try { w.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
+  });
+
+  /* Real review count from Judge.me for the comment icon. */
   function readReviewCount() {
-    var el = root.querySelector("[data-number-of-reviews]");
+    var el = document.querySelector("[data-number-of-reviews]");
     if (el) { var n = parseInt(el.getAttribute("data-number-of-reviews"), 10); if (!isNaN(n)) return n; }
-    var wid = panel && panel.querySelector(".jdgm-rev-widg");
-    if (wid && wid.getAttribute("data-number-of-reviews")) { var n2 = parseInt(wid.getAttribute("data-number-of-reviews"), 10); if (!isNaN(n2)) return n2; }
-    var t = (panel ? (panel.textContent || "") : "").replace(/,/g, "");
+    var w = jdgmEl();
+    var t = ((w && w.textContent) || "").replace(/,/g, "");
     var m = t.match(/(\d+)\s*review/i);
     if (m) { var n3 = parseInt(m[1], 10); if (!isNaN(n3)) return n3; }
     return null;
