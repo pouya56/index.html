@@ -484,11 +484,12 @@ button { font-family: inherit; cursor: pointer; }
 .ig-reviews-panel { margin-top: 16px; }
 .ig-rv-list { display: flex; flex-direction: column; gap: 16px; }
 .ig-rv { display: flex; gap: 11px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: var(--ink); }
-.ig-rv-av { width: 38px; height: 38px; flex: none; border-radius: 50%; padding: 2px; display: flex;
-  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-.ig-rv-av > span { width: 100%; height: 100%; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 15px; color: var(--ink); }
+/* Apple-style account icon: a grey circle with a person silhouette cropped by it. */
+.ig-rv-av { width: 38px; height: 38px; flex: none; border-radius: 50%; overflow: hidden; background: var(--panel); display: flex; align-items: flex-end; justify-content: center; }
+.ig-rv-av .ig-av-ic { width: 100%; height: 100%; display: block; color: #b0b3b8; }
 .ig-rv-av-sm { width: 30px; height: 30px; }
-.ig-rv-av-sm > span { font-size: 13px; }
+.ig-av-owner { background: #e3f0fb; }
+.ig-av-owner .ig-av-ic { color: #1d9bf0; }
 .ig-rv-main { flex: 1 1 auto; min-width: 0; }
 .ig-rv-cbody b { font-weight: 600; margin-right: 5px; }
 .ig-rv .ig-rvstars { color: #f5b301; font-size: 12px; letter-spacing: 1px; margin: 0 5px; }
@@ -514,13 +515,14 @@ button { font-family: inherit; cursor: pointer; }
 .ig-rv-gate { font-size: 13.5px; color: var(--ink-soft); padding: 6px 0; }
 .ig-rv-gate a { color: var(--accent); text-decoration: none; }
 .ig-rv-gate a:hover { text-decoration: underline; }
-/* Owner (store admin) — a distinct blue verified check on the owner's replies. */
-.ig-owner-badge { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: #1d9bf0; color: #fff; font-size: 10px; font-weight: 700; line-height: 1; margin: 0 5px 0 2px; vertical-align: middle; }
+/* Owner (store admin) — an X.com-style blue verified seal on the owner's replies. */
+.ig-owner-badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin: 0 4px 0 2px; vertical-align: middle; }
+.ig-x-badge { width: 100%; height: 100%; display: block; }
+.ig-x-badge .seal { fill: #1d9bf0; }
+.ig-x-badge .tick { fill: #fff; }
 .is-owner-reply .ig-rv-cbody b { color: #0a6ebd; }
-.ig-av-owner { background: #1d9bf0 !important; }
-.ig-av-owner > span { color: #1d9bf0; }
 .ig-owner-pill { display: flex; align-items: center; gap: 8px; margin: 12px 0 2px; padding: 8px 12px; border-radius: 12px; background: rgba(29,155,240,.1); color: #0a6ebd; font-size: 13px; font-weight: 600; }
-.ig-owner-pill .ig-owner-check { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: #1d9bf0; color: #fff; font-size: 10px; font-weight: 700; flex: none; }
+.ig-owner-pill .ig-owner-check { display: inline-flex; width: 18px; height: 18px; flex: none; }
 .ig-owner-off { margin-left: auto; background: none; border: 0; color: #0a6ebd; text-decoration: underline; cursor: pointer; font: inherit; font-size: 12px; padding: 0; }
 .ig-rv-empty { font-size: 14px; color: var(--ink-faint); }
 .ig-rv-more { margin-top: 10px; border: 0; background: none; color: var(--ink-faint); font: inherit; font-size: 13px; cursor: pointer; padding: 4px 0; }
@@ -1325,7 +1327,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     ownerPill.className = "ig-owner-pill"; ownerPill.hidden = !isAdmin;
     // Account-based owners are always owner on this account, so no "turn off" link.
     var off = cfg.owner ? "" : '<button type="button" class="ig-owner-off">turn off</button>';
-    ownerPill.innerHTML = '<span class="ig-owner-check" aria-hidden="true">&#10003;</span><span>Owner mode — your replies show a blue check as ' + esc(cfg.adminName || "the store") + '.</span>' + off;
+    ownerPill.innerHTML = '<span class="ig-owner-check" aria-hidden="true">' + OWNER_SVG + '</span><span>Owner mode — your replies show a blue check as ' + esc(cfg.adminName || "the store") + '.</span>' + off;
     var offBtn = ownerPill.querySelector(".ig-owner-off");
     if (offBtn) offBtn.addEventListener("click", function () { setAdmin(false); flashNote("Owner mode turned off on this device."); });
     if (panel && panel.parentNode) panel.parentNode.insertBefore(ownerPill, panel);
@@ -1348,6 +1350,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   function stars(n) { n = Math.max(0, Math.min(5, Math.round(n))); return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n); }
   function ago(t) { if (!t) return ""; var s = Math.floor((Date.now() - t) / 1000); if (s < 60) return "just now"; var m = Math.floor(s / 60); if (m < 60) return m + "m"; var h = Math.floor(m / 60); if (h < 24) return h + "h"; var d = Math.floor(h / 24); if (d < 7) return d + "d"; return Math.floor(d / 7) + "w"; }
   function initial(name) { name = (name || "").trim(); return name ? name.charAt(0).toUpperCase() : "?"; }
+  /* Apple-style account icon (person cropped by the circle). */
+  var AV_SVG = '<svg class="ig-av-ic" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="13.6" r="6.1" fill="currentColor"/><circle cx="18" cy="35" r="11" fill="currentColor"/></svg>';
+  /* X.com-style verified seal (blue scalloped badge with a white check). */
+  var OWNER_SVG = '<svg class="ig-x-badge" viewBox="0 0 24 24" aria-hidden="true"><path class="seal" d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.68.88-3.34 2.19c-1.39-.46-2.9-.2-3.91.81s-1.27 2.52-.81 3.91c-1.31.66-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.34c-.46 1.39-.2 2.91.81 3.91s2.52 1.27 3.91.81c.66 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.66 2.19-1.91 2.19-3.34z"/><path class="tick" d="M10.06 15.35 6.7 11.99l1.32-1.32 2.04 2.04 5.22-5.22 1.32 1.33z"/></svg>';
   function fbGet(path) { return fetch(fb + path).then(function (r) { return r.json(); }).catch(function () { return null; }); }
   function fbIncPath(path, delta) { if (!fb) return; try { fetch(fb + path + ".json", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ".sv": { "increment": delta } }) }).catch(function () {}); } catch (e) {} }
   function rvById(id) { for (var i = 0; i < reviews.length; i++) { if (reviews[i].id === id) return reviews[i]; } return null; }
@@ -1372,17 +1378,17 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
   function replyHTML(rp) {
     var owner = rp.a ? 1 : 0;
-    var badge = owner ? '<span class="ig-owner-badge" title="Store owner" aria-label="Store owner">&#10003;</span>' : '';
-    return '<div class="ig-rv ig-rv-reply' + (owner ? ' is-owner-reply' : '') + '"><div class="ig-rv-av ig-rv-av-sm' + (owner ? ' ig-av-owner' : '') + '"><span>' + esc(initial(rp.name)) + '</span></div>' +
+    var badge = owner ? '<span class="ig-owner-badge" title="Store owner" aria-label="Store owner">' + OWNER_SVG + '</span>' : '';
+    return '<div class="ig-rv ig-rv-reply' + (owner ? ' is-owner-reply' : '') + '"><div class="ig-rv-av ig-rv-av-sm' + (owner ? ' ig-av-owner' : '') + '">' + AV_SVG + '</div>' +
       '<div class="ig-rv-main"><div class="ig-rv-cbody"><b>' + esc(rp.name) + '</b>' + badge + esc(rp.text) + '</div>' +
       '<div class="ig-rv-meta"><span>' + ago(rp.t) + '</span></div></div></div>';
   }
   function cardHTML(r) {
-    var vb = r.v ? '<span class="ig-rv-verified">✓ Verified</span>' : '';
+    var vb = r.v ? '<span class="ig-rv-verified">✓ Purchased</span>' : '';
     var on = likedReview(r.id), reps = r.replies || [], repsOpen = !!repliesOpen[r.id];
     var toggle = reps.length ? '<button type="button" class="ig-rv-viewreplies" data-id="' + r.id + '">— ' + (repsOpen ? 'Hide' : 'View') + ' replies (' + reps.length + ')</button>' : '';
     return '<div class="ig-rv" data-id="' + r.id + '">' +
-      '<div class="ig-rv-av"><span>' + esc(initial(r.name)) + '</span></div>' +
+      '<div class="ig-rv-av">' + AV_SVG + '</div>' +
       '<div class="ig-rv-main">' +
         '<div class="ig-rv-cbody"><b>' + esc(r.name) + '</b>' + vb + '<span class="ig-rvstars">' + stars(r.rating) + '</span> ' + esc(r.text) + '</div>' +
         '<div class="ig-rv-meta">' +
@@ -1570,7 +1576,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "header", "content": "Reviews / social ⭐" },
     { "type": "paragraph", "content": "An Instagram-style action bar appears under the trust badges: Like, Comment, Share and Save (wishlist), with the count next to each icon. The Comment count and the reviews shown when you tap it come from Judge.me (make sure Judge.me is installed and its widget is enabled). Like and Share counts are numbers you set below." },
     { "type": "checkbox", "id": "show_social", "label": "Show the Instagram action bar", "default": true },
-    { "type": "paragraph", "content": "Reviews (with a star rating) can only be written by customers who bought this product — they get a green ✓ Verified badge, and each buyer can review once. Any signed-in shopper can still reply to reviews." },
+    { "type": "paragraph", "content": "Reviews (with a star rating) can only be written by customers who bought this product — they get a green ✓ Purchased badge, and each buyer can review once. Any signed-in shopper can still reply to reviews." },
     { "type": "number", "id": "like_base", "label": "Like count (starting number)", "default": 144 },
     { "type": "number", "id": "share_base", "label": "Share count (starting number, 0 = hide)", "default": 0 },
     { "type": "text", "id": "firebase_db_url", "label": "Firebase database URL (for REAL shared counts)", "info": "Optional. Paste your Firebase Realtime Database URL (e.g. https://your-project-default-rtdb.firebaseio.com) to make Likes and Shares real numbers shared across all visitors, counting up from the starting numbers above. Leave blank to just use the numbers above." },
