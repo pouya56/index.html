@@ -294,6 +294,21 @@
   .dyn-hero .dh-badge.dh-badge-best svg { width: 11px; height: 11px; fill: currentColor; }
   .dyn-hero .dh-badge.dh-badge-new { background: #1a7f37; color: #fff; }
 
+  /* Instagram-style save (bookmark) button, bottom-right of the image. */
+  .dyn-hero .dh-media-wrap { position: relative; }
+  .dyn-hero .dh-save { position: absolute; right: 10px; bottom: 10px; z-index: 3;
+    width: 38px; height: 38px; border-radius: 50%; border: 0; cursor: pointer; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center; color: var(--ink);
+    background: rgba(255,255,255,0.7); -webkit-backdrop-filter: blur(10px) saturate(1.4); backdrop-filter: blur(10px) saturate(1.4);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.16), inset 0 0 0 0.5px rgba(255,255,255,0.6);
+    transition: transform .15s ease, background .2s ease; -webkit-tap-highlight-color: transparent; }
+  .dyn-hero .dh-save:hover { background: rgba(255,255,255,0.92); }
+  .dyn-hero .dh-save:active { transform: scale(0.9); }
+  .dyn-hero .dh-save svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: fill .2s ease; }
+  .dyn-hero .dh-save.is-saved svg { fill: currentColor; }
+  .dyn-hero .dh-save.just-saved { animation: dhSavePop .34s ease; }
+  @keyframes dhSavePop { 0% { transform: scale(1); } 40% { transform: scale(1.28); } 100% { transform: scale(1); } }
+
   /* macOS "traffic-light" style: on desktop the badges collapse to small
      coloured dots, and expand into liquid-glass pills when the card is hovered.
      Touch devices keep the full labels (no hover). */
@@ -314,6 +329,9 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); }
     .dyn-hero .dh-card:hover .dh-badge.dh-badge-soldout { color: var(--ink-soft); box-shadow: inset 0 0 0 1px var(--line); }
     .dyn-hero .dh-card:hover .dh-badge svg { width: 11px; opacity: 1; margin-right: 3px; }
+    /* The Save X% badge stays a full pill even without hover (New & Best stay dots). */
+    .dyn-hero .dh-badges .dh-badge.dh-badge-sale { max-width: 240px; height: 24px; padding: 0 11px; color: #fff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 1px 2px rgba(0,0,0,0.18); }
   }
 
   .dyn-hero .dh-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
@@ -1081,6 +1099,7 @@
 
           {%- capture card_search -%}{{ product.title }} {{ product.type }} {{ product.vendor }} {% for t in product.tags %}{{ t }} {% endfor %}{% for opt in product.options_with_values %}{{ opt.name }} {% for v in opt.values %}{{ v }} {% endfor %}{% endfor %}{%- endcapture -%}
           <div class="dh-card" data-cat="{{ card_cat | strip }}" data-search="{{ card_search | downcase | strip_newlines | escape }}">
+            <div class="dh-media-wrap">
             <a class="dh-media" href="{{ product.url }}">
               <div class="dh-badges">
                 {%- if is_new -%}
@@ -1105,6 +1124,15 @@
                 {{ 'product-1' | placeholder_svg_tag: 'dh-img-1 dh-ph' }}
               {%- endif -%}
             </a>
+            <button type="button" class="dh-save" aria-label="Save to wishlist" aria-pressed="false"
+              data-wl-id="{{ product.handle }}"
+              data-wl-title="{{ product.title | escape }}"
+              data-wl-url="{{ product.url }}"
+              data-wl-image="{{ product.featured_image | image_url: width: 400 }}"
+              data-wl-price="{{ product.price | money }}">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1Z"/></svg>
+            </button>
+            </div>
 
             <div class="dh-body">
               {%- if section.settings.show_vendor and product.vendor != blank -%}
@@ -1554,6 +1582,43 @@
     });
     if (img1) card.addEventListener("mouseleave", function () { if (baseSrc) img1.src = baseSrc; });
   });
+})();
+</script>
+
+<script>
+/* Instagram-style save button -> browser wishlist (same "dyn_wishlist" list the
+   wishlist page and header drawer use). */
+(function () {
+  var KEY = "dyn_wishlist";
+  var btns = document.querySelectorAll(".dyn-hero .dh-save");
+  if (!btns.length) return;
+  function read() { try { var a = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function write(l) { try { localStorage.setItem(KEY, JSON.stringify(l)); } catch (e) {} try { window.dispatchEvent(new CustomEvent("dyn-wishlist-change")); } catch (e) {} }
+  function has(id) { return read().some(function (x) { return String(x.id) === String(id); }); }
+  function paint() {
+    btns.forEach(function (b) {
+      var on = has(b.getAttribute("data-wl-id"));
+      b.classList.toggle("is-saved", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.setAttribute("aria-label", on ? "Saved — remove from wishlist" : "Save to wishlist");
+    });
+  }
+  btns.forEach(function (b) {
+    b.addEventListener("click", function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var id = b.getAttribute("data-wl-id"), l = read(), i = -1, k;
+      for (k = 0; k < l.length; k++) { if (String(l[k].id) === String(id)) { i = k; break; } }
+      if (i >= 0) { l.splice(i, 1); }
+      else {
+        l.unshift({ id: id, title: b.getAttribute("data-wl-title"), url: b.getAttribute("data-wl-url"), image: b.getAttribute("data-wl-image"), price: b.getAttribute("data-wl-price") });
+        b.classList.remove("just-saved"); void b.offsetWidth; b.classList.add("just-saved");
+      }
+      write(l); paint();
+    });
+  });
+  window.addEventListener("dyn-wishlist-change", paint);
+  window.addEventListener("storage", function (e) { if (e.key === KEY) paint(); });
+  paint();
 })();
 </script>
 
