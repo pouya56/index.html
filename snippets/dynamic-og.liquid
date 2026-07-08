@@ -1,0 +1,40 @@
+{%- comment -%}
+  dynamic-og — social share preview (Open Graph + Twitter Cards) for product pages.
+
+  Makes shared product links show a BIG card with the product's photo, name and
+  price (like Amazon) instead of a tiny link with a compass icon.
+
+  HOW TO INSTALL (one line):
+    1. Online Store > Themes > ... > Edit code.
+    2. Under "Snippets", click "Add a new snippet", name it exactly: dynamic-og
+       and paste this whole file in, then Save.
+    3. Under "Layout", open theme.liquid. Find the </head> tag near the top and
+       add this line just BEFORE it, then Save:
+           {% render 'dynamic-og' %}
+
+  The product must have a featured image (Products > [product] > Media) for the
+  photo to appear.
+{%- endcomment -%}
+{%- if request.page_type == 'product' and product -%}
+  {%- assign og_image = product.featured_image | default: product.images.first -%}
+  {%- if og_image -%}
+    {%- assign og_image_url = og_image | image_url: width: 1200, height: 1200, crop: 'center' -%}
+    {%- unless og_image_url contains '://' -%}{%- assign og_image_url = og_image_url | prepend: 'https:' -%}{%- endunless -%}
+  {%- endif -%}
+  <meta property="og:type" content="product">
+  <meta property="og:title" content="{{ product.title | escape }}">
+  <meta property="og:description" content="{{ product.description | default: shop.description | strip_html | truncate: 200 | escape }}">
+  <meta property="og:url" content="{{ shop.url }}{{ product.url }}">
+  <meta property="og:site_name" content="{{ shop.name | escape }}">
+  {%- if og_image_url -%}
+  <meta property="og:image" content="{{ og_image_url }}">
+  <meta property="og:image:secure_url" content="{{ og_image_url }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="1200">
+  <meta property="og:image:alt" content="{{ product.title | escape }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="{{ og_image_url }}">
+  {%- endif -%}
+  <meta name="twitter:title" content="{{ product.title | escape }}">
+  <meta name="twitter:description" content="{{ product.description | default: shop.description | strip_html | truncate: 200 | escape }}">
+{%- endif -%}
