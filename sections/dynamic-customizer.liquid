@@ -450,16 +450,30 @@ button { font-family: inherit; cursor: pointer; }
 .ig-save.is-on svg { fill: var(--ink); }
 .ig-note { font-size: 12.5px; color: #1a7f37; margin-top: 10px; }
 .ig-jdgm-badge { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.ig-reviews-panel { margin-top: 18px; }
-.ig-noreviews { font-size: 14px; color: var(--ink-faint); padding: 6px 0 2px; }
-/* Tidy Judge.me's widget so it matches the store look once moved up here. */
-.ig-reviews-panel .jdgm-rev-widg__title { font-size: 19px; font-weight: 600; text-align: left; letter-spacing: -0.01em; }
-.ig-reviews-panel .jdgm-rev-widg__summary { text-align: left; }
-.ig-reviews-panel .jdgm-write-rev-link,
-.ig-reviews-panel .jdgm-all-reviews__button,
-.ig-reviews-panel .jdgm-btn { background: var(--ink) !important; border-color: var(--ink) !important; color: #fff !important;
-  border-radius: 999px !important; font-weight: 600 !important; letter-spacing: 0 !important; }
-.ig-reviews-panel .jdgm-star { color: #f5b301 !important; }
+.ig-rating { display: flex; align-items: center; gap: 6px; margin: 10px 0 2px; font-size: 13px; color: var(--ink-faint); }
+.ig-rating .ig-rstars { color: #f5b301; letter-spacing: 1px; font-size: 14px; }
+.ig-reviews-panel { margin-top: 16px; }
+.ig-rv-list { display: flex; flex-direction: column; gap: 13px; }
+.ig-rv { font-size: 14px; line-height: 1.45; color: var(--ink); }
+.ig-rv b { font-weight: 600; margin-right: 6px; }
+.ig-rv .ig-rvstars { color: #f5b301; font-size: 12px; letter-spacing: 1px; margin-left: 2px; }
+.ig-rv .ig-rvtime { display: block; font-size: 11px; color: var(--ink-faint); margin-top: 3px; }
+.ig-rv-empty { font-size: 14px; color: var(--ink-faint); }
+.ig-rv-more { margin-top: 10px; border: 0; background: none; color: var(--ink-faint); font: inherit; font-size: 13px; cursor: pointer; padding: 4px 0; }
+.ig-rv-more:hover { color: var(--ink); }
+.ig-rv-form { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+.ig-rv-ftitle { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.ig-stars-pick { display: flex; gap: 2px; margin-bottom: 9px; }
+.ig-star-pick { border: 0; background: none; cursor: pointer; font-size: 24px; line-height: 1; color: var(--line); padding: 0 1px; transition: color .12s ease; }
+.ig-star-pick.on { color: #f5b301; }
+.ig-rv-name, .ig-rv-text { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 9px 13px; font: inherit; font-size: 14px; background: var(--bg); color: var(--ink); margin-bottom: 9px; box-sizing: border-box; }
+.ig-rv-text { resize: vertical; min-height: 44px; }
+.ig-rv-name:focus, .ig-rv-text:focus { outline: none; border-color: var(--accent); }
+.ig-rv-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.ig-rv-submit { height: 42px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--ink); color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ig-rv-submit:hover { opacity: .9; }
+.ig-rv-submit:disabled { opacity: .5; cursor: default; }
+.ig-rv-note { font-size: 12.5px; margin-top: 9px; color: #1a7f37; }
 
 .modal-root { position: fixed; inset: 0; z-index: 9990; display: none; }
 
@@ -1071,10 +1085,26 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
           </button>
         </div>
         <div class="ig-note" id="igNote" hidden></div>
-        {% endraw %}
-        {%- comment -%} Judge.me review widget (app-embed picks up this tag) — shown only when the comment icon is clicked. The review count is read from it for the comment icon. {%- endcomment -%}
-        <div class="ig-reviews-panel" id="igReviewsPanel">{% if dyn_product %}<div class="jdgm-widget jdgm-review-widget" data-id="{{ dyn_product.id }}"></div>{% endif %}</div>
-        {% raw %}
+        <div class="ig-rating" id="igRating" hidden></div>
+        <div class="ig-reviews-panel" id="igReviewsPanel" hidden>
+          <div class="ig-rv-list" id="igRvList"></div>
+          <button type="button" class="ig-rv-more" id="igRvMore" hidden></button>
+          <form class="ig-rv-form" id="igRvForm" novalidate>
+            <div class="ig-rv-ftitle">Write a review</div>
+            <div class="ig-stars-pick" id="igStarsPick" role="radiogroup" aria-label="Your rating">
+              <button type="button" class="ig-star-pick" data-v="1" aria-label="1 star">&#9733;</button>
+              <button type="button" class="ig-star-pick" data-v="2" aria-label="2 stars">&#9733;</button>
+              <button type="button" class="ig-star-pick" data-v="3" aria-label="3 stars">&#9733;</button>
+              <button type="button" class="ig-star-pick" data-v="4" aria-label="4 stars">&#9733;</button>
+              <button type="button" class="ig-star-pick" data-v="5" aria-label="5 stars">&#9733;</button>
+            </div>
+            <input class="ig-rv-name" id="igRvName" type="text" placeholder="Your name (optional)" maxlength="60" autocomplete="name">
+            <textarea class="ig-rv-text" id="igRvText" placeholder="Share your thoughts about this product…" maxlength="800" rows="2"></textarea>
+            <input class="ig-rv-hp" id="igRvHp" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <button class="ig-rv-submit" id="igRvSubmit" type="submit">Post review</button>
+            <div class="ig-rv-note" id="igRvNote" hidden></div>
+          </form>
+        </div>
       </section>
     </section>
   </main>
@@ -1176,54 +1206,93 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   window.addEventListener("storage", function (e) { if (e.key === WL_KEY) paintSave(); });
   paintSave();
 
-  /* Comment icon — reveal / hide the Judge.me review widget. Judge.me lazy-
-     loads the widget when it comes into view, so revealing it triggers the
-     load. A placeholder shows only while the widget is genuinely empty, and it
-     is cleared the instant Judge.me fills the widget (watched live). */
-  /* Judge.me renders its review widget as its own block lower on the page.
-     Move that rendered widget up into our panel (right under the action bar)
-     so the reviews sit with the Instagram bar instead of at the bottom. */
-  function jdgmEl() { return document.querySelector(".jdgm-rev-widg, .jdgm-review-widget, .jdgm-all-reviews-rating"); }
-  var relocated = false;
-  function moveJdgmIn() {
-    if (relocated) return;
-    var all = document.querySelectorAll(".jdgm-review-widget, .jdgm-rev-widg");
-    for (var i = 0; i < all.length; i++) {
-      var el = all[i];
-      if (!panel.contains(el) && (el.children.length > 0 || (el.textContent || "").trim())) {
-        panel.innerHTML = ""; panel.appendChild(el); relocated = true; return;
-      }
-    }
-  }
-  function setPlaceholder() {
-    var ph = panel.querySelector(".ig-noreviews");
-    var loaded = relocated && (panel.textContent || "").trim().length > 0;
-    if (loaded) { if (ph) ph.parentNode.removeChild(ph); }
-    else if (!ph) { ph = document.createElement("div"); ph.className = "ig-noreviews"; ph.textContent = "Loading reviews…"; panel.appendChild(ph); }
-  }
-  var t0 = 0; (function watch() { moveJdgmIn(); setPlaceholder(); if (t0++ < 60) setTimeout(watch, 400); })();
+  /* ===== Custom reviews (stored in your Firebase, shared by all visitors) ===== */
+  var ratingEl = document.getElementById("igRating");
+  var listEl = document.getElementById("igRvList"), moreBtn = document.getElementById("igRvMore");
+  var form = document.getElementById("igRvForm"), nameEl = document.getElementById("igRvName"), textEl = document.getElementById("igRvText");
+  var hpEl = document.getElementById("igRvHp"), submitBtn = document.getElementById("igRvSubmit"), rvNote = document.getElementById("igRvNote");
+  var starWrap = document.getElementById("igStarsPick");
+  var RVDONE_KEY = "dyn_rvdone_" + handle;
+  var reviews = [], expanded = false, pickRating = 5, panelOpen = false;
 
-  /* Comment icon — scroll to the reviews (now under the action bar). */
-  commentBtn.addEventListener("click", function () {
-    try { panel.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function stars(n) { n = Math.max(0, Math.min(5, Math.round(n))); return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n); }
+  function ago(t) { if (!t) return ""; var s = Math.floor((Date.now() - t) / 1000); if (s < 60) return "just now"; var m = Math.floor(s / 60); if (m < 60) return m + "m ago"; var h = Math.floor(m / 60); if (h < 24) return h + "h ago"; var d = Math.floor(h / 24); if (d < 7) return d + "d ago"; return Math.floor(d / 7) + "w ago"; }
+
+  function rvLoad() {
+    if (!fb) { render(); return; }
+    try {
+      fetch(fb + "/reviews/" + encodeURIComponent(handle) + ".json").then(function (r) { return r.json(); }).then(function (d) {
+        var out = [];
+        if (d && typeof d === "object") { for (var k in d) { if (d.hasOwnProperty(k) && d[k]) { var r = d[k]; out.push({ name: r.name || "Anonymous", rating: parseInt(r.rating, 10) || 5, text: r.text || "", t: parseInt(r.t, 10) || 0 }); } } }
+        out.sort(function (a, b) { return b.t - a.t; });
+        reviews = out; render();
+      }).catch(function () { render(); });
+    } catch (e) { render(); }
+  }
+  function render() {
+    var n = reviews.length;
+    commentCount.textContent = n > 0 ? n : "";
+    if (n) {
+      var sum = 0; reviews.forEach(function (r) { sum += r.rating; });
+      var avg = sum / n;
+      ratingEl.hidden = false;
+      ratingEl.innerHTML = '<span class="ig-rstars">' + stars(avg) + '</span> ' + avg.toFixed(1) + ' · ' + n + (n === 1 ? ' review' : ' reviews');
+    } else { ratingEl.hidden = true; }
+    var show = expanded ? reviews : reviews.slice(0, 3);
+    if (!n) { listEl.innerHTML = '<div class="ig-rv-empty">No reviews yet — be the first to review this product!</div>'; }
+    else {
+      listEl.innerHTML = show.map(function (r) {
+        return '<div class="ig-rv"><b>' + esc(r.name) + '</b><span class="ig-rvstars">' + stars(r.rating) + '</span>' + esc(r.text) + (r.t ? '<span class="ig-rvtime">' + ago(r.t) + '</span>' : '') + '</div>';
+      }).join("");
+    }
+    if (n > 3) { moreBtn.hidden = false; moreBtn.textContent = expanded ? "Show less" : ("View all " + n + " reviews"); } else { moreBtn.hidden = true; }
+  }
+  moreBtn.addEventListener("click", function () { expanded = !expanded; render(); });
+
+  /* Star picker */
+  function paintStars() { Array.prototype.forEach.call(starWrap.children, function (b, i) { b.classList.toggle("on", i < pickRating); }); }
+  Array.prototype.forEach.call(starWrap.children, function (b) { b.addEventListener("click", function () { pickRating = parseInt(b.getAttribute("data-v"), 10) || 5; paintStars(); }); });
+  paintStars();
+
+  function note(msg, ok) { rvNote.textContent = msg; rvNote.style.color = ok === false ? "#c0392b" : "#1a7f37"; rvNote.hidden = false; }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (hpEl && hpEl.value) return;                 // honeypot: silently drop bots
+    if (jget(RVDONE_KEY, false)) { note("You’ve already reviewed this product. Thank you!", false); return; }
+    var text = (textEl.value || "").trim();
+    if (text.length < 3) { note("Please write a little more.", false); textEl.focus(); return; }
+    if (!fb) { note("Reviews need the Firebase link set up first.", false); return; }
+    var review = { name: (nameEl.value || "").trim().slice(0, 60) || "Anonymous", rating: pickRating, text: text.slice(0, 800), t: Date.now() };
+    submitBtn.disabled = true; submitBtn.textContent = "Posting…";
+    try {
+      fetch(fb + "/reviews/" + encodeURIComponent(handle) + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(review) })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          submitBtn.disabled = false; submitBtn.textContent = "Post review";
+          if (res && res.name) {
+            jset(RVDONE_KEY, true);
+            reviews.unshift(review); expanded = false; render();
+            textEl.value = ""; pickRating = 5; paintStars();
+            note("Thanks! Your review is posted.");
+          } else { note("Couldn’t post right now — please try again.", false); }
+        })
+        .catch(function () { submitBtn.disabled = false; submitBtn.textContent = "Post review"; note("Couldn’t post right now — please try again.", false); });
+    } catch (x) { submitBtn.disabled = false; submitBtn.textContent = "Post review"; note("Couldn’t post right now — please try again.", false); }
   });
 
-  /* Real review count from Judge.me for the comment icon. */
-  function readReviewCount() {
-    var el = document.querySelector("[data-number-of-reviews]");
-    if (el) { var n = parseInt(el.getAttribute("data-number-of-reviews"), 10); if (!isNaN(n)) return n; }
-    var w = jdgmEl();
-    var t = ((w && w.textContent) || "").replace(/,/g, "");
-    var m = t.match(/(\d+)\s*review/i);
-    if (m) { var n3 = parseInt(m[1], 10); if (!isNaN(n3)) return n3; }
-    return null;
-  }
-  var tries = 0;
-  (function pollCount() {
-    var n = readReviewCount();
-    if (n != null) { commentCount.textContent = n > 0 ? n : ""; if (n > 0) return; }
-    if (tries++ < 60) setTimeout(pollCount, 500); // keep checking as Judge.me loads
-  })();
+  /* Comment icon — reveal / hide the reviews (we control rendering, so hiding
+     is fine and lazy loading is not an issue). */
+  commentBtn.addEventListener("click", function () {
+    panelOpen = !panelOpen;
+    panel.hidden = !panelOpen;
+    commentBtn.setAttribute("aria-expanded", panelOpen ? "true" : "false");
+    if (panelOpen) { try { panel.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} }
+  });
+
+  render(); rvLoad();
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) rvLoad(); });
 })();
 </script>
 
