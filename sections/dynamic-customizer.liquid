@@ -177,9 +177,9 @@
 {%- comment -%} Owner check: is the logged-in customer the account you named as admin? {%- endcomment -%}
 {%- assign dyn_owner = false -%}
 {%- if customer and customer.email and section.settings.admin_email != blank -%}
-  {%- assign _ae = section.settings.admin_email | downcase | strip -%}
-  {%- assign _ce = customer.email | downcase | strip -%}
-  {%- if _ce == _ae -%}{%- assign dyn_owner = true -%}{%- endif -%}
+  {%- assign dyn_admin_email = section.settings.admin_email | downcase | strip -%}
+  {%- assign dyn_customer_email = customer.email | downcase | strip -%}
+  {%- if dyn_customer_email == dyn_admin_email -%}{%- assign dyn_owner = true -%}{%- endif -%}
 {%- endif -%}
 <script type="application/json" id="dyn-social-config">
 {
