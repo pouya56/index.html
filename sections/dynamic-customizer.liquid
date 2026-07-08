@@ -1479,7 +1479,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     fetch(fb + "/reviews/" + encodeURIComponent(handle) + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(review) })
       .then(function (r) { return r.json(); }).then(function (res) {
         submitBtn.disabled = false;
-        if (res && res.name) { jset(RVDONE_KEY, true); reviews.unshift({ id: res.name, name: review.name, rating: review.rating, text: review.text, t: review.t, v: review.v, likes: 0, replies: [] }); expanded = false; render(); textEl.value = ""; autoGrow(); note("Thanks! Your review is posted."); }
+        if (res && res.name) { jset(RVDONE_KEY, true);
+          try { var mine = JSON.parse(localStorage.getItem("dyn_myreviews") || "[]"); if (!Array.isArray(mine)) mine = []; mine.push({ handle: handle, title: cfg.title || document.title, url: (cfg.url ? (location.origin + cfg.url) : location.href), rating: review.rating, text: review.text, t: review.t }); localStorage.setItem("dyn_myreviews", JSON.stringify(mine)); } catch (e) {}
+          reviews.unshift({ id: res.name, name: review.name, rating: review.rating, text: review.text, t: review.t, v: review.v, likes: 0, replies: [] }); expanded = false; render(); textEl.value = ""; autoGrow(); note("Thanks! Your review is posted."); }
         else { note("Couldn’t post right now — please try again.", false); }
       }).catch(function () { submitBtn.disabled = false; note("Couldn’t post right now — please try again.", false); });
   });

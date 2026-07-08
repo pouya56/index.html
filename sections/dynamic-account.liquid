@@ -1,0 +1,422 @@
+{%- comment -%}
+  Dynamic Account Dashboard — a tabbed customer account page.
+
+  Put this section on a page (e.g. create a page called "Account" so its address
+  is /pages/account) and point your account/menu link there. Deep-link a tab by
+  adding a hash, e.g. /pages/account#wishlist.
+
+  Tabs: Orders, Wishlist, Order tracking, Saved Designs, Saved Addresses,
+  Payment Methods, Reviews. Orders / tracking / addresses read your Shopify
+  customer data (shopper must be logged in). Wishlist / Saved Designs / Reviews
+  are saved in the shopper's browser (no app needed).
+{%- endcomment -%}
+
+<section class="dyn-acct" id="dynAcct" data-login="{{ routes.account_login_url }}">
+  <style>
+    #shopify-section-{{ section.id }} { background: {{ section.settings.page_bg | default: '#ffffff' }}; }
+    .dyn-acct {
+      --ink:#1d1d1f; --ink-soft:#6e6e73; --ink-faint:#86868b; --line:#e5e5ea; --line-soft:#f0f0f2;
+      --panel:#f5f5f7; --accent:#0071e3; --danger:#c0392b; --ok:#1a7f37;
+      --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      color:var(--ink); font-family:var(--font); -webkit-font-smoothing:antialiased;
+    }
+    .dyn-acct .da-wrap { max-width:1120px; margin:0 auto; padding:44px 22px 90px; display:grid; grid-template-columns:230px 1fr; gap:40px; align-items:start; }
+    .dyn-acct .da-nav { display:flex; flex-direction:column; gap:2px; position:sticky; top:24px; }
+    .dyn-acct .da-hi { font-size:19px; font-weight:600; margin-bottom:16px; letter-spacing:-0.01em; }
+    .dyn-acct .da-tab { text-align:left; border:0; background:none; cursor:pointer; font:inherit; font-size:15px; color:var(--ink-soft); padding:10px 14px; border-radius:10px; transition:background .15s,color .15s; }
+    .dyn-acct .da-tab:hover { background:var(--line-soft); color:var(--ink); }
+    .dyn-acct .da-tab.is-active { background:var(--ink); color:#fff; font-weight:500; }
+    .dyn-acct .da-logout { margin-top:14px; padding:10px 14px; font-size:14px; color:var(--ink-faint); text-decoration:none; }
+    .dyn-acct .da-logout:hover { color:var(--danger); }
+
+    .dyn-acct .da-main { min-width:0; }
+    .dyn-acct .da-panel { display:none; }
+    .dyn-acct .da-panel.is-active { display:block; animation:daFade .25s ease; }
+    @keyframes daFade { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+    .dyn-acct .da-h { font-size:26px; font-weight:600; letter-spacing:-0.02em; margin:0 0 4px; }
+    .dyn-acct .da-sub { color:var(--ink-faint); font-size:14px; margin:0 0 22px; }
+    .dyn-acct .da-empty { padding:40px 22px; text-align:center; color:var(--ink-faint); font-size:15px; background:var(--panel); border-radius:16px; }
+
+    /* Cards / lists */
+    .dyn-acct .da-card { border:1px solid var(--line); border-radius:16px; padding:18px 20px; margin-bottom:14px; }
+    .dyn-acct .da-row { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; }
+    .dyn-acct .da-order-no { font-weight:600; font-size:16px; }
+    .dyn-acct .da-order-meta { color:var(--ink-faint); font-size:13px; margin-top:2px; }
+    .dyn-acct .da-badge { display:inline-block; font-size:12px; font-weight:600; padding:3px 10px; border-radius:999px; background:var(--panel); color:var(--ink-soft); }
+    .dyn-acct .da-badge.paid { background:#e7f6ec; color:var(--ok); }
+    .dyn-acct .da-badge.pending { background:#fff4e5; color:#b26a00; }
+    .dyn-acct .da-badge.fulfilled { background:#e7f0fb; color:#0a6ebd; }
+    .dyn-acct .da-items { margin-top:12px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:14px; color:var(--ink-soft); display:flex; flex-wrap:wrap; gap:6px 14px; }
+    .dyn-acct .da-total { font-weight:600; }
+    .dyn-acct .da-link { color:var(--accent); text-decoration:none; font-size:14px; font-weight:500; }
+    .dyn-acct .da-link:hover { text-decoration:underline; }
+
+    .dyn-acct .da-btn { display:inline-flex; align-items:center; justify-content:center; height:42px; padding:0 20px; border-radius:999px; background:var(--ink); color:#fff; border:0; font:inherit; font-size:14px; font-weight:500; cursor:pointer; text-decoration:none; }
+    .dyn-acct .da-btn:hover { opacity:.9; }
+    .dyn-acct .da-btn.ghost { background:none; color:var(--ink); border:1px solid var(--line); }
+    .dyn-acct .da-btn.ghost:hover { border-color:var(--ink); opacity:1; }
+    .dyn-acct .da-btn.sm { height:34px; padding:0 14px; font-size:13px; }
+    .dyn-acct .da-btn.danger { color:var(--danger); background:none; border:1px solid var(--line); }
+    .dyn-acct .da-btn.danger:hover { border-color:var(--danger); }
+
+    .dyn-acct .da-track { display:flex; align-items:center; gap:6px; }
+    .dyn-acct .da-track svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.7; }
+
+    /* Grid tabs (wishlist / designs) */
+    .dyn-acct .da-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:18px; }
+    .dyn-acct .da-tile { border:1px solid var(--line); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
+    .dyn-acct .da-tile-img { aspect-ratio:1/1; background:var(--panel); position:relative; display:block; }
+    .dyn-acct .da-tile-img img { width:100%; height:100%; object-fit:cover; }
+    .dyn-acct .da-tile-b { padding:12px 14px 14px; display:flex; flex-direction:column; gap:6px; flex:1; }
+    .dyn-acct .da-tile-name { font-size:14px; font-weight:500; color:var(--ink); text-decoration:none; }
+    .dyn-acct .da-tile-name:hover { color:var(--accent); }
+    .dyn-acct .da-tile-price { font-size:13px; color:var(--ink-soft); }
+    .dyn-acct .da-tile-actions { margin-top:auto; display:flex; gap:8px; padding-top:8px; }
+    .dyn-acct .da-x { background:none; border:0; color:var(--ink-faint); cursor:pointer; font:inherit; font-size:13px; padding:2px; text-decoration:underline; }
+    .dyn-acct .da-x:hover { color:var(--danger); }
+
+    /* Address forms */
+    .dyn-acct .da-addr { border:1px solid var(--line); border-radius:16px; padding:18px 20px; margin-bottom:14px; }
+    .dyn-acct .da-addr.def { border-color:var(--accent); }
+    .dyn-acct .da-addr p { margin:0; font-size:14px; line-height:1.5; color:var(--ink-soft); }
+    .dyn-acct .da-addr .nm { color:var(--ink); font-weight:600; font-size:15px; }
+    .dyn-acct .da-addr-actions { margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; }
+    .dyn-acct .da-form { border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:16px; }
+    .dyn-acct .da-form[hidden] { display:none; }
+    .dyn-acct .da-field { margin-bottom:12px; }
+    .dyn-acct .da-field label { display:block; font-size:13px; font-weight:500; margin-bottom:5px; color:var(--ink-soft); }
+    .dyn-acct .da-field input, .dyn-acct .da-field select, .dyn-acct .da-field textarea {
+      width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:inherit; font-size:14px; background:#fff; color:var(--ink); }
+    .dyn-acct .da-field input:focus, .dyn-acct .da-field select:focus, .dyn-acct .da-field textarea:focus { outline:none; border-color:var(--accent); }
+    .dyn-acct .da-2col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .dyn-acct .da-check { display:flex; align-items:center; gap:8px; font-size:14px; color:var(--ink-soft); margin:6px 0 14px; }
+    .dyn-acct .da-check input { width:auto; }
+    .dyn-acct .da-form-actions { display:flex; gap:10px; align-items:center; }
+
+    .dyn-acct .da-note { font-size:14px; color:var(--ink-soft); line-height:1.6; }
+    .dyn-acct .da-rv-stars { color:#f5b301; letter-spacing:1px; }
+
+    .dyn-acct .da-guest { max-width:520px; margin:80px auto; text-align:center; padding:40px 22px; }
+    .dyn-acct .da-guest h2 { font-size:24px; margin:0 0 10px; }
+    .dyn-acct .da-guest a.da-btn { margin-top:18px; }
+
+    @media (max-width:820px) {
+      .dyn-acct .da-wrap { grid-template-columns:1fr; gap:8px; }
+      .dyn-acct .da-nav { position:static; flex-direction:row; overflow-x:auto; gap:4px; padding-bottom:8px; margin-bottom:12px; border-bottom:1px solid var(--line-soft); }
+      .dyn-acct .da-hi { display:none; }
+      .dyn-acct .da-tab { white-space:nowrap; }
+      .dyn-acct .da-logout { display:none; }
+      .dyn-acct .da-2col { grid-template-columns:1fr; }
+    }
+  </style>
+
+  {%- if customer -%}
+  <div class="da-wrap">
+    <aside class="da-nav">
+      <div class="da-hi">Hi, {{ customer.first_name | default: customer.name | default: 'there' }}</div>
+      <button type="button" class="da-tab is-active" data-tab="orders">Orders</button>
+      <button type="button" class="da-tab" data-tab="wishlist">Wishlist</button>
+      <button type="button" class="da-tab" data-tab="tracking">Order tracking</button>
+      <button type="button" class="da-tab" data-tab="designs">Saved Designs</button>
+      <button type="button" class="da-tab" data-tab="addresses">Saved Addresses</button>
+      <button type="button" class="da-tab" data-tab="payments">Payment Methods</button>
+      <button type="button" class="da-tab" data-tab="reviews">Reviews</button>
+      <a class="da-logout" href="{{ routes.account_logout_url }}">Log out</a>
+    </aside>
+
+    <div class="da-main">
+
+      {%- comment -%} ---------- ORDERS ---------- {%- endcomment -%}
+      <div class="da-panel is-active" data-panel="orders">
+        <h1 class="da-h">Orders</h1>
+        <p class="da-sub">Your recent orders and their status.</p>
+        {%- if customer.orders.size > 0 -%}
+          {%- for order in customer.orders -%}
+            <div class="da-card">
+              <div class="da-row">
+                <div>
+                  <div class="da-order-no">{{ order.name }}</div>
+                  <div class="da-order-meta">{{ order.created_at | date: "%B %-d, %Y" }} · {{ order.line_items.size }} item{% if order.line_items.size != 1 %}s{% endif %}</div>
+                </div>
+                <div style="text-align:right">
+                  <div class="da-total">{{ order.total_price | money }}</div>
+                  <div style="margin-top:6px; display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap">
+                    <span class="da-badge {% if order.financial_status == 'paid' %}paid{% elsif order.financial_status == 'pending' %}pending{% endif %}">{{ order.financial_status_label }}</span>
+                    <span class="da-badge {% if order.fulfillment_status == 'fulfilled' %}fulfilled{% endif %}">{{ order.fulfillment_status_label }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="da-items">
+                {%- for line in order.line_items limit: 4 -%}<span>{{ line.quantity }}× {{ line.title }}</span>{%- endfor -%}
+                {%- if order.line_items.size > 4 -%}<span>+{{ order.line_items.size | minus: 4 }} more</span>{%- endif -%}
+              </div>
+              <div style="margin-top:12px"><a class="da-link" href="{{ order.customer_url }}">View order details →</a></div>
+            </div>
+          {%- endfor -%}
+        {%- else -%}
+          <div class="da-empty">You haven’t placed any orders yet.</div>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} ---------- WISHLIST ---------- {%- endcomment -%}
+      <div class="da-panel" data-panel="wishlist">
+        <h1 class="da-h">Wishlist</h1>
+        <p class="da-sub">Products you saved with the ♡ / bookmark button.</p>
+        <div id="daWish"></div>
+      </div>
+
+      {%- comment -%} ---------- ORDER TRACKING ---------- {%- endcomment -%}
+      <div class="da-panel" data-panel="tracking">
+        <h1 class="da-h">Order tracking</h1>
+        <p class="da-sub">Track shipments for your orders.</p>
+        {%- assign has_tracking = false -%}
+        {%- for order in customer.orders -%}
+          {%- for fulfillment in order.fulfillments -%}
+            {%- assign has_tracking = true -%}
+            <div class="da-card">
+              <div class="da-row">
+                <div>
+                  <div class="da-order-no">{{ order.name }}</div>
+                  <div class="da-order-meta">
+                    {% if fulfillment.tracking_company %}{{ fulfillment.tracking_company }}{% else %}Shipment{% endif %}
+                    {% if fulfillment.tracking_number %} · {{ fulfillment.tracking_number }}{% endif %}
+                    {% if fulfillment.created_at %} · shipped {{ fulfillment.created_at | date: "%b %-d" }}{% endif %}
+                  </div>
+                </div>
+                {%- if fulfillment.tracking_url -%}
+                  <a class="da-btn sm" href="{{ fulfillment.tracking_url }}" target="_blank" rel="noopener">
+                    <span class="da-track"><svg viewBox="0 0 24 24"><path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="17.5" cy="17" r="1.6"/></svg> Track</span>
+                  </a>
+                {%- endif -%}
+              </div>
+            </div>
+          {%- endfor -%}
+        {%- endfor -%}
+        {%- unless has_tracking -%}
+          <div class="da-empty">No shipments to track yet. Tracking appears here once an order ships.</div>
+        {%- endunless -%}
+      </div>
+
+      {%- comment -%} ---------- SAVED DESIGNS ---------- {%- endcomment -%}
+      <div class="da-panel" data-panel="designs">
+        <h1 class="da-h">Saved Designs</h1>
+        <p class="da-sub">Designs you saved while customizing. Saved on this device.</p>
+        <div id="daDesigns"></div>
+      </div>
+
+      {%- comment -%} ---------- SAVED ADDRESSES ---------- {%- endcomment -%}
+      <div class="da-panel" data-panel="addresses">
+        <h1 class="da-h">Saved Addresses</h1>
+        <p class="da-sub">Manage your shipping and billing addresses.</p>
+
+        <button type="button" class="da-btn" id="daAddrNew" style="margin-bottom:16px">+ Add a new address</button>
+
+        {%- form 'customer_address', customer.new_address, class: 'da-form', id: 'daAddrNewForm', hidden: true -%}
+          <div class="da-2col">
+            <div class="da-field"><label>First name</label><input type="text" name="address[first_name]" value="{{ form.first_name }}"></div>
+            <div class="da-field"><label>Last name</label><input type="text" name="address[last_name]" value="{{ form.last_name }}"></div>
+          </div>
+          <div class="da-field"><label>Company (optional)</label><input type="text" name="address[company]" value="{{ form.company }}"></div>
+          <div class="da-field"><label>Address</label><input type="text" name="address[address1]" value="{{ form.address1 }}"></div>
+          <div class="da-field"><label>Apartment, suite, etc. (optional)</label><input type="text" name="address[address2]" value="{{ form.address2 }}"></div>
+          <div class="da-2col">
+            <div class="da-field"><label>City</label><input type="text" name="address[city]" value="{{ form.city }}"></div>
+            <div class="da-field"><label>Postal / ZIP code</label><input type="text" name="address[zip]" value="{{ form.zip }}"></div>
+          </div>
+          <div class="da-2col">
+            <div class="da-field"><label>Country</label><select name="address[country]" id="daAddrCountry">{{ country_option_tags }}</select></div>
+            <div class="da-field"><label>State / Province</label><input type="text" name="address[province]" value="{{ form.province }}"></div>
+          </div>
+          <div class="da-field"><label>Phone (optional)</label><input type="tel" name="address[phone]" value="{{ form.phone }}"></div>
+          <label class="da-check"><input type="checkbox" name="address[default]" value="1"> Set as default address</label>
+          <div class="da-form-actions">
+            <button type="submit" class="da-btn">Save address</button>
+            <button type="button" class="da-btn ghost da-addr-cancel">Cancel</button>
+          </div>
+        {%- endform -%}
+
+        {%- if customer.addresses.size > 0 -%}
+          {%- for address in customer.addresses -%}
+            <div class="da-addr {% if address == customer.default_address %}def{% endif %}" data-addr="{{ address.id }}">
+              <p class="nm">{{ address.first_name }} {{ address.last_name }}{% if address == customer.default_address %} · <span style="color:var(--accent);font-size:13px">Default</span>{% endif %}</p>
+              <p>
+                {% if address.company != blank %}{{ address.company }}<br>{% endif %}
+                {{ address.address1 }}{% if address.address2 != blank %}, {{ address.address2 }}{% endif %}<br>
+                {{ address.city }}{% if address.province != blank %}, {{ address.province }}{% endif %} {{ address.zip }}<br>
+                {{ address.country }}{% if address.phone != blank %}<br>{{ address.phone }}{% endif %}
+              </p>
+              <div class="da-addr-actions">
+                <button type="button" class="da-btn ghost sm da-addr-edit" data-edit="{{ address.id }}">Edit</button>
+                {%- form 'customer_address', address, class: 'da-inline-del' -%}
+                  <input type="hidden" name="_method" value="delete">
+                  <button type="submit" class="da-btn danger sm" onclick="return confirm('Delete this address?')">Delete</button>
+                {%- endform -%}
+              </div>
+            </div>
+            {%- form 'customer_address', address, class: 'da-form', id: 'daAddrEdit-' | append: address.id, hidden: true -%}
+              <div class="da-2col">
+                <div class="da-field"><label>First name</label><input type="text" name="address[first_name]" value="{{ form.first_name }}"></div>
+                <div class="da-field"><label>Last name</label><input type="text" name="address[last_name]" value="{{ form.last_name }}"></div>
+              </div>
+              <div class="da-field"><label>Company (optional)</label><input type="text" name="address[company]" value="{{ form.company }}"></div>
+              <div class="da-field"><label>Address</label><input type="text" name="address[address1]" value="{{ form.address1 }}"></div>
+              <div class="da-field"><label>Apartment, suite, etc. (optional)</label><input type="text" name="address[address2]" value="{{ form.address2 }}"></div>
+              <div class="da-2col">
+                <div class="da-field"><label>City</label><input type="text" name="address[city]" value="{{ form.city }}"></div>
+                <div class="da-field"><label>Postal / ZIP code</label><input type="text" name="address[zip]" value="{{ form.zip }}"></div>
+              </div>
+              <div class="da-2col">
+                <div class="da-field"><label>Country</label><select name="address[country]">{{ country_option_tags }}</select></div>
+                <div class="da-field"><label>State / Province</label><input type="text" name="address[province]" value="{{ form.province }}"></div>
+              </div>
+              <div class="da-field"><label>Phone (optional)</label><input type="tel" name="address[phone]" value="{{ form.phone }}"></div>
+              <label class="da-check"><input type="checkbox" name="address[default]" value="1" {% if address == customer.default_address %}checked{% endif %}> Set as default address</label>
+              <div class="da-form-actions">
+                <button type="submit" class="da-btn">Update address</button>
+                <button type="button" class="da-btn ghost da-addr-cancel">Cancel</button>
+              </div>
+            {%- endform -%}
+          {%- endfor -%}
+        {%- else -%}
+          <div class="da-empty" id="daNoAddr">No saved addresses yet.</div>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} ---------- PAYMENT METHODS ---------- {%- endcomment -%}
+      <div class="da-panel" data-panel="payments">
+        <h1 class="da-h">Payment Methods</h1>
+        <p class="da-sub">Your saved cards are kept securely by Shopify.</p>
+        <div class="da-card">
+          <p class="da-note">For your security, saved card details are handled entirely by Shopify’s secure checkout and can’t be shown on the store page. Manage your saved payment methods from your Shopify account.</p>
+          <div style="margin-top:16px"><a class="da-btn" href="{{ routes.account_url }}">Manage payment methods</a></div>
+        </div>
+      </div>
+
+      {%- comment -%} ---------- REVIEWS ---------- {%- endcomment -%}
+      <div class="da-panel" data-panel="reviews">
+        <h1 class="da-h">Reviews</h1>
+        <p class="da-sub">Reviews you’ve written. Saved on this device.</p>
+        <div id="daReviews"></div>
+      </div>
+
+    </div>
+  </div>
+  {%- else -%}
+  <div class="da-guest">
+    <h2>Your account</h2>
+    <p class="da-note">Please log in to see your orders, wishlist, addresses and more.</p>
+    <a class="da-btn" href="{{ routes.account_login_url }}">Log in</a>
+  </div>
+  {%- endif -%}
+
+  <script>
+  (function () {
+    var root = document.getElementById("dynAcct");
+    if (!root) return;
+
+    /* ---- Tabs (with #hash deep-linking) ---- */
+    var tabs = root.querySelectorAll(".da-tab"), panels = root.querySelectorAll(".da-panel");
+    function show(name) {
+      var found = false;
+      tabs.forEach(function (t) { var on = t.getAttribute("data-tab") === name; t.classList.toggle("is-active", on); if (on) found = true; });
+      panels.forEach(function (p) { p.classList.toggle("is-active", p.getAttribute("data-panel") === name); });
+      return found;
+    }
+    tabs.forEach(function (t) { t.addEventListener("click", function () { var n = t.getAttribute("data-tab"); show(n); try { history.replaceState(null, "", "#" + n); } catch (e) {} }); });
+    var initial = (location.hash || "").replace("#", "");
+    if (initial) show(initial);
+    window.addEventListener("hashchange", function () { var n = (location.hash || "").replace("#", ""); if (n) show(n); });
+
+    /* ---- helpers ---- */
+    function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+    function jset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function stars(n) { n = Math.max(0, Math.min(5, Math.round(n))); return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n); }
+
+    /* ---- Wishlist tab (reads the shared dyn_wishlist) ---- */
+    var wishEl = document.getElementById("daWish");
+    function renderWish() {
+      if (!wishEl) return;
+      var list = jget("dyn_wishlist", []);
+      if (!Array.isArray(list) || !list.length) { wishEl.innerHTML = '<div class="da-empty">Your wishlist is empty. Tap the bookmark on any product to save it here.</div>'; return; }
+      wishEl.innerHTML = '<div class="da-grid">' + list.map(function (it) {
+        var url = esc(it.url || "#");
+        return '<div class="da-tile"><a class="da-tile-img" href="' + url + '">' + (it.image ? '<img src="' + esc(it.image) + '" alt="" loading="lazy">' : '') + '</a>' +
+          '<div class="da-tile-b"><a class="da-tile-name" href="' + url + '">' + esc(it.title || "Product") + '</a>' +
+          (it.price ? '<div class="da-tile-price">' + esc(it.price) + '</div>' : '') +
+          '<div class="da-tile-actions"><a class="da-btn sm" href="' + url + '">View</a><button type="button" class="da-x" data-wish="' + esc(it.id) + '">Remove</button></div></div></div>';
+      }).join("") + '</div>';
+    }
+    if (wishEl) wishEl.addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest("[data-wish]") : null; if (!b) return;
+      var id = b.getAttribute("data-wish");
+      jset("dyn_wishlist", jget("dyn_wishlist", []).filter(function (x) { return String(x.id) !== String(id); }));
+      try { window.dispatchEvent(new CustomEvent("dyn-wishlist-change")); } catch (e2) {}
+      renderWish();
+    });
+    window.addEventListener("dyn-wishlist-change", renderWish);
+    renderWish();
+
+    /* ---- Saved Designs tab (reads dyn_saved_designs) ---- */
+    var desEl = document.getElementById("daDesigns");
+    function renderDesigns() {
+      if (!desEl) return;
+      var list = jget("dyn_saved_designs", []);
+      if (!Array.isArray(list) || !list.length) { desEl.innerHTML = '<div class="da-empty">No saved designs yet. When you customize a product, tap “Save design” to keep it here.</div>'; return; }
+      desEl.innerHTML = '<div class="da-grid">' + list.map(function (it) {
+        var url = esc(it.url || "#");
+        return '<div class="da-tile"><a class="da-tile-img" href="' + url + '">' + (it.image ? '<img src="' + esc(it.image) + '" alt="" loading="lazy">' : '') + '</a>' +
+          '<div class="da-tile-b"><a class="da-tile-name" href="' + url + '">' + esc(it.name || "Design") + '</a>' +
+          (it.t ? '<div class="da-tile-price">' + new Date(it.t).toLocaleDateString() + '</div>' : '') +
+          '<div class="da-tile-actions"><a class="da-btn sm" href="' + url + '">Open</a><button type="button" class="da-x" data-design="' + esc(it.id) + '">Delete</button></div></div></div>';
+      }).join("") + '</div>';
+    }
+    if (desEl) desEl.addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest("[data-design]") : null; if (!b) return;
+      var id = b.getAttribute("data-design");
+      jset("dyn_saved_designs", jget("dyn_saved_designs", []).filter(function (x) { return String(x.id) !== String(id); }));
+      renderDesigns();
+    });
+    renderDesigns();
+
+    /* ---- Reviews tab (reads dyn_myreviews written when they post a review) ---- */
+    var rvEl = document.getElementById("daReviews");
+    function renderReviews() {
+      if (!rvEl) return;
+      var list = jget("dyn_myreviews", []);
+      if (!Array.isArray(list) || !list.length) { rvEl.innerHTML = '<div class="da-empty">You haven’t written any reviews yet.</div>'; return; }
+      list.sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+      rvEl.innerHTML = list.map(function (it) {
+        return '<div class="da-card"><div class="da-row"><div><a class="da-tile-name" href="' + esc(it.url || "#") + '">' + esc(it.title || "Product") + '</a>' +
+          '<div class="da-order-meta"><span class="da-rv-stars">' + stars(it.rating || 5) + '</span>' + (it.t ? ' · ' + new Date(it.t).toLocaleDateString() : '') + '</div></div></div>' +
+          (it.text ? '<div class="da-items" style="border-top:0;padding-top:8px">' + esc(it.text) + '</div>' : '') + '</div>';
+      }).join("");
+    }
+    renderReviews();
+
+    /* ---- Address add / edit form toggles ---- */
+    function hideAllForms() { root.querySelectorAll(".da-form").forEach(function (f) { f.hidden = true; }); }
+    hideAllForms();
+    var newBtn = document.getElementById("daAddrNew"), newForm = document.getElementById("daAddrNewForm");
+    if (newBtn && newForm) newBtn.addEventListener("click", function () { hideAllForms(); newForm.hidden = false; newForm.scrollIntoView({ block: "center", behavior: "smooth" }); });
+    root.querySelectorAll(".da-addr-edit").forEach(function (b) {
+      b.addEventListener("click", function () { hideAllForms(); var f = document.getElementById("daAddrEdit-" + b.getAttribute("data-edit")); if (f) { f.hidden = false; f.scrollIntoView({ block: "center", behavior: "smooth" }); } });
+    });
+    root.querySelectorAll(".da-addr-cancel").forEach(function (b) { b.addEventListener("click", function () { hideAllForms(); }); });
+  })();
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Dynamic Account",
+  "tag": "section",
+  "class": "dynamic-account-section",
+  "settings": [
+    { "type": "paragraph", "content": "A tabbed account dashboard: Orders, Wishlist, Order tracking, Saved Designs, Saved Addresses, Payment Methods and Reviews. Add it to a page (e.g. a page called “Account” → /pages/account) and point your account link there. The shopper must be logged in to see orders and addresses." },
+    { "type": "color", "id": "page_bg", "label": "Page background", "default": "#ffffff" }
+  ],
+  "presets": [ { "name": "Dynamic Account" } ],
+  "enabled_on": { "templates": ["page", "customers/account"] }
+}
+{% endschema %}
