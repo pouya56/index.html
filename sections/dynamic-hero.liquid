@@ -764,7 +764,30 @@
                   <div class="dh-apps-grid">
                     {%- for block in section.blocks -%}
                       {%- if block.type == 'app_link' and block.settings.enabled -%}
-                        <a class="dh-app" href="{{ block.settings.url | default: '#' }}" {{ block.shopify_attributes }}>
+                        {%- comment -%} Use the typed Link if set, otherwise a sensible default for the chosen icon. {%- endcomment -%}
+                        {%- assign app_href = block.settings.url -%}
+                        {%- if app_href == blank -%}
+                          {%- case block.settings.icon -%}
+                            {%- when 'shop' -%}{%- assign app_href = routes.all_products_collection_url -%}
+                            {%- when 'bag' -%}{%- assign app_href = routes.all_products_collection_url -%}
+                            {%- when 'cart' -%}{%- assign app_href = routes.cart_url -%}
+                            {%- when 'search' -%}{%- assign app_href = routes.search_url -%}
+                            {%- when 'account' -%}{%- assign app_href = routes.account_url -%}
+                            {%- when 'heart' -%}{%- assign app_href = '#wishlist' -%}
+                            {%- when 'mail' -%}{%- assign app_href = '/pages/contact' -%}
+                            {%- when 'phone' -%}{%- assign app_href = '/pages/contact' -%}
+                            {%- when 'info' -%}{%- assign app_href = '/pages/about' -%}
+                            {%- when 'home' -%}{%- assign app_href = routes.root_url -%}
+                            {%- when 'gift' -%}{%- assign app_href = '/pages/gift-card' -%}
+                            {%- when 'blog' -%}{%- assign app_href = '/blogs/news' -%}
+                            {%- when 'tag' -%}{%- assign app_href = '/collections/sale' -%}
+                            {%- when 'star' -%}{%- assign app_href = '/pages/reviews' -%}
+                            {%- when 'location' -%}{%- assign app_href = '/pages/stores' -%}
+                            {%- when 'help' -%}{%- assign app_href = '/pages/faq' -%}
+                            {%- else -%}{%- assign app_href = '#' -%}
+                          {%- endcase -%}
+                        {%- endif -%}
+                        <a class="dh-app" href="{{ app_href }}" {{ block.shopify_attributes }}>
                           <span class="dh-app-ic">
                             {%- if block.settings.image != blank -%}
                               {%- assign aiw = block.settings.image.width | times: 30 | divided_by: block.settings.image.height -%}
@@ -1099,6 +1122,15 @@
   }
 
   // Dropdown menus: account login + apps grid. Click to toggle; outside/Esc closes.
+  /* Any link pointing to #wishlist opens the wishlist drawer (from the header
+     section) instead of navigating — used by the "Wishlist / heart" app icon. */
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest ? e.target.closest('a[href$="#wishlist"], a[href="#wishlist"]') : null;
+    if (!a) return;
+    e.preventDefault();
+    if (window.DynamicHeader && window.DynamicHeader.openWishlist) { window.DynamicHeader.openWishlist(); }
+  }, true);
+
   var menus = Array.prototype.slice.call(root.querySelectorAll(".dh-menu"));
   function closeMenus(except) {
     menus.forEach(function (m) {
@@ -1585,7 +1617,7 @@
     { "type": "app_link", "name": "App link", "settings": [
       { "type": "checkbox", "id": "enabled", "label": "Show this link", "default": true, "info": "Uncheck to hide it from the menu without deleting it." },
       { "type": "text", "id": "label", "label": "Name", "default": "App" },
-      { "type": "url", "id": "url", "label": "Link" },
+      { "type": "url", "id": "url", "label": "Link", "info": "Leave blank to use the default page for the icon you pick below (Shop→all products, Cart→cart, Account→account, Wishlist→opens the wishlist drawer, Contact→/pages/contact, About→/pages/about, Blog→/blogs/news, etc.). Type a link here to override it." },
       { "type": "select", "id": "icon", "label": "Icon", "default": "shop",
         "options": [
           { "value": "none", "label": "No icon (show first letter)" },
