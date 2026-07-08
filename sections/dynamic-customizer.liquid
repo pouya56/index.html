@@ -169,7 +169,7 @@
   "show": {% if section.settings.show_social %}true{% else %}false{% endif %},
   "likeBase": {{ section.settings.like_base | default: 0 }},
   "shareBase": {{ section.settings.share_base | default: 0 }},
-  "fbUrl": {{ section.settings.firebase_db_url | default: '' | json }},
+  "fbUrl": {{ section.settings.firebase_db_url | default: 'https://dynaeimic-social-default-rtdb.firebaseio.com' | json }},
   "handle": {% if dyn_product %}{{ dyn_product.handle | json }}{% else %}"product"{% endif %},
   "title": {% if dyn_product %}{{ dyn_product.title | json }}{% else %}""{% endif %},
   "url": {% if dyn_product %}{{ dyn_product.url | json }}{% else %}""{% endif %},
