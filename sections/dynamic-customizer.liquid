@@ -1064,10 +1064,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         </div>
         <div class="ig-note" id="igNote" hidden></div>
         {% endraw %}
-        {%- comment -%} Judge.me review widget (official snippet) — shown only when the comment icon is clicked. The review count is read from it for the comment icon. {%- endcomment -%}
-        <div class="ig-reviews-panel" id="igReviewsPanel" hidden>
-          {% if dyn_product %}{% render 'judgeme_widgets', widget_type: 'judgeme_review_widget', concierge_install: true, product: dyn_product %}{% endif %}
-        </div>
+        {%- comment -%} Judge.me review widget (app-embed picks up this tag) — shown only when the comment icon is clicked. The review count is read from it for the comment icon. {%- endcomment -%}
+        <div class="ig-reviews-panel" id="igReviewsPanel" hidden>{% if dyn_product %}<div class="jdgm-widget jdgm-review-widget" data-id="{{ dyn_product.id }}"></div>{% endif %}</div>
         {% raw %}
       </section>
     </section>
