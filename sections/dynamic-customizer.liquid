@@ -1064,10 +1064,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         </div>
         <div class="ig-note" id="igNote" hidden></div>
         {% endraw %}
-        {%- comment -%} Hidden Judge.me badge — used only to read the real review count for the comment icon. {%- endcomment -%}
-        <div class="ig-jdgm-badge" aria-hidden="true">{% if dyn_product %}<div class="jdgm-widget jdgm-preview-badge" data-id="{{ dyn_product.id }}"></div>{% endif %}</div>
-        {%- comment -%} Judge.me review widget, shown only when the comment icon is clicked. {%- endcomment -%}
-        <div class="ig-reviews-panel" id="igReviewsPanel" hidden>{% if dyn_product %}<div class="jdgm-widget jdgm-review-widget" data-id="{{ dyn_product.id }}"></div>{% endif %}</div>
+        {%- comment -%} Judge.me review widget (official snippet) — shown only when the comment icon is clicked. The review count is read from it for the comment icon. {%- endcomment -%}
+        <div class="ig-reviews-panel" id="igReviewsPanel" hidden>
+          {% if dyn_product %}{% render 'judgeme_widgets', widget_type: 'judgeme_review_widget', concierge_install: true, product: dyn_product %}{% endif %}
+        </div>
         {% raw %}
       </section>
     </section>
@@ -1105,7 +1105,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   var shareBtn = document.getElementById("igShare"), shareCount = document.getElementById("igShareCount");
   var saveBtn = document.getElementById("igSave"), noteEl = document.getElementById("igNote");
   var panel = document.getElementById("igReviewsPanel");
-  var badge = root.querySelector(".ig-jdgm-badge");
 
   /* Optional Firebase Realtime Database for REAL shared like/share counts.
      Uses the plain REST API (fetch), so there's no third-party SDK to be
@@ -1193,21 +1192,23 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     }
   });
 
-  /* Real review count from Judge.me, shown next to the comment icon. */
+  /* Real review count from Judge.me, shown next to the comment icon. Judge.me
+     sets data-number-of-reviews on its widget once it has loaded. */
   function readReviewCount() {
-    if (!badge) return null;
-    var el = badge.querySelector("[data-number-of-reviews]");
+    var el = root.querySelector("[data-number-of-reviews]");
     if (el) { var n = parseInt(el.getAttribute("data-number-of-reviews"), 10); if (!isNaN(n)) return n; }
-    var t = (badge.textContent || "").replace(/,/g, "");
-    var m = t.match(/(\d+)\s*review/i) || t.match(/\d+/);
-    if (m) { var n2 = parseInt(m[1] || m[0], 10); if (!isNaN(n2)) return n2; }
+    var wid = panel && panel.querySelector(".jdgm-rev-widg");
+    if (wid && wid.getAttribute("data-number-of-reviews")) { var n2 = parseInt(wid.getAttribute("data-number-of-reviews"), 10); if (!isNaN(n2)) return n2; }
+    var t = (panel ? (panel.textContent || "") : "").replace(/,/g, "");
+    var m = t.match(/(\d+)\s*review/i);
+    if (m) { var n3 = parseInt(m[1], 10); if (!isNaN(n3)) return n3; }
     return null;
   }
   var tries = 0;
   (function pollCount() {
     var n = readReviewCount();
-    if (n != null) { commentCount.textContent = n > 0 ? n : ""; return; }
-    if (tries++ < 40) setTimeout(pollCount, 500); // wait ~20s for Judge.me to load
+    if (n != null) { commentCount.textContent = n > 0 ? n : ""; if (n > 0) return; }
+    if (tries++ < 60) setTimeout(pollCount, 500); // keep checking as Judge.me loads
   })();
 })();
 </script>
