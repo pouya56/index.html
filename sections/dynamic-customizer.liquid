@@ -164,6 +164,19 @@
 }
 </script>
 
+<script type="application/json" id="dyn-social-config">
+{
+  "show": {% if section.settings.show_social %}true{% else %}false{% endif %},
+  "likeBase": {{ section.settings.like_base | default: 0 }},
+  "seed": {{ section.settings.reviews_seed | default: '' | json }},
+  "handle": {% if dyn_product %}{{ dyn_product.handle | json }}{% else %}"product"{% endif %},
+  "title": {% if dyn_product %}{{ dyn_product.title | json }}{% else %}""{% endif %},
+  "url": {% if dyn_product %}{{ dyn_product.url | json }}{% else %}""{% endif %},
+  "image": {% if dyn_product and dyn_product.featured_image %}{{ dyn_product.featured_image | image_url: width: 200 | json }}{% else %}""{% endif %},
+  "price": {% if dyn_product %}{{ dyn_product.selected_or_first_available_variant.price | money | json }}{% else %}""{% endif %}
+}
+</script>
+
 {% raw %}
 
 <style>
@@ -416,6 +429,44 @@ button { font-family: inherit; cursor: pointer; }
 .reassure-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-faint); }
 .reassure-item svg { width: 16px; height: 16px; stroke: var(--ink-faint); }
 .reassure-ic { display: inline-flex; align-items: center; }
+
+/* Instagram-style reviews / social bar */
+.ig-social { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line); }
+.ig-actions { display: flex; align-items: center; gap: 6px; }
+.ig-act { border: 0; background: none; cursor: pointer; padding: 6px; color: var(--ink); border-radius: 10px; -webkit-tap-highlight-color: transparent; transition: transform .12s ease, color .2s ease; }
+.ig-act:hover { color: var(--ink-faint); }
+.ig-act:active { transform: scale(0.86); }
+.ig-act svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.ig-act.ig-save { margin-left: auto; }
+.ig-like.is-on { color: #ed4956; }
+.ig-like.is-on svg { fill: #ed4956; stroke: #ed4956; }
+.ig-like.pop { animation: igPop .35s ease; }
+@keyframes igPop { 0%{transform:scale(1)} 35%{transform:scale(1.3)} 100%{transform:scale(1)} }
+.ig-save.is-on svg { fill: var(--ink); }
+.ig-likes { font-weight: 600; font-size: 14px; margin: 10px 0 2px; }
+.ig-rating { font-size: 13px; color: var(--ink-faint); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.ig-rating .ig-rstars { color: #f5b301; letter-spacing: 1px; }
+.ig-reviews { display: flex; flex-direction: column; gap: 11px; }
+.ig-review { font-size: 14px; line-height: 1.45; color: var(--ink); }
+.ig-review b { font-weight: 600; margin-right: 6px; }
+.ig-review .ig-rvstars { color: #f5b301; font-size: 12px; letter-spacing: 1px; margin-left: 4px; }
+.ig-review .ig-rvtime { display: block; font-size: 11px; color: var(--ink-faint); margin-top: 3px; }
+.ig-more { margin-top: 10px; border: 0; background: none; color: var(--ink-faint); font: inherit; font-size: 13px; cursor: pointer; padding: 4px 0; }
+.ig-more:hover { color: var(--ink); }
+.ig-add { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
+.ig-stars-pick { display: flex; gap: 2px; margin-bottom: 8px; }
+.ig-star-pick { border: 0; background: none; cursor: pointer; font-size: 22px; line-height: 1; color: var(--line); padding: 0 1px; transition: color .12s ease; }
+.ig-star-pick.on { color: #f5b301; }
+.ig-add-row { display: flex; align-items: center; gap: 8px; }
+.ig-add-row input { height: 40px; border: 1px solid var(--line); border-radius: 999px; padding: 0 15px; font: inherit; font-size: 14px; background: var(--bg); color: var(--ink); }
+.ig-add-row input:focus { outline: none; border-color: var(--accent); }
+.ig-name { width: 130px; flex: none; }
+.ig-text { flex: 1 1 auto; min-width: 0; }
+.ig-post { flex: none; height: 40px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ig-post:hover { opacity: .9; }
+.ig-post:disabled { opacity: .5; cursor: default; }
+.ig-note { font-size: 12.5px; color: #1a7f37; margin-top: 8px; }
+@media (max-width: 560px) { .ig-name { width: 104px; } }
 
 .modal-root { position: fixed; inset: 0; z-index: 9990; display: none; }
 
@@ -989,9 +1040,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       <div class="cta-stack">
         <div class="cta-row">
           <button class="btn btn-primary btn-lg btn-block" id="customizeBtn">Customize</button>
-          <button class="wish-btn" id="wishBtn" type="button" aria-pressed="false" aria-label="Save to wishlist" title="Save to wishlist">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"></path></svg>
-          </button>
         </div>
       </div>
 
@@ -1009,6 +1057,43 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
           <span data-reassure="2">Free &amp; easy returns</span>
         </div>
       </div>
+
+      <!-- Instagram-style reviews / social bar -->
+      <section class="ig-social" id="igSocial" hidden aria-label="Reviews">
+        <div class="ig-actions">
+          <button class="ig-act ig-like" id="igLike" type="button" aria-pressed="false" aria-label="Like">
+            <svg class="ig-heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.7 9 1.6 5.6 4.6 4.6 7 3.8 9.3 5 12 8c2.7-3 5-4.2 7.4-3.4 3 1 3.9 4.4 2.6 7.1C19.5 16.3 12 21 12 21Z"/></svg>
+          </button>
+          <button class="ig-act ig-comment" id="igComment" type="button" aria-label="Write a review">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+          </button>
+          <button class="ig-act ig-share" id="igShare" type="button" aria-label="Share">
+            <svg viewBox="0 0 24 24"><path d="M22 3 11 14"/><path d="M22 3l-7 18-4-8-8-4 19-6Z"/></svg>
+          </button>
+          <button class="ig-act ig-save" id="igSave" type="button" aria-pressed="false" aria-label="Save to wishlist">
+            <svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1Z"/></svg>
+          </button>
+        </div>
+        <div class="ig-likes" id="igLikes"></div>
+        <div class="ig-rating" id="igRating"></div>
+        <div class="ig-reviews" id="igReviews"></div>
+        <button class="ig-more" id="igMore" type="button" hidden>View all reviews</button>
+        <form class="ig-add" id="igAdd" novalidate>
+          <div class="ig-stars-pick" id="igStarsPick" role="radiogroup" aria-label="Your rating">
+            <button type="button" class="ig-star-pick" data-v="1" aria-label="1 star">&#9733;</button>
+            <button type="button" class="ig-star-pick" data-v="2" aria-label="2 stars">&#9733;</button>
+            <button type="button" class="ig-star-pick" data-v="3" aria-label="3 stars">&#9733;</button>
+            <button type="button" class="ig-star-pick" data-v="4" aria-label="4 stars">&#9733;</button>
+            <button type="button" class="ig-star-pick" data-v="5" aria-label="5 stars">&#9733;</button>
+          </div>
+          <div class="ig-add-row">
+            <input class="ig-name" id="igName" type="text" placeholder="Your name (optional)" maxlength="40" autocomplete="name">
+            <input class="ig-text" id="igText" type="text" placeholder="Add a review…" maxlength="300">
+            <button class="ig-post" id="igPost" type="submit">Post</button>
+          </div>
+          <div class="ig-note" id="igNote" hidden></div>
+        </form>
+      </section>
     </section>
   </main>
 
@@ -1020,6 +1105,93 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<script>
+/* Instagram-style reviews / social bar. Reads #dyn-social-config; reviews are
+   stored per product in the shopper's browser; the Save button uses the shared
+   wishlist ("dyn_wishlist"). */
+(function () {
+  var cfgEl = document.getElementById("dyn-social-config");
+  var root = document.getElementById("igSocial");
+  if (!cfgEl || !root) return;
+  var cfg; try { cfg = JSON.parse(cfgEl.textContent); } catch (e) { return; }
+  if (!cfg.show) return;
+  root.hidden = false;
+
+  var handle = cfg.handle || "product";
+  var RV_KEY = "dyn_rv_" + handle, LK_KEY = "dyn_like_" + handle, WL_KEY = "dyn_wishlist";
+  function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function jset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function stars(n) { n = Math.max(0, Math.min(5, Math.round(n))); return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n); }
+  function ago(t) { if (!t) return ""; var s = Math.floor((Date.now() - t) / 1000); if (s < 60) return "just now"; var m = Math.floor(s / 60); if (m < 60) return m + "m"; var h = Math.floor(m / 60); if (h < 24) return h + "h"; var d = Math.floor(h / 24); if (d < 7) return d + "d"; return Math.floor(d / 7) + "w"; }
+
+  function seedReviews() {
+    var out = [], raw = (cfg.seed || "").split(/\r?\n/);
+    raw.forEach(function (line) {
+      line = line.trim(); if (!line) return;
+      var p = line.split("|");
+      var name = (p[0] || "").trim(), rating = parseInt((p[1] || "5").trim(), 10), text = (p.slice(2).join("|") || "").trim();
+      if (!text && p.length < 3) { text = name; name = "Customer"; rating = 5; }
+      out.push({ name: name || "Customer", rating: isNaN(rating) ? 5 : Math.max(1, Math.min(5, rating)), text: text });
+    });
+    return out;
+  }
+  function localReviews() { var a = jget(RV_KEY, []); return Array.isArray(a) ? a : []; }
+  function allReviews() { return localReviews().concat(seedReviews()); }
+
+  var likeBtn = document.getElementById("igLike"), saveBtn = document.getElementById("igSave"), shareBtn = document.getElementById("igShare"), commentBtn = document.getElementById("igComment");
+  var likesEl = document.getElementById("igLikes"), ratingEl = document.getElementById("igRating"), listEl = document.getElementById("igReviews"), moreBtn = document.getElementById("igMore");
+  var form = document.getElementById("igAdd"), nameEl = document.getElementById("igName"), textEl = document.getElementById("igText"), noteEl = document.getElementById("igNote");
+  var starWrap = document.getElementById("igStarsPick");
+  var expanded = false, pickRating = 5;
+
+  function liked() { return jget(LK_KEY, false) === true; }
+  function renderLikes() { var base = parseInt(cfg.likeBase, 10) || 0; var n = base + (liked() ? 1 : 0); likesEl.textContent = n === 1 ? "1 like" : (n + " likes"); likeBtn.classList.toggle("is-on", liked()); likeBtn.setAttribute("aria-pressed", liked() ? "true" : "false"); }
+  function renderRating() { var rv = allReviews(); if (!rv.length) { ratingEl.hidden = true; return; } ratingEl.hidden = false; var sum = 0; rv.forEach(function (r) { sum += r.rating || 0; }); var avg = sum / rv.length; ratingEl.innerHTML = '<span class="ig-rstars">' + stars(avg) + '</span> ' + avg.toFixed(1) + ' · ' + rv.length + (rv.length === 1 ? ' review' : ' reviews'); }
+  function renderList() {
+    var rv = allReviews(), show = expanded ? rv : rv.slice(0, 3);
+    listEl.innerHTML = show.map(function (r) { return '<div class="ig-review"><b>' + esc(r.name || "Customer") + '</b><span class="ig-rvstars">' + stars(r.rating) + '</span>' + esc(r.text) + (r.t ? '<span class="ig-rvtime">' + ago(r.t) + '</span>' : '') + '</div>'; }).join("");
+    if (rv.length > 3) { moreBtn.hidden = false; moreBtn.textContent = expanded ? "Show less" : ("View all " + rv.length + " reviews"); } else { moreBtn.hidden = true; }
+  }
+  function renderAll() { renderLikes(); renderRating(); renderList(); }
+
+  likeBtn.addEventListener("click", function () { var v = !liked(); jset(LK_KEY, v); if (v) { likeBtn.classList.remove("pop"); void likeBtn.offsetWidth; likeBtn.classList.add("pop"); } renderLikes(); });
+
+  function wlRead() { try { var a = JSON.parse(localStorage.getItem(WL_KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function wlWrite(l) { try { localStorage.setItem(WL_KEY, JSON.stringify(l)); } catch (e) {} try { window.dispatchEvent(new CustomEvent("dyn-wishlist-change")); } catch (e) {} }
+  function saved() { return wlRead().some(function (x) { return String(x.id) === String(handle); }); }
+  function paintSave() { var on = saved(); saveBtn.classList.toggle("is-on", on); saveBtn.setAttribute("aria-pressed", on ? "true" : "false"); saveBtn.setAttribute("aria-label", on ? "Saved — remove from wishlist" : "Save to wishlist"); }
+  saveBtn.addEventListener("click", function () { var l = wlRead(), i = -1, k; for (k = 0; k < l.length; k++) { if (String(l[k].id) === String(handle)) { i = k; break; } } if (i >= 0) { l.splice(i, 1); } else { l.unshift({ id: handle, title: cfg.title, url: cfg.url, image: cfg.image, price: cfg.price }); } wlWrite(l); paintSave(); });
+  window.addEventListener("dyn-wishlist-change", paintSave);
+  window.addEventListener("storage", function (e) { if (e.key === WL_KEY) paintSave(); if (e.key === RV_KEY) renderAll(); });
+
+  function flashNote(msg, ok) { noteEl.textContent = msg; noteEl.style.color = ok === false ? "#c0392b" : "#1a7f37"; noteEl.hidden = false; setTimeout(function () { noteEl.hidden = true; }, 2600); }
+  shareBtn.addEventListener("click", function () {
+    var url = cfg.url ? (location.origin + cfg.url) : location.href, title = cfg.title || document.title;
+    if (navigator.share) { navigator.share({ title: title, url: url }).catch(function () {}); }
+    else if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(function () { flashNote("Link copied!"); }).catch(function () { window.prompt("Copy this link:", url); }); }
+    else { window.prompt("Copy this link:", url); }
+  });
+  commentBtn.addEventListener("click", function () { try { textEl.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} textEl.focus(); });
+  moreBtn.addEventListener("click", function () { expanded = !expanded; renderList(); });
+
+  function paintStars() { Array.prototype.forEach.call(starWrap.children, function (b, i) { b.classList.toggle("on", i < pickRating); }); }
+  Array.prototype.forEach.call(starWrap.children, function (b) { b.addEventListener("click", function () { pickRating = parseInt(b.getAttribute("data-v"), 10) || 5; paintStars(); }); });
+  paintStars();
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var text = (textEl.value || "").trim(); if (!text) { textEl.focus(); return; }
+    var rv = { name: (nameEl.value || "").trim() || "You", rating: pickRating, text: text, t: Date.now() };
+    var l = localReviews(); l.unshift(rv); jset(RV_KEY, l);
+    textEl.value = ""; pickRating = 5; paintStars(); expanded = false; renderAll();
+    flashNote("Thanks! Your review was posted.");
+  });
+
+  renderAll(); paintSave();
+})();
+</script>
 
 {% endraw %}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
@@ -1080,6 +1252,13 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
       ] },
     { "type": "text", "id": "custom_print_label", "label": "Popup price caption", "info": "Small line under the price in the customizer popup.", "default": "Custom print" },
+
+    { "type": "header", "content": "Reviews / social ⭐" },
+    { "type": "paragraph", "content": "An Instagram-style reviews block appears under the trust badges: Like, Comment, Share and Save (wishlist). Shoppers can post a review right on the page. Reviews they write are saved in their own browser; to show a review to everyone, add it to the ‘Featured reviews’ box below." },
+    { "type": "checkbox", "id": "show_social", "label": "Show reviews / social bar", "default": true },
+    { "type": "range", "id": "like_base", "min": 0, "max": 5000, "step": 1, "label": "Starting like count", "default": 24 },
+    { "type": "textarea", "id": "reviews_seed", "label": "Featured reviews", "info": "One review per line, as: Name | rating (1-5) | review text. Example: Sarah M. | 5 | Absolutely beautiful!", "default": "Sarah M. | 5 | Absolutely beautiful — exactly as pictured. Obsessed!\nDavid R. | 5 | Fast turnaround and lovely quality. Highly recommend.\nLeila K. | 4 | Really happy with it, will order again." },
+
     { "type": "header", "content": "Engraving popup" },
     { "type": "text", "id": "engrave_title", "label": "Popup title", "default": "Personalize your AirPods." },
     { "type": "textarea", "id": "engrave_sub", "label": "Popup subtitle", "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them." },
