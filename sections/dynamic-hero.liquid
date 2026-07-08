@@ -773,7 +773,7 @@
                             {%- when 'cart' -%}{%- assign app_href = routes.cart_url -%}
                             {%- when 'search' -%}{%- assign app_href = routes.search_url -%}
                             {%- when 'account' -%}{%- assign app_href = routes.account_url -%}
-                            {%- when 'heart' -%}{%- assign app_href = '#wishlist' -%}
+                            {%- when 'heart' -%}{%- assign app_href = '/pages/wishlist' -%}
                             {%- when 'mail' -%}{%- assign app_href = '/pages/contact' -%}
                             {%- when 'phone' -%}{%- assign app_href = '/pages/contact' -%}
                             {%- when 'info' -%}{%- assign app_href = '/pages/about' -%}
@@ -1617,7 +1617,7 @@
     { "type": "app_link", "name": "App link", "settings": [
       { "type": "checkbox", "id": "enabled", "label": "Show this link", "default": true, "info": "Uncheck to hide it from the menu without deleting it." },
       { "type": "text", "id": "label", "label": "Name", "default": "App" },
-      { "type": "url", "id": "url", "label": "Link", "info": "Leave blank to use the default page for the icon you pick below (Shop→all products, Cart→cart, Account→account, Wishlist→opens the wishlist drawer, Contact→/pages/contact, About→/pages/about, Blog→/blogs/news, etc.). Type a link here to override it." },
+      { "type": "url", "id": "url", "label": "Link", "info": "Leave blank to use the default page for the icon you pick below (Shop→all products, Cart→cart, Account→account, Wishlist→/pages/wishlist, Contact→/pages/contact, About→/pages/about, Blog→/blogs/news, etc.). Type a link here to override it. Tip: use #wishlist to open the pop-out wishlist drawer instead of the page." },
       { "type": "select", "id": "icon", "label": "Icon", "default": "shop",
         "options": [
           { "value": "none", "label": "No icon (show first letter)" },

@@ -1,0 +1,148 @@
+{%- comment -%}
+  Dynamic Wishlist — a standalone wishlist PAGE.
+  Reads the same browser-stored list ("dyn_wishlist") that the heart button on
+  the product page and the header drawer use, so it needs no app and no login.
+  Works on any page (unlike the drawer, which only exists where the header is).
+{%- endcomment -%}
+
+<section class="dyn-wish" id="dynWish">
+  <style>
+    #shopify-section-{{ section.id }} { background: {{ section.settings.page_bg | default: '#ffffff' }}; }
+    .dyn-wish {
+      --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
+      --line: #d2d2d7; --panel: #f5f5f7; --accent: #0071e3; --danger: #c0392b;
+      --serif: "Cormorant Garamond", Georgia, serif;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink); font-family: var(--font);
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+    }
+    .dyn-wish .dw-wrap { max-width: 1200px; margin: 0 auto; padding: 56px 22px 90px; }
+    .dyn-wish .dw-head { text-align: center; margin-bottom: 40px; }
+    .dyn-wish .dw-title { margin: 0; font-family: var(--serif); font-weight: 600; letter-spacing: -0.01em;
+      font-size: clamp(34px, 6vw, 60px); line-height: 1.02; }
+    .dyn-wish .dw-sub { margin: 10px 0 0; color: var(--ink-faint); font-size: 15px; min-height: 20px; }
+    .dyn-wish .dw-clear { display: inline-block; margin-top: 14px; background: none; border: 0; cursor: pointer;
+      color: var(--ink-soft); font: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; padding: 4px; }
+    .dyn-wish .dw-clear:hover { color: var(--danger); }
+
+    .dyn-wish .dw-grid { display: grid; gap: 26px 22px;
+      grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); }
+    .dyn-wish .dw-card { background: #fff; border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
+      display: flex; flex-direction: column; transition: box-shadow .2s ease, transform .2s ease; }
+    .dyn-wish .dw-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 16px 40px rgba(0,0,0,0.08); }
+    .dyn-wish .dw-media { position: relative; display: block; aspect-ratio: 1 / 1; background: var(--panel); overflow: hidden; }
+    .dyn-wish .dw-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+    @media (hover: hover) and (pointer: fine) { .dyn-wish .dw-card:hover .dw-media img { transform: scale(1.04); } }
+    .dyn-wish .dw-ph { position: absolute; inset: 0; background: var(--panel); }
+    .dyn-wish .dw-body { padding: 15px 16px 17px; display: flex; flex-direction: column; gap: 6px; flex: 1 1 auto; }
+    .dyn-wish .dw-name { color: var(--ink); text-decoration: none; font-size: 15px; font-weight: 500; line-height: 1.3; }
+    .dyn-wish .dw-name:hover { color: var(--accent); }
+    .dyn-wish .dw-price { color: var(--ink-soft); font-size: 14px; }
+    .dyn-wish .dw-actions { margin-top: auto; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .dyn-wish .dw-view { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px;
+      border-radius: 999px; background: var(--ink); color: #fff; text-decoration: none; font-size: 13.5px; font-weight: 500; }
+    .dyn-wish .dw-view:hover { opacity: .88; }
+    .dyn-wish .dw-remove { background: none; border: 0; cursor: pointer; color: var(--ink-faint); font: inherit; font-size: 13px; padding: 6px; }
+    .dyn-wish .dw-remove:hover { color: var(--danger); }
+
+    .dyn-wish .dw-empty { text-align: center; padding: 60px 20px 40px; }
+    .dyn-wish .dw-empty-ic { font-size: 54px; line-height: 1; color: var(--ink-faint); }
+    .dyn-wish .dw-empty p { margin: 18px 0 26px; color: var(--ink-soft); font-size: 17px; }
+    .dyn-wish .dw-btn { display: inline-flex; align-items: center; justify-content: center; height: 46px; padding: 0 26px;
+      border-radius: 999px; background: var(--accent); color: #fff; text-decoration: none; font-size: 15px; font-weight: 500; }
+    .dyn-wish .dw-btn:hover { opacity: .9; }
+
+    @media (max-width: 1000px) { .dyn-wish .dw-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (max-width: 720px) { .dyn-wish .dw-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px 14px; }
+      .dyn-wish .dw-wrap { padding: 40px 16px 70px; } }
+  </style>
+
+  <div class="dw-wrap" style="--cols: {{ section.settings.columns | default: 4 }};">
+    <div class="dw-head">
+      <h1 class="dw-title">{{ section.settings.heading | default: 'Wishlist' }}</h1>
+      {%- if section.settings.show_count -%}<p class="dw-sub" data-dw-count></p>{%- endif -%}
+      {%- if section.settings.show_clear -%}<div><button type="button" class="dw-clear" id="dwClear" hidden>Clear all</button></div>{%- endif -%}
+    </div>
+
+    <div class="dw-grid" id="dwGrid" hidden></div>
+
+    <div class="dw-empty" id="dwEmpty" hidden>
+      <div class="dw-empty-ic" aria-hidden="true">&#9825;</div>
+      <p>{{ section.settings.empty_text | default: 'Your wishlist is empty. Tap the ♡ on any product to save it here.' }}</p>
+      <a class="dw-btn" href="{{ section.settings.continue_url | default: routes.all_products_collection_url }}">{{ section.settings.continue_label | default: 'Browse products' }}</a>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    var root = document.getElementById("dynWish");
+    if (!root) return;
+    var KEY = "dyn_wishlist";
+    var grid = root.querySelector("#dwGrid"), empty = root.querySelector("#dwEmpty");
+    var countEl = root.querySelector("[data-dw-count]"), clearBtn = root.querySelector("#dwClear");
+
+    function read() { try { var a = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+    function write(l) { try { localStorage.setItem(KEY, JSON.stringify(l)); } catch (e) {} try { window.dispatchEvent(new CustomEvent("dyn-wishlist-change")); } catch (e) {} }
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+    function render() {
+      var list = read();
+      if (countEl) countEl.textContent = list.length ? (list.length + (list.length === 1 ? " item saved" : " items saved")) : "";
+      if (clearBtn) clearBtn.hidden = list.length === 0;
+      if (!list.length) { grid.hidden = true; grid.innerHTML = ""; empty.hidden = false; return; }
+      empty.hidden = true; grid.hidden = false;
+      grid.innerHTML = list.map(function (it) {
+        var url = esc(it.url || "#");
+        return '<article class="dw-card">' +
+          '<a class="dw-media" href="' + url + '">' +
+            (it.image ? '<img src="' + esc(it.image) + '" alt="" loading="lazy">' : '<span class="dw-ph"></span>') +
+          '</a>' +
+          '<div class="dw-body">' +
+            '<a class="dw-name" href="' + url + '">' + esc(it.title || "Product") + '</a>' +
+            (it.price ? '<div class="dw-price">' + esc(it.price) + '</div>' : '') +
+            '<div class="dw-actions">' +
+              '<a class="dw-view" href="' + url + '">View</a>' +
+              '<button type="button" class="dw-remove" data-id="' + esc(it.id) + '" aria-label="Remove from wishlist">Remove</button>' +
+            '</div>' +
+          '</div></article>';
+      }).join("");
+    }
+
+    grid.addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest("[data-id]") : null;
+      if (!b) return;
+      e.preventDefault();
+      var id = b.getAttribute("data-id");
+      write(read().filter(function (x) { return String(x.id) !== String(id); }));
+      render();
+    });
+    if (clearBtn) clearBtn.addEventListener("click", function () { write([]); render(); });
+    window.addEventListener("dyn-wishlist-change", render);
+    window.addEventListener("storage", function (e) { if (e.key === KEY) render(); });
+    render();
+  })();
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Dynamic Wishlist",
+  "tag": "section",
+  "class": "dynamic-wishlist-section",
+  "settings": [
+    { "type": "paragraph", "content": "Shows the products a shopper saved with the ♡ button. Saved in the browser — no app or login needed. Add this section to a page (e.g. a page called “Wishlist” so its address is /pages/wishlist)." },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Wishlist" },
+    { "type": "checkbox", "id": "show_count", "label": "Show saved-count line", "default": true },
+    { "type": "checkbox", "id": "show_clear", "label": "Show “Clear all” button", "default": true },
+    { "type": "range", "id": "columns", "min": 2, "max": 5, "step": 1, "label": "Columns (desktop)", "default": 4 },
+    { "type": "text", "id": "empty_text", "label": "Empty message", "default": "Your wishlist is empty. Tap the ♡ on any product to save it here." },
+    { "type": "text", "id": "continue_label", "label": "Empty button label", "default": "Browse products" },
+    { "type": "url", "id": "continue_url", "label": "Empty button link", "info": "Leave blank to link to all products." },
+    { "type": "color", "id": "page_bg", "label": "Page background", "default": "#ffffff" }
+  ],
+  "presets": [
+    { "name": "Dynamic Wishlist" }
+  ],
+  "enabled_on": { "templates": ["page", "index"] }
+}
+{% endschema %}
