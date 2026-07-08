@@ -1268,8 +1268,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   function flashNote(msg) { noteEl.textContent = msg; noteEl.hidden = false; setTimeout(function () { noteEl.hidden = true; }, 2500); }
   shareBtn.addEventListener("click", function () {
     var url = cfg.url ? (location.origin + cfg.url) : location.href, title = cfg.title || document.title;
-    if (navigator.share) { navigator.share({ title: title, url: url }).catch(function () {}); }
-    else if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(function () { flashNote("Link copied!"); }).catch(function () { window.prompt("Copy this link:", url); }); }
+    var text = "Check out " + title + (cfg.price ? " — " + cfg.price : "");
+    if (navigator.share) { navigator.share({ title: title, text: text, url: url }).catch(function () {}); }
+    else if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text + " " + url).then(function () { flashNote("Link copied!"); }).catch(function () { window.prompt("Copy this link:", url); }); }
     else { window.prompt("Copy this link:", url); }
     if (fb && !shared()) { jset(SH_KEY, true); fbInc("shares", 1); fbShares += 1; renderShare(); }
   });
