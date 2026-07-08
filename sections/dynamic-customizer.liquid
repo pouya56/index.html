@@ -451,6 +451,7 @@ button { font-family: inherit; cursor: pointer; }
 .ig-note { font-size: 12.5px; color: #1a7f37; margin-top: 10px; }
 .ig-jdgm-badge { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .ig-reviews-panel { margin-top: 18px; }
+.ig-noreviews { font-size: 14px; color: var(--ink-faint); padding: 6px 0 2px; }
 
 .modal-root { position: fixed; inset: 0; z-index: 9990; display: none; }
 
@@ -1170,13 +1171,26 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   window.addEventListener("storage", function (e) { if (e.key === WL_KEY) paintSave(); });
   paintSave();
 
-  /* Comment icon — reveal / hide the Judge.me review widget. */
+  /* Comment icon — reveal / hide the Judge.me review widget. If Judge.me has
+     not filled the widget (e.g. no reviews yet, or the app embed is off), show
+     a friendly placeholder so the panel is never blank. */
+  function checkEmpty() {
+    var w = panel.querySelector(".jdgm-review-widget");
+    var hasContent = w && (w.children.length > 0 || (w.textContent || "").trim().length > 0);
+    var ph = panel.querySelector(".ig-noreviews");
+    if (!hasContent) {
+      if (!ph) { ph = document.createElement("div"); ph.className = "ig-noreviews"; ph.textContent = "No reviews yet — be the first to review this product!"; panel.appendChild(ph); }
+    } else if (ph) { ph.parentNode.removeChild(ph); }
+  }
   commentBtn.addEventListener("click", function () {
     if (!panel) return;
     var open = panel.hidden;
     panel.hidden = !open;
     commentBtn.setAttribute("aria-expanded", open ? "true" : "false");
-    if (open) { try { panel.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {} }
+    if (open) {
+      try { panel.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {}
+      setTimeout(checkEmpty, 300); setTimeout(checkEmpty, 1500);
+    }
   });
 
   /* Real review count from Judge.me, shown next to the comment icon. */
