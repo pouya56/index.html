@@ -32,8 +32,8 @@
 
     /* Background media layers (crossfade) */
     .dyn-fb .fb-bg { position: absolute; inset: 0; z-index: 0; }
-    .dyn-fb .fb-bg-layer { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; }
-    .dyn-fb .fb-bg-layer.is-active { opacity: 1; }
+    .dyn-fb .fb-bg-layer { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; pointer-events: none; }
+    .dyn-fb .fb-bg-layer.is-active { opacity: 1; pointer-events: auto; }
     .dyn-fb .fb-media { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 
     /* Close button (top-right) — appears when a tab is open */
@@ -45,7 +45,8 @@
     .dyn-fb.is-open .fb-close { opacity: 1; pointer-events: auto; transform: scale(1); }
 
     /* Left column: nav arrows + pills */
-    .dyn-fb .fb-left { position: relative; z-index: 3; display: flex; align-items: center; gap: 16px; min-height: 640px; padding: 48px clamp(20px,4vw,52px); box-sizing: border-box; }
+    .dyn-fb .fb-left { position: relative; z-index: 3; display: flex; align-items: center; gap: 16px; min-height: 640px; padding: 48px clamp(20px,4vw,52px); box-sizing: border-box; pointer-events: none; }
+    .dyn-fb .fb-nav, .dyn-fb .fb-navbtn, .dyn-fb .fb-pill, .dyn-fb .fb-panel, .dyn-fb .fb-close { pointer-events: auto; }
     .dyn-fb .fb-nav { display: flex; flex-direction: column; gap: 10px; opacity: 0; pointer-events: none; transition: opacity .25s; }
     .dyn-fb.is-open .fb-nav { opacity: 1; pointer-events: auto; }
     .dyn-fb .fb-navbtn { width: 44px; height: 44px; border-radius: 50%; background: var(--glass); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
@@ -85,6 +86,16 @@
     .dyn-fb .fb-swatch:hover { transform: scale(1.14); }
     .dyn-fb .fb-swatch.is-active { box-shadow: 0 0 0 2px rgba(0,0,0,.35), 0 0 0 4px #fff; }
 
+    /* Before / After comparison (usable as any tab's background media) */
+    .dyn-fb .fb-ba { position: absolute; inset: 0; overflow: hidden; user-select: none; touch-action: none; }
+    .dyn-fb .fb-ba-before, .dyn-fb .fb-ba-after { position: absolute; inset: 0; }
+    .dyn-fb .fb-ba-after { clip-path: inset(0 0 0 50%); -webkit-clip-path: inset(0 0 0 50%); }
+    .dyn-fb .fb-ba-before img, .dyn-fb .fb-ba-after img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .dyn-fb .fb-ba-badge { position: absolute; top: 18px; font: 600 11px/1 var(--font); letter-spacing: .12em; text-transform: uppercase; padding: 7px 12px; border-radius: 50px; z-index: 3; color: #fff; background: rgba(255,255,255,.14); -webkit-backdrop-filter: blur(10px) saturate(150%); backdrop-filter: blur(10px) saturate(150%); border: 1px solid rgba(255,255,255,.35); }
+    .dyn-fb .fb-ba-l { left: 18px; } .dyn-fb .fb-ba-r { right: 18px; }
+    .dyn-fb .fb-ba-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: rgba(255,255,255,.65); transform: translateX(-1px); z-index: 4; box-shadow: 0 0 18px rgba(0,0,0,.45); }
+    .dyn-fb .fb-ba-grip { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.2); -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%); border: 1px solid rgba(255,255,255,.5); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; box-shadow: 0 6px 22px rgba(0,0,0,.35); }
+
     .dyn-fb .fb-empty { color: var(--soft); font-size: 15px; padding: 30px; }
 
     @media (max-width: 860px) {
@@ -109,7 +120,15 @@
       <div class="fb-bg">
         {%- for block in colors -%}
           <div class="fb-bg-layer{% if forloop.first %} is-active{% endif %}" data-key="c{{ forloop.index0 }}">
-            {%- if block.settings.video != blank -%}
+            {%- if block.settings.ba_before != blank and block.settings.ba_after != blank -%}
+              <div class="fb-ba" data-fb-ba>
+                <div class="fb-ba-before"><img class="fb-media" src="{{ block.settings.ba_before | image_url: width: 1800 }}" width="1600" height="1000" alt="Before" loading="lazy"></div>
+                <div class="fb-ba-after" data-fb-ba-after><img class="fb-media" src="{{ block.settings.ba_after | image_url: width: 1800 }}" width="1600" height="1000" alt="After" loading="lazy"></div>
+                <div class="fb-ba-badge fb-ba-l">{{ block.settings.ba_before_label | default: 'Before' }}</div>
+                <div class="fb-ba-badge fb-ba-r">{{ block.settings.ba_after_label | default: 'After' }}</div>
+                <div class="fb-ba-handle" data-fb-ba-handle><div class="fb-ba-grip">⇄</div></div>
+              </div>
+            {%- elsif block.settings.video != blank -%}
               <video class="fb-media" autoplay muted loop playsinline{% if block.settings.image != blank %} poster="{{ block.settings.image | image_url: width: 40 }}"{% endif %}>
                 {%- for s in block.settings.video.sources -%}<source src="{{ s.url }}" type="{{ s.mime_type }}">{%- endfor -%}
               </video>
@@ -120,7 +139,15 @@
         {%- endfor -%}
         {%- for block in feats -%}
           <div class="fb-bg-layer{% if colors.size == 0 and forloop.first %} is-active{% endif %}" data-key="f{{ forloop.index0 }}">
-            {%- if block.settings.video != blank -%}
+            {%- if block.settings.ba_before != blank and block.settings.ba_after != blank -%}
+              <div class="fb-ba" data-fb-ba>
+                <div class="fb-ba-before"><img class="fb-media" src="{{ block.settings.ba_before | image_url: width: 1800 }}" width="1600" height="1000" alt="Before" loading="lazy"></div>
+                <div class="fb-ba-after" data-fb-ba-after><img class="fb-media" src="{{ block.settings.ba_after | image_url: width: 1800 }}" width="1600" height="1000" alt="After" loading="lazy"></div>
+                <div class="fb-ba-badge fb-ba-l">{{ block.settings.ba_before_label | default: 'Before' }}</div>
+                <div class="fb-ba-badge fb-ba-r">{{ block.settings.ba_after_label | default: 'After' }}</div>
+                <div class="fb-ba-handle" data-fb-ba-handle><div class="fb-ba-grip">⇄</div></div>
+              </div>
+            {%- elsif block.settings.video != blank -%}
               <video class="fb-media" autoplay muted loop playsinline{% if block.settings.image != blank %} poster="{{ block.settings.image | image_url: width: 40 }}"{% endif %}>
                 {%- for s in block.settings.video.sources -%}<source src="{{ s.url }}" type="{{ s.mime_type }}">{%- endfor -%}
               </video>
@@ -220,6 +247,21 @@
       });
     });
 
+    /* Before / After sliders — drag to compare (used as a tab's media) */
+    function initBA(el) {
+      var after = el.querySelector("[data-fb-ba-after]"), handle = el.querySelector("[data-fb-ba-handle]");
+      if (!after || !handle) return;
+      var target = 50, cur = 50, raf = null;
+      function paint() { var v = cur.toFixed(2); after.style.clipPath = "inset(0 0 0 " + v + "%)"; after.style.webkitClipPath = "inset(0 0 0 " + v + "%)"; handle.style.left = v + "%"; }
+      function tick() { cur += (target - cur) * 0.15; if (Math.abs(target - cur) < 0.05) cur = target; paint(); raf = (cur !== target) ? requestAnimationFrame(tick) : null; }
+      function to(p) { target = Math.max(2, Math.min(98, p)); if (!raf) raf = requestAnimationFrame(tick); }
+      paint();
+      el.addEventListener("mousemove", function (e) { var r = el.getBoundingClientRect(); to((e.clientX - r.left) / r.width * 100); });
+      el.addEventListener("mouseleave", function () { to(50); });
+      el.addEventListener("touchmove", function (e) { var r = el.getBoundingClientRect(); to((e.touches[0].clientX - r.left) / r.width * 100); }, { passive: true });
+    }
+    root.querySelectorAll("[data-fb-ba]").forEach(initBA);
+
     closeAll(); /* start with nothing open */
   })();
   </script>
@@ -249,13 +291,25 @@
       { "type": "text", "id": "label", "label": "Color name", "default": "Cosmic Orange" },
       { "type": "color", "id": "swatch", "label": "Swatch color", "default": "#c65a2e" },
       { "type": "image_picker", "id": "image", "label": "Background image (this colour)" },
-      { "type": "video", "id": "video", "label": "Background video (optional, overrides image)" }
+      { "type": "video", "id": "video", "label": "Background video (optional, overrides image)" },
+      { "type": "header", "content": "Before / after slider (optional)" },
+      { "type": "paragraph", "content": "Set BOTH images to show a draggable before/after comparison as this tab's background (overrides the image/video above)." },
+      { "type": "image_picker", "id": "ba_before", "label": "Before image" },
+      { "type": "image_picker", "id": "ba_after", "label": "After image" },
+      { "type": "text", "id": "ba_before_label", "label": "Before label", "default": "Before" },
+      { "type": "text", "id": "ba_after_label", "label": "After label", "default": "After" }
     ]},
     { "type": "feature", "name": "Feature (tab)", "settings": [
       { "type": "text", "id": "title", "label": "Feature title", "default": "Ceramic Shield" },
       { "type": "textarea", "id": "detail", "label": "Details", "default": "Describe this feature — what it is and why it matters." },
       { "type": "image_picker", "id": "image", "label": "Background image (this feature)" },
-      { "type": "video", "id": "video", "label": "Background video (optional, overrides image)" }
+      { "type": "video", "id": "video", "label": "Background video (optional, overrides image)" },
+      { "type": "header", "content": "Before / after slider (optional)" },
+      { "type": "paragraph", "content": "Set BOTH images to show a draggable before/after comparison as this tab's background (overrides the image/video above)." },
+      { "type": "image_picker", "id": "ba_before", "label": "Before image" },
+      { "type": "image_picker", "id": "ba_after", "label": "After image" },
+      { "type": "text", "id": "ba_before_label", "label": "Before label", "default": "Before" },
+      { "type": "text", "id": "ba_after_label", "label": "After label", "default": "After" }
     ]}
   ],
   "max_blocks": 16,
