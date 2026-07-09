@@ -5,13 +5,14 @@
   is /pages/account) and point your account/menu link there. Deep-link a tab by
   adding a hash, e.g. /pages/account#wishlist.
 
-  Tabs: Orders, Wishlist, Order tracking, Saved Designs, Reviews, Profile.
-  Orders / tracking / addresses (in Profile) read your Shopify customer data
-  (shopper must be logged in). Wishlist / Saved Designs / Reviews / profile photo
-  are saved in the shopper's browser (no app needed). Name / email are edited on
-  Shopify's own account settings (a theme can't change those) via the Profile
-  tab's "Edit name / email" button. Point your header account icon here by
-  setting the header's "Account page" URL to this page (default /pages/account).
+  Tabs: Orders, Wishlist, Saved Designs, Reviews — plus an "Account settings"
+  link that opens Shopify's own order-detail, tracking, profile and address
+  pages. Orders read your Shopify customer data (shopper must be logged in).
+  Wishlist / Saved Designs / Reviews / profile photo are saved in the shopper's
+  browser (no app needed). Order details, tracking, name, email and addresses
+  live on Shopify's secure account pages (a theme can't change those). Point your
+  header account icon here by setting the header's "Account page" URL to this
+  page (default /pages/account).
 {%- endcomment -%}
 
 <section class="dyn-acct" id="dynAcct" data-login="{{ routes.account_login_url }}">
@@ -29,6 +30,9 @@
     .dyn-acct .da-tab { text-align:left; border:0; background:none; cursor:pointer; font:inherit; font-size:15px; color:var(--ink-soft); padding:10px 14px; border-radius:10px; transition:background .15s,color .15s; }
     .dyn-acct .da-tab:hover { background:var(--line-soft); color:var(--ink); }
     .dyn-acct .da-tab.is-active { background:var(--ink); color:#fff; font-weight:500; }
+    .dyn-acct .da-navlink { display:flex; align-items:center; gap:6px; text-align:left; font-size:15px; color:var(--ink-soft); padding:10px 14px; border-radius:10px; text-decoration:none; transition:background .15s,color .15s; }
+    .dyn-acct .da-navlink:hover { background:var(--line-soft); color:var(--ink); }
+    .dyn-acct .da-navlink svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
     .dyn-acct .da-logout { margin-top:14px; padding:10px 14px; font-size:14px; color:var(--ink-faint); text-decoration:none; }
     .dyn-acct .da-logout:hover { color:var(--danger); }
     .dyn-acct .da-idbar { display:flex; align-items:center; gap:11px; margin-bottom:18px; }
@@ -162,10 +166,9 @@
       </div>
       <button type="button" class="da-tab is-active" data-tab="orders">Orders</button>
       <button type="button" class="da-tab" data-tab="wishlist">Wishlist</button>
-      <button type="button" class="da-tab" data-tab="tracking">Order tracking</button>
       <button type="button" class="da-tab" data-tab="designs">Saved Designs</button>
       <button type="button" class="da-tab" data-tab="reviews">Reviews</button>
-      <button type="button" class="da-tab" data-tab="profile">Profile</button>
+      <a class="da-navlink" href="{{ routes.account_url }}" title="Opens Shopify’s secure account settings">Account settings <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
       <a class="da-logout" href="{{ routes.account_logout_url }}">Log out</a>
     </aside>
 
@@ -195,41 +198,7 @@
                 {%- for line in order.line_items limit: 4 -%}<span>{{ line.quantity }}× {{ line.title }}</span>{%- endfor -%}
                 {%- if order.line_items.size > 4 -%}<span>+{{ order.line_items.size | minus: 4 }} more</span>{%- endif -%}
               </div>
-              <button type="button" class="da-odtoggle">View order details →</button>
-              <div class="da-oddetail" hidden>
-                {%- for line in order.line_items -%}
-                  <div class="da-oi">
-                    <div class="da-oi-img">{%- if line.image -%}<img src="{{ line.image | image_url: width: 120 }}" alt="{{ line.title | escape }}" width="120" height="120" loading="lazy">{%- endif -%}</div>
-                    <div class="da-oi-main">
-                      <div class="da-oi-title">{{ line.quantity }}× {{ line.title }}</div>
-                      {%- if line.variant.title and line.variant.title != 'Default Title' -%}<div class="da-oi-variant">{{ line.variant.title }}</div>{%- endif -%}
-                      {%- for prop in line.properties -%}
-                        {%- assign pn = prop.first -%}{%- assign pv = prop.last -%}{%- assign pc = pn | slice: 0 -%}
-                        {%- if pc != '_' and pv != blank -%}<div class="da-oi-prop">{{ pn }}: {{ pv }}</div>{%- endif -%}
-                      {%- endfor -%}
-                    </div>
-                    <div class="da-oi-price">{{ line.final_line_price | money }}</div>
-                  </div>
-                {%- endfor -%}
-                <div class="da-odtot">
-                  <div><span>Subtotal</span><span>{{ order.subtotal_price | money }}</span></div>
-                  {%- if order.shipping_price > 0 -%}<div><span>Shipping</span><span>{{ order.shipping_price | money }}</span></div>{%- endif -%}
-                  {%- if order.tax_price > 0 -%}<div><span>Tax</span><span>{{ order.tax_price | money }}</span></div>{%- endif -%}
-                  <div class="da-odtot-total"><span>Total</span><span>{{ order.total_price | money }}</span></div>
-                </div>
-                {%- if order.shipping_address -%}
-                  <div class="da-odblock"><div class="da-odblock-h">Shipping to</div>
-                    <div class="da-odblock-b">{{ order.shipping_address.name }}<br>{{ order.shipping_address.address1 }}{% if order.shipping_address.address2 != blank %}, {{ order.shipping_address.address2 }}{% endif %}<br>{{ order.shipping_address.city }}{% if order.shipping_address.province != blank %}, {{ order.shipping_address.province }}{% endif %} {{ order.shipping_address.zip }}<br>{{ order.shipping_address.country }}</div>
-                  </div>
-                {%- endif -%}
-                {%- for fulfillment in order.fulfillments -%}
-                  {%- if fulfillment.tracking_number or fulfillment.tracking_url -%}
-                    <div class="da-odblock"><div class="da-odblock-h">Tracking</div>
-                      <div class="da-odblock-b">{% if fulfillment.tracking_company %}{{ fulfillment.tracking_company }} {% endif %}{% if fulfillment.tracking_number %}· {{ fulfillment.tracking_number }}{% endif %}{% if fulfillment.tracking_url %} · <a class="da-link" href="{{ fulfillment.tracking_url }}" target="_blank" rel="noopener">Track shipment</a>{% endif %}</div>
-                    </div>
-                  {%- endif -%}
-                {%- endfor -%}
-              </div>
+              <div style="margin-top:12px"><a class="da-link" href="{{ order.customer_url }}">View order details &amp; tracking →</a></div>
             </div>
           {%- endfor -%}
         {%- else -%}
@@ -242,49 +211,6 @@
         <h1 class="da-h">Wishlist</h1>
         <p class="da-sub">Products you saved with the ♡ / bookmark button.</p>
         <div id="daWish"></div>
-      </div>
-
-      {%- comment -%} ---------- ORDER TRACKING ---------- {%- endcomment -%}
-      <div class="da-panel" data-panel="tracking">
-        <h1 class="da-h">Order tracking</h1>
-        <p class="da-sub">Shipping status for every order — with a Track button once it ships.</p>
-        {%- if customer.orders.size > 0 -%}
-          {%- for order in customer.orders -%}
-            <div class="da-card">
-              <div class="da-row">
-                <div>
-                  <div class="da-order-no">{{ order.name }}</div>
-                  <div class="da-order-meta">Ordered {{ order.created_at | date: "%b %-d, %Y" }}</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
-                  {%- for fulfillment in order.fulfillments -%}
-                    {%- if fulfillment.tracking_url -%}
-                      <a class="da-btn sm" href="{{ fulfillment.tracking_url }}" target="_blank" rel="noopener">
-                        <span class="da-track"><svg viewBox="0 0 24 24"><path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="17.5" cy="17" r="1.6"/></svg> Track</span>
-                      </a>
-                    {%- endif -%}
-                  {%- endfor -%}
-                  {%- if order.fulfillment_status == 'fulfilled' -%}
-                    <span class="da-badge fulfilled">Shipped</span>
-                  {%- elsif order.fulfillment_status == 'partial' -%}
-                    <span class="da-badge pending">Partly shipped</span>
-                  {%- else -%}
-                    <span class="da-badge pending">Processing</span>
-                  {%- endif -%}
-                </div>
-              </div>
-              {%- for fulfillment in order.fulfillments -%}
-                {%- if fulfillment.tracking_number or fulfillment.tracking_company -%}
-                  <div class="da-items" style="border-top:0; padding-top:8px">
-                    {% if fulfillment.tracking_company %}{{ fulfillment.tracking_company }}{% else %}Carrier{% endif %}{% if fulfillment.tracking_number %} · {{ fulfillment.tracking_number }}{% endif %}{% if fulfillment.created_at %} · shipped {{ fulfillment.created_at | date: "%b %-d" }}{% endif %}
-                  </div>
-                {%- endif -%}
-              {%- endfor -%}
-            </div>
-          {%- endfor -%}
-        {%- else -%}
-          <div class="da-empty">No orders yet. Once you place an order, its shipping status and tracking will appear here.</div>
-        {%- endif -%}
       </div>
 
       {%- comment -%} ---------- SAVED DESIGNS (the custom designs from past orders) ---------- {%- endcomment -%}
@@ -322,107 +248,6 @@
         {%- else -%}
           <div class="da-empty">Your custom designs from past orders will show up here.</div>
         {%- endif -%}
-      </div>
-
-      {%- comment -%} ---------- PROFILE (name, email, photo, addresses) ---------- {%- endcomment -%}
-      <div class="da-panel" data-panel="profile">
-        <h1 class="da-h">Profile</h1>
-        <p class="da-sub">Your details, photo and addresses.</p>
-
-        {%- comment -%} Name + email + photo {%- endcomment -%}
-        <div class="da-card">
-          <div class="da-profile-row">
-            <button type="button" class="da-avatar da-avatar-lg da-avatar-btn" id="daAvatarBig" title="Change photo" aria-label="Change profile photo"><span class="da-avatar-fb">{{ customer.first_name | default: customer.name | default: 'U' | slice: 0 | upcase }}</span><span class="da-avatar-cam" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span></button>
-            <div style="flex:1 1 auto; min-width:0">
-              <div class="da-profile-name">{{ customer.name | default: customer.first_name | default: 'Your account' }}</div>
-              {%- if customer.email != blank -%}<div class="da-profile-email">{{ customer.email }}</div>{%- endif -%}
-              <div class="da-profile-note" id="daAvatarNote">Tap your photo to change it (saved on this device).</div>
-              <button type="button" class="da-x" id="daAvatarRemove" hidden style="margin-top:6px">Remove photo</button>
-            </div>
-            <a class="da-btn ghost sm da-ext" href="{{ routes.account_url }}" title="Opens Shopify's secure account settings">Edit name / email <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
-          </div>
-        </div>
-
-        {%- comment -%} Addresses {%- endcomment -%}
-        <div class="da-row" style="align-items:center; margin:28px 0 14px">
-          <h2 class="da-sech">Addresses</h2>
-          <button type="button" class="da-btn ghost sm" id="daAddrNew">+ Add</button>
-        </div>
-
-        {%- form 'customer_address', customer.new_address, class: 'da-form', id: 'daAddrNewForm', hidden: true -%}
-          <div class="da-2col">
-            <div class="da-field"><label>First name</label><input type="text" name="address[first_name]" value="{{ form.first_name }}"></div>
-            <div class="da-field"><label>Last name</label><input type="text" name="address[last_name]" value="{{ form.last_name }}"></div>
-          </div>
-          <div class="da-field"><label>Company (optional)</label><input type="text" name="address[company]" value="{{ form.company }}"></div>
-          <div class="da-field"><label>Address</label><input type="text" name="address[address1]" value="{{ form.address1 }}"></div>
-          <div class="da-field"><label>Apartment, suite, etc. (optional)</label><input type="text" name="address[address2]" value="{{ form.address2 }}"></div>
-          <div class="da-2col">
-            <div class="da-field"><label>City</label><input type="text" name="address[city]" value="{{ form.city }}"></div>
-            <div class="da-field"><label>Postal / ZIP code</label><input type="text" name="address[zip]" value="{{ form.zip }}"></div>
-          </div>
-          <div class="da-2col">
-            <div class="da-field"><label>Country</label><select name="address[country]" id="daAddrCountry">{{ country_option_tags }}</select></div>
-            <div class="da-field"><label>State / Province</label><input type="text" name="address[province]" value="{{ form.province }}"></div>
-          </div>
-          <div class="da-field"><label>Phone (optional)</label><input type="tel" name="address[phone]" value="{{ form.phone }}"></div>
-          <label class="da-check"><input type="checkbox" name="address[default]" value="1"> Set as default address</label>
-          <div class="da-form-actions">
-            <button type="submit" class="da-btn">Save address</button>
-            <button type="button" class="da-btn ghost da-addr-cancel">Cancel</button>
-          </div>
-        {%- endform -%}
-
-        {%- if customer.addresses.size > 0 -%}
-          {%- for address in customer.addresses -%}
-            <div class="da-addr {% if address == customer.default_address %}def{% endif %}" data-addr="{{ address.id }}">
-              <p class="nm">{{ address.first_name }} {{ address.last_name }}{% if address == customer.default_address %} · <span style="color:var(--accent);font-size:13px">Default</span>{% endif %}</p>
-              <p>
-                {% if address.company != blank %}{{ address.company }}<br>{% endif %}
-                {{ address.address1 }}{% if address.address2 != blank %}, {{ address.address2 }}{% endif %}<br>
-                {{ address.city }}{% if address.province != blank %}, {{ address.province }}{% endif %} {{ address.zip }}<br>
-                {{ address.country }}{% if address.phone != blank %}<br>{{ address.phone }}{% endif %}
-              </p>
-              <div class="da-addr-actions">
-                <button type="button" class="da-btn ghost sm da-addr-edit" data-edit="{{ address.id }}">Edit</button>
-                {%- form 'customer_address', address, class: 'da-inline-del' -%}
-                  <input type="hidden" name="_method" value="delete">
-                  <button type="submit" class="da-btn danger sm" onclick="return confirm('Delete this address?')">Delete</button>
-                {%- endform -%}
-              </div>
-            </div>
-            {%- assign edit_form_id = 'daAddrEdit-' | append: address.id -%}
-            {%- form 'customer_address', address, class: 'da-form', id: edit_form_id, hidden: true -%}
-              <div class="da-2col">
-                <div class="da-field"><label>First name</label><input type="text" name="address[first_name]" value="{{ form.first_name }}"></div>
-                <div class="da-field"><label>Last name</label><input type="text" name="address[last_name]" value="{{ form.last_name }}"></div>
-              </div>
-              <div class="da-field"><label>Company (optional)</label><input type="text" name="address[company]" value="{{ form.company }}"></div>
-              <div class="da-field"><label>Address</label><input type="text" name="address[address1]" value="{{ form.address1 }}"></div>
-              <div class="da-field"><label>Apartment, suite, etc. (optional)</label><input type="text" name="address[address2]" value="{{ form.address2 }}"></div>
-              <div class="da-2col">
-                <div class="da-field"><label>City</label><input type="text" name="address[city]" value="{{ form.city }}"></div>
-                <div class="da-field"><label>Postal / ZIP code</label><input type="text" name="address[zip]" value="{{ form.zip }}"></div>
-              </div>
-              <div class="da-2col">
-                <div class="da-field"><label>Country</label><select name="address[country]">{{ country_option_tags }}</select></div>
-                <div class="da-field"><label>State / Province</label><input type="text" name="address[province]" value="{{ form.province }}"></div>
-              </div>
-              <div class="da-field"><label>Phone (optional)</label><input type="tel" name="address[phone]" value="{{ form.phone }}"></div>
-              <label class="da-check"><input type="checkbox" name="address[default]" value="1" {% if address == customer.default_address %}checked{% endif %}> Set as default address</label>
-              <div class="da-form-actions">
-                <button type="submit" class="da-btn">Update address</button>
-                <button type="button" class="da-btn ghost da-addr-cancel">Cancel</button>
-              </div>
-            {%- endform -%}
-          {%- endfor -%}
-        {%- else -%}
-          <div class="da-empty" id="daNoAddr">No saved addresses yet.</div>
-        {%- endif -%}
-
-        <div class="da-signout">
-          <a class="da-btn ghost" href="{{ routes.account_logout_url }}">Sign out</a>
-        </div>
       </div>
 
       {%- comment -%} ---------- REVIEWS ---------- {%- endcomment -%}
@@ -477,17 +302,6 @@
     var initial = (location.hash || "").replace("#", "");
     if (initial) show(initial);
     window.addEventListener("hashchange", function () { var n = (location.hash || "").replace("#", ""); if (n) show(n); });
-
-    /* ---- Order details expand/collapse (kept on this page, not Shopify's) ---- */
-    var ordersPanel = root.querySelector('[data-panel="orders"]');
-    if (ordersPanel) ordersPanel.addEventListener("click", function (e) {
-      var t = e.target.closest && e.target.closest(".da-odtoggle"); if (!t) return;
-      var d = t.nextElementSibling;
-      if (d && d.classList.contains("da-oddetail")) {
-        var willShow = d.hidden; d.hidden = !willShow;
-        t.textContent = willShow ? "Hide order details" : "View order details →";
-      }
-    });
 
     /* ---- Profile photo (avatar) — upload, shrink, store on this device ---- */
     var AVA_KEY = "dyn_avatar";
@@ -605,16 +419,6 @@
       if (moreBtn) moreBtn.onclick = function () { rvExpanded = !rvExpanded; renderReviews(); };
     }
     renderReviews();
-
-    /* ---- Address add / edit form toggles ---- */
-    function hideAllForms() { root.querySelectorAll(".da-form").forEach(function (f) { f.hidden = true; }); }
-    hideAllForms();
-    var newBtn = document.getElementById("daAddrNew"), newForm = document.getElementById("daAddrNewForm");
-    if (newBtn && newForm) newBtn.addEventListener("click", function () { hideAllForms(); newForm.hidden = false; newForm.scrollIntoView({ block: "center", behavior: "smooth" }); });
-    root.querySelectorAll(".da-addr-edit").forEach(function (b) {
-      b.addEventListener("click", function () { hideAllForms(); var f = document.getElementById("daAddrEdit-" + b.getAttribute("data-edit")); if (f) { f.hidden = false; f.scrollIntoView({ block: "center", behavior: "smooth" }); } });
-    });
-    root.querySelectorAll(".da-addr-cancel").forEach(function (b) { b.addEventListener("click", function () { hideAllForms(); }); });
   })();
   </script>
 </section>
@@ -625,7 +429,7 @@
   "tag": "section",
   "class": "dynamic-account-section",
   "settings": [
-    { "type": "paragraph", "content": "A tabbed account dashboard: Orders, Wishlist, Order tracking, Saved Designs, Saved Addresses, Payment Methods and Reviews. Add it to a page (e.g. a page called “Account” → /pages/account) and point your account link there. The shopper must be logged in to see orders and addresses." },
+    { "type": "paragraph", "content": "A tabbed account dashboard: Orders, Wishlist, Saved Designs and Reviews, plus an “Account settings” link to Shopify’s own order-detail, tracking, profile and address pages. Add it to a page (e.g. a page called “Account” → /pages/account) and point your account link there. The shopper must be logged in to see orders." },
     { "type": "color", "id": "page_bg", "label": "Page background", "default": "#ffffff" }
   ],
   "presets": [ { "name": "Dynamic Account" } ],
