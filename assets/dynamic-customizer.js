@@ -2484,7 +2484,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         : { kind: "text", text: l.text, x: l.x, y: l.y, size: l.size, rotate: l.rotate || 0, font: l.font, color: l.color }
       ).filter((s2) => s2.kind === "img" || (s2.kind === "text" && s2.text));
       const _state = { v: (window.DYN_SHOPIFY || {}).variantId || null, front: ser(sideLayers.front), back: ser(sideLayers.back) };
-      if (_state.front.length || _state.back.length) props["_design_state"] = JSON.stringify(_state);
+      // The design state (layer positions/text) is only used to re-open a design
+      // for editing from the cart — it isn't needed for production. Keep it in the
+      // browser and put just a short id on the order so the admin stays clean
+      // (instead of a big JSON blob on every line item).
+      if (_state.front.length || _state.back.length) {
+        const _dsJson = JSON.stringify(_state);
+        try {
+          const _dsId = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+          localStorage.setItem("dyn_design_" + _dsId, _dsJson);
+          props["_design_id"] = _dsId;
+        } catch (e) { props["_design_state"] = _dsJson; }
+      }
       // Single-line-item pricing: pick the variant (higher price) that matches the
       // customer's choices with Print-sides (back design) and Gift-wrapping (toggle)
       // forced — so both charges ride on the SAME line item.
@@ -2559,9 +2570,16 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     try { cart = await (await fetch("/cart.js", { headers: { "Accept": "application/json" } })).json(); }
     catch (e) { return; }
     const line = (cart.items || []).find((it) => it.key === key);
-    if (!line || !line.properties || !line.properties._design_state) { toast("Couldn't load that design"); return; }
+    // Design state now lives in the browser under a short id (_design_id); older
+    // carts may still carry the full state inline (_design_state) — support both.
+    let rawState = null;
+    if (line && line.properties) {
+      if (line.properties._design_id) { try { rawState = localStorage.getItem("dyn_design_" + line.properties._design_id); } catch (e) {} }
+      if (!rawState && line.properties._design_state) rawState = line.properties._design_state;
+    }
+    if (!line || !rawState) { toast("Couldn't load that design"); return; }
     let state;
-    try { state = JSON.parse(line.properties._design_state); } catch (e) { return; }
+    try { state = JSON.parse(rawState); } catch (e) { return; }
 
     // Image pixels live in the Shopify-hosted files (Design / Back design props),
     // not in _design_state — pair those URLs back onto the image layers, in order.
@@ -3732,7 +3750,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       itemsEl.innerHTML = '<div class="dyn-cart-empty">Your bag is empty.</div>'; footEl.innerHTML = ""; return;
     }
     var items = cart.items;
-    var isFee = function (it) { return !!(it.properties && it.properties._grp && !it.properties._design_state); };
+    var isFee = function (it) { return !!(it.properties && it.properties._grp && !it.properties._design_state && !it.properties._design_id); };
     var feeByGrp = {}, mainGrps = {};
     items.forEach(function (it) { if (isFee(it) && it.properties._grp) feeByGrp[it.properties._grp] = it; });
     items.forEach(function (it) { if (!isFee(it) && it.properties && it.properties._grp) mainGrps[it.properties._grp] = true; });

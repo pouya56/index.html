@@ -155,14 +155,15 @@
           {%- for item in cart.items -%}
             {%- assign grp = item.properties["_grp"] -%}
             {%- assign dstate = item.properties["_design_state"] -%}
-            {%- comment -%} Skip a standalone back-fee line - it's folded into its item below. {%- endcomment -%}
-            {%- if grp != blank and dstate == blank -%}{%- continue -%}{%- endif -%}
+            {%- assign did = item.properties["_design_id"] -%}
+            {%- comment -%} Skip a standalone back-fee line - it's folded into its item below. A design item carries _design_state (older) or _design_id (newer); a fee line carries neither. {%- endcomment -%}
+            {%- if grp != blank and dstate == blank and did == blank -%}{%- continue -%}{%- endif -%}
 
             {%- comment -%} Find this item's folded fee (older single-line carts have none). {%- endcomment -%}
             {%- assign fee_price = 0 -%}{%- assign fee_unit = 0 -%}{%- assign fee_title = '' -%}{%- assign fee_key = '' -%}
             {%- if grp != blank -%}
               {%- for f in cart.items -%}
-                {%- if f.properties["_grp"] == grp and f.properties["_design_state"] == blank -%}
+                {%- if f.properties["_grp"] == grp and f.properties["_design_state"] == blank and f.properties["_design_id"] == blank -%}
                   {%- assign fee_price = f.final_line_price -%}{%- assign fee_unit = f.final_price -%}
                   {%- assign fee_title = f.product_title -%}{%- assign fee_key = f.key -%}
                 {%- endif -%}

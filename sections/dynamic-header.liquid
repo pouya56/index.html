@@ -615,7 +615,7 @@
     // its fee share a hidden _grp token; the item also carries _design_state, the
     // fee doesn't — that's how we tell them apart.
     var items = cart.items || [];
-    var isFee = function (it) { return !!(it.properties && it.properties._grp && !it.properties._design_state); };
+    var isFee = function (it) { return !!(it.properties && it.properties._grp && !it.properties._design_state && !it.properties._design_id); };
     var feeByGrp = {}, mainGrps = {};
     items.forEach(function (it) { if (isFee(it) && it.properties._grp) feeByGrp[it.properties._grp] = it; });
     items.forEach(function (it) { if (!isFee(it) && it.properties && it.properties._grp) mainGrps[it.properties._grp] = true; });
@@ -634,7 +634,7 @@
       }
       var img = previewUrl ? previewUrl
               : (it.image ? it.image.replace(/(\.[a-z]+)(\?|$)/i, "_120x$1$2") : "");
-      var canEdit = it.properties && it.properties._design_state && it.url;
+      var canEdit = it.properties && (it.properties._design_state || it.properties._design_id) && it.url;
       var editUrl = canEdit ? (it.url + (it.url.indexOf("?") >= 0 ? "&" : "?") + "edit=" + encodeURIComponent(it.key)) : "";
       var editLink = canEdit ? '<a class="hd-line-edit" href="' + esc(editUrl) + '">Edit design</a>' : "";
       var grp = it.properties && it.properties._grp;
