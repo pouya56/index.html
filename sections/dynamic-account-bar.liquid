@@ -18,6 +18,8 @@
     #shopify-section-{{ section.id }} { position: absolute; top: 0; left: 0; right: 0; z-index: 60; pointer-events: none; }
     #shopify-section-{{ section.id }} .dyn-abar { background: transparent; }
     #shopify-section-{{ section.id }} .dyn-abar .dh-menu { pointer-events: auto; }
+    /* Match the homepage corner links: 20px from top, 26px from the side. */
+    #shopify-section-{{ section.id }} .ab-inner { padding: {{ section.settings.overlay_top | default: 20 }}px {{ section.settings.overlay_side | default: 26 }}px; }
     {%- endif -%}
     .dyn-abar {
       --bg: #ffffff; --bg-panel: #f5f5f7;
@@ -271,6 +273,8 @@
 
     { "type": "header", "content": "Bar style" },
     { "type": "checkbox", "id": "overlay", "label": "Float over the page (no row)", "default": true, "info": "Sits on top of the page at the top-right — like the homepage corners — instead of taking its own row. Turn off for a normal bar." },
+    { "type": "range", "id": "overlay_top", "min": 0, "max": 80, "step": 2, "unit": "px", "label": "Distance from top (float mode)", "default": 20, "info": "Match your homepage corner links (they use 20px)." },
+    { "type": "range", "id": "overlay_side", "min": 0, "max": 80, "step": 2, "unit": "px", "label": "Distance from side (float mode)", "default": 26 },
     { "type": "select", "id": "align", "label": "Align (normal bar only)", "default": "right",
       "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ] },
     { "type": "checkbox", "id": "transparent_bg", "label": "Transparent background (normal bar only)", "default": true },
