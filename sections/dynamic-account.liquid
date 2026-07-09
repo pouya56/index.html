@@ -168,33 +168,46 @@
       {%- comment -%} ---------- ORDER TRACKING ---------- {%- endcomment -%}
       <div class="da-panel" data-panel="tracking">
         <h1 class="da-h">Order tracking</h1>
-        <p class="da-sub">Track shipments for your orders.</p>
-        {%- assign has_tracking = false -%}
-        {%- for order in customer.orders -%}
-          {%- for fulfillment in order.fulfillments -%}
-            {%- assign has_tracking = true -%}
+        <p class="da-sub">Shipping status for every order — with a Track button once it ships.</p>
+        {%- if customer.orders.size > 0 -%}
+          {%- for order in customer.orders -%}
             <div class="da-card">
               <div class="da-row">
                 <div>
                   <div class="da-order-no">{{ order.name }}</div>
-                  <div class="da-order-meta">
-                    {% if fulfillment.tracking_company %}{{ fulfillment.tracking_company }}{% else %}Shipment{% endif %}
-                    {% if fulfillment.tracking_number %} · {{ fulfillment.tracking_number }}{% endif %}
-                    {% if fulfillment.created_at %} · shipped {{ fulfillment.created_at | date: "%b %-d" }}{% endif %}
-                  </div>
+                  <div class="da-order-meta">Ordered {{ order.created_at | date: "%b %-d, %Y" }}</div>
                 </div>
-                {%- if fulfillment.tracking_url -%}
-                  <a class="da-btn sm" href="{{ fulfillment.tracking_url }}" target="_blank" rel="noopener">
-                    <span class="da-track"><svg viewBox="0 0 24 24"><path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="17.5" cy="17" r="1.6"/></svg> Track</span>
-                  </a>
-                {%- endif -%}
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+                  {%- assign tracked = false -%}
+                  {%- for fulfillment in order.fulfillments -%}
+                    {%- if fulfillment.tracking_url -%}
+                      {%- assign tracked = true -%}
+                      <a class="da-btn sm" href="{{ fulfillment.tracking_url }}" target="_blank" rel="noopener">
+                        <span class="da-track"><svg viewBox="0 0 24 24"><path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="17.5" cy="17" r="1.6"/></svg> Track</span>
+                      </a>
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {%- if order.fulfillment_status == 'fulfilled' -%}
+                    <span class="da-badge fulfilled">Shipped</span>
+                  {%- elsif order.fulfillment_status == 'partial' -%}
+                    <span class="da-badge pending">Partly shipped</span>
+                  {%- else -%}
+                    <span class="da-badge pending">Processing</span>
+                  {%- endif -%}
+                </div>
               </div>
+              {%- for fulfillment in order.fulfillments -%}
+                {%- if fulfillment.tracking_number or fulfillment.tracking_company -%}
+                  <div class="da-items" style="border-top:0; padding-top:8px">
+                    {% if fulfillment.tracking_company %}{{ fulfillment.tracking_company }}{% else %}Carrier{% endif %}{% if fulfillment.tracking_number %} · {{ fulfillment.tracking_number }}{% endif %}{% if fulfillment.created_at %} · shipped {{ fulfillment.created_at | date: "%b %-d" }}{% endif %}
+                  </div>
+                {%- endif -%}
+              {%- endfor -%}
             </div>
           {%- endfor -%}
-        {%- endfor -%}
-        {%- unless has_tracking -%}
-          <div class="da-empty">No shipments to track yet. Tracking appears here once an order ships.</div>
-        {%- endunless -%}
+        {%- else -%}
+          <div class="da-empty">No orders yet. Once you place an order, its shipping status and tracking will appear here.</div>
+        {%- endif -%}
       </div>
 
       {%- comment -%} ---------- SAVED DESIGNS ---------- {%- endcomment -%}
