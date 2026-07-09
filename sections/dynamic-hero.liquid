@@ -805,7 +805,8 @@
       {%- endcapture -%}
       {%- capture corner_extra -%}
         {%- if pos == 'tr' -%}
-          {%- if section.settings.show_apps -%}
+          {%- comment -%} Account + apps moved to the standalone “Account & apps bar” section so they show on every page. {%- endcomment -%}
+          {%- if false -%}
             <div class="dh-menu dh-apps-menu">
               <button type="button" class="dh-icon-btn dh-apps-btn" aria-haspopup="true" aria-expanded="false" aria-label="{{ section.settings.apps_title | default: 'Apps' | escape }}">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="5" r="1.6"/><circle cx="12" cy="5" r="1.6"/><circle cx="19" cy="5" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/><circle cx="5" cy="19" r="1.6"/><circle cx="12" cy="19" r="1.6"/><circle cx="19" cy="19" r="1.6"/></svg>
@@ -900,7 +901,7 @@
               </div>
             </div>
           {%- endif -%}
-          {%- if section.settings.show_account -%}
+          {%- if false -%}
             <div class="dh-menu dh-acct-menu">
               <button type="button" class="dh-icon-btn dh-acct-btn" aria-haspopup="true" aria-expanded="false" aria-label="Account">
                 {%- if section.settings.account_avatar != blank -%}
