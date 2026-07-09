@@ -1252,9 +1252,20 @@
     var doc = new DOMParser().parseFromString(html, "text/html");
     var el = doc.querySelector("#MainContent") || doc.querySelector("main") || doc.querySelector('[role="main"]') || doc.querySelector(".main-content");
     if (!el) { sbody.innerHTML = fallback(url); return; }
-    el.querySelectorAll("script").forEach(function (s) { s.remove(); });
+    // Pull out the scripts, inject the (script-less) HTML, then re-run the scripts so
+    // interactive sections (tabs, sliders, etc.) work inside the panel.
+    var scripts = Array.prototype.slice.call(el.querySelectorAll("script"));
+    scripts.forEach(function (s) { s.parentNode && s.parentNode.removeChild(s); });
     var wrap = document.createElement("div"); wrap.className = "dh-slide-inject"; wrap.innerHTML = el.innerHTML;
     sbody.innerHTML = ""; sbody.appendChild(wrap); sbody.scrollTop = 0;
+    scripts.forEach(function (old) {
+      try {
+        var s = document.createElement("script");
+        for (var i = 0; i < old.attributes.length; i++) { s.setAttribute(old.attributes[i].name, old.attributes[i].value); }
+        if (!old.src) s.textContent = old.textContent;
+        wrap.appendChild(s);
+      } catch (e) {}
+    });
   }
   function openSlide(url) {
     if (!url) return;
