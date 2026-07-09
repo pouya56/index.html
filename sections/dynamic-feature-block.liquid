@@ -10,6 +10,7 @@
 
 {%- assign colors = section.blocks | where: 'type', 'color' -%}
 {%- assign feats  = section.blocks | where: 'type', 'feature' -%}
+{%- assign canv   = section.blocks | where: 'type', 'canvas' -%}
 {%- assign fb_justify = 'center' -%}
 {%- if section.settings.align == 'left' -%}{%- assign fb_justify = 'flex-start' -%}{%- elsif section.settings.align == 'right' -%}{%- assign fb_justify = 'flex-end' -%}{%- endif -%}
 
@@ -104,6 +105,13 @@
     .dyn-fb .fb-ba-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: rgba(255,255,255,.65); transform: translateX(-1px); z-index: 4; box-shadow: 0 0 18px rgba(0,0,0,.45); }
     .dyn-fb .fb-ba-grip { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.2); -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%); border: 1px solid rgba(255,255,255,.5); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; box-shadow: 0 6px 22px rgba(0,0,0,.35); }
 
+    /* Infinite canvas (draggable, wrapping grid of images) */
+    .dyn-fb .fb-canvas { position: absolute; inset: 0; overflow: hidden; cursor: grab; touch-action: none; }
+    .dyn-fb .fb-canvas.is-grab { cursor: grabbing; }
+    .dyn-fb .fb-canvas-plane { position: absolute; top: 0; left: 0; will-change: transform; }
+    .dyn-fb .fb-tile { position: absolute; top: 0; left: 0; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,.28); }
+    .dyn-fb .fb-tile img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; -webkit-user-drag: none; }
+
     .dyn-fb .fb-empty { color: var(--soft); font-size: 15px; padding: 30px; }
 
     @media (max-width: 860px) {
@@ -166,6 +174,14 @@
             {%- endif -%}
           </div>
         {%- endfor -%}
+        {%- for block in canv -%}
+          <div class="fb-bg-layer{% if colors.size == 0 and feats.size == 0 and forloop.first %} is-active{% endif %}" data-key="k{{ forloop.index0 }}">
+            <div class="fb-canvas" data-fb-canvas data-tile="{{ block.settings.tile_size | default: 220 }}" data-gap="{{ block.settings.gap | default: 16 }}">
+              <div class="fb-canvas-plane" data-fb-canvas-plane></div>
+              <script type="application/json" data-fb-canvas-imgs>[{%- assign cfirst = true -%}{%- for n in (1..10) -%}{%- assign ck = 'img' | append: n -%}{%- assign cimg = block.settings[ck] -%}{%- if cimg != blank -%}{%- unless cfirst %},{% endunless %}{%- assign cfirst = false -%}{{ cimg | image_url: width: 600 | json }}{%- endif -%}{%- endfor -%}]</script>
+            </div>
+          </div>
+        {%- endfor -%}
       </div>
 
       <button type="button" class="fb-close" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
@@ -198,8 +214,15 @@
             </div>
           {%- endfor -%}
 
-          {%- if colors.size == 0 and feats.size == 0 and request.design_mode -%}
-            <div class="fb-empty">Add “Color” and “Feature” blocks, and give each one a background image or video.</div>
+          {%- for block in canv -%}
+            <div class="fb-item" data-fb-item data-media="k{{ forloop.index0 }}" {{ block.shopify_attributes }}>
+              <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
+              <div class="fb-panel"><div class="fb-panel-text"><strong>{{ block.settings.title }}.</strong> {{ block.settings.detail }}</div></div>
+            </div>
+          {%- endfor -%}
+
+          {%- if colors.size == 0 and feats.size == 0 and canv.size == 0 and request.design_mode -%}
+            <div class="fb-empty">Add “Color”, “Feature”, or “Infinite canvas” blocks and give each one media.</div>
           {%- endif -%}
         </div>
       </div>
@@ -256,6 +279,38 @@
         showBg("c" + selColor);
       });
     });
+
+    /* Infinite canvas — a draggable, wrapping grid of images */
+    function initCanvas(el) {
+      var plane = el.querySelector("[data-fb-canvas-plane]"), src = el.querySelector("[data-fb-canvas-imgs]");
+      var imgs = []; try { imgs = JSON.parse(src.textContent) || []; } catch (e) {}
+      if (!plane || !imgs.length) return;
+      var tile = parseInt(el.getAttribute("data-tile"), 10) || 220, gap = parseInt(el.getAttribute("data-gap"), 10) || 16;
+      var cellW = tile + gap, cellH = tile + gap;
+      var ox = 0, oy = 0, gridW = 0, gridH = 0, cols = 0, rows = 0, vx = 0, vy = 0, dragging = false, lx = 0, ly = 0, raf = null;
+      function apply() { var tx = (((ox % gridW) + gridW) % gridW) - gridW, ty = (((oy % gridH) + gridH) % gridH) - gridH; plane.style.transform = "translate(" + tx + "px," + ty + "px)"; }
+      function build() {
+        var W = el.clientWidth || 600, H = el.clientHeight || 600;
+        cols = Math.ceil(W / cellW) + 1; rows = Math.ceil(H / cellH) + 1; gridW = cols * cellW; gridH = rows * cellH;
+        var frag = document.createDocumentFragment();
+        for (var j = 0; j < rows * 2; j++) { for (var i = 0; i < cols * 2; i++) {
+          var d = document.createElement("div"); d.className = "fb-tile"; d.style.width = tile + "px"; d.style.height = tile + "px";
+          d.style.transform = "translate(" + (i * cellW) + "px," + (j * cellH) + "px)";
+          var idx = ((i % cols) + (j % rows) * cols) % imgs.length;
+          var im = new Image(); im.src = imgs[idx]; im.loading = "lazy"; im.draggable = false; d.appendChild(im); frag.appendChild(d);
+        } }
+        plane.innerHTML = ""; plane.appendChild(frag); apply();
+      }
+      function momentum() { if (dragging) { raf = null; return; } vx *= 0.94; vy *= 0.94; ox += vx; oy += vy; apply(); raf = (Math.abs(vx) > 0.15 || Math.abs(vy) > 0.15) ? requestAnimationFrame(momentum) : null; }
+      el.addEventListener("pointerdown", function (e) { dragging = true; lx = e.clientX; ly = e.clientY; vx = vy = 0; el.classList.add("is-grab"); if (el.setPointerCapture) { try { el.setPointerCapture(e.pointerId); } catch (er) {} } });
+      el.addEventListener("pointermove", function (e) { if (!dragging) return; var dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY; ox += dx; oy += dy; vx = dx; vy = dy; apply(); });
+      function end() { if (!dragging) return; dragging = false; el.classList.remove("is-grab"); if (!raf) raf = requestAnimationFrame(momentum); }
+      el.addEventListener("pointerup", end); el.addEventListener("pointercancel", end);
+      el.addEventListener("wheel", function (e) { ox -= e.deltaX; oy -= e.deltaY; apply(); e.preventDefault(); }, { passive: false });
+      build();
+      window.addEventListener("resize", build);
+    }
+    root.querySelectorAll("[data-fb-canvas]").forEach(initCanvas);
 
     /* Before / After sliders — drag to compare (used as a tab's media) */
     function initBA(el) {
@@ -336,6 +391,23 @@
       { "type": "select", "id": "ba_ratio", "label": "Slider shape", "default": "4 / 3", "options": [ { "value": "4 / 3", "label": "Landscape 4:3" }, { "value": "1 / 1", "label": "Square" }, { "value": "3 / 4", "label": "Portrait 3:4" }, { "value": "16 / 9", "label": "Wide 16:9" }, { "value": "3 / 2", "label": "Photo 3:2" } ] },
       { "type": "select", "id": "ba_pos", "label": "Slider position", "default": "right", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ] },
       { "type": "range", "id": "ba_inset", "min": 0, "max": 25, "step": 1, "unit": "%", "label": "Distance from the side", "default": 5 }
+    ]},
+    { "type": "canvas", "name": "Infinite canvas (tab)", "settings": [
+      { "type": "text", "id": "title", "label": "Tab title", "default": "Gallery" },
+      { "type": "textarea", "id": "detail", "label": "Details", "default": "Drag to explore." },
+      { "type": "range", "id": "tile_size", "min": 120, "max": 360, "step": 10, "unit": "px", "label": "Image size", "default": 220 },
+      { "type": "range", "id": "gap", "min": 0, "max": 40, "step": 2, "unit": "px", "label": "Gap between images", "default": 16 },
+      { "type": "paragraph", "content": "Add up to 10 images — they tile into an endless draggable grid (drag, scroll, or swipe to move)." },
+      { "type": "image_picker", "id": "img1", "label": "Image 1" },
+      { "type": "image_picker", "id": "img2", "label": "Image 2" },
+      { "type": "image_picker", "id": "img3", "label": "Image 3" },
+      { "type": "image_picker", "id": "img4", "label": "Image 4" },
+      { "type": "image_picker", "id": "img5", "label": "Image 5" },
+      { "type": "image_picker", "id": "img6", "label": "Image 6" },
+      { "type": "image_picker", "id": "img7", "label": "Image 7" },
+      { "type": "image_picker", "id": "img8", "label": "Image 8" },
+      { "type": "image_picker", "id": "img9", "label": "Image 9" },
+      { "type": "image_picker", "id": "img10", "label": "Image 10" }
     ]}
   ],
   "max_blocks": 16,
