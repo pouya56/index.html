@@ -28,6 +28,19 @@
     .dyn-acct .da-tab.is-active { background:var(--ink); color:#fff; font-weight:500; }
     .dyn-acct .da-logout { margin-top:14px; padding:10px 14px; font-size:14px; color:var(--ink-faint); text-decoration:none; }
     .dyn-acct .da-logout:hover { color:var(--danger); }
+    .dyn-acct .da-idbar { display:flex; align-items:center; gap:11px; margin-bottom:18px; }
+    .dyn-acct .da-idbar .da-hi { margin:0; }
+    .dyn-acct .da-avatar { width:42px; height:42px; flex:none; border-radius:50%; overflow:hidden; background:var(--panel); display:flex; align-items:center; justify-content:center; }
+    .dyn-acct .da-avatar img { width:100%; height:100%; object-fit:cover; }
+    .dyn-acct .da-avatar-fb { font-weight:600; color:var(--ink-faint); font-size:17px; }
+    .dyn-acct .da-avatar-lg { width:78px; height:78px; }
+    .dyn-acct .da-avatar-lg .da-avatar-fb { font-size:30px; }
+    .dyn-acct .da-profile-row { display:flex; gap:18px; align-items:center; }
+    .dyn-acct .da-profile-name { font-size:17px; font-weight:600; }
+    .dyn-acct .da-profile-email { color:var(--ink-soft); font-size:14px; margin-top:2px; }
+    .dyn-acct .da-profile-actions { display:flex; align-items:center; gap:12px; margin-top:12px; }
+    .dyn-acct .da-profile-actions label { cursor:pointer; }
+    .dyn-acct .da-profile-note { font-size:12px; color:var(--ink-faint); margin-top:8px; }
 
     .dyn-acct .da-main { min-width:0; }
     .dyn-acct .da-panel { display:none; }
@@ -50,6 +63,23 @@
     .dyn-acct .da-total { font-weight:600; }
     .dyn-acct .da-link { color:var(--accent); text-decoration:none; font-size:14px; font-weight:500; }
     .dyn-acct .da-link:hover { text-decoration:underline; }
+    .dyn-acct .da-odtoggle { margin-top:12px; border:0; background:none; padding:0; cursor:pointer; font:inherit; font-size:14px; font-weight:500; color:var(--accent); }
+    .dyn-acct .da-odtoggle:hover { text-decoration:underline; }
+    .dyn-acct .da-oddetail { margin-top:14px; padding-top:14px; border-top:1px solid var(--line-soft); }
+    .dyn-acct .da-oi { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--line-soft); }
+    .dyn-acct .da-oi-img { width:56px; height:56px; flex:none; border-radius:10px; overflow:hidden; background:var(--panel); }
+    .dyn-acct .da-oi-img img { width:100%; height:100%; object-fit:cover; }
+    .dyn-acct .da-oi-main { flex:1 1 auto; min-width:0; font-size:14px; }
+    .dyn-acct .da-oi-title { font-weight:500; }
+    .dyn-acct .da-oi-variant { color:var(--ink-faint); font-size:13px; margin-top:2px; }
+    .dyn-acct .da-oi-prop { color:var(--ink-soft); font-size:13px; margin-top:3px; word-break:break-word; }
+    .dyn-acct .da-oi-price { flex:none; font-size:14px; font-weight:500; }
+    .dyn-acct .da-odtot { margin-top:12px; font-size:14px; }
+    .dyn-acct .da-odtot > div { display:flex; justify-content:space-between; padding:4px 0; color:var(--ink-soft); }
+    .dyn-acct .da-odtot-total { border-top:1px solid var(--line-soft); margin-top:4px; padding-top:8px !important; color:var(--ink) !important; font-weight:600; }
+    .dyn-acct .da-odblock { margin-top:14px; }
+    .dyn-acct .da-odblock-h { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); margin-bottom:5px; }
+    .dyn-acct .da-odblock-b { font-size:14px; color:var(--ink-soft); line-height:1.55; }
 
     .dyn-acct .da-btn { display:inline-flex; align-items:center; justify-content:center; height:42px; padding:0 20px; border-radius:999px; background:var(--ink); color:#fff; border:0; font:inherit; font-size:14px; font-weight:500; cursor:pointer; text-decoration:none; }
     .dyn-acct .da-btn:hover { opacity:.9; }
@@ -105,7 +135,7 @@
     @media (max-width:820px) {
       .dyn-acct .da-wrap { grid-template-columns:1fr; gap:8px; }
       .dyn-acct .da-nav { position:static; flex-direction:row; overflow-x:auto; gap:4px; padding-bottom:8px; margin-bottom:12px; border-bottom:1px solid var(--line-soft); }
-      .dyn-acct .da-hi { display:none; }
+      .dyn-acct .da-idbar { display:none; }
       .dyn-acct .da-tab { white-space:nowrap; }
       .dyn-acct .da-logout { display:none; }
       .dyn-acct .da-2col { grid-template-columns:1fr; }
@@ -115,14 +145,17 @@
   {%- if customer -%}
   <div class="da-wrap">
     <aside class="da-nav">
-      <div class="da-hi">Hi, {{ customer.first_name | default: customer.name | default: 'there' }}</div>
+      <div class="da-idbar">
+        <span class="da-avatar" id="daAvatarSide"><span class="da-avatar-fb">{{ customer.first_name | default: customer.name | default: 'U' | slice: 0 | upcase }}</span></span>
+        <div class="da-hi">Hi, {{ customer.first_name | default: customer.name | default: 'there' }}</div>
+      </div>
       <button type="button" class="da-tab is-active" data-tab="orders">Orders</button>
       <button type="button" class="da-tab" data-tab="wishlist">Wishlist</button>
       <button type="button" class="da-tab" data-tab="tracking">Order tracking</button>
       <button type="button" class="da-tab" data-tab="designs">Saved Designs</button>
       <button type="button" class="da-tab" data-tab="addresses">Saved Addresses</button>
-      <button type="button" class="da-tab" data-tab="payments">Payment Methods</button>
       <button type="button" class="da-tab" data-tab="reviews">Reviews</button>
+      <button type="button" class="da-tab" data-tab="profile">Profile</button>
       <a class="da-logout" href="{{ routes.account_logout_url }}">Log out</a>
     </aside>
 
@@ -152,7 +185,41 @@
                 {%- for line in order.line_items limit: 4 -%}<span>{{ line.quantity }}× {{ line.title }}</span>{%- endfor -%}
                 {%- if order.line_items.size > 4 -%}<span>+{{ order.line_items.size | minus: 4 }} more</span>{%- endif -%}
               </div>
-              <div style="margin-top:12px"><a class="da-link" href="{{ order.customer_url }}">View order details →</a></div>
+              <button type="button" class="da-odtoggle">View order details →</button>
+              <div class="da-oddetail" hidden>
+                {%- for line in order.line_items -%}
+                  <div class="da-oi">
+                    <div class="da-oi-img">{%- if line.image -%}<img src="{{ line.image | image_url: width: 120 }}" alt="{{ line.title | escape }}" width="120" height="120" loading="lazy">{%- endif -%}</div>
+                    <div class="da-oi-main">
+                      <div class="da-oi-title">{{ line.quantity }}× {{ line.title }}</div>
+                      {%- if line.variant.title and line.variant.title != 'Default Title' -%}<div class="da-oi-variant">{{ line.variant.title }}</div>{%- endif -%}
+                      {%- for prop in line.properties -%}
+                        {%- assign pn = prop.first -%}{%- assign pv = prop.last -%}{%- assign pc = pn | slice: 0 -%}
+                        {%- if pc != '_' and pv != blank -%}<div class="da-oi-prop">{{ pn }}: {{ pv }}</div>{%- endif -%}
+                      {%- endfor -%}
+                    </div>
+                    <div class="da-oi-price">{{ line.final_line_price | money }}</div>
+                  </div>
+                {%- endfor -%}
+                <div class="da-odtot">
+                  <div><span>Subtotal</span><span>{{ order.subtotal_price | money }}</span></div>
+                  {%- if order.shipping_price > 0 -%}<div><span>Shipping</span><span>{{ order.shipping_price | money }}</span></div>{%- endif -%}
+                  {%- if order.tax_price > 0 -%}<div><span>Tax</span><span>{{ order.tax_price | money }}</span></div>{%- endif -%}
+                  <div class="da-odtot-total"><span>Total</span><span>{{ order.total_price | money }}</span></div>
+                </div>
+                {%- if order.shipping_address -%}
+                  <div class="da-odblock"><div class="da-odblock-h">Shipping to</div>
+                    <div class="da-odblock-b">{{ order.shipping_address.name }}<br>{{ order.shipping_address.address1 }}{% if order.shipping_address.address2 != blank %}, {{ order.shipping_address.address2 }}{% endif %}<br>{{ order.shipping_address.city }}{% if order.shipping_address.province != blank %}, {{ order.shipping_address.province }}{% endif %} {{ order.shipping_address.zip }}<br>{{ order.shipping_address.country }}</div>
+                  </div>
+                {%- endif -%}
+                {%- for fulfillment in order.fulfillments -%}
+                  {%- if fulfillment.tracking_number or fulfillment.tracking_url -%}
+                    <div class="da-odblock"><div class="da-odblock-h">Tracking</div>
+                      <div class="da-odblock-b">{% if fulfillment.tracking_company %}{{ fulfillment.tracking_company }} {% endif %}{% if fulfillment.tracking_number %}· {{ fulfillment.tracking_number }}{% endif %}{% if fulfillment.tracking_url %} · <a class="da-link" href="{{ fulfillment.tracking_url }}" target="_blank" rel="noopener">Track shipment</a>{% endif %}</div>
+                    </div>
+                  {%- endif -%}
+                {%- endfor -%}
+              </div>
             </div>
           {%- endfor -%}
         {%- else -%}
@@ -326,13 +393,24 @@
         {%- endif -%}
       </div>
 
-      {%- comment -%} ---------- PAYMENT METHODS ---------- {%- endcomment -%}
-      <div class="da-panel" data-panel="payments">
-        <h1 class="da-h">Payment Methods</h1>
-        <p class="da-sub">Your saved cards are kept securely by Shopify.</p>
+      {%- comment -%} ---------- PROFILE ---------- {%- endcomment -%}
+      <div class="da-panel" data-panel="profile">
+        <h1 class="da-h">Profile</h1>
+        <p class="da-sub">Your details and profile photo.</p>
         <div class="da-card">
-          <p class="da-note">For your security, saved card details are handled entirely by Shopify’s secure checkout and can’t be shown on the store page. Manage your saved payment methods from your Shopify account.</p>
-          <div style="margin-top:16px"><a class="da-btn" href="{{ routes.account_url }}">Manage payment methods</a></div>
+          <div class="da-profile-row">
+            <span class="da-avatar da-avatar-lg" id="daAvatarBig"><span class="da-avatar-fb">{{ customer.first_name | default: customer.name | default: 'U' | slice: 0 | upcase }}</span></span>
+            <div>
+              <div class="da-profile-name">{{ customer.name | default: customer.first_name | default: 'Your account' }}</div>
+              {%- if customer.email != blank -%}<div class="da-profile-email">{{ customer.email }}</div>{%- endif -%}
+              <div class="da-profile-actions">
+                <label class="da-btn ghost sm" for="daAvatarFile">Upload photo</label>
+                <input id="daAvatarFile" type="file" accept="image/*" hidden>
+                <button type="button" class="da-x" id="daAvatarRemove" hidden>Remove</button>
+              </div>
+              <div class="da-profile-note" id="daAvatarNote">Saved on this device.</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -388,6 +466,59 @@
     var initial = (location.hash || "").replace("#", "");
     if (initial) show(initial);
     window.addEventListener("hashchange", function () { var n = (location.hash || "").replace("#", ""); if (n) show(n); });
+
+    /* ---- Order details expand/collapse (kept on this page, not Shopify's) ---- */
+    var ordersPanel = root.querySelector('[data-panel="orders"]');
+    if (ordersPanel) ordersPanel.addEventListener("click", function (e) {
+      var t = e.target.closest && e.target.closest(".da-odtoggle"); if (!t) return;
+      var d = t.nextElementSibling;
+      if (d && d.classList.contains("da-oddetail")) {
+        var willShow = d.hidden; d.hidden = !willShow;
+        t.textContent = willShow ? "Hide order details" : "View order details →";
+      }
+    });
+
+    /* ---- Profile photo (avatar) — upload, shrink, store on this device ---- */
+    var AVA_KEY = "dyn_avatar";
+    var avaEls = [document.getElementById("daAvatarSide"), document.getElementById("daAvatarBig")];
+    var avaFile = document.getElementById("daAvatarFile"), avaRemove = document.getElementById("daAvatarRemove"), avaNote = document.getElementById("daAvatarNote");
+    function paintAvatar() {
+      var url = ""; try { url = localStorage.getItem(AVA_KEY) || ""; } catch (e) {}
+      avaEls.forEach(function (el) {
+        if (!el) return;
+        var fb = el.querySelector(".da-avatar-fb"), img = el.querySelector("img");
+        if (url) { if (!img) { img = document.createElement("img"); img.alt = "Profile photo"; el.appendChild(img); } img.src = url; if (fb) fb.style.display = "none"; }
+        else { if (img) img.remove(); if (fb) fb.style.display = ""; }
+      });
+      if (avaRemove) avaRemove.hidden = !url;
+    }
+    function shrinkImg(dataUrl, max, cb) {
+      var im = new Image();
+      im.onload = function () {
+        var scale = Math.min(1, max / Math.max(im.naturalWidth || max, im.naturalHeight || max));
+        var w = Math.max(1, Math.round((im.naturalWidth || max) * scale)), h = Math.max(1, Math.round((im.naturalHeight || max) * scale));
+        var c = document.createElement("canvas"); c.width = w; c.height = h;
+        c.getContext("2d").drawImage(im, 0, 0, w, h);
+        try { cb(c.toDataURL("image/jpeg", 0.85)); } catch (e) { cb(dataUrl); }
+      };
+      im.onerror = function () { cb(dataUrl); };
+      im.src = dataUrl;
+    }
+    if (avaFile) avaFile.addEventListener("change", function () {
+      var f = avaFile.files && avaFile.files[0]; if (!f) return;
+      if (!/^image\//.test(f.type)) { if (avaNote) avaNote.textContent = "Please choose an image file."; return; }
+      var rd = new FileReader();
+      rd.onload = function () {
+        shrinkImg(String(rd.result), 320, function (small) {
+          try { localStorage.setItem(AVA_KEY, small); paintAvatar(); if (avaNote) avaNote.textContent = "Saved on this device."; }
+          catch (e) { if (avaNote) avaNote.textContent = "Couldn’t save — please try a smaller image."; }
+        });
+      };
+      rd.readAsDataURL(f);
+      avaFile.value = "";
+    });
+    if (avaRemove) avaRemove.addEventListener("click", function () { try { localStorage.removeItem(AVA_KEY); } catch (e) {} paintAvatar(); if (avaNote) avaNote.textContent = "Saved on this device."; });
+    paintAvatar();
 
     /* ---- helpers ---- */
     function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
