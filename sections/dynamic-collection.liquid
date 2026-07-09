@@ -300,7 +300,8 @@
   data-cat-source="{{ cat_source }}"
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
   data-results-url="{{ section.settings.results_page_url }}">
-  {%- if section.settings.show_back -%}
+  {%- comment -%} Back button removed here — the site-wide “Account & apps bar” now provides the back button. {%- endcomment -%}
+  {%- if false -%}
     <a class="dc-back" href="{{ section.settings.back_url | default: routes.root_url }}" aria-label="Back to home">
       <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </a>
