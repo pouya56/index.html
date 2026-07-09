@@ -15,7 +15,8 @@
     #dynCursorDot-{{ section.id }} {
       position: fixed; top: 0; left: 0; z-index: 2147483000; pointer-events: none;
       width: {{ section.settings.size | default: 26 }}px; height: {{ section.settings.size | default: 26 }}px; border-radius: 50%;
-      transform: translate3d(-50px, -50px, 0) translate(-50%, -50%) scale(0); opacity: 0; will-change: transform, opacity;
+      /* Visible at screen centre by default via CSS alone — JS then takes over positioning. */
+      transform: translate3d(50vw, 50vh, 0) translate(-50%, -50%) scale(1); opacity: 1; will-change: transform, opacity;
       {%- if cur_style == 'ring' -%}
         background: transparent; border: 2px solid {{ section.settings.color | default: '#f97316' }};
         box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 0 0 3px rgba(255,255,255,.15);
@@ -51,7 +52,7 @@
 
   var tx = innerWidth / 2, ty = innerHeight / 2, x = tx, y = ty, vx = 0, vy = 0;
   /* Start visible at screen centre so it's obvious it loaded; it snaps to the pointer on first move. */
-  var scale = 0, tscale = 1, hoverScale = 1, op = 0, top_ = 1, last = null;
+  var scale = 1, tscale = 1, hoverScale = 1, op = 1, top_ = 1, last = null;
   var K = 131, C = 10, M = 0.1; /* stiffness, damping, mass */
 
   function track(e) { tx = e.clientX; ty = e.clientY; tscale = 1; top_ = 1; }
