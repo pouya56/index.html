@@ -23,7 +23,11 @@
       --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
       color:var(--ink); font-family:var(--font); -webkit-font-smoothing:antialiased;
     }
-    .dyn-acct .da-wrap { max-width:1120px; margin:0 auto; padding:44px 22px 90px; display:grid; grid-template-columns:230px 1fr; gap:40px; align-items:start; }
+    .dyn-acct .da-topbar { max-width:1120px; margin:0 auto; padding:26px 22px 0; }
+    .dyn-acct .da-logo { display:inline-flex; align-items:center; text-decoration:none; color:var(--ink); }
+    .dyn-acct .da-logo img { display:block; height:auto; }
+    .dyn-acct .da-logo-text { font-size:22px; font-weight:700; letter-spacing:-0.02em; }
+    .dyn-acct .da-wrap { max-width:1120px; margin:0 auto; padding:28px 22px 90px; display:grid; grid-template-columns:230px 1fr; gap:40px; align-items:start; }
     .dyn-acct .da-nav { display:flex; flex-direction:column; gap:2px; position:sticky; top:24px; }
     .dyn-acct .da-hi { font-size:19px; font-weight:600; margin-bottom:16px; letter-spacing:-0.01em; }
     .dyn-acct .da-tab { text-align:left; border:0; background:none; cursor:pointer; font:inherit; font-size:15px; color:var(--ink-soft); padding:10px 14px; border-radius:10px; transition:background .15s,color .15s; }
@@ -154,6 +158,21 @@
       .dyn-acct .da-2col { grid-template-columns:1fr; }
     }
   </style>
+
+  {%- if section.settings.logo != blank or section.settings.show_shop_name -%}
+    <div class="da-topbar">
+      <a class="da-logo" href="{{ routes.root_url }}" aria-label="{{ shop.name | escape }} — home">
+        {%- if section.settings.logo != blank -%}
+          {%- assign logo_w = section.settings.logo_width | default: 160 -%}
+          {%- assign logo_src_w = logo_w | times: 2 -%}
+          {%- assign logo_h = section.settings.logo.height | times: logo_w | divided_by: section.settings.logo.width -%}
+          <img src="{{ section.settings.logo | image_url: width: logo_src_w }}" alt="{{ shop.name | escape }}" width="{{ logo_w }}" height="{{ logo_h }}" style="max-width:{{ logo_w }}px">
+        {%- else -%}
+          <span class="da-logo-text">{{ shop.name }}</span>
+        {%- endif -%}
+      </a>
+    </div>
+  {%- endif -%}
 
   {%- if customer -%}
   <input id="daAvatarFile" type="file" accept="image/*" hidden>
@@ -398,6 +417,12 @@
   "class": "dynamic-account-section",
   "settings": [
     { "type": "paragraph", "content": "A tabbed account dashboard. Wishlist, Saved Designs and Reviews are in-page tabs; Orders and Profile link out to Shopify’s native account pages (order details, tracking, name, email, addresses). Add it to a page (e.g. a page called “Account” → /pages/account) and point your account link there. The shopper must be logged in." },
+
+    { "type": "header", "content": "Logo (top of page)" },
+    { "type": "image_picker", "id": "logo", "label": "Logo", "info": "Shown at the top, linked to your home page. Leave empty to show your store name as text (if turned on below)." },
+    { "type": "range", "id": "logo_width", "min": 80, "max": 320, "step": 10, "unit": "px", "label": "Logo width", "default": 160 },
+    { "type": "checkbox", "id": "show_shop_name", "label": "Show store name when no logo is set", "default": true },
+
     { "type": "color", "id": "page_bg", "label": "Page background", "default": "#ffffff" }
   ],
   "presets": [ { "name": "Dynamic Account" } ],
