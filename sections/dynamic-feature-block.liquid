@@ -90,8 +90,12 @@
     .dyn-fb .fb-swatch:hover { transform: scale(1.14); }
     .dyn-fb .fb-swatch.is-active { box-shadow: 0 0 0 2px rgba(0,0,0,.35), 0 0 0 4px #fff; }
 
-    /* Before / After comparison (usable as any tab's background media) */
-    .dyn-fb .fb-ba { position: absolute; inset: 0; overflow: hidden; user-select: none; touch-action: none; }
+    /* Before / After comparison (usable as any tab's media) — a sizable, positionable box */
+    .dyn-fb .fb-ba { position: absolute; top: 50%; transform: translateY(-50%); width: var(--ba-w, 55%); aspect-ratio: var(--ba-ratio, 4 / 3);
+      border-radius: 20px; overflow: hidden; user-select: none; touch-action: none; box-shadow: 0 30px 80px rgba(0,0,0,.42); pointer-events: auto; }
+    .dyn-fb .fb-ba[data-pos="right"] { right: var(--ba-inset, 5%); }
+    .dyn-fb .fb-ba[data-pos="left"] { left: var(--ba-inset, 5%); }
+    .dyn-fb .fb-ba[data-pos="center"] { left: 50%; transform: translate(-50%, -50%); }
     .dyn-fb .fb-ba-before, .dyn-fb .fb-ba-after { position: absolute; inset: 0; }
     .dyn-fb .fb-ba-after { clip-path: inset(0 0 0 50%); -webkit-clip-path: inset(0 0 0 50%); }
     .dyn-fb .fb-ba-before img, .dyn-fb .fb-ba-after img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -108,6 +112,8 @@
       .dyn-fb .fb-left { position: relative; min-height: 0; margin-top: -70px; padding: 20px; align-items: flex-start; }
       .dyn-fb .fb-pill-title { white-space: normal; }
       .dyn-fb .fb-close { top: 14px; right: 14px; }
+      .dyn-fb .fb-ba, .dyn-fb .fb-ba[data-pos="right"], .dyn-fb .fb-ba[data-pos="left"], .dyn-fb .fb-ba[data-pos="center"] {
+        inset: 0; width: auto; height: auto; top: 0; left: 0; right: 0; transform: none; aspect-ratio: auto; border-radius: 0; }
     }
   </style>
 
@@ -125,7 +131,7 @@
         {%- for block in colors -%}
           <div class="fb-bg-layer{% if forloop.first %} is-active{% endif %}" data-key="c{{ forloop.index0 }}">
             {%- if block.settings.ba_before != blank and block.settings.ba_after != blank -%}
-              <div class="fb-ba" data-fb-ba>
+              <div class="fb-ba" data-fb-ba data-pos="{{ block.settings.ba_pos | default: 'right' }}" style="--ba-w:{{ block.settings.ba_width | default: 55 }}%;--ba-ratio:{{ block.settings.ba_ratio | default: '4 / 3' }};--ba-inset:{{ block.settings.ba_inset | default: 5 }}%">
                 <div class="fb-ba-before"><img class="fb-media" src="{{ block.settings.ba_before | image_url: width: 1800 }}" width="1600" height="1000" alt="Before" loading="lazy"></div>
                 <div class="fb-ba-after" data-fb-ba-after><img class="fb-media" src="{{ block.settings.ba_after | image_url: width: 1800 }}" width="1600" height="1000" alt="After" loading="lazy"></div>
                 <div class="fb-ba-badge fb-ba-l">{{ block.settings.ba_before_label | default: 'Before' }}</div>
@@ -144,7 +150,7 @@
         {%- for block in feats -%}
           <div class="fb-bg-layer{% if colors.size == 0 and forloop.first %} is-active{% endif %}" data-key="f{{ forloop.index0 }}">
             {%- if block.settings.ba_before != blank and block.settings.ba_after != blank -%}
-              <div class="fb-ba" data-fb-ba>
+              <div class="fb-ba" data-fb-ba data-pos="{{ block.settings.ba_pos | default: 'right' }}" style="--ba-w:{{ block.settings.ba_width | default: 55 }}%;--ba-ratio:{{ block.settings.ba_ratio | default: '4 / 3' }};--ba-inset:{{ block.settings.ba_inset | default: 5 }}%">
                 <div class="fb-ba-before"><img class="fb-media" src="{{ block.settings.ba_before | image_url: width: 1800 }}" width="1600" height="1000" alt="Before" loading="lazy"></div>
                 <div class="fb-ba-after" data-fb-ba-after><img class="fb-media" src="{{ block.settings.ba_after | image_url: width: 1800 }}" width="1600" height="1000" alt="After" loading="lazy"></div>
                 <div class="fb-ba-badge fb-ba-l">{{ block.settings.ba_before_label | default: 'Before' }}</div>
@@ -309,7 +315,11 @@
       { "type": "image_picker", "id": "ba_before", "label": "Before image" },
       { "type": "image_picker", "id": "ba_after", "label": "After image" },
       { "type": "text", "id": "ba_before_label", "label": "Before label", "default": "Before" },
-      { "type": "text", "id": "ba_after_label", "label": "After label", "default": "After" }
+      { "type": "text", "id": "ba_after_label", "label": "After label", "default": "After" },
+      { "type": "range", "id": "ba_width", "min": 30, "max": 100, "step": 1, "unit": "%", "label": "Slider width", "default": 55 },
+      { "type": "select", "id": "ba_ratio", "label": "Slider shape", "default": "4 / 3", "options": [ { "value": "4 / 3", "label": "Landscape 4:3" }, { "value": "1 / 1", "label": "Square" }, { "value": "3 / 4", "label": "Portrait 3:4" }, { "value": "16 / 9", "label": "Wide 16:9" }, { "value": "3 / 2", "label": "Photo 3:2" } ] },
+      { "type": "select", "id": "ba_pos", "label": "Slider position", "default": "right", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ] },
+      { "type": "range", "id": "ba_inset", "min": 0, "max": 25, "step": 1, "unit": "%", "label": "Distance from the side", "default": 5 }
     ]},
     { "type": "feature", "name": "Feature (tab)", "settings": [
       { "type": "text", "id": "title", "label": "Feature title", "default": "Ceramic Shield" },
@@ -321,7 +331,11 @@
       { "type": "image_picker", "id": "ba_before", "label": "Before image" },
       { "type": "image_picker", "id": "ba_after", "label": "After image" },
       { "type": "text", "id": "ba_before_label", "label": "Before label", "default": "Before" },
-      { "type": "text", "id": "ba_after_label", "label": "After label", "default": "After" }
+      { "type": "text", "id": "ba_after_label", "label": "After label", "default": "After" },
+      { "type": "range", "id": "ba_width", "min": 30, "max": 100, "step": 1, "unit": "%", "label": "Slider width", "default": 55 },
+      { "type": "select", "id": "ba_ratio", "label": "Slider shape", "default": "4 / 3", "options": [ { "value": "4 / 3", "label": "Landscape 4:3" }, { "value": "1 / 1", "label": "Square" }, { "value": "3 / 4", "label": "Portrait 3:4" }, { "value": "16 / 9", "label": "Wide 16:9" }, { "value": "3 / 2", "label": "Photo 3:2" } ] },
+      { "type": "select", "id": "ba_pos", "label": "Slider position", "default": "right", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ] },
+      { "type": "range", "id": "ba_inset", "min": 0, "max": 25, "step": 1, "unit": "%", "label": "Distance from the side", "default": 5 }
     ]}
   ],
   "max_blocks": 16,
