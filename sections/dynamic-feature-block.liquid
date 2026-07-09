@@ -11,6 +11,7 @@
 {%- assign colors = section.blocks | where: 'type', 'color' -%}
 {%- assign feats  = section.blocks | where: 'type', 'feature' -%}
 {%- assign canv   = section.blocks | where: 'type', 'canvas' -%}
+{%- assign stak   = section.blocks | where: 'type', 'stack' -%}
 {%- assign fb_justify = 'center' -%}
 {%- if section.settings.align == 'left' -%}{%- assign fb_justify = 'flex-start' -%}{%- elsif section.settings.align == 'right' -%}{%- assign fb_justify = 'flex-end' -%}{%- endif -%}
 
@@ -112,6 +113,15 @@
     .dyn-fb .fb-tile { position: absolute; top: 0; left: 0; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,.28); }
     .dyn-fb .fb-tile img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; -webkit-user-drag: none; }
 
+    /* Image stack (hover-expand accordion) as a tab's media */
+    .dyn-fb .fb-stack { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+    .dyn-fb .fb-stk { display: flex; flex-direction: column; gap: 4px; width: 340px; max-width: 82%; }
+    .dyn-fb .fb-stk-card { flex: 0 0 var(--scol, 40px); overflow: hidden; border-radius: 22px; position: relative; cursor: pointer; transition: flex-grow .55s cubic-bezier(.22,1,.36,1); box-shadow: 0 12px 34px rgba(0,0,0,.34); }
+    .dyn-fb .fb-stk-card.is-open { flex-grow: 1; }
+    .dyn-fb .fb-stk-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .dyn-fb .fb-stk-grad { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.5), transparent 55%); opacity: 0; transition: opacity .3s; pointer-events: none; }
+    .dyn-fb .fb-stk-card.is-open .fb-stk-grad { opacity: 1; }
+
     .dyn-fb .fb-empty { color: var(--soft); font-size: 15px; padding: 30px; }
 
     @media (max-width: 860px) {
@@ -182,6 +192,26 @@
             </div>
           </div>
         {%- endfor -%}
+        {%- for block in stak -%}
+          <div class="fb-bg-layer{% if colors.size == 0 and feats.size == 0 and canv.size == 0 and forloop.first %} is-active{% endif %}" data-key="s{{ forloop.index0 }}">
+            {%- assign scount = 0 -%}{%- for n in (1..8) -%}{%- assign sk = 'img' | append: n -%}{%- if block.settings[sk] != blank -%}{%- assign scount = scount | plus: 1 -%}{%- endif -%}{%- endfor -%}
+            {%- assign snm1 = scount | minus: 1 -%}
+            {%- assign scol = block.settings.collapsed | default: 40 -%}{%- assign sexp = block.settings.expanded | default: 360 -%}
+            {%- assign sh = snm1 | times: scol -%}{%- assign sgaps = snm1 | times: 4 -%}{%- assign stkh = sexp | plus: sh | plus: sgaps -%}
+            {%- assign sdef = 1 -%}{%- if scount < 2 -%}{%- assign sdef = 0 -%}{%- endif -%}
+            <div class="fb-stack">
+              <div class="fb-stk" data-fb-stack data-def="{{ sdef }}" style="height:{{ stkh }}px;--scol:{{ scol }}px">
+                {%- assign si = 0 -%}
+                {%- for n in (1..8) -%}{%- assign sk = 'img' | append: n -%}{%- assign simg = block.settings[sk] -%}{%- if simg != blank -%}
+                  <div class="fb-stk-card{% if si == sdef %} is-open{% endif %}" data-fb-stk-card>
+                    <img src="{{ simg | image_url: width: 800 }}" width="{{ simg.width }}" height="{{ simg.height }}" alt="" loading="lazy">
+                    <span class="fb-stk-grad" aria-hidden="true"></span>
+                  </div>
+                {%- assign si = si | plus: 1 -%}{%- endif -%}{%- endfor -%}
+              </div>
+            </div>
+          </div>
+        {%- endfor -%}
       </div>
 
       <button type="button" class="fb-close" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
@@ -221,8 +251,15 @@
             </div>
           {%- endfor -%}
 
-          {%- if colors.size == 0 and feats.size == 0 and canv.size == 0 and request.design_mode -%}
-            <div class="fb-empty">Add “Color”, “Feature”, or “Infinite canvas” blocks and give each one media.</div>
+          {%- for block in stak -%}
+            <div class="fb-item" data-fb-item data-media="s{{ forloop.index0 }}" {{ block.shopify_attributes }}>
+              <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
+              <div class="fb-panel"><div class="fb-panel-text"><strong>{{ block.settings.title }}.</strong> {{ block.settings.detail }}</div></div>
+            </div>
+          {%- endfor -%}
+
+          {%- if colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and request.design_mode -%}
+            <div class="fb-empty">Add “Color”, “Feature”, “Infinite canvas”, or “Image stack” blocks and give each one media.</div>
           {%- endif -%}
         </div>
       </div>
@@ -311,6 +348,17 @@
       window.addEventListener("resize", build);
     }
     root.querySelectorAll("[data-fb-canvas]").forEach(initCanvas);
+
+    /* Image stack — hover/tap a card to expand it (used as a tab's media) */
+    function initStack(el) {
+      var cards = Array.prototype.slice.call(el.querySelectorAll("[data-fb-stk-card]"));
+      if (!cards.length) return;
+      var def = parseInt(el.getAttribute("data-def"), 10) || 0;
+      function open(i) { var n = cards.length; var k = ((i % n) + n) % n; cards.forEach(function (c, idx) { c.classList.toggle("is-open", idx === k); }); }
+      cards.forEach(function (c, i) { c.addEventListener("mouseenter", function () { open(i); }); c.addEventListener("click", function () { open(i); }); });
+      open(def);
+    }
+    root.querySelectorAll("[data-fb-stack]").forEach(initStack);
 
     /* Before / After sliders — drag to compare (used as a tab's media) */
     function initBA(el) {
@@ -408,6 +456,21 @@
       { "type": "image_picker", "id": "img8", "label": "Image 8" },
       { "type": "image_picker", "id": "img9", "label": "Image 9" },
       { "type": "image_picker", "id": "img10", "label": "Image 10" }
+    ]},
+    { "type": "stack", "name": "Image stack (tab)", "settings": [
+      { "type": "text", "id": "title", "label": "Tab title", "default": "Gallery" },
+      { "type": "textarea", "id": "detail", "label": "Details", "default": "Hover a card to expand it." },
+      { "type": "range", "id": "expanded", "min": 200, "max": 520, "step": 10, "unit": "px", "label": "Expanded card height", "default": 360 },
+      { "type": "range", "id": "collapsed", "min": 28, "max": 90, "step": 2, "unit": "px", "label": "Collapsed bar height", "default": 40 },
+      { "type": "paragraph", "content": "Add up to 8 tall images — hover/tap a card to expand it; the others collapse to bars." },
+      { "type": "image_picker", "id": "img1", "label": "Image 1" },
+      { "type": "image_picker", "id": "img2", "label": "Image 2" },
+      { "type": "image_picker", "id": "img3", "label": "Image 3" },
+      { "type": "image_picker", "id": "img4", "label": "Image 4" },
+      { "type": "image_picker", "id": "img5", "label": "Image 5" },
+      { "type": "image_picker", "id": "img6", "label": "Image 6" },
+      { "type": "image_picker", "id": "img7", "label": "Image 7" },
+      { "type": "image_picker", "id": "img8", "label": "Image 8" }
     ]}
   ],
   "max_blocks": 16,
