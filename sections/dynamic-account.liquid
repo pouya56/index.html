@@ -309,7 +309,24 @@
       {%- comment -%} ---------- REVIEWS ---------- {%- endcomment -%}
       <div class="da-panel" data-panel="reviews">
         <h1 class="da-h">Reviews</h1>
-        <p class="da-sub">Reviews you’ve written. Saved on this device.</p>
+        <p class="da-sub">Products you’ve ordered — leave a review, or see the one you wrote.</p>
+        <script type="application/json" id="daPurchased">
+        [
+          {%- assign seen_products = '' -%}{%- assign first_p = true -%}
+          {%- for order in customer.orders -%}
+            {%- for line in order.line_items -%}
+              {%- if line.product and line.product.id -%}
+                {%- assign pkey = '|' | append: line.product.id | append: '|' -%}
+                {%- unless seen_products contains pkey -%}
+                  {%- assign seen_products = seen_products | append: pkey -%}
+                  {%- unless first_p %},{% endunless %}{%- assign first_p = false -%}
+                  {"handle": {{ line.product.handle | json }}, "title": {{ line.product.title | json }}, "url": {{ line.product.url | json }}, "image": {% if line.product.featured_image %}{{ line.product.featured_image | image_url: width: 160 | json }}{% else %}""{% endif %}}
+                {%- endunless -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endfor -%}
+        ]
+        </script>
         <div id="daReviews"></div>
       </div>
 
@@ -393,17 +410,34 @@
     });
     renderDesigns();
 
-    /* ---- Reviews tab (reads dyn_myreviews written when they post a review) ---- */
+    /* ---- Reviews tab — lists purchased products; prompt to review, or show the
+       review they wrote (from dyn_myreviews, saved when they post a review). ---- */
     var rvEl = document.getElementById("daReviews");
     function renderReviews() {
       if (!rvEl) return;
-      var list = jget("dyn_myreviews", []);
-      if (!Array.isArray(list) || !list.length) { rvEl.innerHTML = '<div class="da-empty">You haven’t written any reviews yet.</div>'; return; }
-      list.sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
-      rvEl.innerHTML = list.map(function (it) {
-        return '<div class="da-card"><div class="da-row"><div><a class="da-tile-name" href="' + esc(it.url || "#") + '">' + esc(it.title || "Product") + '</a>' +
-          '<div class="da-order-meta"><span class="da-rv-stars">' + stars(it.rating || 5) + '</span>' + (it.t ? ' · ' + new Date(it.t).toLocaleDateString() : '') + '</div></div></div>' +
-          (it.text ? '<div class="da-items" style="border-top:0;padding-top:8px">' + esc(it.text) + '</div>' : '') + '</div>';
+      var purchased = []; try { purchased = JSON.parse((document.getElementById("daPurchased") || {}).textContent || "[]"); } catch (e) {}
+      if (!Array.isArray(purchased)) purchased = [];
+      var mine = jget("dyn_myreviews", []); if (!Array.isArray(mine)) mine = [];
+      function myReview(h) { for (var i = 0; i < mine.length; i++) { if (mine[i].handle === h) return mine[i]; } return null; }
+      if (!purchased.length) { rvEl.innerHTML = '<div class="da-empty">Products you’ve ordered will appear here so you can review them.</div>'; return; }
+      rvEl.innerHTML = purchased.map(function (p) {
+        var r = myReview(p.handle), done = jget("dyn_rvdone_" + p.handle, false) === true;
+        var url = esc(p.url || "#");
+        var thumb = p.image ? '<a href="' + url + '" style="flex:none"><img src="' + esc(p.image) + '" alt="" style="width:52px;height:52px;border-radius:10px;object-fit:cover"></a>' : '';
+        var meta = r ? '<div class="da-order-meta"><span class="da-rv-stars">' + stars(r.rating || 5) + '</span>' + (r.t ? ' · ' + new Date(r.t).toLocaleDateString() : '') + '</div>' : '';
+        var action;
+        if (r) { action = ''; }
+        else if (done) { action = '<a class="da-link" href="' + url + '#igSocial">View your review →</a>'; }
+        else { action = '<a class="da-btn sm" href="' + url + '?review=1">Write a review</a>'; }
+        return '<div class="da-card">' +
+          '<div class="da-row" style="align-items:center; gap:14px">' +
+            '<div style="display:flex; align-items:center; gap:12px; min-width:0">' + thumb +
+              '<div style="min-width:0"><a class="da-tile-name" href="' + url + '">' + esc(p.title || "Product") + '</a>' + meta + '</div>' +
+            '</div>' +
+            (action ? '<div style="flex:none">' + action + '</div>' : '') +
+          '</div>' +
+          (r && r.text ? '<div class="da-items" style="border-top:1px solid var(--line-soft); margin-top:12px; padding-top:12px">' + esc(r.text) + '</div>' : '') +
+        '</div>';
       }).join("");
     }
     renderReviews();

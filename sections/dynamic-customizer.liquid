@@ -1488,12 +1488,21 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
   /* Comment icon — reveal / hide the reviews (we control rendering, so hiding
      is fine and lazy loading is not an issue). */
+  function openPanel() {
+    panelOpen = true; panel.hidden = false; commentBtn.setAttribute("aria-expanded", "true");
+    try { panel.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
+  }
   commentBtn.addEventListener("click", function () {
-    panelOpen = !panelOpen;
-    panel.hidden = !panelOpen;
-    commentBtn.setAttribute("aria-expanded", panelOpen ? "true" : "false");
-    if (panelOpen) { try { panel.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} }
+    if (!panelOpen) { openPanel(); return; }
+    panelOpen = false; panel.hidden = true; commentBtn.setAttribute("aria-expanded", "false");
   });
+  /* Deep-link from the account page's "Write a review" button: ?review=1 opens
+     the reviews panel and focuses the write-a-review form. */
+  try {
+    if (/[?&]review=1\b/.test(location.search) || location.hash === "#write-review") {
+      setTimeout(function () { openPanel(); var t = document.getElementById("igStarsPick"); if (t) { try { t.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} } }, 400);
+    }
+  } catch (e) {}
 
   /* Review gate: only customers who bought this product can write a star review,
      and only the first time (once done, the form is replaced with a thank-you). */
