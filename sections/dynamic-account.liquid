@@ -23,7 +23,10 @@
       --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
       color:var(--ink); font-family:var(--font); -webkit-font-smoothing:antialiased;
     }
-    .dyn-acct .da-topbar { max-width:1120px; margin:0 auto; padding:26px 22px 0; }
+    .dyn-acct .da-topbar { max-width:1120px; margin:0 auto; padding:26px 22px 0; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .dyn-acct .da-topbar-l { min-width:0; }
+    .dyn-acct .da-topbar-r { display:flex; align-items:center; gap:11px; flex:none; }
+    .dyn-acct .da-topbar-r .da-hi { margin:0; font-size:16px; }
     .dyn-acct .da-logo { display:inline-flex; align-items:center; text-decoration:none; color:var(--ink); }
     .dyn-acct .da-logo img { display:block; height:auto; }
     .dyn-acct .da-logo-text { font-size:22px; font-weight:700; letter-spacing:-0.02em; }
@@ -159,18 +162,28 @@
     }
   </style>
 
-  {%- if section.settings.logo != blank or section.settings.show_shop_name -%}
+  {%- if customer or section.settings.logo != blank or section.settings.show_shop_name -%}
     <div class="da-topbar">
-      <a class="da-logo" href="{{ routes.root_url }}" aria-label="{{ shop.name | escape }} — home">
-        {%- if section.settings.logo != blank -%}
-          {%- assign logo_w = section.settings.logo_width | default: 160 -%}
-          {%- assign logo_src_w = logo_w | times: 2 -%}
-          {%- assign logo_h = section.settings.logo.height | times: logo_w | divided_by: section.settings.logo.width -%}
-          <img src="{{ section.settings.logo | image_url: width: logo_src_w }}" alt="{{ shop.name | escape }}" width="{{ logo_w }}" height="{{ logo_h }}" style="max-width:{{ logo_w }}px">
-        {%- else -%}
-          <span class="da-logo-text">{{ shop.name }}</span>
+      <div class="da-topbar-l">
+        {%- if section.settings.logo != blank or section.settings.show_shop_name -%}
+          <a class="da-logo" href="{{ routes.root_url }}" aria-label="{{ shop.name | escape }} — home">
+            {%- if section.settings.logo != blank -%}
+              {%- assign logo_w = section.settings.logo_width | default: 160 -%}
+              {%- assign logo_src_w = logo_w | times: 2 -%}
+              {%- assign logo_h = section.settings.logo.height | times: logo_w | divided_by: section.settings.logo.width -%}
+              <img src="{{ section.settings.logo | image_url: width: logo_src_w }}" alt="{{ shop.name | escape }}" width="{{ logo_w }}" height="{{ logo_h }}" style="max-width:{{ logo_w }}px">
+            {%- else -%}
+              <span class="da-logo-text">{{ shop.name }}</span>
+            {%- endif -%}
+          </a>
         {%- endif -%}
-      </a>
+      </div>
+      {%- if customer -%}
+        <div class="da-topbar-r">
+          <span class="da-hi">Hi, {{ customer.first_name | default: customer.name | default: 'there' }}</span>
+          <button type="button" class="da-avatar da-avatar-btn" id="daAvatarSide" title="Change photo" aria-label="Change profile photo"><span class="da-avatar-fb">{{ customer.first_name | default: customer.name | default: 'U' | slice: 0 | upcase }}</span><span class="da-avatar-cam" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span></button>
+        </div>
+      {%- endif -%}
     </div>
   {%- endif -%}
 
@@ -178,10 +191,6 @@
   <input id="daAvatarFile" type="file" accept="image/*" hidden>
   <div class="da-wrap">
     <aside class="da-nav">
-      <div class="da-idbar">
-        <button type="button" class="da-avatar da-avatar-btn" id="daAvatarSide" title="Change photo" aria-label="Change profile photo"><span class="da-avatar-fb">{{ customer.first_name | default: customer.name | default: 'U' | slice: 0 | upcase }}</span><span class="da-avatar-cam" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span></button>
-        <div class="da-hi">Hi, {{ customer.first_name | default: customer.name | default: 'there' }}</div>
-      </div>
       <a class="da-navlink" href="https://shopify.com/{{ shop.id }}/account/orders" title="Opens your Shopify orders page">Orders <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
       <button type="button" class="da-tab is-active" data-tab="wishlist">Wishlist</button>
       <button type="button" class="da-tab" data-tab="designs">Saved Designs</button>
