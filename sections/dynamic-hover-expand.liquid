@@ -9,7 +9,7 @@
   <style>
     #shopify-section-{{ section.id }} { background: {{ section.settings.bg | default: '#0e0e0e' }}; }
     #dynHx-{{ section.id }} {
-      --hx-collapsed: {{ section.settings.collapsed | default: 78 }}px;
+      --hx-collapsed: {{ section.settings.collapsed | default: 96 }}px;
       --hx-line: rgba(255,255,255,.09);
       --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       font-family: var(--font); -webkit-font-smoothing: antialiased;
@@ -23,25 +23,29 @@
       border-right: 1px solid var(--hx-line); transition: flex-grow .6s cubic-bezier(.22,1,.36,1); }
     .dyn-hx .hx-card:last-child { border-right: 0; }
     .dyn-hx .hx-card.is-open { flex-grow: 1; }
-    .dyn-hx .hx-img { position: absolute; inset: 0; opacity: 0; transition: opacity .55s ease; }
+    /* Image sits inset to the right of the label strip, with a black border + rounded corners */
+    .dyn-hx .hx-img { position: absolute; left: var(--hx-collapsed); top: 14px; right: 14px; bottom: 14px; border-radius: 16px; overflow: hidden; opacity: 0; transition: opacity .55s ease; }
     .dyn-hx .hx-card.is-open .hx-img { opacity: 1; }
     .dyn-hx .hx-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .dyn-hx .hx-shade { position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(0,0,0,.55), transparent 55%); opacity: 0; transition: opacity .55s; }
-    .dyn-hx .hx-card.is-open .hx-shade { opacity: 1; }
-    .dyn-hx .hx-label { position: absolute; left: 28px; bottom: 26px; z-index: 3; transform-origin: left bottom; transform: rotate(-90deg); white-space: nowrap;
-      color: rgba(255,255,255,.42); font-size: 17px; font-weight: 500; letter-spacing: .01em; transition: color .35s; }
-    .dyn-hx .hx-card.is-open .hx-label { color: #fff; }
-    .dyn-hx .hx-year { position: absolute; left: 26px; top: 26px; z-index: 3; transform-origin: left top; transform: rotate(90deg); white-space: nowrap;
-      color: rgba(255,255,255,.6); font-size: 13px; letter-spacing: .04em; opacity: 0; transition: opacity .4s; }
-    .dyn-hx .hx-card.is-open .hx-year { opacity: 1; }
+    /* Label + year live on the black strip on the left, vertical */
+    .dyn-hx .hx-label, .dyn-hx .hx-year { position: absolute; left: 0; width: var(--hx-collapsed); z-index: 3; display: flex; justify-content: center; }
+    .dyn-hx .hx-label { bottom: 30px; }
+    .dyn-hx .hx-year { top: 30px; }
+    .dyn-hx .hx-label > span, .dyn-hx .hx-year > span { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; }
+    .dyn-hx .hx-label > span { color: rgba(255,255,255,.45); font-size: 17px; font-weight: 500; letter-spacing: .01em; transition: color .35s; }
+    .dyn-hx .hx-card.is-open .hx-label > span { color: #fff; }
+    .dyn-hx .hx-year > span { color: rgba(255,255,255,.55); font-size: 13px; letter-spacing: .04em; }
     .dyn-hx .hx-empty { color: #888; text-align: center; padding: 40px; }
 
     @media (max-width: 760px) {
       .dyn-hx .hx { flex-direction: column; height: auto; }
       .dyn-hx .hx-card { flex: 0 0 var(--hx-collapsed); border-right: 0; border-bottom: 1px solid var(--hx-line); }
-      .dyn-hx .hx-card.is-open { flex: 0 0 62vh; }
-      .dyn-hx .hx-label { transform: none; left: 22px; bottom: 16px; font-size: 16px; }
-      .dyn-hx .hx-year { transform: none; left: 22px; top: 16px; }
+      .dyn-hx .hx-card.is-open { flex: 0 0 66vh; }
+      .dyn-hx .hx-img { left: 14px; top: var(--hx-collapsed); right: 14px; bottom: 14px; }
+      .dyn-hx .hx-label, .dyn-hx .hx-year { width: auto; }
+      .dyn-hx .hx-label { left: 20px; bottom: auto; top: 12px; }
+      .dyn-hx .hx-year { top: auto; bottom: 12px; left: auto; right: 20px; }
+      .dyn-hx .hx-label > span, .dyn-hx .hx-year > span { writing-mode: horizontal-tb; transform: none; }
     }
   </style>
 
@@ -63,9 +67,8 @@
               <span style="position:absolute;inset:0;background:linear-gradient(135deg,#242424,#3a3a3a)"></span>
             {%- endif -%}
           </span>
-          <span class="hx-shade" aria-hidden="true"></span>
-          {%- if block.settings.year != blank -%}<span class="hx-year">{{ block.settings.year }}</span>{%- endif -%}
-          <span class="hx-label">{{ block.settings.label | default: 'Untitled' }}</span>
+          {%- if block.settings.year != blank -%}<span class="hx-year"><span>{{ block.settings.year }}</span></span>{%- endif -%}
+          <span class="hx-label"><span>{{ block.settings.label | default: 'Untitled' }}</span></span>
         {%- endcapture -%}
         {%- if block.settings.link != blank -%}
           <a class="hx-card{% if forloop.first %} is-open{% endif %}" href="{{ block.settings.link }}" data-hx-card {{ block.shopify_attributes }}>{{ hx_inner }}</a>
@@ -105,7 +108,7 @@
     { "type": "text", "id": "subtitle", "label": "Subtitle (optional)" },
     { "type": "header", "content": "Size" },
     { "type": "range", "id": "height", "min": 380, "max": 900, "step": 10, "unit": "px", "label": "Height", "default": 660 },
-    { "type": "range", "id": "collapsed", "min": 48, "max": 140, "step": 2, "unit": "px", "label": "Collapsed column width", "default": 78 },
+    { "type": "range", "id": "collapsed", "min": 60, "max": 160, "step": 2, "unit": "px", "label": "Label strip width", "default": 96 },
     { "type": "header", "content": "Colours" },
     { "type": "color", "id": "bg", "label": "Background", "default": "#0e0e0e" },
     { "type": "color", "id": "ink", "label": "Heading text", "default": "#f5f5f7" }
