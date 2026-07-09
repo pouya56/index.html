@@ -10,9 +10,15 @@
 {%- unless section.settings.transparent_bg -%}{%- assign ab_bg = section.settings.bar_bg -%}{%- endunless -%}
 {%- assign ab_align = section.settings.align | default: 'right' -%}
 
-<div class="dyn-abar ab-{{ ab_align }}{% if section.settings.sticky %} is-sticky{% endif %}" id="dynAbar">
+<div class="dyn-abar ab-{{ ab_align }}{% if section.settings.overlay %} is-overlay{% endif %}{% if section.settings.sticky and section.settings.overlay == false %} is-sticky{% endif %}" id="dynAbar">
   <style>
     #shopify-section-{{ section.id }} .dyn-abar { background: {{ ab_bg }}; }
+    {%- if section.settings.overlay -%}
+    /* Float over the page: pull the whole section out of flow so it takes no row. */
+    #shopify-section-{{ section.id }} { position: absolute; top: 0; left: 0; right: 0; z-index: 60; pointer-events: none; }
+    #shopify-section-{{ section.id }} .dyn-abar { background: transparent; }
+    #shopify-section-{{ section.id }} .dyn-abar .dh-menu { pointer-events: auto; }
+    {%- endif -%}
     .dyn-abar {
       --bg: #ffffff; --bg-panel: #f5f5f7;
       --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
@@ -264,11 +270,12 @@
     { "type": "paragraph", "content": "Add “App link” blocks below to fill the grid. With none added, a sensible default set (Shop, Search, Contact, Account, Cart, policies…) shows automatically." },
 
     { "type": "header", "content": "Bar style" },
-    { "type": "select", "id": "align", "label": "Align", "default": "right",
+    { "type": "checkbox", "id": "overlay", "label": "Float over the page (no row)", "default": true, "info": "Sits on top of the page at the top-right — like the homepage corners — instead of taking its own row. Turn off for a normal bar." },
+    { "type": "select", "id": "align", "label": "Align (normal bar only)", "default": "right",
       "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ] },
-    { "type": "checkbox", "id": "transparent_bg", "label": "Transparent background", "default": true },
-    { "type": "color", "id": "bar_bg", "label": "Bar background", "default": "#ffffff", "info": "Used when Transparent is off." },
-    { "type": "checkbox", "id": "sticky", "label": "Stick to top when scrolling", "default": false }
+    { "type": "checkbox", "id": "transparent_bg", "label": "Transparent background (normal bar only)", "default": true },
+    { "type": "color", "id": "bar_bg", "label": "Bar background", "default": "#ffffff", "info": "Used when Transparent is off and Float is off." },
+    { "type": "checkbox", "id": "sticky", "label": "Stick to top when scrolling (normal bar only)", "default": false }
   ],
   "blocks": [
     { "type": "app_link", "name": "App link", "settings": [
