@@ -10,6 +10,8 @@
 
 {%- assign colors = section.blocks | where: 'type', 'color' -%}
 {%- assign feats  = section.blocks | where: 'type', 'feature' -%}
+{%- assign fb_justify = 'center' -%}
+{%- if section.settings.align == 'left' -%}{%- assign fb_justify = 'flex-start' -%}{%- elsif section.settings.align == 'right' -%}{%- assign fb_justify = 'flex-end' -%}{%- endif -%}
 
 <section class="dyn-fb" id="dynFb-{{ section.id }}">
   <style>
@@ -20,15 +22,17 @@
       --ink: #f5f5f7; --soft: #c4c4c8; --accent: {{ section.settings.accent | default: '#0071e3' }};
       --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased;
-      min-height: 100vh; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 40px 0;
+      --fb-cardh: {{ section.settings.card_height | default: 640 }}px;
+      display: flex; justify-content: {{ fb_justify }}; box-sizing: border-box;
+      {% if section.settings.full_height %}min-height: 100vh; align-items: center; padding: 40px 0;{% else %}align-items: flex-start; padding: {{ section.settings.pad_top | default: 40 }}px 0 {{ section.settings.pad_bottom | default: 40 }}px;{% endif %}
     }
-    .dyn-fb .fb-wrap { width: 85%; max-width: 1600px; margin: 0 auto; }
+    .dyn-fb .fb-wrap { width: {{ section.settings.content_width | default: 85 }}%; max-width: 1600px; }
     .dyn-fb .fb-head { max-width: 640px; margin: 0 auto 26px; text-align: center; }
     .dyn-fb .fb-eyebrow { font-size: 14px; font-weight: 600; color: var(--accent); margin: 0 0 10px; }
     .dyn-fb .fb-title { font-size: clamp(26px, 4vw, 44px); line-height: 1.06; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
     .dyn-fb .fb-desc { font-size: clamp(15px, 2vw, 19px); line-height: 1.5; color: var(--soft); margin: 14px 0 0; }
 
-    .dyn-fb .fb-card { position: relative; overflow: hidden; border-radius: 30px; background: var(--card); min-height: 640px; }
+    .dyn-fb .fb-card { position: relative; overflow: hidden; border-radius: 30px; background: var(--card); min-height: var(--fb-cardh); }
 
     /* Background media layers (crossfade) */
     .dyn-fb .fb-bg { position: absolute; inset: 0; z-index: 0; }
@@ -45,7 +49,7 @@
     .dyn-fb.is-open .fb-close { opacity: 1; pointer-events: auto; transform: scale(1); }
 
     /* Left column: nav arrows + pills */
-    .dyn-fb .fb-left { position: relative; z-index: 3; display: flex; align-items: center; gap: 16px; min-height: 640px; padding: 48px clamp(20px,4vw,52px); box-sizing: border-box; pointer-events: none; }
+    .dyn-fb .fb-left { position: relative; z-index: 3; display: flex; align-items: center; gap: 16px; min-height: var(--fb-cardh); padding: 48px clamp(20px,4vw,52px); box-sizing: border-box; pointer-events: none; }
     .dyn-fb .fb-nav, .dyn-fb .fb-navbtn, .dyn-fb .fb-pill, .dyn-fb .fb-panel, .dyn-fb .fb-close { pointer-events: auto; }
     .dyn-fb .fb-nav { display: flex; flex-direction: column; gap: 10px; opacity: 0; pointer-events: none; transition: opacity .25s; }
     .dyn-fb.is-open .fb-nav { opacity: 1; pointer-events: auto; }
@@ -274,6 +278,14 @@
   "class": "dynamic-feature-block-section",
   "settings": [
     { "type": "paragraph", "content": "Liquid-glass tabs over a full-bleed background. By default nothing is open. Clicking a tab opens it like a page (glass card + swaps the background media). Close with the × (top-right); step with the ↑/↓ arrows. Add a “Color” block per colour (swatch + media) and a “Feature” block per detail (title + detail + media)." },
+    { "type": "header", "content": "Size & position" },
+    { "type": "range", "id": "content_width", "min": 40, "max": 100, "step": 1, "unit": "%", "label": "Width", "default": 85 },
+    { "type": "range", "id": "card_height", "min": 360, "max": 1000, "step": 10, "unit": "px", "label": "Height", "default": 640 },
+    { "type": "select", "id": "align", "label": "Horizontal position", "default": "center",
+      "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ] },
+    { "type": "checkbox", "id": "full_height", "label": "Center in the full screen height", "default": true, "info": "On = the block is vertically centered in a full screen. Off = it flows normally with the spacing below." },
+    { "type": "range", "id": "pad_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Space above (when not full height)", "default": 40 },
+    { "type": "range", "id": "pad_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Space below (when not full height)", "default": 40 },
     { "type": "header", "content": "Heading (optional)" },
     { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
     { "type": "text", "id": "title", "label": "Title" },
