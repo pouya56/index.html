@@ -343,7 +343,8 @@
           {%- assign seen_products = '' -%}{%- assign first_p = true -%}
           {%- for order in customer.orders -%}
             {%- for line in order.line_items -%}
-              {%- if line.product and line.product.id -%}
+              {%- comment -%} Skip add-on/fee lines (gift wrapping, back-print fee) — they carry a _For marker and aren't reviewable products. {%- endcomment -%}
+              {%- if line.product and line.product.id and line.properties["_For"] == blank -%}
                 {%- assign pkey = '|' | append: line.product.id | append: '|' -%}
                 {%- unless seen_products contains pkey -%}
                   {%- assign seen_products = seen_products | append: pkey -%}
