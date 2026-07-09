@@ -41,6 +41,12 @@
     .dyn-acct .da-profile-actions { display:flex; align-items:center; gap:12px; margin-top:12px; }
     .dyn-acct .da-profile-actions label { cursor:pointer; }
     .dyn-acct .da-profile-note { font-size:12px; color:var(--ink-faint); margin-top:8px; }
+    .dyn-acct .da-avatar-btn { position:relative; border:0; padding:0; cursor:pointer; }
+    .dyn-acct .da-avatar-cam { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.42); opacity:0; transition:opacity .15s; border-radius:50%; }
+    .dyn-acct .da-avatar-cam svg { width:45%; height:45%; fill:none; stroke:#fff; stroke-width:1.7; stroke-linejoin:round; }
+    .dyn-acct .da-avatar-btn:hover .da-avatar-cam, .dyn-acct .da-avatar-btn:focus-visible .da-avatar-cam { opacity:1; }
+    .dyn-acct .da-sech { font-size:19px; font-weight:600; margin:0; letter-spacing:-0.01em; }
+    .dyn-acct .da-signout { margin-top:30px; padding-top:20px; border-top:1px solid var(--line-soft); }
 
     .dyn-acct .da-main { min-width:0; }
     .dyn-acct .da-panel { display:none; }
@@ -143,17 +149,17 @@
   </style>
 
   {%- if customer -%}
+  <input id="daAvatarFile" type="file" accept="image/*" hidden>
   <div class="da-wrap">
     <aside class="da-nav">
       <div class="da-idbar">
-        <span class="da-avatar" id="daAvatarSide"><span class="da-avatar-fb">{{ customer.first_name | default: customer.name | default: 'U' | slice: 0 | upcase }}</span></span>
+        <button type="button" class="da-avatar da-avatar-btn" id="daAvatarSide" title="Change photo" aria-label="Change profile photo"><span class="da-avatar-fb">{{ customer.first_name | default: customer.name | default: 'U' | slice: 0 | upcase }}</span><span class="da-avatar-cam" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span></button>
         <div class="da-hi">Hi, {{ customer.first_name | default: customer.name | default: 'there' }}</div>
       </div>
       <button type="button" class="da-tab is-active" data-tab="orders">Orders</button>
       <button type="button" class="da-tab" data-tab="wishlist">Wishlist</button>
       <button type="button" class="da-tab" data-tab="tracking">Order tracking</button>
       <button type="button" class="da-tab" data-tab="designs">Saved Designs</button>
-      <button type="button" class="da-tab" data-tab="addresses">Saved Addresses</button>
       <button type="button" class="da-tab" data-tab="reviews">Reviews</button>
       <button type="button" class="da-tab" data-tab="profile">Profile</button>
       <a class="da-logout" href="{{ routes.account_logout_url }}">Log out</a>
@@ -314,12 +320,30 @@
         {%- endif -%}
       </div>
 
-      {%- comment -%} ---------- SAVED ADDRESSES ---------- {%- endcomment -%}
-      <div class="da-panel" data-panel="addresses">
-        <h1 class="da-h">Saved Addresses</h1>
-        <p class="da-sub">Manage your shipping and billing addresses.</p>
+      {%- comment -%} ---------- PROFILE (name, email, photo, addresses) ---------- {%- endcomment -%}
+      <div class="da-panel" data-panel="profile">
+        <h1 class="da-h">Profile</h1>
+        <p class="da-sub">Your details, photo and addresses.</p>
 
-        <button type="button" class="da-btn" id="daAddrNew" style="margin-bottom:16px">+ Add a new address</button>
+        {%- comment -%} Name + email + photo {%- endcomment -%}
+        <div class="da-card">
+          <div class="da-profile-row">
+            <button type="button" class="da-avatar da-avatar-lg da-avatar-btn" id="daAvatarBig" title="Change photo" aria-label="Change profile photo"><span class="da-avatar-fb">{{ customer.first_name | default: customer.name | default: 'U' | slice: 0 | upcase }}</span><span class="da-avatar-cam" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span></button>
+            <div style="flex:1 1 auto; min-width:0">
+              <div class="da-profile-name">{{ customer.name | default: customer.first_name | default: 'Your account' }}</div>
+              {%- if customer.email != blank -%}<div class="da-profile-email">{{ customer.email }}</div>{%- endif -%}
+              <div class="da-profile-note" id="daAvatarNote">Tap your photo to change it (saved on this device).</div>
+              <button type="button" class="da-x" id="daAvatarRemove" hidden style="margin-top:6px">Remove photo</button>
+            </div>
+            <a class="da-btn ghost sm" href="{{ routes.account_url }}">Edit name / email</a>
+          </div>
+        </div>
+
+        {%- comment -%} Addresses {%- endcomment -%}
+        <div class="da-row" style="align-items:center; margin:28px 0 14px">
+          <h2 class="da-sech">Addresses</h2>
+          <button type="button" class="da-btn ghost sm" id="daAddrNew">+ Add</button>
+        </div>
 
         {%- form 'customer_address', customer.new_address, class: 'da-form', id: 'daAddrNewForm', hidden: true -%}
           <div class="da-2col">
@@ -391,26 +415,9 @@
         {%- else -%}
           <div class="da-empty" id="daNoAddr">No saved addresses yet.</div>
         {%- endif -%}
-      </div>
 
-      {%- comment -%} ---------- PROFILE ---------- {%- endcomment -%}
-      <div class="da-panel" data-panel="profile">
-        <h1 class="da-h">Profile</h1>
-        <p class="da-sub">Your details and profile photo.</p>
-        <div class="da-card">
-          <div class="da-profile-row">
-            <span class="da-avatar da-avatar-lg" id="daAvatarBig"><span class="da-avatar-fb">{{ customer.first_name | default: customer.name | default: 'U' | slice: 0 | upcase }}</span></span>
-            <div>
-              <div class="da-profile-name">{{ customer.name | default: customer.first_name | default: 'Your account' }}</div>
-              {%- if customer.email != blank -%}<div class="da-profile-email">{{ customer.email }}</div>{%- endif -%}
-              <div class="da-profile-actions">
-                <label class="da-btn ghost sm" for="daAvatarFile">Upload photo</label>
-                <input id="daAvatarFile" type="file" accept="image/*" hidden>
-                <button type="button" class="da-x" id="daAvatarRemove" hidden>Remove</button>
-              </div>
-              <div class="da-profile-note" id="daAvatarNote">Saved on this device.</div>
-            </div>
-          </div>
+        <div class="da-signout">
+          <a class="da-btn ghost" href="{{ routes.account_logout_url }}">Sign out</a>
         </div>
       </div>
 
@@ -481,6 +488,7 @@
     /* ---- Profile photo (avatar) — upload, shrink, store on this device ---- */
     var AVA_KEY = "dyn_avatar";
     var avaEls = [document.getElementById("daAvatarSide"), document.getElementById("daAvatarBig")];
+    avaEls.forEach(function (el) { if (el) el.addEventListener("click", function () { var f = document.getElementById("daAvatarFile"); if (f) f.click(); }); });
     var avaFile = document.getElementById("daAvatarFile"), avaRemove = document.getElementById("daAvatarRemove"), avaNote = document.getElementById("daAvatarNote");
     function paintAvatar() {
       var url = ""; try { url = localStorage.getItem(AVA_KEY) || ""; } catch (e) {}
