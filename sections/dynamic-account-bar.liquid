@@ -9,6 +9,10 @@
 {%- assign ab_bg = 'transparent' -%}
 {%- unless section.settings.transparent_bg -%}{%- assign ab_bg = section.settings.bar_bg -%}{%- endunless -%}
 
+{%- comment -%} Hide the back button on the home page (nothing to go back to there). {%- endcomment -%}
+{%- assign show_back_btn = section.settings.show_back -%}
+{%- if template.name == 'index' and section.settings.back_hide_home -%}{%- assign show_back_btn = false -%}{%- endif -%}
+
 <div class="dyn-abar{% if section.settings.overlay %} is-overlay{% endif %}{% if section.settings.sticky and section.settings.overlay == false %} is-sticky{% endif %}" id="dynAbar">
   <style>
     #shopify-section-{{ section.id }} .dyn-abar { background: {{ ab_bg }}; }
@@ -92,7 +96,7 @@
 
   <div class="ab-inner">
     <div class="ab-l">
-      {%- if section.settings.show_back -%}
+      {%- if show_back_btn -%}
         <button type="button" class="ab-back" id="dynAbarBack" aria-label="Go back to the previous page" title="Back">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>
         </button>
@@ -287,6 +291,7 @@
 
     { "type": "header", "content": "Back button" },
     { "type": "checkbox", "id": "show_back", "label": "Show back button (top-left)", "default": true, "info": "A round ‘←’ button that returns to the previous page — or your home page if there isn’t one." },
+    { "type": "checkbox", "id": "back_hide_home", "label": "Hide it on the home page", "default": true, "info": "Recommended — the home page has no ‘previous’ page, and it would overlap the corner links there." },
 
     { "type": "header", "content": "Account menu" },
     { "type": "checkbox", "id": "show_account", "label": "Show account menu", "default": true },
