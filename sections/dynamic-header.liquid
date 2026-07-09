@@ -258,8 +258,10 @@
         {%- if block.settings.action == 'wishlist' or block.settings.icon == 'heart' -%}{%- assign is_wish = true -%}{%- endif -%}
         {%- assign is_search = false -%}
         {%- if block.settings.action == 'search' or block.settings.icon == 'search' -%}{%- assign is_search = true -%}{%- endif -%}
-        {%- if is_cart -%}{%- assign is_wish = false -%}{%- assign is_search = false -%}{%- endif -%}
-        {%- if is_wish -%}{%- assign is_search = false -%}{%- endif -%}
+        {%- assign is_user = false -%}
+        {%- if block.settings.action == 'account' or block.settings.icon == 'user' -%}{%- assign is_user = true -%}{%- endif -%}
+        {%- if is_cart -%}{%- assign is_wish = false -%}{%- assign is_search = false -%}{%- assign is_user = false -%}{%- endif -%}
+        {%- if is_wish -%}{%- assign is_search = false -%}{%- assign is_user = false -%}{%- endif -%}
         {%- capture ico -%}
           {%- if block.settings.custom_icon -%}
             <img src="{{ block.settings.custom_icon | image_url: width: 80 }}" alt="" width="27" height="27">
@@ -294,6 +296,10 @@
             <a class="gb-ico" data-hd-wishlist href="{{ block.settings.link | default: routes.root_url }}" aria-label="{{ lbl | escape }}" title="{{ lbl | escape }}" {{ block.shopify_attributes }}>{{ ico }}<span class="gb-badge" data-hd-wishlist-count hidden>0</span></a>
           {%- elsif is_search -%}
             <a class="gb-ico" data-hd-search href="{{ block.settings.link | default: routes.search_url }}" aria-label="{{ lbl | escape }}" title="{{ lbl | escape }}" {{ block.shopify_attributes }}>{{ ico }}</a>
+          {%- elsif is_user -%}
+            {%- assign acct_default = section.settings.account_url | default: '/pages/account' -%}
+            {%- unless customer -%}{%- assign acct_default = routes.account_login_url -%}{%- endunless -%}
+            <a class="gb-ico" href="{{ block.settings.link | default: acct_default }}" aria-label="{{ lbl | escape }}" title="{{ lbl | escape }}" {{ block.shopify_attributes }}>{{ ico }}</a>
           {%- else -%}
             <a class="gb-ico" href="{{ block.settings.link | default: routes.root_url }}" aria-label="{{ lbl | escape }}" title="{{ lbl | escape }}" {{ block.shopify_attributes }}>{{ ico }}</a>
           {%- endif -%}
@@ -1005,6 +1011,8 @@
   "name": "Dynamic Header",
   "tag": "section",
   "settings": [
+    { "type": "header", "content": "Account" },
+    { "type": "url", "id": "account_url", "label": "Account page (for the account icon)", "info": "Where the account icon sends a logged-in shopper. Defaults to /pages/account (your custom account page). Logged-out shoppers always go to the login page." },
     { "type": "header", "content": "Visibility" },
     { "type": "checkbox", "id": "hide_on_home", "label": "Hide on the home page", "default": false, "info": "The header disappears on the home page (where the hero already shows your logo + search) but stays on every other page." },
     { "type": "checkbox", "id": "hide_on_password", "label": "Hide on the password page", "default": true, "info": "Hides the header on your store's password/coming-soon page." },

@@ -5,10 +5,13 @@
   is /pages/account) and point your account/menu link there. Deep-link a tab by
   adding a hash, e.g. /pages/account#wishlist.
 
-  Tabs: Orders, Wishlist, Order tracking, Saved Designs, Saved Addresses,
-  Payment Methods, Reviews. Orders / tracking / addresses read your Shopify
-  customer data (shopper must be logged in). Wishlist / Saved Designs / Reviews
-  are saved in the shopper's browser (no app needed).
+  Tabs: Orders, Wishlist, Order tracking, Saved Designs, Reviews, Profile.
+  Orders / tracking / addresses (in Profile) read your Shopify customer data
+  (shopper must be logged in). Wishlist / Saved Designs / Reviews / profile photo
+  are saved in the shopper's browser (no app needed). Name / email are edited on
+  Shopify's own account settings (a theme can't change those) via the Profile
+  tab's "Edit name / email" button. Point your header account icon here by
+  setting the header's "Account page" URL to this page (default /pages/account).
 {%- endcomment -%}
 
 <section class="dyn-acct" id="dynAcct" data-login="{{ routes.account_login_url }}">
@@ -47,6 +50,7 @@
     .dyn-acct .da-avatar-btn:hover .da-avatar-cam, .dyn-acct .da-avatar-btn:focus-visible .da-avatar-cam { opacity:1; }
     .dyn-acct .da-sech { font-size:19px; font-weight:600; margin:0; letter-spacing:-0.01em; }
     .dyn-acct .da-signout { margin-top:30px; padding-top:20px; border-top:1px solid var(--line-soft); }
+    .dyn-acct .da-ext svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; vertical-align:-1px; margin-left:5px; }
 
     .dyn-acct .da-main { min-width:0; }
     .dyn-acct .da-panel { display:none; }
@@ -335,7 +339,7 @@
               <div class="da-profile-note" id="daAvatarNote">Tap your photo to change it (saved on this device).</div>
               <button type="button" class="da-x" id="daAvatarRemove" hidden style="margin-top:6px">Remove photo</button>
             </div>
-            <a class="da-btn ghost sm" href="{{ routes.account_url }}">Edit name / email</a>
+            <a class="da-btn ghost sm da-ext" href="{{ routes.account_url }}" title="Opens Shopify's secure account settings">Edit name / email <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
           </div>
         </div>
 
