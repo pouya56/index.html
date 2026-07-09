@@ -94,6 +94,8 @@
     .dyn-acct .da-form-actions { display:flex; gap:10px; align-items:center; }
 
     .dyn-acct .da-note { font-size:14px; color:var(--ink-soft); line-height:1.6; }
+    .dyn-acct .da-rvmore { display:block; width:100%; margin-top:6px; padding:12px; border:1px solid var(--line); border-radius:12px; background:none; color:var(--ink-soft); font:inherit; font-size:14px; font-weight:500; cursor:pointer; transition:border-color .15s, color .15s; }
+    .dyn-acct .da-rvmore:hover { border-color:var(--ink); color:var(--ink); }
     .dyn-acct .da-rv-stars { color:#f5b301; letter-spacing:1px; }
 
     .dyn-acct .da-guest { max-width:520px; margin:80px auto; text-align:center; padding:40px 22px; }
@@ -422,32 +424,42 @@
     /* ---- Reviews tab — lists purchased products; prompt to review, or show the
        review they wrote (from dyn_myreviews, saved when they post a review). ---- */
     var rvEl = document.getElementById("daReviews");
+    var RV_PAGE = 6, rvExpanded = false;
+    function rvCard(p) {
+      var r = myReview(p.handle), done = jget("dyn_rvdone_" + p.handle, false) === true;
+      var url = esc(p.url || "#");
+      var thumb = p.image ? '<a href="' + url + '" style="flex:none"><img src="' + esc(p.image) + '" alt="" style="width:52px;height:52px;border-radius:10px;object-fit:cover"></a>' : '';
+      var meta = r ? '<div class="da-order-meta"><span class="da-rv-stars">' + stars(r.rating || 5) + '</span>' + (r.t ? ' · ' + new Date(r.t).toLocaleDateString() : '') + '</div>' : '';
+      var action;
+      if (r) { action = ''; }
+      else if (done) { action = '<a class="da-link" href="' + url + '#igSocial">View your review →</a>'; }
+      else { action = '<a class="da-btn sm" href="' + url + '?review=1">Write a review</a>'; }
+      return '<div class="da-card">' +
+        '<div class="da-row" style="align-items:center; gap:14px">' +
+          '<div style="display:flex; align-items:center; gap:12px; min-width:0">' + thumb +
+            '<div style="min-width:0"><a class="da-tile-name" href="' + url + '">' + esc(p.title || "Product") + '</a>' + meta + '</div>' +
+          '</div>' +
+          (action ? '<div style="flex:none">' + action + '</div>' : '') +
+        '</div>' +
+        (r && r.text ? '<div class="da-items" style="border-top:1px solid var(--line-soft); margin-top:12px; padding-top:12px">' + esc(r.text) + '</div>' : '') +
+      '</div>';
+    }
+    var mine = [];
+    function myReview(h) { for (var i = 0; i < mine.length; i++) { if (mine[i].handle === h) return mine[i]; } return null; }
     function renderReviews() {
       if (!rvEl) return;
       var purchased = []; try { purchased = JSON.parse((document.getElementById("daPurchased") || {}).textContent || "[]"); } catch (e) {}
       if (!Array.isArray(purchased)) purchased = [];
-      var mine = jget("dyn_myreviews", []); if (!Array.isArray(mine)) mine = [];
-      function myReview(h) { for (var i = 0; i < mine.length; i++) { if (mine[i].handle === h) return mine[i]; } return null; }
+      mine = jget("dyn_myreviews", []); if (!Array.isArray(mine)) mine = [];
       if (!purchased.length) { rvEl.innerHTML = '<div class="da-empty">Products you’ve ordered will appear here so you can review them.</div>'; return; }
-      rvEl.innerHTML = purchased.map(function (p) {
-        var r = myReview(p.handle), done = jget("dyn_rvdone_" + p.handle, false) === true;
-        var url = esc(p.url || "#");
-        var thumb = p.image ? '<a href="' + url + '" style="flex:none"><img src="' + esc(p.image) + '" alt="" style="width:52px;height:52px;border-radius:10px;object-fit:cover"></a>' : '';
-        var meta = r ? '<div class="da-order-meta"><span class="da-rv-stars">' + stars(r.rating || 5) + '</span>' + (r.t ? ' · ' + new Date(r.t).toLocaleDateString() : '') + '</div>' : '';
-        var action;
-        if (r) { action = ''; }
-        else if (done) { action = '<a class="da-link" href="' + url + '#igSocial">View your review →</a>'; }
-        else { action = '<a class="da-btn sm" href="' + url + '?review=1">Write a review</a>'; }
-        return '<div class="da-card">' +
-          '<div class="da-row" style="align-items:center; gap:14px">' +
-            '<div style="display:flex; align-items:center; gap:12px; min-width:0">' + thumb +
-              '<div style="min-width:0"><a class="da-tile-name" href="' + url + '">' + esc(p.title || "Product") + '</a>' + meta + '</div>' +
-            '</div>' +
-            (action ? '<div style="flex:none">' + action + '</div>' : '') +
-          '</div>' +
-          (r && r.text ? '<div class="da-items" style="border-top:1px solid var(--line-soft); margin-top:12px; padding-top:12px">' + esc(r.text) + '</div>' : '') +
-        '</div>';
-      }).join("");
+      var visible = rvExpanded ? purchased : purchased.slice(0, RV_PAGE);
+      var html = visible.map(rvCard).join("");
+      if (purchased.length > RV_PAGE) {
+        html += '<button type="button" class="da-rvmore" id="daRvMore">' + (rvExpanded ? "Show less" : ("Show more (" + (purchased.length - RV_PAGE) + ")")) + '</button>';
+      }
+      rvEl.innerHTML = html;
+      var moreBtn = document.getElementById("daRvMore");
+      if (moreBtn) moreBtn.onclick = function () { rvExpanded = !rvExpanded; renderReviews(); };
     }
     renderReviews();
 
