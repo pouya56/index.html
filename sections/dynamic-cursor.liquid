@@ -50,8 +50,11 @@
   var scale = 0, tscale = 0, hoverScale = 1, op = 0, top_ = 0, last = null;
   var K = 131, C = 10, M = 0.1; /* stiffness, damping, mass */
 
-  window.addEventListener("mousemove", function (e) { tx = e.clientX; ty = e.clientY; tscale = 1; top_ = 1; }, { passive: true });
+  function track(e) { tx = e.clientX; ty = e.clientY; tscale = 1; top_ = 1; }
+  window.addEventListener("mousemove", track, { passive: true });
+  window.addEventListener("pointermove", track, { passive: true });
   document.addEventListener("mouseleave", function () { tscale = 0; top_ = 0; });
+  document.addEventListener("mouseenter", function () { tscale = 1; top_ = 1; });
   window.addEventListener("blur", function () { tscale = 0; top_ = 0; });
   if (grow) {
     document.addEventListener("mouseover", function (e) { if (e.target.closest && e.target.closest('a,button,[role="button"],input,textarea,select,label')) hoverScale = 1.9; });
