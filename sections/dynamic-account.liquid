@@ -266,7 +266,8 @@
                 {%- endform -%}
               </div>
             </div>
-            {%- form 'customer_address', address, class: 'da-form', id: 'daAddrEdit-' | append: address.id, hidden: true -%}
+            {%- assign edit_form_id = 'daAddrEdit-' | append: address.id -%}
+            {%- form 'customer_address', address, class: 'da-form', id: edit_form_id, hidden: true -%}
               <div class="da-2col">
                 <div class="da-field"><label>First name</label><input type="text" name="address[first_name]" value="{{ form.first_name }}"></div>
                 <div class="da-field"><label>Last name</label><input type="text" name="address[last_name]" value="{{ form.last_name }}"></div>
