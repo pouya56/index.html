@@ -1,10 +1,11 @@
 {%- comment -%}
-  Apple Feature Block — dark, full-bleed Apple-style product showcase (inspired by
-  Skiper UI "skiper76"). A large product image bleeds off the right of a rounded
-  black card; on the left a vertical stack of "pills": the first ("Colors") holds
-  the colour swatches (which crossfade the image), the rest expand into a text card
-  (bold title + detail). Up/down arrows step through them like a carousel.
-  Blocks: "Color" (swatch + image) and "Feature" (title + detail).
+  Apple Feature Block — Skiper76-style liquid-glass showcase.
+  Full-bleed background media (image OR video) behind translucent iOS-glass
+  "tab" pills on the left. By default NO tab is open. Click a pill to open it
+  like a page: it expands into a glass card (title + detail, or the colour
+  swatches) AND swaps the background media to that tab's media. Close with the
+  × (top-right); step through tabs with the ↑ / ↓ arrows.
+  Blocks: "Color" (swatch + media) and "Feature" (title + detail + media).
 {%- endcomment -%}
 
 {%- assign colors = section.blocks | where: 'type', 'color' -%}
@@ -15,64 +16,83 @@
     #shopify-section-{{ section.id }} { background: {{ section.settings.page_bg | default: '#141414' }}; }
     #dynFb-{{ section.id }} {
       --card: {{ section.settings.card_bg | default: '#050505' }};
-      --pill: #1c1c1e; --pill-hover: #2a2a2c;
-      --ink: #f5f5f7; --soft: #b0b0b5; --accent: {{ section.settings.accent | default: '#0071e3' }};
+      --glass: rgba(58,58,60,0.42); --glass-hover: rgba(78,78,80,0.5); --glass-brd: rgba(255,255,255,0.14);
+      --ink: #f5f5f7; --soft: #c4c4c8; --accent: {{ section.settings.accent | default: '#0071e3' }};
       --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased;
       min-height: 100vh; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 40px 0;
     }
-    .dyn-fb .fb-wrap { width: 85%; max-width: 1600px; margin: 0 auto; padding: 0; }
+    .dyn-fb .fb-wrap { width: 85%; max-width: 1600px; margin: 0 auto; }
     .dyn-fb .fb-head { max-width: 640px; margin: 0 auto 26px; text-align: center; }
     .dyn-fb .fb-eyebrow { font-size: 14px; font-weight: 600; color: var(--accent); margin: 0 0 10px; }
     .dyn-fb .fb-title { font-size: clamp(26px, 4vw, 44px); line-height: 1.06; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
     .dyn-fb .fb-desc { font-size: clamp(15px, 2vw, 19px); line-height: 1.5; color: var(--soft); margin: 14px 0 0; }
 
-    .dyn-fb .fb-card { position: relative; overflow: hidden; border-radius: 30px; background: var(--card);
-      min-height: 600px; display: flex; align-items: center; padding: 40px clamp(20px, 4vw, 52px); }
+    .dyn-fb .fb-card { position: relative; overflow: hidden; border-radius: 30px; background: var(--card); min-height: 640px; }
 
-    /* Right: full-bleed product image that crossfades */
-    .dyn-fb .fb-stage { position: absolute; top: 0; right: 0; bottom: 0; width: 66%; }
-    .dyn-fb .fb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;
-      opacity: 0; transform: scale(1.01); transition: opacity .6s ease, transform .8s cubic-bezier(.22,1,.36,1); }
-    .dyn-fb .fb-img.is-active { opacity: 1; transform: scale(1); }
+    /* Background media layers (crossfade) */
+    .dyn-fb .fb-bg { position: absolute; inset: 0; z-index: 0; }
+    .dyn-fb .fb-bg-layer { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; }
+    .dyn-fb .fb-bg-layer.is-active { opacity: 1; }
+    .dyn-fb .fb-media { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 
-    /* Left: nav arrows + pill stack (above the image) */
-    .dyn-fb .fb-left { position: relative; z-index: 2; display: flex; align-items: center; gap: 16px; }
-    .dyn-fb .fb-nav { display: flex; flex-direction: column; gap: 10px; }
-    .dyn-fb .fb-navbtn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.04);
-      color: var(--ink); cursor: pointer; display: grid; place-items: center; transition: background .15s, transform .12s; }
-    .dyn-fb .fb-navbtn:hover { background: rgba(255,255,255,.12); }
+    /* Close button (top-right) — appears when a tab is open */
+    .dyn-fb .fb-close { position: absolute; top: 22px; right: 22px; z-index: 6; width: 46px; height: 46px; border-radius: 50%;
+      background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid var(--glass-brd); color: var(--ink); cursor: pointer; display: grid; place-items: center;
+      opacity: 0; pointer-events: none; transform: scale(.9); transition: opacity .25s, transform .25s; box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 8px 24px rgba(0,0,0,.3); }
+    .dyn-fb .fb-close svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+    .dyn-fb.is-open .fb-close { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+    /* Left column: nav arrows + pills */
+    .dyn-fb .fb-left { position: relative; z-index: 3; display: flex; align-items: center; gap: 16px; min-height: 640px; padding: 48px clamp(20px,4vw,52px); box-sizing: border-box; }
+    .dyn-fb .fb-nav { display: flex; flex-direction: column; gap: 10px; opacity: 0; pointer-events: none; transition: opacity .25s; }
+    .dyn-fb.is-open .fb-nav { opacity: 1; pointer-events: auto; }
+    .dyn-fb .fb-navbtn { width: 44px; height: 44px; border-radius: 50%; background: var(--glass); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+      border: 1px solid var(--glass-brd); color: var(--ink); cursor: pointer; display: grid; place-items: center; transition: background .15s, transform .12s; box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+    .dyn-fb .fb-navbtn:hover { background: var(--glass-hover); }
     .dyn-fb .fb-navbtn:active { transform: scale(.92); }
     .dyn-fb .fb-navbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-    .dyn-fb .fb-list { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
-    .dyn-fb .fb-item { max-width: 340px; background: var(--pill); border-radius: 24px; overflow: hidden; transition: background .2s; }
-    .dyn-fb .fb-item:hover { background: var(--pill-hover); }
-    .dyn-fb .fb-item-head { display: flex; align-items: center; gap: 12px; padding: 10px 22px 10px 10px; background: none; border: 0; cursor: pointer; font: inherit; color: var(--ink); width: 100%; text-align: left; }
-    .dyn-fb .fb-item.is-open:not([data-colors]) .fb-item-head { display: none; }
-    .dyn-fb .fb-item-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
-    .dyn-fb .fb-ic { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.32); background: transparent; position: relative; }
+    .dyn-fb .fb-list { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; width: 100%; max-width: 380px; }
+    .dyn-fb .fb-item { max-width: 100%; }
+
+    /* Glass pill (collapsed) */
+    .dyn-fb .fb-pill { display: inline-flex; align-items: center; gap: 12px; padding: 10px 22px 10px 10px; border: 1px solid var(--glass-brd); border-radius: 999px;
+      background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+      color: var(--ink); cursor: pointer; font: inherit; text-align: left; box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 6px 20px rgba(0,0,0,.22); transition: background .18s, transform .12s; }
+    .dyn-fb .fb-pill:hover { background: var(--glass-hover); }
+    .dyn-fb .fb-pill:active { transform: scale(.98); }
+    .dyn-fb .fb-pill-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
+    .dyn-fb .fb-ic { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.4); background: transparent; position: relative; }
     .dyn-fb .fb-ic::before, .dyn-fb .fb-ic::after { content: ""; position: absolute; top: 50%; left: 50%; width: 11px; height: 1.7px; background: #fff; border-radius: 2px; transform: translate(-50%,-50%); }
     .dyn-fb .fb-ic::after { transform: translate(-50%,-50%) rotate(90deg); }
     .dyn-fb .fb-item[data-colors] .fb-ic { background: #fff; border-color: #fff; }
     .dyn-fb .fb-item[data-colors] .fb-ic::before, .dyn-fb .fb-item[data-colors] .fb-ic::after { opacity: 0; }
-    .dyn-fb .fb-item-body { height: 0; overflow: hidden; transition: height .36s cubic-bezier(.22,1,.36,1); }
-    .dyn-fb .fb-item-inner { padding: 16px 24px 20px; font-size: 15px; line-height: 1.55; color: var(--soft); }
-    .dyn-fb .fb-item-inner strong { color: var(--ink); font-weight: 600; }
 
-    .dyn-fb .fb-swatches { display: flex; flex-wrap: wrap; gap: 13px; padding: 2px 24px 18px 52px; }
-    .dyn-fb .fb-swatch { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255,255,255,.18); background: var(--sw, #888); cursor: pointer; padding: 0; transition: transform .14s; }
+    /* Glass panel (expanded "page") */
+    .dyn-fb .fb-panel { display: none; border: 1px solid var(--glass-brd); border-radius: 22px; background: var(--glass);
+      -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); padding: 20px 24px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 10px 34px rgba(0,0,0,.34); max-width: 380px; animation: fbIn .32s cubic-bezier(.22,1,.36,1); }
+    .dyn-fb .fb-item.is-open .fb-pill { display: none; }
+    .dyn-fb .fb-item.is-open .fb-panel { display: block; }
+    @keyframes fbIn { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+    .dyn-fb .fb-panel-text { font-size: 15px; line-height: 1.55; color: var(--soft); }
+    .dyn-fb .fb-panel-text strong { color: var(--ink); font-weight: 600; }
+    .dyn-fb .fb-colorname { color: var(--ink); font-weight: 600; }
+    .dyn-fb .fb-swatches { display: flex; flex-wrap: wrap; gap: 13px; margin-top: 16px; }
+    .dyn-fb .fb-swatch { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,.22); background: var(--sw, #888); cursor: pointer; padding: 0; transition: transform .14s; }
     .dyn-fb .fb-swatch:hover { transform: scale(1.14); }
-    .dyn-fb .fb-swatch.is-active { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px #fff; }
+    .dyn-fb .fb-swatch.is-active { box-shadow: 0 0 0 2px rgba(0,0,0,.35), 0 0 0 4px #fff; }
 
     .dyn-fb .fb-empty { color: var(--soft); font-size: 15px; padding: 30px; }
 
     @media (max-width: 860px) {
-      .dyn-fb .fb-card { flex-direction: column; align-items: stretch; padding: 24px 18px; min-height: 0; }
-      .dyn-fb .fb-stage { position: relative; width: 100%; height: 320px; margin: -4px -18px 18px; width: calc(100% + 36px); order: -1; }
-      .dyn-fb .fb-img { object-fit: contain; }
-      .dyn-fb .fb-left { gap: 10px; }
-      .dyn-fb .fb-item-title { white-space: normal; }
+      .dyn-fb .fb-card { min-height: 0; }
+      .dyn-fb .fb-bg { position: relative; height: 300px; }
+      .dyn-fb .fb-left { position: relative; min-height: 0; margin-top: -70px; padding: 20px; align-items: flex-start; }
+      .dyn-fb .fb-pill-title { white-space: normal; }
+      .dyn-fb .fb-close { top: 14px; right: 14px; }
     }
   </style>
 
@@ -86,26 +106,48 @@
     {%- endif -%}
 
     <div class="fb-card">
-      <div class="fb-left">
-        {%- if section.blocks.size > 1 -%}
-          <div class="fb-nav">
-            <button type="button" class="fb-navbtn" data-fb-up aria-label="Previous feature"><svg viewBox="0 0 24 24"><polyline points="6 15 12 9 18 15"/></svg></button>
-            <button type="button" class="fb-navbtn" data-fb-down aria-label="Next feature"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+      <div class="fb-bg">
+        {%- for block in colors -%}
+          <div class="fb-bg-layer{% if forloop.first %} is-active{% endif %}" data-key="c{{ forloop.index0 }}">
+            {%- if block.settings.video != blank -%}
+              <video class="fb-media" autoplay muted loop playsinline{% if block.settings.image != blank %} poster="{{ block.settings.image | image_url: width: 40 }}"{% endif %}>
+                {%- for s in block.settings.video.sources -%}<source src="{{ s.url }}" type="{{ s.mime_type }}">{%- endfor -%}
+              </video>
+            {%- elsif block.settings.image != blank -%}
+              <img class="fb-media" src="{{ block.settings.image | image_url: width: 1800 }}" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" alt="{{ block.settings.label | escape }}" loading="lazy">
+            {%- endif -%}
           </div>
-        {%- endif -%}
+        {%- endfor -%}
+        {%- for block in feats -%}
+          <div class="fb-bg-layer{% if colors.size == 0 and forloop.first %} is-active{% endif %}" data-key="f{{ forloop.index0 }}">
+            {%- if block.settings.video != blank -%}
+              <video class="fb-media" autoplay muted loop playsinline{% if block.settings.image != blank %} poster="{{ block.settings.image | image_url: width: 40 }}"{% endif %}>
+                {%- for s in block.settings.video.sources -%}<source src="{{ s.url }}" type="{{ s.mime_type }}">{%- endfor -%}
+              </video>
+            {%- elsif block.settings.image != blank -%}
+              <img class="fb-media" src="{{ block.settings.image | image_url: width: 1800 }}" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" alt="{{ block.settings.title | escape }}" loading="lazy">
+            {%- endif -%}
+          </div>
+        {%- endfor -%}
+      </div>
+
+      <button type="button" class="fb-close" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+
+      <div class="fb-left">
+        <div class="fb-nav">
+          <button type="button" class="fb-navbtn" data-fb-up aria-label="Previous"><svg viewBox="0 0 24 24"><polyline points="6 15 12 9 18 15"/></svg></button>
+          <button type="button" class="fb-navbtn" data-fb-down aria-label="Next"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+        </div>
 
         <div class="fb-list">
           {%- if colors.size > 0 -%}
-            <div class="fb-item is-open" data-fb-item data-colors>
-              <button type="button" class="fb-item-head" aria-expanded="true">
-                <span class="fb-ic" aria-hidden="true"></span>
-                <span class="fb-item-title">{{ section.settings.colors_label | default: 'Colors' }}</span>
-              </button>
-              <div class="fb-item-body">
+            <div class="fb-item" data-fb-item data-colors>
+              <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ section.settings.colors_label | default: 'Colors' }}</span></button>
+              <div class="fb-panel">
+                <div class="fb-panel-text"><strong>{{ section.settings.colors_label | default: 'Colors' }}.</strong> {{ section.settings.colors_intro | default: 'Choose from a range of finishes.' }} Shown in <span class="fb-colorname" data-fb-colorname>{{ colors.first.settings.label }}</span>.</div>
                 <div class="fb-swatches">
                   {%- for block in colors -%}
-                    <button type="button" class="fb-swatch{% if forloop.first %} is-active{% endif %}" data-i="{{ forloop.index0 }}"
-                      style="--sw: {{ block.settings.swatch }}" aria-label="{{ block.settings.label | escape }}" {{ block.shopify_attributes }}></button>
+                    <button type="button" class="fb-swatch{% if forloop.first %} is-active{% endif %}" data-i="{{ forloop.index0 }}" data-name="{{ block.settings.label | escape }}" style="--sw: {{ block.settings.swatch }}" aria-label="{{ block.settings.label | escape }}" {{ block.shopify_attributes }}></button>
                   {%- endfor -%}
                 </div>
               </div>
@@ -113,30 +155,16 @@
           {%- endif -%}
 
           {%- for block in feats -%}
-            <div class="fb-item" data-fb-item {{ block.shopify_attributes }}>
-              <button type="button" class="fb-item-head" aria-expanded="false">
-                <span class="fb-ic" aria-hidden="true"></span>
-                <span class="fb-item-title">{{ block.settings.title }}</span>
-              </button>
-              <div class="fb-item-body"><div class="fb-item-inner"><strong>{{ block.settings.title }}.</strong> {{ block.settings.detail }}</div></div>
+            <div class="fb-item" data-fb-item data-media="f{{ forloop.index0 }}" {{ block.shopify_attributes }}>
+              <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
+              <div class="fb-panel"><div class="fb-panel-text"><strong>{{ block.settings.title }}.</strong> {{ block.settings.detail }}</div></div>
             </div>
           {%- endfor -%}
 
           {%- if colors.size == 0 and feats.size == 0 and request.design_mode -%}
-            <div class="fb-empty">Add “Color” and “Feature” blocks in the section settings.</div>
+            <div class="fb-empty">Add “Color” and “Feature” blocks, and give each one a background image or video.</div>
           {%- endif -%}
         </div>
-      </div>
-
-      <div class="fb-stage">
-        {%- for block in colors -%}
-          {%- if block.settings.image != blank -%}
-            <img class="fb-img{% if forloop.first %} is-active{% endif %}" data-i="{{ forloop.index0 }}"
-              src="{{ block.settings.image | image_url: width: 1600 }}"
-              width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}"
-              alt="{{ block.settings.label | escape }}" loading="lazy">
-          {%- endif -%}
-        {%- endfor -%}
       </div>
     </div>
   </div>
@@ -145,49 +173,54 @@
   (function () {
     var root = document.getElementById("dynFb-{{ section.id }}");
     if (!root) return;
-
     var items = Array.prototype.slice.call(root.querySelectorAll("[data-fb-item]"));
-    function bodyH(item) { var b = item.querySelector(".fb-item-body"); return b && b.firstElementChild ? b.firstElementChild.offsetHeight : 0; }
-    function setOpen(item, open) {
-      var body = item.querySelector(".fb-item-body"), head = item.querySelector(".fb-item-head");
-      item.classList.toggle("is-open", open);
-      if (head) head.setAttribute("aria-expanded", open ? "true" : "false");
-      if (body) body.style.height = open ? (bodyH(item) + "px") : "0px";
+    var layers = Array.prototype.slice.call(root.querySelectorAll(".fb-bg-layer"));
+    var closeBtn = root.querySelector(".fb-close");
+    var nameEl = root.querySelector("[data-fb-colorname]");
+    var selColor = 0, openIndex = -1;
+
+    function showBg(key) { layers.forEach(function (l) { l.classList.toggle("is-active", l.getAttribute("data-key") === key); }); }
+    function defaultKey() {
+      if (root.querySelector('[data-colors]')) return "c" + selColor;
+      var f = items[0]; return f ? f.getAttribute("data-media") : "";
     }
-    function openOnly(item) { items.forEach(function (o) { setOpen(o, o === item); }); }
-    items.forEach(function (item) {
-      item.querySelector(".fb-item-head").addEventListener("click", function () {
-        var isOpen = item.classList.contains("is-open");
-        if (isOpen && !item.hasAttribute("data-colors")) { setOpen(item, false); }
-        else { openOnly(item); }
-      });
-    });
-    /* default: first item (Colors, or first feature) open */
-    var first = root.querySelector("[data-fb-item]");
-    if (first) openOnly(first);
+    function closeAll() {
+      openIndex = -1;
+      items.forEach(function (it) { it.classList.remove("is-open"); });
+      root.classList.remove("is-open");
+      showBg(defaultKey());
+    }
+    function openTab(i) {
+      if (i < 0 || i >= items.length) return;
+      openIndex = i;
+      items.forEach(function (it, k) { it.classList.toggle("is-open", k === i); });
+      root.classList.add("is-open");
+      var it = items[i];
+      showBg(it.hasAttribute("data-colors") ? ("c" + selColor) : it.getAttribute("data-media"));
+    }
 
-    /* Up / down arrows step through the pills like a carousel */
-    function currentIndex() { for (var i = 0; i < items.length; i++) { if (items[i].classList.contains("is-open")) return i; } return 0; }
+    items.forEach(function (it, i) {
+      var pill = it.querySelector(".fb-pill");
+      if (pill) pill.addEventListener("click", function () { openTab(i); });
+    });
+    if (closeBtn) closeBtn.addEventListener("click", closeAll);
     var up = root.querySelector("[data-fb-up]"), down = root.querySelector("[data-fb-down]");
-    if (up) up.addEventListener("click", function () { openOnly(items[(currentIndex() - 1 + items.length) % items.length]); });
-    if (down) down.addEventListener("click", function () { openOnly(items[(currentIndex() + 1) % items.length]); });
+    if (up) up.addEventListener("click", function () { openTab((openIndex - 1 + items.length) % items.length); });
+    if (down) down.addEventListener("click", function () { openTab((openIndex + 1) % items.length); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && openIndex >= 0) closeAll(); });
 
-    window.addEventListener("resize", function () {
-      var o = root.querySelector("[data-fb-item].is-open");
-      if (o) { var b = o.querySelector(".fb-item-body"); if (b && b.firstElementChild) b.style.height = b.firstElementChild.offsetHeight + "px"; }
-    });
-
-    /* Color swatches → crossfade the product image */
-    var imgs = Array.prototype.slice.call(root.querySelectorAll(".fb-img"));
-    var swatches = Array.prototype.slice.call(root.querySelectorAll(".fb-swatch"));
-    swatches.forEach(function (sw) {
+    /* Colour swatches: change the phone colour (background media) */
+    root.querySelectorAll(".fb-swatch").forEach(function (sw) {
       sw.addEventListener("click", function (e) {
         e.stopPropagation();
-        var i = sw.getAttribute("data-i");
-        imgs.forEach(function (el) { el.classList.toggle("is-active", el.getAttribute("data-i") === i); });
-        swatches.forEach(function (el) { el.classList.toggle("is-active", el === sw); });
+        selColor = parseInt(sw.getAttribute("data-i"), 10) || 0;
+        root.querySelectorAll(".fb-swatch").forEach(function (s) { s.classList.toggle("is-active", s === sw); });
+        if (nameEl) nameEl.textContent = sw.getAttribute("data-name") || "";
+        showBg("c" + selColor);
       });
     });
+
+    closeAll(); /* start with nothing open */
   })();
   </script>
 </section>
@@ -198,26 +231,31 @@
   "tag": "section",
   "class": "dynamic-feature-block-section",
   "settings": [
-    { "type": "paragraph", "content": "A dark, full-bleed Apple-style showcase: a product image that changes colour, with expandable feature pills + up/down arrows on the left. Add a “Color” block per colour (swatch + image) and a “Feature” block per detail." },
+    { "type": "paragraph", "content": "Liquid-glass tabs over a full-bleed background. By default nothing is open. Clicking a tab opens it like a page (glass card + swaps the background media). Close with the × (top-right); step with the ↑/↓ arrows. Add a “Color” block per colour (swatch + media) and a “Feature” block per detail (title + detail + media)." },
     { "type": "header", "content": "Heading (optional)" },
     { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
     { "type": "text", "id": "title", "label": "Title" },
     { "type": "textarea", "id": "description", "label": "Description" },
-    { "type": "text", "id": "colors_label", "label": "Colors pill label", "default": "Colors" },
+    { "type": "header", "content": "Colors tab" },
+    { "type": "text", "id": "colors_label", "label": "Colors tab label", "default": "Colors" },
+    { "type": "textarea", "id": "colors_intro", "label": "Colors tab text", "default": "Choose from a range of bold finishes." },
     { "type": "header", "content": "Colours" },
     { "type": "color", "id": "page_bg", "label": "Section background", "default": "#141414" },
-    { "type": "color", "id": "card_bg", "label": "Card background", "default": "#050505" },
+    { "type": "color", "id": "card_bg", "label": "Card background (behind media)", "default": "#050505" },
     { "type": "color", "id": "accent", "label": "Accent (eyebrow)", "default": "#0071e3" }
   ],
   "blocks": [
     { "type": "color", "name": "Color", "settings": [
       { "type": "text", "id": "label", "label": "Color name", "default": "Cosmic Orange" },
       { "type": "color", "id": "swatch", "label": "Swatch color", "default": "#c65a2e" },
-      { "type": "image_picker", "id": "image", "label": "Product image (fills the right side)" }
+      { "type": "image_picker", "id": "image", "label": "Background image (this colour)" },
+      { "type": "video", "id": "video", "label": "Background video (optional, overrides image)" }
     ]},
-    { "type": "feature", "name": "Feature (expandable)", "settings": [
+    { "type": "feature", "name": "Feature (tab)", "settings": [
       { "type": "text", "id": "title", "label": "Feature title", "default": "Ceramic Shield" },
-      { "type": "textarea", "id": "detail", "label": "Details", "default": "Describe this feature — what it is and why it matters." }
+      { "type": "textarea", "id": "detail", "label": "Details", "default": "Describe this feature — what it is and why it matters." },
+      { "type": "image_picker", "id": "image", "label": "Background image (this feature)" },
+      { "type": "video", "id": "video", "label": "Background video (optional, overrides image)" }
     ]}
   ],
   "max_blocks": 16,
@@ -227,8 +265,8 @@
         { "type": "color", "settings": { "label": "Cosmic Orange", "swatch": "#c65a2e" } },
         { "type": "color", "settings": { "label": "Deep Blue", "swatch": "#243a52" } },
         { "type": "color", "settings": { "label": "Silver", "swatch": "#e3e4e6" } },
-        { "type": "feature", "settings": { "title": "Aluminum Unibody" } },
-        { "type": "feature", "settings": { "title": "Vapor Chamber" } },
+        { "type": "feature", "settings": { "title": "Aluminum Unibody", "detail": "Optimized for performance and battery. Aluminum alloy is remarkably light and has exceptional thermal conductivity." } },
+        { "type": "feature", "settings": { "title": "Vapor Chamber", "detail": "Deionized water sealed inside moves heat away from the chip, allowing even higher sustained performance." } },
         { "type": "feature", "settings": { "title": "Ceramic Shield", "detail": "Protects the back, making it far more resistant to cracks, with better scratch resistance on the front." } },
         { "type": "feature", "settings": { "title": "Immersive Pro Display" } },
         { "type": "feature", "settings": { "title": "Camera Control" } },
