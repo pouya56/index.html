@@ -1293,8 +1293,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   var form = document.getElementById("igRvForm"), textEl = document.getElementById("igRvText");
   var hpEl = document.getElementById("igRvHp"), submitBtn = document.getElementById("igRvSubmit"), rvNote = document.getElementById("igRvNote");
   var starWrap = document.getElementById("igStarsPick"), starHint = document.getElementById("igStarHint"), chosenEl = document.getElementById("igRvChosen"), boxEl = document.getElementById("igRvBox");
-  var RVDONE_KEY = "dyn_rvdone_" + handle, RVID_KEY = "dyn_rvid_" + handle;
-  var editingId = null, inEditFlow = false, doneBoxEl = null;
+  var RVDONE_KEY = "dyn_rvdone_" + handle;
   var reviews = [], expanded = false, pickRating = 0, panelOpen = false, repliesOpen = {};
   /* Only customers who bought this product can write a star review (once). Anyone
      signed in can still REPLY to reviews. Buyers get the green ✓ Verified badge. */
@@ -1374,13 +1373,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         out.push({ id: k, name: r.name || "Anonymous", rating: parseInt(r.rating, 10) || 5, text: r.text || "", t: parseInt(r.t, 10) || 0, v: r.v ? 1 : 0, likes: parseInt(lk[k], 10) || 0, replies: reps });
       }
       out.sort(function (a, b) { return b.t - a.t; });
-      reviews = out;
-      // Backfill this device's review id (so an existing review is editable): if
-      // we know they reviewed but don't have the id, match by their account name.
-      if (jget(RVDONE_KEY, false) && !jget(RVID_KEY, "") && cfg.customerName) {
-        for (var mi = 0; mi < reviews.length; mi++) { if (reviews[mi].name === cfg.customerName) { jset(RVID_KEY, reviews[mi].id); break; } }
-      }
-      render();
+      reviews = out; render();
     }).catch(function () { render(); });
   }
 
@@ -1473,51 +1466,21 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   paintStars();
 
   function note(msg, ok) { rvNote.textContent = msg; rvNote.style.color = ok === false ? "#c0392b" : "#1a7f37"; rvNote.hidden = false; }
-  /* Save this device's own review to localStorage so the account "Reviews" tab
-     can show it, and so it can be edited later. */
-  function upsertMyReview(rating, text) {
-    try {
-      var mine = JSON.parse(localStorage.getItem("dyn_myreviews") || "[]"); if (!Array.isArray(mine)) mine = [];
-      var rec = { handle: handle, title: cfg.title || document.title, url: (cfg.url ? (location.origin + cfg.url) : location.href), rating: rating, text: text, t: Date.now() };
-      var found = false;
-      for (var i = 0; i < mine.length; i++) { if (mine[i].handle === handle) { mine[i] = rec; found = true; break; } }
-      if (!found) mine.push(rec);
-      localStorage.setItem("dyn_myreviews", JSON.stringify(mine));
-    } catch (e) {}
-  }
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     if (hpEl && hpEl.value) return;
     if (pickRating < 1) { note("Please tap a star to rate first.", false); return; }
-    if (!editingId && !inEditFlow && jget(RVDONE_KEY, false)) { note("You’ve already reviewed this product.", false); return; }
+    if (jget(RVDONE_KEY, false)) { note("You’ve already reviewed this product. Thank you!", false); return; }
     var text = (textEl.value || "").trim();
     if (text.length < 3) { note("Please write a little more.", false); textEl.focus(); return; }
     if (!fb) { note("Reviews need the Firebase link set up first.", false); return; }
-
-    if (editingId) {
-      /* ---- Edit an existing review (PATCH) ---- */
-      submitBtn.disabled = true;
-      fetch(fb + "/reviews/" + encodeURIComponent(handle) + "/" + editingId + ".json", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rating: pickRating, text: text.slice(0, 800), e: 1 }) })
-        .then(function (r) { return r.json(); }).then(function (res) {
-          submitBtn.disabled = false;
-          if (res && res.rating != null || res) {
-            var rv = rvById(editingId); if (rv) { rv.rating = pickRating; rv.text = text.slice(0, 800); rv.e = 1; }
-            upsertMyReview(pickRating, text.slice(0, 800));
-            editingId = null; inEditFlow = false; submitBtn.textContent = "Post review";
-            render(); showReviewedState("✓ Your review was updated.");
-          } else { note("Couldn’t update right now — please try again.", false); }
-        }).catch(function () { submitBtn.disabled = false; note("Couldn’t update right now — please try again.", false); });
-      return;
-    }
-
-    /* ---- Post a new review (POST) ---- */
     var review = { name: ((cfg.customerName || "").toString().trim().slice(0, 60)) || "Anonymous", rating: pickRating, text: text.slice(0, 800), t: Date.now(), v: cfg.purchased ? 1 : 0 };
     submitBtn.disabled = true;
     fetch(fb + "/reviews/" + encodeURIComponent(handle) + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(review) })
       .then(function (r) { return r.json(); }).then(function (res) {
         submitBtn.disabled = false;
-        if (res && res.name) { jset(RVDONE_KEY, true); jset(RVID_KEY, res.name); inEditFlow = false;
-          upsertMyReview(review.rating, review.text);
+        if (res && res.name) { jset(RVDONE_KEY, true);
+          try { var mine = JSON.parse(localStorage.getItem("dyn_myreviews") || "[]"); if (!Array.isArray(mine)) mine = []; mine.push({ handle: handle, title: cfg.title || document.title, url: (cfg.url ? (location.origin + cfg.url) : location.href), rating: review.rating, text: review.text, t: review.t }); localStorage.setItem("dyn_myreviews", JSON.stringify(mine)); } catch (e) {}
           reviews.unshift({ id: res.name, name: review.name, rating: review.rating, text: review.text, t: review.t, v: review.v, likes: 0, replies: [] }); expanded = false; render(); textEl.value = ""; autoGrow(); note("Thanks! Your review is posted."); }
         else { note("Couldn’t post right now — please try again.", false); }
       }).catch(function () { submitBtn.disabled = false; note("Couldn’t post right now — please try again.", false); });
@@ -1550,33 +1513,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     else { gate.textContent = "Only customers who bought this product can review it."; }
     panel.appendChild(gate);
   } else if (jget(RVDONE_KEY, false)) {
-    showReviewedState();
-    // Deep-link from the account "Edit your review" link (?review=edit).
-    try { if (/[?&]review=edit\b/.test(location.search)) { setTimeout(startEditReview, 1000); } } catch (e) {}
-  }
-
-  /* The "you've reviewed this" box with an Edit button, and the edit flow that
-     pre-fills the form with the customer's existing review. */
-  function myReviewRec() { try { var m = JSON.parse(localStorage.getItem("dyn_myreviews") || "[]"); for (var i = 0; i < m.length; i++) { if (m[i].handle === handle) return m[i]; } } catch (e) {} return null; }
-  function showReviewedState(msg) {
     form.style.display = "none";
-    if (!doneBoxEl) { doneBoxEl = document.createElement("div"); doneBoxEl.className = "ig-rv-gate"; panel.appendChild(doneBoxEl); }
-    doneBoxEl.innerHTML = (msg || "✓ Thanks — you’ve reviewed this product.") + ' <button type="button" class="ig-rv-editmine">Edit your review</button>';
-    var eb = doneBoxEl.querySelector(".ig-rv-editmine"); if (eb) eb.addEventListener("click", startEditReview);
-    doneBoxEl.style.display = "";
-  }
-  function startEditReview() {
-    inEditFlow = true;
-    editingId = jget(RVID_KEY, "") || null;
-    var rec = myReviewRec(), rv = editingId ? rvById(editingId) : null;
-    pickRating = (rec && rec.rating) || (rv && rv.rating) || 5;
-    if (textEl) textEl.value = (rec && rec.text) || (rv && rv.text) || "";
-    if (doneBoxEl) doneBoxEl.style.display = "none";
-    form.style.display = "";
-    submitBtn.textContent = editingId ? "Update review" : "Post review";
-    paintStars();
-    if (pickRating > 0) revealForm(); else showPicker();
-    openPanel();
+    var done = document.createElement("div"); done.className = "ig-rv-gate";
+    done.textContent = "✓ Thanks — you’ve already reviewed this product.";
+    panel.appendChild(done);
   }
 
   buildOwnerPill(); handleAdminParam();
