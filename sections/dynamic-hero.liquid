@@ -100,6 +100,7 @@
   .dyn-hero .dh-pop-link { display: block; padding: 9px 10px; border-radius: 10px; font-size: 14px; color: var(--ink);
     text-decoration: none; transition: background .14s; }
   .dyn-hero .dh-pop-link:hover { background: var(--bg-panel); }
+  .dyn-hero .dh-pop-ext { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vertical-align: -1px; margin-left: 4px; opacity: .55; }
   .dyn-hero .dh-pop-btn { display: block; text-align: center; margin: 2px 4px 6px; padding: 10px 14px; border-radius: 999px;
     background: var(--ink); color: #fff; font-size: 14px; font-weight: 500; text-decoration: none; transition: opacity .14s; }
   .dyn-hero .dh-pop-btn:hover { opacity: .9; }
@@ -913,9 +914,13 @@
               </button>
               <div class="dh-pop dh-acct-pop" hidden>
                 {%- if customer -%}
+                  {%- assign account_page = section.settings.account_page_url | default: '/pages/account' -%}
                   <div class="dh-pop-title">Hi, {{ customer.first_name | default: 'there' }}</div>
-                  <a class="dh-pop-link" href="{{ routes.account_url }}">My account</a>
-                  <a class="dh-pop-link" href="https://shopify.com/{{ shop.id }}/account/orders">Orders</a>
+                  <a class="dh-pop-link" href="https://shopify.com/{{ shop.id }}/account/orders">Orders <svg class="dh-pop-ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
+                  <a class="dh-pop-link" href="{{ account_page }}#wishlist">Wishlist</a>
+                  <a class="dh-pop-link" href="{{ account_page }}#designs">Saved Designs</a>
+                  <a class="dh-pop-link" href="{{ account_page }}#reviews">Reviews</a>
+                  <a class="dh-pop-link" href="https://shopify.com/{{ shop.id }}/account/profile">Profile <svg class="dh-pop-ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
                   <a class="dh-pop-link" href="{{ routes.account_logout_url }}">Log out</a>
                 {%- else -%}
                   <div class="dh-pop-title">Your account</div>
@@ -1702,8 +1707,9 @@
     { "type": "header", "content": "Account button (top-right)" },
     { "type": "checkbox", "id": "show_account", "label": "Show account button", "default": true, "info": "Apple-style person icon. Clicking opens a small login menu. When a customer is logged in it shows their initial + account links." },
     { "type": "image_picker", "id": "account_avatar", "label": "Avatar photo (optional)", "info": "Shown instead of the person icon. Per-customer photos need a separate app; this is a single store-wide photo for now." },
-    { "type": "url", "id": "login_url", "label": "Log in link", "info": "Defaults to your store's /account/login." },
-    { "type": "url", "id": "register_url", "label": "Create account link", "info": "Defaults to your store's /account/register." },
+    { "type": "url", "id": "login_url", "label": "Log in link", "info": "Where the Log in / Sign up button goes. Leave blank to use your store's secure Shopify login." },
+    { "type": "url", "id": "account_page_url", "label": "Account page (custom dashboard)", "info": "The page where you added the Dynamic Account section (Wishlist / Saved Designs / Reviews). Leave blank to use /pages/account." },
+    { "type": "url", "id": "register_url", "label": "Create account link", "info": "Optional. Not needed for passwordless accounts (the Log in / Sign up button covers sign-up)." },
 
     { "type": "header", "content": "Apps grid (top-right, 9 dots)" },
     { "type": "checkbox", "id": "show_apps", "label": "Show 9-dot apps menu", "default": true, "info": "Clicking opens a grid dropdown. Fill it by adding 'App link' blocks at the bottom of this panel." },
