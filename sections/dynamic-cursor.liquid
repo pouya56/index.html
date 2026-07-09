@@ -12,8 +12,8 @@
   data-hide="{{ section.settings.hide_native }}"
   data-grow="{{ section.settings.grow_on_links }}">
   <style>
-    #dynCursor-{{ section.id }} .dyn-cursor {
-      position: fixed; top: 0; left: 0; z-index: 99999; pointer-events: none;
+    #dynCursorDot-{{ section.id }} {
+      position: fixed; top: 0; left: 0; z-index: 2147483000; pointer-events: none;
       width: {{ section.settings.size | default: 26 }}px; height: {{ section.settings.size | default: 26 }}px; border-radius: 50%;
       transform: translate3d(-50px, -50px, 0) translate(-50%, -50%) scale(0); opacity: 0; will-change: transform, opacity;
       {%- if cur_style == 'ring' -%}
@@ -29,9 +29,9 @@
     {%- if section.settings.hide_native -%}
       @media (hover: hover) and (pointer: fine) { html.dyn-cursor-on, html.dyn-cursor-on * { cursor: none !important; } }
     {%- endif -%}
-    @media (hover: none), (pointer: coarse) { #dynCursor-{{ section.id }} .dyn-cursor { display: none; } }
+    @media (hover: none), (pointer: coarse) { #dynCursorDot-{{ section.id }} { display: none; } }
   </style>
-  <div class="dyn-cursor" aria-hidden="true"></div>
+  <div class="dyn-cursor" id="dynCursorDot-{{ section.id }}" aria-hidden="true"></div>
 </div>
 
 <script>
@@ -45,6 +45,9 @@
 
   if (mount.getAttribute("data-hide") === "true") document.documentElement.classList.add("dyn-cursor-on");
   var grow = mount.getAttribute("data-grow") === "true";
+
+  /* Move the blob to <body> so no transformed/overflow parent can trap or clip a position:fixed element */
+  if (dot.parentNode !== document.body) document.body.appendChild(dot);
 
   var tx = innerWidth / 2, ty = innerHeight / 2, x = tx, y = ty, vx = 0, vy = 0;
   var scale = 0, tscale = 0, hoverScale = 1, op = 0, top_ = 0, last = null;
