@@ -1,0 +1,138 @@
+{%- comment -%}
+  Expanding Image Stack — a vertical accordion of image "cards" (inspired by
+  Skiper UI "skiper53"). Cards sit stacked as thin bars; hovering/tapping one
+  expands it to full size while the others stay collapsed. Optional auto-cycle.
+  Blocks: "Card" (image + optional link).
+{%- endcomment -%}
+
+{%- assign ncards = section.blocks.size -%}
+{%- assign nm1 = ncards | minus: 1 -%}
+{%- assign extra = nm1 | times: section.settings.collapsed_h -%}
+{%- assign gaps = nm1 | times: section.settings.gap -%}
+{%- assign stk_h = section.settings.expanded_h | plus: extra | plus: gaps -%}
+{%- comment -%} Default open card = 2nd (index 1), matching the source; falls back to the first if there's only one. {%- endcomment -%}
+{%- assign def_open = 1 -%}{%- if ncards < 2 -%}{%- assign def_open = 0 -%}{%- endif -%}
+
+<section class="dyn-stk" id="dynStk-{{ section.id }}" data-autoplay="{{ section.settings.autoplay }}" data-interval="{{ section.settings.interval | times: 1000 }}">
+  <style>
+    #shopify-section-{{ section.id }} { background: {{ section.settings.bg | default: '#f2f0ea' }}; }
+    #dynStk-{{ section.id }} {
+      --collapsed: {{ section.settings.collapsed_h | default: 54 }}px;
+      --radius: {{ section.settings.radius | default: 20 }}px;
+      --gap: {{ section.settings.gap | default: 6 }}px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .dyn-stk .stk-wrap { display: flex; justify-content: center; padding: {{ section.settings.pad_top | default: 64 }}px 22px {{ section.settings.pad_bottom | default: 64 }}px; }
+    .dyn-stk .stk-head { max-width: 640px; margin: 0 auto 26px; text-align: center; }
+    .dyn-stk .stk-title { font-size: clamp(24px, 4vw, 40px); font-weight: 700; letter-spacing: -0.03em; margin: 0; color: {{ section.settings.ink | default: '#1d1d1f' }}; }
+    .dyn-stk .stk-sub { font-size: 16px; color: {{ section.settings.ink | default: '#1d1d1f' }}; opacity: .6; margin: 12px 0 0; }
+    .dyn-stk .stk { display: flex; flex-direction: column; gap: var(--gap); width: {{ section.settings.width | default: 440 }}px; max-width: 94vw; }
+    .dyn-stk .stk-card { flex: 0 0 var(--collapsed); overflow: hidden; border-radius: var(--radius); position: relative; cursor: pointer;
+      transition: flex-grow .6s cubic-bezier(.22,1,.36,1); box-shadow: 0 10px 30px rgba(0,0,0,.14); }
+    .dyn-stk .stk-card.is-open { flex-grow: 1; }
+    .dyn-stk .stk-card img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+    .dyn-stk .stk-card a { display: block; width: 100%; height: 100%; }
+    .dyn-stk .stk-grad { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to top, rgba(0,0,0,.5), transparent 55%); opacity: 0; transition: opacity .3s; }
+    .dyn-stk .stk-card.is-open .stk-grad { opacity: 1; }
+    .dyn-stk .stk-cap { position: absolute; right: 16px; bottom: 14px; z-index: 2; color: rgba(255,255,255,.55); font-size: 12px; letter-spacing: .02em;
+      opacity: 0; transform: translateY(8px); transition: opacity .35s .1s, transform .35s .1s; }
+    .dyn-stk .stk-card.is-open .stk-cap { opacity: 1; transform: none; }
+    .dyn-stk .stk-empty { color: #888; font-size: 15px; text-align: center; }
+    @media (max-width: 520px) { .dyn-stk .stk { width: 100%; } }
+  </style>
+
+  <div class="stk-wrap">
+    <div style="width:{{ section.settings.width | default: 440 }}px; max-width:94vw">
+      {%- if section.settings.title != blank or section.settings.subtitle != blank -%}
+        <div class="stk-head">
+          {%- if section.settings.title != blank -%}<h2 class="stk-title">{{ section.settings.title }}</h2>{%- endif -%}
+          {%- if section.settings.subtitle != blank -%}<p class="stk-sub">{{ section.settings.subtitle }}</p>{%- endif -%}
+        </div>
+      {%- endif -%}
+
+      {%- if ncards > 0 -%}
+        <div class="stk" style="height:{{ stk_h }}px">
+          {%- for block in section.blocks -%}
+            <div class="stk-card{% if forloop.index0 == def_open %} is-open{% endif %}" data-stk-card {{ block.shopify_attributes }}>
+              {%- capture card_media -%}
+                {%- if block.settings.image != blank -%}
+                  <img src="{{ block.settings.image | image_url: width: 900 }}" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" alt="{{ block.settings.caption | escape }}" loading="lazy">
+                {%- else -%}
+                  <div style="width:100%;height:100%;background:linear-gradient(135deg,#2a2a2a,#454545)"></div>
+                {%- endif -%}
+                <span class="stk-grad" aria-hidden="true"></span>
+                {%- if block.settings.caption != blank -%}<span class="stk-cap">{{ block.settings.caption }}</span>{%- endif -%}
+              {%- endcapture -%}
+              {%- if block.settings.link != blank -%}<a href="{{ block.settings.link }}">{{ card_media }}</a>{%- else -%}{{ card_media }}{%- endif -%}
+            </div>
+          {%- endfor -%}
+        </div>
+      {%- elsif request.design_mode -%}
+        <div class="stk-empty">Add “Card” blocks (each with an image) to build the stack.</div>
+      {%- endif -%}
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    var root = document.getElementById("dynStk-{{ section.id }}");
+    if (!root) return;
+    var cards = Array.prototype.slice.call(root.querySelectorAll("[data-stk-card]"));
+    if (!cards.length) return;
+    var cur = 0, timer = null;
+    function open(i) { cur = (i + cards.length) % cards.length; cards.forEach(function (c, k) { c.classList.toggle("is-open", k === cur); }); }
+    cards.forEach(function (c, i) {
+      c.addEventListener("mouseenter", function () { stop(); open(i); });
+      c.addEventListener("click", function () { stop(); open(i); });
+    });
+    open({{ def_open }});
+    var interval = parseInt(root.getAttribute("data-interval"), 10) || 0;
+    function start() { if (root.getAttribute("data-autoplay") === "true" && cards.length > 1 && interval >= 1000 && !timer) { timer = setInterval(function () { open(cur + 1); }, interval); } }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    root.addEventListener("mouseleave", function () { start(); });
+    start();
+  })();
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Image Stack",
+  "tag": "section",
+  "class": "dynamic-stack-section",
+  "settings": [
+    { "type": "paragraph", "content": "A vertical stack of image cards. Hover or tap a card to expand it; the rest collapse to thin bars. Add a “Card” block per image." },
+    { "type": "text", "id": "title", "label": "Title (optional)" },
+    { "type": "text", "id": "subtitle", "label": "Subtitle (optional)" },
+    { "type": "header", "content": "Size" },
+    { "type": "range", "id": "width", "min": 300, "max": 720, "step": 8, "unit": "px", "label": "Stack width", "default": 384 },
+    { "type": "range", "id": "expanded_h", "min": 320, "max": 760, "step": 8, "unit": "px", "label": "Expanded card height", "default": 384 },
+    { "type": "range", "id": "collapsed_h", "min": 28, "max": 120, "step": 2, "unit": "px", "label": "Collapsed bar height", "default": 40 },
+    { "type": "range", "id": "gap", "min": 0, "max": 24, "step": 1, "unit": "px", "label": "Gap between cards", "default": 4 },
+    { "type": "range", "id": "radius", "min": 0, "max": 40, "step": 1, "unit": "px", "label": "Corner radius", "default": 24 },
+    { "type": "range", "id": "pad_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Space above", "default": 64 },
+    { "type": "range", "id": "pad_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Space below", "default": 64 },
+    { "type": "header", "content": "Auto-cycle" },
+    { "type": "checkbox", "id": "autoplay", "label": "Auto-expand each card in turn", "default": false },
+    { "type": "range", "id": "interval", "min": 1, "max": 8, "step": 1, "unit": "s", "label": "Speed", "default": 3 },
+    { "type": "header", "content": "Colours" },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#f5f4f3" },
+    { "type": "color", "id": "ink", "label": "Heading text", "default": "#1d1d1f" }
+  ],
+  "blocks": [
+    { "type": "card", "name": "Card", "settings": [
+      { "type": "image_picker", "id": "image", "label": "Image (tall poster works best)" },
+      { "type": "text", "id": "caption", "label": "Caption (optional)" },
+      { "type": "url", "id": "link", "label": "Link (optional)" }
+    ]}
+  ],
+  "max_blocks": 10,
+  "presets": [
+    { "name": "Image Stack",
+      "blocks": [
+        { "type": "card" }, { "type": "card" }, { "type": "card" }, { "type": "card" }, { "type": "card" }
+      ]
+    }
+  ]
+}
+{% endschema %}
