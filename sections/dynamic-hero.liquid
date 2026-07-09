@@ -416,14 +416,12 @@
     transition: transform .6s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 30px 0 70px rgba(0,0,0,.3); overflow: hidden; }
   #dhSlide.is-open .dh-slide-panel { transform: translateX(0); }
   #dhSlide .dh-slide-body { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-  #dhSlide .dh-slide-img { width: 100%; height: 46vh; object-fit: cover; display: block; }
-  #dhSlide .dh-slide-text { max-width: 760px; margin: 0 auto; padding: 60px 26px 100px; color: #1d1d1f;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  #dhSlide .dh-slide-h { font-size: clamp(28px, 5vw, 46px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.06; margin: 0 0 22px; }
-  #dhSlide .dh-slide-rte { font-size: 17px; line-height: 1.75; color: #444; }
-  #dhSlide .dh-slide-rte p { margin: 0 0 1.1em; }
-  #dhSlide .dh-slide-rte a { color: #0071e3; }
-  #dhSlide .dh-slide-more { display: inline-block; margin-top: 26px; padding: 13px 24px; border-radius: 999px; background: #1d1d1f; color: #fff; text-decoration: none; font-weight: 600; }
+  #dhSlide .dh-slide-inject { padding-top: 6px; }
+  #dhSlide .dh-slide-loading { display: flex; align-items: center; justify-content: center; height: 100%; color: #8a8a8a;
+    font: 15px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  #dhSlide .dh-slide-text { max-width: 760px; margin: 0 auto; padding: 80px 26px; color: #1d1d1f;
+    font: 17px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  #dhSlide .dh-slide-more { display: inline-block; margin-top: 8px; padding: 13px 24px; border-radius: 999px; background: #1d1d1f; color: #fff; text-decoration: none; font-weight: 600; }
   #dhSlide .dh-slide-more:hover { opacity: .9; }
   #dhSlide .dh-slide-close { position: absolute; top: 18px; right: 18px; z-index: 3; width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(0,0,0,.12);
     background: rgba(255,255,255,.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); cursor: pointer; display: grid; place-items: center; box-shadow: 0 4px 18px rgba(0,0,0,.18); }
@@ -1228,8 +1226,8 @@
   {%- if slide_n > 0 -%}
     <div class="dh-sbtns">
       {%- for block in section.blocks -%}
-        {%- if block.type == 'slide_link' -%}
-          <button type="button" class="dh-sbtn" data-dh-slide="{{ block.id }}" aria-label="{{ block.settings.label | default: 'Open' | escape }}" title="{{ block.settings.label | default: 'Open' | escape }}" {{ block.shopify_attributes }}><span class="dh-sbtn-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="14" rx="3.5" stroke="currentColor" stroke-width="1.8"/><line x1="9.5" y1="5.5" x2="9.5" y2="18.5" stroke="currentColor" stroke-width="1.8"/><rect x="5.2" y="7" width="2.6" height="10" rx="1.1" fill="currentColor"/></svg></span><span class="dh-sbtn-label">{{ block.settings.label | default: 'Open' }}</span></button>
+        {%- if block.type == 'slide_link' and block.settings.url != blank -%}
+          <button type="button" class="dh-sbtn" data-dh-slide="{{ block.settings.url }}" aria-label="{{ block.settings.label | default: 'Open' | escape }}" title="{{ block.settings.label | default: 'Open' | escape }}" {{ block.shopify_attributes }}><span class="dh-sbtn-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="14" rx="3.5" stroke="currentColor" stroke-width="1.8"/><line x1="9.5" y1="5.5" x2="9.5" y2="18.5" stroke="currentColor" stroke-width="1.8"/><rect x="5.2" y="7" width="2.6" height="10" rx="1.1" fill="currentColor"/></svg></span><span class="dh-sbtn-label">{{ block.settings.label | default: 'Open' }}</span></button>
         {%- endif -%}
       {%- endfor -%}
     </div>
@@ -1240,32 +1238,30 @@
   <div class="dh-slide-scrim" data-dh-slide-close></div>
   <div class="dh-slide-panel">
     <button type="button" class="dh-slide-close" aria-label="Close" data-dh-slide-close><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
-    <div class="dh-slide-body">
-      {%- for block in section.blocks -%}
-        {%- if block.type == 'slide_link' -%}
-          <article class="dh-slide-page" data-slide-id="{{ block.id }}" hidden>
-            {%- if block.settings.image != blank -%}<img class="dh-slide-img" src="{{ block.settings.image | image_url: width: 1800 }}" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" alt="{{ block.settings.heading | escape }}" loading="lazy">{%- endif -%}
-            <div class="dh-slide-text">
-              {%- if block.settings.heading != blank -%}<h2 class="dh-slide-h">{{ block.settings.heading }}</h2>{%- endif -%}
-              <div class="dh-slide-rte">{{ block.settings.content }}</div>
-              {%- if block.settings.url != blank -%}<a class="dh-slide-more" href="{{ block.settings.url }}">{{ block.settings.link_label | default: 'View full page' }} →</a>{%- endif -%}
-            </div>
-          </article>
-        {%- endif -%}
-      {%- endfor -%}
-    </div>
+    <div class="dh-slide-body"></div>
   </div>
 </div>
 
 <script>
 (function () {
   var slide = document.getElementById("dhSlide"); if (!slide) return;
-  var pages = Array.prototype.slice.call(slide.querySelectorAll(".dh-slide-page"));
-  var body = slide.querySelector(".dh-slide-body");
-  function openSlide(id) {
-    pages.forEach(function (p) { p.hidden = p.getAttribute("data-slide-id") !== id; });
-    if (body) body.scrollTop = 0;
+  var sbody = slide.querySelector(".dh-slide-body");
+  var cache = {};
+  function fallback(url) { return '<div class="dh-slide-text"><p>Couldn’t show this page here. <a class="dh-slide-more" href="' + url + '">Open it →</a></p></div>'; }
+  function inject(html, url) {
+    var doc = new DOMParser().parseFromString(html, "text/html");
+    var el = doc.querySelector("#MainContent") || doc.querySelector("main") || doc.querySelector('[role="main"]') || doc.querySelector(".main-content");
+    if (!el) { sbody.innerHTML = fallback(url); return; }
+    el.querySelectorAll("script").forEach(function (s) { s.remove(); });
+    var wrap = document.createElement("div"); wrap.className = "dh-slide-inject"; wrap.innerHTML = el.innerHTML;
+    sbody.innerHTML = ""; sbody.appendChild(wrap); sbody.scrollTop = 0;
+  }
+  function openSlide(url) {
+    if (!url) return;
     slide.classList.add("is-open"); slide.setAttribute("aria-hidden", "false"); document.documentElement.style.overflow = "hidden";
+    if (cache[url]) { inject(cache[url], url); return; }
+    sbody.innerHTML = '<div class="dh-slide-loading">Loading…</div>'; sbody.scrollTop = 0;
+    fetch(url, { credentials: "same-origin" }).then(function (r) { return r.text(); }).then(function (html) { cache[url] = html; if (slide.classList.contains("is-open")) inject(html, url); }).catch(function () { sbody.innerHTML = fallback(url); });
   }
   function closeSlide() { slide.classList.remove("is-open"); slide.setAttribute("aria-hidden", "true"); document.documentElement.style.overflow = ""; }
   document.querySelectorAll("[data-dh-slide]").forEach(function (b) { b.addEventListener("click", function () { openSlide(b.getAttribute("data-dh-slide")); }); });
@@ -1848,13 +1844,9 @@
   ],
   "blocks": [
     { "type": "slide_link", "name": "Slide-in button", "settings": [
-      { "type": "paragraph", "content": "A sidebar icon on the hero's left. Clicking it slides a panel in from the left with the content below (close with × or Esc). Add a “View full page” link to send visitors to the real page." },
+      { "type": "paragraph", "content": "A sidebar icon on the hero's left. Clicking it slides the chosen page in from the left, showing its real content. Close with × or Esc." },
       { "type": "text", "id": "label", "label": "Button label (shows on hover)", "default": "About" },
-      { "type": "text", "id": "heading", "label": "Panel heading", "default": "About us" },
-      { "type": "richtext", "id": "content", "label": "Panel text", "default": "<p>Tell your story here — who you are and what makes your products special.</p>" },
-      { "type": "image_picker", "id": "image", "label": "Panel image (optional)" },
-      { "type": "url", "id": "url", "label": "‘View full page’ link (optional)" },
-      { "type": "text", "id": "link_label", "label": "Link label", "default": "View full page" }
+      { "type": "url", "id": "url", "label": "Page to open" }
     ]},
     { "type": "corner_link", "name": "Corner link", "settings": [
       { "type": "select", "id": "corner", "label": "Which corner", "default": "tl",
