@@ -103,6 +103,8 @@
   .dyn-hero .dh-pop-btn { display: block; text-align: center; margin: 2px 4px 6px; padding: 10px 14px; border-radius: 999px;
     background: var(--ink); color: #fff; font-size: 14px; font-weight: 500; text-decoration: none; transition: opacity .14s; }
   .dyn-hero .dh-pop-btn:hover { opacity: .9; }
+  .dyn-hero a.dh-pop-cta { text-decoration: none; }
+  .dyn-hero .dh-pop-note { font-size: 12px; color: var(--ink-soft); line-height: 1.5; padding: 0 10px 10px; }
   .dyn-hero .dh-pop-empty { font-size: 13px; color: var(--ink-faint); padding: 10px; max-width: 240px; }
   .dyn-hero .dh-apps-pop { min-width: 280px; }
   .dyn-hero .dh-apps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
@@ -913,28 +915,12 @@
                 {%- if customer -%}
                   <div class="dh-pop-title">Hi, {{ customer.first_name | default: 'there' }}</div>
                   <a class="dh-pop-link" href="{{ routes.account_url }}">My account</a>
-                  <a class="dh-pop-link" href="{{ routes.account_url }}">Orders</a>
+                  <a class="dh-pop-link" href="https://shopify.com/{{ shop.id }}/account/orders">Orders</a>
                   <a class="dh-pop-link" href="{{ routes.account_logout_url }}">Log out</a>
                 {%- else -%}
-                  <div class="dh-pop-title">Log in</div>
-                  {%- form 'customer_login', class: 'dh-login-form' -%}
-                    {%- if form.errors -%}
-                      <div class="dh-form-err" data-has-error>{{ form.errors | default_errors }}</div>
-                    {%- endif -%}
-                    <label class="dh-field">
-                      <span>Email</span>
-                      <input type="email" name="customer[email]" required autocomplete="email" placeholder="you@email.com">
-                    </label>
-                    <label class="dh-field">
-                      <span>Password</span>
-                      <input type="password" name="customer[password]" autocomplete="current-password" placeholder="Your password">
-                    </label>
-                    <button type="submit" class="dh-pop-btn">Log in</button>
-                    <div class="dh-form-links">
-                      <a href="{{ routes.account_recover_url }}">Forgot password?</a>
-                      <a href="{{ section.settings.register_url | default: routes.account_register_url }}">Create account</a>
-                    </div>
-                  {%- endform -%}
+                  <div class="dh-pop-title">Your account</div>
+                  <p class="dh-pop-note">Sign in with your email — Shopify sends you a secure login code, so there’s no password to remember or forget.</p>
+                  <a class="dh-pop-btn dh-pop-cta" href="{{ section.settings.login_url | default: routes.account_login_url }}">Log in / Sign up</a>
                 {%- endif -%}
               </div>
             </div>
