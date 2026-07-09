@@ -2308,6 +2308,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         '<div class="modal-foot"><div class="price-breakdown"><div class="price-breakdown-toggle" style="cursor:default">' +
           '<span class="total">' + priceStr + '</span><span class="meta">' + escapeHtml((window.DYN_SETTINGS && window.DYN_SETTINGS.customPrintLabel) || "Custom print") + '</span></div></div>' +
           '<div class="foot-actions"><button class="btn btn-ghost" data-close>Cancel</button>' +
+          '<button type="button" class="btn btn-ghost" id="uploadSave">Save design</button>' +
           '<button class="btn btn-primary" id="uploadApply" disabled>' + escapeHtml(eBtn) + '</button></div></div>' +
       '</div>';
     $("#modalRoot").innerHTML = html;
@@ -2371,6 +2372,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (!e.target.closest(".up-el")) { activeLayerId = null; if (txt) txt.value = ""; renderUpEls(); }
     });
     q2("#uploadApply").onclick = onUploadApply;
+    const saveDesignBtn = q2("#uploadSave");
+    if (saveDesignBtn) saveDesignBtn.onclick = function () {
+      if (!(sideLayers.front.length || sideLayers.back.length)) { toast("Add text or an image to your design first"); return; }
+      saveDesignBtn.disabled = true; const _lbl = saveDesignBtn.textContent; saveDesignBtn.textContent = "Saving…";
+      saveCurrentDesign()
+        .then(function (ok) { toast(ok ? "Saved to your account — see Saved Designs" : "Couldn’t save the design"); })
+        .catch(function () { toast("Couldn’t save the design"); })
+        .then(function () { saveDesignBtn.disabled = false; saveDesignBtn.textContent = _lbl; });
+    };
     renderUpEls();
   }
 
@@ -2410,6 +2420,51 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     });
     if (pa) applyStageForSide("front");
     renderUpEls();
+  }
+
+  // ---- Save design to the shopper's account ("Saved Designs" tab reads
+  // dyn_saved_designs from localStorage). Image pixels aren't hosted until
+  // checkout, so this is a visual bookmark (thumbnail), not a full re-edit. ----
+  function shrinkDataUrl(dataUrl, max) {
+    return new Promise(function (resolve) {
+      try {
+        const im = new Image();
+        im.onload = function () {
+          const scale = Math.min(1, max / Math.max(im.naturalWidth || max, im.naturalHeight || max));
+          const w = Math.max(1, Math.round((im.naturalWidth || max) * scale)), h = Math.max(1, Math.round((im.naturalHeight || max) * scale));
+          const c = document.createElement("canvas"); c.width = w; c.height = h;
+          c.getContext("2d").drawImage(im, 0, 0, w, h);
+          try { resolve(c.toDataURL("image/jpeg", 0.82)); } catch (e) { resolve(dataUrl); }
+        };
+        im.onerror = function () { resolve(dataUrl); };
+        im.src = dataUrl;
+      } catch (e) { resolve(dataUrl); }
+    });
+  }
+  async function saveCurrentDesign() {
+    const S = window.DYN_SHOPIFY || {};
+    let preview = "";
+    try {
+      let comp = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
+      if (!comp) comp = await compositeSide(sideLayers.back, sideImage("back"), sidePrint("back"));
+      if (comp) preview = await shrinkDataUrl(comp, 340);
+    } catch (e) {}
+    let list;
+    try { list = JSON.parse(localStorage.getItem("dyn_saved_designs") || "[]"); if (!Array.isArray(list)) list = []; } catch (e) { list = []; }
+    const name = S.productTitle || (typeof product !== "undefined" && product && product.name) || "Design";
+    list.unshift({
+      id: "sd" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      name: name, title: name,
+      url: S.productUrl || location.pathname,
+      image: preview,
+      t: Date.now()
+    });
+    while (list.length > 24) list.pop();
+    try { localStorage.setItem("dyn_saved_designs", JSON.stringify(list)); return true; }
+    catch (e) {
+      // storage likely full (thumbnails are heavy) — drop this preview and retry once
+      try { list[0].image = ""; localStorage.setItem("dyn_saved_designs", JSON.stringify(list)); return true; } catch (e2) { return false; }
+    }
   }
 
   async function onUploadApply() {
