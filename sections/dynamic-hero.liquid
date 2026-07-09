@@ -917,9 +917,9 @@
                   {%- assign account_page = section.settings.account_page_url | default: '/pages/account' -%}
                   <div class="dh-pop-title">Hi, {{ customer.first_name | default: 'there' }}</div>
                   <a class="dh-pop-link" href="https://shopify.com/{{ shop.id }}/account/orders">Orders <svg class="dh-pop-ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
-                  <a class="dh-pop-link" href="{{ account_page }}#wishlist">Wishlist</a>
-                  <a class="dh-pop-link" href="{{ account_page }}#designs">Saved Designs</a>
-                  <a class="dh-pop-link" href="{{ account_page }}#reviews">Reviews</a>
+                  <a class="dh-pop-link" href="{{ account_page }}?tab=wishlist">Wishlist</a>
+                  <a class="dh-pop-link" href="{{ account_page }}?tab=designs">Saved Designs</a>
+                  <a class="dh-pop-link" href="{{ account_page }}?tab=reviews">Reviews</a>
                   <a class="dh-pop-link" href="https://shopify.com/{{ shop.id }}/account/profile">Profile <svg class="dh-pop-ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
                   <a class="dh-pop-link" href="{{ routes.account_logout_url }}">Log out</a>
                 {%- else -%}
