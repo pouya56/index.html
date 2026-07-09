@@ -391,6 +391,27 @@
     .dyn-hero .dh-tabs.is-images .dh-tab { flex: 0 0 auto; }
   }
   @media (max-width: 460px)  { .dyn-hero .dh-grid { gap: 12px; } .dyn-hero .dh-grid .dh-card { flex-basis: 78%; } .dyn-hero .dh-body { padding: 12px 12px 14px; } }
+
+  /* Slide-in page buttons (left side) */
+  .dyn-hero .dh-sbtns { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); z-index: 6; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+  .dyn-hero .dh-sbtn { display: inline-flex; align-items: center; gap: 9px; padding: 12px 20px; border-radius: 999px; border: 1px solid var(--line);
+    background: #fff; color: var(--ink); font: 500 15px/1 var(--font); cursor: pointer; text-decoration: none; box-shadow: 0 6px 20px rgba(0,0,0,.1); transition: background .16s, transform .12s, box-shadow .16s; }
+  .dyn-hero .dh-sbtn:hover { box-shadow: 0 10px 28px rgba(0,0,0,.16); transform: translateX(2px); }
+  .dyn-hero .dh-sbtn:active { transform: scale(.97); }
+  .dyn-hero .dh-sbtn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  @media (max-width: 700px) { .dyn-hero .dh-sbtns { left: 14px; gap: 8px; } .dyn-hero .dh-sbtn { padding: 10px 15px; font-size: 13px; } }
+
+  #dhSlide { position: fixed; inset: 0; z-index: 9999; visibility: hidden; }
+  #dhSlide.is-open { visibility: visible; }
+  #dhSlide .dh-slide-scrim { position: absolute; inset: 0; background: rgba(0,0,0,.35); opacity: 0; transition: opacity .5s ease; }
+  #dhSlide.is-open .dh-slide-scrim { opacity: 1; }
+  #dhSlide .dh-slide-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; transform: translateX(-100%);
+    transition: transform .6s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 30px 0 70px rgba(0,0,0,.3); overflow: hidden; }
+  #dhSlide.is-open .dh-slide-panel { transform: translateX(0); }
+  #dhSlide .dh-slide-frame { width: 100%; height: 100%; border: 0; display: block; }
+  #dhSlide .dh-slide-close { position: absolute; top: 18px; right: 18px; z-index: 3; width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(0,0,0,.12);
+    background: rgba(255,255,255,.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); cursor: pointer; display: grid; place-items: center; box-shadow: 0 4px 18px rgba(0,0,0,.18); }
+  #dhSlide .dh-slide-close svg { width: 20px; height: 20px; fill: none; stroke: #1d1d1f; stroke-width: 2; stroke-linecap: round; }
 </style>
 
 {%- assign coll = section.settings.collection | default: collection -%}
@@ -1186,7 +1207,38 @@
       {%- endif -%}
     {%- endif -%}
   </div>
+  {%- assign slide_n = 0 -%}
+  {%- for block in section.blocks -%}{%- if block.type == 'slide_link' -%}{%- assign slide_n = slide_n | plus: 1 -%}{%- endif -%}{%- endfor -%}
+  {%- if slide_n > 0 -%}
+    <div class="dh-sbtns">
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'slide_link' and block.settings.url != blank -%}
+          <button type="button" class="dh-sbtn" data-dh-slide="{{ block.settings.url }}" {{ block.shopify_attributes }}>{{ block.settings.label | default: 'Open' }} <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></button>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
 </section>
+
+<div id="dhSlide" aria-hidden="true">
+  <div class="dh-slide-scrim" data-dh-slide-close></div>
+  <div class="dh-slide-panel">
+    <button type="button" class="dh-slide-close" aria-label="Close" data-dh-slide-close><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+    <iframe class="dh-slide-frame" title="Page" src="about:blank" loading="lazy"></iframe>
+  </div>
+</div>
+
+<script>
+(function () {
+  var slide = document.getElementById("dhSlide"); if (!slide) return;
+  var frame = slide.querySelector(".dh-slide-frame");
+  function openSlide(url) { if (!url) return; frame.src = url; slide.classList.add("is-open"); slide.setAttribute("aria-hidden", "false"); document.documentElement.style.overflow = "hidden"; }
+  function closeSlide() { slide.classList.remove("is-open"); slide.setAttribute("aria-hidden", "true"); document.documentElement.style.overflow = ""; setTimeout(function () { try { frame.src = "about:blank"; } catch (e) {} }, 650); }
+  document.querySelectorAll("[data-dh-slide]").forEach(function (b) { b.addEventListener("click", function () { openSlide(b.getAttribute("data-dh-slide")); }); });
+  slide.querySelectorAll("[data-dh-slide-close]").forEach(function (b) { b.addEventListener("click", closeSlide); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSlide(); });
+})();
+</script>
 
 <noscript>
   <style>.dyn-hero .dh-grid .dh-card { opacity: 1 !important; transform: none !important; }</style>
@@ -1761,6 +1813,11 @@
     { "type": "url", "id": "noresults_url", "label": "Button link", "info": "Defaults to /pages/contact." }
   ],
   "blocks": [
+    { "type": "slide_link", "name": "Slide-in button", "settings": [
+      { "type": "paragraph", "content": "A button on the left of the hero. Clicking it slides the linked page in from the left (like scrolling to it). Close with the × or Esc." },
+      { "type": "text", "id": "label", "label": "Button text", "default": "About" },
+      { "type": "url", "id": "url", "label": "Page to open" }
+    ]},
     { "type": "corner_link", "name": "Corner link", "settings": [
       { "type": "select", "id": "corner", "label": "Which corner", "default": "tl",
         "options": [
