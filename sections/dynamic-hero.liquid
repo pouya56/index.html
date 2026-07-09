@@ -394,16 +394,19 @@
 
   /* Slide-in page buttons (left side) */
   .dyn-hero .dh-sbtns { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); z-index: 6; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
-  .dyn-hero .dh-sbtn { position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 15px 26px; border-radius: 999px; border: 0;
-    background: var(--ink); color: #fff; font: 600 17px/1 var(--font); letter-spacing: -0.01em; cursor: pointer; text-decoration: none; box-shadow: 0 12px 30px rgba(0,0,0,.24); transition: transform .15s, box-shadow .16s; }
-  .dyn-hero .dh-sbtn:hover { transform: translateX(5px); box-shadow: 0 16px 40px rgba(0,0,0,.32); }
-  .dyn-hero .dh-sbtn:active { transform: scale(.97); }
-  .dyn-hero .dh-sbtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; animation: dhNudge 1.7s ease-in-out infinite; }
-  .dyn-hero .dh-sbtn::before { content: ""; position: absolute; inset: 0; border-radius: 999px; box-shadow: 0 0 0 0 rgba(0,0,0,.3); animation: dhPulse 2.6s ease-out infinite; pointer-events: none; }
-  @keyframes dhNudge { 0%,100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
-  @keyframes dhPulse { 0% { box-shadow: 0 0 0 0 rgba(0,0,0,.3); } 70% { box-shadow: 0 0 0 16px rgba(0,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
-  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-sbtn svg, .dyn-hero .dh-sbtn::before { animation: none; } }
-  @media (max-width: 700px) { .dyn-hero .dh-sbtns { left: 14px; gap: 9px; } .dyn-hero .dh-sbtn { padding: 12px 18px; font-size: 15px; } }
+  .dyn-hero .dh-sbtn { position: relative; display: inline-flex; align-items: center; padding: 12px; border-radius: 15px; border: 0;
+    background: #1c1c1e; color: #d6d6da; cursor: pointer; text-decoration: none; box-shadow: 0 10px 28px rgba(0,0,0,.3); transition: transform .15s, box-shadow .16s, color .2s; }
+  .dyn-hero .dh-sbtn:hover { color: #fff; transform: translateX(4px); box-shadow: 0 16px 40px rgba(0,0,0,.36); }
+  .dyn-hero .dh-sbtn:active { transform: scale(.95); }
+  .dyn-hero .dh-sbtn-ic { display: inline-flex; flex: none; }
+  .dyn-hero .dh-sbtn-ic svg { width: 26px; height: 26px; display: block; }
+  .dyn-hero .dh-sbtn-label { max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; font: 600 16px/1 var(--font); letter-spacing: -0.01em;
+    transition: max-width .38s cubic-bezier(.22,1,.36,1), opacity .3s, margin-left .38s; }
+  .dyn-hero .dh-sbtn:hover .dh-sbtn-label { max-width: 220px; opacity: 1; margin-left: 10px; }
+  .dyn-hero .dh-sbtn::before { content: ""; position: absolute; inset: 0; border-radius: 15px; animation: dhPulse 2.6s ease-out infinite; pointer-events: none; }
+  @keyframes dhPulse { 0% { box-shadow: 0 0 0 0 rgba(140,140,150,.55); } 70% { box-shadow: 0 0 0 14px rgba(140,140,150,0); } 100% { box-shadow: 0 0 0 0 rgba(140,140,150,0); } }
+  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-sbtn::before { animation: none; } }
+  @media (max-width: 700px) { .dyn-hero .dh-sbtns { left: 14px; } .dyn-hero .dh-sbtn { padding: 10px; } .dyn-hero .dh-sbtn-ic svg { width: 22px; height: 22px; } }
 
   #dhSlide { position: fixed; inset: 0; z-index: 9999; visibility: hidden; }
   #dhSlide.is-open { visibility: visible; }
@@ -1217,7 +1220,7 @@
     <div class="dh-sbtns">
       {%- for block in section.blocks -%}
         {%- if block.type == 'slide_link' and block.settings.url != blank -%}
-          <button type="button" class="dh-sbtn" data-dh-slide="{{ block.settings.url }}" {{ block.shopify_attributes }}>{{ block.settings.label | default: 'Open' }} <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></button>
+          <button type="button" class="dh-sbtn" data-dh-slide="{{ block.settings.url }}" aria-label="{{ block.settings.label | default: 'Open' | escape }}" title="{{ block.settings.label | default: 'Open' | escape }}" {{ block.shopify_attributes }}><span class="dh-sbtn-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="14" rx="3.5" stroke="currentColor" stroke-width="1.8"/><line x1="9.5" y1="5.5" x2="9.5" y2="18.5" stroke="currentColor" stroke-width="1.8"/><rect x="5.2" y="7" width="2.6" height="10" rx="1.1" fill="currentColor"/></svg></span><span class="dh-sbtn-label">{{ block.settings.label | default: 'Open' }}</span></button>
         {%- endif -%}
       {%- endfor -%}
     </div>
