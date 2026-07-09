@@ -1,0 +1,14 @@
+{
+  "name": "dynaeimic-account-extras",
+  "private": true,
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "description": "Customer Account UI Extension adding custom tabs to Shopify's native account page.",
+  "type": "module",
+  "dependencies": {
+    "react": "^18.2.0",
+    "@shopify/ui-extensions": "unstable",
+    "@shopify/ui-extensions-react": "unstable"
+  },
+  "comment": "After `npm install`, replace 'unstable' with the concrete version the CLI pins, and set the same api_version in shopify.extension.toml."
+}

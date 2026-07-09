@@ -1,0 +1,24 @@
+# Customer Account UI Extension config.
+# Pin api_version to match the @shopify/ui-extensions-react version you install,
+# then verify targets/components in `shopify app dev`.
+api_version = "2025-01"
+
+[[extensions]]
+type = "ui_extension"
+name = "Dynaeimic Account Extras"
+handle = "dynaeimic-account-extras"
+
+  # The custom full page shown inside the customer account.
+  [[extensions.targeting]]
+  target = "customer-account.page.render"
+  module = "./src/AccountPage.jsx"
+
+  # The menu link (in the account nav) that opens the page above.
+  [[extensions.targeting]]
+  target = "customer-account.page.menu-item.render"
+  module = "./src/MenuItem.jsx"
+
+  [extensions.capabilities]
+  # Required so the extension may call your Firebase Realtime Database (and any
+  # other external host you fetch from). List the exact origins below.
+  network_access = true
