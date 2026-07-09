@@ -5,12 +5,11 @@
   is /pages/account) and point your account/menu link there. Deep-link a tab by
   adding a hash, e.g. /pages/account#wishlist.
 
-  Tabs: Orders, Wishlist, Saved Designs, Reviews — plus an "Account settings"
-  link that opens Shopify's own order-detail, tracking, profile and address
-  pages. Orders read your Shopify customer data (shopper must be logged in).
-  Wishlist / Saved Designs / Reviews / profile photo are saved in the shopper's
-  browser (no app needed). Order details, tracking, name, email and addresses
-  live on Shopify's secure account pages (a theme can't change those). Point your
+  Sidebar: Orders and Profile are direct links to Shopify's native customer
+  account pages (https://shopify.com/<shop.id>/account/orders and /account/profile),
+  which hold order details, tracking, name, email and addresses (a theme can't
+  change those). Wishlist / Saved Designs / Reviews are in-page tabs, saved in
+  the shopper's browser (no app needed); the profile photo is too. Point your
   header account icon here by setting the header's "Account page" URL to this
   page (default /pages/account).
 {%- endcomment -%}
@@ -150,7 +149,7 @@
       .dyn-acct .da-wrap { grid-template-columns:1fr; gap:8px; }
       .dyn-acct .da-nav { position:static; flex-direction:row; overflow-x:auto; gap:4px; padding-bottom:8px; margin-bottom:12px; border-bottom:1px solid var(--line-soft); }
       .dyn-acct .da-idbar { display:none; }
-      .dyn-acct .da-tab { white-space:nowrap; }
+      .dyn-acct .da-tab, .dyn-acct .da-navlink { white-space:nowrap; flex:none; }
       .dyn-acct .da-logout { display:none; }
       .dyn-acct .da-2col { grid-template-columns:1fr; }
     }
@@ -164,50 +163,18 @@
         <button type="button" class="da-avatar da-avatar-btn" id="daAvatarSide" title="Change photo" aria-label="Change profile photo"><span class="da-avatar-fb">{{ customer.first_name | default: customer.name | default: 'U' | slice: 0 | upcase }}</span><span class="da-avatar-cam" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span></button>
         <div class="da-hi">Hi, {{ customer.first_name | default: customer.name | default: 'there' }}</div>
       </div>
-      <button type="button" class="da-tab is-active" data-tab="orders">Orders</button>
-      <button type="button" class="da-tab" data-tab="wishlist">Wishlist</button>
+      <a class="da-navlink" href="https://shopify.com/{{ shop.id }}/account/orders" title="Opens your Shopify orders page">Orders <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
+      <button type="button" class="da-tab is-active" data-tab="wishlist">Wishlist</button>
       <button type="button" class="da-tab" data-tab="designs">Saved Designs</button>
       <button type="button" class="da-tab" data-tab="reviews">Reviews</button>
-      <a class="da-navlink" href="{{ routes.account_url }}" title="Opens Shopify’s secure account settings">Account settings <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
+      <a class="da-navlink" href="https://shopify.com/{{ shop.id }}/account/profile" title="Opens your Shopify profile page">Profile <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
       <a class="da-logout" href="{{ routes.account_logout_url }}">Log out</a>
     </aside>
 
     <div class="da-main">
 
-      {%- comment -%} ---------- ORDERS ---------- {%- endcomment -%}
-      <div class="da-panel is-active" data-panel="orders">
-        <h1 class="da-h">Orders</h1>
-        <p class="da-sub">Your recent orders and their status.</p>
-        {%- if customer.orders.size > 0 -%}
-          {%- for order in customer.orders -%}
-            <div class="da-card">
-              <div class="da-row">
-                <div>
-                  <div class="da-order-no">{{ order.name }}</div>
-                  <div class="da-order-meta">{{ order.created_at | date: "%B %-d, %Y" }} · {{ order.line_items.size }} item{% if order.line_items.size != 1 %}s{% endif %}</div>
-                </div>
-                <div style="text-align:right">
-                  <div class="da-total">{{ order.total_price | money }}</div>
-                  <div style="margin-top:6px; display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap">
-                    <span class="da-badge {% if order.financial_status == 'paid' %}paid{% elsif order.financial_status == 'pending' %}pending{% endif %}">{{ order.financial_status_label }}</span>
-                    <span class="da-badge {% if order.fulfillment_status == 'fulfilled' %}fulfilled{% endif %}">{{ order.fulfillment_status_label }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="da-items">
-                {%- for line in order.line_items limit: 4 -%}<span>{{ line.quantity }}× {{ line.title }}</span>{%- endfor -%}
-                {%- if order.line_items.size > 4 -%}<span>+{{ order.line_items.size | minus: 4 }} more</span>{%- endif -%}
-              </div>
-              <div style="margin-top:12px"><a class="da-link" href="{{ order.customer_url }}">View order details &amp; tracking →</a></div>
-            </div>
-          {%- endfor -%}
-        {%- else -%}
-          <div class="da-empty">You haven’t placed any orders yet.</div>
-        {%- endif -%}
-      </div>
-
       {%- comment -%} ---------- WISHLIST ---------- {%- endcomment -%}
-      <div class="da-panel" data-panel="wishlist">
+      <div class="da-panel is-active" data-panel="wishlist">
         <h1 class="da-h">Wishlist</h1>
         <p class="da-sub">Products you saved with the ♡ / bookmark button.</p>
         <div id="daWish"></div>
@@ -429,7 +396,7 @@
   "tag": "section",
   "class": "dynamic-account-section",
   "settings": [
-    { "type": "paragraph", "content": "A tabbed account dashboard: Orders, Wishlist, Saved Designs and Reviews, plus an “Account settings” link to Shopify’s own order-detail, tracking, profile and address pages. Add it to a page (e.g. a page called “Account” → /pages/account) and point your account link there. The shopper must be logged in to see orders." },
+    { "type": "paragraph", "content": "A tabbed account dashboard. Wishlist, Saved Designs and Reviews are in-page tabs; Orders and Profile link out to Shopify’s native account pages (order details, tracking, name, email, addresses). Add it to a page (e.g. a page called “Account” → /pages/account) and point your account link there. The shopper must be logged in." },
     { "type": "color", "id": "page_bg", "label": "Page background", "default": "#ffffff" }
   ],
   "presets": [ { "name": "Dynamic Account" } ],
