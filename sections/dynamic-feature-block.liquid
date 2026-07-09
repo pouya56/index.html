@@ -12,6 +12,7 @@
 {%- assign feats  = section.blocks | where: 'type', 'feature' -%}
 {%- assign canv   = section.blocks | where: 'type', 'canvas' -%}
 {%- assign stak   = section.blocks | where: 'type', 'stack' -%}
+{%- assign scrl   = section.blocks | where: 'type', 'scroll' -%}
 {%- assign fb_justify = 'center' -%}
 {%- if section.settings.align == 'left' -%}{%- assign fb_justify = 'flex-start' -%}{%- elsif section.settings.align == 'right' -%}{%- assign fb_justify = 'flex-end' -%}{%- endif -%}
 
@@ -125,6 +126,18 @@
     .dyn-fb .fb-stk-grad { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.5), transparent 55%); opacity: 0; transition: opacity .3s; pointer-events: none; }
     .dyn-fb .fb-stk-card.is-open .fb-stk-grad { opacity: 1; }
 
+    /* Progressive-blur scroll (fades at top & bottom) as a tab's media */
+    .dyn-fb .fb-scroll { position: absolute; top: 6%; bottom: 6%; width: var(--scr-w, 42%); overflow: hidden; }
+    .dyn-fb .fb-scroll[data-pos="right"] { right: var(--scr-inset, 5%); }
+    .dyn-fb .fb-scroll[data-pos="left"] { left: var(--scr-inset, 5%); }
+    .dyn-fb .fb-scroll[data-pos="center"] { left: 50%; transform: translateX(-50%); }
+    .dyn-fb .fb-scroll-inner { position: absolute; inset: 0; overflow-y: auto; padding: 90px 24px; color: #e6e6ea; font-size: 15px; line-height: 1.75; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .dyn-fb .fb-scroll-inner::-webkit-scrollbar { width: 0; height: 0; }
+    .dyn-fb .fb-scroll-inner > * { margin: 0 0 1.2em; }
+    .dyn-fb .fb-scroll-blur { position: absolute; left: 0; width: 100%; height: 130px; pointer-events: none; z-index: 2; }
+    .dyn-fb .fb-scroll-blur.is-top { top: 0; background: linear-gradient(to top, transparent, var(--card)); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent); mask-image: linear-gradient(to bottom, #000 45%, transparent); }
+    .dyn-fb .fb-scroll-blur.is-bot { bottom: 0; background: linear-gradient(to bottom, transparent, var(--card)); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); -webkit-mask-image: linear-gradient(to top, #000 45%, transparent); mask-image: linear-gradient(to top, #000 45%, transparent); }
+
     .dyn-fb .fb-empty { color: var(--soft); font-size: 15px; padding: 30px; }
 
     @media (max-width: 860px) {
@@ -137,6 +150,8 @@
         inset: 0; width: auto; height: auto; top: 0; left: 0; right: 0; transform: none; aspect-ratio: auto; border-radius: 0; }
       .dyn-fb .fb-stk, .dyn-fb .fb-stk[data-pos="right"], .dyn-fb .fb-stk[data-pos="left"], .dyn-fb .fb-stk[data-pos="center"] {
         left: 50%; right: auto; transform: translate(-50%, -50%); width: 88%; }
+      .dyn-fb .fb-scroll, .dyn-fb .fb-scroll[data-pos="right"], .dyn-fb .fb-scroll[data-pos="left"], .dyn-fb .fb-scroll[data-pos="center"] {
+        left: 0; right: 0; top: 0; bottom: 0; width: auto; transform: none; }
     }
   </style>
 
@@ -217,6 +232,15 @@
             </div>
           </div>
         {%- endfor -%}
+        {%- for block in scrl -%}
+          <div class="fb-bg-layer{% if colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and forloop.first %} is-active{% endif %}" data-key="b{{ forloop.index0 }}">
+            <div class="fb-scroll" data-pos="{{ block.settings.scr_pos | default: 'right' }}" style="--scr-w:{{ block.settings.scr_width | default: 42 }}%;--scr-inset:{{ block.settings.scr_inset | default: 5 }}%">
+              <div class="fb-scroll-inner">{{ block.settings.content }}</div>
+              <span class="fb-scroll-blur is-top" aria-hidden="true"></span>
+              <span class="fb-scroll-blur is-bot" aria-hidden="true"></span>
+            </div>
+          </div>
+        {%- endfor -%}
       </div>
 
       <button type="button" class="fb-close" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
@@ -263,8 +287,15 @@
             </div>
           {%- endfor -%}
 
-          {%- if colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and request.design_mode -%}
-            <div class="fb-empty">Add “Color”, “Feature”, “Infinite canvas”, or “Image stack” blocks and give each one media.</div>
+          {%- for block in scrl -%}
+            <div class="fb-item" data-fb-item data-media="b{{ forloop.index0 }}" {{ block.shopify_attributes }}>
+              <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
+              <div class="fb-panel"><div class="fb-panel-text"><strong>{{ block.settings.title }}.</strong> {{ block.settings.detail }}</div></div>
+            </div>
+          {%- endfor -%}
+
+          {%- if colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and scrl.size == 0 and request.design_mode -%}
+            <div class="fb-empty">Add “Color”, “Feature”, “Infinite canvas”, “Image stack”, or “Scroll text” blocks and give each one media.</div>
           {%- endif -%}
         </div>
       </div>
@@ -479,6 +510,14 @@
       { "type": "image_picker", "id": "img6", "label": "Image 6" },
       { "type": "image_picker", "id": "img7", "label": "Image 7" },
       { "type": "image_picker", "id": "img8", "label": "Image 8" }
+    ]},
+    { "type": "scroll", "name": "Scroll text (progressive blur)", "settings": [
+      { "type": "text", "id": "title", "label": "Tab title", "default": "Story" },
+      { "type": "textarea", "id": "detail", "label": "Details", "default": "Scroll to read." },
+      { "type": "richtext", "id": "content", "label": "Scrolling text", "default": "<p>Add your long text here. It scrolls, softly blurring and fading at the top and bottom edges.</p>" },
+      { "type": "range", "id": "scr_width", "min": 25, "max": 90, "step": 1, "unit": "%", "label": "Width", "default": 42 },
+      { "type": "select", "id": "scr_pos", "label": "Position", "default": "right", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ] },
+      { "type": "range", "id": "scr_inset", "min": 0, "max": 25, "step": 1, "unit": "%", "label": "Distance from the side", "default": 5 }
     ]}
   ],
   "max_blocks": 16,
