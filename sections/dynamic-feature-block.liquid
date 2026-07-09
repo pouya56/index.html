@@ -114,8 +114,11 @@
     .dyn-fb .fb-tile img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; -webkit-user-drag: none; }
 
     /* Image stack (hover-expand accordion) as a tab's media */
-    .dyn-fb .fb-stack { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-    .dyn-fb .fb-stk { display: flex; flex-direction: column; gap: 4px; width: 340px; max-width: 82%; }
+    .dyn-fb .fb-stack { position: absolute; inset: 0; }
+    .dyn-fb .fb-stk { position: absolute; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 4px; width: var(--stk-w, 340px); max-width: 88%; }
+    .dyn-fb .fb-stk[data-pos="right"] { right: var(--stk-inset, 5%); }
+    .dyn-fb .fb-stk[data-pos="left"] { left: var(--stk-inset, 5%); }
+    .dyn-fb .fb-stk[data-pos="center"] { left: 50%; transform: translate(-50%, -50%); }
     .dyn-fb .fb-stk-card { flex: 0 0 var(--scol, 40px); overflow: hidden; border-radius: 22px; position: relative; cursor: pointer; transition: flex-grow .55s cubic-bezier(.22,1,.36,1); box-shadow: 0 12px 34px rgba(0,0,0,.34); }
     .dyn-fb .fb-stk-card.is-open { flex-grow: 1; }
     .dyn-fb .fb-stk-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -132,6 +135,8 @@
       .dyn-fb .fb-close { top: 14px; right: 14px; }
       .dyn-fb .fb-ba, .dyn-fb .fb-ba[data-pos="right"], .dyn-fb .fb-ba[data-pos="left"], .dyn-fb .fb-ba[data-pos="center"] {
         inset: 0; width: auto; height: auto; top: 0; left: 0; right: 0; transform: none; aspect-ratio: auto; border-radius: 0; }
+      .dyn-fb .fb-stk, .dyn-fb .fb-stk[data-pos="right"], .dyn-fb .fb-stk[data-pos="left"], .dyn-fb .fb-stk[data-pos="center"] {
+        left: 50%; right: auto; transform: translate(-50%, -50%); width: 88%; }
     }
   </style>
 
@@ -200,7 +205,7 @@
             {%- assign sh = snm1 | times: scol -%}{%- assign sgaps = snm1 | times: 4 -%}{%- assign stkh = sexp | plus: sh | plus: sgaps -%}
             {%- assign sdef = 1 -%}{%- if scount < 2 -%}{%- assign sdef = 0 -%}{%- endif -%}
             <div class="fb-stack">
-              <div class="fb-stk" data-fb-stack data-def="{{ sdef }}" style="height:{{ stkh }}px;--scol:{{ scol }}px">
+              <div class="fb-stk" data-fb-stack data-def="{{ sdef }}" data-pos="{{ block.settings.stk_pos | default: 'center' }}" style="height:{{ stkh }}px;--scol:{{ scol }}px;--stk-w:{{ block.settings.stk_width | default: 340 }}px;--stk-inset:{{ block.settings.stk_inset | default: 5 }}%">
                 {%- assign si = 0 -%}
                 {%- for n in (1..8) -%}{%- assign sk = 'img' | append: n -%}{%- assign simg = block.settings[sk] -%}{%- if simg != blank -%}
                   <div class="fb-stk-card{% if si == sdef %} is-open{% endif %}" data-fb-stk-card>
@@ -460,8 +465,11 @@
     { "type": "stack", "name": "Image stack (tab)", "settings": [
       { "type": "text", "id": "title", "label": "Tab title", "default": "Gallery" },
       { "type": "textarea", "id": "detail", "label": "Details", "default": "Hover a card to expand it." },
+      { "type": "range", "id": "stk_width", "min": 220, "max": 560, "step": 10, "unit": "px", "label": "Stack width", "default": 340 },
       { "type": "range", "id": "expanded", "min": 200, "max": 520, "step": 10, "unit": "px", "label": "Expanded card height", "default": 360 },
       { "type": "range", "id": "collapsed", "min": 28, "max": 90, "step": 2, "unit": "px", "label": "Collapsed bar height", "default": 40 },
+      { "type": "select", "id": "stk_pos", "label": "Position", "default": "center", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ] },
+      { "type": "range", "id": "stk_inset", "min": 0, "max": 25, "step": 1, "unit": "%", "label": "Distance from the side", "default": 5 },
       { "type": "paragraph", "content": "Add up to 8 tall images — hover/tap a card to expand it; the others collapse to bars." },
       { "type": "image_picker", "id": "img1", "label": "Image 1" },
       { "type": "image_picker", "id": "img2", "label": "Image 2" },
