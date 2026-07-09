@@ -226,7 +226,7 @@
               {%- if preview_url != '' -%}
                 {%- if line.product -%}{%- assign purl = line.product.url -%}{%- else -%}{%- assign purl = order.customer_url -%}{%- endif -%}
                 <div class="da-tile">
-                  <a class="da-tile-img" href="{{ purl }}"><img src="{{ preview_url }}" alt="{{ line.title | escape }}" loading="lazy"></a>
+                  <a class="da-tile-img" href="{{ purl }}"><img src="{{ preview_url }}" alt="{{ line.title | escape }}" width="600" height="600" loading="lazy"></a>
                   <div class="da-tile-b">
                     <a class="da-tile-name" href="{{ purl }}">{{ line.title }}</a>
                     <div class="da-tile-price">{{ order.name }} · {{ order.created_at | date: "%b %-d, %Y" }}</div>
