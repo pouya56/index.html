@@ -1,0 +1,93 @@
+{%- comment -%}
+  Spring Cursor — a soft blob that follows the mouse with spring physics
+  (inspired by Skiper UI "skiper61"). Self-contained. Add it to your Footer
+  (or Header) section group so it runs on every page. Ignored on touch devices
+  and when the visitor prefers reduced motion.
+{%- endcomment -%}
+
+{%- assign cur_style = section.settings.style | default: 'solid' -%}
+
+<div class="dyn-cursor-mount" id="dynCursor-{{ section.id }}"
+  data-size="{{ section.settings.size | default: 26 }}"
+  data-hide="{{ section.settings.hide_native }}"
+  data-grow="{{ section.settings.grow_on_links }}">
+  <style>
+    #dynCursor-{{ section.id }} .dyn-cursor {
+      position: fixed; top: 0; left: 0; z-index: 99999; pointer-events: none;
+      width: {{ section.settings.size | default: 26 }}px; height: {{ section.settings.size | default: 26 }}px; border-radius: 50%;
+      transform: translate3d(-50px, -50px, 0) translate(-50%, -50%) scale(0); opacity: 0; will-change: transform, opacity;
+      {%- if cur_style == 'ring' -%}
+        background: transparent; border: 2px solid {{ section.settings.color | default: '#111111' }};
+      {%- elsif cur_style == 'invert' -%}
+        background: #ffffff; mix-blend-mode: difference;
+      {%- else -%}
+        background: {{ section.settings.color | default: '#111111' }};
+      {%- endif -%}
+    }
+    {%- if section.settings.hide_native -%}
+      @media (hover: hover) and (pointer: fine) { html.dyn-cursor-on, html.dyn-cursor-on * { cursor: none !important; } }
+    {%- endif -%}
+    @media (hover: none), (pointer: coarse) { #dynCursor-{{ section.id }} .dyn-cursor { display: none; } }
+  </style>
+  <div class="dyn-cursor" aria-hidden="true"></div>
+</div>
+
+<script>
+(function () {
+  var mount = document.getElementById("dynCursor-{{ section.id }}");
+  if (!mount) return;
+  var dot = mount.querySelector(".dyn-cursor");
+  var fine = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!dot || !fine) return;
+
+  if (mount.getAttribute("data-hide") === "true") document.documentElement.classList.add("dyn-cursor-on");
+  var grow = mount.getAttribute("data-grow") === "true";
+
+  var tx = innerWidth / 2, ty = innerHeight / 2, x = tx, y = ty, vx = 0, vy = 0;
+  var scale = 0, tscale = 0, hoverScale = 1, op = 0, top_ = 0, last = null;
+  var K = 131, C = 10, M = 0.1; /* stiffness, damping, mass */
+
+  window.addEventListener("mousemove", function (e) { tx = e.clientX; ty = e.clientY; tscale = 1; top_ = 1; }, { passive: true });
+  document.addEventListener("mouseleave", function () { tscale = 0; top_ = 0; });
+  window.addEventListener("blur", function () { tscale = 0; top_ = 0; });
+  if (grow) {
+    document.addEventListener("mouseover", function (e) { if (e.target.closest && e.target.closest('a,button,[role="button"],input,textarea,select,label')) hoverScale = 1.9; });
+    document.addEventListener("mouseout", function (e) { if (e.target.closest && e.target.closest('a,button,[role="button"],input,textarea,select,label')) hoverScale = 1; });
+  }
+
+  function stepSpring(dt) {
+    var ax = (-K * (x - tx) - C * vx) / M; vx += ax * dt; x += vx * dt;
+    var ay = (-K * (y - ty) - C * vy) / M; vy += ay * dt; y += vy * dt;
+  }
+  function frame(t) {
+    if (last == null) last = t; var dt = Math.min((t - last) / 1000, 0.05); last = t;
+    if (calm) { x = tx; y = ty; } /* no spring for reduced motion */
+    else { var steps = Math.max(1, Math.ceil(dt / (1 / 120))), sdt = dt / steps; for (var i = 0; i < steps; i++) stepSpring(sdt); }
+    scale += (tscale * hoverScale - scale) * 0.2; op += (top_ - op) * 0.2;
+    dot.style.transform = "translate3d(" + x.toFixed(2) + "px," + y.toFixed(2) + "px,0) translate(-50%,-50%) scale(" + scale.toFixed(3) + ")";
+    dot.style.opacity = op.toFixed(3);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Spring Cursor",
+  "tag": "section",
+  "class": "dynamic-cursor-section",
+  "settings": [
+    { "type": "paragraph", "content": "A soft blob that follows the mouse with a springy motion. Add this to your Footer (or Header) section group so it shows on every page. It’s automatically off on phones/tablets." },
+    { "type": "range", "id": "size", "min": 8, "max": 64, "step": 2, "unit": "px", "label": "Size", "default": 26 },
+    { "type": "select", "id": "style", "label": "Style", "default": "solid",
+      "options": [ { "value": "solid", "label": "Solid dot" }, { "value": "ring", "label": "Ring (outline)" }, { "value": "invert", "label": "Invert colors underneath" } ] },
+    { "type": "color", "id": "color", "label": "Color", "default": "#111111", "info": "Used for Solid & Ring (Invert ignores it)." },
+    { "type": "checkbox", "id": "grow_on_links", "label": "Grow over links & buttons", "default": true },
+    { "type": "checkbox", "id": "hide_native", "label": "Hide the normal mouse pointer", "default": false, "info": "Turn on to replace the cursor entirely. Leave off to keep the normal pointer with the blob trailing it." }
+  ],
+  "enabled_on": { "groups": ["header", "footer", "aside", "custom.overlay"] },
+  "presets": [ { "name": "Spring Cursor" } ]
+}
+{% endschema %}
