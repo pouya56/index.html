@@ -562,8 +562,8 @@
       var thumb = p.image ? '<a href="' + url + '" style="flex:none"><img src="' + esc(p.image) + '" alt="" style="width:52px;height:52px;border-radius:10px;object-fit:cover"></a>' : '';
       var meta = r ? '<div class="da-order-meta"><span class="da-rv-stars">' + stars(r.rating || 5) + '</span>' + (r.t ? ' · ' + new Date(r.t).toLocaleDateString() : '') + '</div>' : '';
       var action;
-      if (r) { action = ''; }
-      else if (done) { action = '<a class="da-link" href="' + url + '#igSocial">View your review →</a>'; }
+      if (r) { action = '<a class="da-link" href="' + url + '?review=edit">Edit review →</a>'; }
+      else if (done) { action = '<a class="da-link" href="' + url + '?review=edit">Edit your review →</a>'; }
       else { action = '<a class="da-btn sm" href="' + url + '?review=1">Write a review</a>'; }
       return '<div class="da-card">' +
         '<div class="da-row" style="align-items:center; gap:14px">' +
