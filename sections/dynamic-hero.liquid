@@ -197,22 +197,18 @@
   /* Liquid-glass buttons under the search bar (Google-style) */
   .dyn-hero .dh-hero-btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
 
-  /* "Finding your gift…" loader shown after a search is submitted */
-  .dyn-hero .dh-finding { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 7; width: min(92vw, 720px);
-    text-align: center; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .5s ease, visibility 0s linear .5s; }
-  .dyn-hero.dh-finding-on .dh-finding { opacity: 1; visibility: visible; transition: opacity .5s ease; }
-  .dyn-hero .dh-finding-txt { display: inline-block; font: 600 clamp(20px, 3vw, 30px)/1.35 var(--font); letter-spacing: -0.02em; color: #9a9aa3;
-    background: linear-gradient(90deg, #b7b7bf 0%, #b7b7bf 34%, var(--ink) 50%, #b7b7bf 66%, #b7b7bf 100%);
+  /* "Finding your gift…" loader — full-screen overlay that covers the whole page (moved to <body> so nothing sits on top) */
+  .dh-finding { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: {{ section.settings.finding_bg | default: '#f5f5f7' }}; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .5s ease, visibility 0s linear .5s; }
+  .dh-finding.is-on { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .5s ease; }
+  .dh-finding-txt { display: inline-block; font-weight: 600; font-size: clamp(20px, 3vw, 30px); line-height: 1.35; letter-spacing: -0.02em; color: #9a9aa3;
+    background: linear-gradient(90deg, #b7b7bf 0%, #b7b7bf 34%, {{ section.settings.finding_ink | default: '#1d1d1f' }} 50%, #b7b7bf 66%, #b7b7bf 100%);
     background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     animation: dhShimmer 1.7s linear infinite; }
-  @supports not ((-webkit-background-clip: text) or (background-clip: text)) { .dyn-hero .dh-finding-txt { color: var(--ink); } }
+  @supports not ((-webkit-background-clip: text) or (background-clip: text)) { .dh-finding-txt { color: {{ section.settings.finding_ink | default: '#1d1d1f' }}; -webkit-text-fill-color: currentColor; } }
   @keyframes dhShimmer { 0% { background-position: 120% 0; } 100% { background-position: -120% 0; } }
-  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-finding-txt { animation: none; color: var(--ink); -webkit-text-fill-color: currentColor; } }
-  /* While finding, fade the search bar + buttons + results so the loader stands alone */
-  .dyn-hero.dh-finding-on .dh-search,
-  .dyn-hero.dh-finding-on .dh-hero-btns,
-  .dyn-hero.dh-finding-on .dh-tabs-wrap,
-  .dyn-hero.dh-finding-on .dh-shelf-wrap { opacity: 0; transition: opacity .4s ease; pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) { .dh-finding-txt { animation: none; color: {{ section.settings.finding_ink | default: '#1d1d1f' }}; -webkit-text-fill-color: currentColor; } }
   .dyn-hero .dh-gbtn { display: inline-flex; align-items: center; justify-content: center; min-width: 150px; height: 46px; padding: 0 24px;
     border-radius: 999px; border: 1px solid rgba(255,255,255,0.6); cursor: pointer; text-decoration: none; white-space: nowrap;
     font: 500 15px/1 var(--font); color: var(--ink); position: relative; overflow: hidden;
@@ -1624,13 +1620,16 @@
   var findingOn = root.getAttribute("data-finding") === "true";
   var findingText = root.getAttribute("data-finding-text") || "Finding your gift…";
   var findingMs = parseInt(root.getAttribute("data-finding-ms"), 10) || 1600;
-  var findingTxtEl = root.querySelector(".dh-finding-txt");
+  var findingEl = root.querySelector(".dh-finding");
+  var findingTxtEl = findingEl ? findingEl.querySelector(".dh-finding-txt") : null;
   var findingReduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* Move the overlay to <body> so it covers the whole page — header, account bar, everything. */
+  if (findingEl && findingEl.parentNode !== document.body) document.body.appendChild(findingEl);
   function runFinding(done) {
-    if (!findingTxtEl || findingReduce) { if (done) done(); return; }
+    if (!findingEl || !findingTxtEl || findingReduce) { if (done) done(); return; }
     findingTxtEl.textContent = findingText;
-    root.classList.add("dh-finding-on");
-    setTimeout(function () { root.classList.remove("dh-finding-on"); if (done) done(); }, Math.max(400, findingMs));
+    findingEl.classList.add("is-on");
+    setTimeout(function () { findingEl.classList.remove("is-on"); if (done) done(); }, Math.max(400, findingMs));
   }
   var ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
   var CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -1879,6 +1878,8 @@
     { "type": "checkbox", "id": "show_finding", "label": "Show a “Finding your gift…” loader on search", "default": true, "info": "When a shopper submits a search, the bar fades and a shimmering message shows for a moment before the results appear." },
     { "type": "text", "id": "finding_text", "label": "Loader message", "default": "Finding your gift…" },
     { "type": "range", "id": "finding_ms", "min": 600, "max": 4000, "step": 100, "unit": "ms", "label": "Loader duration", "default": 1600 },
+    { "type": "color", "id": "finding_bg", "label": "Loader background", "default": "#f5f5f7", "info": "The full-screen colour the page fades to while finding." },
+    { "type": "color", "id": "finding_ink", "label": "Loader text colour", "default": "#1d1d1f" },
     { "type": "header", "content": "Buttons under the search (Google-style)" },
     { "type": "checkbox", "id": "show_btn1", "label": "Show the 'Search' button", "default": false },
     { "type": "text", "id": "btn1_label", "label": "Search button text", "default": "Search", "info": "Runs the search with whatever is typed." },
