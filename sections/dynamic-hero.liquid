@@ -1000,6 +1000,7 @@
     </div>
 
     {%- assign prods = coll.products -%}
+    {%- assign hide_kws = section.settings.exclude_keywords | default: '' | downcase | split: ',' -%}
     {%- if prods.size == 0 -%}
       <div class="dh-empty">
         <p>{{ section.settings.empty_text | default: 'Nothing here yet.' }}</p>
@@ -1023,7 +1024,8 @@
             {%- if section.settings.show_btn3 -%}<button type="button" class="dh-gbtn" id="dhBtnRandom">{{ section.settings.btn3_label | default: 'Surprise me' }}</button>{%- endif -%}
           </div>
           {%- if section.settings.show_btn3 -%}
-            <script type="application/json" data-dh-random>[{%- assign rfirst = true -%}{%- for product in prods limit: 50 -%}{%- unless rfirst %},{% endunless %}{%- assign rfirst = false -%}{{ product.url | json }}{%- endfor -%}]</script>
+            <script type="application/json" data-dh-random>[{%- assign rfirst = true -%}{%- for product in prods limit: 50 -%}{%- assign rt = product.title | downcase -%}{%- assign rhide = false -%}{%- for kw in hide_kws -%}{%- assign kwt = kw | strip -%}{%- if kwt != blank and rt contains kwt -%}{%- assign rhide = true -%}{%- endif -%}{%- endfor -%}{%- unless rhide -%}{%- unless rfirst %},{% endunless %}{%- assign rfirst = false -%}{{ product.url | json }}{%- endunless -%}{%- endfor -%}]</script>
+            <script type="application/json" data-dh-hidekw>{{ section.settings.exclude_keywords | default: '' | downcase | json }}</script>
           {%- endif -%}
         {%- endif -%}
       {%- endif -%}
@@ -1103,6 +1105,9 @@
         {%- assign hide_tag = section.settings.hide_tag | default: 'hidden' -%}
         {%- for product in prods limit: section.settings.max_products -%}
           {%- if product.tags contains hide_tag -%}{%- continue -%}{%- endif -%}
+          {%- assign p_title_dc = product.title | downcase -%}{%- assign p_hidden = false -%}
+          {%- for kw in hide_kws -%}{%- assign kwt = kw | strip -%}{%- if kwt != blank and p_title_dc contains kwt -%}{%- assign p_hidden = true -%}{%- endif -%}{%- endfor -%}
+          {%- if p_hidden -%}{%- continue -%}{%- endif -%}
           {%- assign on_sale = false -%}
           {%- if product.compare_at_price > product.price -%}{%- assign on_sale = true -%}{%- endif -%}
 
@@ -1314,7 +1319,12 @@
         .then(function (r) { return r.json(); })
         .then(function (d) {
           var ps = (d && d.products) || [];
-          rlist = ps.map(function (p) { return "/products/" + p.handle; });
+          var kwEl = document.querySelector("[data-dh-hidekw]"), kws = [];
+          try { kws = (JSON.parse(kwEl.textContent) || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean); } catch (e) {}
+          rlist = ps.filter(function (p) {
+            var t = (p.title || "").toLowerCase();
+            return !kws.some(function (k) { return t.indexOf(k) !== -1; });
+          }).map(function (p) { return "/products/" + p.handle; });
           if (!pickAndOpen(rlist)) window.location.href = "{{ routes.all_products_collection_url }}";
         })
         .catch(function () { window.location.href = "{{ routes.all_products_collection_url }}"; });
@@ -1869,6 +1879,7 @@
     { "type": "range", "id": "max_products", "min": 8, "max": 50, "step": 2, "label": "Max products shown", "default": 48,
       "info": "Tabs filter this loaded set instantly. Raise it if a category looks short." },
     { "type": "text", "id": "hide_tag", "label": "Hide products with this tag", "default": "hidden", "info": "Products with this tag (e.g. the internal back-print add-on) are hidden from the grid." },
+    { "type": "text", "id": "exclude_keywords", "label": "Hide products whose name contains", "default": "gift wrapping, back print", "info": "Comma-separated. Any product whose title contains one of these is hidden from the grid and the 'Surprise me' button (e.g. add-ons like gift wrapping)." },
     { "type": "select", "id": "image_ratio", "label": "Image shape", "default": "natural",
       "options": [ { "value": "natural", "label": "Natural (tall)" }, { "value": "portrait", "label": "Portrait" }, { "value": "square", "label": "Square" }, { "value": "landscape", "label": "Landscape" } ] },
 
