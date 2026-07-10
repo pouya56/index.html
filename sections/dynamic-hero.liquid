@@ -202,6 +202,24 @@
     animation: dhSiri 6s linear infinite; filter: blur(8px); opacity: 0; transition: opacity .35s ease; }
   .dyn-hero .dh-search-go:hover::before, .dyn-hero .dh-search-go.has-text::before { opacity: 0.95; }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search-go::before { animation: none; } }
+  /* Gooey / liquid blobs behind the search bar (appear on hover / focus) */
+  .dyn-hero .dh-search-goo { position: relative; max-width: 784px; margin: 26px auto 0; }
+  .dyn-hero.dh-landing .dh-search-goo { width: min(96vw, 750px); margin: 30px auto; }
+  .dyn-hero .dh-search-goo .dh-search { margin: 0 !important; width: 100% !important; max-width: none !important; position: relative; z-index: 1; }
+  .dyn-hero .dh-search-goo .dh-goo-core { border-radius: 26px; }
+  .dyn-hero .dh-search-goo:hover .dh-goo, .dyn-hero .dh-search-goo:focus-within .dh-goo { opacity: 1; }
+  .dyn-hero .dh-search-goo .dh-goo-blob { top: 50%; left: auto; margin: -30px 0 0 0; width: 60px; height: 60px; }
+  .dyn-hero .dh-goo-sb-l { left: 0; }
+  .dyn-hero .dh-goo-sb-r { right: 0; }
+  .dyn-hero .dh-goo-sb-t { left: 50%; margin-left: -30px; top: 0; margin-top: -20px; }
+  .dyn-hero .dh-search-goo:hover .dh-goo-sb-l, .dyn-hero .dh-search-goo:focus-within .dh-goo-sb-l { animation: dhGooSL 3s ease-in-out infinite; }
+  .dyn-hero .dh-search-goo:hover .dh-goo-sb-r, .dyn-hero .dh-search-goo:focus-within .dh-goo-sb-r { animation: dhGooSR 3s ease-in-out infinite .5s; }
+  .dyn-hero .dh-search-goo:hover .dh-goo-sb-t, .dyn-hero .dh-search-goo:focus-within .dh-goo-sb-t { animation: dhGooST 2.6s ease-in-out infinite .9s; }
+  @keyframes dhGooSL { 0%, 100% { transform: translate(0,0) scale(.3); } 50% { transform: translate(-46px,0) scale(1); } }
+  @keyframes dhGooSR { 0%, 100% { transform: translate(0,0) scale(.3); } 50% { transform: translate(46px,0) scale(1); } }
+  @keyframes dhGooST { 0%, 100% { transform: translate(0,0) scale(.25); } 50% { transform: translate(0,-34px) scale(.8); } }
+  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search-goo .dh-goo-blob { animation: none !important; } }
+
   /* Liquid-glass buttons under the search bar (Google-style) */
   .dyn-hero .dh-hero-btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
 
@@ -1062,6 +1080,8 @@
       </div>
     {%- else -%}
       {%- if section.settings.show_search -%}
+        <div class="dh-search-goo">
+        <span class="dh-goo dh-goo-search" aria-hidden="true"><span class="dh-goo-core"></span><span class="dh-goo-blob dh-goo-sb-l"></span><span class="dh-goo-blob dh-goo-sb-r"></span><span class="dh-goo-blob dh-goo-sb-t"></span></span>
         <div class="dh-search">
           <button type="button" class="dh-search-plus" id="dhSearchPlus" aria-label="Search" tabindex="-1">
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1074,6 +1094,7 @@
             <span class="dh-go-ic dh-go-up"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span>
             <span class="dh-go-ic dh-go-check"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
           </button>
+        </div>
         </div>
         {%- if section.settings.show_finding -%}
           <div class="dh-finding" aria-hidden="true"><span class="dh-finding-txt"></span></div>
