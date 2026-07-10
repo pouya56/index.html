@@ -1676,6 +1676,15 @@
   // "results page" URL is set, Enter/submit opens that page with the query.
   var searchEl = document.getElementById("dhSearch");
   var searchBtn = document.getElementById("dhSearchGo");
+  // Clicking anywhere on the bar (padding, edges, gaps) focuses the input — not just the text field.
+  var searchWrap = searchEl ? searchEl.closest(".dh-search") : null;
+  if (searchWrap && searchEl) {
+    searchWrap.addEventListener("mousedown", function (e) {
+      if (e.target === searchEl || (e.target.closest && e.target.closest("button, a, input"))) return;
+      e.preventDefault();          // keep focus from moving to the bar itself
+      searchEl.focus();
+    });
+  }
   var resultsUrl = (root.getAttribute("data-results-url") || "").trim();
   var findingOn = root.getAttribute("data-finding") === "true";
   var findingText = root.getAttribute("data-finding-text") || "Finding your gift…";
