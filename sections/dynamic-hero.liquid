@@ -167,13 +167,7 @@
     transition: box-shadow .18s; }
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dyn-hero .dh-search { background: #fff; border-color: var(--line); } }
   .dyn-hero .dh-search:focus-within { box-shadow: 0 14px 44px rgba(0,0,0,0.14), inset 0 1px 1px rgba(255,255,255,0.95), 0 0 0 4px rgba(0,113,227,0.14); }
-  /* Siri-style animated glow on hover / focus */
-  .dyn-hero .dh-search::before { content: ""; position: absolute; inset: -4px; border-radius: 30px; z-index: -1; pointer-events: none;
-    background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff); background-size: 300% 100%;
-    animation: dhSiri 6s linear infinite; filter: blur(11px); opacity: 0; transition: opacity .35s ease; }
-  .dyn-hero .dh-search:hover::before, .dyn-hero .dh-search:focus-within::before { opacity: 0.9; }
   @keyframes dhSiri { to { background-position: 300% 0; } }
-  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search::before { animation: none; } }
   /* Shimmering diagonal light streak (refraction) across the glass */
   .dyn-hero .dh-search::after { content: ""; position: absolute; inset: 1px; z-index: 0; pointer-events: none; border-radius: 25px;
     background: linear-gradient(112deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 60%);
@@ -190,9 +184,24 @@
   .dyn-hero .dh-search-plus:hover, .dyn-hero .dh-search-go:hover { background: rgba(120,120,128,0.22); }
   .dyn-hero .dh-search-plus:active, .dyn-hero .dh-search-go:active { transform: scale(0.93); }
   .dyn-hero .dh-search-plus svg { width: 22px; height: 22px; fill: none; stroke: var(--ink-soft); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .dyn-hero .dh-search-go svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  /* Arrow button: stacked icons that swap with a spin/fade */
+  .dyn-hero .dh-search-go { overflow: visible; }
+  .dyn-hero .dh-go-ic { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transform: scale(.5) rotate(-35deg);
+    transition: opacity .26s ease, transform .34s cubic-bezier(.22,1,.36,1); }
+  .dyn-hero .dh-go-ic svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-hero .dh-search-go .dh-go-back { opacity: 1; transform: none; }               /* empty → back arrow */
+  .dyn-hero .dh-search-go.has-text .dh-go-back { opacity: 0; transform: scale(.5) rotate(35deg); }
+  .dyn-hero .dh-search-go.has-text .dh-go-up { opacity: 1; transform: none; }          /* typing → up arrow */
+  .dyn-hero .dh-search-go.is-ok .dh-go-back, .dyn-hero .dh-search-go.is-ok .dh-go-up { opacity: 0; }
+  .dyn-hero .dh-search-go.is-ok .dh-go-check { opacity: 1; transform: none; }
   .dyn-hero .dh-search-go.is-ok { background: #1a7f37; }
-  .dyn-hero .dh-search-go.is-ok svg { stroke: #fff; }
+  .dyn-hero .dh-search-go.is-ok .dh-go-ic svg { stroke: #fff; }
+  /* Colorful glow — only around the arrow button, brightest once there's text */
+  .dyn-hero .dh-search-go::before { content: ""; position: absolute; inset: -4px; border-radius: 19px; z-index: -1; pointer-events: none;
+    background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff); background-size: 300% 100%;
+    animation: dhSiri 6s linear infinite; filter: blur(8px); opacity: 0; transition: opacity .35s ease; }
+  .dyn-hero .dh-search-go:hover::before, .dyn-hero .dh-search-go.has-text::before { opacity: 0.95; }
+  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search-go::before { animation: none; } }
   /* Liquid-glass buttons under the search bar (Google-style) */
   .dyn-hero .dh-hero-btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
 
@@ -1031,7 +1040,9 @@
             data-typing="{{ section.settings.search_examples | escape }}"
             placeholder="{{ section.settings.search_placeholder | default: 'Search these products…' }}">
           <button type="button" class="dh-search-go" id="dhSearchGo" aria-label="Search">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            <span class="dh-go-ic dh-go-back"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+            <span class="dh-go-ic dh-go-up"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span>
+            <span class="dh-go-ic dh-go-check"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
           </button>
         </div>
         {%- if section.settings.show_finding -%}
@@ -1638,13 +1649,11 @@
   function flashArrowOk(cb) {
     if (!searchBtn) { if (cb) cb(); return; }
     searchBtn.classList.add("is-ok");
-    searchBtn.innerHTML = CHECK_SVG;
     if (cb) setTimeout(cb, 430);
   }
   function resetArrow() {
     if (!searchBtn) return;
     searchBtn.classList.remove("is-ok");
-    searchBtn.innerHTML = ARROW_SVG;
   }
   function runSearch(q) {
     if (!q) return;
@@ -1666,6 +1675,7 @@
   }
   if (searchEl) {
     searchEl.addEventListener("input", function () {
+      if (searchBtn) searchBtn.classList.toggle("has-text", !!searchEl.value.trim()); // ← empty, ↑ typing
       if (resultsUrl) return; // redirect mode: don't filter here
       // Finding mode: wait for submit to run the loader; only reset live when cleared.
       if (findingOn) { if (!searchEl.value.trim()) { query = ""; applyFilters(); } return; }
