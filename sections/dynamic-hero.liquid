@@ -1649,9 +1649,9 @@
   function runSearch(q) {
     if (!q) return;
     if (resultsUrl) {
-      flashArrowOk(function () {
-        window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
-      });
+      var go = function () { window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q); };
+      if (findingOn) { if (searchEl) searchEl.blur(); runFinding(go); }
+      else { flashArrowOk(go); }
     } else {
       query = q.toLowerCase();
       flashArrowOk(null); setTimeout(resetArrow, 1300);
