@@ -15,6 +15,8 @@
 {%- assign scrl   = section.blocks | where: 'type', 'scroll' -%}
 {%- assign fb_justify = 'center' -%}
 {%- if section.settings.align == 'left' -%}{%- assign fb_justify = 'flex-start' -%}{%- elsif section.settings.align == 'right' -%}{%- assign fb_justify = 'flex-end' -%}{%- endif -%}
+{%- assign has_default = false -%}
+{%- if section.settings.default_image != blank or section.settings.default_video != blank -%}{%- assign has_default = true -%}{%- endif -%}
 
 <section class="dyn-fb" id="dynFb-{{ section.id }}">
   <style>
@@ -168,8 +170,19 @@
 
     <div class="fb-card">
       <div class="fb-bg">
+        {%- if has_default -%}
+          <div class="fb-bg-layer is-active" data-key="default">
+            {%- if section.settings.default_video != blank -%}
+              <video class="fb-media" autoplay muted loop playsinline{% if section.settings.default_image != blank %} poster="{{ section.settings.default_image | image_url: width: 40 }}"{% endif %}>
+                {%- for s in section.settings.default_video.sources -%}<source src="{{ s.url }}" type="{{ s.mime_type }}">{%- endfor -%}
+              </video>
+            {%- elsif section.settings.default_image != blank -%}
+              <img class="fb-media" src="{{ section.settings.default_image | image_url: width: 1800 }}" width="{{ section.settings.default_image.width }}" height="{{ section.settings.default_image.height }}" alt="" loading="lazy">
+            {%- endif -%}
+          </div>
+        {%- endif -%}
         {%- for block in colors -%}
-          <div class="fb-bg-layer{% if forloop.first %} is-active{% endif %}" data-key="c{{ forloop.index0 }}">
+          <div class="fb-bg-layer{% if has_default == false and forloop.first %} is-active{% endif %}" data-key="c{{ forloop.index0 }}">
             {%- if block.settings.ba_before != blank and block.settings.ba_after != blank -%}
               <div class="fb-ba" data-fb-ba data-pos="{{ block.settings.ba_pos | default: 'right' }}" style="--ba-w:{{ block.settings.ba_width | default: 55 }}%;--ba-ratio:{{ block.settings.ba_ratio | default: '4 / 3' }};--ba-inset:{{ block.settings.ba_inset | default: 5 }}%">
                 <div class="fb-ba-before"><img class="fb-media" src="{{ block.settings.ba_before | image_url: width: 1800 }}" width="1600" height="1000" alt="Before" loading="lazy"></div>
@@ -188,7 +201,7 @@
           </div>
         {%- endfor -%}
         {%- for block in feats -%}
-          <div class="fb-bg-layer{% if colors.size == 0 and forloop.first %} is-active{% endif %}" data-key="f{{ forloop.index0 }}">
+          <div class="fb-bg-layer{% if has_default == false and colors.size == 0 and forloop.first %} is-active{% endif %}" data-key="f{{ forloop.index0 }}">
             {%- if block.settings.ba_before != blank and block.settings.ba_after != blank -%}
               <div class="fb-ba" data-fb-ba data-pos="{{ block.settings.ba_pos | default: 'right' }}" style="--ba-w:{{ block.settings.ba_width | default: 55 }}%;--ba-ratio:{{ block.settings.ba_ratio | default: '4 / 3' }};--ba-inset:{{ block.settings.ba_inset | default: 5 }}%">
                 <div class="fb-ba-before"><img class="fb-media" src="{{ block.settings.ba_before | image_url: width: 1800 }}" width="1600" height="1000" alt="Before" loading="lazy"></div>
@@ -207,7 +220,7 @@
           </div>
         {%- endfor -%}
         {%- for block in canv -%}
-          <div class="fb-bg-layer{% if colors.size == 0 and feats.size == 0 and forloop.first %} is-active{% endif %}" data-key="k{{ forloop.index0 }}">
+          <div class="fb-bg-layer{% if has_default == false and colors.size == 0 and feats.size == 0 and forloop.first %} is-active{% endif %}" data-key="k{{ forloop.index0 }}">
             {%- assign ccount = 0 -%}{%- for n in (1..10) -%}{%- assign ck2 = 'img' | append: n -%}{%- if block.settings[ck2] != blank -%}{%- assign ccount = ccount | plus: 1 -%}{%- endif -%}{%- endfor -%}
             <div class="fb-canvas" data-fb-canvas data-tile="{{ block.settings.tile_size | default: 220 }}" data-gap="{{ block.settings.gap | default: 16 }}">
               <div class="fb-canvas-plane" data-fb-canvas-plane></div>
@@ -217,7 +230,7 @@
           </div>
         {%- endfor -%}
         {%- for block in stak -%}
-          <div class="fb-bg-layer{% if colors.size == 0 and feats.size == 0 and canv.size == 0 and forloop.first %} is-active{% endif %}" data-key="s{{ forloop.index0 }}">
+          <div class="fb-bg-layer{% if has_default == false and colors.size == 0 and feats.size == 0 and canv.size == 0 and forloop.first %} is-active{% endif %}" data-key="s{{ forloop.index0 }}">
             {%- assign scount = 0 -%}{%- for n in (1..8) -%}{%- assign sk = 'img' | append: n -%}{%- if block.settings[sk] != blank -%}{%- assign scount = scount | plus: 1 -%}{%- endif -%}{%- endfor -%}
             {%- assign snm1 = scount | minus: 1 -%}
             {%- assign scol = block.settings.collapsed | default: 40 -%}{%- assign sexp = block.settings.expanded | default: 360 -%}
@@ -237,7 +250,7 @@
           </div>
         {%- endfor -%}
         {%- for block in scrl -%}
-          <div class="fb-bg-layer{% if colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and forloop.first %} is-active{% endif %}" data-key="b{{ forloop.index0 }}">
+          <div class="fb-bg-layer{% if has_default == false and colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and forloop.first %} is-active{% endif %}" data-key="b{{ forloop.index0 }}">
             <div class="fb-scroll" data-pos="{{ block.settings.scr_pos | default: 'right' }}" style="--scr-w:{{ block.settings.scr_width | default: 42 }}%;--scr-inset:{{ block.settings.scr_inset | default: 5 }}%">
               <div class="fb-scroll-inner">{{ block.settings.content }}</div>
               <span class="fb-scroll-blur is-top" aria-hidden="true"></span>
@@ -322,6 +335,7 @@
 
     function showBg(key) { layers.forEach(function (l) { l.classList.toggle("is-active", l.getAttribute("data-key") === key); }); }
     function defaultKey() {
+      if (root.querySelector('[data-key="default"]')) return "default";
       if (root.querySelector('[data-colors]')) return "c" + selColor;
       var f = items[0]; return f ? f.getAttribute("data-media") : "";
     }
@@ -441,6 +455,9 @@
     { "type": "checkbox", "id": "full_height", "label": "Center in the full screen height", "default": true, "info": "On = the block is vertically centered in a full screen. Off = it flows normally with the spacing below." },
     { "type": "range", "id": "pad_top", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Space above (when not full height)", "default": 40 },
     { "type": "range", "id": "pad_bottom", "min": 0, "max": 200, "step": 4, "unit": "px", "label": "Space below (when not full height)", "default": 40 },
+    { "type": "header", "content": "Default cover (shown before any tab is open)" },
+    { "type": "image_picker", "id": "default_image", "label": "Default background image", "info": "Shown when no tab is open, and again whenever you close a tab. Leave empty to use the first tab's media." },
+    { "type": "video", "id": "default_video", "label": "Default background video (optional)", "info": "If set, plays instead of the image above." },
     { "type": "header", "content": "Heading (optional)" },
     { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
     { "type": "text", "id": "title", "label": "Title" },
