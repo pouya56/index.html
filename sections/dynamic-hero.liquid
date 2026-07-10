@@ -196,6 +196,22 @@
   .dyn-hero .dh-search-go svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
   /* Liquid-glass buttons under the search bar (Google-style) */
   .dyn-hero .dh-hero-btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
+
+  /* "Finding your gift…" loader shown after a search is submitted */
+  .dyn-hero .dh-finding { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 7; width: min(92vw, 720px);
+    text-align: center; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .5s ease, visibility 0s linear .5s; }
+  .dyn-hero.dh-finding-on .dh-finding { opacity: 1; visibility: visible; transition: opacity .5s ease; }
+  .dyn-hero .dh-finding-txt { font: 600 clamp(20px, 3vw, 30px)/1.35 var(--font); letter-spacing: -0.02em;
+    background: linear-gradient(90deg, rgba(140,140,150,.28) 0%, rgba(140,140,150,.28) 35%, var(--ink) 50%, rgba(140,140,150,.28) 65%, rgba(140,140,150,.28) 100%);
+    background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+    animation: dhShimmer 1.7s linear infinite; }
+  @keyframes dhShimmer { 0% { background-position: 120% 0; } 100% { background-position: -120% 0; } }
+  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-finding-txt { animation: none; color: var(--ink); -webkit-text-fill-color: currentColor; } }
+  /* While finding, fade the search bar + buttons + results so the loader stands alone */
+  .dyn-hero.dh-finding-on .dh-search,
+  .dyn-hero.dh-finding-on .dh-hero-btns,
+  .dyn-hero.dh-finding-on .dh-tabs-wrap,
+  .dyn-hero.dh-finding-on .dh-shelf-wrap { opacity: 0; transition: opacity .4s ease; pointer-events: none; }
   .dyn-hero .dh-gbtn { display: inline-flex; align-items: center; justify-content: center; min-width: 150px; height: 46px; padding: 0 24px;
     border-radius: 999px; border: 1px solid rgba(255,255,255,0.6); cursor: pointer; text-decoration: none; white-space: nowrap;
     font: 500 15px/1 var(--font); color: var(--ink); position: relative; overflow: hidden;
@@ -439,6 +455,9 @@
   data-currency="{{ shop.currency }}"
   data-cat-source="{{ cat_source }}"
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
+  data-finding="{% if section.settings.show_finding %}true{% else %}false{% endif %}"
+  data-finding-text="{{ section.settings.finding_text | default: 'Finding your gift…' | escape }}"
+  data-finding-ms="{{ section.settings.finding_ms | default: 1600 }}"
   data-results-url="{{ section.settings.results_page_url }}">
   {%- comment -%} Liquid-glass refraction filter used by the search bar sheen. {%- endcomment -%}
   <svg class="dh-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -1017,6 +1036,9 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
           </button>
         </div>
+        {%- if section.settings.show_finding -%}
+          <div class="dh-finding" aria-hidden="true"><span class="dh-finding-txt"></span></div>
+        {%- endif -%}
         {%- if section.settings.show_btn1 or section.settings.show_btn2 or section.settings.show_btn3 -%}
           <div class="dh-hero-btns">
             {%- if section.settings.show_btn1 -%}<button type="button" class="dh-gbtn" id="dhBtnSearch">{{ section.settings.btn1_label | default: 'Search' }}</button>{%- endif -%}
@@ -1598,6 +1620,17 @@
   var searchEl = document.getElementById("dhSearch");
   var searchBtn = document.getElementById("dhSearchGo");
   var resultsUrl = (root.getAttribute("data-results-url") || "").trim();
+  var findingOn = root.getAttribute("data-finding") === "true";
+  var findingText = root.getAttribute("data-finding-text") || "Finding your gift…";
+  var findingMs = parseInt(root.getAttribute("data-finding-ms"), 10) || 1600;
+  var findingTxtEl = root.querySelector(".dh-finding-txt");
+  var findingReduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function runFinding(done) {
+    if (!findingTxtEl || findingReduce) { if (done) done(); return; }
+    findingTxtEl.textContent = findingText;
+    root.classList.add("dh-finding-on");
+    setTimeout(function () { root.classList.remove("dh-finding-on"); if (done) done(); }, Math.max(400, findingMs));
+  }
   var ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
   var CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
   // Turn the search arrow green with a checkmark, then run cb (used before navigating).
@@ -1619,14 +1652,22 @@
         window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
       });
     } else {
-      query = q.toLowerCase(); applyFilters();
+      query = q.toLowerCase();
       flashArrowOk(null); setTimeout(resetArrow, 1300);
-      if (searchEl) searchEl.focus();
+      if (findingOn) {
+        if (searchEl) searchEl.blur();
+        runFinding(function () { applyFilters(); });
+      } else {
+        applyFilters();
+        if (searchEl) searchEl.focus();
+      }
     }
   }
   if (searchEl) {
     searchEl.addEventListener("input", function () {
       if (resultsUrl) return; // redirect mode: don't filter here
+      // Finding mode: wait for submit to run the loader; only reset live when cleared.
+      if (findingOn) { if (!searchEl.value.trim()) { query = ""; applyFilters(); } return; }
       query = searchEl.value.trim().toLowerCase();
       if (query) badgeFilter = null; // typing takes over from a badge filter
       applyFilters();
@@ -1834,6 +1875,9 @@
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search these products…" },
     { "type": "textarea", "id": "search_examples", "label": "Typing examples", "info": "One phrase per line. They type out in the search box one after another. Clear to turn the effect off.", "default": "I'm shopping for my wife.\nI'm looking for a birthday gift.\nI need a gift for my mom.\nI'm shopping for my dad.\nI want a gift for my best friend.\nI'm buying a gift for my boyfriend.\nI need an anniversary gift.\nI'm shopping for my daughter.\nI want something personalized.\nI'm looking for a unique gift.\nI need a Christmas gift.\nI'm shopping for a coworker.\nI want a custom mug.\nI'm shopping for myself.\nI'm not sure what to buy." },
 
+    { "type": "checkbox", "id": "show_finding", "label": "Show a “Finding your gift…” loader on search", "default": true, "info": "When a shopper submits a search, the bar fades and a shimmering message shows for a moment before the results appear." },
+    { "type": "text", "id": "finding_text", "label": "Loader message", "default": "Finding your gift…" },
+    { "type": "range", "id": "finding_ms", "min": 600, "max": 4000, "step": 100, "unit": "ms", "label": "Loader duration", "default": 1600 },
     { "type": "header", "content": "Buttons under the search (Google-style)" },
     { "type": "checkbox", "id": "show_btn1", "label": "Show the 'Search' button", "default": false },
     { "type": "text", "id": "btn1_label", "label": "Search button text", "default": "Search", "info": "Runs the search with whatever is typed." },
