@@ -154,6 +154,7 @@
     line-height: 1.02; margin: 0; letter-spacing: -0.01em; }
   .dyn-hero .dh-head .dh-desc { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 16px auto 0; max-width: 620px; }
   .dyn-hero .dh-head-link { display: inline-block; text-decoration: none; color: inherit; cursor: pointer; }
+  .dyn-hero .dh-head .dh-head-logo-link { display: inline-block; line-height: 0; }
   .dyn-hero .dh-head .dh-head-logo { height: clamp(30px, 5vw, 46px); width: auto; max-width: min(64vw, 260px); object-fit: contain; margin: 0 auto; display: block; }
   .dyn-hero .dh-head .dh-head-video { display: block; margin: 0 auto; width: auto; max-width: min(82vw, 360px);
     max-height: clamp(90px, 22vh, 220px); border-radius: 18px; object-fit: cover; background: transparent; }
@@ -1043,7 +1044,7 @@
         </video>
       {%- elsif section.settings.heading_logo != blank -%}
         {%- assign hlw = section.settings.heading_logo.width | times: 56 | divided_by: section.settings.heading_logo.height -%}
-        <img class="dh-head-logo" src="{{ section.settings.heading_logo | image_url: width: 700 }}" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56">
+        <a href="{{ routes.root_url }}" class="dh-head-logo-link" aria-label="{{ shop.name | escape }} — home"><img class="dh-head-logo" src="{{ section.settings.heading_logo | image_url: width: 700 }}" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56"></a>
       {%- else -%}
         <h1>{{ section.settings.heading | default: coll.title | default: 'Store' }}</h1>
       {%- endif -%}

@@ -63,6 +63,7 @@
   .dyn-col .dc-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(36px, 6vw, 60px);
     line-height: 1.02; margin: 0; letter-spacing: -0.01em; }
   .dyn-col .dc-head .dc-desc { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 16px auto 0; max-width: 620px; }
+  .dyn-col .dc-head .dc-head-logo-link { display: inline-block; line-height: 0; }
   .dyn-col .dc-head .dc-head-logo { height: clamp(24px, 3.2vw, 34px); width: auto; max-width: min(60vw, 220px); object-fit: contain; margin: 0 auto; display: block; }
   .dyn-col .dc-head .dc-head-video { display: block; margin: 0 auto; width: auto; max-width: min(82vw, 360px);
     max-height: clamp(90px, 22vh, 220px); border-radius: 18px; object-fit: cover; background: transparent; }
@@ -339,7 +340,7 @@
         </video>
       {%- elsif section.settings.heading_logo != blank -%}
         {%- assign hlw = section.settings.heading_logo.width | times: 56 | divided_by: section.settings.heading_logo.height -%}
-        <img class="dc-head-logo" src="{{ section.settings.heading_logo | image_url: width: 700 }}" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56">
+        <a href="{{ routes.root_url }}" class="dc-head-logo-link" aria-label="{{ shop.name | escape }} — home"><img class="dc-head-logo" src="{{ section.settings.heading_logo | image_url: width: 700 }}" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56"></a>
       {%- else -%}
         <h1>{{ section.settings.heading | default: coll.title | default: 'Store' }}</h1>
       {%- endif -%}
