@@ -1029,7 +1029,10 @@
                 btn.addEventListener("click", function () {
                   if (!list.length) { window.location.href = "{{ routes.all_products_collection_url }}"; return; }
                   var u = list[Math.floor(Math.random() * list.length)];
-                  if (u) window.location.href = u;
+                  if (!u) return;
+                  /* Open the random product in the full-screen pop-up; fall back to navigating. */
+                  if (typeof window.dhSlideOpen === "function") window.dhSlideOpen(u);
+                  else window.location.href = u;
                 });
               })();
             </script>
@@ -1297,6 +1300,7 @@
   document.querySelectorAll("[data-dh-slide]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); openSlide(b.getAttribute("data-dh-slide")); }); });
   slide.querySelectorAll("[data-dh-slide-close]").forEach(function (b) { b.addEventListener("click", closeSlide); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSlide(); });
+  window.dhSlideOpen = openSlide; /* let other buttons (e.g. Surprise me) open a URL in this pop-up */
 })();
 </script>
 
