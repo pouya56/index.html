@@ -1348,15 +1348,15 @@
     try { rlist = randSrc ? (JSON.parse(randSrc.textContent) || []) : []; } catch (e) {}
     var lastR = null;
     function confettiBurst() {
-      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       var r = randBtn.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      if (!r.width) { cx = innerWidth / 2; cy = innerHeight / 2; }
       var colors = ["#ff5ea8", "#4f8cff", "#ffd35e", "#5edf8f", "#a06bff", "#ff9d5e"];
       var wrap = document.createElement("div");
       wrap.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:2147483001;overflow:hidden;";
       document.body.appendChild(wrap);
       var parts = [];
-      for (var i = 0; i < 110; i++) {
-        var p = document.createElement("div"), w = 6 + Math.random() * 8;
+      for (var i = 0; i < 140; i++) {
+        var p = document.createElement("div"), w = 8 + Math.random() * 10;
         p.style.cssText = "position:absolute;top:0;left:0;width:" + w + "px;height:" + (w * 0.55) + "px;background:" + colors[i % colors.length] + ";border-radius:2px;will-change:transform,opacity;";
         wrap.appendChild(p);
         var ang = Math.random() * Math.PI * 2, sp = 5 + Math.random() * 12;
@@ -1384,16 +1384,13 @@
       if (urls.length === 1) { u = urls[0]; }
       else { do { u = urls[Math.floor(Math.random() * urls.length)]; } while (u === lastR); }
       lastR = u;
-      if (u) {
-        confettiBurst();                              // burst on click
-        setTimeout(function () { openSlide(u, true); }, 650);
-        setTimeout(confettiBurst, 900);               // second wave — rains over the pop-up
-        setTimeout(confettiBurst, 1500);              // and once more, so it keeps going after it opens
-        return true;
-      }
+      if (u) { setTimeout(function () { openSlide(u, true); }, 650); return true; }
       return false;
     }
     randBtn.addEventListener("click", function () {
+      confettiBurst();                     // fire confetti right away, before anything else
+      setTimeout(confettiBurst, 850);      // second wave — over the pop-up
+      setTimeout(confettiBurst, 1500);     // and a third, so it keeps going after it opens
       if (pickAndOpen(rlist)) return;
       /* Inline list empty — fetch products live and open a random one anyway. */
       fetch("/products.json?limit=250", { credentials: "same-origin" })
