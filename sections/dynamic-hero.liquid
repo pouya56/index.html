@@ -440,13 +440,17 @@
   #dhSlide.is-open { visibility: visible; }
   #dhSlide .dh-slide-scrim { position: absolute; inset: 0; background: rgba(0,0,0,.35); opacity: 0; transition: opacity .5s ease; }
   #dhSlide.is-open .dh-slide-scrim { opacity: 1; }
-  #dhSlide .dh-slide-panel { position: absolute; inset: 0; width: 100%; height: 100%; background: #fff;
+  /* Liquid-glass pop-up — same material as the search bar */
+  #dhSlide .dh-slide-panel { position: absolute; inset: 0; width: 100%; height: 100%;
+    background: rgba(255,255,255,0.72); -webkit-backdrop-filter: blur(26px) saturate(1.8) brightness(1.05); backdrop-filter: blur(26px) saturate(1.8) brightness(1.05);
     opacity: 0; transition: opacity .3s ease; overflow: hidden; }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { #dhSlide .dh-slide-panel { background: #fff; } }
   #dhSlide.is-open .dh-slide-panel { opacity: 1; }
-  /* Half-size mode (used by the "Surprise me" random product) — a centred window ~50% of the page */
-  #dhSlide.dh-slide-half .dh-slide-panel { inset: auto; top: 50%; left: 50%; width: 50vw; height: 86vh; transform: translate(-50%, -50%); border-radius: 22px; box-shadow: 0 40px 120px rgba(0,0,0,.45); }
-  @media (max-width: 800px) { #dhSlide.dh-slide-half .dh-slide-panel { width: 94vw; height: 90vh; border-radius: 16px; } }
-  #dhSlide .dh-slide-body { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  /* Half-size mode (used by the "Surprise me" random product) — a centred glass window ~50% of the page */
+  #dhSlide.dh-slide-half .dh-slide-panel { inset: auto; top: 50%; left: 50%; width: 50vw; height: 86vh; transform: translate(-50%, -50%); border-radius: 26px;
+    border: 1px solid rgba(255,255,255,0.7); box-shadow: 0 40px 120px rgba(0,0,0,.45), inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -8px 18px rgba(255,255,255,0.22); }
+  @media (max-width: 800px) { #dhSlide.dh-slide-half .dh-slide-panel { width: 94vw; height: 90vh; border-radius: 20px; } }
+  #dhSlide .dh-slide-body { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; background: transparent; }
   #dhSlide .dh-slide-inject { padding-top: 0; }
   #dhSlide .dh-slide-loading { display: flex; align-items: center; justify-content: center; height: 100%; color: #8a8a8a;
     font: 15px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -1331,6 +1335,8 @@
   function closeSlide() { slide.classList.remove("is-open"); slide.setAttribute("aria-hidden", "true"); document.documentElement.style.overflow = ""; }
   document.querySelectorAll("[data-dh-slide]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); openSlide(b.getAttribute("data-dh-slide")); }); });
   slide.querySelectorAll("[data-dh-slide-close]").forEach(function (b) { b.addEventListener("click", closeSlide); });
+  /* Click anywhere outside the panel (the backdrop) to close. */
+  slide.addEventListener("click", function (e) { if (!e.target.closest(".dh-slide-panel")) closeSlide(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSlide(); });
   window.dhSlideOpen = openSlide; /* let other buttons (e.g. Surprise me) open a URL in this pop-up */
 
