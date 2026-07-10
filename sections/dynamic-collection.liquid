@@ -106,6 +106,8 @@
   .dyn-col .dc-search-trigger[aria-expanded="true"] .dc-tab-all svg { stroke: var(--ink); }
   .dyn-col .dc-search-trigger[aria-expanded="true"] .dc-tab-label { color: var(--ink); font-weight: 600; opacity: 1; }
   .dyn-col .dc-tabs.is-images .dc-search-trigger[aria-expanded="true"]::after { background: var(--accent); }
+  /* While search is open, hide the active category's dot so only Search shows one */
+  .dyn-col .dc-tabs.is-images.dc-searching .dc-tab.is-active::after { background: transparent; }
   /* The search bar that drops in BELOW the categories when the magnifier is tapped */
   .dyn-col .dc-search-below { display: flex; justify-content: center; }
   .dyn-col .dc-search-below .dc-search { display: none; margin: 0 auto; }
@@ -784,8 +786,8 @@
   // Magnifier tab (next to All) opens the search bar below the categories; closes when clicked away empty.
   var searchTrigger = document.getElementById("dcSearchTrigger");
   var searchBar = document.getElementById("dcSearchBar");
-  function openSearch() { if (searchBar) searchBar.classList.add("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "true"); if (searchEl) searchEl.focus(); }
-  function closeSearch() { if (searchBar && searchEl && !searchEl.value.trim()) { searchBar.classList.remove("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false"); } }
+  function openSearch() { if (searchBar) searchBar.classList.add("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "true"); if (tabs) tabs.classList.add("dc-searching"); if (searchEl) searchEl.focus(); }
+  function closeSearch() { if (searchBar && searchEl && !searchEl.value.trim()) { searchBar.classList.remove("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false"); if (tabs) tabs.classList.remove("dc-searching"); } }
   if (searchTrigger) searchTrigger.addEventListener("click", function (e) {
     e.stopPropagation();  // don't let the category-tab handler treat this as a category
     if (searchBar && searchBar.classList.contains("is-open")) { if (searchEl) searchEl.focus(); } else { openSearch(); }
@@ -798,6 +800,7 @@
       if (searchEl) { searchEl.value = ""; query = ""; badgeFilter = null; applyFilters(); }
       searchBar.classList.remove("is-open");
       if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false");
+      if (tabs) tabs.classList.remove("dc-searching");
     }
   });
 
