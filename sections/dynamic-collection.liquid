@@ -110,8 +110,9 @@
   .dyn-col .dc-tabs.is-images.dc-searching .dc-tab.is-active::after { background: transparent; }
   /* The search bar that drops in BELOW the categories when the magnifier is tapped */
   .dyn-col .dc-search-below { display: flex; justify-content: center; }
+  .dyn-col .dc-search-below { margin: 6px 0 0; }
   .dyn-col .dc-search-below .dc-search { display: none; margin: 0 auto; }
-  .dyn-col .dc-search-below .dc-search.is-open { display: flex; animation: dcDrop .32s cubic-bezier(.22,1,.36,1); }
+  .dyn-col .dc-search-below .dc-search.is-open { display: flex; margin: 8px auto 32px; animation: dcDrop .32s cubic-bezier(.22,1,.36,1); }
   @keyframes dcDrop { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
   /* Link buttons under the search bar */
   .dyn-col .dc-hero-btns { display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
