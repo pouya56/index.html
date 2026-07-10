@@ -415,6 +415,9 @@
   #dhSlide .dh-slide-panel { position: absolute; inset: 0; width: 100%; height: 100%; background: #fff;
     opacity: 0; transition: opacity .3s ease; overflow: hidden; }
   #dhSlide.is-open .dh-slide-panel { opacity: 1; }
+  /* Half-size mode (used by the "Surprise me" random product) — a centred window ~50% of the page */
+  #dhSlide.dh-slide-half .dh-slide-panel { inset: auto; top: 50%; left: 50%; width: 50vw; height: 86vh; transform: translate(-50%, -50%); border-radius: 22px; box-shadow: 0 40px 120px rgba(0,0,0,.45); }
+  @media (max-width: 800px) { #dhSlide.dh-slide-half .dh-slide-panel { width: 94vw; height: 90vh; border-radius: 16px; } }
   #dhSlide .dh-slide-body { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   #dhSlide .dh-slide-inject { padding-top: 0; }
   #dhSlide .dh-slide-loading { display: flex; align-items: center; justify-content: center; height: 100%; color: #8a8a8a;
@@ -1026,12 +1029,16 @@
                 var btn = document.getElementById("dhBtnRandom"); if (!btn) return;
                 var src = document.querySelector("[data-dh-random]"); var list = [];
                 try { list = JSON.parse(src.textContent) || []; } catch (e) {}
+                var lastU = null;
                 btn.addEventListener("click", function () {
                   if (!list.length) { window.location.href = "{{ routes.all_products_collection_url }}"; return; }
-                  var u = list[Math.floor(Math.random() * list.length)];
+                  var u;
+                  if (list.length === 1) { u = list[0]; }
+                  else { do { u = list[Math.floor(Math.random() * list.length)]; } while (u === lastU); }
+                  lastU = u;
                   if (!u) return;
-                  /* Open the random product in the full-screen pop-up; fall back to navigating. */
-                  if (typeof window.dhSlideOpen === "function") window.dhSlideOpen(u);
+                  /* Open the random product in the half-size pop-up; fall back to navigating. */
+                  if (typeof window.dhSlideOpen === "function") window.dhSlideOpen(u, true);
                   else window.location.href = u;
                 });
               })();
@@ -1289,8 +1296,9 @@
       } catch (e) {}
     });
   }
-  function openSlide(url) {
+  function openSlide(url, half) {
     if (!url) return;
+    slide.classList.toggle("dh-slide-half", !!half);
     slide.classList.add("is-open"); slide.setAttribute("aria-hidden", "false"); document.documentElement.style.overflow = "hidden";
     if (cache[url]) { inject(cache[url], url); return; }
     sbody.innerHTML = '<div class="dh-slide-loading">Loading…</div>'; sbody.scrollTop = 0;
