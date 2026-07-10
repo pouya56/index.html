@@ -233,14 +233,10 @@
   .dyn-hero .dh-goo { position: absolute; inset: 0; z-index: 0; pointer-events: none; filter: url(#dhGooey); opacity: 0; transition: opacity .3s ease; }
   .dyn-hero .dh-goo-wrap:hover .dh-goo { opacity: 1; }
   .dyn-hero .dh-goo-core { position: absolute; inset: 0; border-radius: 18px; background: var(--accent); opacity: .92; }
-  .dyn-hero .dh-goo-blob { position: absolute; top: 50%; left: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: var(--accent); transform: scale(0); }
-  .dyn-hero .dh-goo-wrap:hover .dh-goo-b1 { animation: dhGoo1 2.6s ease-in-out infinite; }
-  .dyn-hero .dh-goo-wrap:hover .dh-goo-b2 { animation: dhGoo2 2.6s ease-in-out infinite .35s; }
-  .dyn-hero .dh-goo-wrap:hover .dh-goo-b3 { animation: dhGoo3 2.2s ease-in-out infinite .7s; }
-  @keyframes dhGoo1 { 0%, 100% { transform: translate(0,0) scale(.4); } 50% { transform: translate(-120px, 4px) scale(1); } }
-  @keyframes dhGoo2 { 0%, 100% { transform: translate(0,0) scale(.4); } 50% { transform: translate(120px, -4px) scale(1); } }
-  @keyframes dhGoo3 { 0%, 100% { transform: translate(0,0) scale(.35); } 50% { transform: translate(0, -44px) scale(.9); } }
-  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-goo-wrap:hover .dh-goo-blob { animation: none; } }
+  /* One blob that follows the mouse over the button (position set in JS via --gx/--gy/--gs) */
+  .dyn-hero .dh-goo-follow { position: absolute; top: 0; left: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; background: var(--accent);
+    transform: translate(var(--gx, 0px), var(--gy, 0px)) scale(var(--gs, 0)); transition: transform .16s ease-out; will-change: transform; }
+  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-goo-follow { transition: transform .05s linear; } }
   /* "Surprise me" glows on hover */
   .dyn-hero #dhBtnRandom { overflow: visible; position: relative; z-index: 1; }
   .dyn-hero #dhBtnRandom::before { content: ""; position: absolute; inset: -4px; border-radius: 22px; z-index: -1; pointer-events: none;
@@ -1085,7 +1081,7 @@
             {%- if section.settings.show_btn2 -%}<a class="dh-gbtn" href="{{ section.settings.btn2_url | default: routes.all_products_collection_url }}">{{ section.settings.btn2_label | default: 'Shop all' }}</a>{%- endif -%}
             {%- if section.settings.show_btn3 -%}
               <span class="dh-goo-wrap">
-                <span class="dh-goo" aria-hidden="true"><span class="dh-goo-core"></span><span class="dh-goo-blob dh-goo-b1"></span><span class="dh-goo-blob dh-goo-b2"></span><span class="dh-goo-blob dh-goo-b3"></span></span>
+                <span class="dh-goo" aria-hidden="true"><span class="dh-goo-core"></span><span class="dh-goo-blob dh-goo-follow"></span></span>
                 <button type="button" class="dh-gbtn" id="dhBtnRandom">{{ section.settings.btn3_label | default: 'Surprise me' }}</button>
               </span>
             {%- endif -%}
@@ -1685,6 +1681,16 @@
       searchEl.focus();
     });
   }
+  // Surprise me: the gooey blob follows the mouse, so the liquid bulge appears wherever the cursor is.
+  (function () {
+    var gwrap = document.querySelector(".dh-goo-wrap");
+    if (!gwrap) return;
+    function place(e) { var r = gwrap.getBoundingClientRect(); gwrap.style.setProperty("--gx", (e.clientX - r.left).toFixed(1) + "px"); gwrap.style.setProperty("--gy", (e.clientY - r.top).toFixed(1) + "px"); }
+    gwrap.addEventListener("mouseenter", function (e) { place(e); gwrap.style.setProperty("--gs", "1"); });
+    gwrap.addEventListener("mousemove", place);
+    gwrap.addEventListener("mouseleave", function () { gwrap.style.setProperty("--gs", "0"); });
+  })();
+
   var resultsUrl = (root.getAttribute("data-results-url") || "").trim();
   var findingOn = root.getAttribute("data-finding") === "true";
   var findingText = root.getAttribute("data-finding-text") || "Finding your gift…";
