@@ -430,7 +430,6 @@
       function to(p) { target = Math.max(2, Math.min(98, p)); if (!raf) raf = requestAnimationFrame(tick); }
       paint();
       el.addEventListener("mousemove", function (e) { var r = el.getBoundingClientRect(); to((e.clientX - r.left) / r.width * 100); });
-      el.addEventListener("mouseleave", function () { to(50); });
       el.addEventListener("touchmove", function (e) { var r = el.getBoundingClientRect(); to((e.touches[0].clientX - r.left) / r.width * 100); }, { passive: true });
     }
     root.querySelectorAll("[data-fb-ba]").forEach(initBA);
