@@ -227,6 +227,13 @@
   .dyn-hero .dh-gbtn:active { transform: scale(0.97); }
   .dyn-hero .dh-gbtn::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
     background: linear-gradient(115deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 60%); mix-blend-mode: screen; opacity: 0.6; filter: url(#dhLiquid); }
+  /* "Surprise me" glows on hover */
+  .dyn-hero #dhBtnRandom { overflow: visible; }
+  .dyn-hero #dhBtnRandom::before { content: ""; position: absolute; inset: -4px; border-radius: 22px; z-index: -1; pointer-events: none;
+    background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff); background-size: 300% 100%;
+    animation: dhSiri 6s linear infinite; filter: blur(9px); opacity: 0; transition: opacity .35s ease; }
+  .dyn-hero #dhBtnRandom:hover::before { opacity: 0.95; }
+  @media (prefers-reduced-motion: reduce) { .dyn-hero #dhBtnRandom::before { animation: none; } }
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dyn-hero .dh-gbtn { background: #fff; border-color: var(--line); } }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-gbtn::after { filter: none; } }
 
@@ -1334,13 +1341,44 @@
     var rlist = [];
     try { rlist = randSrc ? (JSON.parse(randSrc.textContent) || []) : []; } catch (e) {}
     var lastR = null;
+    function confettiBurst() {
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      var r = randBtn.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      var colors = ["#ff5ea8", "#4f8cff", "#ffd35e", "#5edf8f", "#a06bff", "#ff9d5e"];
+      var wrap = document.createElement("div");
+      wrap.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:2147483001;overflow:hidden;";
+      document.body.appendChild(wrap);
+      var parts = [];
+      for (var i = 0; i < 110; i++) {
+        var p = document.createElement("div"), w = 6 + Math.random() * 8;
+        p.style.cssText = "position:absolute;top:0;left:0;width:" + w + "px;height:" + (w * 0.55) + "px;background:" + colors[i % colors.length] + ";border-radius:2px;will-change:transform,opacity;";
+        wrap.appendChild(p);
+        var ang = Math.random() * Math.PI * 2, sp = 5 + Math.random() * 12;
+        parts.push({ el: p, x: cx, y: cy, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 7, rot: Math.random() * 360, vr: (Math.random() - 0.5) * 22 });
+      }
+      var start = null;
+      function frame(t) {
+        if (start == null) start = t; var el = t - start, alive = false;
+        for (var i = 0; i < parts.length; i++) {
+          var p = parts[i];
+          p.vy += 0.32; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+          var op = Math.max(0, 1 - el / 1500);
+          if (op > 0 && p.y < innerHeight + 40) alive = true;
+          p.el.style.transform = "translate(" + p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px) rotate(" + p.rot.toFixed(0) + "deg)";
+          p.el.style.opacity = op;
+        }
+        if (alive && el < 1800) requestAnimationFrame(frame);
+        else if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+      }
+      requestAnimationFrame(frame);
+    }
     function pickAndOpen(urls) {
       if (!urls.length) return false;
       var u;
       if (urls.length === 1) { u = urls[0]; }
       else { do { u = urls[Math.floor(Math.random() * urls.length)]; } while (u === lastR); }
       lastR = u;
-      if (u) { openSlide(u, true); return true; }
+      if (u) { confettiBurst(); setTimeout(function () { openSlide(u, true); }, 650); return true; }
       return false;
     }
     randBtn.addEventListener("click", function () {
