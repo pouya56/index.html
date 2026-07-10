@@ -1625,11 +1625,11 @@
   var findingReduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   /* Move the overlay to <body> so it covers the whole page — header, account bar, everything. */
   if (findingEl && findingEl.parentNode !== document.body) document.body.appendChild(findingEl);
-  function runFinding(done) {
+  function runFinding(done, keepUp) {
     if (!findingEl || !findingTxtEl || findingReduce) { if (done) done(); return; }
     findingTxtEl.textContent = findingText;
     findingEl.classList.add("is-on");
-    setTimeout(function () { findingEl.classList.remove("is-on"); if (done) done(); }, Math.max(400, findingMs));
+    setTimeout(function () { if (!keepUp) findingEl.classList.remove("is-on"); if (done) done(); }, Math.max(400, findingMs));
   }
   var ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
   var CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -1649,7 +1649,7 @@
     if (!q) return;
     if (resultsUrl) {
       var go = function () { window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q); };
-      if (findingOn) { if (searchEl) searchEl.blur(); runFinding(go); }
+      if (findingOn) { if (searchEl) searchEl.blur(); runFinding(go, true); /* keep the overlay up through navigation — no flash of the old page */ }
       else { flashArrowOk(go); }
     } else {
       query = q.toLowerCase();
