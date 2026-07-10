@@ -1,0 +1,149 @@
+{%- comment -%}
+  Dark Mode Toggle — a floating sun/moon button (bottom-left) that flips the whole
+  store between light and dark. The choice is remembered per visitor (localStorage).
+  Add this to your Header section group so it loads early (no flash) and shows on
+  every page. It carries the dark stylesheet that re-colours all the "dynamic-*"
+  sections. Inspired by Skiper UI "skiper4".
+{%- endcomment -%}
+
+{%- comment -%} Apply the saved theme as early as possible to avoid a flash of light. {%- endcomment -%}
+<script>(function(){try{if(localStorage.getItem('dynTheme')==='dark'){document.documentElement.classList.add('dyn-dark');}}catch(e){}})();</script>
+
+<style>
+  /* ---- The floating toggle button ---- */
+  #dynDark-{{ section.id }} { position: fixed; z-index: 2147482500;
+    {% if section.settings.position == 'br' %}right: {{ section.settings.side_gap | default: 22 }}px;{% elsif section.settings.position == 'bl' %}left: {{ section.settings.side_gap | default: 22 }}px;{% elsif section.settings.position == 'tr' %}right: {{ section.settings.side_gap | default: 22 }}px;{% else %}left: {{ section.settings.side_gap | default: 22 }}px;{% endif %}
+    {% if section.settings.position == 'tr' or section.settings.position == 'tl' %}top: {{ section.settings.edge_gap | default: 22 }}px;{% else %}bottom: {{ section.settings.edge_gap | default: 22 }}px;{% endif %} }
+  #dynDark-{{ section.id }} .ddt-btn { width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(0,0,0,.10); cursor: pointer; padding: 0;
+    display: grid; place-items: center; position: relative; overflow: hidden; background: rgba(255,255,255,.82);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6);
+    box-shadow: 0 8px 26px rgba(0,0,0,.18), inset 0 1px 1px rgba(255,255,255,.9); transition: background .25s, box-shadow .25s, transform .1s; }
+  #dynDark-{{ section.id }} .ddt-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,.24); }
+  #dynDark-{{ section.id }} .ddt-btn:active { transform: scale(.94); }
+  html.dyn-dark #dynDark-{{ section.id }} .ddt-btn { background: rgba(38,38,44,.78); border-color: rgba(255,255,255,.14); box-shadow: 0 8px 26px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,.10); }
+  #dynDark-{{ section.id }} .ddt-ic { position: absolute; inset: 0; display: grid; place-items: center; transition: opacity .3s ease, transform .45s cubic-bezier(.22,1,.36,1); }
+  #dynDark-{{ section.id }} .ddt-ic svg { width: 24px; height: 24px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  /* Sun shows in light mode, moon in dark mode */
+  #dynDark-{{ section.id }} .ddt-sun { stroke: #1d1d1f; opacity: 1; transform: rotate(0) scale(1); }
+  #dynDark-{{ section.id }} .ddt-moon { stroke: #f5f5f7; opacity: 0; transform: rotate(-90deg) scale(.4); }
+  html.dyn-dark #dynDark-{{ section.id }} .ddt-sun { opacity: 0; transform: rotate(90deg) scale(.4); }
+  html.dyn-dark #dynDark-{{ section.id }} .ddt-moon { opacity: 1; transform: rotate(0) scale(1); }
+  @media (max-width: 700px) { #dynDark-{{ section.id }} .ddt-btn { width: 44px; height: 44px; } }
+
+  /* ============================================================
+     DARK MODE — re-colour every "dynamic-*" section
+     Most sections read these CSS variables, so overriding them per
+     scope flips the bulk of the UI. A few glass/white surfaces are
+     patched below so text stays readable.
+     ============================================================ */
+  html.dyn-dark { color-scheme: dark; background: #0d0d0f; }
+  html.dyn-dark body { background: #0d0d0f; }
+
+  html.dyn-dark .dyn-hero, html.dyn-dark .dyn-header, html.dyn-dark .dyn-abar,
+  html.dyn-dark .dyn-acct, html.dyn-dark .dyn-account, html.dyn-dark .dyn-cart,
+  html.dyn-dark .dyn-sug, html.dyn-dark .dyn-suggest, html.dyn-dark .dyn-about,
+  html.dyn-dark .dyn-policies, html.dyn-dark .dyn-wish, html.dyn-dark .dyn-gc,
+  html.dyn-dark .dyn-hs, html.dyn-dark .dyn-features, html.dyn-dark .dyn-customizer,
+  html.dyn-dark .dyn-contact, html.dyn-dark .dyn-faq, html.dyn-dark .dyn-search,
+  html.dyn-dark .dyn-collection, html.dyn-dark .dyn-stack, html.dyn-dark .dyn-hx {
+    --bg: #0d0d0f; --bg-panel: #121214; --panel: #121214; --paper: #121214; --card: #1a1a1d; --surface: #1a1a1d;
+    --ink: #f1f1f4; --ink-soft: #b1b1b7; --ink-faint: #87878d;
+    --line: #2c2c31; --line-soft: #222226;
+  }
+
+  /* Section wrappers that paint a light background directly */
+  html.dyn-dark .dyn-hero, html.dyn-dark .dyn-acct, html.dyn-dark .dyn-account,
+  html.dyn-dark .dyn-cart, html.dyn-dark .dyn-sug, html.dyn-dark .dyn-suggest,
+  html.dyn-dark .dyn-about, html.dyn-dark .dyn-policies, html.dyn-dark .dyn-wish,
+  html.dyn-dark .dyn-gc, html.dyn-dark .dyn-hs, html.dyn-dark .dyn-features,
+  html.dyn-dark .dyn-contact, html.dyn-dark .dyn-faq, html.dyn-dark .dyn-search { background: var(--bg-panel); color: var(--ink); }
+
+  /* Generic surfaces & form controls inside our sections */
+  html.dyn-dark [class^="dyn-"] input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+  html.dyn-dark [class^="dyn-"] textarea,
+  html.dyn-dark [class^="dyn-"] select { background: #1a1a1d !important; color: #f1f1f4 !important; border-color: #2c2c31 !important; }
+  html.dyn-dark [class^="dyn-"] input::placeholder, html.dyn-dark [class^="dyn-"] textarea::placeholder { color: #7c7c82 !important; }
+
+  /* ---- Hero (home page) specific glass/white patches ---- */
+  html.dyn-dark .dyn-hero .dh-search { background: rgba(30,30,35,.6) !important; border-color: rgba(255,255,255,.10) !important;
+    box-shadow: 0 14px 44px rgba(0,0,0,.55), inset 0 1px 1px rgba(255,255,255,.08) !important; }
+  html.dyn-dark .dyn-hero .dh-search-plus, html.dyn-dark .dyn-hero .dh-search-go { background: rgba(255,255,255,.10); }
+  html.dyn-dark .dyn-hero .dh-search-plus:hover, html.dyn-dark .dyn-hero .dh-search-go:hover { background: rgba(255,255,255,.18); }
+  html.dyn-dark .dyn-hero .dh-gbtn { background: rgba(40,40,46,.6) !important; border-color: rgba(255,255,255,.10) !important; color: var(--ink) !important;
+    box-shadow: 0 14px 44px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,.08) !important; }
+  html.dyn-dark .dyn-hero .dh-gbtn:hover { background: rgba(56,56,64,.75) !important; }
+  html.dyn-dark .dyn-hero .dh-card { background: #1a1a1d; border-color: #2c2c31; }
+  html.dyn-dark .dyn-hero .dh-media { background: #1a1a1d; }
+  html.dyn-dark .dyn-hero .dh-shelf-arrow { background: rgba(30,30,35,.72); color: var(--ink); }
+  html.dyn-dark .dyn-hero .dh-shelf-arrow:hover { background: rgba(48,48,54,.9); }
+  html.dyn-dark .dyn-hero .dh-tab { color: var(--ink-soft); }
+  html.dyn-dark .dyn-hero .dh-pop { background: #17171a !important; border-color: #2c2c31 !important; }
+  html.dyn-dark #dhSlide .dh-slide-panel { background: rgba(20,20,23,.9) !important; }
+
+  /* ---- Account / cards / panels across sections ---- */
+  html.dyn-dark .dyn-acct .da-card, html.dyn-dark .dyn-wish .dw-card, html.dyn-dark .dyn-gc .gc-panel,
+  html.dyn-dark .dyn-gc .gc-message, html.dyn-dark .dyn-sug .ds-cart-row, html.dyn-dark .dyn-suggest .ds-cart-row { background: #17171a !important; border-color: #2c2c31 !important; }
+
+  /* ---- Standalone Account & apps bar popovers ---- */
+  html.dyn-dark .dyn-abar .dh-icon-btn { background: #1a1a1d; border-color: #2c2c31; color: var(--ink); }
+  html.dyn-dark .dyn-abar .dh-pop { background: #17171a !important; border-color: #2c2c31 !important; }
+
+  @media (prefers-reduced-motion: reduce) { #dynDark-{{ section.id }} .ddt-ic { transition: opacity .2s ease; } }
+</style>
+
+<div id="dynDark-{{ section.id }}">
+  <button type="button" class="ddt-btn" id="ddtBtn-{{ section.id }}" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle dark mode">
+    <span class="ddt-ic ddt-sun" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+    </span>
+    <span class="ddt-ic ddt-moon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.5 6.5 0 0 0 9.8 9.8z"/></svg>
+    </span>
+  </button>
+</div>
+
+<script>
+(function () {
+  var btn = document.getElementById("ddtBtn-{{ section.id }}");
+  if (!btn) return;
+  var root = document.documentElement;
+  function sync() { btn.setAttribute("aria-pressed", root.classList.contains("dyn-dark") ? "true" : "false"); }
+  sync();
+  btn.addEventListener("click", function () {
+    var dark = root.classList.toggle("dyn-dark");
+    try { localStorage.setItem("dynTheme", dark ? "dark" : "light"); } catch (e) {}
+    sync();
+  });
+  {%- if section.settings.follow_system -%}
+  /* First-time visitors follow their OS preference until they choose manually. */
+  try {
+    if (localStorage.getItem("dynTheme") === null && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      root.classList.add("dyn-dark"); sync();
+    }
+  } catch (e) {}
+  {%- endif -%}
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dark Mode Toggle",
+  "tag": "section",
+  "class": "dynamic-dark-toggle-section",
+  "settings": [
+    { "type": "paragraph", "content": "A floating sun/moon button that switches the whole store between light and dark. Add this to your Header section group so it shows on every page and loads early (no flash). Each visitor's choice is remembered." },
+    { "type": "select", "id": "position", "label": "Button position", "default": "bl",
+      "options": [
+        { "value": "bl", "label": "Bottom-left" },
+        { "value": "br", "label": "Bottom-right" },
+        { "value": "tl", "label": "Top-left" },
+        { "value": "tr", "label": "Top-right" }
+      ] },
+    { "type": "range", "id": "side_gap", "min": 8, "max": 60, "step": 2, "unit": "px", "label": "Distance from the side", "default": 22 },
+    { "type": "range", "id": "edge_gap", "min": 8, "max": 60, "step": 2, "unit": "px", "label": "Distance from top/bottom", "default": 22 },
+    { "type": "checkbox", "id": "follow_system", "label": "Start in the visitor's system theme", "default": true, "info": "First-time visitors get dark if their device is set to dark, until they pick manually." }
+  ],
+  "enabled_on": { "groups": ["header", "footer", "aside", "custom.overlay"] },
+  "presets": [ { "name": "Dark Mode Toggle" } ]
+}
+{% endschema %}
