@@ -1367,13 +1367,13 @@
         if (start == null) start = t; var el = t - start, alive = false;
         for (var i = 0; i < parts.length; i++) {
           var p = parts[i];
-          p.vy += 0.32; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-          var op = Math.max(0, 1 - el / 1500);
+          p.vy += 0.26; p.vx *= 0.995; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+          var op = Math.max(0, 1 - el / 3200);
           if (op > 0 && p.y < innerHeight + 40) alive = true;
           p.el.style.transform = "translate(" + p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px) rotate(" + p.rot.toFixed(0) + "deg)";
           p.el.style.opacity = op;
         }
-        if (alive && el < 1800) requestAnimationFrame(frame);
+        if (alive && el < 3600) requestAnimationFrame(frame);
         else if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
       }
       requestAnimationFrame(frame);
@@ -1384,7 +1384,13 @@
       if (urls.length === 1) { u = urls[0]; }
       else { do { u = urls[Math.floor(Math.random() * urls.length)]; } while (u === lastR); }
       lastR = u;
-      if (u) { confettiBurst(); setTimeout(function () { openSlide(u, true); }, 650); return true; }
+      if (u) {
+        confettiBurst();                              // burst on click
+        setTimeout(function () { openSlide(u, true); }, 650);
+        setTimeout(confettiBurst, 900);               // second wave — rains over the pop-up
+        setTimeout(confettiBurst, 1500);              // and once more, so it keeps going after it opens
+        return true;
+      }
       return false;
     }
     randBtn.addEventListener("click", function () {
