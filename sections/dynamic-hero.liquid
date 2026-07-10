@@ -65,6 +65,14 @@
   .dyn-hero.dh-landing .dh-corner-link svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
   .dyn-hero.dh-landing img.dh-corner-ic { width: 18px; height: 18px; object-fit: contain; }
   @media (max-width: 700px) { .dyn-hero.dh-landing .dh-corner-group { gap: 14px; } .dyn-hero.dh-landing .dh-corner-link { font-size: 13px; } }
+  /* Clear water droplet that follows the mouse over the corner links */
+  .dyn-hero .dh-cwater { position: absolute; top: 0; left: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; z-index: -1; pointer-events: none;
+    background: radial-gradient(circle at 38% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.30) 58%, rgba(255,255,255,0.05) 100%);
+    -webkit-backdrop-filter: blur(3px) saturate(1.35); backdrop-filter: blur(3px) saturate(1.35);
+    box-shadow: inset 0 3px 8px rgba(255,255,255,0.85), inset 0 -5px 12px rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.10);
+    opacity: 0; transform: translate(var(--cwx, 0px), var(--cwy, 0px)) scale(var(--cws, 0.3)); transition: opacity .3s ease, transform .18s ease-out; will-change: transform, opacity; }
+  .dyn-hero .dh-corner-group:hover .dh-cwater { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-cwater { transition: opacity .3s ease; } }
 
   /* Account button + apps grid (top-right) with dropdown menus */
   .dyn-hero .dh-menu { position: relative; display: inline-flex; }
@@ -1023,7 +1031,7 @@
         {%- endif -%}
       {%- endcapture -%}
       {%- capture corner_group -%}{{ corner_links }}{{ corner_extra }}{%- endcapture -%}
-      {%- if corner_group != blank -%}<div class="dh-corner-group dh-corner-{{ pos }}">{{ corner_group }}</div>{%- endif -%}
+      {%- if corner_group != blank -%}<div class="dh-corner-group dh-corner-{{ pos }}"><span class="dh-cwater" aria-hidden="true"></span>{{ corner_group }}</div>{%- endif -%}
   {%- endfor -%}
   {%- if section.settings.copyright_text != blank -%}
     <div class="dh-copyright">{{ section.settings.copyright_text }}</div>
@@ -1690,6 +1698,15 @@
     gwrap.addEventListener("mousemove", place);
     gwrap.addEventListener("mouseleave", function () { gwrap.style.setProperty("--gs", "0"); });
   })();
+
+  // Corner links: a clear water droplet follows the mouse over each corner group.
+  Array.prototype.forEach.call(document.querySelectorAll(".dh-corner-group"), function (g) {
+    if (!g.querySelector(".dh-cwater")) return;
+    function place(e) { var r = g.getBoundingClientRect(); g.style.setProperty("--cwx", (e.clientX - r.left).toFixed(1) + "px"); g.style.setProperty("--cwy", (e.clientY - r.top).toFixed(1) + "px"); }
+    g.addEventListener("mouseenter", function (e) { place(e); g.style.setProperty("--cws", "1"); });
+    g.addEventListener("mousemove", place);
+    g.addEventListener("mouseleave", function () { g.style.setProperty("--cws", "0"); });
+  });
 
   var resultsUrl = (root.getAttribute("data-results-url") || "").trim();
   var findingOn = root.getAttribute("data-finding") === "true";
