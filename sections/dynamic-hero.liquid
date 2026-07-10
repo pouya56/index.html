@@ -201,10 +201,11 @@
   .dyn-hero .dh-finding { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 7; width: min(92vw, 720px);
     text-align: center; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .5s ease, visibility 0s linear .5s; }
   .dyn-hero.dh-finding-on .dh-finding { opacity: 1; visibility: visible; transition: opacity .5s ease; }
-  .dyn-hero .dh-finding-txt { font: 600 clamp(20px, 3vw, 30px)/1.35 var(--font); letter-spacing: -0.02em;
-    background: linear-gradient(90deg, rgba(140,140,150,.28) 0%, rgba(140,140,150,.28) 35%, var(--ink) 50%, rgba(140,140,150,.28) 65%, rgba(140,140,150,.28) 100%);
-    background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+  .dyn-hero .dh-finding-txt { display: inline-block; font: 600 clamp(20px, 3vw, 30px)/1.35 var(--font); letter-spacing: -0.02em; color: #9a9aa3;
+    background: linear-gradient(90deg, #b7b7bf 0%, #b7b7bf 34%, var(--ink) 50%, #b7b7bf 66%, #b7b7bf 100%);
+    background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     animation: dhShimmer 1.7s linear infinite; }
+  @supports not ((-webkit-background-clip: text) or (background-clip: text)) { .dyn-hero .dh-finding-txt { color: var(--ink); } }
   @keyframes dhShimmer { 0% { background-position: 120% 0; } 100% { background-position: -120% 0; } }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-finding-txt { animation: none; color: var(--ink); -webkit-text-fill-color: currentColor; } }
   /* While finding, fade the search bar + buttons + results so the loader stands alone */
