@@ -486,7 +486,7 @@
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
   data-finding="{% if section.settings.show_finding %}true{% else %}false{% endif %}"
   data-finding-text="{{ section.settings.finding_text | default: 'Finding your gift…' | escape }}"
-  data-finding-ms="{{ section.settings.finding_ms | default: 1100 }}"
+  data-finding-ms="{{ section.settings.finding_ms | default: 550 }}"
   data-results-url="{{ section.settings.results_page_url }}">
   {%- comment -%} Liquid-glass refraction filter used by the search bar sheen. {%- endcomment -%}
   <svg class="dh-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -1678,17 +1678,20 @@
   var resultsUrl = (root.getAttribute("data-results-url") || "").trim();
   var findingOn = root.getAttribute("data-finding") === "true";
   var findingText = root.getAttribute("data-finding-text") || "Finding your gift…";
-  var findingMs = parseInt(root.getAttribute("data-finding-ms"), 10) || 1100;
+  var findingMs = parseInt(root.getAttribute("data-finding-ms"), 10) || 550;
   var findingEl = root.querySelector(".dh-finding");
   var findingTxtEl = findingEl ? findingEl.querySelector(".dh-finding-txt") : null;
   var findingReduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   /* Move the overlay to <body> so it covers the whole page — header, account bar, everything. */
   if (findingEl && findingEl.parentNode !== document.body) document.body.appendChild(findingEl);
+  /* Always clear the loader when the page is shown — fixes it being stuck after pressing Back
+     (the browser restores the page from cache with the overlay still on). */
+  window.addEventListener("pageshow", function () { if (findingEl) findingEl.classList.remove("is-on"); });
   function runFinding(done, keepUp) {
     if (!findingEl || !findingTxtEl || findingReduce) { if (done) done(); return; }
     findingTxtEl.textContent = findingText;
     findingEl.classList.add("is-on");
-    setTimeout(function () { if (!keepUp) findingEl.classList.remove("is-on"); if (done) done(); }, Math.max(400, findingMs));
+    setTimeout(function () { if (!keepUp) findingEl.classList.remove("is-on"); if (done) done(); }, Math.max(200, findingMs));
   }
   var ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
   var CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -1938,7 +1941,7 @@
 
     { "type": "checkbox", "id": "show_finding", "label": "Show a “Finding your gift…” loader on search", "default": true, "info": "When a shopper submits a search, the bar fades and a shimmering message shows for a moment before the results appear." },
     { "type": "text", "id": "finding_text", "label": "Loader message", "default": "Finding your gift…" },
-    { "type": "range", "id": "finding_ms", "min": 600, "max": 4000, "step": 100, "unit": "ms", "label": "Loader duration", "default": 1100 },
+    { "type": "range", "id": "finding_ms", "min": 300, "max": 4000, "step": 50, "unit": "ms", "label": "Loader duration", "default": 550 },
     { "type": "color", "id": "finding_bg", "label": "Loader background", "default": "#f5f5f7", "info": "The full-screen colour the page fades to while finding." },
     { "type": "color", "id": "finding_ink", "label": "Loader text colour", "default": "#1d1d1f" },
     { "type": "header", "content": "Buttons under the search (Google-style)" },
