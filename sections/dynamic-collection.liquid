@@ -102,8 +102,10 @@
   .dyn-col .dc-search-go:hover::before, .dyn-col .dc-search-go.has-text::before { opacity: 0.95; }
   @media (prefers-reduced-motion: reduce) { .dyn-col .dc-search-go::before { animation: none; } }
   /* Magnifier "tab" trigger, sitting next to All in the category row (plain, no background) */
-  .dyn-col .dc-search-trigger .dc-tab-all svg { fill: none; stroke: var(--ink-faint); stroke-width: 2; stroke-linecap: round; }
-  .dyn-col .dc-search-trigger::after { display: none !important; }
+  .dyn-col .dc-tabs.is-images .dc-search-trigger .dc-tab-all svg { fill: none; stroke: var(--ink-faint); stroke-width: 2; stroke-linecap: round; }
+  .dyn-col .dc-search-trigger[aria-expanded="true"] .dc-tab-all svg { stroke: var(--ink); }
+  .dyn-col .dc-search-trigger[aria-expanded="true"] .dc-tab-label { color: var(--ink); font-weight: 600; opacity: 1; }
+  .dyn-col .dc-search-trigger[aria-expanded="true"]::after { background: var(--accent); }
   /* The search bar that drops in BELOW the categories when the magnifier is tapped */
   .dyn-col .dc-search-below { display: flex; justify-content: center; }
   .dyn-col .dc-search-below .dc-search { display: none; margin: 0 auto; }
@@ -789,6 +791,15 @@
     if (searchBar && searchBar.classList.contains("is-open")) { if (searchEl) searchEl.focus(); } else { openSearch(); }
   });
   if (searchEl) searchEl.addEventListener("blur", function () { setTimeout(closeSearch, 140); });
+  // Esc closes the search bar (and clears the filter).
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (searchBar && searchBar.classList.contains("is-open")) {
+      if (searchEl) { searchEl.value = ""; query = ""; badgeFilter = null; applyFilters(); }
+      searchBar.classList.remove("is-open");
+      if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false");
+    }
+  });
 
   // Typing effect: cycle example phrases through the placeholder like a typewriter.
   // Pauses while the shopper is focused or has typed something; resumes when empty.
