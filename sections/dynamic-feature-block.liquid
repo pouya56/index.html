@@ -145,13 +145,16 @@
     .dyn-fb .fb-empty { color: var(--soft); font-size: 15px; padding: 30px; }
 
     @media (max-width: 860px) {
-      /* Media fills the whole box; tabs overlay as a narrow left sidebar. */
       .dyn-fb .fb-card { height: 82vh; min-height: 440px; }
-      .dyn-fb .fb-left { height: 82vh; min-height: 440px; padding: 18px 12px; align-items: center; }
-      .dyn-fb .fb-list { max-width: 64%; padding: 4px 10px 14px; margin-left: 0; }
-      .dyn-fb .fb-pill { padding: 9px 16px 9px 9px; }
+      .dyn-fb .fb-left { height: 82vh; min-height: 440px; padding: 18px 14px; align-items: center; }
+      .dyn-fb .fb-list { max-width: 84%; padding: 4px 10px 14px; margin-left: 0; }
+      .dyn-fb .fb-pill { padding: 10px 18px 10px 10px; }
       .dyn-fb .fb-pill-title { white-space: normal; font-size: 15px; }
       .dyn-fb .fb-close { top: 14px; right: 14px; }
+      /* Closed = a clean dark menu of tabs (no photo showing behind them) */
+      .dyn-fb:not(.is-open) .fb-left { background: var(--card); }
+      /* Open = the media/content fills the box; the tab menu is hidden (use × and ↑/↓ arrows) */
+      .dyn-fb.is-open .fb-list { display: none; }
       .dyn-fb .fb-ba, .dyn-fb .fb-ba[data-pos="right"], .dyn-fb .fb-ba[data-pos="left"], .dyn-fb .fb-ba[data-pos="center"] {
         inset: 0; width: auto; height: auto; top: 0; left: 0; right: 0; transform: none; aspect-ratio: auto; border-radius: 0; }
       .dyn-fb .fb-stk, .dyn-fb .fb-stk[data-pos="right"], .dyn-fb .fb-stk[data-pos="left"], .dyn-fb .fb-stk[data-pos="center"] {
