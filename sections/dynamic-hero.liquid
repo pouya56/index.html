@@ -412,10 +412,9 @@
   #dhSlide.is-open { visibility: visible; }
   #dhSlide .dh-slide-scrim { position: absolute; inset: 0; background: rgba(0,0,0,.35); opacity: 0; transition: opacity .5s ease; }
   #dhSlide.is-open .dh-slide-scrim { opacity: 1; }
-  #dhSlide .dh-slide-panel { position: absolute; top: 50%; left: 50%; width: min(920px, 92vw); height: min(88vh, 900px); background: #fff; border-radius: 24px;
-    transform: translate(-50%, -50%) scale(.9); opacity: 0; transition: transform .42s cubic-bezier(0.16, 1, 0.3, 1), opacity .28s ease; box-shadow: 0 40px 120px rgba(0,0,0,.45); overflow: hidden; }
-  #dhSlide.is-open .dh-slide-panel { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  @media (max-width: 700px) { #dhSlide .dh-slide-panel { width: 94vw; height: 90vh; border-radius: 18px; } }
+  #dhSlide .dh-slide-panel { position: absolute; inset: 0; width: 100%; height: 100%; background: #fff;
+    transform: scale(.96); opacity: 0; transition: transform .42s cubic-bezier(0.16, 1, 0.3, 1), opacity .28s ease; overflow: hidden; }
+  #dhSlide.is-open .dh-slide-panel { transform: scale(1); opacity: 1; }
   #dhSlide .dh-slide-body { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   #dhSlide .dh-slide-inject { padding-top: 6px; }
   #dhSlide .dh-slide-loading { display: flex; align-items: center; justify-content: center; height: 100%; color: #8a8a8a;
@@ -1856,7 +1855,7 @@
   ],
   "blocks": [
     { "type": "slide_link", "name": "Pop-up button", "settings": [
-      { "type": "paragraph", "content": "A sidebar icon on the hero's left. Clicking it pops the chosen page up as a centred window, showing its real content. Close with × or Esc." },
+      { "type": "paragraph", "content": "A sidebar icon on the hero's left. Clicking it pops the chosen page up full-screen, showing its real content. Close with × or Esc." },
       { "type": "text", "id": "label", "label": "Button label (shows on hover)", "default": "About" },
       { "type": "url", "id": "url", "label": "Page to open" }
     ]},
