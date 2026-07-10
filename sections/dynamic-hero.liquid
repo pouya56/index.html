@@ -1013,7 +1013,7 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
           </button>
         </div>
-        {%- if section.settings.show_btn1 or section.settings.show_btn2 -%}
+        {%- if section.settings.show_btn1 or section.settings.show_btn2 or section.settings.show_btn3 -%}
           <div class="dh-hero-btns">
             {%- if section.settings.show_btn1 -%}<button type="button" class="dh-gbtn" id="dhBtnSearch">{{ section.settings.btn1_label | default: 'Search' }}</button>{%- endif -%}
             {%- if section.settings.show_btn2 -%}<a class="dh-gbtn" href="{{ section.settings.btn2_url | default: routes.all_products_collection_url }}">{{ section.settings.btn2_label | default: 'Shop all' }}</a>{%- endif -%}
