@@ -145,11 +145,12 @@
     .dyn-fb .fb-empty { color: var(--soft); font-size: 15px; padding: 30px; }
 
     @media (max-width: 860px) {
-      .dyn-fb .fb-card { height: auto; min-height: 0; }
-      .dyn-fb .fb-bg { position: relative; height: 300px; }
-      .dyn-fb .fb-left { position: relative; height: auto; min-height: 0; margin-top: -70px; padding: 20px; align-items: flex-start; }
-      .dyn-fb .fb-list { max-height: none; overflow: visible; padding: 4px 6px 12px; margin-left: 0; }
-      .dyn-fb .fb-pill-title { white-space: normal; }
+      /* Media fills the whole box; tabs overlay as a narrow left sidebar. */
+      .dyn-fb .fb-card { height: 82vh; min-height: 440px; }
+      .dyn-fb .fb-left { height: 82vh; min-height: 440px; padding: 18px 12px; align-items: center; }
+      .dyn-fb .fb-list { max-width: 64%; padding: 4px 10px 14px; margin-left: 0; }
+      .dyn-fb .fb-pill { padding: 9px 16px 9px 9px; }
+      .dyn-fb .fb-pill-title { white-space: normal; font-size: 15px; }
       .dyn-fb .fb-close { top: 14px; right: 14px; }
       .dyn-fb .fb-ba, .dyn-fb .fb-ba[data-pos="right"], .dyn-fb .fb-ba[data-pos="left"], .dyn-fb .fb-ba[data-pos="center"] {
         inset: 0; width: auto; height: auto; top: 0; left: 0; right: 0; transform: none; aspect-ratio: auto; border-radius: 0; }
