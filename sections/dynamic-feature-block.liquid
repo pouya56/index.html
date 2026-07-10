@@ -53,7 +53,7 @@
 
     /* Left column: nav arrows + pills */
     .dyn-fb .fb-left { position: relative; z-index: 3; display: flex; align-items: center; gap: 16px; height: var(--fb-cardh); padding: 48px clamp(20px,4vw,52px); box-sizing: border-box; pointer-events: none; }
-    .dyn-fb .fb-nav, .dyn-fb .fb-navbtn, .dyn-fb .fb-pill, .dyn-fb .fb-panel, .dyn-fb .fb-close { pointer-events: auto; }
+    .dyn-fb .fb-nav, .dyn-fb .fb-navbtn, .dyn-fb .fb-pill, .dyn-fb .fb-panel, .dyn-fb .fb-close, .dyn-fb .fb-list { pointer-events: auto; }
     .dyn-fb .fb-nav { display: flex; flex-direction: column; gap: 10px; opacity: 0; pointer-events: none; transition: opacity .25s; }
     .dyn-fb.is-open .fb-nav { opacity: 1; pointer-events: auto; }
     .dyn-fb .fb-navbtn { width: 44px; height: 44px; border-radius: 50%; background: var(--glass); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
@@ -62,7 +62,7 @@
     .dyn-fb .fb-navbtn:active { transform: scale(.92); }
     .dyn-fb .fb-navbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-    .dyn-fb .fb-list { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; width: 100%; max-width: 380px; max-height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+    .dyn-fb .fb-list { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; width: 100%; max-width: 380px; max-height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding: 4px 4px 12px; scroll-behavior: smooth; }
     .dyn-fb .fb-list::-webkit-scrollbar { width: 0; height: 0; }
     .dyn-fb .fb-item { max-width: 100%; }
 
@@ -331,6 +331,8 @@
       root.classList.add("is-open");
       var it = items[i];
       showBg(it.hasAttribute("data-colors") ? ("c" + selColor) : it.getAttribute("data-media"));
+      /* Scroll the opened tab (and its panel) into view within the list so it's never cut off. */
+      requestAnimationFrame(function () { if (it.scrollIntoView) { try { it.scrollIntoView({ block: "nearest" }); } catch (e) { it.scrollIntoView(); } } });
     }
 
     items.forEach(function (it, i) {
