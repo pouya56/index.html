@@ -113,6 +113,7 @@
     .dyn-fb .fb-canvas.is-grab { cursor: grabbing; }
     .dyn-fb .fb-canvas-plane { position: absolute; top: 0; left: 0; will-change: transform; }
     .dyn-fb .fb-tile { position: absolute; top: 0; left: 0; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,.28); }
+    .dyn-fb .fb-canvas-empty { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); max-width: 70%; text-align: center; color: var(--soft); font-size: 14px; line-height: 1.5; padding: 16px 20px; border: 1px dashed rgba(255,255,255,.25); border-radius: 14px; }
     .dyn-fb .fb-tile img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; -webkit-user-drag: none; }
 
     /* Image stack (hover-expand accordion) as a tab's media */
@@ -207,9 +208,11 @@
         {%- endfor -%}
         {%- for block in canv -%}
           <div class="fb-bg-layer{% if colors.size == 0 and feats.size == 0 and forloop.first %} is-active{% endif %}" data-key="k{{ forloop.index0 }}">
+            {%- assign ccount = 0 -%}{%- for n in (1..10) -%}{%- assign ck2 = 'img' | append: n -%}{%- if block.settings[ck2] != blank -%}{%- assign ccount = ccount | plus: 1 -%}{%- endif -%}{%- endfor -%}
             <div class="fb-canvas" data-fb-canvas data-tile="{{ block.settings.tile_size | default: 220 }}" data-gap="{{ block.settings.gap | default: 16 }}">
               <div class="fb-canvas-plane" data-fb-canvas-plane></div>
               <script type="application/json" data-fb-canvas-imgs>[{%- assign cfirst = true -%}{%- for n in (1..10) -%}{%- assign ck = 'img' | append: n -%}{%- assign cimg = block.settings[ck] -%}{%- if cimg != blank -%}{%- unless cfirst %},{% endunless %}{%- assign cfirst = false -%}{{ cimg | image_url: width: 600 | json }}{%- endif -%}{%- endfor -%}]</script>
+              {%- if ccount == 0 and request.design_mode -%}<div class="fb-canvas-empty">Add images (Image 1–10) to this canvas block so there’s something to drag.</div>{%- endif -%}
             </div>
           </div>
         {%- endfor -%}
@@ -253,46 +256,50 @@
         </div>
 
         <div class="fb-list">
-          {%- if colors.size > 0 -%}
-            <div class="fb-item" data-fb-item data-colors>
-              <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ section.settings.colors_label | default: 'Colors' }}</span></button>
-              <div class="fb-panel">
-                <div class="fb-panel-text"><strong>{{ section.settings.colors_label | default: 'Colors' }}.</strong> {{ section.settings.colors_intro | default: 'Choose from a range of finishes.' }} Shown in <span class="fb-colorname" data-fb-colorname>{{ colors.first.settings.label }}</span>.</div>
-                <div class="fb-swatches">
-                  {%- for block in colors -%}
-                    <button type="button" class="fb-swatch{% if forloop.first %} is-active{% endif %}" data-i="{{ forloop.index0 }}" data-name="{{ block.settings.label | escape }}" style="--sw: {{ block.settings.swatch }}" aria-label="{{ block.settings.label | escape }}" {{ block.shopify_attributes }}></button>
-                  {%- endfor -%}
+          {%- comment -%} Tabs render in real block order so you can drag to reorder any of them. {%- endcomment -%}
+          {%- assign fi = 0 -%}{%- assign ki = 0 -%}{%- assign sj = 0 -%}{%- assign bi = 0 -%}{%- assign colors_shown = false -%}
+          {%- for block in section.blocks -%}
+            {%- case block.type -%}
+              {%- when 'color' -%}
+                {%- unless colors_shown -%}
+                  {%- assign colors_shown = true -%}
+                  <div class="fb-item" data-fb-item data-colors>
+                    <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ section.settings.colors_label | default: 'Colors' }}</span></button>
+                    <div class="fb-panel">
+                      <div class="fb-panel-text"><strong>{{ section.settings.colors_label | default: 'Colors' }}.</strong> {{ section.settings.colors_intro | default: 'Choose from a range of finishes.' }} Shown in <span class="fb-colorname" data-fb-colorname>{{ colors.first.settings.label }}</span>.</div>
+                      <div class="fb-swatches">
+                        {%- for cb in colors -%}
+                          <button type="button" class="fb-swatch{% if forloop.first %} is-active{% endif %}" data-i="{{ forloop.index0 }}" data-name="{{ cb.settings.label | escape }}" style="--sw: {{ cb.settings.swatch }}" aria-label="{{ cb.settings.label | escape }}" {{ cb.shopify_attributes }}></button>
+                        {%- endfor -%}
+                      </div>
+                    </div>
+                  </div>
+                {%- endunless -%}
+              {%- when 'feature' -%}
+                <div class="fb-item" data-fb-item data-media="f{{ fi }}" {{ block.shopify_attributes }}>
+                  <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
+                  {%- if block.settings.title != blank or block.settings.detail != blank -%}<div class="fb-panel"><div class="fb-panel-text">{% if block.settings.title != blank %}<strong>{{ block.settings.title }}.</strong> {% endif %}{{ block.settings.detail }}</div></div>{%- endif -%}
                 </div>
-              </div>
-            </div>
-          {%- endif -%}
-
-          {%- for block in feats -%}
-            <div class="fb-item" data-fb-item data-media="f{{ forloop.index0 }}" {{ block.shopify_attributes }}>
-              <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
-              <div class="fb-panel"><div class="fb-panel-text"><strong>{{ block.settings.title }}.</strong> {{ block.settings.detail }}</div></div>
-            </div>
-          {%- endfor -%}
-
-          {%- for block in canv -%}
-            <div class="fb-item" data-fb-item data-media="k{{ forloop.index0 }}" {{ block.shopify_attributes }}>
-              <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
-              <div class="fb-panel"><div class="fb-panel-text"><strong>{{ block.settings.title }}.</strong> {{ block.settings.detail }}</div></div>
-            </div>
-          {%- endfor -%}
-
-          {%- for block in stak -%}
-            <div class="fb-item" data-fb-item data-media="s{{ forloop.index0 }}" {{ block.shopify_attributes }}>
-              <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
-              <div class="fb-panel"><div class="fb-panel-text"><strong>{{ block.settings.title }}.</strong> {{ block.settings.detail }}</div></div>
-            </div>
-          {%- endfor -%}
-
-          {%- for block in scrl -%}
-            <div class="fb-item" data-fb-item data-media="b{{ forloop.index0 }}" {{ block.shopify_attributes }}>
-              <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
-              <div class="fb-panel"><div class="fb-panel-text"><strong>{{ block.settings.title }}.</strong> {{ block.settings.detail }}</div></div>
-            </div>
+                {%- assign fi = fi | plus: 1 -%}
+              {%- when 'canvas' -%}
+                <div class="fb-item" data-fb-item data-media="k{{ ki }}" {{ block.shopify_attributes }}>
+                  <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
+                  {%- if block.settings.title != blank or block.settings.detail != blank -%}<div class="fb-panel"><div class="fb-panel-text">{% if block.settings.title != blank %}<strong>{{ block.settings.title }}.</strong> {% endif %}{{ block.settings.detail }}</div></div>{%- endif -%}
+                </div>
+                {%- assign ki = ki | plus: 1 -%}
+              {%- when 'stack' -%}
+                <div class="fb-item" data-fb-item data-media="s{{ sj }}" {{ block.shopify_attributes }}>
+                  <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
+                  {%- if block.settings.title != blank or block.settings.detail != blank -%}<div class="fb-panel"><div class="fb-panel-text">{% if block.settings.title != blank %}<strong>{{ block.settings.title }}.</strong> {% endif %}{{ block.settings.detail }}</div></div>{%- endif -%}
+                </div>
+                {%- assign sj = sj | plus: 1 -%}
+              {%- when 'scroll' -%}
+                <div class="fb-item" data-fb-item data-media="b{{ bi }}" {{ block.shopify_attributes }}>
+                  <button type="button" class="fb-pill"><span class="fb-ic" aria-hidden="true"></span><span class="fb-pill-title">{{ block.settings.title }}</span></button>
+                  {%- if block.settings.title != blank or block.settings.detail != blank -%}<div class="fb-panel"><div class="fb-panel-text">{% if block.settings.title != blank %}<strong>{{ block.settings.title }}.</strong> {% endif %}{{ block.settings.detail }}</div></div>{%- endif -%}
+                </div>
+                {%- assign bi = bi | plus: 1 -%}
+            {%- endcase -%}
           {%- endfor -%}
 
           {%- if colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and scrl.size == 0 and request.design_mode -%}
