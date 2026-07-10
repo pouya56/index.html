@@ -1387,7 +1387,7 @@
       if (urls.length === 1) { u = urls[0]; }
       else { do { u = urls[Math.floor(Math.random() * urls.length)]; } while (u === lastR); }
       lastR = u;
-      if (u) { setTimeout(function () { openSlide(u, true); }, 650); return true; }
+      if (u) { openSlide(u, true); return true; }
       return false;
     }
     randBtn.addEventListener("click", function () {
