@@ -68,19 +68,19 @@
     max-height: clamp(90px, 22vh, 220px); border-radius: 18px; object-fit: cover; background: transparent; }
 
   /* Live search box (filters the grid on this page) */
-  /* Liquid-glass pill (matches the hero search bar) */
-  .dyn-col .dc-search { position: relative; display: flex; align-items: center; gap: 10px; max-width: 460px; margin: 18px auto 0; padding: 9px; border-radius: 26px; z-index: 1;
+  /* Liquid-glass pill (matches the hero search bar) — collapsed to a magnifier until clicked */
+  .dyn-col .dc-search { position: relative; display: flex; align-items: center; gap: 10px; width: fit-content; max-width: 92vw; margin: 18px auto 0; padding: 8px; border-radius: 26px; z-index: 1;
     background: rgba(255,255,255,0.62); -webkit-backdrop-filter: blur(22px) saturate(1.8) brightness(1.05); backdrop-filter: blur(22px) saturate(1.8) brightness(1.05);
     border: 1px solid rgba(255,255,255,0.7);
     box-shadow: 0 14px 44px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -8px 18px rgba(255,255,255,0.22);
-    transition: max-width .34s cubic-bezier(.4,0,.2,1), box-shadow .18s; }
+    transition: box-shadow .18s; }
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dyn-col .dc-search { background: #fff; border-color: var(--line); } }
-  /* Grows when clicked (focused) or when it has text */
-  .dyn-col .dc-search:focus-within,
-  .dyn-col .dc-search:has(.dc-search-input:not(:placeholder-shown)) { max-width: 720px; }
-  .dyn-col .dc-search:focus-within { box-shadow: 0 14px 44px rgba(0,0,0,0.14), inset 0 1px 1px rgba(255,255,255,0.95), 0 0 0 4px rgba(0,113,227,0.14); }
+  .dyn-col .dc-search.is-open { box-shadow: 0 14px 44px rgba(0,0,0,0.14), inset 0 1px 1px rgba(255,255,255,0.95), 0 0 0 4px rgba(0,113,227,0.14); }
   @keyframes dcSiri { to { background-position: 300% 0; } }
-  .dyn-col .dc-search-input { position: relative; z-index: 2; flex: 1 1 auto; min-width: 0; width: 100%; font-family: var(--font); font-size: 17px; color: var(--ink); background: transparent; border: none; box-shadow: none; padding: 0 8px; }
+  /* Input collapsed by default; expands when open */
+  .dyn-col .dc-search-input { position: relative; z-index: 2; flex: 1 1 auto; min-width: 0; max-width: 0; opacity: 0; overflow: hidden; font-family: var(--font); font-size: 17px; color: var(--ink); background: transparent; border: none; box-shadow: none; padding: 0;
+    transition: max-width .38s cubic-bezier(.22,1,.36,1), opacity .25s ease, padding .38s ease; }
+  .dyn-col .dc-search.is-open .dc-search-input { max-width: 62vw; opacity: 1; padding: 0 8px; }
   .dyn-col .dc-search-input::placeholder { color: var(--ink-faint); }
   .dyn-col .dc-search-input:focus { outline: none; box-shadow: none; }
   /* Rounded-square side buttons */
@@ -89,8 +89,10 @@
   .dyn-col .dc-search-plus:hover, .dyn-col .dc-search-go:hover { background: rgba(120,120,128,0.22); }
   .dyn-col .dc-search-plus:active, .dyn-col .dc-search-go:active { transform: scale(0.93); }
   .dyn-col .dc-search-plus svg { width: 22px; height: 22px; fill: none; stroke: var(--ink-soft); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  /* Arrow button: ← empty, ↑ typing, ✓ on submit */
+  /* Arrow button: ← empty, ↑ typing, ✓ on submit — hidden until the bar is open */
   .dyn-col .dc-search-go { overflow: visible; }
+  .dyn-col .dc-search:not(.is-open) .dc-search-go { display: none; }
+  .dyn-col .dc-search-plus { cursor: pointer; }
   .dyn-col .dc-go-ic { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transform: scale(.5) rotate(-35deg); transition: opacity .26s ease, transform .34s cubic-bezier(.22,1,.36,1); }
   .dyn-col .dc-go-ic svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
   .dyn-col .dc-search-go .dc-go-back { opacity: 1; transform: none; }
@@ -347,8 +349,8 @@
     {%- else -%}
       {%- if section.settings.show_search -%}
         <div class="dc-search{% unless section.settings.show_search_button %} dc-nogo{% endunless %}">
-          <button type="button" class="dc-search-plus" id="dcSearchPlus" aria-label="Search" tabindex="-1">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <button type="button" class="dc-search-plus" id="dcSearchPlus" aria-label="Open search" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </button>
           <input type="search" id="dcSearch" class="dc-search-input" autocomplete="off" aria-label="Search products"
             data-typing="{{ section.settings.search_examples | escape }}"
@@ -765,9 +767,15 @@
     if (resultsUrl) { if (q) window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q); }
     else { query = q.toLowerCase(); applyFilters(); flashOk(); if (searchEl) searchEl.focus(); }
   });
-  // The "+" button just focuses the search field.
+  // Magnifier: click to expand the bar; it collapses back when clicked away while empty.
   var searchPlus = document.getElementById("dcSearchPlus");
-  if (searchPlus && searchEl) searchPlus.addEventListener("click", function () { searchEl.focus(); });
+  var searchWrap = searchEl ? searchEl.closest(".dc-search") : null;
+  function openSearch() { if (searchWrap) searchWrap.classList.add("is-open"); if (searchPlus) searchPlus.setAttribute("aria-expanded", "true"); if (searchEl) searchEl.focus(); }
+  function closeSearch() { if (searchWrap && searchEl && !searchEl.value.trim()) { searchWrap.classList.remove("is-open"); if (searchPlus) searchPlus.setAttribute("aria-expanded", "false"); } }
+  if (searchPlus) searchPlus.addEventListener("click", function () {
+    if (searchWrap && searchWrap.classList.contains("is-open")) { if (searchEl) searchEl.focus(); } else { openSearch(); }
+  });
+  if (searchEl) searchEl.addEventListener("blur", function () { setTimeout(closeSearch, 140); });
 
   // Typing effect: cycle example phrases through the placeholder like a typewriter.
   // Pauses while the shopper is focused or has typed something; resumes when empty.
