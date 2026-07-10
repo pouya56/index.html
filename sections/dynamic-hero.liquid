@@ -454,7 +454,7 @@
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
   data-finding="{% if section.settings.show_finding %}true{% else %}false{% endif %}"
   data-finding-text="{{ section.settings.finding_text | default: 'Finding your gift…' | escape }}"
-  data-finding-ms="{{ section.settings.finding_ms | default: 1600 }}"
+  data-finding-ms="{{ section.settings.finding_ms | default: 1100 }}"
   data-results-url="{{ section.settings.results_page_url }}">
   {%- comment -%} Liquid-glass refraction filter used by the search bar sheen. {%- endcomment -%}
   <svg class="dh-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -1619,7 +1619,7 @@
   var resultsUrl = (root.getAttribute("data-results-url") || "").trim();
   var findingOn = root.getAttribute("data-finding") === "true";
   var findingText = root.getAttribute("data-finding-text") || "Finding your gift…";
-  var findingMs = parseInt(root.getAttribute("data-finding-ms"), 10) || 1600;
+  var findingMs = parseInt(root.getAttribute("data-finding-ms"), 10) || 1100;
   var findingEl = root.querySelector(".dh-finding");
   var findingTxtEl = findingEl ? findingEl.querySelector(".dh-finding-txt") : null;
   var findingReduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1877,7 +1877,7 @@
 
     { "type": "checkbox", "id": "show_finding", "label": "Show a “Finding your gift…” loader on search", "default": true, "info": "When a shopper submits a search, the bar fades and a shimmering message shows for a moment before the results appear." },
     { "type": "text", "id": "finding_text", "label": "Loader message", "default": "Finding your gift…" },
-    { "type": "range", "id": "finding_ms", "min": 600, "max": 4000, "step": 100, "unit": "ms", "label": "Loader duration", "default": 1600 },
+    { "type": "range", "id": "finding_ms", "min": 600, "max": 4000, "step": 100, "unit": "ms", "label": "Loader duration", "default": 1100 },
     { "type": "color", "id": "finding_bg", "label": "Loader background", "default": "#f5f5f7", "info": "The full-screen colour the page fades to while finding." },
     { "type": "color", "id": "finding_ink", "label": "Loader text colour", "default": "#1d1d1f" },
     { "type": "header", "content": "Buttons under the search (Google-style)" },
