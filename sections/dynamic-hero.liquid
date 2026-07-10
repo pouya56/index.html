@@ -158,42 +158,41 @@
   .dyn-hero .dh-head .dh-head-video { display: block; margin: 0 auto; width: auto; max-width: min(82vw, 360px);
     max-height: clamp(90px, 22vh, 220px); border-radius: 18px; object-fit: cover; background: transparent; }
 
-  /* Live search box (filters the grid on this page) */
-  .dyn-hero .dh-search { position: relative; display: flex; align-items: center; max-width: 784px; margin: 26px auto 0; }
+  /* Live search box — ChatGPT-style liquid-glass pill with a "+" and an arrow button */
+  .dyn-hero .dh-search { position: relative; display: flex; align-items: center; gap: 10px; max-width: 784px; margin: 26px auto 0; padding: 9px;
+    border-radius: 26px; z-index: 1;
+    background: rgba(255,255,255,0.62); -webkit-backdrop-filter: blur(22px) saturate(1.8) brightness(1.05); backdrop-filter: blur(22px) saturate(1.8) brightness(1.05);
+    border: 1px solid rgba(255,255,255,0.7);
+    box-shadow: 0 14px 44px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -8px 18px rgba(255,255,255,0.22);
+    transition: box-shadow .18s; }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dyn-hero .dh-search { background: #fff; border-color: var(--line); } }
+  .dyn-hero .dh-search:focus-within { box-shadow: 0 14px 44px rgba(0,0,0,0.14), inset 0 1px 1px rgba(255,255,255,0.95), 0 0 0 4px rgba(0,113,227,0.14); }
   /* Siri-style animated glow on hover / focus */
-  .dyn-hero .dh-search::before { content: ""; position: absolute; inset: -4px; border-radius: 999px; z-index: 0; pointer-events: none;
+  .dyn-hero .dh-search::before { content: ""; position: absolute; inset: -4px; border-radius: 30px; z-index: -1; pointer-events: none;
     background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff); background-size: 300% 100%;
     animation: dhSiri 6s linear infinite; filter: blur(11px); opacity: 0; transition: opacity .35s ease; }
-  .dyn-hero .dh-search:hover::before, .dyn-hero .dh-search:focus-within::before { opacity: 0.95; }
+  .dyn-hero .dh-search:hover::before, .dyn-hero .dh-search:focus-within::before { opacity: 0.9; }
   @keyframes dhSiri { to { background-position: 300% 0; } }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search::before { animation: none; } }
-  .dyn-hero .dh-search-mag { position: absolute; left: 20px; z-index: 2; width: 20px; height: 20px; fill: none; stroke: var(--ink-faint);
-    stroke-width: 2; stroke-linecap: round; pointer-events: none; }
-  /* Liquid-glass search field */
-  .dyn-hero .dh-search-input { position: relative; z-index: 1; width: 100%; font-family: var(--font); font-size: 16px; color: var(--ink);
-    background: rgba(255,255,255,0.5); -webkit-backdrop-filter: blur(20px) saturate(1.7) brightness(1.05); backdrop-filter: blur(20px) saturate(1.7) brightness(1.05);
-    border: 1px solid rgba(255,255,255,0.65); border-radius: 999px; padding: 15px 56px 15px 52px;
-    box-shadow: 0 10px 34px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.85), inset 0 -7px 16px rgba(255,255,255,0.2);
-    transition: border-color .16s, box-shadow .16s; }
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .dyn-hero .dh-search-input { background: #fff; border-color: var(--line); }
-  }
-  .dyn-hero .dh-search-input::placeholder { color: var(--ink-faint); }
-  .dyn-hero .dh-search-input:focus { outline: none; border-color: rgba(255,255,255,0.9);
-    box-shadow: 0 10px 34px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.9), 0 0 0 4px rgba(0,113,227,0.14); }
-  /* Glass: top specular highlight + a shimmering diagonal light streak (refraction) */
-  .dyn-hero .dh-search-input { background-image: linear-gradient(177deg, rgba(255,255,255,0.55), rgba(255,255,255,0) 46%); }
-  .dyn-hero .dh-search::after { content: ""; position: absolute; inset: 1px; z-index: 1; pointer-events: none; border-radius: 999px;
+  /* Shimmering diagonal light streak (refraction) across the glass */
+  .dyn-hero .dh-search::after { content: ""; position: absolute; inset: 1px; z-index: 0; pointer-events: none; border-radius: 25px;
     background: linear-gradient(112deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 60%);
-    mix-blend-mode: screen; opacity: 0.65; filter: url(#dhLiquid); }
+    mix-blend-mode: screen; opacity: 0.6; filter: url(#dhLiquid); }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search::after { filter: none; } }
-  /* ChatGPT-style round arrow button inside the bar */
-  .dyn-hero .dh-search-go { position: absolute; right: 8px; top: 50%; margin-top: -19px; z-index: 2; width: 38px; height: 38px; border-radius: 50%;
-    background: var(--ink); color: #fff; border: none; display: grid; place-items: center; cursor: pointer; transition: opacity .16s, transform .1s; }
-  .dyn-hero .dh-search-go:hover { opacity: 0.9; }
-  .dyn-hero .dh-search-go:active { transform: scale(0.93); }
-  .dyn-hero .dh-search-go.is-ok { background: #1a7f37; transition: background .2s; }
-  .dyn-hero .dh-search-go svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  /* Transparent input in the middle */
+  .dyn-hero .dh-search-input { position: relative; z-index: 2; flex: 1 1 auto; min-width: 0; width: 100%; font-family: var(--font); font-size: 17px; color: var(--ink);
+    background: transparent; border: none; box-shadow: none; padding: 0 8px; }
+  .dyn-hero .dh-search-input::placeholder { color: var(--ink-faint); }
+  .dyn-hero .dh-search-input:focus { outline: none; box-shadow: none; }
+  /* Rounded-square side buttons (light glass) */
+  .dyn-hero .dh-search-plus, .dyn-hero .dh-search-go { position: relative; z-index: 2; flex: none; width: 46px; height: 46px; border-radius: 15px; border: none;
+    display: grid; place-items: center; cursor: pointer; background: rgba(120,120,128,0.14); transition: background .16s, transform .1s; }
+  .dyn-hero .dh-search-plus:hover, .dyn-hero .dh-search-go:hover { background: rgba(120,120,128,0.22); }
+  .dyn-hero .dh-search-plus:active, .dyn-hero .dh-search-go:active { transform: scale(0.93); }
+  .dyn-hero .dh-search-plus svg { width: 22px; height: 22px; fill: none; stroke: var(--ink-soft); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-hero .dh-search-go svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-hero .dh-search-go.is-ok { background: #1a7f37; }
+  .dyn-hero .dh-search-go.is-ok svg { stroke: #fff; }
   /* Liquid-glass buttons under the search bar (Google-style) */
   .dyn-hero .dh-hero-btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
 
@@ -1025,7 +1024,9 @@
     {%- else -%}
       {%- if section.settings.show_search -%}
         <div class="dh-search">
-          <svg class="dh-search-mag" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <button type="button" class="dh-search-plus" id="dhSearchPlus" aria-label="Search" tabindex="-1">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
           <input type="search" id="dhSearch" class="dh-search-input" autocomplete="off" aria-label="Search products"
             data-typing="{{ section.settings.search_examples | escape }}"
             placeholder="{{ section.settings.search_placeholder | default: 'Search these products…' }}">
@@ -1681,6 +1682,9 @@
   if (searchBtn) searchBtn.addEventListener("click", function () {
     runSearch(searchEl ? searchEl.value.trim() : "");
   });
+  // The "+" button just focuses the search field.
+  var searchPlus = document.getElementById("dhSearchPlus");
+  if (searchPlus && searchEl) searchPlus.addEventListener("click", function () { searchEl.focus(); });
   // "Search" glass button under the bar runs the same search.
   var btnSearch = document.getElementById("dhBtnSearch");
   if (btnSearch) btnSearch.addEventListener("click", function () {
