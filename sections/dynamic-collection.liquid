@@ -68,37 +68,43 @@
     max-height: clamp(90px, 22vh, 220px); border-radius: 18px; object-fit: cover; background: transparent; }
 
   /* Live search box (filters the grid on this page) */
-  .dyn-col .dc-search { position: relative; display: flex; align-items: center; max-width: 400px; margin: 18px auto 0;
-    transition: max-width .34s cubic-bezier(.4,0,.2,1); }
+  /* Liquid-glass pill (matches the hero search bar) */
+  .dyn-col .dc-search { position: relative; display: flex; align-items: center; gap: 10px; max-width: 460px; margin: 18px auto 0; padding: 9px; border-radius: 26px; z-index: 1;
+    background: rgba(255,255,255,0.62); -webkit-backdrop-filter: blur(22px) saturate(1.8) brightness(1.05); backdrop-filter: blur(22px) saturate(1.8) brightness(1.05);
+    border: 1px solid rgba(255,255,255,0.7);
+    box-shadow: 0 14px 44px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -8px 18px rgba(255,255,255,0.22);
+    transition: max-width .34s cubic-bezier(.4,0,.2,1), box-shadow .18s; }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dyn-col .dc-search { background: #fff; border-color: var(--line); } }
   /* Grows when clicked (focused) or when it has text */
   .dyn-col .dc-search:focus-within,
-  .dyn-col .dc-search:has(.dc-search-input:not(:placeholder-shown)) { max-width: 640px; }
-  /* Siri-style animated glow on hover / focus */
-  .dyn-col .dc-search::before { content: ""; position: absolute; inset: -4px; border-radius: 999px; z-index: 0; pointer-events: none;
-    background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff); background-size: 300% 100%;
-    animation: dcSiri 6s linear infinite; filter: blur(11px); opacity: 0; transition: opacity .35s ease; }
-  .dyn-col .dc-search:hover::before, .dyn-col .dc-search:focus-within::before { opacity: 0.95; }
+  .dyn-col .dc-search:has(.dc-search-input:not(:placeholder-shown)) { max-width: 720px; }
+  .dyn-col .dc-search:focus-within { box-shadow: 0 14px 44px rgba(0,0,0,0.14), inset 0 1px 1px rgba(255,255,255,0.95), 0 0 0 4px rgba(0,113,227,0.14); }
   @keyframes dcSiri { to { background-position: 300% 0; } }
-  @media (prefers-reduced-motion: reduce) { .dyn-col .dc-search::before { animation: none; } }
-  .dyn-col .dc-search-mag { position: absolute; left: 20px; z-index: 2; width: 20px; height: 20px; fill: none; stroke: var(--ink-faint);
-    stroke-width: 2; stroke-linecap: round; pointer-events: none; }
-  .dyn-col .dc-search-input { position: relative; z-index: 1; width: 100%; font-family: var(--font); font-size: 14.5px; color: var(--ink); background: var(--bg);
-    border: 1px solid var(--line); border-radius: 999px; padding: 11px 50px 11px 46px; box-shadow: 0 8px 30px rgba(0,0,0,0.06);
-    transition: border-color .16s, box-shadow .16s, padding .3s ease, font-size .3s ease; }
-  .dyn-col .dc-search:focus-within .dc-search-input,
-  .dyn-col .dc-search:has(.dc-search-input:not(:placeholder-shown)) .dc-search-input { font-size: 16px; padding: 15px 56px 15px 52px; }
-  /* No arrow button: tighten the right padding */
-  .dyn-col .dc-search.dc-nogo .dc-search-input { padding-right: 22px; }
-  .dyn-col .dc-search.dc-nogo:focus-within .dc-search-input,
-  .dyn-col .dc-search.dc-nogo:has(.dc-search-input:not(:placeholder-shown)) .dc-search-input { padding-right: 26px; }
+  .dyn-col .dc-search-input { position: relative; z-index: 2; flex: 1 1 auto; min-width: 0; width: 100%; font-family: var(--font); font-size: 17px; color: var(--ink); background: transparent; border: none; box-shadow: none; padding: 0 8px; }
   .dyn-col .dc-search-input::placeholder { color: var(--ink-faint); }
-  .dyn-col .dc-search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 8px 30px rgba(0,0,0,0.06), 0 0 0 4px rgba(0,113,227,0.14); }
-  /* ChatGPT-style round arrow button inside the bar */
-  .dyn-col .dc-search-go { position: absolute; right: 8px; top: 50%; margin-top: -19px; z-index: 2; width: 38px; height: 38px; border-radius: 50%;
-    background: var(--ink); color: #fff; border: none; display: grid; place-items: center; cursor: pointer; transition: opacity .16s, transform .1s; }
-  .dyn-col .dc-search-go:hover { opacity: 0.9; }
-  .dyn-col .dc-search-go:active { transform: scale(0.93); }
-  .dyn-col .dc-search-go svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-col .dc-search-input:focus { outline: none; box-shadow: none; }
+  /* Rounded-square side buttons */
+  .dyn-col .dc-search-plus, .dyn-col .dc-search-go { position: relative; z-index: 2; flex: none; width: 46px; height: 46px; border-radius: 15px; border: none;
+    display: grid; place-items: center; cursor: pointer; background: rgba(120,120,128,0.14); transition: background .16s, transform .1s; }
+  .dyn-col .dc-search-plus:hover, .dyn-col .dc-search-go:hover { background: rgba(120,120,128,0.22); }
+  .dyn-col .dc-search-plus:active, .dyn-col .dc-search-go:active { transform: scale(0.93); }
+  .dyn-col .dc-search-plus svg { width: 22px; height: 22px; fill: none; stroke: var(--ink-soft); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  /* Arrow button: ← empty, ↑ typing, ✓ on submit */
+  .dyn-col .dc-search-go { overflow: visible; }
+  .dyn-col .dc-go-ic { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transform: scale(.5) rotate(-35deg); transition: opacity .26s ease, transform .34s cubic-bezier(.22,1,.36,1); }
+  .dyn-col .dc-go-ic svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-col .dc-search-go .dc-go-back { opacity: 1; transform: none; }
+  .dyn-col .dc-search-go.has-text .dc-go-back { opacity: 0; transform: scale(.5) rotate(35deg); }
+  .dyn-col .dc-search-go.has-text .dc-go-up { opacity: 1; transform: none; }
+  .dyn-col .dc-search-go.is-ok .dc-go-back, .dyn-col .dc-search-go.is-ok .dc-go-up { opacity: 0; }
+  .dyn-col .dc-search-go.is-ok .dc-go-check { opacity: 1; transform: none; }
+  .dyn-col .dc-search-go.is-ok { background: #1a7f37; }
+  .dyn-col .dc-search-go.is-ok .dc-go-ic svg { stroke: #fff; }
+  .dyn-col .dc-search-go::before { content: ""; position: absolute; inset: -4px; border-radius: 19px; z-index: -1; pointer-events: none;
+    background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff); background-size: 300% 100%;
+    animation: dcSiri 6s linear infinite; filter: blur(8px); opacity: 0; transition: opacity .35s ease; }
+  .dyn-col .dc-search-go:hover::before, .dyn-col .dc-search-go.has-text::before { opacity: 0.95; }
+  @media (prefers-reduced-motion: reduce) { .dyn-col .dc-search-go::before { animation: none; } }
   /* Link buttons under the search bar */
   .dyn-col .dc-hero-btns { display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
   .dyn-col .dc-gbtn { display: inline-flex; align-items: center; justify-content: center; min-width: 150px; height: 46px; padding: 0 24px;
@@ -341,13 +347,17 @@
     {%- else -%}
       {%- if section.settings.show_search -%}
         <div class="dc-search{% unless section.settings.show_search_button %} dc-nogo{% endunless %}">
-          <svg class="dc-search-mag" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <button type="button" class="dc-search-plus" id="dcSearchPlus" aria-label="Search" tabindex="-1">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
           <input type="search" id="dcSearch" class="dc-search-input" autocomplete="off" aria-label="Search products"
             data-typing="{{ section.settings.search_examples | escape }}"
             placeholder="{{ section.settings.search_placeholder | default: 'Search these products…' }}">
           {%- if section.settings.show_search_button -%}
           <button type="button" class="dc-search-go" id="dcSearchGo" aria-label="Search">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            <span class="dc-go-ic dc-go-back"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+            <span class="dc-go-ic dc-go-up"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span>
+            <span class="dc-go-ic dc-go-check"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
           </button>
           {%- endif -%}
         </div>
@@ -745,11 +755,19 @@
     });
   }
   var searchBtn = document.getElementById("dcSearchGo");
+  // Swap the arrow (← empty, ↑ typing) as the shopper types.
+  if (searchEl && searchBtn) searchEl.addEventListener("input", function () {
+    searchBtn.classList.toggle("has-text", !!searchEl.value.trim());
+  });
+  function flashOk() { if (!searchBtn) return; searchBtn.classList.add("is-ok"); setTimeout(function () { searchBtn.classList.remove("is-ok"); }, 900); }
   if (searchBtn) searchBtn.addEventListener("click", function () {
     var q = searchEl ? searchEl.value.trim() : "";
     if (resultsUrl) { if (q) window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q); }
-    else { query = q.toLowerCase(); applyFilters(); if (searchEl) searchEl.focus(); }
+    else { query = q.toLowerCase(); applyFilters(); flashOk(); if (searchEl) searchEl.focus(); }
   });
+  // The "+" button just focuses the search field.
+  var searchPlus = document.getElementById("dcSearchPlus");
+  if (searchPlus && searchEl) searchPlus.addEventListener("click", function () { searchEl.focus(); });
 
   // Typing effect: cycle example phrases through the placeholder like a typewriter.
   // Pauses while the shopper is focused or has typed something; resumes when empty.
