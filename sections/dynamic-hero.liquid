@@ -227,8 +227,21 @@
   .dyn-hero .dh-gbtn:active { transform: scale(0.97); }
   .dyn-hero .dh-gbtn::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
     background: linear-gradient(115deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 60%); mix-blend-mode: screen; opacity: 0.6; filter: url(#dhLiquid); }
+  /* "Surprise me" gooey/liquid hover — blobs merge behind the button (Skiper64) */
+  .dyn-hero .dh-goo-wrap { position: relative; display: inline-flex; }
+  .dyn-hero .dh-goo { position: absolute; inset: 0; z-index: 0; pointer-events: none; filter: url(#dhGooey); opacity: 0; transition: opacity .3s ease; }
+  .dyn-hero .dh-goo-wrap:hover .dh-goo { opacity: 1; }
+  .dyn-hero .dh-goo-core { position: absolute; inset: 0; border-radius: 18px; background: var(--accent); opacity: .92; }
+  .dyn-hero .dh-goo-blob { position: absolute; top: 50%; left: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: var(--accent); transform: scale(0); }
+  .dyn-hero .dh-goo-wrap:hover .dh-goo-b1 { animation: dhGoo1 2.6s ease-in-out infinite; }
+  .dyn-hero .dh-goo-wrap:hover .dh-goo-b2 { animation: dhGoo2 2.6s ease-in-out infinite .4s; }
+  .dyn-hero .dh-goo-wrap:hover .dh-goo-b3 { animation: dhGoo3 2.2s ease-in-out infinite .8s; }
+  @keyframes dhGoo1 { 0%, 100% { transform: translate(0,0) scale(.4); } 50% { transform: translate(-72px, 3px) scale(1); } }
+  @keyframes dhGoo2 { 0%, 100% { transform: translate(0,0) scale(.4); } 50% { transform: translate(72px, -3px) scale(1); } }
+  @keyframes dhGoo3 { 0%, 100% { transform: translate(0,0) scale(.35); } 50% { transform: translate(0, -30px) scale(.85); } }
+  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-goo-wrap:hover .dh-goo-blob { animation: none; } }
   /* "Surprise me" glows on hover */
-  .dyn-hero #dhBtnRandom { overflow: visible; }
+  .dyn-hero #dhBtnRandom { overflow: visible; position: relative; z-index: 1; }
   .dyn-hero #dhBtnRandom::before { content: ""; position: absolute; inset: -4px; border-radius: 22px; z-index: -1; pointer-events: none;
     background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff); background-size: 300% 100%;
     animation: dhSiri 6s linear infinite; filter: blur(9px); opacity: 0; transition: opacity .35s ease; }
@@ -484,6 +497,12 @@
         </feTurbulence>
         <feGaussianBlur in="noise" stdDeviation="1.1" result="sn"></feGaussianBlur>
         <feDisplacementMap in="SourceGraphic" in2="sn" scale="12" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+      {%- comment -%} Gooey / metaball filter — merges the blobs behind the Surprise button (Skiper64). {%- endcomment -%}
+      <filter id="dhGooey" x="-100%" y="-150%" width="300%" height="400%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"></feGaussianBlur>
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo"></feColorMatrix>
+        <feBlend in="SourceGraphic" in2="goo"></feBlend>
       </filter>
     </defs>
   </svg>
@@ -1063,7 +1082,12 @@
           <div class="dh-hero-btns">
             {%- if section.settings.show_btn1 -%}<button type="button" class="dh-gbtn" id="dhBtnSearch">{{ section.settings.btn1_label | default: 'Search' }}</button>{%- endif -%}
             {%- if section.settings.show_btn2 -%}<a class="dh-gbtn" href="{{ section.settings.btn2_url | default: routes.all_products_collection_url }}">{{ section.settings.btn2_label | default: 'Shop all' }}</a>{%- endif -%}
-            {%- if section.settings.show_btn3 -%}<button type="button" class="dh-gbtn" id="dhBtnRandom">{{ section.settings.btn3_label | default: 'Surprise me' }}</button>{%- endif -%}
+            {%- if section.settings.show_btn3 -%}
+              <span class="dh-goo-wrap">
+                <span class="dh-goo" aria-hidden="true"><span class="dh-goo-core"></span><span class="dh-goo-blob dh-goo-b1"></span><span class="dh-goo-blob dh-goo-b2"></span><span class="dh-goo-blob dh-goo-b3"></span></span>
+                <button type="button" class="dh-gbtn" id="dhBtnRandom">{{ section.settings.btn3_label | default: 'Surprise me' }}</button>
+              </span>
+            {%- endif -%}
           </div>
           {%- if section.settings.show_btn3 -%}
             <script type="application/json" data-dh-random>[{%- assign rfirst = true -%}{%- for product in prods limit: 50 -%}{%- assign rt = product.title | downcase -%}{%- assign rhide = false -%}{%- for kw in hide_kws -%}{%- assign kwt = kw | strip -%}{%- if kwt != blank and rt contains kwt -%}{%- assign rhide = true -%}{%- endif -%}{%- endfor -%}{%- unless rhide -%}{%- unless rfirst %},{% endunless %}{%- assign rfirst = false -%}{{ product.url | json }}{%- endunless -%}{%- endfor -%}]</script>
