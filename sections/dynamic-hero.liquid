@@ -1024,25 +1024,6 @@
           </div>
           {%- if section.settings.show_btn3 -%}
             <script type="application/json" data-dh-random>[{%- assign rfirst = true -%}{%- for product in prods limit: 50 -%}{%- unless rfirst %},{% endunless %}{%- assign rfirst = false -%}{{ product.url | json }}{%- endfor -%}]</script>
-            <script>
-              (function () {
-                var btn = document.getElementById("dhBtnRandom"); if (!btn) return;
-                var src = document.querySelector("[data-dh-random]"); var list = [];
-                try { list = JSON.parse(src.textContent) || []; } catch (e) {}
-                var lastU = null;
-                btn.addEventListener("click", function () {
-                  if (!list.length) { window.location.href = "{{ routes.all_products_collection_url }}"; return; }
-                  var u;
-                  if (list.length === 1) { u = list[0]; }
-                  else { do { u = list[Math.floor(Math.random() * list.length)]; } while (u === lastU); }
-                  lastU = u;
-                  if (!u) return;
-                  /* Open the random product in the half-size pop-up; fall back to navigating. */
-                  if (typeof window.dhSlideOpen === "function") window.dhSlideOpen(u, true);
-                  else window.location.href = u;
-                });
-              })();
-            </script>
           {%- endif -%}
         {%- endif -%}
       {%- endif -%}
@@ -1309,6 +1290,23 @@
   slide.querySelectorAll("[data-dh-slide-close]").forEach(function (b) { b.addEventListener("click", closeSlide); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSlide(); });
   window.dhSlideOpen = openSlide; /* let other buttons (e.g. Surprise me) open a URL in this pop-up */
+
+  /* "Surprise me" — open a random product in the half-size pop-up (never the same one twice in a row). */
+  var randBtn = document.getElementById("dhBtnRandom");
+  var randSrc = document.querySelector("[data-dh-random]");
+  if (randBtn && randSrc) {
+    var rlist = [];
+    try { rlist = JSON.parse(randSrc.textContent) || []; } catch (e) {}
+    var lastR = null;
+    randBtn.addEventListener("click", function () {
+      if (!rlist.length) { window.location.href = "{{ routes.all_products_collection_url }}"; return; }
+      var u;
+      if (rlist.length === 1) { u = rlist[0]; }
+      else { do { u = rlist[Math.floor(Math.random() * rlist.length)]; } while (u === lastR); }
+      lastR = u;
+      if (u) openSlide(u, true);
+    });
+  }
 })();
 </script>
 
