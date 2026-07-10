@@ -57,7 +57,7 @@
   .dyn-col.dc-landing .dc-head .dc-head-logo { height: clamp(40px, 6.5vw, 60px); }
   .dyn-col.dc-landing .dc-head .dc-head-video { max-height: clamp(120px, 30vh, 280px); max-width: min(88vw, 460px); }
   .dyn-col.dc-landing .dc-head h1 { font-size: clamp(30px, 5vw, 46px); }
-  .dyn-col.dc-landing .dc-search { margin-top: 30px; margin-bottom: 30px; }
+  .dyn-col.dc-landing .dc-goo { margin-top: 30px; margin-bottom: 30px; }
 
   .dyn-col .dc-head { text-align: center; max-width: 720px; margin: 0 auto; }
   .dyn-col .dc-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(36px, 6vw, 60px);
@@ -68,53 +68,28 @@
   .dyn-col .dc-head .dc-head-video { display: block; margin: 0 auto; width: auto; max-width: min(82vw, 360px);
     max-height: clamp(90px, 22vh, 220px); border-radius: 18px; object-fit: cover; background: transparent; }
 
-  /* Live search box (filters the grid on this page) */
-  /* Liquid-glass search pill (matches the hero) */
-  .dyn-col .dc-search { position: relative; display: flex; align-items: center; gap: 8px; width: fit-content; max-width: 92vw; margin: 18px auto 0; padding: 8px 8px 8px 4px; border-radius: 26px; z-index: 1;
-    background: rgba(255,255,255,0.62); -webkit-backdrop-filter: blur(22px) saturate(1.8) brightness(1.05); backdrop-filter: blur(22px) saturate(1.8) brightness(1.05);
-    border: 1px solid rgba(255,255,255,0.7);
-    box-shadow: 0 14px 44px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -8px 18px rgba(255,255,255,0.22);
-    transition: box-shadow .18s; }
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dyn-col .dc-search { background: #fff; border-color: var(--line); } }
-  .dyn-col .dc-search:focus-within { box-shadow: 0 14px 44px rgba(0,0,0,0.14), inset 0 1px 1px rgba(255,255,255,0.95), 0 0 0 4px rgba(0,113,227,0.14); }
-  @keyframes dcSiri { to { background-position: 300% 0; } }
-  .dyn-col .dc-search-mag { flex: none; display: grid; place-items: center; width: 34px; height: 34px; margin-left: 8px; }
-  .dyn-col .dc-search-mag svg { width: 20px; height: 20px; fill: none; stroke: var(--ink-faint); stroke-width: 2; stroke-linecap: round; }
-  .dyn-col .dc-search-input { position: relative; z-index: 2; flex: 1 1 auto; min-width: 220px; width: 100%; font-family: var(--font); font-size: 17px; color: var(--ink); background: transparent; border: none; box-shadow: none; padding: 0 6px; }
-  .dyn-col .dc-search-input::placeholder { color: var(--ink-faint); }
-  .dyn-col .dc-search-input:focus { outline: none; box-shadow: none; }
-  /* Arrow button: ← empty, ↑ typing, ✓ on submit */
-  .dyn-col .dc-search-go { position: relative; z-index: 2; flex: none; width: 46px; height: 46px; border-radius: 15px; border: none; overflow: visible;
-    display: grid; place-items: center; cursor: pointer; background: rgba(120,120,128,0.14); transition: background .16s, transform .1s; }
-  .dyn-col .dc-search-go:hover { background: rgba(120,120,128,0.22); }
-  .dyn-col .dc-search-go:active { transform: scale(0.93); }
-  .dyn-col .dc-go-ic { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transform: scale(.5) rotate(-35deg); transition: opacity .26s ease, transform .34s cubic-bezier(.22,1,.36,1); }
-  .dyn-col .dc-go-ic svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-  .dyn-col .dc-search-go .dc-go-back { opacity: 1; transform: none; }
-  .dyn-col .dc-search-go.has-text .dc-go-back { opacity: 0; transform: scale(.5) rotate(35deg); }
-  .dyn-col .dc-search-go.has-text .dc-go-up { opacity: 1; transform: none; }
-  .dyn-col .dc-search-go.is-ok .dc-go-back, .dyn-col .dc-search-go.is-ok .dc-go-up { opacity: 0; }
-  .dyn-col .dc-search-go.is-ok .dc-go-check { opacity: 1; transform: none; }
-  .dyn-col .dc-search-go.is-ok { background: #1a7f37; }
-  .dyn-col .dc-search-go.is-ok .dc-go-ic svg { stroke: #fff; }
-  .dyn-col .dc-search-go::before { content: ""; position: absolute; inset: -4px; border-radius: 19px; z-index: -1; pointer-events: none;
-    background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff); background-size: 300% 100%;
-    animation: dcSiri 6s linear infinite; filter: blur(8px); opacity: 0; transition: opacity .35s ease; }
-  .dyn-col .dc-search-go:hover::before, .dyn-col .dc-search-go.has-text::before { opacity: 0.95; }
-  @media (prefers-reduced-motion: reduce) { .dyn-col .dc-search-go::before { animation: none; } }
-  /* Magnifier "tab" trigger, sitting next to All in the category row (plain, no background) */
-  .dyn-col .dc-tabs.is-images .dc-search-trigger .dc-tab-all svg { fill: none; stroke: var(--ink-faint); stroke-width: 2; stroke-linecap: round; }
-  .dyn-col .dc-search-trigger[aria-expanded="true"] .dc-tab-all svg { stroke: var(--ink); }
-  .dyn-col .dc-search-trigger[aria-expanded="true"] .dc-tab-label { color: var(--ink); font-weight: 600; opacity: 1; }
-  .dyn-col .dc-tabs.is-images .dc-search-trigger[aria-expanded="true"]::after { background: var(--accent); }
-  /* While search is open, hide the active category's dot so only Search shows one */
-  .dyn-col .dc-tabs.is-images.dc-searching .dc-tab.is-active::after { background: transparent; }
-  /* The search bar that drops in BELOW the categories when the magnifier is tapped */
-  .dyn-col .dc-search-below { display: flex; justify-content: center; }
-  .dyn-col .dc-search-below { margin: 6px 0 0; }
-  .dyn-col .dc-search-below .dc-search { display: none; margin: 0 auto; }
-  .dyn-col .dc-search-below .dc-search.is-open { display: flex; margin: 8px auto 32px; animation: dcDrop .32s cubic-bezier(.22,1,.36,1); }
-  @keyframes dcDrop { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+  /* Gooey expanding search — magnifier stretches into the bar while an icon bubble detaches (metaball) */
+  .dyn-col .dc-goo { position: relative; display: flex; align-items: center; justify-content: center; margin: 20px auto 0; }
+  .dyn-col .dc-goo-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  .dyn-col .dc-goo-wrap { position: relative; display: flex; height: 46px; align-items: center; justify-content: center; filter: url(#dcGooey); }
+  .dyn-col .dc-goo-row { display: flex; height: 46px; align-items: center; width: 148px; margin-left: 0;
+    transition: width .42s cubic-bezier(.34,1.26,.64,1), margin-left .42s cubic-bezier(.34,1.26,.64,1); }
+  .dyn-col .dc-goo.is-open .dc-goo-row { width: min(72vw, 360px); margin-left: 56px; }
+  .dyn-col .dc-goo-pill { display: flex; height: 46px; width: 100%; align-items: center; gap: 9px; border-radius: 999px; padding: 0 20px; overflow: hidden; cursor: pointer;
+    border: 0; background: var(--ink); color: #fff; font: inherit; }
+  .dyn-col .dc-goo-ic { display: inline-flex; flex: none; }
+  .dyn-col .dc-goo-ic svg, .dyn-col .dc-goo-bubble-surface svg { width: 18px; height: 18px; }
+  .dyn-col .dc-goo.is-open .dc-goo-ic { display: none; }
+  .dyn-col .dc-goo-input { flex: 1 1 auto; min-width: 0; height: 100%; background: transparent; border: 0; outline: none; font-family: var(--font); font-size: 15px; color: #fff; }
+  .dyn-col .dc-goo-input::placeholder { color: rgba(255,255,255,0.55); }
+  .dyn-col .dc-goo:not(.is-open) .dc-goo-input { pointer-events: none; }
+  .dyn-col .dc-goo:not(.is-open) .dc-goo-input::placeholder { color: rgba(255,255,255,0.85); }
+  .dyn-col .dc-goo-bubble { position: absolute; top: 50%; left: 0; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
+    transform: translateY(-50%) scale(0); opacity: 0; transition: transform .42s cubic-bezier(.34,1.26,.64,1), opacity .28s ease; }
+  .dyn-col .dc-goo.is-open .dc-goo-bubble { transform: translateY(-50%) scale(1); opacity: 1; }
+  .dyn-col .dc-goo-bubble-surface { display: flex; width: 46px; height: 46px; align-items: center; justify-content: center; border-radius: 50%; background: var(--ink); color: #fff; }
+  .dyn-col .dc-goo-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .dyn-col .dc-goo-row, .dyn-col .dc-goo-bubble { transition: opacity .2s ease; } }
   /* Link buttons under the search bar */
   .dyn-col .dc-hero-btns { display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
   .dyn-col .dc-gbtn { display: inline-flex; align-items: center; justify-content: center; min-width: 150px; height: 46px; padding: 0 24px;
@@ -357,21 +332,25 @@
       </div>
     {%- else -%}
       {%- if section.settings.show_search -%}
-        {%- capture dc_search_html -%}<div class="dc-search{% unless section.settings.show_search_button %} dc-nogo{% endunless %}" id="dcSearchBar">
-          <span class="dc-search-mag" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-          <input type="search" id="dcSearch" class="dc-search-input" autocomplete="off" aria-label="Search products"
-            data-typing="{{ section.settings.search_examples | escape }}"
-            placeholder="{{ section.settings.search_placeholder | default: 'Search these products…' }}">
-          {%- if section.settings.show_search_button -%}
-          <button type="button" class="dc-search-go" id="dcSearchGo" aria-label="Search">
-            <span class="dc-go-ic dc-go-back"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
-            <span class="dc-go-ic dc-go-up"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span>
-            <span class="dc-go-ic dc-go-check"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
-          </button>
-          {%- endif -%}
-        </div>{%- endcapture -%}
-        {%- assign dc_has_img_tabs = false -%}{%- if section.settings.show_tabs and section.blocks.size > 0 -%}{%- assign dc_has_img_tabs = true -%}{%- endif -%}
-        {%- unless dc_has_img_tabs -%}{{ dc_search_html }}{%- endunless -%}
+        {%- capture dc_goo_icon -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>{%- endcapture -%}
+        <div class="dc-goo" id="dcGoo">
+          <svg class="dc-goo-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs>
+            <filter id="dcGooey" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"></feGaussianBlur>
+              <feColorMatrix in="b" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10" result="g"></feColorMatrix>
+              <feComposite in="SourceGraphic" in2="g" operator="atop"></feComposite>
+            </filter>
+          </defs></svg>
+          <div class="dc-goo-wrap">
+            <div class="dc-goo-row">
+              <div class="dc-goo-pill" id="dcGooPill" role="button" tabindex="0" aria-label="Search">
+                <span class="dc-goo-ic" aria-hidden="true">{{ dc_goo_icon }}</span>
+                <input type="search" id="dcSearch" class="dc-goo-input" autocomplete="off" enterkeyhint="search" aria-label="Search products" data-typing="{{ section.settings.search_examples | escape }}" placeholder="{{ section.settings.search_placeholder | default: 'Search these products…' }}" disabled>
+              </div>
+            </div>
+            <div class="dc-goo-bubble" aria-hidden="true"><span class="dc-goo-bubble-surface">{{ dc_goo_icon }}</span></div>
+          </div>
+        </div>
         {%- assign show_b1 = false -%}{%- if section.settings.show_btn1 and section.settings.btn1_label != blank -%}{%- assign show_b1 = true -%}{%- endif -%}
         {%- assign show_b2 = false -%}{%- if section.settings.show_btn2 and section.settings.btn2_label != blank -%}{%- assign show_b2 = true -%}{%- endif -%}
         {%- if show_b1 or show_b2 -%}
@@ -396,12 +375,6 @@
         <div class="dc-tabs-wrap" id="dcTabsWrap">
         <button type="button" class="dc-tabs-arrow dc-prev" id="dcPrev" aria-label="Scroll categories left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
         <div class="dc-tabs is-images" id="dcTabs" role="tablist">
-          {%- if section.settings.show_search -%}
-          <button type="button" class="dc-tab dc-search-trigger" id="dcSearchTrigger" aria-label="Search" aria-expanded="false">
-            <span class="dc-tab-img dc-tab-all"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-            <span class="dc-tab-label">Search</span>
-          </button>
-          {%- endif -%}
           {%- if section.settings.show_all_tab -%}
           <button type="button" class="dc-tab is-active" data-cat="__all" role="tab" aria-selected="true">
             <span class="dc-tab-img dc-tab-all">
@@ -448,10 +421,6 @@
             {%- endunless -%}
           {%- endfor -%}
         </div>
-      {%- endif -%}
-
-      {%- if section.settings.show_search and dc_has_img_tabs -%}
-        <div class="dc-search-below" id="dcSearchBelow">{{ dc_search_html }}</div>
       {%- endif -%}
 
       <div class="dc-shelf-wrap" id="dcShelfWrap">
@@ -761,6 +730,12 @@
   // "results page" URL is set, Enter/submit opens that page with the query.
   var searchEl = document.getElementById("dcSearch");
   var resultsUrl = (root.getAttribute("data-results-url") || "").trim();
+  var goo = document.getElementById("dcGoo");
+  var gooPill = document.getElementById("dcGooPill");
+
+  function openGoo() { if (!goo) return; goo.classList.add("is-open"); if (searchEl) { searchEl.disabled = false; searchEl.focus(); } }
+  function closeGoo() { if (!goo || !searchEl) return; if (searchEl.value.trim()) return; goo.classList.remove("is-open"); searchEl.disabled = true; }
+
   if (searchEl) {
     searchEl.addEventListener("input", function () {
       if (resultsUrl) return; // redirect mode: don't filter here
@@ -768,43 +743,24 @@
       if (query) badgeFilter = null; // typing takes over from a badge filter
       applyFilters();
     });
-    if (resultsUrl) searchEl.addEventListener("keydown", function (e) {
-      if (e.key !== "Enter") return;
-      e.preventDefault();
-      var q = searchEl.value.trim(); if (!q) return;
-      window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
+    searchEl.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && resultsUrl) {
+        e.preventDefault();
+        var q = searchEl.value.trim(); if (!q) return;
+        window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
+      }
     });
+    searchEl.addEventListener("blur", function () { setTimeout(closeGoo, 140); });
   }
-  var searchBtn = document.getElementById("dcSearchGo");
-  // Swap the arrow (← empty, ↑ typing) as the shopper types.
-  if (searchEl && searchBtn) searchEl.addEventListener("input", function () {
-    searchBtn.classList.toggle("has-text", !!searchEl.value.trim());
-  });
-  function flashOk() { if (!searchBtn) return; searchBtn.classList.add("is-ok"); setTimeout(function () { searchBtn.classList.remove("is-ok"); }, 900); }
-  if (searchBtn) searchBtn.addEventListener("click", function () {
-    var q = searchEl ? searchEl.value.trim() : "";
-    if (resultsUrl) { if (q) window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q); }
-    else { query = q.toLowerCase(); applyFilters(); flashOk(); if (searchEl) searchEl.focus(); }
-  });
-  // Magnifier tab (next to All) opens the search bar below the categories; closes when clicked away empty.
-  var searchTrigger = document.getElementById("dcSearchTrigger");
-  var searchBar = document.getElementById("dcSearchBar");
-  function openSearch() { if (searchBar) searchBar.classList.add("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "true"); if (tabs) tabs.classList.add("dc-searching"); if (searchEl) searchEl.focus(); }
-  function closeSearch() { if (searchBar && searchEl && !searchEl.value.trim()) { searchBar.classList.remove("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false"); if (tabs) tabs.classList.remove("dc-searching"); } }
-  if (searchTrigger) searchTrigger.addEventListener("click", function (e) {
-    e.stopPropagation();  // don't let the category-tab handler treat this as a category
-    if (searchBar && searchBar.classList.contains("is-open")) { if (searchEl) searchEl.focus(); } else { openSearch(); }
-  });
-  if (searchEl) searchEl.addEventListener("blur", function () { setTimeout(closeSearch, 140); });
-  // Esc closes the search bar (and clears the filter).
+  if (gooPill) {
+    gooPill.addEventListener("click", function () { if (goo && !goo.classList.contains("is-open")) openGoo(); });
+    gooPill.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && goo && !goo.classList.contains("is-open")) { e.preventDefault(); openGoo(); } });
+  }
+  // Esc closes the search and clears the filter.
   document.addEventListener("keydown", function (e) {
-    if (e.key !== "Escape") return;
-    if (searchBar && searchBar.classList.contains("is-open")) {
-      if (searchEl) { searchEl.value = ""; query = ""; badgeFilter = null; applyFilters(); }
-      searchBar.classList.remove("is-open");
-      if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false");
-      if (tabs) tabs.classList.remove("dc-searching");
-    }
+    if (e.key !== "Escape" || !goo || !goo.classList.contains("is-open")) return;
+    if (searchEl) { searchEl.value = ""; query = ""; badgeFilter = null; applyFilters(); searchEl.disabled = true; }
+    goo.classList.remove("is-open");
   });
 
   // Typing effect: cycle example phrases through the placeholder like a typewriter.
