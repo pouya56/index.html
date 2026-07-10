@@ -1293,18 +1293,31 @@
 
   /* "Surprise me" — open a random product in the half-size pop-up (never the same one twice in a row). */
   var randBtn = document.getElementById("dhBtnRandom");
-  var randSrc = document.querySelector("[data-dh-random]");
-  if (randBtn && randSrc) {
+  if (randBtn) {
+    var randSrc = document.querySelector("[data-dh-random]");
     var rlist = [];
-    try { rlist = JSON.parse(randSrc.textContent) || []; } catch (e) {}
+    try { rlist = randSrc ? (JSON.parse(randSrc.textContent) || []) : []; } catch (e) {}
     var lastR = null;
-    randBtn.addEventListener("click", function () {
-      if (!rlist.length) { window.location.href = "{{ routes.all_products_collection_url }}"; return; }
+    function pickAndOpen(urls) {
+      if (!urls.length) return false;
       var u;
-      if (rlist.length === 1) { u = rlist[0]; }
-      else { do { u = rlist[Math.floor(Math.random() * rlist.length)]; } while (u === lastR); }
+      if (urls.length === 1) { u = urls[0]; }
+      else { do { u = urls[Math.floor(Math.random() * urls.length)]; } while (u === lastR); }
       lastR = u;
-      if (u) openSlide(u, true);
+      if (u) { openSlide(u, true); return true; }
+      return false;
+    }
+    randBtn.addEventListener("click", function () {
+      if (pickAndOpen(rlist)) return;
+      /* Inline list empty — fetch products live and open a random one anyway. */
+      fetch("/products.json?limit=250", { credentials: "same-origin" })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var ps = (d && d.products) || [];
+          rlist = ps.map(function (p) { return "/products/" + p.handle; });
+          if (!pickAndOpen(rlist)) window.location.href = "{{ routes.all_products_collection_url }}";
+        })
+        .catch(function () { window.location.href = "{{ routes.all_products_collection_url }}"; });
     });
   }
 })();
