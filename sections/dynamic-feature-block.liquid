@@ -35,7 +35,7 @@
     .dyn-fb .fb-title { font-size: clamp(26px, 4vw, 44px); line-height: 1.06; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
     .dyn-fb .fb-desc { font-size: clamp(15px, 2vw, 19px); line-height: 1.5; color: var(--soft); margin: 14px 0 0; }
 
-    .dyn-fb .fb-card { position: relative; overflow: hidden; border-radius: 30px; background: var(--card); min-height: var(--fb-cardh); }
+    .dyn-fb .fb-card { position: relative; overflow: hidden; border-radius: 30px; background: var(--card); height: var(--fb-cardh); }
 
     /* Background media layers (crossfade) */
     .dyn-fb .fb-bg { position: absolute; inset: 0; z-index: 0; }
@@ -52,7 +52,7 @@
     .dyn-fb.is-open .fb-close { opacity: 1; pointer-events: auto; transform: scale(1); }
 
     /* Left column: nav arrows + pills */
-    .dyn-fb .fb-left { position: relative; z-index: 3; display: flex; align-items: center; gap: 16px; min-height: var(--fb-cardh); padding: 48px clamp(20px,4vw,52px); box-sizing: border-box; pointer-events: none; }
+    .dyn-fb .fb-left { position: relative; z-index: 3; display: flex; align-items: center; gap: 16px; height: var(--fb-cardh); padding: 48px clamp(20px,4vw,52px); box-sizing: border-box; pointer-events: none; }
     .dyn-fb .fb-nav, .dyn-fb .fb-navbtn, .dyn-fb .fb-pill, .dyn-fb .fb-panel, .dyn-fb .fb-close { pointer-events: auto; }
     .dyn-fb .fb-nav { display: flex; flex-direction: column; gap: 10px; opacity: 0; pointer-events: none; transition: opacity .25s; }
     .dyn-fb.is-open .fb-nav { opacity: 1; pointer-events: auto; }
@@ -62,7 +62,8 @@
     .dyn-fb .fb-navbtn:active { transform: scale(.92); }
     .dyn-fb .fb-navbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-    .dyn-fb .fb-list { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; width: 100%; max-width: 380px; }
+    .dyn-fb .fb-list { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; width: 100%; max-width: 380px; max-height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+    .dyn-fb .fb-list::-webkit-scrollbar { width: 0; height: 0; }
     .dyn-fb .fb-item { max-width: 100%; }
 
     /* Glass pill (collapsed) */
