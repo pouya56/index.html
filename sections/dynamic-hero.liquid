@@ -811,7 +811,7 @@
         {%- for block in section.blocks -%}
           {%- if block.type == 'corner_link' and block.settings.corner == pos and cnt < 4 -%}
             {%- assign cnt = cnt | plus: 1 -%}
-            <a class="dh-corner-link{% if block.settings.icon_only %} is-icononly{% endif %}" href="{{ block.settings.url | default: '#' }}"{% if block.settings.icon_only %} aria-label="{{ block.settings.label | escape }}"{% endif %} {{ block.shopify_attributes }}>
+            <a class="dh-corner-link{% if block.settings.icon_only %} is-icononly{% endif %}" href="{{ block.settings.url | default: '#' }}"{% if block.settings.open_popup and block.settings.url != blank %} data-dh-slide="{{ block.settings.url }}"{% endif %}{% if block.settings.icon_only %} aria-label="{{ block.settings.label | escape }}"{% endif %} {{ block.shopify_attributes }}>
               {%- if block.settings.icon_image != blank -%}
                 {%- assign iw = block.settings.icon_image.width | times: 18 | divided_by: block.settings.icon_image.height -%}
                 <img class="dh-corner-ic" src="{{ block.settings.icon_image | image_url: width: 54 }}" alt="" width="{{ iw }}" height="18">
@@ -1275,7 +1275,7 @@
     fetch(url, { credentials: "same-origin" }).then(function (r) { return r.text(); }).then(function (html) { cache[url] = html; if (slide.classList.contains("is-open")) inject(html, url); }).catch(function () { sbody.innerHTML = fallback(url); });
   }
   function closeSlide() { slide.classList.remove("is-open"); slide.setAttribute("aria-hidden", "true"); document.documentElement.style.overflow = ""; }
-  document.querySelectorAll("[data-dh-slide]").forEach(function (b) { b.addEventListener("click", function () { openSlide(b.getAttribute("data-dh-slide")); }); });
+  document.querySelectorAll("[data-dh-slide]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); openSlide(b.getAttribute("data-dh-slide")); }); });
   slide.querySelectorAll("[data-dh-slide-close]").forEach(function (b) { b.addEventListener("click", closeSlide); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSlide(); });
 })();
@@ -1869,6 +1869,7 @@
         ], "info": "Up to 4 links per corner; extras beyond 4 are ignored." },
       { "type": "text", "id": "label", "label": "Text", "default": "Link" },
       { "type": "url", "id": "url", "label": "Link" },
+      { "type": "checkbox", "id": "open_popup", "label": "Open as a full-screen pop-up", "default": false, "info": "Instead of going to the page, clicking this corner link opens it as a full-screen pop-up (great for an About page). Close with × or Esc." },
       { "type": "select", "id": "icon", "label": "Icon", "default": "none",
         "options": [
           { "value": "none", "label": "No icon" },
