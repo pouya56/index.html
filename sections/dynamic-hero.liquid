@@ -1017,7 +1017,23 @@
           <div class="dh-hero-btns">
             {%- if section.settings.show_btn1 -%}<button type="button" class="dh-gbtn" id="dhBtnSearch">{{ section.settings.btn1_label | default: 'Search' }}</button>{%- endif -%}
             {%- if section.settings.show_btn2 -%}<a class="dh-gbtn" href="{{ section.settings.btn2_url | default: routes.all_products_collection_url }}">{{ section.settings.btn2_label | default: 'Shop all' }}</a>{%- endif -%}
+            {%- if section.settings.show_btn3 -%}<button type="button" class="dh-gbtn" id="dhBtnRandom">{{ section.settings.btn3_label | default: 'Surprise me' }}</button>{%- endif -%}
           </div>
+          {%- if section.settings.show_btn3 -%}
+            <script type="application/json" data-dh-random>[{%- assign rfirst = true -%}{%- for product in prods limit: 50 -%}{%- unless rfirst %},{% endunless %}{%- assign rfirst = false -%}{{ product.url | json }}{%- endfor -%}]</script>
+            <script>
+              (function () {
+                var btn = document.getElementById("dhBtnRandom"); if (!btn) return;
+                var src = document.querySelector("[data-dh-random]"); var list = [];
+                try { list = JSON.parse(src.textContent) || []; } catch (e) {}
+                btn.addEventListener("click", function () {
+                  if (!list.length) { window.location.href = "{{ routes.all_products_collection_url }}"; return; }
+                  var u = list[Math.floor(Math.random() * list.length)];
+                  if (u) window.location.href = u;
+                });
+              })();
+            </script>
+          {%- endif -%}
         {%- endif -%}
       {%- endif -%}
       {%- comment -%} Build the category tabs from product type or tag. {%- endcomment -%}
@@ -1791,6 +1807,8 @@
     { "type": "checkbox", "id": "show_btn2", "label": "Show the 'Shop' button", "default": false },
     { "type": "text", "id": "btn2_label", "label": "Shop button text", "default": "Shop all" },
     { "type": "url", "id": "btn2_url", "label": "Shop button link", "info": "Defaults to all products." },
+    { "type": "checkbox", "id": "show_btn3", "label": "Show the 'Surprise me' button", "default": false, "info": "Opens a random product from this section's collection." },
+    { "type": "text", "id": "btn3_label", "label": "Surprise button text", "default": "Surprise me" },
 
     { "type": "text", "id": "copyright_text", "label": "Bottom copyright text", "default": "© 2026, Dynaeimic", "info": "Small centered text at the very bottom. Clear to hide." },
 
