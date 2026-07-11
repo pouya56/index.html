@@ -133,8 +133,15 @@
   .dyn-col .dc-tabs.is-pills .dc-tab:hover { color: var(--ink); background: rgba(0,0,0,0.045); }
   .dyn-col .dc-tabs.is-pills .dc-tab.is-active { background: var(--ink); color: #fff; }
 
+  /* Sticky category bar: stays with you as you scroll down through the products. */
+  .dyn-col .dc-tabs-wrap { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 6px; margin: 24px auto; max-width: 1040px; padding: 10px 0; }
+  .dyn-col .dc-tabs-wrap::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100vw; z-index: -1;
+    background: {{ section.settings.page_bg | default: '#f5f5f7' }}; }
+  .dyn-col .dc-tabs.is-pills { position: sticky; top: 0; z-index: 30; padding: 10px 0; margin: 24px auto; }
+  .dyn-col .dc-tabs.is-pills::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100vw; z-index: -1;
+    background: {{ section.settings.page_bg | default: '#f5f5f7' }}; }
+
   /* Image tabs (Apple-style: picture + label, no box - tiles blend into the page) */
-  .dyn-col .dc-tabs-wrap { position: relative; display: flex; align-items: center; gap: 6px; margin: 28px auto 32px; max-width: 1040px; }
   .dyn-col .dc-tabs.is-images { flex: 1 1 auto; gap: 20px; align-items: flex-start; flex-wrap: nowrap; justify-content: flex-start;
     overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; margin: 0; max-width: none; padding: 4px 2px; }
   .dyn-col .dc-tabs.is-images.is-centered { justify-content: center; }
@@ -313,8 +320,8 @@
   .dyn-col .dc-banner--tall { grid-column: span 1; grid-row: span 4; }
   .dyn-col .dc-banner--lg   { grid-column: span 2; grid-row: span 4; }
   .dyn-col .dc-banner-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
-  .dyn-col .dc-banner-scrim { position: absolute; inset: 0; z-index: -1; pointer-events: none;
-    background: linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.35) 34%, rgba(255,255,255,0) 60%); }
+  /* Readability without fading the image: a soft shadow that hugs the text only. */
+  .dyn-col .dc-banner--shade .dc-banner-txt { text-shadow: 0 1px 3px rgba(0,0,0,0.28), 0 1px 12px rgba(0,0,0,0.18); }
   .dyn-col .dc-banner-txt { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; max-width: 90%; }
   .dyn-col .dc-banner-kicker { font-size: 13.5px; font-weight: 600; letter-spacing: 0.01em; opacity: 0.9; }
   .dyn-col .dc-banner-title { font-family: var(--font-heading-family, var(--font)); font-weight: 700; font-size: clamp(20px, 2.2vw, 30px); line-height: 1.08; letter-spacing: -0.01em; }
@@ -675,10 +682,11 @@
             {%- assign bsize = block.settings.size | default: 'sm' -%}
             {%- assign bink = block.settings.text_color | default: '#17223b' -%}
             {%- assign bbg = block.settings.bg_color | default: '#eef1f5' -%}
+            {%- assign bcls = 'dc-banner dc-banner--' | append: bsize -%}
+            {%- if block.settings.scrim and block.settings.image != blank -%}{%- assign bcls = bcls | append: ' dc-banner--shade' -%}{%- endif -%}
             {%- capture banner_inner -%}
               {%- if block.settings.image != blank -%}
                 <img class="dc-banner-img" src="{{ block.settings.image | image_url: width: 1200 }}" alt="{{ block.settings.heading | escape }}" loading="lazy">
-                {%- if block.settings.scrim -%}<span class="dc-banner-scrim"></span>{%- endif -%}
               {%- endif -%}
               <div class="dc-banner-txt">
                 {%- if block.settings.kicker != blank -%}<span class="dc-banner-kicker">{{ block.settings.kicker }}</span>{%- endif -%}
@@ -687,9 +695,9 @@
               </div>
             {%- endcapture -%}
             {%- if block.settings.link != blank -%}
-              <a class="dc-banner dc-banner--{{ bsize }}" href="{{ block.settings.link }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</a>
+              <a class="{{ bcls }}" href="{{ block.settings.link }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</a>
             {%- else -%}
-              <div class="dc-banner dc-banner--{{ bsize }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</div>
+              <div class="{{ bcls }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</div>
             {%- endif -%}
           {%- endfor -%}
         </div>
@@ -1285,7 +1293,7 @@
           { "value": "lg", "label": "Large (2×2)" }
         ] },
       { "type": "image_picker", "id": "image", "label": "Background image" },
-      { "type": "checkbox", "id": "scrim", "label": "Light fade behind the text", "default": true, "info": "Keeps the text readable over a busy photo." },
+      { "type": "checkbox", "id": "scrim", "label": "Shadow behind the text", "default": true, "info": "Adds a soft shadow so the text stays readable over a photo — without fading the image." },
       { "type": "text", "id": "kicker", "label": "Small top line", "info": "e.g. In as fast as an hour" },
       { "type": "text", "id": "heading", "label": "Heading", "default": "Shop the sale" },
       { "type": "text", "id": "button_label", "label": "Link text", "default": "Shop now" },
