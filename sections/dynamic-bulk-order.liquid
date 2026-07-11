@@ -79,8 +79,6 @@
 </style>
 
 <section class="dbo" id="dboRoot"
-  data-cloud="{{ section.settings.cloudinary_cloud_name }}"
-  data-preset="{{ section.settings.cloudinary_upload_preset }}"
   data-minqty="{{ section.settings.min_qty | default: 1 }}">
 
   <div class="dbo-head">
@@ -105,7 +103,7 @@
     "title": {{ product.title | json }},
     "image": {{ product.featured_image | image_url: width: 400 | json }},
     "options": [{%- for o in product.options_with_values -%}{ "name": {{ o.name | json }}, "values": {{ o.values | json }} }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}],
-    "variants": [{%- for v in product.variants -%}{ "options": {{ v.options | json }}, "available": {{ v.available }} }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}]
+    "variants": [{%- for v in product.variants -%}{ "id": {{ v.id }}, "options": {{ v.options | json }}, "available": {{ v.available }} }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}]
   }{%- unless forloop.last -%},{%- endunless -%}
 {%- endfor -%}
 ]
@@ -175,8 +173,6 @@
   var tpl = document.getElementById("dboRowTpl");
   var addBtn = document.getElementById("dboAdd");
   var submitBtn = document.getElementById("dboSubmit");
-  var CLOUD = (root.getAttribute("data-cloud") || "").trim();
-  var PRESET = (root.getAttribute("data-preset") || "").trim();
   var minQty = parseInt(root.getAttribute("data-minqty"), 10) || 1;
   var ADDVAR_LABEL = "{{ section.settings.addvar_label | default: 'Add another variation' | escape }}";
 
@@ -258,15 +254,30 @@
   addBtn.addEventListener("click", addRow);
   addRow();
 
-  async function uploadFile(file) {
-    if (!CLOUD || !PRESET || !file) return "";
+  function firstVariantId(prod) {
+    if (!prod || !prod.variants || !prod.variants.length) return null;
+    for (var i = 0; i < prod.variants.length; i++) if (prod.variants[i].available) return prod.variants[i].id;
+    return prod.variants[0].id;
+  }
+  var _addedToCart = false;
+  // Host the design on Shopify itself: attach it to a cart line item, read the
+  // hosted URL from the response, and clear the cart afterwards (no purchase).
+  async function uploadViaShopify(file, variantId) {
+    if (!file || !variantId) return "";
     try {
-      var fd = new FormData(); fd.append("file", file); fd.append("upload_preset", PRESET);
-      var res = await fetch("https://api.cloudinary.com/v1_1/" + CLOUD + "/auto/upload", { method: "POST", body: fd });
+      var fd = new FormData();
+      fd.append("id", String(variantId));
+      fd.append("quantity", "1");
+      fd.append("properties[Bulk design]", file, file.name);
+      var res = await fetch("/cart/add.js", { method: "POST", headers: { Accept: "application/json" }, body: fd });
+      if (!res.ok) return "";
       var j = await res.json();
-      return j.secure_url || "";
+      _addedToCart = true;
+      var it = (j.items && j.items[0]) || j;
+      return (it && it.properties && (it.properties["Bulk design"] || it.properties.Bulk_design)) || "";
     } catch (e) { return ""; }
   }
+  async function clearCart() { try { await fetch("/cart/clear.js", { method: "POST", headers: { Accept: "application/json" } }); } catch (e) {} }
 
   async function buildBody() {
     var name = (document.getElementById("dboName").value || "").trim();
@@ -295,10 +306,12 @@
         any = true; rowHasQty = true;
       }
       if (rowHasQty && row._file) {
-        var url = await uploadFile(row._file);
-        fileLines.push(pName + ": " + (url || ("(design '" + row._file.name + "' — upload not configured)")));
+        var vid = firstVariantId(findProduct(pSel.value));
+        var url = await uploadViaShopify(row._file, vid);
+        fileLines.push(pName + ": " + (url || ("(couldn't attach '" + row._file.name + "')")));
       }
     }
+    if (_addedToCart) await clearCart();
     if (!any) return null;
 
     var out = ["BULK ORDER REQUEST", ""];
@@ -339,9 +352,7 @@
   "class": "dynamic-bulk-order-section",
   "settings": [
     { "type": "collection", "id": "collection", "label": "Products available for bulk order", "info": "Choose a collection. Leave empty to allow all products." },
-    { "type": "paragraph", "content": "The request is emailed to your store contact email (Settings → Store details) via Shopify's contact form. Add your Cloudinary details so uploaded designs are included as links." },
-    { "type": "text", "id": "cloudinary_cloud_name", "label": "Cloudinary cloud name", "info": "Same as your customizer." },
-    { "type": "text", "id": "cloudinary_upload_preset", "label": "Cloudinary unsigned upload preset" },
+    { "type": "paragraph", "content": "The request is emailed to your store contact email (Settings → Store details) via Shopify's contact form. Uploaded designs are hosted on Shopify and included as links automatically — no third-party setup." },
     { "type": "text", "id": "heading", "label": "Heading", "default": "Bulk order" },
     { "type": "textarea", "id": "intro", "label": "Intro text", "default": "Order several products at once — pick each item, choose the options and quantity, and upload your design." },
     { "type": "text", "id": "add_label", "label": "Add-product button text", "default": "Add another product" },
