@@ -299,6 +299,38 @@
   @media (max-width: 800px)  { .dyn-col .dc-gridall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
   @media (max-width: 460px)  { .dyn-col .dc-gridall { gap: 12px; } .dyn-col .dc-gridall .dc-card { min-height: 340px; } }
 
+  /* Editable promo-banner mosaic (Target/Walmart-style tiles) */
+  .dyn-col .dc-banners-heading { margin-top: 56px; }
+  .dyn-col .dc-banners { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 215px; gap: 16px; grid-auto-flow: dense; margin: 20px auto 10px; }
+  .dyn-col .dc-banner { position: relative; overflow: hidden; border-radius: 22px; display: flex; flex-direction: column; align-items: flex-start;
+    padding: 26px 28px; text-decoration: none; background: #eef1f5; color: #17223b; isolation: isolate;
+    grid-column: span 1; grid-row: span 1; transition: transform .18s ease, box-shadow .18s ease; }
+  .dyn-col a.dc-banner:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(0,0,0,0.12); }
+  .dyn-col .dc-banner--sm   { grid-column: span 1; grid-row: span 1; }
+  .dyn-col .dc-banner--wide { grid-column: span 2; grid-row: span 1; }
+  .dyn-col .dc-banner--tall { grid-column: span 1; grid-row: span 2; }
+  .dyn-col .dc-banner--lg   { grid-column: span 2; grid-row: span 2; }
+  .dyn-col .dc-banner-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+  .dyn-col .dc-banner-scrim { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.35) 34%, rgba(255,255,255,0) 60%); }
+  .dyn-col .dc-banner-txt { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; max-width: 90%; }
+  .dyn-col .dc-banner-kicker { font-size: 13.5px; font-weight: 600; letter-spacing: 0.01em; opacity: 0.9; }
+  .dyn-col .dc-banner-title { font-family: var(--font-heading-family, var(--font)); font-weight: 700; font-size: clamp(20px, 2.2vw, 30px); line-height: 1.08; letter-spacing: -0.01em; }
+  .dyn-col .dc-banner--sm .dc-banner-title { font-size: clamp(18px, 1.8vw, 24px); }
+  .dyn-col .dc-banner-cta { margin-top: 4px; font-size: 14.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .dyn-col a.dc-banner:hover .dc-banner-cta { text-decoration-thickness: 2px; }
+  @media (max-width: 900px) {
+    .dyn-col .dc-banners { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 200px; }
+    .dyn-col .dc-banner--lg { grid-column: span 2; grid-row: span 2; }
+    .dyn-col .dc-banner--wide { grid-column: span 2; grid-row: span 1; }
+    .dyn-col .dc-banner--tall { grid-column: span 1; grid-row: span 2; }
+  }
+  @media (max-width: 520px) {
+    .dyn-col .dc-banners { grid-template-columns: 1fr; grid-auto-rows: 190px; }
+    .dyn-col .dc-banner, .dyn-col .dc-banner--lg, .dyn-col .dc-banner--wide, .dyn-col .dc-banner--tall { grid-column: span 1; grid-row: span 1; }
+    .dyn-col .dc-banner--lg, .dyn-col .dc-banner--tall { grid-row: span 1; }
+  }
+
   .dyn-col .dc-swatches { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; min-height: 20px; }
   .dyn-col .dc-swatch { width: 18px; height: 18px; border-radius: 50%; padding: 0; border: none; cursor: pointer;
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15); transition: transform .14s; }
@@ -409,7 +441,9 @@
           </button>
           {%- endif -%}
         </div>{%- endcapture -%}
-        {%- assign dc_has_img_tabs = false -%}{%- if section.settings.show_tabs and section.blocks.size > 0 -%}{%- assign dc_has_img_tabs = true -%}{%- endif -%}
+        {%- assign tab_block_count = 0 -%}
+        {%- for b in section.blocks -%}{%- if b.type == 'tab' -%}{%- assign tab_block_count = tab_block_count | plus: 1 -%}{%- endif -%}{%- endfor -%}
+        {%- assign dc_has_img_tabs = false -%}{%- if section.settings.show_tabs and tab_block_count > 0 -%}{%- assign dc_has_img_tabs = true -%}{%- endif -%}
         {%- unless dc_has_img_tabs -%}{{ dc_search_html }}{%- endunless -%}
         {%- assign show_b1 = false -%}{%- if section.settings.show_btn1 and section.settings.btn1_label != blank -%}{%- assign show_b1 = true -%}{%- endif -%}
         {%- assign show_b2 = false -%}{%- if section.settings.show_btn2 and section.settings.btn2_label != blank -%}{%- assign show_b2 = true -%}{%- endif -%}
@@ -430,7 +464,7 @@
       {%- assign real_cats = '' -%}
       {%- for c in cats -%}{%- if c != blank -%}{%- assign real_cats = real_cats | append: '1' -%}{%- endif -%}{%- endfor -%}
 
-      {%- if section.settings.show_tabs and section.blocks.size > 0 -%}
+      {%- if section.settings.show_tabs and tab_block_count > 0 -%}
         {%- comment -%} Image tabs: merchant-defined blocks with an uploaded picture per category. {%- endcomment -%}
         <div class="dc-tabs-wrap" id="dcTabsWrap">
         <button type="button" class="dc-tabs-arrow dc-prev" id="dcPrev" aria-label="Scroll categories left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -453,10 +487,13 @@
             <span class="dc-tab-label">{{ section.settings.all_label | default: 'All' }}</span>
           </button>
           {%- endif -%}
+          {%- assign tab_i = 0 -%}
           {%- for block in section.blocks -%}
+            {%- unless block.type == 'tab' -%}{%- continue -%}{%- endunless -%}
+            {%- assign tab_i = tab_i | plus: 1 -%}
             {%- assign cv = block.settings.category_value -%}
             {%- assign first_active = false -%}
-            {%- if section.settings.show_all_tab == false and forloop.first -%}{%- assign first_active = true -%}{%- endif -%}
+            {%- if section.settings.show_all_tab == false and tab_i == 1 -%}{%- assign first_active = true -%}{%- endif -%}
             <button type="button" class="dc-tab{% if first_active %} is-active{% endif %}" data-cat="{{ cv | handle }}" role="tab" aria-selected="{% if first_active %}true{% else %}false{% endif %}" {{ block.shopify_attributes }}>
               <span class="dc-tab-img">
                 {%- if block.settings.image != blank -%}
@@ -625,6 +662,40 @@
       {%- if section.settings.show_scrollbar -%}
         <div class="dc-scrollbar" id="dcScrollbar"><div class="dc-scrollbar-thumb" id="dcScrollThumb"></div></div>
       {%- endif -%}
+
+      {%- comment -%} Editable promo banners (mosaic) under the best-seller row. {%- endcomment -%}
+      {%- assign banner_count = 0 -%}
+      {%- for b in section.blocks -%}{%- if b.type == 'banner' -%}{%- assign banner_count = banner_count | plus: 1 -%}{%- endif -%}{%- endfor -%}
+      {%- if banner_count > 0 -%}
+        {%- if section.settings.banners_heading != blank -%}
+          <h2 class="dc-grid-heading dc-banners-heading">{{ section.settings.banners_heading }}</h2>
+        {%- endif -%}
+        <div class="dc-banners">
+          {%- for block in section.blocks -%}
+            {%- unless block.type == 'banner' -%}{%- continue -%}{%- endunless -%}
+            {%- assign bsize = block.settings.size | default: 'sm' -%}
+            {%- assign bink = block.settings.text_color | default: '#17223b' -%}
+            {%- assign bbg = block.settings.bg_color | default: '#eef1f5' -%}
+            {%- capture banner_inner -%}
+              {%- if block.settings.image != blank -%}
+                <img class="dc-banner-img" src="{{ block.settings.image | image_url: width: 1200 }}" alt="{{ block.settings.heading | escape }}" loading="lazy">
+                {%- if block.settings.scrim -%}<span class="dc-banner-scrim"></span>{%- endif -%}
+              {%- endif -%}
+              <div class="dc-banner-txt">
+                {%- if block.settings.kicker != blank -%}<span class="dc-banner-kicker">{{ block.settings.kicker }}</span>{%- endif -%}
+                {%- if block.settings.heading != blank -%}<span class="dc-banner-title">{{ block.settings.heading }}</span>{%- endif -%}
+                {%- if block.settings.button_label != blank -%}<span class="dc-banner-cta">{{ block.settings.button_label }}</span>{%- endif -%}
+              </div>
+            {%- endcapture -%}
+            {%- if block.settings.link != blank -%}
+              <a class="dc-banner dc-banner--{{ bsize }}" href="{{ block.settings.link }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</a>
+            {%- else -%}
+              <div class="dc-banner dc-banner--{{ bsize }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</div>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+
       {%- if section.settings.show_all_grid -%}
         {%- if section.settings.all_heading != blank -%}
           <h2 class="dc-grid-heading dc-allgrid-heading">{{ section.settings.all_heading }}</h2>
@@ -767,10 +838,19 @@
       }
       return searching ? okQ : okCat;
     }
-    // Top row: matched cards (optionally best sellers only).
+    // Top best-seller row: stays fixed across category tabs (ignores the
+    // category), only responding to search text / badge filters.
+    function shelfMatch(c) {
+      var okQ = !query || queryMatch(query, c.getAttribute("data-search") || "");
+      if (badgeFilter) {
+        var fl = " " + (c.getAttribute("data-flags") || "") + " ";
+        return fl.indexOf(" " + badgeFilter + " ") >= 0 && okQ;
+      }
+      return okQ;
+    }
     var visible = [];
     cards.forEach(function (c) {
-      var m = baseMatch(c);
+      var m = shelfMatch(c);
       if (m && shelfBestOnly) {
         var fl = " " + (c.getAttribute("data-flags") || "") + " ";
         if (fl.indexOf(" best ") < 0) m = false;
@@ -1144,6 +1224,7 @@
     { "type": "checkbox", "id": "show_swatches", "label": "Show colour swatches", "default": true },
     { "type": "text", "id": "grid_heading", "label": "Row heading", "default": "Best sellers", "info": "Heading above the horizontal best-seller row. Clear to hide." },
     { "type": "checkbox", "id": "top_bestsellers_only", "label": "Top row shows best sellers only", "default": true, "info": "The horizontal row shows only products flagged as best sellers (see the ‘Best seller badge’ section). If none are flagged, it shows all products." },
+    { "type": "text", "id": "banners_heading", "label": "Promo banner heading", "info": "Optional heading above the promo banners. Clear to hide." },
     { "type": "checkbox", "id": "show_all_grid", "label": "Show all products in a grid below", "default": true, "info": "Adds a vertical, wrapping grid of every product under the best-seller row." },
     { "type": "text", "id": "all_heading", "label": "Grid heading", "default": "All products", "info": "Heading above the vertical grid. Clear to hide." },
     { "type": "checkbox", "id": "image_bg", "label": "Fill each box with the product image", "default": false, "info": "The photo covers the whole card as a background; the name and price overlay on top." },
@@ -1193,9 +1274,26 @@
       { "type": "text", "id": "category_value", "label": "Filters products where Type =",
         "info": "Type the exact Product type value of the items for this tab, e.g. Drinkware. (If 'Build tabs from' is set to Tag, enter the tag instead.)" },
       { "type": "image_picker", "id": "image", "label": "Tab image" }
+    ]},
+    { "type": "banner", "name": "Promo banner", "settings": [
+      { "type": "select", "id": "size", "label": "Tile size", "default": "sm",
+        "options": [
+          { "value": "sm", "label": "Small (1×1)" },
+          { "value": "wide", "label": "Wide (2 wide)" },
+          { "value": "tall", "label": "Tall (2 high)" },
+          { "value": "lg", "label": "Large (2×2)" }
+        ] },
+      { "type": "image_picker", "id": "image", "label": "Background image" },
+      { "type": "checkbox", "id": "scrim", "label": "Light fade behind the text", "default": true, "info": "Keeps the text readable over a busy photo." },
+      { "type": "text", "id": "kicker", "label": "Small top line", "info": "e.g. In as fast as an hour" },
+      { "type": "text", "id": "heading", "label": "Heading", "default": "Shop the sale" },
+      { "type": "text", "id": "button_label", "label": "Link text", "default": "Shop now" },
+      { "type": "url", "id": "link", "label": "Link" },
+      { "type": "color", "id": "bg_color", "label": "Background colour", "default": "#eef1f5" },
+      { "type": "color", "id": "text_color", "label": "Text colour", "default": "#17223b" }
     ]}
   ],
-  "max_blocks": 12,
+  "max_blocks": 24,
   "presets": [ { "name": "Dynamic Collection" } ],
   "enabled_on": { "templates": ["collection", "list-collections", "index"] }
 }
