@@ -942,23 +942,20 @@
       c.style.display = m ? "" : "none";
       if (m) visibleAll.push(c);
     });
-    // "Focused" view = a specific category is picked, a badge is active, or the
-    // shopper is searching. Then show ONLY the matching products and hide the
-    // best-seller row + promo banners so the category stands alone.
-    var focused = searching || (currentCat && currentCat !== "__all") || !!badgeFilter;
-    var showShelf = !focused && visible.length > 0;
+    // The grid below filters to the chosen category / search, but the best-seller
+    // row and promo banners STAY on the page — scroll up and they're still there.
+    var showShelf = visible.length > 0;
     if (shelfWrap) shelfWrap.style.display = showShelf ? "" : "none";
     if (bestHeading) bestHeading.style.display = showShelf ? "" : "none";
     if (scrollbarEl) scrollbarEl.style.display = showShelf ? "" : "none";
-    if (bannersWrap) bannersWrap.style.display = focused ? "none" : "";
-    if (bannersHeading) bannersHeading.style.display = focused ? "none" : "";
-    if (allHeading) allHeading.style.display = focused ? "none" : "";
+    if (bannersWrap) bannersWrap.style.display = "";
+    if (bannersHeading) bannersHeading.style.display = "";
+    if (allHeading) allHeading.style.display = "";
     if (badgeChip) {
       if (badgeFilter) { badgeChip.hidden = false; if (badgeChipTxt) badgeChipTxt.textContent = badgeLabels[badgeFilter] || badgeFilter; }
       else { badgeChip.hidden = true; }
     }
-    var anyShown = focused ? visibleAll.length : (visible.length + visibleAll.length);
-    if (noRes) noRes.style.display = anyShown ? "none" : "block";
+    if (noRes) noRes.style.display = (visible.length + visibleAll.length) ? "none" : "block";
     grid.scrollLeft = 0;
     reveal(visible);
     updateGridArrows();
