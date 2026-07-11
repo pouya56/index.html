@@ -1,0 +1,378 @@
+{% comment %}
+  ============================================================================
+  Dynamic Bulk Order — a multi-product order form.
+  ----------------------------------------------------------------------------
+  The customer adds one or more rows. Each row: pick a product → pick the
+  variant (colour/size) → set a quantity → upload their design file → see a
+  live mockup of the design on the product. Submitting adds every row to the
+  cart (design files are hosted by Shopify on each line item) and sends them to
+  checkout.
+  INSTALL:
+  1. Theme code editor > Sections > Add a new section named
+     "dynamic-bulk-order" and paste this whole file.
+  2. Online Store > Pages > Add page > title "Bulk order" (theme template:
+     "Default page" or a page template that includes this section). Then in
+     Customize > that page > Add section > "Dynamic Bulk Order". Save.
+     (Or set the page's template to one that contains only this section.)
+  3. In the section settings, choose the Collection whose products can be
+     bulk-ordered, and set the mockup print-area box if you like.
+  ============================================================================
+{% endcomment %}
+
+{%- assign bo_coll = section.settings.collection -%}
+{%- if bo_coll == blank -%}{%- assign bo_coll = collections.all -%}{%- endif -%}
+
+<style>
+  .dbo { --ink:#1d1d1f; --soft:#6e6e73; --faint:#86868b; --line:#e3e3e8; --line2:#d2d2d7; --accent:#0071e3; --accent-soft:#e8f2fd; --panel:#f5f5f7; --danger:#c0392b;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:var(--font); color:var(--ink); -webkit-font-smoothing:antialiased; max-width:1000px; margin:0 auto; padding:40px 22px 80px; }
+  .dbo *, .dbo *::before, .dbo *::after { box-sizing:border-box; }
+  .dbo-head { text-align:center; margin-bottom:30px; }
+  .dbo-head h1 { font-size:clamp(28px,5vw,44px); font-weight:600; letter-spacing:-0.02em; margin:0 0 10px; }
+  .dbo-head p { font-size:16px; color:var(--soft); line-height:1.55; margin:0 auto; max-width:620px; }
+  .dbo-rows { display:flex; flex-direction:column; gap:16px; }
+  .dbo-row { display:grid; grid-template-columns:180px 1fr; gap:20px; padding:18px; border:1px solid var(--line); border-radius:20px; background:#fff;
+    box-shadow:0 1px 2px rgba(0,0,0,0.03); }
+  .dbo-mock { position:relative; width:100%; aspect-ratio:1/1; border-radius:14px; overflow:hidden; background:var(--panel); }
+  .dbo-mock .dbo-prodimg { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+  .dbo-mock .dbo-designimg { position:absolute; object-fit:contain; display:none; }
+  .dbo-mock .dbo-mockhint { position:absolute; inset:0; display:grid; place-items:center; color:var(--faint); font-size:12px; text-align:center; padding:10px; }
+  .dbo-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; align-content:start; }
+  .dbo-fields .dbo-full { grid-column:1 / -1; }
+  .dbo-fields label { display:flex; flex-direction:column; gap:5px; font-size:12.5px; font-weight:600; color:var(--ink); }
+  .dbo-fields select, .dbo-fields input[type=number] { height:44px; padding:0 12px; border:1px solid var(--line2); border-radius:12px; font:inherit; font-size:15px;
+    color:var(--ink); background:#fff; width:100%; }
+  .dbo-fields select:focus, .dbo-fields input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+  .dbo-file-wrap { position:relative; }
+  .dbo-file-btn { display:flex; align-items:center; gap:8px; height:44px; padding:0 14px; border:1px dashed var(--line2); border-radius:12px; cursor:pointer;
+    font-size:14px; color:var(--soft); background:#fff; }
+  .dbo-file-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .dbo-file-btn svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .dbo-file-name { font-size:12px; color:var(--faint); margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dbo-file input[type=file] { display:none; }
+  .dbo-row-foot { grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:6px; border-top:1px solid var(--line); margin-top:4px; }
+  .dbo-sub { font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .dbo-remove { border:0; background:transparent; color:var(--danger); font:inherit; font-size:13px; cursor:pointer; padding:6px 8px; border-radius:8px; }
+  .dbo-remove:hover { background:#fdeceb; }
+  .dbo-add { display:inline-flex; align-items:center; gap:8px; margin-top:18px; height:46px; padding:0 20px; border:1px solid var(--line2); border-radius:999px;
+    background:#fff; color:var(--ink); font:inherit; font-size:15px; font-weight:500; cursor:pointer; transition:background .16s; }
+  .dbo-add:hover { background:var(--panel); }
+  .dbo-add svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
+  .dbo-summary { margin-top:28px; padding:20px 22px; border:1px solid var(--line); border-radius:20px; background:var(--panel); }
+  .dbo-contact { display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; margin-bottom:16px; }
+  .dbo-contact .dbo-full { grid-column:1 / -1; }
+  .dbo-contact label { display:flex; flex-direction:column; gap:5px; font-size:12.5px; font-weight:600; }
+  .dbo-contact input, .dbo-contact textarea { padding:11px 12px; border:1px solid var(--line2); border-radius:12px; font:inherit; font-size:15px; background:#fff; }
+  .dbo-contact textarea { min-height:70px; resize:vertical; }
+  .dbo-totrow { display:flex; align-items:baseline; justify-content:space-between; font-size:20px; font-weight:600; margin-bottom:16px; }
+  .dbo-totrow span:last-child { font-variant-numeric:tabular-nums; }
+  .dbo-submit { width:100%; height:52px; border:0; border-radius:999px; background:var(--ink); color:#fff; font:inherit; font-size:16px; font-weight:600; cursor:pointer;
+    transition:opacity .16s, transform .1s; }
+  .dbo-submit:hover { opacity:0.92; } .dbo-submit:active { transform:scale(0.99); }
+  .dbo-submit[disabled] { opacity:0.5; cursor:default; }
+  .dbo-note { font-size:12.5px; color:var(--faint); text-align:center; margin-top:12px; }
+  .dbo-empty { text-align:center; padding:60px 20px; color:var(--soft); }
+  @media (max-width:640px) {
+    .dbo-row { grid-template-columns:1fr; }
+    .dbo-mock { max-width:220px; margin:0 auto; }
+    .dbo-fields, .dbo-contact { grid-template-columns:1fr; }
+  }
+</style>
+
+<section class="dbo" id="dboRoot"
+  data-cart-url="{{ routes.cart_url | default: '/cart' }}"
+  data-currency="{{ shop.currency }}"
+  data-after="{{ section.settings.after_submit | default: 'checkout' }}"
+  data-mx="{{ section.settings.mock_x | default: 28 }}"
+  data-my="{{ section.settings.mock_y | default: 30 }}"
+  data-mw="{{ section.settings.mock_w | default: 44 }}"
+  data-mh="{{ section.settings.mock_h | default: 40 }}"
+  data-minqty="{{ section.settings.min_qty | default: 1 }}">
+
+  <div class="dbo-head">
+    <h1>{{ section.settings.heading | default: 'Bulk order' }}</h1>
+    {%- if section.settings.intro != blank -%}<p>{{ section.settings.intro }}</p>{%- endif -%}
+  </div>
+
+  {%- if bo_coll.products.size == 0 -%}
+    <div class="dbo-empty">No products are available for bulk order yet.</div>
+  {%- else -%}
+    <script type="application/json" id="dboData">
+[
+{%- for product in bo_coll.products -%}
+  {
+    "id": {{ product.id }},
+    "title": {{ product.title | json }},
+    "image": {{ product.featured_image | image_url: width: 700 | json }},
+    "variants": [
+      {%- for v in product.variants -%}
+      { "id": {{ v.id }}, "title": {{ v.title | json }}, "price": {{ v.price }}, "available": {{ v.available }}, "image": {% if v.image %}{{ v.image | image_url: width: 700 | json }}{% else %}null{% endif %} }{%- unless forloop.last -%},{%- endunless -%}
+      {%- endfor -%}
+    ]
+  }{%- unless forloop.last -%},{%- endunless -%}
+{%- endfor -%}
+]
+    </script>
+
+    <div class="dbo-rows" id="dboRows"></div>
+
+    <button type="button" class="dbo-add" id="dboAdd">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      {{ section.settings.add_label | default: 'Add another product' }}
+    </button>
+
+    <div class="dbo-summary">
+      <div class="dbo-contact">
+        <label class="dbo-full">Name<input type="text" id="dboName" autocomplete="name"></label>
+        <label>Email<input type="email" id="dboEmail" autocomplete="email"></label>
+        <label>Phone (optional)<input type="tel" id="dboPhone" autocomplete="tel"></label>
+        <label class="dbo-full">Notes (optional)<textarea id="dboNotes" placeholder="Deadline, special instructions…"></textarea></label>
+      </div>
+      <div class="dbo-totrow"><span>Estimated total</span><span id="dboTotal">—</span></div>
+      <button type="button" class="dbo-submit" id="dboSubmit">{{ section.settings.submit_label | default: 'Add all to cart' }}</button>
+      <p class="dbo-note">{{ section.settings.submit_note | default: 'Your uploaded files are saved to each item. We’ll confirm details before production.' }}</p>
+    </div>
+
+    <template id="dboRowTpl">
+      <div class="dbo-row">
+        <div class="dbo-mock">
+          <img class="dbo-prodimg" alt="">
+          <img class="dbo-designimg" alt="">
+          <div class="dbo-mockhint">Pick a product</div>
+        </div>
+        <div class="dbo-fields">
+          <label class="dbo-full">Product
+            <select class="dbo-product"><option value="">Select a product…</option></select>
+          </label>
+          <label>Variation
+            <select class="dbo-variant"><option value="">—</option></select>
+          </label>
+          <label>Quantity
+            <input type="number" class="dbo-qty" min="1" step="1" value="1" inputmode="numeric">
+          </label>
+          <div class="dbo-file dbo-full">
+            <span style="font-size:12.5px;font-weight:600;display:block;margin-bottom:5px;">Your design / artwork</span>
+            <label class="dbo-file-btn">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span class="dbo-file-label">Upload file</span>
+              <input type="file" class="dbo-file-input" accept="image/*,.pdf,.ai,.svg">
+            </label>
+            <div class="dbo-file-name"></div>
+          </div>
+          <div class="dbo-row-foot">
+            <span class="dbo-sub">—</span>
+            <button type="button" class="dbo-remove">Remove</button>
+          </div>
+        </div>
+      </div>
+    </template>
+  {%- endif -%}
+</section>
+
+<script>
+(function () {
+  var root = document.getElementById("dboRoot");
+  if (!root) return;
+  var dataEl = document.getElementById("dboData");
+  if (!dataEl) return;
+  var PRODUCTS = [];
+  try { PRODUCTS = JSON.parse(dataEl.textContent) || []; } catch (e) { return; }
+
+  var rowsEl = document.getElementById("dboRows");
+  var tpl = document.getElementById("dboRowTpl");
+  var addBtn = document.getElementById("dboAdd");
+  var submitBtn = document.getElementById("dboSubmit");
+  var totalEl = document.getElementById("dboTotal");
+  var cartUrl = root.getAttribute("data-cart-url") || "/cart";
+  var after = root.getAttribute("data-after") || "checkout";
+  var cur = root.getAttribute("data-currency") || "USD";
+  var minQty = parseInt(root.getAttribute("data-minqty"), 10) || 1;
+  var MX = parseFloat(root.getAttribute("data-mx")) || 28;
+  var MY = parseFloat(root.getAttribute("data-my")) || 30;
+  var MW = parseFloat(root.getAttribute("data-mw")) || 44;
+  var MH = parseFloat(root.getAttribute("data-mh")) || 40;
+
+  function money(cents) {
+    try { return new Intl.NumberFormat(undefined, { style: "currency", currency: cur }).format(cents / 100); }
+    catch (e) { return "$" + (cents / 100).toFixed(2); }
+  }
+  function findProduct(id) { for (var i = 0; i < PRODUCTS.length; i++) if (String(PRODUCTS[i].id) === String(id)) return PRODUCTS[i]; return null; }
+
+  function lineTotal(row) {
+    var vSel = row.querySelector(".dbo-variant");
+    var qty = Math.max(minQty, parseInt(row.querySelector(".dbo-qty").value, 10) || minQty);
+    var opt = vSel.options[vSel.selectedIndex];
+    var price = opt ? parseInt(opt.getAttribute("data-price"), 10) : 0;
+    if (!opt || !opt.value || !isFinite(price)) return 0;
+    return price * qty;
+  }
+  function recalc() {
+    var total = 0, anyValid = false;
+    rows().forEach(function (row) {
+      var sub = lineTotal(row);
+      row.querySelector(".dbo-sub").textContent = sub > 0 ? money(sub) : "—";
+      total += sub;
+      if (sub > 0) anyValid = true;
+    });
+    totalEl.textContent = total > 0 ? money(total) : "—";
+    submitBtn.disabled = !anyValid;
+  }
+  function rows() { return Array.prototype.slice.call(rowsEl.querySelectorAll(".dbo-row")); }
+
+  function fillVariants(row, prod) {
+    var vSel = row.querySelector(".dbo-variant");
+    vSel.innerHTML = "";
+    if (!prod) { vSel.innerHTML = '<option value="">—</option>'; return; }
+    prod.variants.forEach(function (v) {
+      var o = document.createElement("option");
+      o.value = v.id;
+      o.setAttribute("data-price", v.price);
+      if (v.image) o.setAttribute("data-image", v.image);
+      o.textContent = (v.title === "Default Title" ? prod.title : v.title) + " — " + money(v.price) + (v.available ? "" : " (sold out)");
+      if (!v.available) o.disabled = true;
+      vSel.appendChild(o);
+    });
+    // preselect first available
+    for (var i = 0; i < vSel.options.length; i++) { if (!vSel.options[i].disabled) { vSel.selectedIndex = i; break; } }
+  }
+
+  function setMock(row) {
+    var pSel = row.querySelector(".dbo-product");
+    var vSel = row.querySelector(".dbo-variant");
+    var prod = findProduct(pSel.value);
+    var prodImg = row.querySelector(".dbo-prodimg");
+    var hint = row.querySelector(".dbo-mockhint");
+    if (!prod) { prodImg.removeAttribute("src"); hint.style.display = "grid"; hint.textContent = "Pick a product"; return; }
+    var vOpt = vSel.options[vSel.selectedIndex];
+    var img = (vOpt && vOpt.getAttribute("data-image")) || prod.image || "";
+    if (img) { prodImg.src = img; hint.style.display = "none"; }
+    else { prodImg.removeAttribute("src"); hint.style.display = "grid"; hint.textContent = prod.title; }
+  }
+
+  function placeDesign(row) {
+    var d = row.querySelector(".dbo-designimg");
+    if (!d.getAttribute("src")) { d.style.display = "none"; return; }
+    d.style.display = "block";
+    d.style.left = MX + "%"; d.style.top = MY + "%"; d.style.width = MW + "%"; d.style.height = MH + "%";
+  }
+
+  function bindRow(row) {
+    var pSel = row.querySelector(".dbo-product");
+    // fill product options
+    PRODUCTS.forEach(function (p) {
+      var o = document.createElement("option"); o.value = p.id; o.textContent = p.title; pSel.appendChild(o);
+    });
+    var vSel = row.querySelector(".dbo-variant");
+    var qty = row.querySelector(".dbo-qty");
+    var fileInput = row.querySelector(".dbo-file-input");
+    var fileName = row.querySelector(".dbo-file-name");
+    var fileLabel = row.querySelector(".dbo-file-label");
+
+    pSel.addEventListener("change", function () { fillVariants(row, findProduct(pSel.value)); setMock(row); recalc(); });
+    vSel.addEventListener("change", function () { setMock(row); placeDesign(row); recalc(); });
+    qty.addEventListener("input", recalc);
+    qty.addEventListener("change", function () { if ((parseInt(qty.value, 10) || 0) < minQty) qty.value = minQty; recalc(); });
+
+    fileInput.addEventListener("change", function () {
+      var f = fileInput.files && fileInput.files[0];
+      var d = row.querySelector(".dbo-designimg");
+      if (!f) { fileName.textContent = ""; fileLabel.textContent = "Upload file"; d.removeAttribute("src"); placeDesign(row); return; }
+      fileName.textContent = f.name;
+      fileLabel.textContent = "Change file";
+      if (/^image\//.test(f.type)) {
+        var url = URL.createObjectURL(f);
+        d.src = url; placeDesign(row);
+      } else { d.removeAttribute("src"); placeDesign(row); }
+      row._file = f;
+    });
+  }
+
+  function addRow() {
+    var node = tpl.content.firstElementChild.cloneNode(true);
+    rowsEl.appendChild(node);
+    bindRow(node);
+    node.querySelector(".dbo-remove").addEventListener("click", function () {
+      node.remove();
+      if (!rows().length) addRow();
+      recalc();
+    });
+    recalc();
+    return node;
+  }
+
+  addBtn.addEventListener("click", addRow);
+  addRow();
+
+  submitBtn.addEventListener("click", async function () {
+    var valid = rows().filter(function (r) {
+      var v = r.querySelector(".dbo-variant");
+      return v.value && (parseInt(r.querySelector(".dbo-qty").value, 10) || 0) >= minQty;
+    });
+    if (!valid.length) { alert("Please pick at least one product and variation."); return; }
+
+    var name = (document.getElementById("dboName").value || "").trim();
+    var email = (document.getElementById("dboEmail").value || "").trim();
+    var phone = (document.getElementById("dboPhone").value || "").trim();
+    var notes = (document.getElementById("dboNotes").value || "").trim();
+
+    submitBtn.disabled = true;
+    var origText = submitBtn.textContent;
+    submitBtn.textContent = "Adding…";
+
+    try {
+      for (var i = 0; i < valid.length; i++) {
+        var row = valid[i];
+        var vId = row.querySelector(".dbo-variant").value;
+        var qty = Math.max(minQty, parseInt(row.querySelector(".dbo-qty").value, 10) || minQty);
+        var pName = row.querySelector(".dbo-product").options[row.querySelector(".dbo-product").selectedIndex].textContent;
+        var vName = row.querySelector(".dbo-variant").options[row.querySelector(".dbo-variant").selectedIndex].textContent;
+        var fd = new FormData();
+        fd.append("id", vId);
+        fd.append("quantity", String(qty));
+        fd.append("properties[_Bulk order]", "Yes");
+        if (name) fd.append("properties[Ordered by]", name);
+        if (email) fd.append("properties[Email]", email);
+        if (phone) fd.append("properties[Phone]", phone);
+        if (notes) fd.append("properties[Notes]", notes);
+        if (row._file) fd.append("properties[Design file]", row._file, row._file.name);
+        var res = await fetch("/cart/add.js", { method: "POST", headers: { Accept: "application/json" }, body: fd });
+        if (!res.ok) {
+          var err = await res.json().catch(function () { return {}; });
+          throw new Error(err.description || "Couldn't add an item to the cart.");
+        }
+      }
+      window.location.href = (after === "cart") ? cartUrl : "/checkout";
+    } catch (e) {
+      alert(e.message || "Something went wrong. Please try again.");
+      submitBtn.disabled = false;
+      submitBtn.textContent = origText;
+    }
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Bulk Order",
+  "tag": "section",
+  "class": "dynamic-bulk-order-section",
+  "settings": [
+    { "type": "collection", "id": "collection", "label": "Products available for bulk order", "info": "Choose a collection. Leave empty to allow all products." },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Bulk order" },
+    { "type": "textarea", "id": "intro", "label": "Intro text", "default": "Order several products at once — pick each item, choose the variation, set a quantity, and upload your design." },
+    { "type": "text", "id": "add_label", "label": "Add-row button text", "default": "Add another product" },
+    { "type": "text", "id": "submit_label", "label": "Submit button text", "default": "Add all to cart" },
+    { "type": "text", "id": "submit_note", "label": "Note under the submit button", "default": "Your uploaded files are saved to each item. We’ll confirm details before production." },
+    { "type": "select", "id": "after_submit", "label": "After submitting", "default": "checkout",
+      "options": [ { "value": "checkout", "label": "Go to checkout" }, { "value": "cart", "label": "Go to the cart" } ] },
+    { "type": "range", "id": "min_qty", "label": "Minimum quantity per item", "min": 1, "max": 100, "step": 1, "default": 1 },
+    { "type": "header", "content": "Design mockup box", "info": "Where the uploaded design sits on the product image, as a % of the image." },
+    { "type": "range", "id": "mock_x", "label": "Left", "min": 0, "max": 90, "step": 1, "default": 28, "unit": "%" },
+    { "type": "range", "id": "mock_y", "label": "Top", "min": 0, "max": 90, "step": 1, "default": 30, "unit": "%" },
+    { "type": "range", "id": "mock_w", "label": "Width", "min": 10, "max": 100, "step": 1, "default": 44, "unit": "%" },
+    { "type": "range", "id": "mock_h", "label": "Height", "min": 10, "max": 100, "step": 1, "default": 40, "unit": "%" }
+  ],
+  "presets": [ { "name": "Dynamic Bulk Order" } ],
+  "enabled_on": { "templates": ["page", "index"] }
+}
+{% endschema %}
