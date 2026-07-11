@@ -1,25 +1,24 @@
 {% comment %}
   ============================================================================
-  Dynamic Bulk Order — multi-product request form. Emails YOU and the CUSTOMER.
+  Dynamic Bulk Order — multi-product request form. Emails YOU (native Shopify).
   ----------------------------------------------------------------------------
   Each row: tap the "+" tile to pick a product from a grid, choose the options
   (Size / Colour dropdowns), set a quantity, "Add another variation" for more
   combos, and upload the design. On submit, designs are hosted on Shopify and
-  the request is sent via FormSubmit to you AND cc'd to the customer, then a
-  thank-you shows on the page. No prices, no cart, no mockup.
+  the whole request is sent through Shopify's own contact form to your store
+  contact email — no third-party service, no activation step. A thank-you
+  shows on the page after sending. No prices, no cart, no mockup.
   SETUP:
   1. Theme editor > Sections > add "dynamic-bulk-order" > paste this.
   2. Pages > Add page "Bulk order". Customize > that page > Add section >
-     "Dynamic Bulk Order". Choose the Collection + your notification email.
-  3. FIRST submission: FormSubmit sends a one-time "Activate" email to your
-     address — click it once, and every request after that is delivered
-     automatically (to you + the customer).
+     "Dynamic Bulk Order". Choose the Collection you want customers to order from.
+  3. Requests arrive at your Store contact email
+     (Settings > Store details > Contact email). Change it there if needed.
   ============================================================================
 {% endcomment %}
 
 {%- assign bo_coll = section.settings.collection -%}
 {%- if bo_coll == blank -%}{%- assign bo_coll = collections.all -%}{%- endif -%}
-{%- assign notify_email = section.settings.notify_email | default: shop.email -%}
 
 <style>
   .dbo { --ink:#1d1d1f; --soft:#6e6e73; --faint:#86868b; --line:#e3e3e8; --line2:#d2d2d7; --accent:#0071e3; --accent-soft:#e8f2fd; --panel:#f5f5f7; --danger:#c0392b; --ok:#1a7f37;
@@ -74,6 +73,7 @@
   .dbo-submit:hover { opacity:0.92; } .dbo-submit:active { transform:scale(0.99); }
   .dbo-submit[disabled] { opacity:0.55; cursor:default; }
   .dbo-note { font-size:12.5px; color:var(--faint); text-align:center; margin-top:12px; line-height:1.5; }
+  .dbo-errors { margin:0 0 20px; padding:12px 16px; border:1px solid #f3c6c3; background:#fdeceb; color:var(--danger); border-radius:12px; font-size:14px; }
   .dbo-success { text-align:center; padding:56px 20px; border:1px solid var(--line); border-radius:20px; background:#fff; }
   .dbo-success svg { width:60px; height:60px; color:var(--ok); margin:0 auto 18px; display:block; }
   .dbo-success h2 { font-size:26px; font-weight:600; margin:0 0 10px; }
@@ -96,7 +96,7 @@
   @media (max-width:640px) { .dbo-contact { grid-template-columns:1fr; } }
 </style>
 
-<section class="dbo" id="dboRoot" data-minqty="{{ section.settings.min_qty | default: 1 }}" data-notify="{{ notify_email }}">
+<section class="dbo" id="dboRoot" data-minqty="{{ section.settings.min_qty | default: 1 }}">
   <div class="dbo-head">
     <h1>{{ section.settings.heading | default: 'Bulk order' }}</h1>
     {%- if section.settings.intro != blank -%}<p>{{ section.settings.intro }}</p>{%- endif -%}
@@ -119,29 +119,42 @@
 ]
     </script>
 
-    <div id="dboForm">
-      <div class="dbo-rows" id="dboRows"></div>
-      <button type="button" class="dbo-add" id="dboAdd">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        {{ section.settings.add_label | default: 'Add another product' }}
-      </button>
-      <div class="dbo-summary">
-        <div class="dbo-contact">
-          <label class="dbo-full">Name<input type="text" id="dboName" autocomplete="name"></label>
-          <label>Email<input type="email" id="dboEmail" autocomplete="email" required></label>
-          <label>Phone (optional)<input type="tel" id="dboPhone" autocomplete="tel"></label>
-          <label class="dbo-full">Notes (optional)<textarea id="dboNotes" placeholder="Deadline, special instructions…"></textarea></label>
+    {%- form 'contact', id: 'dboContactForm' -%}
+      {%- if form.posted_successfully? -%}
+        <div class="dbo-success">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <h2>{{ section.settings.success_title | default: 'Request sent!' }}</h2>
+          <p>{{ section.settings.success_text | default: 'Thanks — we’ve received your bulk order request and will email you a confirmation and quote shortly.' }}</p>
         </div>
-        <button type="button" class="dbo-submit" id="dboSubmit">{{ section.settings.submit_label | default: 'Send my bulk order' }}</button>
-        <p class="dbo-note">{{ section.settings.submit_note | default: 'We’ll email you and us a confirmation. Your uploaded designs are included automatically.' }}</p>
-      </div>
-    </div>
+      {%- else -%}
+        {%- if form.errors -%}
+          <div class="dbo-errors">Please check your details — {{ form.errors | default_errors }}</div>
+        {%- endif -%}
 
-    <div class="dbo-success" id="dboSuccess" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <h2>{{ section.settings.success_title | default: 'Request sent!' }}</h2>
-      <p>{{ section.settings.success_text | default: 'Thanks — a copy is on its way to your inbox, and we’ll email you a confirmation and quote shortly.' }}</p>
-    </div>
+        {%- comment -%} Native fields the contact form actually submits. {%- endcomment -%}
+        <input type="hidden" name="contact[email]" id="dboContactEmail">
+        <input type="hidden" name="contact[name]" id="dboContactName">
+        <textarea name="contact[body]" id="dboContactBody" hidden></textarea>
+
+        <div id="dboForm">
+          <div class="dbo-rows" id="dboRows"></div>
+          <button type="button" class="dbo-add" id="dboAdd">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            {{ section.settings.add_label | default: 'Add another product' }}
+          </button>
+          <div class="dbo-summary">
+            <div class="dbo-contact">
+              <label class="dbo-full">Name<input type="text" id="dboName" autocomplete="name"></label>
+              <label>Email<input type="email" id="dboEmail" autocomplete="email" required></label>
+              <label>Phone (optional)<input type="tel" id="dboPhone" autocomplete="tel"></label>
+              <label class="dbo-full">Notes (optional)<textarea id="dboNotes" placeholder="Deadline, special instructions…"></textarea></label>
+            </div>
+            <button type="submit" class="dbo-submit" id="dboSubmit">{{ section.settings.submit_label | default: 'Send my bulk order' }}</button>
+            <p class="dbo-note">{{ section.settings.submit_note | default: 'We’ll email you a confirmation. Your uploaded designs are included automatically.' }}</p>
+          </div>
+        </div>
+      {%- endif -%}
+    {%- endform -%}
 
     <template id="dboRowTpl">
       <div class="dbo-row">
@@ -183,18 +196,18 @@
   var PRODUCTS = [];
   try { PRODUCTS = JSON.parse(dataEl.textContent) || []; } catch (e) { return; }
 
+  var contactForm = document.getElementById("dboContactForm");
+  var fEmail = document.getElementById("dboContactEmail");
+  var fName = document.getElementById("dboContactName");
+  var fBody = document.getElementById("dboContactBody");
   var addBtn = document.getElementById("dboAdd");
   var submitBtn = document.getElementById("dboSubmit");
-  var formBox = document.getElementById("dboForm");
-  var successBox = document.getElementById("dboSuccess");
   var picker = document.getElementById("dboPicker");
   var pickerGrid = document.getElementById("dboPickerGrid");
   var pickerSearch = document.getElementById("dboPickerSearch");
   var minQty = parseInt(root.getAttribute("data-minqty"), 10) || 1;
-  var NOTIFY = (root.getAttribute("data-notify") || "").trim();
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); }
-  function findProduct(id) { for (var i = 0; i < PRODUCTS.length; i++) if (String(PRODUCTS[i].id) === String(id)) return PRODUCTS[i]; return null; }
   function rows() { return Array.prototype.slice.call(rowsEl.querySelectorAll(".dbo-row")); }
   function isDefault(prod) {
     return !prod.options || prod.options.length === 0 ||
@@ -285,7 +298,7 @@
   addBtn.addEventListener("click", addRow);
   addRow();
 
-  // ---- Shopify file hosting ----
+  // ---- Shopify file hosting (upload to cart, read hosted URL, then clear) ----
   var _addedToCart = false;
   async function uploadViaShopify(file, variantId) {
     if (!file || !variantId) return "";
@@ -303,7 +316,6 @@
   async function clearCart() { try { await fetch("/cart/clear.js", { method: "POST", headers: { Accept: "application/json" } }); } catch (e) {} }
 
   async function buildBody() {
-    var name = (document.getElementById("dboName").value || "").trim();
     var phone = (document.getElementById("dboPhone").value || "").trim();
     var notes = (document.getElementById("dboNotes").value || "").trim();
     var itemLines = [], fileLines = [], any = false;
@@ -343,30 +355,20 @@
   }
 
   var submitting = false;
-  submitBtn.addEventListener("click", function () {
+  contactForm.addEventListener("submit", function (e) {
+    e.preventDefault();
     if (submitting) return;
     var name = (document.getElementById("dboName").value || "").trim();
     var email = (document.getElementById("dboEmail").value || "").trim();
     if (!email) { document.getElementById("dboEmail").focus(); return; }
-    if (!NOTIFY) { alert("This form isn’t set up yet (missing notification email)."); return; }
     submitting = true; submitBtn.disabled = true; var t = submitBtn.textContent; submitBtn.textContent = "Sending…";
 
     buildBody().then(function (body) {
       if (!body) { alert("Please pick a product, choose the options, and enter a quantity for at least one variation."); submitting = false; submitBtn.disabled = false; submitBtn.textContent = t; return; }
-      var payload = {
-        _subject: "Bulk order request" + (name ? " — " + name : ""),
-        name: name || "(no name)",
-        email: email,          // shopper's email (reply-to)
-        _cc: email,            // send the shopper a copy too
-        _template: "box",
-        _captcha: "false",
-        message: body
-      };
-      fetch("https://formsubmit.co/ajax/" + encodeURIComponent(NOTIFY), {
-        method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify(payload)
-      }).then(function (res) { return res.ok ? res.json() : Promise.reject(); })
-        .then(function () { formBox.style.display = "none"; if (successBox) successBox.hidden = false; window.scrollTo({ top: root.offsetTop - 20, behavior: "smooth" }); })
-        .catch(function () { alert("Sorry, we couldn’t send that. Please try again or email us directly."); submitting = false; submitBtn.disabled = false; submitBtn.textContent = t; });
+      fName.value = name;
+      fEmail.value = email;
+      fBody.value = body;
+      contactForm.submit(); // native Shopify contact form → emails your store contact email, reloads to success
     });
   });
 })();
@@ -379,16 +381,15 @@
   "class": "dynamic-bulk-order-section",
   "settings": [
     { "type": "collection", "id": "collection", "label": "Products available for bulk order", "info": "Choose a collection. Leave empty to allow all products." },
-    { "type": "text", "id": "notify_email", "label": "Your notification email", "info": "Where bulk requests are sent (the customer is cc'd a copy). Leave empty to use your store contact email." },
-    { "type": "paragraph", "content": "First submission: FormSubmit sends a one-time ‘Activate’ email to the address above — click it once, then every request is delivered automatically to you and the customer. Uploaded designs are hosted on Shopify and included as links (no third-party file setup)." },
+    { "type": "paragraph", "content": "Requests are sent through Shopify’s own contact form to your Store contact email (Settings → Store details → Contact email) — no third-party service and nothing to activate. Uploaded designs are hosted on Shopify and included as links." },
     { "type": "text", "id": "heading", "label": "Heading", "default": "Bulk order" },
     { "type": "textarea", "id": "intro", "label": "Intro text", "default": "Order several products at once — pick each item, choose the options and quantity, and upload your design." },
     { "type": "text", "id": "add_label", "label": "Add-product button text", "default": "Add another product" },
     { "type": "text", "id": "addvar_label", "label": "Add-variation button text", "default": "Add another variation" },
     { "type": "text", "id": "submit_label", "label": "Submit button text", "default": "Send my bulk order" },
-    { "type": "text", "id": "submit_note", "label": "Note under the submit button", "default": "We’ll email you and us a confirmation. Your uploaded designs are included automatically." },
+    { "type": "text", "id": "submit_note", "label": "Note under the submit button", "default": "We’ll email you a confirmation. Your uploaded designs are included automatically." },
     { "type": "text", "id": "success_title", "label": "Success title", "default": "Request sent!" },
-    { "type": "textarea", "id": "success_text", "label": "Success message", "default": "Thanks — a copy is on its way to your inbox, and we’ll email you a confirmation and quote shortly." },
+    { "type": "textarea", "id": "success_text", "label": "Success message", "default": "Thanks — we’ve received your bulk order request and will email you a confirmation and quote shortly." },
     { "type": "range", "id": "min_qty", "label": "Minimum quantity per variation", "min": 1, "max": 100, "step": 1, "default": 1 }
   ],
   "presets": [ { "name": "Dynamic Bulk Order" } ],
