@@ -209,8 +209,7 @@
      avoids the iOS "first tap shows hover, second tap opens" problem, so a
      single tap opens the product. */
   @media (hover: hover) and (pointer: fine) {
-    .dyn-col .dc-card:hover .dc-media .dc-img-2 { opacity: 1; }
-    .dyn-col .dc-card:hover .dc-media .dc-img-1.has-2 { opacity: 0; }
+    /* Keep the first image on hover — no swap to the 2nd gallery photo. */
     .dyn-col .dc-card:hover .dc-media img { transform: scale(1.04); }
   }
   .dyn-col .dc-badges { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
