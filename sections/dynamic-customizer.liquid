@@ -1123,14 +1123,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
             <input id="qtyInput" type="number" value="1" min="1" max="999" aria-label="Quantity" />
             <button id="qtyPlus" aria-label="Increase quantity">+</button>
           </div>
-          {%- if section.settings.show_bulk_link and section.settings.bulk_link != blank -%}
-            <a class="bulk-link" href="{{ section.settings.bulk_link }}">
-              {%- if section.settings.bulk_link_icon -%}
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-              {%- endif -%}
-              {{ section.settings.bulk_link_label | default: 'Order in bulk' }}
-            </a>
-          {%- endif -%}
+          <span id="bulkLinkMount"></span>
         </div>
       </div>
 
@@ -1545,6 +1538,27 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
 {% endraw %}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
+
+{%- if section.settings.show_bulk_link and section.settings.bulk_link != blank -%}
+<script>
+(function () {
+  function inject() {
+    var mount = document.getElementById("bulkLinkMount");
+    if (!mount || mount.dataset.filled) return;
+    mount.dataset.filled = "1";
+    var a = document.createElement("a");
+    a.className = "bulk-link";
+    a.href = {{ section.settings.bulk_link | json }};
+    {% if section.settings.bulk_link_icon %}
+    a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+    {% endif %}
+    a.appendChild(document.createTextNode({{ section.settings.bulk_link_label | default: 'Order in bulk' | json }}));
+    mount.appendChild(a);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject); else inject();
+})();
+</script>
+{%- endif -%}
 
 
 {%- comment -%} The Features panel lives in its own section: dynamic-features.liquid {%- endcomment -%}
