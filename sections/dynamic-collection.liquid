@@ -150,15 +150,20 @@
     max-width: 0; opacity: 0; margin-right: 0; transition: max-width .32s ease, opacity .26s ease, margin-right .32s ease; }
   .dyn-col.dc-scrolled .dc-bar-logo { max-width: 220px; opacity: 1; margin-right: 8px; }
   .dyn-col .dc-bar-logo img { height: 44px; width: auto; max-width: 200px; object-fit: contain; display: block; }
-  /* Left inline search — opens from the sticky bar when the magnifier is clicked (scrolled). */
-  .dyn-col .dc-inline-search { display: none; align-items: center; gap: 7px; flex: 0 1 260px; max-width: 280px; min-width: 0; height: 38px; padding: 0 14px; border-radius: 999px;
-    background: rgba(255,255,255,0.72); -webkit-backdrop-filter: blur(16px) saturate(1.6); backdrop-filter: blur(16px) saturate(1.6); border: 1px solid rgba(0,0,0,0.09);
+  /* Left inline search — opens near the magnifier (not the logo) when scrolled.
+     Same liquid-glass look as the main search bar. */
+  .dyn-col .dc-inline-search { display: none; align-items: center; gap: 8px; flex: 0 1 300px; max-width: 340px; min-width: 0; height: 42px; padding: 0 16px; border-radius: 999px; margin-left: auto;
+    background: rgba(255,255,255,0.62); -webkit-backdrop-filter: blur(22px) saturate(1.8) brightness(1.05); backdrop-filter: blur(22px) saturate(1.8) brightness(1.05);
+    border: 1px solid rgba(255,255,255,0.7); box-shadow: 0 14px 44px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -8px 18px rgba(255,255,255,0.22);
     animation: dcInlineIn .28s cubic-bezier(.22,1,.36,1); }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dyn-col .dc-inline-search { background: #fff; border-color: var(--line); } }
   .dyn-col .dc-inline-search.is-open { display: flex; }
-  @keyframes dcInlineIn { from { opacity: 0; transform: translateX(-10px); max-width: 0; } to { opacity: 1; transform: none; max-width: 280px; } }
-  .dyn-col .dc-inline-mag { flex: none; display: grid; place-items: center; width: 17px; height: 17px; }
-  .dyn-col .dc-inline-mag svg { width: 16px; height: 16px; fill: none; stroke: var(--ink-faint); stroke-width: 2; stroke-linecap: round; }
-  .dyn-col .dc-inline-input { flex: 1 1 auto; min-width: 0; width: 100%; border: none; background: transparent; font-family: var(--font); font-size: 14px; color: var(--ink); padding: 0; }
+  .dyn-col .dc-inline-search:focus-within { box-shadow: 0 14px 44px rgba(0,0,0,0.14), inset 0 1px 1px rgba(255,255,255,0.95), 0 0 0 4px rgba(0,113,227,0.14); }
+  @keyframes dcInlineIn { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: none; } }
+  .dyn-col .dc-inline-mag { flex: none; display: grid; place-items: center; width: 20px; height: 20px; }
+  .dyn-col .dc-inline-mag svg { width: 18px; height: 18px; fill: none; stroke: var(--ink-faint); stroke-width: 2; stroke-linecap: round; }
+  .dyn-col .dc-inline-input { flex: 1 1 auto; min-width: 0; width: 100%; border: none; background: transparent; font-family: var(--font); font-size: 16px; color: var(--ink); padding: 0; }
+  .dyn-col .dc-inline-input::placeholder { color: var(--ink-faint); }
   .dyn-col .dc-inline-input:focus { outline: none; box-shadow: none; }
 
   /* Image tabs (Apple-style: picture + label, no box - tiles blend into the page) */
