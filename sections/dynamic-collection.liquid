@@ -189,6 +189,16 @@
   /* Apple-Store-style card: name/price on top, image fills a soft gradient box below */
   .dyn-col .dc-card { background: linear-gradient(180deg,#ffffff,#eceff3); border: 1px solid rgba(0,0,0,0.07); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; min-height: 460px; box-shadow: 0 6px 22px rgba(0,0,0,0.07); transition: box-shadow .25s ease, transform .25s ease; }
   .dyn-col .dc-card:hover { box-shadow: 0 12px 34px rgba(0,0,0,0.11); transform: translateY(-3px); }
+
+  /* Full-bleed mode: product image fills the whole box, name/price overlay on top */
+  .dyn-col.dc-fill .dc-card { position: relative; }
+  .dyn-col.dc-fill .dc-media-wrap { position: absolute; inset: 0; order: 0; z-index: 0; min-height: 0; }
+  .dyn-col.dc-fill .dc-media { position: absolute; inset: 0; }
+  .dyn-col.dc-fill .dc-media img { inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* Soft white scrim behind the text so the name/price stay readable over any photo */
+  .dyn-col.dc-fill .dc-media-wrap::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.55) 20%, rgba(255,255,255,0) 40%); }
+  .dyn-col.dc-fill .dc-body { position: relative; z-index: 4; order: -1; }
   .dyn-col .dc-card, .dyn-col .dc-card.in { transition: opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
   .dyn-col .dc-media-wrap { position: relative; order: 1; flex: 1 1 auto; min-height: 300px; }
   .dyn-col .dc-media { position: absolute; inset: 0; display: block; background: transparent; overflow: hidden; transition: background .2s; }
@@ -323,7 +333,7 @@
 {%- if coll == blank and collection != blank -%}{%- assign coll = collection -%}{%- endif -%}
 {%- assign cat_source = section.settings.category_source | default: 'type' -%}
 
-<section class="dyn-col{% if section.settings.hide_until_search %} dc-landing{% endif %}" id="dynCol"
+<section class="dyn-col{% if section.settings.hide_until_search %} dc-landing{% endif %}{% if section.settings.image_bg %} dc-fill{% endif %}" id="dynCol"
   data-currency="{{ shop.currency }}"
   data-cat-source="{{ cat_source }}"
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
@@ -1075,6 +1085,7 @@
     { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": false },
     { "type": "checkbox", "id": "show_swatches", "label": "Show colour swatches", "default": true },
     { "type": "text", "id": "grid_heading", "label": "Row heading", "default": "Popular on Dynaeimic.", "info": "Shown centered above the products, like 'Popular on the Google Store.' Clear to hide." },
+    { "type": "checkbox", "id": "image_bg", "label": "Fill each box with the product image", "default": false, "info": "The photo covers the whole card as a background; the name and price overlay on top." },
     { "type": "checkbox", "id": "show_buy_link", "label": "Show a 'Buy' link on each card", "default": false },
     { "type": "text", "id": "buy_label", "label": "Buy link text", "default": "Buy" },
     { "type": "checkbox", "id": "show_scrollbar", "label": "Show a scroll bar under the row", "default": true },
