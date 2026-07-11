@@ -921,13 +921,19 @@
       var sw = grid.scrollWidth, cw = grid.clientWidth, maxScroll = sw - cw;
       if (maxScroll <= 2) { scrollbar.style.display = "none"; return; }
       scrollbar.style.display = "";
-      var ratio = cw / sw;
-      scrollThumb.style.width = (ratio * 100) + "%";
-      scrollThumb.style.left = (grid.scrollLeft / maxScroll) * (100 - ratio * 100) + "%";
+      // Proportional to the viewport, but clamped so the darker pill always
+      // reads as a distinct segment (never nearly the whole track).
+      var pct = cw / sw * 100;
+      pct = Math.max(14, Math.min(pct, 52));
+      scrollThumb.style.width = pct + "%";
+      scrollThumb.style.left = (grid.scrollLeft / maxScroll) * (100 - pct) + "%";
     }
     grid.addEventListener("scroll", updateScrollbar, { passive: true });
     window.addEventListener("resize", updateScrollbar);
     updateScrollbar();
+    // Re-measure after layout/filter settles (cards start hidden then reveal).
+    requestAnimationFrame(updateScrollbar);
+    setTimeout(updateScrollbar, 120);
     var dragging = false, startX = 0, startLeft = 0;
     scrollThumb.addEventListener("pointerdown", function (e) {
       dragging = true; startX = e.clientX; startLeft = grid.scrollLeft;
