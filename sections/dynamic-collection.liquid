@@ -707,7 +707,7 @@
             {%- if block.settings.scrim and block.settings.image != blank -%}{%- assign bcls = bcls | append: ' dc-banner--shade' -%}{%- endif -%}
             {%- capture banner_inner -%}
               {%- if block.settings.image != blank -%}
-                <img class="dc-banner-img" src="{{ block.settings.image | image_url: width: 1200 }}" alt="{{ block.settings.heading | escape }}" loading="lazy">
+                <img class="dc-banner-img" src="{{ block.settings.image | image_url: width: 1200 }}" alt="{{ block.settings.heading | escape }}" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" loading="lazy">
               {%- endif -%}
               <div class="dc-banner-txt">
                 {%- if block.settings.kicker != blank -%}<span class="dc-banner-kicker">{{ block.settings.kicker }}</span>{%- endif -%}
