@@ -742,7 +742,7 @@
           {%- for block in section.blocks -%}
             {%- unless block.type == 'banner' -%}{%- continue -%}{%- endunless -%}
             {%- assign bsize = block.settings.size | default: 'sm' -%}
-            {%- assign bimg = block.settings.image_style | default: 'inside' -%}
+            {%- assign bimg = block.settings.image_style | default: 'cover' -%}
             {%- assign bink = block.settings.text_color | default: '#17223b' -%}
             {%- assign bbg = block.settings.bg_color | default: '#eef1f5' -%}
             {%- assign bcls = 'dc-banner dc-banner--' | append: bsize | append: ' dc-banner--' | append: bimg -%}
@@ -1442,10 +1442,10 @@
           { "value": "lg", "label": "Large (double width, full height)" }
         ] },
       { "type": "image_picker", "id": "image", "label": "Image" },
-      { "type": "select", "id": "image_style", "label": "Image style", "default": "inside",
+      { "type": "select", "id": "image_style", "label": "Image style", "default": "cover",
         "options": [
-          { "value": "inside", "label": "Inside the tile (photo on the colour)" },
-          { "value": "cover", "label": "Fill the whole tile (background)" }
+          { "value": "cover", "label": "Fill the whole tile (background)" },
+          { "value": "inside", "label": "Inside the tile (photo on the colour)" }
         ] },
       { "type": "checkbox", "id": "scrim", "label": "Shadow behind the text", "default": true, "info": "Only for the ‘Fill the whole tile’ style — keeps text readable over the photo." },
       { "type": "text", "id": "kicker", "label": "Small top line", "info": "e.g. In as fast as an hour" },
