@@ -287,9 +287,10 @@
   /* "Popular on …" heading above the row */
   .dyn-col .dc-grid-heading { text-align: center; font-family: var(--font-head); font-weight: 500; font-size: clamp(26px, 4vw, 40px); line-height: 1.1; letter-spacing: -0.01em; color: var(--ink); margin: 40px auto 26px; }
   /* Scroll progress bar under the row */
-  .dyn-col .dc-scrollbar { position: relative; height: 3px; border-radius: 3px; background: rgba(0,0,0,0.09); margin: 30px auto 0; max-width: 1180px; }
-  .dyn-col .dc-scrollbar-thumb { position: absolute; top: -2px; left: 0; height: 7px; border-radius: 4px; background: var(--ink); width: 20%; cursor: grab; touch-action: none; }
-  .dyn-col .dc-scrollbar-thumb:active { cursor: grabbing; }
+  .dyn-col .dc-scrollbar { position: relative; height: 4px; border-radius: 999px; background: rgba(0,0,0,0.08); margin: 30px auto 0; max-width: 1180px; }
+  .dyn-col .dc-scrollbar-thumb { position: absolute; top: 0; left: 0; height: 4px; border-radius: 999px; background: rgba(0,0,0,0.32); width: 20%; cursor: grab; touch-action: none; transition: background .18s ease, height .16s ease, top .16s ease; }
+  .dyn-col .dc-scrollbar:hover .dc-scrollbar-thumb { background: rgba(0,0,0,0.42); height: 6px; top: -1px; }
+  .dyn-col .dc-scrollbar-thumb:active { cursor: grabbing; background: rgba(0,0,0,0.55); height: 6px; top: -1px; }
 
   .dyn-col .dc-swatches { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; min-height: 20px; }
   .dyn-col .dc-swatch { width: 18px; height: 18px; border-radius: 50%; padding: 0; border: none; cursor: pointer;
