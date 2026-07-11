@@ -186,13 +186,12 @@
     .dyn-col .dc-grid .dc-card { opacity: 1 !important; transform: none !important; transition: none !important; }
   }
 
-  /* Google-Store-style card: white rounded image box on top, name/price/Buy below */
-  .dyn-col .dc-card { background: transparent; border-radius: 0; overflow: visible; display: flex; flex-direction: column; box-shadow: none; }
+  /* Apple-Store-style card: name/price on top, image fills a soft gradient box below */
+  .dyn-col .dc-card { background: linear-gradient(180deg,#f6f7f9,#e9edf2); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; min-height: 460px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
   .dyn-col .dc-card, .dyn-col .dc-card.in { transition: opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
-  .dyn-col .dc-media-wrap { position: relative; order: 0; }
-  .dyn-col .dc-media { position: relative; display: block; aspect-ratio: 1 / 1; background: #ffffff; border-radius: 22px; overflow: hidden; transition: background .2s; }
-  .dyn-col .dc-card:hover .dc-media { background: #fbfbfd; }
-  .dyn-col .dc-media img { position: absolute; inset: 15%; width: 70%; height: 70%; object-fit: contain; transition: opacity .35s ease, transform .5s ease; }
+  .dyn-col .dc-media-wrap { position: relative; order: 1; flex: 1 1 auto; min-height: 300px; }
+  .dyn-col .dc-media { position: absolute; inset: 0; display: block; background: transparent; overflow: hidden; transition: background .2s; }
+  .dyn-col .dc-media img { position: absolute; inset: 26px; width: calc(100% - 52px); height: calc(100% - 52px); object-fit: contain; transition: opacity .35s ease, transform .5s ease; }
   .dyn-col .dc-media .dc-ph { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--bg-panel); }
   .dyn-col .dc-media .dc-img-2 { opacity: 0; }
   /* Only swap to the 2nd image on true hover devices (mouse). On touch this
@@ -261,9 +260,9 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 1px 2px rgba(0,0,0,0.18); }
   }
 
-  .dyn-col .dc-body { order: 0; padding: 16px 2px 0; display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; align-items: flex-start; text-align: left; }
+  .dyn-col .dc-body { order: -1; padding: 26px 26px 4px; display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; align-items: flex-start; text-align: left; }
   .dyn-col .dc-vendor { font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); }
-  .dyn-col .dc-title { font-size: 17px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; margin: 0; color: var(--ink); }
+  .dyn-col .dc-title { font-size: 22px; font-weight: 600; line-height: 1.08; letter-spacing: -0.015em; margin: 0; color: var(--ink); }
   .dyn-col .dc-title a { color: inherit; text-decoration: none; }
   .dyn-col .dc-title a:hover { color: var(--accent); }
   .dyn-col .dc-price { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; font-variant-numeric: tabular-nums; }
@@ -316,7 +315,7 @@
     .dyn-col .dc-tabs::-webkit-scrollbar { display: none; }
     .dyn-col .dc-tabs.is-images .dc-tab { flex: 0 0 auto; }
   }
-  @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-grid .dc-card { flex-basis: 78%; } .dyn-col .dc-body { padding: 14px 2px 0; } .dyn-col .dc-title { font-size: 16px; } }
+  @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-grid .dc-card { flex-basis: 78%; min-height: 400px; } .dyn-col .dc-body { padding: 20px 20px 4px; } .dyn-col .dc-title { font-size: 20px; } }
 </style>
 
 {%- assign coll = section.settings.collection | default: collection -%}
@@ -1075,7 +1074,7 @@
     { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": false },
     { "type": "checkbox", "id": "show_swatches", "label": "Show colour swatches", "default": true },
     { "type": "text", "id": "grid_heading", "label": "Row heading", "default": "Popular on Dynaeimic.", "info": "Shown centered above the products, like 'Popular on the Google Store.' Clear to hide." },
-    { "type": "checkbox", "id": "show_buy_link", "label": "Show a 'Buy' link on each card", "default": true },
+    { "type": "checkbox", "id": "show_buy_link", "label": "Show a 'Buy' link on each card", "default": false },
     { "type": "text", "id": "buy_label", "label": "Buy link text", "default": "Buy" },
     { "type": "checkbox", "id": "show_scrollbar", "label": "Show a scroll bar under the row", "default": true },
 
