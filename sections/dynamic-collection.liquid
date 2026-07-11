@@ -186,14 +186,13 @@
     .dyn-col .dc-grid .dc-card { opacity: 1 !important; transform: none !important; transition: none !important; }
   }
 
-  /* Apple-style card: text at the top, product image filling the box on a soft background */
-  .dyn-col .dc-card { background: linear-gradient(180deg, #f6f7f9 0%, #e9edf2 100%); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; min-height: 460px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-  .dyn-col .dc-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 20px 48px rgba(0,0,0,0.10); }
-  .dyn-col .dc-card, .dyn-col .dc-card.in { transition: opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1), box-shadow .2s ease; }
-  .dyn-col .dc-media-wrap { order: 1; flex: 1 1 auto; min-height: 300px; }
-  .dyn-col .dc-media { position: absolute; inset: 0; display: block; background: transparent; overflow: hidden; }
-  .dyn-col .dc-media img { position: absolute; inset: 26px; width: calc(100% - 52px); height: calc(100% - 52px); object-fit: contain; transition: opacity .35s ease, transform .5s ease; }
+  /* Google-Store-style card: white rounded image box on top, name/price/Buy below */
+  .dyn-col .dc-card { background: transparent; border-radius: 0; overflow: visible; display: flex; flex-direction: column; box-shadow: none; }
+  .dyn-col .dc-card, .dyn-col .dc-card.in { transition: opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
+  .dyn-col .dc-media-wrap { position: relative; order: 0; }
+  .dyn-col .dc-media { position: relative; display: block; aspect-ratio: 1 / 1; background: #ffffff; border-radius: 22px; overflow: hidden; transition: background .2s; }
+  .dyn-col .dc-card:hover .dc-media { background: #fbfbfd; }
+  .dyn-col .dc-media img { position: absolute; inset: 15%; width: 70%; height: 70%; object-fit: contain; transition: opacity .35s ease, transform .5s ease; }
   .dyn-col .dc-media .dc-ph { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--bg-panel); }
   .dyn-col .dc-media .dc-img-2 { opacity: 0; }
   /* Only swap to the 2nd image on true hover devices (mouse). On touch this
@@ -262,15 +261,25 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 1px 2px rgba(0,0,0,0.18); }
   }
 
-  .dyn-col .dc-body { order: -1; padding: 26px 26px 4px; display: flex; flex-direction: column; gap: 3px; flex: 0 0 auto; align-items: flex-start; text-align: left; }
+  .dyn-col .dc-body { order: 0; padding: 16px 2px 0; display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; align-items: flex-start; text-align: left; }
   .dyn-col .dc-vendor { font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); }
-  .dyn-col .dc-title { font-size: 22px; font-weight: 600; line-height: 1.08; letter-spacing: -0.015em; margin: 0; color: var(--ink); }
+  .dyn-col .dc-title { font-size: 17px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; margin: 0; color: var(--ink); }
   .dyn-col .dc-title a { color: inherit; text-decoration: none; }
   .dyn-col .dc-title a:hover { color: var(--accent); }
   .dyn-col .dc-price { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; font-variant-numeric: tabular-nums; }
   .dyn-col .dc-price .dc-now { font-size: 15px; font-weight: 400; color: var(--ink-soft); }
   .dyn-col .dc-price .dc-was { font-size: 13px; color: var(--ink-faint); text-decoration: line-through; }
   .dyn-col .dc-price .dc-now.on-sale { color: var(--danger); }
+  .dyn-col .dc-badges { display: none; } /* Google-store look: no New/Best/Sale tags */
+  .dyn-col .dc-buy { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 15px; font-weight: 500; color: var(--accent); text-decoration: none; }
+  .dyn-col .dc-buy svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform .16s; }
+  .dyn-col .dc-buy:hover svg { transform: translateX(3px); }
+  /* "Popular on …" heading above the row */
+  .dyn-col .dc-grid-heading { text-align: center; font-family: var(--font-head); font-weight: 500; font-size: clamp(26px, 4vw, 40px); line-height: 1.1; letter-spacing: -0.01em; color: var(--ink); margin: 40px auto 26px; }
+  /* Scroll progress bar under the row */
+  .dyn-col .dc-scrollbar { position: relative; height: 3px; border-radius: 3px; background: rgba(0,0,0,0.09); margin: 30px auto 0; max-width: 1180px; }
+  .dyn-col .dc-scrollbar-thumb { position: absolute; top: -2px; left: 0; height: 7px; border-radius: 4px; background: var(--ink); width: 20%; cursor: grab; touch-action: none; }
+  .dyn-col .dc-scrollbar-thumb:active { cursor: grabbing; }
 
   .dyn-col .dc-swatches { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; min-height: 20px; }
   .dyn-col .dc-swatch { width: 18px; height: 18px; border-radius: 50%; padding: 0; border: none; cursor: pointer;
@@ -307,7 +316,7 @@
     .dyn-col .dc-tabs::-webkit-scrollbar { display: none; }
     .dyn-col .dc-tabs.is-images .dc-tab { flex: 0 0 auto; }
   }
-  @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-grid .dc-card { flex-basis: 78%; min-height: 400px; } .dyn-col .dc-body { padding: 20px 20px 4px; } .dyn-col .dc-title { font-size: 20px; } }
+  @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-grid .dc-card { flex-basis: 78%; } .dyn-col .dc-body { padding: 14px 2px 0; } .dyn-col .dc-title { font-size: 16px; } }
 </style>
 
 {%- assign coll = section.settings.collection | default: collection -%}
@@ -456,6 +465,9 @@
         <div class="dc-search-below" id="dcSearchBelow">{{ dc_search_html }}</div>
       {%- endif -%}
 
+      {%- if section.settings.grid_heading != blank -%}
+        <h2 class="dc-grid-heading">{{ section.settings.grid_heading }}</h2>
+      {%- endif -%}
       <div class="dc-shelf-wrap" id="dcShelfWrap">
       <button type="button" class="dc-shelf-arrow dc-prev" id="dcGridPrev" aria-label="Scroll products left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
       <div class="dc-grid" id="dcGrid">
@@ -572,12 +584,18 @@
                   </div>
                 {%- endif -%}
               {%- endif -%}
+              {%- if section.settings.show_buy_link -%}
+                <a class="dc-buy" href="{{ product.url }}">{{ section.settings.buy_label | default: 'Buy' }} <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></a>
+              {%- endif -%}
             </div>
           </div>
         {%- endfor -%}
       </div>
       <button type="button" class="dc-shelf-arrow dc-next" id="dcGridNext" aria-label="Scroll products right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
+      {%- if section.settings.show_scrollbar -%}
+        <div class="dc-scrollbar" id="dcScrollbar"><div class="dc-scrollbar-thumb" id="dcScrollThumb"></div></div>
+      {%- endif -%}
       <div class="dc-noresults" id="dcNoResults">
         <svg class="dc-nr-face" viewBox="0 0 48 48" aria-hidden="true"><circle cx="18" cy="20" r="2" fill="currentColor"/><circle cx="30" cy="20" r="2" fill="currentColor"/><path class="dc-nr-mouth" d="M15 30 Q24 23 33 30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
         <p class="dc-nr-title">{{ section.settings.noresults_title | default: 'No matches — yet.' }}</p>
@@ -884,6 +902,37 @@
   grid.addEventListener("scroll", updateGridArrows, { passive: true });
   window.addEventListener("resize", updateGridArrows);
 
+  // Scroll progress bar under the row (reflects position; draggable).
+  var scrollbar = document.getElementById("dcScrollbar");
+  var scrollThumb = document.getElementById("dcScrollThumb");
+  if (scrollbar && scrollThumb) {
+    function updateScrollbar() {
+      var sw = grid.scrollWidth, cw = grid.clientWidth, maxScroll = sw - cw;
+      if (maxScroll <= 2) { scrollbar.style.display = "none"; return; }
+      scrollbar.style.display = "";
+      var ratio = cw / sw;
+      scrollThumb.style.width = (ratio * 100) + "%";
+      scrollThumb.style.left = (grid.scrollLeft / maxScroll) * (100 - ratio * 100) + "%";
+    }
+    grid.addEventListener("scroll", updateScrollbar, { passive: true });
+    window.addEventListener("resize", updateScrollbar);
+    updateScrollbar();
+    var dragging = false, startX = 0, startLeft = 0;
+    scrollThumb.addEventListener("pointerdown", function (e) {
+      dragging = true; startX = e.clientX; startLeft = grid.scrollLeft;
+      if (scrollThumb.setPointerCapture) { try { scrollThumb.setPointerCapture(e.pointerId); } catch (er) {} }
+      e.preventDefault();
+    });
+    scrollThumb.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      var maxScroll = grid.scrollWidth - grid.clientWidth;
+      var travel = scrollbar.clientWidth - scrollThumb.clientWidth;
+      if (travel > 0) grid.scrollLeft = startLeft + ((e.clientX - startX) / travel) * maxScroll;
+    });
+    scrollThumb.addEventListener("pointerup", function () { dragging = false; });
+    scrollThumb.addEventListener("pointercancel", function () { dragging = false; });
+  }
+
   // If this page was opened with a ?q= query (e.g. from the home search),
   // prefill the box and filter to those results — unless this page itself
   // redirects elsewhere.
@@ -1025,6 +1074,10 @@
     { "type": "header", "content": "Card" },
     { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": false },
     { "type": "checkbox", "id": "show_swatches", "label": "Show colour swatches", "default": true },
+    { "type": "text", "id": "grid_heading", "label": "Row heading", "default": "Popular on Dynaeimic.", "info": "Shown centered above the products, like 'Popular on the Google Store.' Clear to hide." },
+    { "type": "checkbox", "id": "show_buy_link", "label": "Show a 'Buy' link on each card", "default": true },
+    { "type": "text", "id": "buy_label", "label": "Buy link text", "default": "Buy" },
+    { "type": "checkbox", "id": "show_scrollbar", "label": "Show a scroll bar under the row", "default": true },
 
     { "type": "header", "content": "Best seller badge ⭐" },
     { "type": "checkbox", "id": "show_bestseller", "label": "Show “Best seller” badge", "default": true },
