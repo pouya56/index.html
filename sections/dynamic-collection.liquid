@@ -354,8 +354,9 @@
     grid-row: span 2; transition: transform .18s ease, box-shadow .18s ease; }
   .dyn-col a.dc-banner { cursor: pointer; }
   .dyn-col a.dc-banner:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(0,0,0,0.12); }
-  .dyn-col .dc-banner--half { grid-row: span 1; padding: 16px 22px; }
-  .dyn-col .dc-banner--sm   { grid-row: span 2; }
+  /* Small tiles are half a column tall, so two stack on top of each other. */
+  .dyn-col .dc-banner--half,
+  .dyn-col .dc-banner--sm   { grid-row: span 1; padding: 16px 22px; }
   .dyn-col .dc-banner--tall { grid-row: span 2; }
   .dyn-col .dc-banner--wide { grid-row: span 2; grid-column: span 2; }
   .dyn-col .dc-banner--lg   { grid-row: span 2; grid-column: span 2; }
@@ -365,10 +366,12 @@
   .dyn-col .dc-banner-txt { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; max-width: 92%; }
   .dyn-col .dc-banner-kicker { font-size: 13.5px; font-weight: 600; letter-spacing: 0.01em; opacity: 0.9; }
   .dyn-col .dc-banner-title { font-family: var(--font-heading-family, var(--font)); font-weight: 700; font-size: clamp(20px, 2.2vw, 30px); line-height: 1.08; letter-spacing: -0.01em; }
-  .dyn-col .dc-banner--half .dc-banner-title { font-size: clamp(17px, 1.7vw, 22px); }
+  .dyn-col .dc-banner--half .dc-banner-title,
+  .dyn-col .dc-banner--sm .dc-banner-title { font-size: clamp(17px, 1.7vw, 22px); }
   /* Small text line under the heading */
   .dyn-col .dc-banner-sub { font-size: 14px; font-weight: 500; line-height: 1.35; opacity: 0.92; max-width: 30ch; }
-  .dyn-col .dc-banner--half .dc-banner-sub { font-size: 12.5px; }
+  .dyn-col .dc-banner--half .dc-banner-sub,
+  .dyn-col .dc-banner--sm .dc-banner-sub { font-size: 12.5px; }
   .dyn-col .dc-banner-cta { margin-top: 4px; font-size: 14.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
   .dyn-col a.dc-banner:hover .dc-banner-cta { text-decoration-thickness: 2px; }
   .dyn-col .dc-banners-wrap .dc-shelf-arrow { top: 50%; }
@@ -1423,14 +1426,13 @@
       { "type": "image_picker", "id": "image", "label": "Tab image" }
     ]},
     { "type": "banner", "name": "Promo banner", "settings": [
-      { "type": "select", "id": "size", "label": "Tile size", "default": "sm",
-        "info": "Two ‘Small — half height’ tiles stack on top of each other in the space of one Small square.",
+      { "type": "select", "id": "size", "label": "Tile size", "default": "tall",
+        "info": "Put two ‘Small’ tiles next to each other and they stack on top of each other in one column.",
         "options": [
-          { "value": "half", "label": "Small — half height (stacks)" },
-          { "value": "sm", "label": "Small square" },
-          { "value": "wide", "label": "Wide (2 wide)" },
-          { "value": "tall", "label": "Tall (2 high)" },
-          { "value": "lg", "label": "Large (2×2)" }
+          { "value": "sm", "label": "Small (two stack in a column)" },
+          { "value": "tall", "label": "Full height" },
+          { "value": "wide", "label": "Wide (double width)" },
+          { "value": "lg", "label": "Large (double width, full height)" }
         ] },
       { "type": "image_picker", "id": "image", "label": "Background image" },
       { "type": "checkbox", "id": "scrim", "label": "Shadow behind the text", "default": true, "info": "Adds a soft shadow so the text stays readable over a photo — without fading the image." },
