@@ -1,0 +1,69 @@
+{% comment %}
+  ============================================================================
+  Dynamic Bulk Order Button — a link on each product page to your Bulk Order page.
+  ----------------------------------------------------------------------------
+  SETUP:
+  1. Theme editor > Sections > add "dynamic-bulk-order-button" > paste this.
+  2. Online Store > Customize > switch the template dropdown to "Product" >
+     Add section > "Dynamic Bulk Order Button" > drag it under the buy button.
+  3. In its settings, set "Bulk order page link" to your Bulk order page.
+  It appears on every product automatically.
+  ============================================================================
+{% endcomment %}
+
+{%- assign bob_link = section.settings.link -%}
+
+<style>
+  .dboB-{{ section.id }} { --ink:#1d1d1f; --soft:#6e6e73; --line2:#d2d2d7; --panel:#f5f5f7;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:var(--font); -webkit-font-smoothing:antialiased; margin:{{ section.settings.margin_top }}px 0 {{ section.settings.margin_bottom }}px; }
+  .dboB-{{ section.id }}.al-left { text-align:left; }
+  .dboB-{{ section.id }}.al-center { text-align:center; }
+  .dboB-{{ section.id }}.al-full { text-align:center; }
+  .dboB-{{ section.id }} .dboB-link { display:inline-flex; align-items:center; justify-content:center; gap:9px; height:48px; padding:0 26px;
+    border-radius:999px; font:inherit; font-size:15.5px; font-weight:600; text-decoration:none; letter-spacing:-0.01em;
+    transition:opacity .16s, transform .1s, background .16s, border-color .16s; cursor:pointer; }
+  .dboB-{{ section.id }}.al-full .dboB-link { display:flex; width:100%; }
+  .dboB-{{ section.id }} .dboB-link svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+  .dboB-{{ section.id }} .is-filled { background:var(--ink); color:#fff; border:1px solid var(--ink); }
+  .dboB-{{ section.id }} .is-filled:hover { opacity:0.9; }
+  .dboB-{{ section.id }} .is-outline { background:#fff; color:var(--ink); border:1px solid var(--line2); }
+  .dboB-{{ section.id }} .is-outline:hover { background:var(--panel); }
+  .dboB-{{ section.id }} .dboB-link:active { transform:scale(0.985); }
+  .dboB-{{ section.id }} .dboB-note { font-size:13px; color:var(--soft); margin:9px 0 0; line-height:1.5; }
+</style>
+
+<div class="dboB-{{ section.id }} al-{{ section.settings.align | default: 'full' }}">
+  {%- if bob_link != blank -%}
+    <a class="dboB-link is-{{ section.settings.style | default: 'outline' }}" href="{{ bob_link }}">
+      {%- if section.settings.show_icon -%}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      {%- endif -%}
+      {{ section.settings.label | default: 'Order in bulk' }}
+    </a>
+    {%- if section.settings.subtext != blank -%}<p class="dboB-note">{{ section.settings.subtext }}</p>{%- endif -%}
+  {%- else -%}
+    <p class="dboB-note">Set the “Bulk order page link” in this section’s settings.</p>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Dynamic Bulk Order Button",
+  "tag": "section",
+  "class": "dynamic-bulk-order-button-section",
+  "settings": [
+    { "type": "paragraph", "content": "A button on each product page that links to your Bulk Order page. Set the link below, then place this section under the buy button on your Product template." },
+    { "type": "url", "id": "link", "label": "Bulk order page link", "info": "Pick your Bulk order page." },
+    { "type": "text", "id": "label", "label": "Button text", "default": "Order in bulk" },
+    { "type": "text", "id": "subtext", "label": "Small text under the button", "default": "Need 10+? Get volume pricing and upload your design." },
+    { "type": "checkbox", "id": "show_icon", "label": "Show box icon", "default": true },
+    { "type": "select", "id": "style", "label": "Button style", "options": [ { "value": "outline", "label": "Outline (light)" }, { "value": "filled", "label": "Filled (dark)" } ], "default": "outline" },
+    { "type": "select", "id": "align", "label": "Width / alignment", "options": [ { "value": "full", "label": "Full width" }, { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" } ], "default": "full" },
+    { "type": "range", "id": "margin_top", "label": "Space above", "min": 0, "max": 40, "step": 2, "unit": "px", "default": 12 },
+    { "type": "range", "id": "margin_bottom", "label": "Space below", "min": 0, "max": 40, "step": 2, "unit": "px", "default": 4 }
+  ],
+  "presets": [ { "name": "Dynamic Bulk Order Button" } ],
+  "enabled_on": { "templates": ["product"] }
+}
+{% endschema %}
