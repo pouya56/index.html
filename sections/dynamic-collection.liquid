@@ -150,6 +150,15 @@
     max-width: 0; opacity: 0; margin-right: 0; transition: max-width .32s ease, opacity .26s ease, margin-right .32s ease; }
   .dyn-col.dc-scrolled .dc-bar-logo { max-width: 220px; opacity: 1; margin-right: 8px; }
   .dyn-col .dc-bar-logo img { height: 44px; width: auto; max-width: 200px; object-fit: contain; display: block; }
+  /* Compact inline search bar that appears in the sticky bar on scroll (between logo and All). */
+  .dyn-col .dc-inline-search { display: none; align-items: center; gap: 7px; flex: 1 1 150px; max-width: 260px; min-width: 0; height: 38px; padding: 0 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.72); -webkit-backdrop-filter: blur(16px) saturate(1.6); backdrop-filter: blur(16px) saturate(1.6); border: 1px solid rgba(0,0,0,0.09); }
+  .dyn-col.dc-scrolled .dc-inline-search { display: flex; }
+  .dyn-col.dc-scrolled .dc-search-trigger { display: none; }  /* hide the magnifier tab; show the bar instead */
+  .dyn-col .dc-inline-mag { flex: none; display: grid; place-items: center; width: 17px; height: 17px; }
+  .dyn-col .dc-inline-mag svg { width: 16px; height: 16px; fill: none; stroke: var(--ink-faint); stroke-width: 2; stroke-linecap: round; }
+  .dyn-col .dc-inline-input { flex: 1 1 auto; min-width: 0; width: 100%; border: none; background: transparent; font-family: var(--font); font-size: 14px; color: var(--ink); padding: 0; }
+  .dyn-col .dc-inline-input:focus { outline: none; box-shadow: none; }
 
   /* Image tabs (Apple-style: picture + label, no box - tiles blend into the page) */
   .dyn-col .dc-tabs.is-images { flex: 1 1 auto; gap: 20px; align-items: flex-start; flex-wrap: nowrap; justify-content: flex-start;
@@ -318,8 +327,9 @@
   .dyn-col .dc-scrollbar-thumb:active { cursor: grabbing; background: rgba(0,0,0,0.55); height: 6px; top: -1px; }
 
   /* Vertical "all products" grid below the best-seller row (wraps, no side-scroll) */
-  .dyn-col .dc-allgrid-heading { margin-top: 56px; }
-  .dyn-col .dc-gridall { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 22px; margin: 6px auto 0; }
+  .dyn-col .dc-allgrid-heading { margin-top: 88px; margin-bottom: 20px; }
+  .dyn-col .dc-gridall { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 22px; margin: 88px auto 0; }
+  .dyn-col .dc-allgrid-heading + .dc-gridall { margin-top: 10px; }
   .dyn-col .dc-gridall .dc-card { min-width: 0; }
   @media (max-width: 1100px) { .dyn-col .dc-gridall { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 800px)  { .dyn-col .dc-gridall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
@@ -327,8 +337,9 @@
 
   /* Editable promo banners — horizontal scroller. Two rows tall so "half"
      tiles stack on top of each other; the row scrolls left/right for more. */
-  .dyn-col .dc-banners-heading { margin-top: 56px; }
-  .dyn-col .dc-banners-wrap { position: relative; margin: 20px auto 10px; }
+  .dyn-col .dc-banners-heading { margin-top: 88px; margin-bottom: 16px; }
+  .dyn-col .dc-banners-wrap { position: relative; margin: 88px auto 10px; }
+  .dyn-col .dc-banners-heading + .dc-banners-wrap { margin-top: 14px; }
   .dyn-col .dc-banners { display: grid; grid-auto-flow: column dense; grid-template-rows: repeat(2, 150px); grid-auto-columns: minmax(240px, 300px);
     gap: 16px; overflow-x: auto; scroll-behavior: smooth; scroll-snap-type: x proximity; scrollbar-width: none; -ms-overflow-style: none; padding: 4px 2px 8px; }
   .dyn-col .dc-banners::-webkit-scrollbar { display: none; }
@@ -499,6 +510,13 @@
           <a href="{{ routes.root_url }}" class="dc-bar-logo" id="dcBarLogo" aria-label="{{ shop.name | escape }} — home">
             <img src="{{ section.settings.heading_logo | image_url: width: 400 }}" alt="{{ shop.name | escape }}" width="{{ bar_lw }}" height="40" loading="lazy">
           </a>
+        {%- endif -%}
+        {%- if section.settings.show_search -%}
+        <div class="dc-inline-search" id="dcInlineSearch">
+          <span class="dc-inline-mag" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <input type="search" class="dc-inline-input" id="dcInlineInput" autocomplete="off" aria-label="Search products"
+            placeholder="{{ section.settings.search_placeholder | default: 'Search…' }}">
+        </div>
         {%- endif -%}
         <button type="button" class="dc-tabs-arrow dc-prev" id="dcPrev" aria-label="Scroll categories left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
         <div class="dc-tabs is-images" id="dcTabs" role="tablist">
@@ -778,7 +796,10 @@
   // Optional vertical "all products" grid below the row.
   var gridAll = document.getElementById("dcGridAll");
   var allCards = gridAll ? Array.prototype.slice.call(gridAll.querySelectorAll(".dc-card")) : [];
-  var gridHeading = root.querySelector(".dc-grid-heading:not(.dc-allgrid-heading)");
+  var bestHeading = root.querySelector(".dc-grid-heading:not(.dc-allgrid-heading):not(.dc-banners-heading)");
+  var allHeading = root.querySelector(".dc-allgrid-heading");
+  var bannersWrap = document.getElementById("dcBannersWrap");
+  var bannersHeading = root.querySelector(".dc-banners-heading");
   var scrollbarEl = document.getElementById("dcScrollbar");
   // Top row can be limited to best sellers — but only if some exist (else show all).
   var wantBestTop = root.getAttribute("data-top-best") === "true";
@@ -904,16 +925,23 @@
       c.style.display = m ? "" : "none";
       if (m) visibleAll.push(c);
     });
-    // Hide the top row (and its heading/scrollbar) when it has nothing to show.
-    var shelfEmpty = visible.length === 0;
-    if (shelfWrap) shelfWrap.style.display = shelfEmpty ? "none" : "";
-    if (gridHeading) gridHeading.style.display = shelfEmpty ? "none" : "";
-    if (scrollbarEl && shelfEmpty) scrollbarEl.style.display = "none";
+    // "Focused" view = a specific category is picked, a badge is active, or the
+    // shopper is searching. Then show ONLY the matching products and hide the
+    // best-seller row + promo banners so the category stands alone.
+    var focused = searching || (currentCat && currentCat !== "__all") || !!badgeFilter;
+    var showShelf = !focused && visible.length > 0;
+    if (shelfWrap) shelfWrap.style.display = showShelf ? "" : "none";
+    if (bestHeading) bestHeading.style.display = showShelf ? "" : "none";
+    if (scrollbarEl) scrollbarEl.style.display = showShelf ? "" : "none";
+    if (bannersWrap) bannersWrap.style.display = focused ? "none" : "";
+    if (bannersHeading) bannersHeading.style.display = focused ? "none" : "";
+    if (allHeading) allHeading.style.display = focused ? "none" : "";
     if (badgeChip) {
       if (badgeFilter) { badgeChip.hidden = false; if (badgeChipTxt) badgeChipTxt.textContent = badgeLabels[badgeFilter] || badgeFilter; }
       else { badgeChip.hidden = true; }
     }
-    if (noRes) noRes.style.display = (visible.length + visibleAll.length) ? "none" : "block";
+    var anyShown = focused ? visibleAll.length : (visible.length + visibleAll.length);
+    if (noRes) noRes.style.display = anyShown ? "none" : "block";
     grid.scrollLeft = 0;
     reveal(visible);
     updateGridArrows();
@@ -973,6 +1001,22 @@
       if (e.key !== "Enter") return;
       e.preventDefault();
       var q = searchEl.value.trim(); if (!q) return;
+      window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
+    });
+  }
+  // Compact inline search bar in the sticky category bar (filters the same list).
+  var inlineInput = document.getElementById("dcInlineInput");
+  if (inlineInput) {
+    if (!resultsUrl) inlineInput.addEventListener("input", function () {
+      query = inlineInput.value.trim().toLowerCase();
+      if (query) badgeFilter = null;
+      if (searchEl) searchEl.value = inlineInput.value; // keep both boxes in sync
+      applyFilters();
+    });
+    else inlineInput.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      var q = inlineInput.value.trim(); if (!q) return;
       window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
     });
   }
