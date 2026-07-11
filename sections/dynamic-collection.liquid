@@ -953,16 +953,16 @@
   if (searchBtn) searchBtn.addEventListener("click", function () {
     var q = searchEl ? searchEl.value.trim() : "";
     if (resultsUrl) { if (q) window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q); }
-    else { query = q.toLowerCase(); applyFilters(); flashOk(); if (searchEl) searchEl.focus(); }
+    else { query = q.toLowerCase(); applyFilters(); flashOk(); if (searchEl) searchEl.focus({ preventScroll: true }); }
   });
   // Magnifier tab (next to All) opens the search bar below the categories; closes when clicked away empty.
   var searchTrigger = document.getElementById("dcSearchTrigger");
   var searchBar = document.getElementById("dcSearchBar");
-  function openSearch() { if (searchBar) searchBar.classList.add("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "true"); if (tabs) tabs.classList.add("dc-searching"); if (searchEl) searchEl.focus(); }
+  function openSearch() { if (searchBar) searchBar.classList.add("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "true"); if (tabs) tabs.classList.add("dc-searching"); if (searchEl) searchEl.focus({ preventScroll: true }); }
   function closeSearch() { if (searchBar && searchEl && !searchEl.value.trim()) { searchBar.classList.remove("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false"); if (tabs) tabs.classList.remove("dc-searching"); } }
   if (searchTrigger) searchTrigger.addEventListener("click", function (e) {
     e.stopPropagation();  // don't let the category-tab handler treat this as a category
-    if (searchBar && searchBar.classList.contains("is-open")) { if (searchEl) searchEl.focus(); } else { openSearch(); }
+    if (searchBar && searchBar.classList.contains("is-open")) { if (searchEl) searchEl.focus({ preventScroll: true }); } else { openSearch(); }
   });
   if (searchEl) searchEl.addEventListener("blur", function () { setTimeout(closeSearch, 140); });
   // Esc closes the search bar (and clears the filter).
