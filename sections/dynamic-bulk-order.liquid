@@ -27,6 +27,13 @@
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     font-family:var(--font); color:var(--ink); -webkit-font-smoothing:antialiased; max-width:1000px; margin:0 auto; padding:40px 22px 80px; }
   .dbo *, .dbo *::before, .dbo *::after { box-sizing:border-box; }
+  .dbo-topbar { display:flex; align-items:center; margin-bottom:28px; }
+  .dbo-topbar.is-left { justify-content:flex-start; }
+  .dbo-topbar.is-center { justify-content:center; }
+  .dbo-logo { display:inline-flex; align-items:center; text-decoration:none; transition:opacity .16s; }
+  .dbo-logo:hover { opacity:0.72; }
+  .dbo-logo img { display:block; height:auto; max-width:62vw; }
+  .dbo-logo-text { font-size:22px; font-weight:600; letter-spacing:-0.02em; color:var(--ink); }
   .dbo-head { text-align:center; margin-bottom:30px; }
   .dbo-head h1 { font-size:clamp(28px,5vw,44px); font-weight:600; letter-spacing:-0.02em; margin:0 0 10px; }
   .dbo-head p { font-size:16px; color:var(--soft); line-height:1.55; margin:0 auto; max-width:620px; }
@@ -101,6 +108,21 @@
 </style>
 
 <section class="dbo" id="dboRoot" data-minqty="{{ section.settings.min_qty | default: 1 }}" data-notify="{{ notify_email }}">
+  {%- assign bo_logo = section.settings.logo | default: settings.logo -%}
+  {%- if section.settings.show_logo != false -%}
+    {%- assign lw = section.settings.logo_width | default: 130 -%}
+    <div class="dbo-topbar is-{{ section.settings.logo_align | default: 'center' }}">
+      <a href="{{ routes.root_url }}" class="dbo-logo" aria-label="{{ shop.name | escape }} — home">
+        {%- if bo_logo != blank -%}
+          {%- assign lh = lw | divided_by: bo_logo.aspect_ratio | round -%}
+          <img src="{{ bo_logo | image_url: width: 500 }}" alt="{{ shop.name | escape }}" width="{{ lw }}" height="{{ lh }}" style="width:{{ lw }}px;">
+        {%- else -%}
+          <span class="dbo-logo-text">{{ shop.name }}</span>
+        {%- endif -%}
+      </a>
+    </div>
+  {%- endif -%}
+
   <div class="dbo-head">
     <h1>{{ section.settings.heading | default: 'Bulk order' }}</h1>
     {%- if section.settings.intro != blank -%}<p>{{ section.settings.intro }}</p>{%- endif -%}
@@ -387,6 +409,12 @@
   "tag": "section",
   "class": "dynamic-bulk-order-section",
   "settings": [
+    { "type": "header", "content": "Logo (links to home)" },
+    { "type": "checkbox", "id": "show_logo", "label": "Show logo at top", "default": true },
+    { "type": "image_picker", "id": "logo", "label": "Logo image", "info": "Leave empty to use your theme logo." },
+    { "type": "range", "id": "logo_width", "label": "Logo width", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 130 },
+    { "type": "select", "id": "logo_align", "label": "Logo position", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" } ], "default": "center" },
+    { "type": "header", "content": "Order settings" },
     { "type": "collection", "id": "collection", "label": "Products available for bulk order", "info": "Choose a collection. Leave empty to allow all products." },
     { "type": "text", "id": "notify_email", "label": "Your notification email", "info": "Where bulk requests are emailed. Leave empty to use your store contact email." },
     { "type": "paragraph", "content": "Requests are emailed straight to you with no captcha for the customer. FIRST submission only: FormSubmit sends a one-time ‘Activate’ email to the address above — click it once, then every request is delivered automatically. Uploaded designs are hosted on Shopify and included as links." },
