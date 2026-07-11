@@ -742,7 +742,8 @@
           {%- for block in section.blocks -%}
             {%- unless block.type == 'banner' -%}{%- continue -%}{%- endunless -%}
             {%- assign bsize = block.settings.size | default: 'sm' -%}
-            {%- assign bimg = block.settings.image_style | default: 'cover' -%}
+            {%- comment -%} Always fill the tile (full-bleed). {%- endcomment -%}
+            {%- assign bimg = 'cover' -%}
             {%- assign bink = block.settings.text_color | default: '#17223b' -%}
             {%- assign bbg = block.settings.bg_color | default: '#eef1f5' -%}
             {%- assign bcls = 'dc-banner dc-banner--' | append: bsize | append: ' dc-banner--' | append: bimg -%}
@@ -1441,13 +1442,8 @@
           { "value": "wide", "label": "Wide (double width)" },
           { "value": "lg", "label": "Large (double width, full height)" }
         ] },
-      { "type": "image_picker", "id": "image", "label": "Image" },
-      { "type": "select", "id": "image_style", "label": "Image style", "default": "cover",
-        "options": [
-          { "value": "cover", "label": "Fill the whole tile (background)" },
-          { "value": "inside", "label": "Inside the tile (photo on the colour)" }
-        ] },
-      { "type": "checkbox", "id": "scrim", "label": "Shadow behind the text", "default": true, "info": "Only for the ‘Fill the whole tile’ style — keeps text readable over the photo." },
+      { "type": "image_picker", "id": "image", "label": "Image", "info": "Fills the whole tile." },
+      { "type": "checkbox", "id": "scrim", "label": "Shadow behind the text", "default": true, "info": "Keeps the text readable over the photo." },
       { "type": "text", "id": "kicker", "label": "Small top line", "info": "e.g. In as fast as an hour" },
       { "type": "text", "id": "heading", "label": "Heading (line 1)", "default": "Best-in-Class" },
       { "type": "text", "id": "heading2", "label": "Heading (line 2, accent colour)", "info": "Shown under line 1 in the accent colour — e.g. ‘Auto Heat Press’." },
