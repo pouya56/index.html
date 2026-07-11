@@ -150,6 +150,16 @@
     max-width: 0; opacity: 0; margin-right: 0; transition: max-width .32s ease, opacity .26s ease, margin-right .32s ease; }
   .dyn-col.dc-scrolled .dc-bar-logo { max-width: 220px; opacity: 1; margin-right: 8px; }
   .dyn-col .dc-bar-logo img { height: 44px; width: auto; max-width: 200px; object-fit: contain; display: block; }
+  /* Left inline search — opens from the sticky bar when the magnifier is clicked (scrolled). */
+  .dyn-col .dc-inline-search { display: none; align-items: center; gap: 7px; flex: 0 1 260px; max-width: 280px; min-width: 0; height: 38px; padding: 0 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.72); -webkit-backdrop-filter: blur(16px) saturate(1.6); backdrop-filter: blur(16px) saturate(1.6); border: 1px solid rgba(0,0,0,0.09);
+    animation: dcInlineIn .28s cubic-bezier(.22,1,.36,1); }
+  .dyn-col .dc-inline-search.is-open { display: flex; }
+  @keyframes dcInlineIn { from { opacity: 0; transform: translateX(-10px); max-width: 0; } to { opacity: 1; transform: none; max-width: 280px; } }
+  .dyn-col .dc-inline-mag { flex: none; display: grid; place-items: center; width: 17px; height: 17px; }
+  .dyn-col .dc-inline-mag svg { width: 16px; height: 16px; fill: none; stroke: var(--ink-faint); stroke-width: 2; stroke-linecap: round; }
+  .dyn-col .dc-inline-input { flex: 1 1 auto; min-width: 0; width: 100%; border: none; background: transparent; font-family: var(--font); font-size: 14px; color: var(--ink); padding: 0; }
+  .dyn-col .dc-inline-input:focus { outline: none; box-shadow: none; }
 
   /* Image tabs (Apple-style: picture + label, no box - tiles blend into the page) */
   .dyn-col .dc-tabs.is-images { flex: 1 1 auto; gap: 20px; align-items: flex-start; flex-wrap: nowrap; justify-content: flex-start;
@@ -501,6 +511,13 @@
           <a href="{{ routes.root_url }}" class="dc-bar-logo" id="dcBarLogo" aria-label="{{ shop.name | escape }} — home">
             <img src="{{ section.settings.heading_logo | image_url: width: 400 }}" alt="{{ shop.name | escape }}" width="{{ bar_lw }}" height="40" loading="lazy">
           </a>
+        {%- endif -%}
+        {%- if section.settings.show_search -%}
+        <div class="dc-inline-search" id="dcInlineSearch">
+          <span class="dc-inline-mag" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <input type="search" class="dc-inline-input" id="dcInlineInput" autocomplete="off" aria-label="Search products"
+            placeholder="{{ section.settings.search_placeholder | default: 'Search…' }}">
+        </div>
         {%- endif -%}
         <button type="button" class="dc-tabs-arrow dc-prev" id="dcPrev" aria-label="Scroll categories left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
         <div class="dc-tabs is-images" id="dcTabs" role="tablist">
@@ -1003,17 +1020,42 @@
   var searchTrigger = document.getElementById("dcSearchTrigger");
   var searchBar = document.getElementById("dcSearchBar");
   var searchBelow = document.getElementById("dcSearchBelow");
+  var inlineWrap = document.getElementById("dcInlineSearch");
+  var inlineInput = document.getElementById("dcInlineInput");
   // Pin the search drawer directly under the sticky category bar (whatever its height).
   function syncBelowTop() { if (searchBelow && tabsWrap) searchBelow.style.top = tabsWrap.offsetHeight + "px"; }
   syncBelowTop();
   window.addEventListener("resize", syncBelowTop);
   function openSearch() { syncBelowTop(); if (searchBelow) searchBelow.classList.add("dc-below-open"); if (searchBar) searchBar.classList.add("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "true"); if (tabs) tabs.classList.add("dc-searching"); if (searchEl) searchEl.focus({ preventScroll: true }); }
   function closeSearch() { if (searchBar && searchEl && !searchEl.value.trim()) { searchBar.classList.remove("is-open"); if (searchBelow) searchBelow.classList.remove("dc-below-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false"); if (tabs) tabs.classList.remove("dc-searching"); } }
+  // Left inline search (used when the page is scrolled): opens from the sticky bar.
+  function openInline() { if (!inlineWrap) return; inlineWrap.classList.add("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "true"); if (inlineInput) inlineInput.focus({ preventScroll: true }); }
+  function closeInline() { if (inlineWrap && inlineInput && !inlineInput.value.trim()) { inlineWrap.classList.remove("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false"); } }
   if (searchTrigger) searchTrigger.addEventListener("click", function (e) {
     e.stopPropagation();  // don't let the category-tab handler treat this as a category
+    // Scrolled down → open the search bar on the LEFT of the sticky bar.
+    if (root.classList.contains("dc-scrolled") && inlineWrap) {
+      if (inlineWrap.classList.contains("is-open")) { if (inlineInput) inlineInput.focus({ preventScroll: true }); }
+      else openInline();
+      return;
+    }
+    // At the top → drop the search bar in below the categories (as before).
     if (searchBar && searchBar.classList.contains("is-open")) { if (searchEl) searchEl.focus({ preventScroll: true }); } else { openSearch(); }
   });
   if (searchEl) searchEl.addEventListener("blur", function () { setTimeout(closeSearch, 140); });
+  if (inlineInput) inlineInput.addEventListener("blur", function () { setTimeout(closeInline, 140); });
+  if (inlineInput) inlineInput.addEventListener("input", function () {
+    if (resultsUrl) return;
+    query = inlineInput.value.trim().toLowerCase();
+    if (query) badgeFilter = null;
+    if (searchEl) searchEl.value = inlineInput.value; // keep both boxes in sync
+    applyFilters();
+  });
+  if (inlineInput && resultsUrl) inlineInput.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return; e.preventDefault();
+    var q = inlineInput.value.trim(); if (!q) return;
+    window.location.href = resultsUrl + (resultsUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
+  });
 
   // Slide the logo into the sticky category bar once the page is scrolled.
   (function () {
@@ -1032,6 +1074,13 @@
   // Esc closes the search bar (and clears the filter).
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
+    if (inlineWrap && inlineWrap.classList.contains("is-open")) {
+      if (inlineInput) inlineInput.value = "";
+      if (searchEl) searchEl.value = "";
+      query = ""; badgeFilter = null; applyFilters();
+      inlineWrap.classList.remove("is-open");
+      if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false");
+    }
     if (searchBar && searchBar.classList.contains("is-open")) {
       if (searchEl) { searchEl.value = ""; query = ""; badgeFilter = null; applyFilters(); }
       searchBar.classList.remove("is-open");
