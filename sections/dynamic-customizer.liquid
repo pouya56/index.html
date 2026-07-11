@@ -1680,13 +1680,21 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         }
         out.innerHTML = html;
 
+        // Pull the shopper's current colour / size / design from the customizer.
+        function readText(sel) { var el = document.querySelector(sel); return el ? (el.textContent || "").trim() : ""; }
+        var color = readText("#colorName");
+        var size = readText('#pSizes .pill[aria-pressed="true"]');
+        var design = readText("#customizeSummary");
+
         // The email request always uses a valid quantity (never below the minimum).
         var subject = "Bulk quote request: " + title;
-        var body = "Hi,\n\nI'd like a bulk quote for:\n\nProduct: " + title +
-                   "\nQuantity: " + qty +
-                   "\nEstimated price each: " + money(per) +
-                   "\nEstimated total: " + money(total) +
-                   "\n\nThank you!";
+        var lines = "Product: " + title + "\nQuantity: " + qty;
+        if (color) lines += "\nColour: " + color;
+        if (size) lines += "\nSize: " + size;
+        if (design && design.toLowerCase().indexOf("not customized") < 0) lines += "\nDesign: " + design;
+        lines += "\nEstimated price each: " + money(per) + "\nEstimated total: " + money(total);
+        var body = "Hi,\n\nI'd like a bulk quote for:\n\n" + lines +
+                   "\n\n(I'll attach or describe my artwork in a reply if needed.)\n\nThank you!";
         if (email) {
           req.setAttribute("href", "mailto:" + email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body));
         }
