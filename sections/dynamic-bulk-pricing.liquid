@@ -1,0 +1,133 @@
+{% comment %}
+  ============================================================================
+  Dynamic Bulk Pricing — a display-only "buy more, save more" tier table.
+  ----------------------------------------------------------------------------
+  ONE-TIME SETUP (creates the per-product data field):
+  1. Shopify admin > Settings > Custom data > Products > Add definition.
+     - Name:      Volume tiers
+     - Namespace and key:  custom.volume_tiers
+     - Type:      JSON
+     Save.
+  2. On each product (Products > pick a product > scroll to "Metafields" >
+     Volume tiers), paste the tiers as a JSON list, cheapest last, e.g. the
+     T-shirt:
+       [{"min":10,"price":35},{"min":50,"price":25},{"min":100,"price":19}]
+     ("min" = the quantity where that price starts; "price" = price per item
+     in your store currency, e.g. dollars.)
+  INSTALL THIS SECTION:
+  3. Theme code editor > Sections > Add a new section named
+     "dynamic-bulk-pricing" and replace its contents with this whole file.
+  4. Online Store > Customize > switch the template dropdown to "Product" >
+     Add section > "Dynamic Bulk Pricing" > drag it under the price. Save.
+  The table only appears on products that have the metafield filled in.
+  This is DISPLAY ONLY — it shows the pricing; you charge bulk orders via a
+  draft order / custom invoice (or add a discount later).
+  ============================================================================
+{% endcomment %}
+
+{%- assign ns = section.settings.mf_namespace | default: 'custom' -%}
+{%- assign key = section.settings.mf_key | default: 'volume_tiers' -%}
+{%- assign tiers = product.metafields[ns][key].value -%}
+
+{%- if tiers and tiers.size > 0 -%}
+<style>
+  .dyn-bulk { --ink:#1d1d1f; --soft:#6e6e73; --faint:#86868b; --line:#e3e3e8; --accent:#0071e3; --hi:#eef5ff;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:var(--font); color:var(--ink); -webkit-font-smoothing:antialiased; max-width:520px; margin:22px 0; }
+  .dyn-bulk *, .dyn-bulk *::before, .dyn-bulk *::after { box-sizing:border-box; }
+  .dyn-bulk .db-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0 0 12px; }
+  .dyn-bulk .db-title { font-size:17px; font-weight:600; letter-spacing:-0.01em; margin:0; }
+  .dyn-bulk .db-note { font-size:13px; color:var(--soft); }
+  .dyn-bulk .db-card { border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#fff;
+    box-shadow:0 1px 2px rgba(0,0,0,0.03); }
+  .dyn-bulk .db-row { display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:12px;
+    padding:13px 16px; border-top:1px solid var(--line); font-variant-numeric:tabular-nums; }
+  .dyn-bulk .db-row:first-child { border-top:0; }
+  .dyn-bulk .db-row.is-base { background:#fafafc; }
+  .dyn-bulk .db-qty { font-size:14.5px; font-weight:500; }
+  .dyn-bulk .db-qty small { display:block; font-size:12px; font-weight:400; color:var(--faint); }
+  .dyn-bulk .db-price { font-size:15px; font-weight:600; text-align:right; white-space:nowrap; }
+  .dyn-bulk .db-price small { font-weight:400; color:var(--faint); font-size:12px; }
+  .dyn-bulk .db-save { justify-self:end; font-size:11.5px; font-weight:600; color:#1a7f37; background:#e7f6ec;
+    padding:3px 9px; border-radius:999px; white-space:nowrap; min-width:60px; text-align:center; }
+  .dyn-bulk .db-save.is-empty { background:transparent; color:transparent; }
+  .dyn-bulk .db-cta { display:inline-flex; align-items:center; gap:7px; margin-top:14px; height:44px; padding:0 22px;
+    border-radius:999px; background:var(--ink); color:#fff; font-size:14.5px; font-weight:500; text-decoration:none;
+    transition:opacity .16s, transform .1s; }
+  .dyn-bulk .db-cta:hover { opacity:0.9; } .dyn-bulk .db-cta:active { transform:scale(0.98); }
+  .dyn-bulk .db-foot { font-size:12px; color:var(--faint); margin-top:10px; }
+  @media (max-width:460px){ .dyn-bulk .db-row { grid-template-columns:1fr auto; } .dyn-bulk .db-save { grid-column:1 / -1; justify-self:start; margin-top:-4px; } }
+</style>
+
+<div class="dyn-bulk">
+  <div class="db-head">
+    <h3 class="db-title">{{ section.settings.heading | default: 'Buy more, save more' }}</h3>
+    {%- if section.settings.subnote != blank -%}<span class="db-note">{{ section.settings.subnote }}</span>{%- endif -%}
+  </div>
+
+  <div class="db-card">
+    {%- comment -%} Base row: single-unit price for quantities below the first tier. {%- endcomment -%}
+    {%- if section.settings.show_base -%}
+      {%- assign first_min = tiers[0].min -%}
+      <div class="db-row is-base">
+        <div class="db-qty">1{% if first_min > 1 %}–{{ first_min | minus: 1 }}{% endif %} <small>{{ section.settings.each_word | default: 'each' }}</small></div>
+        <div class="db-price">{{ product.price | money }}</div>
+        <span class="db-save is-empty">—</span>
+      </div>
+    {%- endif -%}
+
+    {%- assign base_cents = product.price -%}
+    {%- for t in tiers -%}
+      {%- assign next_tier = tiers[forloop.index] -%}
+      {%- assign tier_cents = t.price | times: 100 -%}
+      <div class="db-row">
+        <div class="db-qty">
+          {%- if next_tier -%}{{ t.min }}–{{ next_tier.min | minus: 1 }}{%- else -%}{{ t.min }}+{%- endif -%}
+          <small>{{ section.settings.each_word | default: 'each' }}</small>
+        </div>
+        <div class="db-price">{{ tier_cents | money }}</div>
+        {%- if base_cents > 0 and tier_cents < base_cents -%}
+          {%- assign pct = base_cents | minus: tier_cents | times: 100 | divided_by: base_cents -%}
+          <span class="db-save">{{ section.settings.save_word | default: 'Save' }} {{ pct }}%</span>
+        {%- else -%}
+          <span class="db-save is-empty">—</span>
+        {%- endif -%}
+      </div>
+    {%- endfor -%}
+  </div>
+
+  {%- if section.settings.cta_label != blank -%}
+    <a class="db-cta" href="{{ section.settings.cta_link | default: '/pages/contact' }}">
+      {{ section.settings.cta_label }}
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+    </a>
+  {%- endif -%}
+  {%- if section.settings.footnote != blank -%}<p class="db-foot">{{ section.settings.footnote }}</p>{%- endif -%}
+</div>
+</div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Dynamic Bulk Pricing",
+  "tag": "section",
+  "class": "dynamic-bulk-pricing-section",
+  "settings": [
+    { "type": "paragraph", "content": "Shows a per-product volume-price table. Fill each product's 'custom.volume_tiers' JSON metafield (see the notes at the top of the section code). Display only — you charge bulk orders manually." },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Buy more, save more" },
+    { "type": "text", "id": "subnote", "label": "Small note (top right)", "default": "Volume pricing" },
+    { "type": "checkbox", "id": "show_base", "label": "Show the single-unit row", "default": true },
+    { "type": "text", "id": "each_word", "label": "Per-unit word", "default": "each" },
+    { "type": "text", "id": "save_word", "label": "Savings word", "default": "Save" },
+    { "type": "header", "content": "Bulk enquiry button (optional)" },
+    { "type": "text", "id": "cta_label", "label": "Button text", "default": "Request a bulk quote", "info": "Leave empty to hide the button." },
+    { "type": "url", "id": "cta_link", "label": "Button link", "info": "e.g. your contact page." },
+    { "type": "text", "id": "footnote", "label": "Fine print", "default": "Bulk prices are applied on your invoice — contact us to order in volume." },
+    { "type": "header", "content": "Advanced" },
+    { "type": "text", "id": "mf_namespace", "label": "Metafield namespace", "default": "custom" },
+    { "type": "text", "id": "mf_key", "label": "Metafield key", "default": "volume_tiers" }
+  ],
+  "presets": [ { "name": "Dynamic Bulk Pricing" } ],
+  "enabled_on": { "templates": ["product"] }
+}
+{% endschema %}
