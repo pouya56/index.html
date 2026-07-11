@@ -136,6 +136,7 @@
 {%- for product in bo_coll.products -%}
   {
     "id": {{ product.id }},
+    "handle": {{ product.handle | json }},
     "title": {{ product.title | json }},
     "image": {{ product.featured_image | image_url: width: 500 | json }},
     "options": [{%- for o in product.options_with_values -%}{ "name": {{ o.name | json }}, "values": {{ o.values | json }} }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}],
@@ -316,7 +317,20 @@
     return node;
   }
   addBtn.addEventListener("click", addRow);
-  addRow();
+  var firstRow = addRow();
+
+  // Preselect a product if the page was opened with ?product=<handle>
+  (function () {
+    try {
+      var pre = new URLSearchParams(window.location.search).get("product");
+      if (!pre) return;
+      var match = null;
+      for (var i = 0; i < PRODUCTS.length; i++) {
+        if (String(PRODUCTS[i].handle) === pre || String(PRODUCTS[i].id) === pre) { match = PRODUCTS[i]; break; }
+      }
+      if (match && firstRow) setRowProduct(firstRow, match);
+    } catch (e) {}
+  })();
 
   // ---- Shopify file hosting (upload to cart, read hosted URL, then clear) ----
   var _addedToCart = false;

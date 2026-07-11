@@ -12,6 +12,13 @@
 {% endcomment %}
 
 {%- assign bob_link = section.settings.link -%}
+{%- if bob_link != blank and product and product.handle -%}
+  {%- if bob_link contains '?' -%}
+    {%- assign bob_link = bob_link | append: '&product=' | append: product.handle -%}
+  {%- else -%}
+    {%- assign bob_link = bob_link | append: '?product=' | append: product.handle -%}
+  {%- endif -%}
+{%- endif -%}
 
 <style>
   .dboB-{{ section.id }} { --ink:#1d1d1f; --soft:#6e6e73; --line2:#d2d2d7; --panel:#f5f5f7;
