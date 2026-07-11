@@ -442,6 +442,8 @@ button { font-family: inherit; cursor: pointer; }
 .bulk-link:hover { background: var(--bg-panel); border-color: var(--ink); }
 .bulk-link svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2;
   stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.bulk-note { font-size: 13px; color: var(--muted, #6e6e73); margin-top: 8px; line-height: 1.5; }
+.bulk-note:empty { display: none; }
 
 .cta-stack { display: flex; flex-direction: column; gap: 12px; margin-top: 36px; }
 .cta-row { display: flex; gap: 12px; align-items: stretch; }
@@ -1125,6 +1127,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
           </div>
           <span id="bulkLinkMount"></span>
         </div>
+        <div id="bulkNoteMount" class="bulk-note"></div>
       </div>
 
       <!-- Gift options mount (filled by the app when enabled in settings) -->
@@ -1554,6 +1557,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     {% endif %}
     a.appendChild(document.createTextNode({{ section.settings.bulk_link_label | default: 'Order in bulk' | json }}));
     mount.appendChild(a);
+    {% if section.settings.bulk_link_note != blank %}
+    var note = document.getElementById("bulkNoteMount");
+    if (note) note.textContent = {{ section.settings.bulk_link_note | json }};
+    {% endif %}
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject); else inject();
 })();
@@ -1589,6 +1596,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "url", "id": "bulk_link", "label": "Bulk order page link", "info": "Pick your Bulk order page. The button is hidden until this is set." },
     { "type": "text", "id": "bulk_link_label", "label": "Button text", "default": "Order in bulk" },
     { "type": "checkbox", "id": "bulk_link_icon", "label": "Show box icon", "default": true },
+    { "type": "text", "id": "bulk_link_note", "label": "Small note under the button", "default": "Volume pricing from 10+ — save more per item.", "info": "Leave empty to hide." },
     { "type": "header", "content": "Trust row (under the buttons)" },
     { "type": "paragraph", "content": "The three short reassurance items shown beneath the buttons. Leave a field blank to hide that item; clear all three to hide the whole row." },
     { "type": "text", "id": "reassure_1", "label": "Trust item 1", "default": "Free delivery" },
