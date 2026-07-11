@@ -1528,6 +1528,89 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {% endraw %}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
+{%- comment -%} Volume / bulk pricing button, dropped in under the gift-wrapping toggle.
+  Reads the product's custom.volume_tiers JSON metafield; hidden if it's empty. {%- endcomment -%}
+{%- assign btiers = dyn_product.metafields.custom.volume_tiers.value -%}
+{%- if dyn_product and btiers and btiers.size > 0 -%}
+  {%- assign base_cents = dyn_product.price -%}
+  {%- assign best_pct = 0 -%}
+  {%- for t in btiers -%}
+    {%- assign tc = t.price | times: 100 -%}
+    {%- if base_cents > 0 and tc < base_cents -%}
+      {%- assign p = base_cents | minus: tc | times: 100 | divided_by: base_cents -%}
+      {%- if p > best_pct -%}{%- assign best_pct = p -%}{%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- assign first_min = btiers[0].min -%}
+  <style>
+    .dc-bulk { margin: 8px 0 4px; }
+    .dc-bulk-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 14px 16px; border: 1px solid var(--line, #d2d2d7); border-radius: 14px; background: var(--bg-panel, #f5f5f7);
+      color: var(--ink, #1d1d1f); cursor: pointer; font: inherit; transition: background .16s; }
+    .dc-bulk-toggle:hover { background: #eceef1; }
+    .dc-bulk-tl { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+    .dc-bulk-t1 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+    .dc-bulk-t2 { font-size: 12.5px; color: #1a7f37; font-weight: 600; }
+    .dc-bulk-chev { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .22s; flex: none; }
+    .dc-bulk.is-open .dc-bulk-chev { transform: rotate(180deg); }
+    .dc-bulk-panel { border: 1px solid var(--line, #d2d2d7); border-radius: 14px; margin-top: 8px; overflow: hidden; }
+    .dc-bulk-panel[hidden] { display: none; }
+    .dc-bulk-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px;
+      border-top: 1px solid var(--line-soft, #e8e8ed); font-size: 14px; font-variant-numeric: tabular-nums; }
+    .dc-bulk-row:first-child { border-top: 0; }
+    .dc-bulk-row small { color: var(--ink-faint, #86868b); font-size: 12px; }
+    .dc-bulk-row .dc-bulk-p { font-weight: 600; }
+    .dc-bulk-row em { font-style: normal; color: #1a7f37; font-weight: 600; font-size: 12px; margin-left: 8px; }
+    .dc-bulk-base { background: var(--bg-panel, #f5f5f7); }
+    .dc-bulk-foot { font-size: 12px; color: var(--ink-faint, #86868b); padding: 10px 16px 12px; border-top: 1px solid var(--line-soft, #e8e8ed); }
+  </style>
+  <template id="dcBulkTpl">
+    <div class="dc-bulk">
+      <button type="button" class="dc-bulk-toggle" aria-expanded="false">
+        <span class="dc-bulk-tl">
+          <span class="dc-bulk-t1">Volume pricing</span>
+          {%- if best_pct > 0 -%}<span class="dc-bulk-t2">Save up to {{ best_pct }}%</span>{%- endif -%}
+        </span>
+        <svg class="dc-bulk-chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="dc-bulk-panel" hidden>
+        <div class="dc-bulk-row dc-bulk-base"><span>1{% if first_min > 1 %}–{{ first_min | minus: 1 }}{% endif %} <small>each</small></span><span class="dc-bulk-p">{{ dyn_product.price | money }}</span></div>
+        {%- for t in btiers -%}
+          {%- assign nx = btiers[forloop.index] -%}
+          {%- assign tc = t.price | times: 100 -%}
+          <div class="dc-bulk-row">
+            <span>{% if nx %}{{ t.min }}–{{ nx.min | minus: 1 }}{% else %}{{ t.min }}+{% endif %} <small>each</small></span>
+            <span class="dc-bulk-p">{{ tc | money }}{% if base_cents > 0 and tc < base_cents %}{% assign pp = base_cents | minus: tc | times: 100 | divided_by: base_cents %}<em>Save {{ pp }}%</em>{% endif %}</span>
+          </div>
+        {%- endfor -%}
+        <div class="dc-bulk-foot">Bulk prices are applied on your invoice — contact us to order in volume.</div>
+      </div>
+    </div>
+  </template>
+  <script>
+  (function () {
+    function init() {
+      var tpl = document.getElementById("dcBulkTpl");
+      var mount = document.getElementById("giftMount");
+      if (!tpl || !mount || document.getElementById("dcBulkLive")) return;
+      var node = tpl.content.firstElementChild.cloneNode(true);
+      node.id = "dcBulkLive";
+      mount.insertAdjacentElement("afterend", node);
+      var btn = node.querySelector(".dc-bulk-toggle");
+      var panel = node.querySelector(".dc-bulk-panel");
+      btn.addEventListener("click", function () {
+        var opening = panel.hasAttribute("hidden");
+        if (opening) panel.removeAttribute("hidden"); else panel.setAttribute("hidden", "");
+        btn.setAttribute("aria-expanded", opening ? "true" : "false");
+        node.classList.toggle("is-open", opening);
+      });
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+    else init();
+  })();
+  </script>
+{%- endif -%}
+
 {%- comment -%} The Features panel lives in its own section: dynamic-features.liquid {%- endcomment -%}
 
 {% schema %}
