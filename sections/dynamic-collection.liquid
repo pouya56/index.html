@@ -292,6 +292,14 @@
   .dyn-col .dc-scrollbar:hover .dc-scrollbar-thumb { background: rgba(0,0,0,0.42); height: 6px; top: -1px; }
   .dyn-col .dc-scrollbar-thumb:active { cursor: grabbing; background: rgba(0,0,0,0.55); height: 6px; top: -1px; }
 
+  /* Vertical "all products" grid below the best-seller row (wraps, no side-scroll) */
+  .dyn-col .dc-allgrid-heading { margin-top: 56px; }
+  .dyn-col .dc-gridall { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 22px; margin: 6px auto 0; }
+  .dyn-col .dc-gridall .dc-card { min-width: 0; }
+  @media (max-width: 1100px) { .dyn-col .dc-gridall { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 800px)  { .dyn-col .dc-gridall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
+  @media (max-width: 460px)  { .dyn-col .dc-gridall { gap: 12px; } .dyn-col .dc-gridall .dc-card { min-height: 340px; } }
+
   .dyn-col .dc-swatches { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; min-height: 20px; }
   .dyn-col .dc-swatch { width: 18px; height: 18px; border-radius: 50%; padding: 0; border: none; cursor: pointer;
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15); transition: transform .14s; }
@@ -346,6 +354,7 @@
 <section class="dyn-col{% if section.settings.hide_until_search %} dc-landing{% endif %}{% if section.settings.image_bg %} dc-fill{% endif %}" id="dynCol"
   data-currency="{{ shop.currency }}"
   data-cat-source="{{ cat_source }}"
+  data-top-best="{% if section.settings.top_bestsellers_only %}true{% else %}false{% endif %}"
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
   data-results-url="{{ section.settings.results_page_url }}">
   {%- comment -%} Back button removed here — the site-wide “Account & apps bar” now provides the back button. {%- endcomment -%}
@@ -488,10 +497,8 @@
       {%- if section.settings.grid_heading != blank -%}
         <h2 class="dc-grid-heading">{{ section.settings.grid_heading }}</h2>
       {%- endif -%}
-      <div class="dc-shelf-wrap" id="dcShelfWrap">
-      <button type="button" class="dc-shelf-arrow dc-prev" id="dcGridPrev" aria-label="Scroll products left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div class="dc-grid" id="dcGrid">
-        {%- assign hide_tag = section.settings.hide_tag | default: 'hidden' -%}
+      {%- assign hide_tag = section.settings.hide_tag | default: 'hidden' -%}
+      {%- capture dc_cards_html -%}
         {%- for product in prods limit: section.settings.max_products -%}
           {%- if product.tags contains hide_tag -%}{%- continue -%}{%- endif -%}
           {%- assign on_sale = false -%}
@@ -610,11 +617,20 @@
             </div>
           </div>
         {%- endfor -%}
-      </div>
+      {%- endcapture -%}
+      <div class="dc-shelf-wrap" id="dcShelfWrap">
+      <button type="button" class="dc-shelf-arrow dc-prev" id="dcGridPrev" aria-label="Scroll products left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="dc-grid" id="dcGrid">{{ dc_cards_html }}</div>
       <button type="button" class="dc-shelf-arrow dc-next" id="dcGridNext" aria-label="Scroll products right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
       {%- if section.settings.show_scrollbar -%}
         <div class="dc-scrollbar" id="dcScrollbar"><div class="dc-scrollbar-thumb" id="dcScrollThumb"></div></div>
+      {%- endif -%}
+      {%- if section.settings.show_all_grid -%}
+        {%- if section.settings.all_heading != blank -%}
+          <h2 class="dc-grid-heading dc-allgrid-heading">{{ section.settings.all_heading }}</h2>
+        {%- endif -%}
+        <div class="dc-gridall" id="dcGridAll">{{ dc_cards_html }}</div>
       {%- endif -%}
       <div class="dc-noresults" id="dcNoResults">
         <svg class="dc-nr-face" viewBox="0 0 48 48" aria-hidden="true"><circle cx="18" cy="20" r="2" fill="currentColor"/><circle cx="30" cy="20" r="2" fill="currentColor"/><path class="dc-nr-mouth" d="M15 30 Q24 23 33 30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
@@ -650,6 +666,15 @@
   var hideUntilSearch = root.getAttribute("data-hide-until-search") === "true";
   if (!grid) return;
   var cards = Array.prototype.slice.call(grid.querySelectorAll(".dc-card"));
+  // Optional vertical "all products" grid below the row.
+  var gridAll = document.getElementById("dcGridAll");
+  var allCards = gridAll ? Array.prototype.slice.call(gridAll.querySelectorAll(".dc-card")) : [];
+  var gridHeading = root.querySelector(".dc-grid-heading:not(.dc-allgrid-heading)");
+  var scrollbarEl = document.getElementById("dcScrollbar");
+  // Top row can be limited to best sellers — but only if some exist (else show all).
+  var wantBestTop = root.getAttribute("data-top-best") === "true";
+  var hasBest = cards.some(function (c) { return (" " + (c.getAttribute("data-flags") || "") + " ").indexOf(" best ") >= 0; });
+  var shelfBestOnly = wantBestTop && hasBest;
 
   // How many cards are visible at once (for a per-row left->right sweep).
   function colCount() {
@@ -733,26 +758,44 @@
     if (tabs) tabs.querySelectorAll(".dc-tab").forEach(function (b) {
       b.classList.toggle("is-active", searching ? b.getAttribute("data-cat") === "__all" : b.getAttribute("data-cat") === currentCat);
     });
-    var visible = [];
-    cards.forEach(function (c) {
+    function baseMatch(c) {
       var cc = " " + (c.getAttribute("data-cat") || "") + " ";
       var okCat = currentCat === "__all" || cc.indexOf(" " + currentCat + " ") >= 0;
       var okQ = !query || queryMatch(query, c.getAttribute("data-search") || "");
-      var match;
       if (badgeFilter) {
         var fl = " " + (c.getAttribute("data-flags") || "") + " ";
-        match = fl.indexOf(" " + badgeFilter + " ") >= 0 && okQ;
-      } else {
-        match = searching ? okQ : okCat;
+        return fl.indexOf(" " + badgeFilter + " ") >= 0 && okQ;
       }
-      c.style.display = match ? "" : "none";
-      if (match) visible.push(c);
+      return searching ? okQ : okCat;
+    }
+    // Top row: matched cards (optionally best sellers only).
+    var visible = [];
+    cards.forEach(function (c) {
+      var m = baseMatch(c);
+      if (m && shelfBestOnly) {
+        var fl = " " + (c.getAttribute("data-flags") || "") + " ";
+        if (fl.indexOf(" best ") < 0) m = false;
+      }
+      c.style.display = m ? "" : "none";
+      if (m) visible.push(c);
     });
+    // Vertical grid below: every matched card.
+    var visibleAll = [];
+    allCards.forEach(function (c) {
+      var m = baseMatch(c);
+      c.style.display = m ? "" : "none";
+      if (m) visibleAll.push(c);
+    });
+    // Hide the top row (and its heading/scrollbar) when it has nothing to show.
+    var shelfEmpty = visible.length === 0;
+    if (shelfWrap) shelfWrap.style.display = shelfEmpty ? "none" : "";
+    if (gridHeading) gridHeading.style.display = shelfEmpty ? "none" : "";
+    if (scrollbarEl && shelfEmpty) scrollbarEl.style.display = "none";
     if (badgeChip) {
       if (badgeFilter) { badgeChip.hidden = false; if (badgeChipTxt) badgeChipTxt.textContent = badgeLabels[badgeFilter] || badgeFilter; }
       else { badgeChip.hidden = true; }
     }
-    if (noRes) noRes.style.display = visible.length ? "none" : "block";
+    if (noRes) noRes.style.display = (visible.length + visibleAll.length) ? "none" : "block";
     grid.scrollLeft = 0;
     reveal(visible);
     updateGridArrows();
@@ -1100,7 +1143,10 @@
     { "type": "header", "content": "Card" },
     { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": false },
     { "type": "checkbox", "id": "show_swatches", "label": "Show colour swatches", "default": true },
-    { "type": "text", "id": "grid_heading", "label": "Row heading", "default": "Popular on Dynaeimic.", "info": "Shown centered above the products, like 'Popular on the Google Store.' Clear to hide." },
+    { "type": "text", "id": "grid_heading", "label": "Row heading", "default": "Best sellers", "info": "Heading above the horizontal best-seller row. Clear to hide." },
+    { "type": "checkbox", "id": "top_bestsellers_only", "label": "Top row shows best sellers only", "default": true, "info": "The horizontal row shows only products flagged as best sellers (see the ‘Best seller badge’ section). If none are flagged, it shows all products." },
+    { "type": "checkbox", "id": "show_all_grid", "label": "Show all products in a grid below", "default": true, "info": "Adds a vertical, wrapping grid of every product under the best-seller row." },
+    { "type": "text", "id": "all_heading", "label": "Grid heading", "default": "All products", "info": "Heading above the vertical grid. Clear to hide." },
     { "type": "checkbox", "id": "image_bg", "label": "Fill each box with the product image", "default": false, "info": "The photo covers the whole card as a background; the name and price overlay on top." },
     { "type": "checkbox", "id": "show_buy_link", "label": "Show a 'Buy' link on each card", "default": false },
     { "type": "text", "id": "buy_label", "label": "Buy link text", "default": "Buy" },
