@@ -976,14 +976,13 @@
     query = "";
     badgeFilter = null;
     currentCat = btn.getAttribute("data-cat"); applyFilters();
-    // Jump down to the products for the chosen category (skip for "All").
-    if (currentCat !== "__all") {
-      var target = allHeading || gridAll || shelfWrap;
-      if (target) {
-        var barH = tabsWrap ? tabsWrap.offsetHeight : 0;
-        var y = target.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - barH - 14;
-        window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
-      }
+    // Jump down to the products for ANY tab, including "All".
+    root.classList.add("dc-cat-focused"); // keep the grid tall enough to reach the top
+    var target = allHeading || gridAll || shelfWrap;
+    if (target) {
+      var barH = tabsWrap ? tabsWrap.offsetHeight : 0;
+      var y = target.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - barH - 14;
+      window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
     }
   });
 
