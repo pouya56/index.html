@@ -54,9 +54,11 @@
   .dbo-addvar svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; }
   .dbo-file-btn { display:inline-flex; align-items:center; gap:8px; height:42px; padding:0 14px; border:1px dashed var(--line2); border-radius:12px; cursor:pointer; font-size:14px; color:var(--soft); background:#fff; }
   .dbo-file-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .dbo-file-btn svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-  .dbo-file input[type=file] { display:none; }
-  .dbo-file-name { font-size:12px; color:var(--faint); margin-top:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dbo-file-btn svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+  .dbo-file-btn input[type=file] { display:none; }
+  .dbo-varfile { flex:1 1 150px; min-width:130px; max-width:210px; height:40px; }
+  .dbo-varfile.has-file { border-style:solid; border-color:var(--accent); color:var(--accent); }
+  .dbo-varfile .dbo-varfile-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .dbo-row-foot { display:flex; justify-content:flex-end; padding-top:4px; }
   .dbo-remove { border:0; background:transparent; color:var(--danger); font:inherit; font-size:13px; cursor:pointer; padding:6px 8px; border-radius:8px; }
   .dbo-remove:hover { background:#fdeceb; }
@@ -163,14 +165,6 @@
           <div class="dbo-pname empty">No product selected</div>
           <div class="dbo-varlines"></div>
           <button type="button" class="dbo-addvar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> {{ section.settings.addvar_label | default: 'Add another variation' }}</button>
-          <div class="dbo-file">
-            <label class="dbo-file-btn">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span class="dbo-file-label">Upload design</span>
-              <input type="file" class="dbo-file-input" accept="image/*,.pdf,.ai,.svg">
-            </label>
-            <div class="dbo-file-name"></div>
-          </div>
           <div class="dbo-row-foot"><button type="button" class="dbo-remove">Remove product</button></div>
         </div>
       </div>
@@ -218,6 +212,19 @@
     for (var i = 0; i < prod.variants.length; i++) if (prod.variants[i].available) return prod.variants[i].id;
     return prod.variants[0].id;
   }
+  // Resolve the exact variant from the dropdown selections (falls back to first).
+  function resolveVariantId(prod, line) {
+    if (!prod || !prod.variants) return null;
+    var sels = Array.prototype.slice.call(line.querySelectorAll(".dbo-opt"));
+    if (!sels.length) return firstVariantId(prod);
+    var chosen = sels.map(function (s) { return s.value; });
+    for (var i = 0; i < prod.variants.length; i++) {
+      var vo = prod.variants[i].options || [];
+      var match = chosen.length === vo.length && chosen.every(function (val, idx) { return val === vo[idx]; });
+      if (match) return prod.variants[i].id;
+    }
+    return firstVariantId(prod);
+  }
 
   // ---- product picker ----
   function buildPicker() {
@@ -260,6 +267,17 @@
     var qw = document.createElement("div"); qw.className = "dbo-qtywrap";
     qw.innerHTML = '<span>Qty</span><input type="number" class="dbo-qty" min="0" step="1" value="0" inputmode="numeric">';
     line.appendChild(qw);
+    // per-variation design upload
+    var fileWrap = document.createElement("label"); fileWrap.className = "dbo-file-btn dbo-varfile";
+    fileWrap.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="dbo-varfile-label">Design</span><input type="file" class="dbo-varfile-input" accept="image/*,.pdf,.ai,.svg">';
+    var fileInput = fileWrap.querySelector("input");
+    var fileLabel = fileWrap.querySelector(".dbo-varfile-label");
+    fileInput.addEventListener("change", function () {
+      var f = fileInput.files && fileInput.files[0];
+      if (!f) { line._file = null; fileWrap.classList.remove("has-file"); fileLabel.textContent = "Design"; return; }
+      line._file = f; fileWrap.classList.add("has-file"); fileLabel.textContent = f.name;
+    });
+    line.appendChild(fileWrap);
     var rm = document.createElement("button"); rm.type = "button"; rm.className = "dbo-varremove"; rm.setAttribute("aria-label", "Remove variation"); rm.textContent = "×";
     rm.addEventListener("click", function () { var box = line.parentNode; line.remove(); if (!box.querySelector(".dbo-varline")) box.appendChild(makeVarLine(prod)); });
     line.appendChild(rm);
@@ -278,14 +296,6 @@
   function bindRow(row) {
     row.querySelector(".dbo-pick").addEventListener("click", function () { openPicker(row); });
     row.querySelector(".dbo-addvar").addEventListener("click", function () { if (row._product) row.querySelector(".dbo-varlines").appendChild(makeVarLine(row._product)); });
-    var fileInput = row.querySelector(".dbo-file-input");
-    var fileName = row.querySelector(".dbo-file-name");
-    var fileLabel = row.querySelector(".dbo-file-label");
-    fileInput.addEventListener("change", function () {
-      var f = fileInput.files && fileInput.files[0];
-      if (!f) { fileName.textContent = ""; fileLabel.textContent = "Upload design"; row._file = null; return; }
-      fileName.textContent = f.name; fileLabel.textContent = "Change design"; row._file = f;
-    });
   }
 
   function addRow() {
@@ -318,13 +328,13 @@
   async function buildBody() {
     var phone = (document.getElementById("dboPhone").value || "").trim();
     var notes = (document.getElementById("dboNotes").value || "").trim();
-    var itemLines = [], fileLines = [], any = false;
+    var itemLines = [], any = false;
     var rws = rows();
     for (var r = 0; r < rws.length; r++) {
       var row = rws[r];
       if (!row._product) continue;
-      var pName = row._product.title;
-      var rowHasQty = false;
+      var prod = row._product;
+      var pName = prod.title;
       var lines = Array.prototype.slice.call(row.querySelectorAll(".dbo-varline"));
       for (var l = 0; l < lines.length; l++) {
         var line = lines[l];
@@ -336,11 +346,12 @@
         if (sels.length && !complete) continue;
         var label = parts.length ? parts.join(", ") : "Standard";
         itemLines.push("- " + pName + " — " + label + " — Qty " + q);
-        any = true; rowHasQty = true;
-      }
-      if (rowHasQty && row._file) {
-        var url = await uploadViaShopify(row._file, firstVariantId(row._product));
-        fileLines.push(pName + ": " + (url || ("(couldn't attach '" + row._file.name + "')")));
+        // upload this variation's own design, if any
+        if (line._file) {
+          var url = await uploadViaShopify(line._file, resolveVariantId(prod, line));
+          itemLines.push("    Design: " + (url || ("(couldn't attach '" + line._file.name + "')")));
+        }
+        any = true;
       }
     }
     if (_addedToCart) await clearCart();
@@ -349,7 +360,6 @@
     if (phone) out.push("Phone: " + phone);
     out.push("", "Items:");
     out = out.concat(itemLines);
-    if (fileLines.length) { out.push("", "Design files:"); out = out.concat(fileLines); }
     if (notes) out.push("", "Notes: " + notes);
     return out.join("\n");
   }
