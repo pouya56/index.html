@@ -1558,6 +1558,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     .dc-bulk-panel[hidden] { display: none; }
     .dc-bulk-q { display: flex; flex-direction: column; gap: 6px; }
     .dc-bulk-q label { font-size: 13px; font-weight: 600; color: var(--ink, #1d1d1f); }
+    .dc-bulk-min { font-weight: 400; color: var(--ink-faint, #86868b); }
+    .dc-bulk-warn { font-size: 12.5px; color: var(--danger, #c0392b); margin-top: 6px; }
     .dc-bulk-q input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--line, #d2d2d7); border-radius: 12px;
       font: inherit; font-size: 16px; color: var(--ink, #1d1d1f); background: var(--bg, #fff); -moz-appearance: textfield; }
     .dc-bulk-q input:focus { outline: none; border-color: var(--accent, #0071e3); box-shadow: 0 0 0 3px var(--accent-soft, #e8f2fd); }
@@ -1590,8 +1592,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       </button>
       <div class="dc-bulk-panel" hidden>
         <div class="dc-bulk-q">
-          <label for="dcBulkQty">How many do you need?</label>
-          <input type="number" id="dcBulkQty" min="1" step="1" value="{{ btiers[0].min | default: 10 }}" inputmode="numeric">
+          <label for="dcBulkQty">How many do you need? <span class="dc-bulk-min">(min {{ btiers[0].min | default: 10 }})</span></label>
+          <input type="number" id="dcBulkQty" min="{{ btiers[0].min | default: 10 }}" step="1" value="{{ btiers[0].min | default: 10 }}" inputmode="numeric">
         </div>
         <div class="dc-bulk-out" id="dcBulkOut"></div>
         <a class="dc-bulk-req" id="dcBulkReq" href="#">{{ section.settings.bulk_quote_button | default: 'Email this quote request' }}</a>
@@ -1621,6 +1623,13 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       // Quote calculator
       var tiers = [];
       try { tiers = JSON.parse(node.getAttribute("data-tiers") || "[]"); } catch (e) {}
+      // Minimum quantity for a bulk quote = the smallest tier "min".
+      var minQty = null;
+      for (var mi = 0; mi < tiers.length; mi++) {
+        var mm = Number(tiers[mi].min);
+        if (isFinite(mm) && (minQty === null || mm < minQty)) minQty = mm;
+      }
+      if (minQty === null || minQty < 1) minQty = 1;
       var base = parseFloat(node.getAttribute("data-base")) || 0;
       var cur = node.getAttribute("data-cur") || "USD";
       var title = node.getAttribute("data-title") || "";
@@ -1651,22 +1660,27 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         }
         return n;
       }
-      function update() {
-        var qty = parseInt(qtyEl.value, 10);
-        if (!isFinite(qty) || qty < 1) qty = 1;
+      function update(snap) {
+        var raw = parseInt(qtyEl.value, 10);
+        var below = !isFinite(raw) || raw < minQty;   // under the minimum bulk quantity
+        var qty = below ? minQty : raw;
+        if (snap && String(qty) !== qtyEl.value) qtyEl.value = qty; // snap the box up on blur/enter
+
         var t = bestTier(qty);
         var per = (t && t.price < base) ? t.price : base;
         var total = per * qty;
         var save = base > 0 ? Math.round((base - per) / base * 100) : 0;
-        var html = '<div class="dc-bulk-line"><span>Price each</span><strong>' + money(per) +
-                   (save > 0 ? ' <em>Save ' + save + '%</em>' : '') + '</strong></div>' +
-                   '<div class="dc-bulk-line big"><span>Total for ' + qty + '</span><strong>' + money(total) + '</strong></div>';
+        var html = below ? '<div class="dc-bulk-warn">Bulk quotes start at ' + minQty + ' units — showing ' + minQty + '.</div>' : '';
+        html += '<div class="dc-bulk-line"><span>Price each</span><strong>' + money(per) +
+                (save > 0 ? ' <em>Save ' + save + '%</em>' : '') + '</strong></div>' +
+                '<div class="dc-bulk-line big"><span>Total for ' + qty + '</span><strong>' + money(total) + '</strong></div>';
         var nx = nextTier(qty);
         if (nx && nx.price < base) {
           html += '<div class="dc-bulk-hint">Add ' + (nx.min - qty) + ' more to drop to ' + money(nx.price) + ' each.</div>';
         }
         out.innerHTML = html;
 
+        // The email request always uses a valid quantity (never below the minimum).
         var subject = "Bulk quote request: " + title;
         var body = "Hi,\n\nI'd like a bulk quote for:\n\nProduct: " + title +
                    "\nQuantity: " + qty +
@@ -1677,9 +1691,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
           req.setAttribute("href", "mailto:" + email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body));
         }
       }
-      qtyEl.addEventListener("input", update);
-      qtyEl.addEventListener("change", update);
-      update();
+      qtyEl.addEventListener("input", function () { update(false); });
+      qtyEl.addEventListener("change", function () { update(true); });
+      qtyEl.addEventListener("blur", function () { update(true); });
+      update(true);
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
     else init();
