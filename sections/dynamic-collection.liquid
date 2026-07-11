@@ -110,10 +110,14 @@
   /* While search is open, hide the active category's dot so only Search shows one */
   .dyn-col .dc-tabs.is-images.dc-searching .dc-tab.is-active::after { background: transparent; }
   /* The search bar that drops in BELOW the categories when the magnifier is tapped */
-  .dyn-col .dc-search-below { display: flex; justify-content: center; }
-  .dyn-col .dc-search-below { margin: 6px 0 0; }
+  /* Search bar drops in right under the sticky category bar, wherever you are on
+     the page (position: sticky, with its top offset set to the tab-bar height in JS). */
+  .dyn-col .dc-search-below { display: flex; justify-content: center; position: sticky; top: 0; z-index: 29; margin: 6px 0 0; }
+  .dyn-col .dc-search-below.dc-below-open { padding: 6px 0 12px; margin: 0; }
+  .dyn-col .dc-search-below.dc-below-open::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100vw; z-index: -1;
+    background: {{ section.settings.page_bg | default: '#f5f5f7' }}; box-shadow: 0 10px 20px -8px rgba(0,0,0,0.10); }
   .dyn-col .dc-search-below .dc-search { display: none; margin: 0 auto; }
-  .dyn-col .dc-search-below .dc-search.is-open { display: flex; margin: 8px auto 32px; animation: dcDrop .32s cubic-bezier(.22,1,.36,1); }
+  .dyn-col .dc-search-below .dc-search.is-open { display: flex; margin: 8px auto; animation: dcDrop .32s cubic-bezier(.22,1,.36,1); }
   @keyframes dcDrop { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
   /* Link buttons under the search bar */
   .dyn-col .dc-hero-btns { display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
@@ -144,8 +148,8 @@
   /* Logo that slides into the sticky bar once you scroll down; links home. */
   .dyn-col .dc-bar-logo { display: inline-flex; align-items: center; flex: 0 0 auto; line-height: 0; overflow: hidden;
     max-width: 0; opacity: 0; margin-right: 0; transition: max-width .32s ease, opacity .26s ease, margin-right .32s ease; }
-  .dyn-col.dc-scrolled .dc-bar-logo { max-width: 170px; opacity: 1; margin-right: 8px; }
-  .dyn-col .dc-bar-logo img { height: 34px; width: auto; max-width: 155px; object-fit: contain; display: block; }
+  .dyn-col.dc-scrolled .dc-bar-logo { max-width: 220px; opacity: 1; margin-right: 8px; }
+  .dyn-col .dc-bar-logo img { height: 44px; width: auto; max-width: 200px; object-fit: contain; display: block; }
 
   /* Image tabs (Apple-style: picture + label, no box - tiles blend into the page) */
   .dyn-col .dc-tabs.is-images { flex: 1 1 auto; gap: 20px; align-items: flex-start; flex-wrap: nowrap; justify-content: flex-start;
@@ -979,8 +983,13 @@
   // Magnifier tab (next to All) opens the search bar below the categories; closes when clicked away empty.
   var searchTrigger = document.getElementById("dcSearchTrigger");
   var searchBar = document.getElementById("dcSearchBar");
-  function openSearch() { if (searchBar) searchBar.classList.add("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "true"); if (tabs) tabs.classList.add("dc-searching"); if (searchEl) searchEl.focus({ preventScroll: true }); }
-  function closeSearch() { if (searchBar && searchEl && !searchEl.value.trim()) { searchBar.classList.remove("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false"); if (tabs) tabs.classList.remove("dc-searching"); } }
+  var searchBelow = document.getElementById("dcSearchBelow");
+  // Pin the search drawer directly under the sticky category bar (whatever its height).
+  function syncBelowTop() { if (searchBelow && tabsWrap) searchBelow.style.top = tabsWrap.offsetHeight + "px"; }
+  syncBelowTop();
+  window.addEventListener("resize", syncBelowTop);
+  function openSearch() { syncBelowTop(); if (searchBelow) searchBelow.classList.add("dc-below-open"); if (searchBar) searchBar.classList.add("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "true"); if (tabs) tabs.classList.add("dc-searching"); if (searchEl) searchEl.focus({ preventScroll: true }); }
+  function closeSearch() { if (searchBar && searchEl && !searchEl.value.trim()) { searchBar.classList.remove("is-open"); if (searchBelow) searchBelow.classList.remove("dc-below-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false"); if (tabs) tabs.classList.remove("dc-searching"); } }
   if (searchTrigger) searchTrigger.addEventListener("click", function (e) {
     e.stopPropagation();  // don't let the category-tab handler treat this as a category
     if (searchBar && searchBar.classList.contains("is-open")) { if (searchEl) searchEl.focus({ preventScroll: true }); } else { openSearch(); }
@@ -1007,6 +1016,7 @@
     if (searchBar && searchBar.classList.contains("is-open")) {
       if (searchEl) { searchEl.value = ""; query = ""; badgeFilter = null; applyFilters(); }
       searchBar.classList.remove("is-open");
+      if (searchBelow) searchBelow.classList.remove("dc-below-open");
       if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false");
       if (tabs) tabs.classList.remove("dc-searching");
     }
