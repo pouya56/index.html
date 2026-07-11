@@ -186,12 +186,14 @@
     .dyn-col .dc-grid .dc-card { opacity: 1 !important; transform: none !important; transition: none !important; }
   }
 
-  .dyn-col .dc-card { background: var(--bg); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;
+  /* Apple-style card: text at the top, product image filling the box on a soft background */
+  .dyn-col .dc-card { background: linear-gradient(180deg, #f6f7f9 0%, #e9edf2 100%); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; min-height: 460px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-  .dyn-col .dc-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 16px 40px rgba(0,0,0,0.08); }
+  .dyn-col .dc-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 20px 48px rgba(0,0,0,0.10); }
   .dyn-col .dc-card, .dyn-col .dc-card.in { transition: opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1), box-shadow .2s ease; }
-  .dyn-col .dc-media { position: relative; display: block; aspect-ratio: var(--ratio); background: #fff; overflow: hidden; }
-  .dyn-col .dc-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .35s ease, transform .5s ease; }
+  .dyn-col .dc-media-wrap { order: 1; flex: 1 1 auto; min-height: 300px; }
+  .dyn-col .dc-media { position: absolute; inset: 0; display: block; background: transparent; overflow: hidden; }
+  .dyn-col .dc-media img { position: absolute; inset: 26px; width: calc(100% - 52px); height: calc(100% - 52px); object-fit: contain; transition: opacity .35s ease, transform .5s ease; }
   .dyn-col .dc-media .dc-ph { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--bg-panel); }
   .dyn-col .dc-media .dc-img-2 { opacity: 0; }
   /* Only swap to the 2nd image on true hover devices (mouse). On touch this
@@ -260,13 +262,13 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 1px 2px rgba(0,0,0,0.18); }
   }
 
-  .dyn-col .dc-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .dyn-col .dc-body { order: -1; padding: 26px 26px 4px; display: flex; flex-direction: column; gap: 3px; flex: 0 0 auto; align-items: flex-start; text-align: left; }
   .dyn-col .dc-vendor { font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); }
-  .dyn-col .dc-title { font-size: 15.5px; font-weight: 500; line-height: 1.3; margin: 0; }
+  .dyn-col .dc-title { font-size: 22px; font-weight: 600; line-height: 1.08; letter-spacing: -0.015em; margin: 0; color: var(--ink); }
   .dyn-col .dc-title a { color: inherit; text-decoration: none; }
   .dyn-col .dc-title a:hover { color: var(--accent); }
   .dyn-col .dc-price { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; font-variant-numeric: tabular-nums; }
-  .dyn-col .dc-price .dc-now { font-size: 15px; font-weight: 500; }
+  .dyn-col .dc-price .dc-now { font-size: 15px; font-weight: 400; color: var(--ink-soft); }
   .dyn-col .dc-price .dc-was { font-size: 13px; color: var(--ink-faint); text-decoration: line-through; }
   .dyn-col .dc-price .dc-now.on-sale { color: var(--danger); }
 
@@ -305,7 +307,7 @@
     .dyn-col .dc-tabs::-webkit-scrollbar { display: none; }
     .dyn-col .dc-tabs.is-images .dc-tab { flex: 0 0 auto; }
   }
-  @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-grid .dc-card { flex-basis: 78%; } .dyn-col .dc-body { padding: 12px 12px 14px; } }
+  @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-grid .dc-card { flex-basis: 78%; min-height: 400px; } .dyn-col .dc-body { padding: 20px 20px 4px; } .dyn-col .dc-title { font-size: 20px; } }
 </style>
 
 {%- assign coll = section.settings.collection | default: collection -%}
