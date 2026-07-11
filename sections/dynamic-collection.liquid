@@ -337,6 +337,8 @@
   .dyn-col .dc-gridall { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 22px; margin: 88px auto 0; }
   .dyn-col .dc-allgrid-heading + .dc-gridall { margin-top: 10px; }
   .dyn-col .dc-gridall .dc-card { min-width: 0; }
+  /* When a category/search is active, keep the grid tall enough to scroll to the top. */
+  .dyn-col.dc-cat-focused .dc-gridall { min-height: calc(100svh - 150px); align-content: start; }
   @media (max-width: 1100px) { .dyn-col .dc-gridall { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 800px)  { .dyn-col .dc-gridall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
   @media (max-width: 460px)  { .dyn-col .dc-gridall { gap: 12px; } .dyn-col .dc-gridall .dc-card { min-height: 340px; } }
@@ -942,6 +944,9 @@
       c.style.display = m ? "" : "none";
       if (m) visibleAll.push(c);
     });
+    // While a category/search is active, make the product grid at least a screen
+    // tall so it can scroll up to the top (banners tuck away above; scroll up to see them).
+    root.classList.toggle("dc-cat-focused", searching || (currentCat && currentCat !== "__all") || !!badgeFilter);
     // The grid below filters to the chosen category / search, but the best-seller
     // row and promo banners STAY on the page — scroll up and they're still there.
     var showShelf = visible.length > 0;
