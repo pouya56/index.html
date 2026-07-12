@@ -38,7 +38,6 @@
 {%- assign blk_reviews = blank -%}
 {%- assign blk_gift = blank -%}
 {%- assign blk_logo = blank -%}
-{%- assign blk_cloud = blank -%}
 {%- assign blk_engrave = blank -%}
 {%- assign blk_print = blank -%}
 {%- assign blk_labels = blank -%}
@@ -51,7 +50,6 @@
     {%- when 'reviews' -%}{%- assign blk_reviews = block -%}
     {%- when 'gift' -%}{%- assign blk_gift = block -%}
     {%- when 'logo_top' -%}{%- assign blk_logo = block -%}
-    {%- when 'file_uploads' -%}{%- assign blk_cloud = block -%}
     {%- when 'engrave_popup' -%}{%- assign blk_engrave = block -%}
     {%- when 'print_area' -%}{%- assign blk_print = block -%}
     {%- when 'order_labels' -%}{%- assign blk_labels = block -%}
@@ -98,8 +96,8 @@
     "accountUrl": {{ routes.account_url | default: '/account' | json }},
     "searchUrl": {{ routes.search_url | default: '/search' | json }},
     "accountsEnabled": {% if shop.customer_accounts_enabled %}true{% else %}false{% endif %},
-    "cloudName": {{ blk_cloud.settings.cloudinary_cloud_name | default: '' | json }},
-    "uploadPreset": {{ blk_cloud.settings.cloudinary_upload_preset | default: '' | json }},
+    "cloudName": "",
+    "uploadPreset": "",
     "onProductPage": {% if dyn_product %}true{% else %}false{% endif %}
   },
   "settings": {
@@ -1824,7 +1822,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {
   "name": "Dynamic Customizer",
   "settings": [],
-  "max_blocks": 11,
+  "max_blocks": 10,
   "blocks": [
     { "type": "print_method", "name": "Print method", "limit": 1, "settings": [
       { "type": "select", "id": "customizer_type", "label": "Print method / style", "default": "uv",
@@ -1887,11 +1885,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "image_picker", "id": "top_logo", "label": "Logo image", "info": "Leave empty to use your theme logo." },
       { "type": "range", "id": "top_logo_width", "label": "Logo width", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 130 },
       { "type": "select", "id": "top_logo_align", "label": "Logo position", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" } ], "default": "center" }
-    ] },
-    { "type": "file_uploads", "name": "File uploads (Cloudinary)", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Optional. Lets customers upload files saved to the order via Cloudinary. Create a free Cloudinary account, add an UNSIGNED upload preset, then paste both below. Add this block only if you use Cloudinary." },
-      { "type": "text", "id": "cloudinary_cloud_name", "label": "Cloudinary cloud name" },
-      { "type": "text", "id": "cloudinary_upload_preset", "label": "Cloudinary unsigned upload preset" }
     ] },
     { "type": "bulk_link", "name": "Bulk order link", "limit": 1, "settings": [
       { "type": "paragraph", "content": "A button linking to your Bulk Order page. Add this block to show it; remove it to hide it. Drag to reorder among the other feature blocks." },
