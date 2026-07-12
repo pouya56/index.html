@@ -1697,6 +1697,28 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (giftOn && feeC > 0 && giftCfg.wrapVariantId) pr.textContent = fmt(cents(base) + feeC, base);
   }
 
+  // The gift-wrap fee field accepts a variant id, a .../variants/ID URL, or the
+  // Gift Wrap product's handle / URL — we look up the variant id when needed.
+  let _wrapIdCache;
+  async function resolveWrapVariant(raw) {
+    raw = String(raw || "").trim();
+    if (!raw) return null;
+    if (/^\d{4,}$/.test(raw)) return raw;
+    const vm = raw.match(/variants?[\/=](\d{4,})/i); if (vm) return vm[1];
+    if (_wrapIdCache !== undefined) return _wrapIdCache;
+    let handle = raw;
+    const hm = raw.match(/\/products\/([a-z0-9_-]+)/i); if (hm) handle = hm[1];
+    handle = handle.replace(/^https?:\/\/[^\/]+\//i, "").split(/[?#]/)[0].replace(/\/+$/, "").split("/").pop().toLowerCase();
+    try {
+      const r = await fetch("/products/" + encodeURIComponent(handle) + ".js", { headers: { Accept: "application/json" } });
+      if (!r.ok) { _wrapIdCache = null; return null; }
+      const p = await r.json();
+      const v = (p.variants || []).find((x) => x.available) || (p.variants || [])[0];
+      _wrapIdCache = v ? String(v.id) : null;
+      return _wrapIdCache;
+    } catch (e) { _wrapIdCache = null; return null; }
+  }
+
   function updateCustomizeSummary() {
     const el = $("#customizeSummary");
     if (!el) return;
@@ -2597,14 +2619,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         if (noteEl && noteEl.value.trim()) props["Gift note"] = noteEl.value.trim();
         const usedGiftVariant = !!(sidesVariant && _giftVariantActive);
         if (!usedGiftVariant) {
-          const wrapId = String(gift.wrapVariantId || "").match(/\d{4,}/);
+          const wrapId = await resolveWrapVariant(gift.wrapVariantId);
           if (wrapId) {
             const gq = Math.max(1, (store.get().quantity) || 1);
             // Share a _grp with the item so the cart display folds the wrapping
             // line into it (shows as one item with a combined price).
             let grp = props["_grp"];
             if (!grp) { grp = "g" + Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36); props["_grp"] = grp; }
-            extraItems.push({ id: wrapId[0], quantity: gq, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "item", "_grp": grp, "Gift wrapping": "Yes" } });
+            extraItems.push({ id: wrapId, quantity: gq, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "item", "_grp": grp, "Gift wrapping": "Yes" } });
           }
         }
       }
