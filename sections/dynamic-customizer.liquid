@@ -144,10 +144,10 @@
     "frontTabLabel": {{ blk_print.settings.front_tab_label | default: 'Front' | json }},
     "backTabLabel": {{ blk_print.settings.back_tab_label | default: 'Back' | json }},
     "eyebrow": {{ dyn_product.vendor | default: '' | json }},
-    "title": {{ dyn_product.title | default: '' | json }},
+    "title": "",
     "price": "",
-    "priceNote": {{ 'Free shipping' | json }},
-    "description": {{ dyn_product.description | default: '' | json }},
+    "priceNote": {{ section.settings.price_note | default: '' | json }},
+    "description": "",
     "modelLabel": "",
     "customizeLabel": {{ 'Customize' | json }},
     "addcartLabel": {{ 'Add to Cart' | json }},
@@ -1812,6 +1812,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {
   "name": "Dynamic Customizer",
   "settings": [
+    { "type": "header", "content": "Price note" },
+    { "type": "text", "id": "price_note", "label": "Text next to the price", "default": "Free shipping", "info": "Small grey text beside the price. Leave empty to hide it." },
     { "type": "header", "content": "Logo (top of page, links home)" },
     { "type": "checkbox", "id": "show_top_logo", "label": "Show logo at top", "default": true },
     { "type": "image_picker", "id": "top_logo", "label": "Logo image", "info": "Leave empty to use your theme logo." },

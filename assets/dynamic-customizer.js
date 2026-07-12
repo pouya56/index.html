@@ -1650,8 +1650,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const p = D.pricing.compute(product, store.get());
     currentPricing = p;
     $("#pPrice").textContent = p.format(p.total);
-    $("#pPriceNote").textContent =
-      store.get().quantity > 1 ? `${p.format(p.subtotalUnit)} each` : "Free shipping";
+    const note = (window.DYN_SETTINGS && window.DYN_SETTINGS.priceNote) || "";
+    $("#pPriceNote").textContent = store.get().quantity > 1 ? `${p.format(p.subtotalUnit)} each` : note;
   }
 
   function updateCustomizeSummary() {
