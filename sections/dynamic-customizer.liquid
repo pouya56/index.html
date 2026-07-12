@@ -1570,6 +1570,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   if (!host) return;
   var detail = document.querySelector(".detail");
   var cta = detail ? detail.querySelector(".cta-stack") : null;
+  var bulkNoteEl = null;
 
   function buildBulk(slot) {
     {%- if blk_bulk != blank and blk_bulk.settings.bulk_link != blank -%}
@@ -1587,7 +1588,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     var note = document.createElement("div");
     note.className = "bulk-note";
     note.textContent = {{ blk_bulk.settings.bulk_link_note | json }};
-    slot.appendChild(note);
+    bulkNoteEl = note; // placed under the whole quantity row, not inside the inline slot
     {% endif %}
     {%- endif -%}
   }
@@ -1617,8 +1618,11 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
   function after(ref, node) { if (ref && ref.parentNode) ref.parentNode.insertBefore(node, ref.nextSibling); }
 
-  // Bulk → inline next to the quantity stepper.
-  if (byType.bulk_link && qtyRow) { qtyRow.appendChild(byType.bulk_link); }
+  // Bulk → inline next to the quantity stepper; its note sits full-width under the row.
+  if (byType.bulk_link && qtyRow) {
+    qtyRow.appendChild(byType.bulk_link);
+    if (bulkNoteEl) after(qtyRow, bulkNoteEl);
+  }
   // Gift → directly under the Quantity group.
   if (byType.gift && qtyGroup) { after(qtyGroup, byType.gift); }
   // Trust row → under the Customize button; Reviews follow just beneath it.
