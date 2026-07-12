@@ -1476,14 +1476,29 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     let giftIdx = -1, giftNo = "", giftYes = "";
     if (giftName) {
       giftIdx = options.findIndex((o) => String(o.name || "").trim().toLowerCase() === giftName);
-      if (giftIdx >= 0) {
-        const gvals = options[giftIdx].values || [];
-        const findG = (want) => gvals.find((v) => String(v).trim().toLowerCase() === String(want).trim().toLowerCase()) || "";
-        giftYes = findG(giftCfg.wrappedValue || "Yes") || "";
-        giftNo = findG(giftCfg.unwrappedValue || "No") || gvals.find((v) => v !== giftYes) || gvals[0] || "";
-        if (!giftYes) giftIdx = -1;                 // no wrapped value — fall back to the legacy fee line
-        else if (giftNo) selected[giftIdx] = giftNo; // start unwrapped (base price)
+    } else if (giftCfg.enabled) {
+      // No option name typed — auto-find a Gift-wrapping option (2+ values).
+      const isGift = (nm) => { const n = String(nm || "").trim().toLowerCase(); return n === "gift wrapping" || n === "gift wrap" || n === "gift" || n === "wrapping" || n.indexOf("gift wrap") >= 0; };
+      giftIdx = options.findIndex((o) => isGift(o.name) && (o.values || []).length >= 2);
+    }
+    if (giftIdx >= 0) {
+      const gvals = options[giftIdx].values || [];
+      const findG = (want) => gvals.find((v) => String(v).trim().toLowerCase() === String(want).trim().toLowerCase()) || "";
+      giftYes = findG(giftCfg.wrappedValue || "Yes");
+      giftNo = findG(giftCfg.unwrappedValue || "No");
+      // If the value names don't match, auto-detect by price (priciest = wrapped).
+      if (!giftYes || !giftNo) {
+        const cents = (str) => { const n = parseFloat(String(str).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
+        const minFor = (val) => { let m = Infinity; variants.forEach((vv) => { if ((vv.options || [])[giftIdx] === val) { const c = cents(vv.price); if (c && c < m) m = c; } }); return m === Infinity ? 0 : m; };
+        const priced = gvals.map((v) => ({ v: v, p: minFor(v) })).filter((x) => x.p > 0).sort((a, b) => a.p - b.p);
+        if (priced.length >= 2 && priced[0].p !== priced[priced.length - 1].p) {
+          if (!giftNo) giftNo = priced[0].v;
+          if (!giftYes) giftYes = priced[priced.length - 1].v;
+        }
       }
+      if (!giftNo) giftNo = gvals.find((v) => v !== giftYes) || gvals[0] || "";
+      if (!giftYes) giftIdx = -1;                 // no wrapped value — fall back to the legacy fee line
+      else if (giftNo) selected[giftIdx] = giftNo; // start unwrapped (base price)
     }
     // Resolver picks the variant matching the customer's colour/size with the
     // hidden Print-sides and Gift-wrapping options forced by their choices.
@@ -1655,16 +1670,29 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     applyVariantPrice();
   }
 
-  // Show the real variant price (incl. the Gift-wrapping and Print-sides upcharges)
-  // on the page, so toggling gift wrapping / adding a back design updates the price.
+  // Reflect the Gift-wrapping and Print-sides upcharges in the page price.
+  // If a priced "Gift wrapping" option/variant exists, use it (one line item);
+  // otherwise add the display fee amount so the toggle still updates the price.
   function applyVariantPrice() {
-    if (typeof _sidesResolve !== "function" || !_sidesResolve) return;
+    const pr = document.querySelector("#pPrice"); if (!pr) return;
     const giftCfg = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
     const giftEl = document.querySelector("#giftIsGift");
     const giftOn = !!(giftCfg.enabled && giftEl && giftEl.checked);
     const hasBack = (sideLayers.back || []).some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text));
-    const v = _sidesResolve(hasBack, giftOn);
-    if (v && v.price) { const pr = document.querySelector("#pPrice"); if (pr) pr.textContent = v.price; }
+    const cents = (s) => { const n = parseFloat(String(s).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
+    const fmt = (c, sample) => { const sym = (String(sample).match(/^[^\d.-]*/) || [""])[0] || "$"; return sym + (c / 100).toFixed(2).replace(/\.00$/, ""); };
+    let base = (window.DYN_SHOPIFY || {}).priceMoney || pr.textContent;
+    if (typeof _sidesResolve === "function" && _sidesResolve) {
+      const vBase = _sidesResolve(hasBack, false);
+      const vGift = _sidesResolve(hasBack, true);
+      if (vBase && vBase.price) base = vBase.price;
+      // Gift is a priced option → its variant already includes the fee.
+      if (vBase && vGift && vBase.price !== vGift.price) { pr.textContent = (giftOn ? vGift : vBase).price; return; }
+    }
+    pr.textContent = base;
+    // Legacy method: a separate fee variant is added at checkout, so show base + fee.
+    const feeC = cents(giftCfg.wrapMoney);
+    if (giftOn && feeC > 0 && giftCfg.wrapVariantId) pr.textContent = fmt(cents(base) + feeC, base);
   }
 
   function updateCustomizeSummary() {
