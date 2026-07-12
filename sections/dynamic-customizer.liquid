@@ -31,12 +31,6 @@
   template works for every product. The manual picker is only a fallback for when
   this section is placed on a non-product page (home page, custom page, etc.).
 {%- endcomment -%}
-{%- if product != blank -%}
-  {%- assign dyn_product = product -%}
-{%- else -%}
-  {%- assign dyn_product = section.settings.product_ref -%}
-{%- endif -%}
-
 {%- comment -%} Feature blocks (each limited to one). Their settings feed the config below;
    the presence of a block is what turns its feature on. {%- endcomment -%}
 {%- assign blk_bulk = blank -%}
@@ -50,6 +44,8 @@
 {%- assign blk_engrave = blank -%}
 {%- assign blk_print = blank -%}
 {%- assign blk_labels = blank -%}
+{%- assign blk_method = blank -%}
+{%- assign blk_source = blank -%}
 {%- for block in section.blocks -%}
   {%- case block.type -%}
     {%- when 'bulk_link' -%}{%- assign blk_bulk = block -%}
@@ -63,8 +59,16 @@
     {%- when 'engrave_popup' -%}{%- assign blk_engrave = block -%}
     {%- when 'print_area' -%}{%- assign blk_print = block -%}
     {%- when 'order_labels' -%}{%- assign blk_labels = block -%}
+    {%- when 'print_method' -%}{%- assign blk_method = block -%}
+    {%- when 'product_source' -%}{%- assign blk_source = block -%}
   {%- endcase -%}
 {%- endfor -%}
+
+{%- if product != blank -%}
+  {%- assign dyn_product = product -%}
+{%- else -%}
+  {%- assign dyn_product = blk_source.settings.product_ref -%}
+{%- endif -%}
 <script type="application/json" id="dyn-config">
 {
   "assets": {
@@ -103,7 +107,7 @@
     "onProductPage": {% if dyn_product %}true{% else %}false{% endif %}
   },
   "settings": {
-    "customizerType": {{ section.settings.customizer_type | default: 'uv' | json }},
+    "customizerType": {{ blk_method.settings.customizer_type | default: 'uv' | json }},
     "madeToOrder": {% if dyn_product.tags contains 'made-to-order' or dyn_product.tags contains 'made_to_order' %}true{% else %}false{% endif %},
     "gift": {
       "enabled": {% if blk_gift != blank %}true{% else %}false{% endif %},
@@ -1696,23 +1700,24 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {% schema %}
 {
   "name": "Dynamic Customizer",
-  "settings": [
-    { "type": "header", "content": "Customizer" },
-    { "type": "select", "id": "customizer_type", "label": "Print method / style", "default": "uv",
-      "info": "All four use the same design popup (photos + text on the printable area). The chosen method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template.",
-      "options": [
-        { "value": "uv", "label": "UV" },
-        { "value": "dtf", "label": "DTF" },
-        { "value": "sublimation", "label": "Sublimation" },
-        { "value": "engraving", "label": "Engraving" }
-      ] },
-    { "type": "header", "content": "Product details" },
-    { "type": "product", "id": "product_ref", "label": "Product (non-product pages only)", "info": "Only used when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown." },
-    { "type": "paragraph", "content": "Made to order / always orderable is set PER PRODUCT in Shopify (not here — one template is shared by every product). Open the product → each variant's Inventory → tick \"Continue selling when out of stock\": those variations stay orderable. Products left in normal tracking show sold-out variations as unavailable. So tick it for the Mug and leave the T-shirt normal. (Optional: tag a product \"made-to-order\" to force it orderable in the storefront regardless.)" },
-    { "type": "paragraph", "content": "Product text, the engraving popup, the printable area and order labels are now separate blocks below — add the ones you need." }
-  ],
-  "max_blocks": 11,
+  "settings": [],
+  "max_blocks": 13,
   "blocks": [
+    { "type": "print_method", "name": "Print method", "limit": 1, "settings": [
+      { "type": "select", "id": "customizer_type", "label": "Print method / style", "default": "uv",
+        "info": "All four use the same design popup. The chosen method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template.",
+        "options": [
+          { "value": "uv", "label": "UV" },
+          { "value": "dtf", "label": "DTF" },
+          { "value": "sublimation", "label": "Sublimation" },
+          { "value": "engraving", "label": "Engraving" }
+        ] }
+    ] },
+    { "type": "product_source", "name": "Product source", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "Only needed when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown." },
+      { "type": "product", "id": "product_ref", "label": "Product (non-product pages only)" },
+      { "type": "paragraph", "content": "Made to order / always orderable is set PER PRODUCT in Shopify: open the product → each variant's Inventory → tick \"Continue selling when out of stock\". (Optional: tag a product \"made-to-order\" to force it orderable regardless.)" }
+    ] },
     { "type": "product_text", "name": "Product text", "limit": 1, "settings": [
       { "type": "paragraph", "content": "The small copy around the buy box. Leave a field blank to use the app's default." },
       { "type": "text", "id": "eyebrow", "label": "Eyebrow (small label above title)", "default": "AirPods Pro 3" },
@@ -1846,6 +1851,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   ],
   "presets": [
     { "name": "Dynamic Customizer", "blocks": [
+      { "type": "print_method" },
+      { "type": "product_source" },
       { "type": "logo_top" },
       { "type": "product_text" },
       { "type": "engrave_popup" },
