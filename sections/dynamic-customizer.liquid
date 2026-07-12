@@ -374,22 +374,6 @@ button { font-family: inherit; cursor: pointer; }
 .dyn-logo:hover { opacity: .72; }
 .dyn-logo img { display: block; height: auto; max-width: 60vw; }
 .dyn-logo.dyn-logo-text { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink, #1d1d1f); }
-/* Upload-your-design block */
-.dyn-up { margin: 6px 0 2px; }
-.dyn-up-title { font-size: 15px; font-weight: 600; color: var(--ink, #1d1d1f); margin: 0 0 10px; }
-.dyn-up-drop { display: flex; align-items: center; gap: 10px; padding: 16px; border: 1.5px dashed var(--line2, #d2d2d7);
-  border-radius: 14px; cursor: pointer; color: #6e6e73; background: var(--bg-panel, #f5f5f7); transition: border-color .16s, color .16s, background .16s; }
-.dyn-up-drop:hover { border-color: var(--accent, #0071e3); color: var(--accent, #0071e3); background: #eef4ff; }
-.dyn-up-drop.has-file { border-style: solid; border-color: var(--accent, #0071e3); color: var(--accent, #0071e3); }
-.dyn-up-drop svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-.dyn-up-label { font-size: 14.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dyn-up-input { display: none; }
-.dyn-up-name { font-size: 12.5px; color: #86868b; margin-top: 7px; min-height: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dyn-up-help { font-size: 12.5px; color: #86868b; line-height: 1.5; margin: 8px 0 0; }
-.dyn-up-btn { width: 100%; height: 50px; margin-top: 14px; border: 0; border-radius: 999px; background: var(--ink, #1d1d1f);
-  color: #fff; font: inherit; font-size: 15.5px; font-weight: 600; cursor: pointer; transition: opacity .16s, transform .1s; }
-.dyn-up-btn:hover { opacity: .92; } .dyn-up-btn:active { transform: scale(.99); }
-.dyn-up-btn[disabled] { opacity: .55; cursor: default; }
 .gallery {
   position: sticky; top: 28px;
   display: flex; flex-direction: column; gap: 16px;
@@ -1615,21 +1599,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {%- if section.blocks.size > 0 -%}
 <div id="dynBlocks" hidden>
   {%- for block in section.blocks -%}
-    <div class="dyn-slot" data-dyn-block="{{ block.type }}" data-block-id="{{ block.id }}" {{ block.shopify_attributes }}>
-      {%- if block.type == 'design_upload' -%}
-        <div class="dyn-up" data-prop="{{ block.settings.property_label | default: 'Your design' | escape }}">
-          {%- if block.settings.title != blank -%}<div class="dyn-up-title">{{ block.settings.title }}</div>{%- endif -%}
-          <label class="dyn-up-drop">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <span class="dyn-up-label">{{ block.settings.drop_label | default: 'Choose your design file' }}</span>
-            <input type="file" class="dyn-up-input" accept="{{ block.settings.accept | default: 'image/*,.pdf,.ai,.svg,.eps' }}">
-          </label>
-          <div class="dyn-up-name"></div>
-          {%- if block.settings.help != blank -%}<p class="dyn-up-help">{{ block.settings.help }}</p>{%- endif -%}
-          <button type="button" class="dyn-up-btn">{{ block.settings.button_label | default: 'Add to cart with my design' }}</button>
-        </div>
-      {%- endif -%}
-    </div>
+    <div class="dyn-slot" data-dyn-block="{{ block.type }}" data-block-id="{{ block.id }}" {{ block.shopify_attributes }}></div>
   {%- endfor -%}
 </div>
 <script>
@@ -1693,53 +1663,15 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   }
   // Gift → directly under the Quantity group.
   if (byType.gift && qtyGroup) { after(qtyGroup, byType.gift); }
-  // Under the Customize button, in order: design upload, trust row, reviews.
-  var anchor = cta;
-  if (byType.design_upload && anchor) { after(anchor, byType.design_upload); anchor = byType.design_upload; }
-  if (byType.trust_row && anchor) { after(anchor, byType.trust_row); anchor = byType.trust_row; }
-  if (byType.reviews && anchor) { after(anchor, byType.reviews); anchor = byType.reviews; }
+  // Trust row → under the Customize button; Reviews follow just beneath it.
+  if (byType.trust_row && cta) { after(cta, byType.trust_row); }
+  if (byType.reviews) { after(byType.trust_row || cta, byType.reviews); }
 
   // Anything without a specific home falls back after the buttons.
   Array.prototype.forEach.call(host.querySelectorAll(".dyn-slot"), function (slot) {
     if (!slot.parentNode || slot.parentNode === host) { if (cta) after(cta, slot); else if (detail) detail.appendChild(slot); }
   });
   if (host.parentNode && !host.children.length) host.parentNode.removeChild(host);
-
-  // Wire the "Upload your design" block: attach the file to the cart line and go to cart.
-  if (byType.design_upload) wireUpload(byType.design_upload);
-  function wireUpload(slot) {
-    var box = slot.querySelector(".dyn-up"); if (!box) return;
-    var input = box.querySelector(".dyn-up-input");
-    var drop = box.querySelector(".dyn-up-drop");
-    var nameEl = box.querySelector(".dyn-up-name");
-    var labelEl = box.querySelector(".dyn-up-label");
-    var btn = box.querySelector(".dyn-up-btn");
-    var prop = box.getAttribute("data-prop") || "Your design";
-    var chosen = null, defaultLabel = labelEl ? labelEl.textContent : "Choose your design file";
-    input.addEventListener("change", function () {
-      chosen = input.files && input.files[0];
-      if (chosen) { drop.classList.add("has-file"); labelEl.textContent = chosen.name; nameEl.textContent = "Ready to upload"; }
-      else { drop.classList.remove("has-file"); labelEl.textContent = defaultLabel; nameEl.textContent = ""; }
-    });
-    var busy = false;
-    btn.addEventListener("click", function () {
-      if (busy) return;
-      if (!chosen) { input.click(); return; }
-      var shop = window.DYN_SHOPIFY || {};
-      var vid = shop.variantId; // kept live-updated as the shopper picks colour/size
-      if (!vid) { alert("Please choose the options first."); return; }
-      var qEl = document.getElementById("qtyInput");
-      var qty = qEl ? (parseInt(qEl.value, 10) || 1) : 1;
-      busy = true; btn.disabled = true; var t = btn.textContent; btn.textContent = "Uploading…";
-      var fd = new FormData();
-      fd.append("id", String(vid)); fd.append("quantity", String(qty));
-      fd.append("properties[" + prop + "]", chosen, chosen.name);
-      fetch("/cart/add.js", { method: "POST", headers: { Accept: "application/json" }, body: fd })
-        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-        .then(function () { window.location.href = (shop.cartUrl || "/cart"); })
-        .catch(function () { alert("Sorry, we couldn’t add that. Please try again."); busy = false; btn.disabled = false; btn.textContent = t; });
-    });
-  }
 })();
 </script>
 {%- endif -%}
@@ -1824,17 +1756,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "text", "id": "front_tab_label", "label": "Front tab label", "default": "Front" },
     { "type": "text", "id": "back_tab_label", "label": "Back tab label", "default": "Back" }
   ],
-  "max_blocks": 6,
+  "max_blocks": 4,
   "blocks": [
-    { "type": "design_upload", "name": "Upload your design", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Lets the customer attach their own artwork and add it straight to the cart — the file is saved on the order. Add this block to show it; it appears under the Customize button. Great for customers who already have a print-ready file." },
-      { "type": "text", "id": "title", "label": "Heading", "default": "Already have a design?" },
-      { "type": "text", "id": "drop_label", "label": "Upload box text", "default": "Choose your design file" },
-      { "type": "textarea", "id": "help", "label": "Helper text", "default": "PNG, JPG, PDF, SVG or AI. High-resolution files print best." },
-      { "type": "text", "id": "button_label", "label": "Button text", "default": "Add to cart with my design" },
-      { "type": "text", "id": "property_label", "label": "Order label for the file", "default": "Your design", "info": "How the attached file is named on the order." },
-      { "type": "text", "id": "accept", "label": "Allowed file types", "default": "image/*,.pdf,.ai,.svg,.eps", "info": "Advanced — comma-separated accept list for the file picker." }
-    ] },
     { "type": "bulk_link", "name": "Bulk order link", "limit": 1, "settings": [
       { "type": "paragraph", "content": "A button linking to your Bulk Order page. Add this block to show it; remove it to hide it. Drag to reorder among the other feature blocks." },
       { "type": "url", "id": "bulk_link", "label": "Bulk order page link", "info": "Pick your Bulk order page. The button is hidden until this is set." },
