@@ -208,8 +208,13 @@
                   {%- endif -%}
                 {%- endunless -%}
               {%- endfor -%}
-              {%- if fee_title != blank -%}
-                <div class="dc-line-fee">Includes {{ fee_title | downcase }} - {{ fee_price | money }}</div>
+              {%- assign back_fee = item.properties["_back_fee"] -%}
+              {%- if back_fee != blank or fee_title != blank -%}
+                <div class="dc-line-fee">
+                  {%- if back_fee != blank -%}<div>Back print · {{ back_fee }}</div>{%- endif -%}
+                  {%- if fee_title != blank -%}<div>{{ fee_title }} · {{ fee_price | money }}</div>{%- endif -%}
+                  <div><b>Item total · {{ line_total | money }}</b></div>
+                </div>
               {%- endif -%}
               {%- if dstate != blank and item.url != blank -%}
                 <div class="dc-line-actions">

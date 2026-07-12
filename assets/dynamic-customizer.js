@@ -2626,6 +2626,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const giftOnEl = $("#giftIsGift");
       const giftOn = !!(gift.enabled && giftOnEl && giftOnEl.checked);
       const sidesVariant = (typeof _sidesResolve === "function" && _sidesResolve) ? _sidesResolve(hasBackDesign, giftOn) : null;
+      // Record the back-print upcharge (the Front+Back vs Front-only price gap) so
+      // the cart can show it as its own line in the breakdown.
+      if (hasBackDesign && sidesVariant && typeof _sidesResolve === "function") {
+        const vFront = _sidesResolve(false, giftOn);
+        const c = (s) => { const n = parseFloat(String(s).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
+        const diff = c(sidesVariant.price) - (vFront ? c(vFront.price) : 0);
+        if (diff > 0) props["_back_fee"] = "$" + (diff / 100).toFixed(2).replace(/\.00$/, "");
+      }
       const extraItems = [];
       if (!sidesVariant && hasBackDesign && S.backFeeVariantId) {
         const grp = "g" + Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36);

@@ -645,7 +645,16 @@
       var editLink = canEdit ? '<a class="hd-line-edit" href="' + esc(editUrl) + '">Edit design</a>' : "";
       var grp = it.properties && it.properties._grp;
       var fee = (grp && !isFee(it)) ? feeByGrp[grp] : null;
-      var feeNote = fee ? '<div class="hd-line-fee">+ ' + esc(fee.product_title) + " · " + cartMoney(fee.final_line_price) + "</div>" : "";
+      var backFee = it.properties && it.properties._back_fee;
+      var feeNote = "";
+      if (backFee || fee) {
+        var itemTotal = (it.final_line_price || 0) + (fee ? (fee.final_line_price || 0) : 0);
+        feeNote = '<div class="hd-line-fee">' +
+          (backFee ? "<div>Back print · " + esc(backFee) + "</div>" : "") +
+          (fee ? "<div>" + esc(fee.product_title) + " · " + cartMoney(fee.final_line_price) + "</div>" : "") +
+          "<div><strong>Item total · " + cartMoney(itemTotal) + "</strong></div>" +
+        "</div>";
+      }
       // Editable gift note for gift items (they carry a "Gift" or "Gift note" prop).
       var isGiftItem = it.properties && (it.properties.hasOwnProperty("Gift note") || it.properties.Gift);
       var noteVal = (it.properties && it.properties["Gift note"]) || "";
