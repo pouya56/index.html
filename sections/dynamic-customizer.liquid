@@ -1634,7 +1634,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     + ".pa-stage{position:relative;line-height:0;box-shadow:0 20px 60px rgba(0,0,0,.5);border-radius:10px;background:#fff;}"
     + ".pa-stage img{display:block;max-width:min(560px,90vw);max-height:62vh;width:auto;height:auto;border-radius:10px;-webkit-user-drag:none;user-select:none;}"
     + ".pa-box{position:absolute;border:2px solid #0071e3;background:rgba(0,113,227,.14);cursor:move;box-sizing:border-box;touch-action:none;}"
-    + ".pa-box .pa-h{position:absolute;right:2px;bottom:2px;width:24px;height:24px;border-radius:50%;background:#0071e3;border:3px solid #fff;cursor:nwse-resize;box-shadow:0 2px 8px rgba(0,0,0,.45);touch-action:none;}"
+    + ".pa-box .pa-h{position:absolute;width:26px;height:26px;border-radius:50%;background:#0071e3;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);touch-action:none;}"
+    + ".pa-h.nw{left:-13px;top:-13px;cursor:nwse-resize;}.pa-h.ne{right:-13px;top:-13px;cursor:nesw-resize;}.pa-h.sw{left:-13px;bottom:-13px;cursor:nesw-resize;}.pa-h.se{right:-13px;bottom:-13px;cursor:nwse-resize;}"
     + ".pa-tag{position:absolute;top:-24px;left:0;background:#0071e3;color:#fff;font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px;white-space:nowrap;}"
     + ".pa-panel{margin-top:16px;background:#fff;border-radius:14px;padding:14px 18px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.3);}"
     + ".pa-tabs{display:inline-flex;gap:4px;background:#f0f0f2;border-radius:999px;padding:4px;margin-bottom:12px;}"
@@ -1652,7 +1653,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   var root = document.createElement("div"); root.className = "pa-tool";
   root.innerHTML = '<div class="pa-stage" id="paStage">'
     + '<img id="paImg" alt="">'
-    + '<div class="pa-box" id="paBox"><div class="pa-tag" id="paTag"></div><div class="pa-h" id="paH"></div></div></div>'
+    + '<div class="pa-box" id="paBox"><div class="pa-tag" id="paTag"></div><i class="pa-h nw" data-c="nw"></i><i class="pa-h ne" data-c="ne"></i><i class="pa-h sw" data-c="sw"></i><i class="pa-h se" data-c="se"></i></div></div>'
     + '<div class="pa-panel">' + tabsHtml + '<div class="pa-nums">'
     + '<div><b id="paL">0</b><span>Left</span></div><div><b id="paT">0</b><span>Top</span></div>'
     + '<div><b id="paW">0</b><span>Width</span></div><div><b id="paHt">0</b><span>Height</span></div></div>'
@@ -1683,23 +1684,33 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   selectSide(cur);
   Array.prototype.forEach.call(root.querySelectorAll(".pa-tab"), function (t) { t.addEventListener("click", function () { selectSide(+t.getAttribute("data-side")); }); });
 
-  var mode = null, sx = 0, sy = 0, o = null;
+  var drag = null; // { c: 'move'|'nw'|'ne'|'sw'|'se', o:{x,y,w,h}, sx, sy }
   function rect() { return stage.getBoundingClientRect(); }
-  function down(e, m) { e.preventDefault(); mode = m; var pt = e.touches ? e.touches[0] : e; var b = box(); sx = pt.clientX; sy = pt.clientY; o = { x: b.x, y: b.y, w: b.w, h: b.h }; }
-  function move(e) {
-    if (!mode) return; var pt = e.touches ? e.touches[0] : e; var rc = rect(); var b = box();
-    var dx = (pt.clientX - sx) / rc.width * 100, dy = (pt.clientY - sy) / rc.height * 100;
-    if (mode === "move") { b.x = o.x + dx; b.y = o.y + dy; }
-    else { b.w = clamp(o.w + dx, 5, 100 - b.x); b.h = clamp(o.h + dy, 5, 100 - b.y); }
-    render();
+  function start(c) {
+    return function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var b = box(); drag = { c: c, o: { x: b.x, y: b.y, w: b.w, h: b.h }, sx: e.clientX, sy: e.clientY };
+      try { e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch (err) {}
+    };
   }
-  function up() { mode = null; }
-  boxEl.addEventListener("mousedown", function (e) { if (e.target.id !== "paH") down(e, "move"); });
-  boxEl.addEventListener("touchstart", function (e) { if (e.target.id !== "paH") down(e, "move"); }, { passive: false });
-  root.querySelector("#paH").addEventListener("mousedown", function (e) { e.stopPropagation(); down(e, "size"); });
-  root.querySelector("#paH").addEventListener("touchstart", function (e) { e.stopPropagation(); down(e, "size"); }, { passive: false });
-  document.addEventListener("mousemove", move); document.addEventListener("touchmove", move, { passive: false });
-  document.addEventListener("mouseup", up); document.addEventListener("touchend", up);
+  boxEl.addEventListener("pointerdown", start("move"));
+  Array.prototype.forEach.call(boxEl.querySelectorAll(".pa-h"), function (h) { h.addEventListener("pointerdown", start(h.getAttribute("data-c"))); });
+  document.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    var rc = rect(); var b = box(); var o = drag.o;
+    var dx = (e.clientX - drag.sx) / rc.width * 100, dy = (e.clientY - drag.sy) / rc.height * 100;
+    if (drag.c === "move") { b.x = o.x + dx; b.y = o.y + dy; }
+    else {
+      var right = o.x + o.w, bottom = o.y + o.h;
+      if (drag.c.indexOf("w") >= 0) { b.x = clamp(o.x + dx, 0, right - 5); b.w = right - b.x; }
+      if (drag.c.indexOf("e") >= 0) { b.w = clamp(o.w + dx, 5, 100 - o.x); }
+      if (drag.c.indexOf("n") >= 0) { b.y = clamp(o.y + dy, 0, bottom - 5); b.h = bottom - b.y; }
+      if (drag.c.indexOf("s") >= 0) { b.h = clamp(o.h + dy, 5, 100 - o.y); }
+    }
+    render();
+  });
+  document.addEventListener("pointerup", function () { drag = null; });
+  document.addEventListener("pointercancel", function () { drag = null; });
 
   root.querySelector("#paCopy").addEventListener("click", function () {
     var b = box();
