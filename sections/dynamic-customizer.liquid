@@ -1598,21 +1598,38 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     gift: function () { return document.getElementById("giftMount"); }
   };
 
+  // Fill each slot with its feature node (ids/listeners preserved), and collect them by type.
+  var byType = {};
   Array.prototype.forEach.call(host.querySelectorAll(".dyn-slot"), function (slot) {
     var type = slot.getAttribute("data-dyn-block");
+    byType[type] = slot;
     if (type === "bulk_link") { buildBulk(slot); return; }
     var getNode = movers[type];
     if (!getNode) return;
     var node = getNode();
-    if (node) slot.appendChild(node); // move the live node in; ids/listeners are preserved
+    if (node) slot.appendChild(node);
   });
 
-  // Drop the ordered stack into the buy-box column, right after the buttons.
+  // Each feature has a fixed home in the buy-box (not one stack).
   host.hidden = false;
-  if (detail) {
-    if (cta && cta.nextSibling) detail.insertBefore(host, cta.nextSibling);
-    else detail.appendChild(host);
-  }
+  var qtyRow = detail ? detail.querySelector(".qty-row") : null;
+  var qtyGroup = qtyRow ? (qtyRow.closest ? qtyRow.closest(".opt-group") : qtyRow.parentNode) : null;
+
+  function after(ref, node) { if (ref && ref.parentNode) ref.parentNode.insertBefore(node, ref.nextSibling); }
+
+  // Bulk → inline next to the quantity stepper.
+  if (byType.bulk_link && qtyRow) { qtyRow.appendChild(byType.bulk_link); }
+  // Gift → directly under the Quantity group.
+  if (byType.gift && qtyGroup) { after(qtyGroup, byType.gift); }
+  // Trust row → under the Customize button; Reviews follow just beneath it.
+  if (byType.trust_row && cta) { after(cta, byType.trust_row); }
+  if (byType.reviews) { after(byType.trust_row || cta, byType.reviews); }
+
+  // Anything without a specific home falls back after the buttons.
+  Array.prototype.forEach.call(host.querySelectorAll(".dyn-slot"), function (slot) {
+    if (!slot.parentNode || slot.parentNode === host) { if (cta) after(cta, slot); else if (detail) detail.appendChild(slot); }
+  });
+  if (host.parentNode && !host.children.length) host.parentNode.removeChild(host);
 })();
 </script>
 {%- endif -%}
