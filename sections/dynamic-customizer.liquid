@@ -95,13 +95,20 @@
   "settings": {
     "customizerType": {{ blk_method.settings.customizer_type | default: 'uv' | json }},
     "madeToOrder": {% if dyn_product.tags contains 'made-to-order' or dyn_product.tags contains 'made_to_order' %}true{% else %}false{% endif %},
+    {%- assign gw_vid = blk_gift.settings.gift_wrap_variant_id -%}
+    {%- assign gw_money = blk_gift.settings.gift_wrap_money -%}
+    {%- if blk_gift.settings.gift_wrap_product != blank -%}
+      {%- assign gw_prod = blk_gift.settings.gift_wrap_product -%}
+      {%- assign gw_vid = gw_prod.selected_or_first_available_variant.id -%}
+      {%- assign gw_money = gw_prod.price | money -%}
+    {%- endif -%}
     "gift": {
       "enabled": {% if blk_gift != blank %}true{% else %}false{% endif %},
       "wrapOption": {{ blk_gift.settings.gift_wrap_option | default: '' | json }},
       "wrappedValue": {{ blk_gift.settings.gift_wrapped_value | default: 'Yes' | json }},
       "unwrappedValue": {{ blk_gift.settings.gift_unwrapped_value | default: 'No' | json }},
-      "wrapVariantId": {{ blk_gift.settings.gift_wrap_variant_id | default: '' | json }},
-      "wrapMoney": {{ blk_gift.settings.gift_wrap_money | default: '' | json }},
+      "wrapVariantId": {{ gw_vid | default: '' | json }},
+      "wrapMoney": {{ gw_money | default: '' | json }},
       "toggleLabel": {{ blk_gift.settings.gift_toggle_label | default: 'This is a gift' | json }},
       "wrapLabel": {{ blk_gift.settings.gift_wrap_label | default: 'Add gift wrapping' | json }},
       "noteLabel": {{ blk_gift.settings.gift_note_label | default: 'Add a gift note (optional)' | json }}
@@ -1915,12 +1922,14 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "text", "id": "bulk_link_note", "label": "Small note under the button", "default": "Volume pricing from 10+ — save more per item.", "info": "Leave empty to hide." }
     ] },
     { "type": "gift", "name": "Gift options", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Adds an 'Add gift wrapping' toggle plus a free gift note. Add this block to show it; remove it to hide it. To charge: if the product has a spare option slot, add a 'Gift wrapping' option (No/Yes, +$8 on Yes) and type its name below for one true line item. If you're at Shopify's 3-option limit, leave it empty and paste a separate Gift Wrapping variant id." },
-      { "type": "text", "id": "gift_wrap_option", "label": "Gift wrapping — product OPTION name (recommended)", "info": "e.g. 'Gift wrapping'. The option you added to the product with No / Yes values. One line item, no separate charge." },
+      { "type": "paragraph", "content": "Adds an 'Add gift wrapping' toggle plus a free gift note. The simplest way to charge for wrapping: create a 'Gift Wrap' product with the fee as its price, then pick it below — toggling gift wrapping adds it as one grouped line item at its real price." },
+      { "type": "product", "id": "gift_wrap_product", "label": "Gift Wrap product (pick it here)", "info": "Pick your Gift Wrap product. Its price is charged and shown on the toggle automatically." },
+      { "type": "header", "content": "Advanced (only if not using the picker above)" },
+      { "type": "text", "id": "gift_wrap_option", "label": "Gift wrapping — product OPTION name", "info": "Alternative: a 'Gift wrapping' No/Yes option on the product itself (Yes priced higher). One line item, no separate product." },
       { "type": "text", "id": "gift_wrapped_value", "label": "Wrapped value", "default": "Yes", "info": "The option value that includes wrapping (the pricier one)." },
       { "type": "text", "id": "gift_unwrapped_value", "label": "Not-wrapped value", "default": "No", "info": "The base option value (no wrapping)." },
-      { "type": "text", "id": "gift_wrap_money", "label": "Gift wrapping — amount shown on the toggle", "info": "Display only, e.g. $8.", "default": "$8" },
-      { "type": "text", "id": "gift_wrap_variant_id", "label": "Gift wrapping — your Gift Wrap product", "info": "Paste your Gift Wrap product's URL or handle (or its variant id). Toggling gift wrapping adds it as one grouped line item. Used when the option name above is empty." },
+      { "type": "text", "id": "gift_wrap_money", "label": "Gift wrapping — amount shown on the toggle", "info": "Display only, e.g. $8. Ignored when you pick a product above (its real price is used).", "default": "$8" },
+      { "type": "text", "id": "gift_wrap_variant_id", "label": "Gift wrapping — product URL / variant id (older method)", "info": "Alternative to the picker: paste the Gift Wrap product's URL, handle, or variant id." },
       { "type": "text", "id": "gift_toggle_label", "label": "Toggle label", "default": "This is a gift" },
       { "type": "text", "id": "gift_wrap_label", "label": "Wrapping checkbox label", "default": "Add gift wrapping" },
       { "type": "text", "id": "gift_note_label", "label": "Gift note label", "default": "Add a gift note (optional)" }
