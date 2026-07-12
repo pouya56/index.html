@@ -2377,7 +2377,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (photoOnly
       ? ("Click the image to upload your design, then drag, resize or rotate it on your " + noun + ".")
       : ("Add photos and text — tap to select, then drag, resize or rotate each on your " + noun + ". Up to " + MAX_IMG + " of each."));
-    const eBtn = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "Add to Bag";
+    const eBtn = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "Save design";
     const ePlaceholder = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupPlaceholder) || "Add your text";
     const html =
       '<div class="modal-scrim" data-close></div>' +
@@ -2535,9 +2535,43 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     renderUpEls();
   }
 
-  async function onUploadApply() {
-    const btn = $("#uploadApply");
-    btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Saving';
+  // Popup button: SAVE the design and return to the page — nothing is added to
+  // the cart yet, so the customer can still pick gift wrapping first, then use
+  // the page's Add to Cart.
+  function onUploadApply() {
+    ["front", "back"].forEach((s) => {
+      sideLayers[s] = sideLayers[s].filter((l) => !(l.kind === "text" && !l.text));
+    });
+    layers = sideLayers[currentSide];
+    const any = ["front", "back"].some((s) => sideLayers[s].some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text)));
+    if (!any) { toast("Add a design first"); return; }
+    setDesignReady(true);
+    const sum = $("#customizeSummary"); if (sum) sum.textContent = "Design saved — not in the bag yet";
+    closeModal();
+    applyVariantPrice(); // a back design may change the page price
+    toast("Design saved — Add to Cart when you're ready");
+  }
+
+  // Toggle the page between "Customize" and "Edit design + Add to Cart".
+  function setDesignReady(on) {
+    const add = document.getElementById("pageAddCart");
+    const cust = document.getElementById("customizeBtn");
+    if (add) add.hidden = !on;
+    if (cust) {
+      if (on) { cust.classList.remove("btn-primary"); cust.classList.add("btn-ghost"); cust.textContent = "Edit design"; }
+      else {
+        cust.classList.add("btn-primary"); cust.classList.remove("btn-ghost");
+        cust.textContent = (window.DYN_SETTINGS && window.DYN_SETTINGS.customizeLabel) || "Customize";
+      }
+    }
+  }
+
+  // Page Add to Cart: submit the saved design (with the gift-wrap choice made
+  // on the page) to the cart.
+  async function onPageAddCart() {
+    const btn = document.getElementById("pageAddCart");
+    if (!btn) return;
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Adding';
     try {
       const S = window.DYN_SETTINGS || {};
       ["front", "back"].forEach((s) => {
@@ -2684,13 +2718,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           }
         } catch (e) {}
         if (window.DynamicCart && window.DynamicCart.refresh) { try { window.DynamicCart.refresh(); } catch (e) {} }
-        closeModal(); toast(wasEditing ? "Design updated" : "Added to Bag");
+        toast(wasEditing ? "Design updated" : "Added to Bag");
         // Clear the canvas so the next time it opens the customer starts fresh
         // (can upload a different design without the old one still there).
         resetUploadDesign();
+        setDesignReady(false);
       }
     } catch (e) { console.error(e); toast("Something went wrong"); }
-    finally { btn.textContent = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "Add to Bag"; renderUpEls(); }
+    finally { btn.disabled = false; btn.textContent = (window.DYN_SETTINGS && window.DYN_SETTINGS.addcartLabel) || "Add to Cart"; renderUpEls(); }
   }
 
   async function maybeEditMode() {
@@ -2773,6 +2808,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (t) t.value = al ? (al.text || "") : "";
     if (typeof renderUpEls === "function") renderUpEls();
     const sum = document.querySelector("#customizeSummary"); if (sum) sum.textContent = "Editing your saved design";
+    setDesignReady(true); // the restored design can be re-added from the page
     toast("Editing your saved design");
   }
 
@@ -3761,6 +3797,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (modalOpen) refreshPricing();
     }
     $("#customizeBtn").onclick = openModal;
+    const pageAdd = document.getElementById("pageAddCart");
+    if (pageAdd) pageAdd.onclick = onPageAddCart;
     mountGiftOptions();
     wireWishButton();
     document.addEventListener("keydown", (e) => {
