@@ -34,25 +34,17 @@
 {%- comment -%} Feature blocks (each limited to one). Their settings feed the config below;
    the presence of a block is what turns its feature on. {%- endcomment -%}
 {%- assign blk_bulk = blank -%}
-{%- assign blk_trust = blank -%}
 {%- assign blk_reviews = blank -%}
 {%- assign blk_gift = blank -%}
-{%- assign blk_logo = blank -%}
-{%- assign blk_engrave = blank -%}
 {%- assign blk_print = blank -%}
-{%- assign blk_labels = blank -%}
 {%- assign blk_method = blank -%}
 {%- assign blk_source = blank -%}
 {%- for block in section.blocks -%}
   {%- case block.type -%}
     {%- when 'bulk_link' -%}{%- assign blk_bulk = block -%}
-    {%- when 'trust_row' -%}{%- assign blk_trust = block -%}
     {%- when 'reviews' -%}{%- assign blk_reviews = block -%}
     {%- when 'gift' -%}{%- assign blk_gift = block -%}
-    {%- when 'logo_top' -%}{%- assign blk_logo = block -%}
-    {%- when 'engrave_popup' -%}{%- assign blk_engrave = block -%}
     {%- when 'print_area' -%}{%- assign blk_print = block -%}
-    {%- when 'order_labels' -%}{%- assign blk_labels = block -%}
     {%- when 'print_method' -%}{%- assign blk_method = block -%}
     {%- when 'product_source' -%}{%- assign blk_source = block -%}
   {%- endcase -%}
@@ -129,12 +121,12 @@
     "sampleImage2": {% if blk_print.settings.sample_image_2 %}{{ blk_print.settings.sample_image_2 | image_url: width: 1200 | json }}{% else %}""{% endif %},
     "sampleCaption": {{ blk_print.settings.sample_caption | default: 'How your finished product will look' | json }},
     "sampleButtonLabel": {{ blk_print.settings.sample_button_label | default: 'See a finished sample' | json }},
-    "labelDesign": {{ blk_labels.settings.label_design | default: 'Print Front' | json }},
-    "labelBackDesign": {{ blk_labels.settings.label_back_design | default: 'Print Back' | json }},
-    "labelPreview": {{ blk_labels.settings.label_preview | default: 'Preview Front' | json }},
-    "labelBackPreview": {{ blk_labels.settings.label_back_preview | default: 'Preview Back' | json }},
-    "labelText": {{ blk_labels.settings.label_text | default: 'Text' | json }},
-    "labelBackText": {{ blk_labels.settings.label_back_text | default: 'Back text' | json }},
+    "labelDesign": {{ section.settings.label_design | default: 'Print Front' | json }},
+    "labelBackDesign": {{ section.settings.label_back_design | default: 'Print Back' | json }},
+    "labelPreview": {{ section.settings.label_preview | default: 'Preview Front' | json }},
+    "labelBackPreview": {{ section.settings.label_back_preview | default: 'Preview Back' | json }},
+    "labelText": {{ section.settings.label_text | default: 'Text' | json }},
+    "labelBackText": {{ section.settings.label_back_text | default: 'Back text' | json }},
     "backImage": {% if blk_print.settings.back_image %}{{ blk_print.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     {%- assign bpos = blk_print.settings.back_pos | default: '22, 30, 56, 40' | replace: ' ', '' | split: ',' -%}
     "printBack": {
@@ -161,19 +153,19 @@
     "addcartLabel": {{ 'Add to Cart' | json }},
     "customPrintLabel": {{ 'Custom print' | json }},
     "reassure": [
-      {{ blk_trust.settings.reassure_1 | default: '' | json }},
-      {{ blk_trust.settings.reassure_2 | default: '' | json }},
-      {{ blk_trust.settings.reassure_3 | default: '' | json }}
+      {{ section.settings.reassure_1 | default: 'Free delivery' | json }},
+      {{ section.settings.reassure_2 | default: 'Made in 3–5 days' | json }},
+      {{ section.settings.reassure_3 | default: 'Free & easy returns' | json }}
     ],
     "reassureIcons": [
-      {{ blk_trust.settings.reassure_1_icon | default: 'truck' | json }},
-      {{ blk_trust.settings.reassure_2_icon | default: 'clock' | json }},
-      {{ blk_trust.settings.reassure_3_icon | default: 'check' | json }}
+      {{ section.settings.reassure_1_icon | default: 'truck' | json }},
+      {{ section.settings.reassure_2_icon | default: 'clock' | json }},
+      {{ section.settings.reassure_3_icon | default: 'check' | json }}
     ],
-    "engraveTitle": {{ blk_engrave.settings.engrave_title | default: '' | json }},
-    "engraveSub": {{ blk_engrave.settings.engrave_sub | default: '' | json }},
-    "popupButtonLabel": {{ blk_engrave.settings.popup_button_label | default: 'Add to Bag' | json }},
-    "popupPlaceholder": {{ blk_engrave.settings.popup_placeholder | default: 'Add your text' | json }},
+    "engraveTitle": {{ section.settings.engrave_title | default: '' | json }},
+    "engraveSub": {{ section.settings.engrave_sub | default: '' | json }},
+    "popupButtonLabel": {{ section.settings.popup_button_label | default: 'Add to Bag' | json }},
+    "popupPlaceholder": {{ section.settings.popup_placeholder | default: 'Add your text' | json }},
     "engrave": {
       "x": {{ section.settings.engrave_x | default: 50 }},
       "y": {{ section.settings.engrave_y | default: 56 }},
@@ -1581,22 +1573,22 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {% endraw %}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
-{%- if blk_logo != blank -%}
-{%- assign top_logo = blk_logo.settings.top_logo | default: settings.logo -%}
+{%- if section.settings.show_top_logo -%}
+{%- assign top_logo = section.settings.top_logo | default: settings.logo -%}
 <script>
 (function () {
   var bar = document.getElementById("dynTopbar");
   var a = document.getElementById("dynTopLogo");
   if (!bar || !a) return;
   a.setAttribute("href", {{ routes.root_url | default: '/' | json }});
-  bar.className = "dyn-topbar is-{{ blk_logo.settings.top_logo_align | default: 'center' }}";
+  bar.className = "dyn-topbar is-{{ section.settings.top_logo_align | default: 'center' }}";
   {%- if top_logo != blank -%}
   var img = document.createElement("img");
   img.src = {{ top_logo | image_url: width: 500 | json }};
   img.alt = {{ shop.name | json }};
-  img.width = {{ blk_logo.settings.top_logo_width | default: 130 }};
-  img.height = {{ blk_logo.settings.top_logo_width | default: 130 | divided_by: top_logo.aspect_ratio | round }};
-  img.style.width = "{{ blk_logo.settings.top_logo_width | default: 130 }}px";
+  img.width = {{ section.settings.top_logo_width | default: 130 }};
+  img.height = {{ section.settings.top_logo_width | default: 130 | divided_by: top_logo.aspect_ratio | round }};
+  img.style.width = "{{ section.settings.top_logo_width | default: 130 }}px";
   a.appendChild(img);
   {%- else -%}
   a.textContent = {{ shop.name | json }};
@@ -1771,7 +1763,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   }
 
   var movers = {
-    trust_row: function () { return document.querySelector(".reassure"); },
     reviews: function () { return document.getElementById("igSocial"); },
     gift: function () { return document.getElementById("giftMount"); }
   };
@@ -1802,9 +1793,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   }
   // Gift → directly under the Quantity group.
   if (byType.gift && qtyGroup) { after(qtyGroup, byType.gift); }
-  // Trust row → under the Customize button; Reviews follow just beneath it.
-  if (byType.trust_row && cta) { after(cta, byType.trust_row); }
-  if (byType.reviews) { after(byType.trust_row || cta, byType.reviews); }
+  // Reviews → below the fixed trust row (which now renders in place after the buttons).
+  if (byType.reviews) { after((detail && detail.querySelector(".reassure")) || cta, byType.reviews); }
 
   // Anything without a specific home falls back after the buttons.
   Array.prototype.forEach.call(host.querySelectorAll(".dyn-slot"), function (slot) {
@@ -1821,8 +1811,59 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {% schema %}
 {
   "name": "Dynamic Customizer",
-  "settings": [],
-  "max_blocks": 10,
+  "settings": [
+    { "type": "header", "content": "Logo (top of page, links home)" },
+    { "type": "checkbox", "id": "show_top_logo", "label": "Show logo at top", "default": true },
+    { "type": "image_picker", "id": "top_logo", "label": "Logo image", "info": "Leave empty to use your theme logo." },
+    { "type": "range", "id": "top_logo_width", "label": "Logo width", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 130 },
+    { "type": "select", "id": "top_logo_align", "label": "Logo position", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" } ], "default": "center" },
+    { "type": "header", "content": "Engraving popup text" },
+    { "type": "text", "id": "engrave_title", "label": "Popup title", "default": "Personalize your AirPods." },
+    { "type": "textarea", "id": "engrave_sub", "label": "Popup subtitle", "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them." },
+    { "type": "text", "id": "popup_button_label", "label": "Popup button text", "info": "The primary button inside the popup.", "default": "Add to Bag" },
+    { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" },
+    { "type": "header", "content": "Trust row (under the buttons)" },
+    { "type": "paragraph", "content": "Three short reassurance items under the buttons. Leave a field blank to hide that one." },
+    { "type": "text", "id": "reassure_1", "label": "Trust item 1", "default": "Free delivery" },
+    { "type": "select", "id": "reassure_1_icon", "label": "Trust item 1 icon", "default": "truck",
+      "options": [
+        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
+        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
+        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
+        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
+        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
+        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
+      ] },
+    { "type": "text", "id": "reassure_2", "label": "Trust item 2", "default": "Made in 3–5 days" },
+    { "type": "select", "id": "reassure_2_icon", "label": "Trust item 2 icon", "default": "clock",
+      "options": [
+        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
+        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
+        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
+        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
+        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
+        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
+      ] },
+    { "type": "text", "id": "reassure_3", "label": "Trust item 3", "default": "Free & easy returns" },
+    { "type": "select", "id": "reassure_3_icon", "label": "Trust item 3 icon", "default": "check",
+      "options": [
+        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
+        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
+        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
+        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
+        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
+        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
+      ] },
+    { "type": "header", "content": "Order labels (names on the order)" },
+    { "type": "paragraph", "content": "Each attached file shows on the order as a download link with the label below." },
+    { "type": "text", "id": "label_design", "label": "Front artwork label", "default": "Print Front" },
+    { "type": "text", "id": "label_preview", "label": "Front preview label", "default": "Preview Front" },
+    { "type": "text", "id": "label_back_design", "label": "Back artwork label", "default": "Print Back" },
+    { "type": "text", "id": "label_back_preview", "label": "Back preview label", "default": "Preview Back" },
+    { "type": "text", "id": "label_text", "label": "Front text label", "default": "Text" },
+    { "type": "text", "id": "label_back_text", "label": "Back text label", "default": "Back text" }
+  ],
+  "max_blocks": 6,
   "blocks": [
     { "type": "print_method", "name": "Print method", "limit": 1, "settings": [
       { "type": "select", "id": "customizer_type", "label": "Print method / style", "default": "uv",
@@ -1838,13 +1879,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "paragraph", "content": "Only needed when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown." },
       { "type": "product", "id": "product_ref", "label": "Product (non-product pages only)" },
       { "type": "paragraph", "content": "Made to order / always orderable is set PER PRODUCT in Shopify: open the product → each variant's Inventory → tick \"Continue selling when out of stock\". (Optional: tag a product \"made-to-order\" to force it orderable regardless.)" }
-    ] },
-    { "type": "engrave_popup", "name": "Engraving popup text", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "The heading and helper text inside the design popup." },
-      { "type": "text", "id": "engrave_title", "label": "Popup title", "default": "Personalize your AirPods." },
-      { "type": "textarea", "id": "engrave_sub", "label": "Popup subtitle", "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them." },
-      { "type": "text", "id": "popup_button_label", "label": "Popup button text", "info": "The primary button inside the popup.", "default": "Add to Bag" },
-      { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" }
     ] },
     { "type": "print_area", "name": "Printable area", "limit": 1, "settings": [
       { "type": "paragraph", "content": "Set the box visually: while editing here, click the blue “◳ Set print area” button on the product preview (bottom-right). Drag/resize the box (Front/Back tabs if a back image is set), tap Copy, and paste into the matching field below. (You can also open the live product page with ?setarea=1.)" },
@@ -1871,21 +1905,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "text", "id": "back_fee_variant_id", "label": "Back fee — product VARIANT id (older method)", "info": "Only used if 'Print sides' above is empty. Adds a separate line item for the back charge." },
       { "type": "text", "id": "back_fee_money", "label": "Back fee — amount shown on the tab", "info": "Display only, e.g. $5." }
     ] },
-    { "type": "order_labels", "name": "Order labels", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Each attached file shows on the order as a download link with the label below. Leave blank to use the defaults." },
-      { "type": "text", "id": "label_design", "label": "Front artwork label", "default": "Print Front" },
-      { "type": "text", "id": "label_preview", "label": "Front preview label", "default": "Preview Front" },
-      { "type": "text", "id": "label_back_design", "label": "Back artwork label", "default": "Print Back" },
-      { "type": "text", "id": "label_back_preview", "label": "Back preview label", "default": "Preview Back" },
-      { "type": "text", "id": "label_text", "label": "Front text label", "default": "Text" },
-      { "type": "text", "id": "label_back_text", "label": "Back text label", "default": "Back text" }
-    ] },
-    { "type": "logo_top", "name": "Logo (top of page)", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Shows your logo at the top of the product page, linked to your home page. Add this block to show it." },
-      { "type": "image_picker", "id": "top_logo", "label": "Logo image", "info": "Leave empty to use your theme logo." },
-      { "type": "range", "id": "top_logo_width", "label": "Logo width", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 130 },
-      { "type": "select", "id": "top_logo_align", "label": "Logo position", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" } ], "default": "center" }
-    ] },
     { "type": "bulk_link", "name": "Bulk order link", "limit": 1, "settings": [
       { "type": "paragraph", "content": "A button linking to your Bulk Order page. Add this block to show it; remove it to hide it. Drag to reorder among the other feature blocks." },
       { "type": "url", "id": "bulk_link", "label": "Bulk order page link", "info": "Pick your Bulk order page. The button is hidden until this is set." },
@@ -1904,39 +1923,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "text", "id": "gift_wrap_label", "label": "Wrapping checkbox label", "default": "Add gift wrapping" },
       { "type": "text", "id": "gift_note_label", "label": "Gift note label", "default": "Add a gift note (optional)" }
     ] },
-    { "type": "trust_row", "name": "Trust row", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Three short reassurance items. Add this block to show them; remove it to hide. Leave a field blank to hide that one item." },
-      { "type": "text", "id": "reassure_1", "label": "Trust item 1", "default": "Free delivery" },
-      { "type": "select", "id": "reassure_1_icon", "label": "Trust item 1 icon", "default": "truck",
-        "options": [
-          { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
-          { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
-          { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
-          { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
-          { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
-          { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
-        ] },
-      { "type": "text", "id": "reassure_2", "label": "Trust item 2", "default": "Made in 3–5 days" },
-      { "type": "select", "id": "reassure_2_icon", "label": "Trust item 2 icon", "default": "clock",
-        "options": [
-          { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
-          { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
-          { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
-          { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
-          { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
-          { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
-        ] },
-      { "type": "text", "id": "reassure_3", "label": "Trust item 3", "default": "Free & easy returns" },
-      { "type": "select", "id": "reassure_3_icon", "label": "Trust item 3 icon", "default": "check",
-        "options": [
-          { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
-          { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
-          { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
-          { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
-          { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
-          { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
-        ] }
-    ] },
     { "type": "reviews", "name": "Reviews / social", "limit": 1, "settings": [
       { "type": "paragraph", "content": "An Instagram-style Like / Comment / Share / Save bar with reviews. Add this block to show it; remove it to hide. The Comment count and reviews come from Judge.me (install it and enable its widget)." },
       { "type": "paragraph", "content": "Reviews (with a star rating) can only be written by customers who bought this product — they get a green ✓ Purchased badge, and each buyer can review once. Any signed-in shopper can still reply." },
@@ -1953,13 +1939,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "name": "Dynamic Customizer", "blocks": [
       { "type": "print_method" },
       { "type": "product_source" },
-      { "type": "logo_top" },
-      { "type": "engrave_popup" },
       { "type": "print_area" },
-      { "type": "order_labels" },
       { "type": "bulk_link" },
       { "type": "gift" },
-      { "type": "trust_row" },
       { "type": "reviews" }
     ] }
   ]
