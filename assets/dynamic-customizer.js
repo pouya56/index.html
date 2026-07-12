@@ -2377,7 +2377,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (photoOnly
       ? ("Click the image to upload your design, then drag, resize or rotate it on your " + noun + ".")
       : ("Add photos and text — tap to select, then drag, resize or rotate each on your " + noun + ". Up to " + MAX_IMG + " of each."));
-    const eBtn = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "Save design";
+    // Popup button says "Add design" — it saves the design and returns to the
+    // page. A legacy stored "Add to Bag" label is ignored so it can't mislead.
+    const eRaw = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "";
+    const eBtn = (eRaw && eRaw !== "Add to Bag" && eRaw !== "Save design") ? eRaw : "Add design";
     const ePlaceholder = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupPlaceholder) || "Add your text";
     const html =
       '<div class="modal-scrim" data-close></div>' +
@@ -2567,17 +2570,25 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   }
 
   // Page Add to Cart: submit the saved design (with the gift-wrap choice made
-  // on the page) to the cart.
+  // on the page) to the cart. HARD GUARD: no design, no add — the designer
+  // opens instead.
   async function onPageAddCart() {
     const btn = document.getElementById("pageAddCart");
     if (!btn) return;
+    ["front", "back"].forEach((s) => {
+      sideLayers[s] = sideLayers[s].filter((l) => !(l.kind === "text" && !l.text));
+    });
+    layers = sideLayers[currentSide];
+    const hasDesign = ["front", "back"].some((s) => sideLayers[s].some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text)));
+    if (!hasDesign) {
+      setDesignReady(false);
+      toast("Add your design first");
+      openModal();
+      return;
+    }
     btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Adding';
     try {
       const S = window.DYN_SETTINGS || {};
-      ["front", "back"].forEach((s) => {
-        sideLayers[s] = sideLayers[s].filter((l) => !(l.kind === "text" && !l.text));
-      });
-      layers = sideLayers[currentSide];
       async function ensureCloud(arr) {
         for (const l of arr.filter((x) => x.kind === "img" && x.url)) {
           if (l.cloudUrl) continue;
