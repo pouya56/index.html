@@ -131,7 +131,7 @@
       ], "info": "Fixed sits behind everything (works best when your page/sections are transparent). Banner is a tall block you place at the top." },
     { "type": "range", "id": "height", "label": "Banner height (desktop)", "min": 200, "max": 900, "step": 20, "unit": "px", "default": 520 },
     { "type": "range", "id": "height_mobile", "label": "Banner height (mobile)", "min": 160, "max": 700, "step": 20, "unit": "px", "default": 360 },
-    { "type": "range", "id": "z_index", "label": "Layer (fixed mode)", "min": -1, "max": 0, "step": 1, "default": 0, "info": "-1 sits behind everything; 0 sits just above the page background." },
+    { "type": "select", "id": "z_index", "label": "Layer (fixed mode)", "default": "0", "options": [ { "value": "-1", "label": "Behind everything" }, { "value": "0", "label": "Just above page background" } ], "info": "Fixed mode only." },
     { "type": "header", "content": "Colours" },
     { "type": "color", "id": "color1", "label": "Colour 1", "default": "#e8ffec" },
     { "type": "color", "id": "color2", "label": "Colour 2", "default": "#d1f5ff" },
