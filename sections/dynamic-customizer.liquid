@@ -46,6 +46,10 @@
 {%- assign blk_logo = blank -%}
 {%- assign blk_cloud = blank -%}
 {%- assign blk_back = blank -%}
+{%- assign blk_text = blank -%}
+{%- assign blk_engrave = blank -%}
+{%- assign blk_print = blank -%}
+{%- assign blk_labels = blank -%}
 {%- for block in section.blocks -%}
   {%- case block.type -%}
     {%- when 'bulk_link' -%}{%- assign blk_bulk = block -%}
@@ -55,6 +59,10 @@
     {%- when 'logo_top' -%}{%- assign blk_logo = block -%}
     {%- when 'file_uploads' -%}{%- assign blk_cloud = block -%}
     {%- when 'back_side' -%}{%- assign blk_back = block -%}
+    {%- when 'product_text' -%}{%- assign blk_text = block -%}
+    {%- when 'engrave_popup' -%}{%- assign blk_engrave = block -%}
+    {%- when 'print_area' -%}{%- assign blk_print = block -%}
+    {%- when 'order_labels' -%}{%- assign blk_labels = block -%}
   {%- endcase -%}
 {%- endfor -%}
 <script type="application/json" id="dyn-config">
@@ -109,25 +117,25 @@
       "noteLabel": {{ blk_gift.settings.gift_note_label | default: 'Add a gift note (optional)' | json }}
     },
     "print": {
-      "show": {% if section.settings.print_show %}true{% else %}false{% endif %},
-      "x": {{ section.settings.print_x | default: 22 }},
-      "y": {{ section.settings.print_y | default: 30 }},
-      "w": {{ section.settings.print_w | default: 56 }},
-      "h": {{ section.settings.print_h | default: 40 }}
+      "show": {% if blk_print == blank or blk_print.settings.print_show %}true{% else %}false{% endif %},
+      "x": {{ blk_print.settings.print_x | default: 22 }},
+      "y": {{ blk_print.settings.print_y | default: 30 }},
+      "w": {{ blk_print.settings.print_w | default: 56 }},
+      "h": {{ blk_print.settings.print_h | default: 40 }}
     },
     "enableBack": {% if blk_back != blank %}true{% else %}false{% endif %},
-    "frontImage": {% if section.settings.front_image %}{{ section.settings.front_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
-    "exampleImage": {% if section.settings.example_image %}{{ section.settings.example_image | image_url: width: 1000 | json }}{% else %}""{% endif %},
-    "sampleImage": {% if section.settings.sample_image %}{{ section.settings.sample_image | image_url: width: 1200 | json }}{% else %}""{% endif %},
-    "sampleImage2": {% if section.settings.sample_image_2 %}{{ section.settings.sample_image_2 | image_url: width: 1200 | json }}{% else %}""{% endif %},
-    "sampleCaption": {{ section.settings.sample_caption | default: '' | json }},
-    "sampleButtonLabel": {{ section.settings.sample_button_label | default: '' | json }},
-    "labelDesign": {{ section.settings.label_design | default: '' | json }},
-    "labelBackDesign": {{ section.settings.label_back_design | default: '' | json }},
-    "labelPreview": {{ section.settings.label_preview | default: '' | json }},
-    "labelBackPreview": {{ section.settings.label_back_preview | default: '' | json }},
-    "labelText": {{ section.settings.label_text | default: '' | json }},
-    "labelBackText": {{ section.settings.label_back_text | default: '' | json }},
+    "frontImage": {% if blk_print.settings.front_image %}{{ blk_print.settings.front_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
+    "exampleImage": {% if blk_print.settings.example_image %}{{ blk_print.settings.example_image | image_url: width: 1000 | json }}{% else %}""{% endif %},
+    "sampleImage": {% if blk_print.settings.sample_image %}{{ blk_print.settings.sample_image | image_url: width: 1200 | json }}{% else %}""{% endif %},
+    "sampleImage2": {% if blk_print.settings.sample_image_2 %}{{ blk_print.settings.sample_image_2 | image_url: width: 1200 | json }}{% else %}""{% endif %},
+    "sampleCaption": {{ blk_print.settings.sample_caption | default: 'How your finished product will look' | json }},
+    "sampleButtonLabel": {{ blk_print.settings.sample_button_label | default: 'See a finished sample' | json }},
+    "labelDesign": {{ blk_labels.settings.label_design | default: 'Print Front' | json }},
+    "labelBackDesign": {{ blk_labels.settings.label_back_design | default: 'Print Back' | json }},
+    "labelPreview": {{ blk_labels.settings.label_preview | default: 'Preview Front' | json }},
+    "labelBackPreview": {{ blk_labels.settings.label_back_preview | default: 'Preview Back' | json }},
+    "labelText": {{ blk_labels.settings.label_text | default: 'Text' | json }},
+    "labelBackText": {{ blk_labels.settings.label_back_text | default: 'Back text' | json }},
     "backImage": {% if blk_back.settings.back_image %}{{ blk_back.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "printBack": {
       "show": {% if blk_back.settings.back_print_show %}true{% else %}false{% endif %},
@@ -143,15 +151,15 @@
     "sidesBothValue": {{ blk_back.settings.sides_both_value | default: '' | json }},
     "frontTabLabel": {{ blk_back.settings.front_tab_label | default: 'Front' | json }},
     "backTabLabel": {{ blk_back.settings.back_tab_label | default: 'Back' | json }},
-    "eyebrow": {{ section.settings.eyebrow | default: '' | json }},
+    "eyebrow": {{ blk_text.settings.eyebrow | default: '' | json }},
     "title": {{ section.settings.title | default: '' | json }},
     "price": {{ section.settings.price | default: '' | json }},
-    "priceNote": {{ section.settings.price_note | default: '' | json }},
+    "priceNote": {{ blk_text.settings.price_note | default: '' | json }},
     "description": {{ section.settings.description | default: '' | json }},
-    "modelLabel": {{ section.settings.model_label | default: '' | json }},
-    "customizeLabel": {{ section.settings.customize_label | default: '' | json }},
-    "addcartLabel": {{ section.settings.addcart_label | default: '' | json }},
-    "customPrintLabel": {{ section.settings.custom_print_label | default: '' | json }},
+    "modelLabel": {{ blk_text.settings.model_label | default: '' | json }},
+    "customizeLabel": {{ blk_text.settings.customize_label | default: 'Customize' | json }},
+    "addcartLabel": {{ blk_text.settings.addcart_label | default: 'Add to Cart' | json }},
+    "customPrintLabel": {{ blk_text.settings.custom_print_label | default: 'Custom print' | json }},
     "reassure": [
       {{ blk_trust.settings.reassure_1 | default: '' | json }},
       {{ blk_trust.settings.reassure_2 | default: '' | json }},
@@ -162,16 +170,16 @@
       {{ blk_trust.settings.reassure_2_icon | default: 'clock' | json }},
       {{ blk_trust.settings.reassure_3_icon | default: 'check' | json }}
     ],
-    "engraveTitle": {{ section.settings.engrave_title | default: '' | json }},
-    "engraveSub": {{ section.settings.engrave_sub | default: '' | json }},
-    "popupButtonLabel": {{ section.settings.popup_button_label | default: '' | json }},
-    "popupPlaceholder": {{ section.settings.popup_placeholder | default: '' | json }},
+    "engraveTitle": {{ blk_engrave.settings.engrave_title | default: '' | json }},
+    "engraveSub": {{ blk_engrave.settings.engrave_sub | default: '' | json }},
+    "popupButtonLabel": {{ blk_engrave.settings.popup_button_label | default: 'Add to Bag' | json }},
+    "popupPlaceholder": {{ blk_engrave.settings.popup_placeholder | default: 'Add your text' | json }},
     "engrave": {
       "x": {{ section.settings.engrave_x | default: 50 }},
       "y": {{ section.settings.engrave_y | default: 56 }},
       "size": {{ section.settings.engrave_size | default: 5 }},
       "rotate": {{ section.settings.engrave_rotate | default: 0 }},
-      "color": {{ section.settings.engrave_color | default: '#9a9ba2' | json }}
+      "color": {{ blk_print.settings.engrave_color | default: '#1d1d1f' | json }}
     },
     "mainImage": {% if section.settings.main_image %}{{ section.settings.main_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "gallery": [
@@ -1701,43 +1709,50 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "header", "content": "Product details" },
     { "type": "product", "id": "product_ref", "label": "Product (non-product pages only)", "info": "Only used when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown." },
     { "type": "paragraph", "content": "Made to order / always orderable is set PER PRODUCT in Shopify (not here — one template is shared by every product). Open the product → each variant's Inventory → tick \"Continue selling when out of stock\": those variations stay orderable. Products left in normal tracking show sold-out variations as unavailable. So tick it for the Mug and leave the T-shirt normal. (Optional: tag a product \"made-to-order\" to force it orderable in the storefront regardless.)" },
-    { "type": "text", "id": "eyebrow", "label": "Eyebrow (small label above title)", "default": "AirPods Pro 3" },
-    { "type": "text", "id": "price_note", "label": "Price note", "default": "Free shipping" },
-    { "type": "text", "id": "model_label", "label": "Model / variant label", "default": "AirPods Pro 3" },
-    { "type": "text", "id": "customize_label", "label": "Customize button text", "default": "Customize" },
-    { "type": "text", "id": "addcart_label", "label": "Add-to-cart button text", "default": "Add to Cart" },
-    { "type": "text", "id": "custom_print_label", "label": "Popup price caption", "info": "Small line under the price in the customizer popup.", "default": "Custom print" },
-
-    { "type": "header", "content": "Engraving popup" },
-    { "type": "text", "id": "engrave_title", "label": "Popup title", "default": "Personalize your AirPods." },
-    { "type": "textarea", "id": "engrave_sub", "label": "Popup subtitle", "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them." },
-    { "type": "text", "id": "popup_button_label", "label": "Popup button text", "info": "The primary button inside the popup.", "default": "Add to Bag" },
-    { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" },
-    { "type": "header", "content": "Printable area" },
-    { "type": "paragraph", "content": "The box on the product where the design must stay (percentages of the product image — set per product). Left/Top is the box's top-left corner." },
-    { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
-    { "type": "image_picker", "id": "example_image", "label": "Example design (placeholder)", "info": "A faded sample shown in the print area to show customers where their design goes. It disappears when they upload. Leave empty to hide." },
-    { "type": "image_picker", "id": "sample_image", "label": "Finished sample — FRONT", "info": "Photo of the finished front. Shown behind the 'See a finished sample' button. On the Front tab, the button shows THIS photo." },
-    { "type": "image_picker", "id": "sample_image_2", "label": "Finished sample — BACK (optional)", "info": "Photo of the finished back. On the Back tab, the button shows THIS photo instead. Needs 'Enable back side' on. Leave empty to always show the front sample." },
-    { "type": "text", "id": "sample_button_label", "label": "Sample button text", "default": "See a finished sample" },
-    { "type": "text", "id": "sample_caption", "label": "Sample caption (in popup)", "info": "Text shown under the finished-product photo in the popup.", "default": "How your finished product will look" },
-    { "type": "header", "content": "Order labels (names on the order)" },
-    { "type": "paragraph", "content": "Each attached file shows on the order as a clickable download link with the label below. Leave blank to use the defaults." },
-    { "type": "text", "id": "label_design", "label": "Front artwork label", "default": "Print Front" },
-    { "type": "text", "id": "label_preview", "label": "Front preview label", "default": "Preview Front" },
-    { "type": "text", "id": "label_back_design", "label": "Back artwork label", "default": "Print Back" },
-    { "type": "text", "id": "label_back_preview", "label": "Back preview label", "default": "Preview Back" },
-    { "type": "text", "id": "label_text", "label": "Front text label", "default": "Text" },
-    { "type": "text", "id": "label_back_text", "label": "Back text label", "default": "Back text" },
-    { "type": "checkbox", "id": "print_show", "label": "Show the printable-area outline to customers", "default": true },
-    { "type": "range", "id": "print_x", "label": "Area left", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 22 },
-    { "type": "range", "id": "print_y", "label": "Area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },
-    { "type": "range", "id": "print_w", "label": "Area width", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 56 },
-    { "type": "range", "id": "print_h", "label": "Area height", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 40 },
-    { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes. Customers place, size and rotate each text/photo themselves.", "default": "#1d1d1f" }
+    { "type": "paragraph", "content": "Product text, the engraving popup, the printable area and order labels are now separate blocks below — add the ones you need." }
   ],
-  "max_blocks": 7,
+  "max_blocks": 11,
   "blocks": [
+    { "type": "product_text", "name": "Product text", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "The small copy around the buy box. Leave a field blank to use the app's default." },
+      { "type": "text", "id": "eyebrow", "label": "Eyebrow (small label above title)", "default": "AirPods Pro 3" },
+      { "type": "text", "id": "price_note", "label": "Price note", "default": "Free shipping" },
+      { "type": "text", "id": "model_label", "label": "Model / variant label", "default": "AirPods Pro 3" },
+      { "type": "text", "id": "customize_label", "label": "Customize button text", "default": "Customize" },
+      { "type": "text", "id": "addcart_label", "label": "Add-to-cart button text", "default": "Add to Cart" },
+      { "type": "text", "id": "custom_print_label", "label": "Popup price caption", "info": "Small line under the price in the customizer popup.", "default": "Custom print" }
+    ] },
+    { "type": "engrave_popup", "name": "Engraving popup text", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "The heading and helper text inside the design popup." },
+      { "type": "text", "id": "engrave_title", "label": "Popup title", "default": "Personalize your AirPods." },
+      { "type": "textarea", "id": "engrave_sub", "label": "Popup subtitle", "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them." },
+      { "type": "text", "id": "popup_button_label", "label": "Popup button text", "info": "The primary button inside the popup.", "default": "Add to Bag" },
+      { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" }
+    ] },
+    { "type": "print_area", "name": "Printable area", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "The box on the product where the design must stay (percentages of the product image — set per product). Left/Top is the box's top-left corner." },
+      { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
+      { "type": "image_picker", "id": "example_image", "label": "Example design (placeholder)", "info": "A faded sample shown in the print area to show where the design goes. It disappears when they upload. Leave empty to hide." },
+      { "type": "image_picker", "id": "sample_image", "label": "Finished sample — FRONT", "info": "Photo of the finished front, shown behind the 'See a finished sample' button." },
+      { "type": "image_picker", "id": "sample_image_2", "label": "Finished sample — BACK (optional)", "info": "Photo of the finished back. Shown on the Back tab. Needs the Back side block. Leave empty to always show the front sample." },
+      { "type": "text", "id": "sample_button_label", "label": "Sample button text", "default": "See a finished sample" },
+      { "type": "text", "id": "sample_caption", "label": "Sample caption (in popup)", "info": "Text under the finished-product photo in the popup.", "default": "How your finished product will look" },
+      { "type": "checkbox", "id": "print_show", "label": "Show the printable-area outline to customers", "default": true },
+      { "type": "range", "id": "print_x", "label": "Area left", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 22 },
+      { "type": "range", "id": "print_y", "label": "Area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },
+      { "type": "range", "id": "print_w", "label": "Area width", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 56 },
+      { "type": "range", "id": "print_h", "label": "Area height", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 40 },
+      { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes.", "default": "#1d1d1f" }
+    ] },
+    { "type": "order_labels", "name": "Order labels", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "Each attached file shows on the order as a download link with the label below. Leave blank to use the defaults." },
+      { "type": "text", "id": "label_design", "label": "Front artwork label", "default": "Print Front" },
+      { "type": "text", "id": "label_preview", "label": "Front preview label", "default": "Preview Front" },
+      { "type": "text", "id": "label_back_design", "label": "Back artwork label", "default": "Print Back" },
+      { "type": "text", "id": "label_back_preview", "label": "Back preview label", "default": "Preview Back" },
+      { "type": "text", "id": "label_text", "label": "Front text label", "default": "Text" },
+      { "type": "text", "id": "label_back_text", "label": "Back text label", "default": "Back text" }
+    ] },
     { "type": "logo_top", "name": "Logo (top of page)", "limit": 1, "settings": [
       { "type": "paragraph", "content": "Shows your logo at the top of the product page, linked to your home page. Add this block to show it." },
       { "type": "image_picker", "id": "top_logo", "label": "Logo image", "info": "Leave empty to use your theme logo." },
@@ -1832,6 +1847,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   "presets": [
     { "name": "Dynamic Customizer", "blocks": [
       { "type": "logo_top" },
+      { "type": "product_text" },
+      { "type": "engrave_popup" },
+      { "type": "print_area" },
+      { "type": "order_labels" },
       { "type": "bulk_link" },
       { "type": "gift" },
       { "type": "trust_row" },
