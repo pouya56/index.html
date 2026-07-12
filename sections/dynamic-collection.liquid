@@ -953,14 +953,22 @@
     if (shelfWrap) shelfWrap.style.display = showShelf ? "" : "none";
     if (bestHeading) bestHeading.style.display = showShelf ? "" : "none";
     if (scrollbarEl) scrollbarEl.style.display = showShelf ? "" : "none";
-    if (bannersWrap) bannersWrap.style.display = "";
-    if (bannersHeading) bannersHeading.style.display = "";
-    if (allHeading) allHeading.style.display = "";
+    // No matches at all: clear the page below the category bar and show the
+    // message right under it (instead of buried below the banners).
+    var none = (visible.length + visibleAll.length) === 0;
+    if (bannersWrap) bannersWrap.style.display = none ? "none" : "";
+    if (bannersHeading) bannersHeading.style.display = none ? "none" : "";
+    if (allHeading) allHeading.style.display = none ? "none" : "";
     if (badgeChip) {
       if (badgeFilter) { badgeChip.hidden = false; if (badgeChipTxt) badgeChipTxt.textContent = badgeLabels[badgeFilter] || badgeFilter; }
       else { badgeChip.hidden = true; }
     }
-    if (noRes) noRes.style.display = (visible.length + visibleAll.length) ? "none" : "block";
+    if (noRes) {
+      noRes.style.display = none ? "block" : "none";
+      if (none && tabsWrap && tabsWrap.parentNode && tabsWrap.nextElementSibling !== noRes) {
+        tabsWrap.insertAdjacentElement("afterend", noRes);
+      }
+    }
     grid.scrollLeft = 0;
     reveal(visible);
     updateGridArrows();
