@@ -1067,13 +1067,13 @@
   function closeInline() { if (inlineWrap && inlineInput && !inlineInput.value.trim()) { inlineWrap.classList.remove("is-open"); if (searchTrigger) searchTrigger.setAttribute("aria-expanded", "false"); } }
   if (searchTrigger) searchTrigger.addEventListener("click", function (e) {
     e.stopPropagation();  // don't let the category-tab handler treat this as a category
-    // Scrolled down → open the search bar on the LEFT of the sticky bar.
-    if (root.classList.contains("dc-scrolled") && inlineWrap) {
+    // Same search everywhere: the compact glass pill in the bar — scrolled or not.
+    if (inlineWrap) {
       if (inlineWrap.classList.contains("is-open")) { if (inlineInput) inlineInput.focus({ preventScroll: true }); }
       else openInline();
       return;
     }
-    // At the top → drop the search bar in below the categories (as before).
+    // Fallback (no inline pill rendered): drop the search bar in below the categories.
     if (searchBar && searchBar.classList.contains("is-open")) { if (searchEl) searchEl.focus({ preventScroll: true }); } else { openSearch(); }
   });
   if (searchEl) searchEl.addEventListener("blur", function () { setTimeout(closeSearch, 140); });
