@@ -1315,6 +1315,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let currentSide = "front";
   let curVariantOpts = [];   // option values of the currently-selected variant (for per-variant back image)
   let _sidesResolve = null;  // (hasBack) => variant matching current options with the "sides" option forced; set by the variant picker
+  let _giftVariantActive = false;  // true when gift wrapping rides on a product option/variant (so we skip the legacy fee line)
   let layers = sideLayers.front;   // alias to the current side's layer array
   let activeLayerId = null;
   let layerSeq = 0;
@@ -1500,6 +1501,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (!giftYes) giftIdx = -1;                 // no wrapped value — fall back to the legacy fee line
       else if (giftNo) selected[giftIdx] = giftNo; // start unwrapped (base price)
     }
+    _giftVariantActive = giftIdx >= 0;
     // Resolver picks the variant matching the customer's colour/size with the
     // hidden Print-sides and Gift-wrapping options forced by their choices.
     _sidesResolve = (sidesIdx < 0 && giftIdx < 0) ? null : function (hasBack, giftOn) {
@@ -2593,7 +2595,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         props["Gift"] = "Yes";
         const noteEl = $("#giftNote");
         if (noteEl && noteEl.value.trim()) props["Gift note"] = noteEl.value.trim();
-        const usedGiftVariant = sidesVariant && String(gift.wrapOption || "").trim() !== "";
+        const usedGiftVariant = !!(sidesVariant && _giftVariantActive);
         if (!usedGiftVariant) {
           const wrapId = String(gift.wrapVariantId || "").match(/\d{4,}/);
           if (wrapId) {
