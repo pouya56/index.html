@@ -168,7 +168,9 @@
               {%- for f in cart.items -%}
                 {%- if f.properties["_grp"] == grp and f.properties["_design_state"] == blank and f.properties["_design_id"] == blank -%}
                   {%- assign fee_price = f.final_line_price -%}{%- assign fee_unit = f.final_price -%}
-                  {%- assign fee_title = f.product_title -%}{%- assign fee_key = f.key -%}
+                  {%- comment -%} product_title is a JS-API field; in Liquid it's product.title. {%- endcomment -%}
+                  {%- assign fee_title = f.product.title | default: f.title | default: 'Gift wrapping' -%}
+                  {%- assign fee_key = f.key -%}
                 {%- endif -%}
               {%- endfor -%}
             {%- endif -%}
@@ -212,14 +214,14 @@
                 {%- endunless -%}
               {%- endfor -%}
               {%- assign back_fee = item.properties["_back_fee"] -%}
-              {%- if back_fee != blank or fee_title != blank -%}
+              {%- if back_fee != blank or fee_key != blank -%}
                 {%- assign back_cents = back_fee | remove: '$' | remove: ',' | times: 100.0 | round | times: item.quantity -%}
                 {%- assign base_cents = item.final_line_price | minus: back_cents -%}
                 {%- if base_cents < 0 -%}{%- assign base_cents = item.final_line_price -%}{%- assign back_cents = 0 -%}{%- endif -%}
                 <div class="dc-line-fee">
                   <div>{{ item.product.title }} · {{ base_cents | money }}</div>
                   {%- if back_cents > 0 -%}<div>Back print · {{ back_cents | money }}</div>{%- endif -%}
-                  {%- if fee_title != blank -%}<div>{{ fee_title }} · {{ fee_price | money }} <button type="button" class="dc-fee-remove" data-remove-fee="{{ fee_key }}">Remove</button></div>{%- endif -%}
+                  {%- if fee_key != blank -%}<div>{{ fee_title }} · {{ fee_price | money }} <button type="button" class="dc-fee-remove" data-remove-fee="{{ fee_key }}">Remove</button></div>{%- endif -%}
                 </div>
               {%- endif -%}
               {%- if dstate != blank and item.url != blank -%}
