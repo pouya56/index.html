@@ -1652,6 +1652,19 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     $("#pPrice").textContent = p.format(p.total);
     const note = (window.DYN_SETTINGS && window.DYN_SETTINGS.priceNote) || "";
     $("#pPriceNote").textContent = store.get().quantity > 1 ? `${p.format(p.subtotalUnit)} each` : note;
+    applyVariantPrice();
+  }
+
+  // Show the real variant price (incl. the Gift-wrapping and Print-sides upcharges)
+  // on the page, so toggling gift wrapping / adding a back design updates the price.
+  function applyVariantPrice() {
+    if (typeof _sidesResolve !== "function" || !_sidesResolve) return;
+    const giftCfg = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
+    const giftEl = document.querySelector("#giftIsGift");
+    const giftOn = !!(giftCfg.enabled && giftEl && giftEl.checked);
+    const hasBack = (sideLayers.back || []).some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text));
+    const v = _sidesResolve(hasBack, giftOn);
+    if (v && v.price) { const pr = document.querySelector("#pPrice"); if (pr) pr.textContent = v.price; }
   }
 
   function updateCustomizeSummary() {
@@ -2423,6 +2436,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const on = giftIsGift.checked;
       if (giftPanel) giftPanel.hidden = !on;
       if (giftNote) giftNote.disabled = !on;
+      applyVariantPrice();   // reflect the wrapping fee in the page price
     };
     giftIsGift.onchange = syncGift; syncGift();
     if (giftNote && giftCount) { const c = () => (giftCount.textContent = String(giftNote.value.length)); giftNote.oninput = c; c(); }
