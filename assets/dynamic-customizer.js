@@ -1997,7 +1997,24 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // Example placeholder: hide as soon as the customer adds any design.
     const example = q2("#upExample");
     if (example) example.style.display = (layers && layers.length) ? "none" : "";
-    // Mug-wrap mode: draw the cylindrically warped design on the overlay canvas.
+    updateModalPrice();
+  }
+
+  // Live popup price: reflects the Print-sides upcharge once a back design is added
+  // (and gift wrapping), using the same variant the cart will use.
+  function updateModalPrice() {
+    const totalEl = document.querySelector("#modalRoot .price-breakdown .total");
+    if (!totalEl) return;
+    const S = window.DYN_SHOPIFY || {};
+    const has = (s) => (sideLayers[s] || []).some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text));
+    const hasBackDesign = has("back");
+    const giftCfg = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
+    const giftOnEl = document.querySelector("#giftIsGift");
+    const giftOn = !!(giftCfg.enabled && giftOnEl && giftOnEl.checked);
+    let price = S.priceMoney || "";
+    const v = (typeof _sidesResolve === "function" && _sidesResolve) ? _sidesResolve(hasBackDesign, giftOn) : null;
+    if (v && v.price) price = v.price;
+    if (price) totalEl.textContent = price;
   }
   // Photo-only methods (e.g. DTF) allow just ONE design; others allow up to MAX_IMG.
   function maxImages() { return (product && product.photoOnly) ? 1 : MAX_IMG; }
