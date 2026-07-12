@@ -352,14 +352,31 @@
 
   if (list) list.addEventListener("click", function (e) {
     if (e.target.closest(".dc-details > summary")) return; // let the dropdown toggle
-    // Remove just the gift-wrap fee line; the item itself stays in the cart.
+    // Remove the gift-wrap fee line AND un-gift the item (drop Gift / Gift note).
     var feeBtn = e.target.closest("[data-remove-fee]");
     if (feeBtn) {
       var feeKey = feeBtn.getAttribute("data-remove-fee");
       if (!feeKey) return;
+      var mainLn = feeBtn.closest(".dc-line");
+      var mainKey = mainLn ? mainLn.getAttribute("data-key") : "";
       feeBtn.disabled = true; feeBtn.textContent = "Removing…";
       fetch("/cart/change.js", { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify({ id: feeKey, quantity: 0 }) })
+        .then(function () {
+          if (!mainKey) return null;
+          return fetch("/cart.js", { headers: { "Accept": "application/json" } })
+            .then(function (r) { return r.json(); })
+            .then(function (cart) {
+              var it = (cart.items || []).filter(function (i) { return i.key === mainKey; })[0];
+              if (!it) return null;
+              // change.js replaces properties wholesale — resend everything except the gift bits.
+              var props = {}; for (var k in (it.properties || {})) { if (k !== "Gift" && k !== "Gift note") props[k] = it.properties[k]; }
+              return fetch("/cart/change.js", {
+                method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                body: JSON.stringify({ id: mainKey, quantity: it.quantity, properties: props })
+              });
+            });
+        })
         .then(function () { syncHeader(); window.location.reload(); })
         .catch(function () { window.location.reload(); });
       return;

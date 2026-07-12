@@ -3983,9 +3983,24 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (dec) dec.onclick = function () { applyUpdates(upd(Math.max(0, qty - 1))); };
       if (inc) inc.onclick = function () { applyUpdates(upd(qty + 1)); };
       if (rm) rm.onclick = function () { applyUpdates(upd(0)); };
-      // Remove only the gift-wrap fee line; the item itself stays in the bag.
+      // Remove the gift-wrap fee line and un-gift the item (drop Gift / Gift note).
       var rmFee = row.querySelector("[data-remove-fee]");
-      if (rmFee && feeKey) rmFee.onclick = function () { var o = {}; o[feeKey] = 0; applyUpdates(o); };
+      if (rmFee && feeKey) rmFee.onclick = function () {
+        rmFee.disabled = true; rmFee.textContent = "Removing…";
+        if (itemsEl) itemsEl.style.opacity = "0.5";
+        fetch("/cart/change.js", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ id: feeKey, quantity: 0 }) })
+          .then(function () { return fetch("/cart.js", { headers: { Accept: "application/json" } }); })
+          .then(function (r) { return r.json(); })
+          .then(function (cart2) {
+            var it = (cart2.items || []).filter(function (i) { return i.key === key; })[0];
+            if (!it) return null;
+            // change.js replaces properties wholesale — resend everything except the gift bits.
+            var props = {}; for (var k in (it.properties || {})) { if (k !== "Gift" && k !== "Gift note") props[k] = it.properties[k]; }
+            return fetch("/cart/change.js", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ id: it.key, quantity: it.quantity, properties: props }) });
+          })
+          .then(function () { if (itemsEl) itemsEl.style.opacity = ""; refresh(); })
+          .catch(function () { if (itemsEl) itemsEl.style.opacity = ""; refresh(); });
+      };
     });
   }
 
