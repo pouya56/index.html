@@ -1123,7 +1123,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
   <!-- Header (logo + glass bar + search) is now its own section: dynamic-header.liquid -->
 
-  <!-- Logo masthead (links home) — filled by the injector after {% endraw %} -->
+  <!-- Logo masthead (links home) — filled by the injector script below -->
   <div class="dyn-topbar is-center" id="dynTopbar" hidden>
     <a class="dyn-logo" id="dynTopLogo" href="/" aria-label="Home"></a>
   </div>
@@ -1250,8 +1250,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   <!-- Fullscreen customization modal (populated by app.js) -->
   <div class="modal-root" id="modalRoot" aria-hidden="true"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 
 <script>
 /* Instagram-style action bar. Like/Share counts come from your settings; the
