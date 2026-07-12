@@ -36,6 +36,21 @@
 {%- else -%}
   {%- assign dyn_product = section.settings.product_ref -%}
 {%- endif -%}
+
+{%- comment -%} Feature blocks (each limited to one). Their settings feed the config below;
+   the presence of a block is what turns its feature on. {%- endcomment -%}
+{%- assign blk_bulk = blank -%}
+{%- assign blk_trust = blank -%}
+{%- assign blk_reviews = blank -%}
+{%- assign blk_gift = blank -%}
+{%- for block in section.blocks -%}
+  {%- case block.type -%}
+    {%- when 'bulk_link' -%}{%- assign blk_bulk = block -%}
+    {%- when 'trust_row' -%}{%- assign blk_trust = block -%}
+    {%- when 'reviews' -%}{%- assign blk_reviews = block -%}
+    {%- when 'gift' -%}{%- assign blk_gift = block -%}
+  {%- endcase -%}
+{%- endfor -%}
 <script type="application/json" id="dyn-config">
 {
   "assets": {
@@ -77,15 +92,15 @@
     "customizerType": {{ section.settings.customizer_type | default: 'uv' | json }},
     "madeToOrder": {% if dyn_product.tags contains 'made-to-order' or dyn_product.tags contains 'made_to_order' %}true{% else %}false{% endif %},
     "gift": {
-      "enabled": {% if section.settings.gift_enabled %}true{% else %}false{% endif %},
-      "wrapOption": {{ section.settings.gift_wrap_option | default: '' | json }},
-      "wrappedValue": {{ section.settings.gift_wrapped_value | default: 'Yes' | json }},
-      "unwrappedValue": {{ section.settings.gift_unwrapped_value | default: 'No' | json }},
-      "wrapVariantId": {{ section.settings.gift_wrap_variant_id | default: '' | json }},
-      "wrapMoney": {{ section.settings.gift_wrap_money | default: '' | json }},
-      "toggleLabel": {{ section.settings.gift_toggle_label | default: 'This is a gift' | json }},
-      "wrapLabel": {{ section.settings.gift_wrap_label | default: 'Add gift wrapping' | json }},
-      "noteLabel": {{ section.settings.gift_note_label | default: 'Add a gift note (optional)' | json }}
+      "enabled": {% if blk_gift != blank %}true{% else %}false{% endif %},
+      "wrapOption": {{ blk_gift.settings.gift_wrap_option | default: '' | json }},
+      "wrappedValue": {{ blk_gift.settings.gift_wrapped_value | default: 'Yes' | json }},
+      "unwrappedValue": {{ blk_gift.settings.gift_unwrapped_value | default: 'No' | json }},
+      "wrapVariantId": {{ blk_gift.settings.gift_wrap_variant_id | default: '' | json }},
+      "wrapMoney": {{ blk_gift.settings.gift_wrap_money | default: '' | json }},
+      "toggleLabel": {{ blk_gift.settings.gift_toggle_label | default: 'This is a gift' | json }},
+      "wrapLabel": {{ blk_gift.settings.gift_wrap_label | default: 'Add gift wrapping' | json }},
+      "noteLabel": {{ blk_gift.settings.gift_note_label | default: 'Add a gift note (optional)' | json }}
     },
     "print": {
       "show": {% if section.settings.print_show %}true{% else %}false{% endif %},
@@ -132,14 +147,14 @@
     "addcartLabel": {{ section.settings.addcart_label | default: '' | json }},
     "customPrintLabel": {{ section.settings.custom_print_label | default: '' | json }},
     "reassure": [
-      {{ section.settings.reassure_1 | default: '' | json }},
-      {{ section.settings.reassure_2 | default: '' | json }},
-      {{ section.settings.reassure_3 | default: '' | json }}
+      {{ blk_trust.settings.reassure_1 | default: '' | json }},
+      {{ blk_trust.settings.reassure_2 | default: '' | json }},
+      {{ blk_trust.settings.reassure_3 | default: '' | json }}
     ],
     "reassureIcons": [
-      {{ section.settings.reassure_1_icon | default: 'truck' | json }},
-      {{ section.settings.reassure_2_icon | default: 'clock' | json }},
-      {{ section.settings.reassure_3_icon | default: 'check' | json }}
+      {{ blk_trust.settings.reassure_1_icon | default: 'truck' | json }},
+      {{ blk_trust.settings.reassure_2_icon | default: 'clock' | json }},
+      {{ blk_trust.settings.reassure_3_icon | default: 'check' | json }}
     ],
     "engraveTitle": {{ section.settings.engrave_title | default: '' | json }},
     "engraveSub": {{ section.settings.engrave_sub | default: '' | json }},
@@ -176,18 +191,18 @@
 {%- endif -%}
 {%- comment -%} Owner check: is the logged-in customer the account you named as admin? {%- endcomment -%}
 {%- assign dyn_owner = false -%}
-{%- if customer and customer.email and section.settings.admin_email != blank -%}
-  {%- assign dyn_admin_email = section.settings.admin_email | downcase | strip -%}
+{%- if customer and customer.email and blk_reviews != blank and blk_reviews.settings.admin_email != blank -%}
+  {%- assign dyn_admin_email = blk_reviews.settings.admin_email | downcase | strip -%}
   {%- assign dyn_customer_email = customer.email | downcase | strip -%}
   {%- if dyn_customer_email == dyn_admin_email -%}{%- assign dyn_owner = true -%}{%- endif -%}
 {%- endif -%}
 <script type="application/json" id="dyn-social-config">
 {
-  "show": {% if section.settings.show_social %}true{% else %}false{% endif %},
-  "likeBase": {{ section.settings.like_base | default: 0 }},
-  "shareBase": {{ section.settings.share_base | default: 0 }},
-  "fbUrl": {{ section.settings.firebase_db_url | default: 'https://dynaeimic-social-default-rtdb.firebaseio.com' | json }},
-  "verifiedOnly": {% if section.settings.reviews_verified_only %}true{% else %}false{% endif %},
+  "show": {% if blk_reviews != blank %}true{% else %}false{% endif %},
+  "likeBase": {{ blk_reviews.settings.like_base | default: 0 }},
+  "shareBase": {{ blk_reviews.settings.share_base | default: 0 }},
+  "fbUrl": {{ blk_reviews.settings.firebase_db_url | default: 'https://dynaeimic-social-default-rtdb.firebaseio.com' | json }},
+  "verifiedOnly": {% if blk_reviews.settings.reviews_verified_only %}true{% else %}false{% endif %},
   "loggedIn": {% if customer %}true{% else %}false{% endif %},
   "purchased": {% if dyn_purchased %}true{% else %}false{% endif %},
   "customerName": {{ customer.name | default: '' | json }},
@@ -197,9 +212,9 @@
   "url": {% if dyn_product %}{{ dyn_product.url | json }}{% else %}""{% endif %},
   "image": {% if dyn_product and dyn_product.featured_image %}{{ dyn_product.featured_image | image_url: width: 200 | json }}{% else %}""{% endif %},
   "price": {% if dyn_product %}{{ dyn_product.selected_or_first_available_variant.price | money | json }}{% else %}""{% endif %},
-  "adminHash": {% if section.settings.admin_key != blank %}{{ section.settings.admin_key | sha256 | json }}{% else %}""{% endif %},
+  "adminHash": {% if blk_reviews.settings.admin_key != blank %}{{ blk_reviews.settings.admin_key | sha256 | json }}{% else %}""{% endif %},
   "owner": {% if dyn_owner %}true{% else %}false{% endif %},
-  "adminName": {{ section.settings.admin_name | default: shop.name | json }}
+  "adminName": {{ blk_reviews.settings.admin_name | default: shop.name | json }}
 }
 </script>
 
@@ -1125,9 +1140,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
             <input id="qtyInput" type="number" value="1" min="1" max="999" aria-label="Quantity" />
             <button id="qtyPlus" aria-label="Increase quantity">+</button>
           </div>
-          <span id="bulkLinkMount"></span>
         </div>
-        <div id="bulkNoteMount" class="bulk-note"></div>
       </div>
 
       <!-- Gift options mount (filled by the app when enabled in settings) -->
@@ -1542,29 +1555,64 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {% endraw %}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
-{%- if section.settings.show_bulk_link and section.settings.bulk_link != blank -%}
+{%- comment -%} FEATURE BLOCKS: ordered anchors + reparent the live feature nodes into them.
+   Every feature is found by a stable id/selector, so moving the node keeps the app's
+   wiring intact — the app fills each node in place, wherever the block order puts it. {%- endcomment -%}
+{%- if section.blocks.size > 0 -%}
+<div id="dynBlocks" hidden>
+  {%- for block in section.blocks -%}
+    <div class="dyn-slot" data-dyn-block="{{ block.type }}" data-block-id="{{ block.id }}" {{ block.shopify_attributes }}></div>
+  {%- endfor -%}
+</div>
 <script>
 (function () {
-  function inject() {
-    var mount = document.getElementById("bulkLinkMount");
-    if (!mount || mount.dataset.filled) return;
-    mount.dataset.filled = "1";
+  var host = document.getElementById("dynBlocks");
+  if (!host) return;
+  var detail = document.querySelector(".detail");
+  var cta = detail ? detail.querySelector(".cta-stack") : null;
+
+  function buildBulk(slot) {
+    {%- if blk_bulk != blank and blk_bulk.settings.bulk_link != blank -%}
     var a = document.createElement("a");
     a.className = "bulk-link";
-    var bulkBase = {{ section.settings.bulk_link | json }};
-    var bulkHandle = {{ product.handle | json }};
-    a.href = bulkBase + (bulkHandle ? ((bulkBase.indexOf("?") >= 0 ? "&" : "?") + "product=" + encodeURIComponent(bulkHandle)) : "");
-    {% if section.settings.bulk_link_icon %}
+    var base = {{ blk_bulk.settings.bulk_link | json }};
+    var handle = {{ product.handle | json }};
+    a.href = base + (handle ? ((base.indexOf("?") >= 0 ? "&" : "?") + "product=" + encodeURIComponent(handle)) : "");
+    {% if blk_bulk.settings.bulk_link_icon %}
     a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
     {% endif %}
-    a.appendChild(document.createTextNode({{ section.settings.bulk_link_label | default: 'Order in bulk' | json }}));
-    mount.appendChild(a);
-    {% if section.settings.bulk_link_note != blank %}
-    var note = document.getElementById("bulkNoteMount");
-    if (note) note.textContent = {{ section.settings.bulk_link_note | json }};
+    a.appendChild(document.createTextNode({{ blk_bulk.settings.bulk_link_label | default: 'Order in bulk' | json }}));
+    slot.appendChild(a);
+    {% if blk_bulk.settings.bulk_link_note != blank %}
+    var note = document.createElement("div");
+    note.className = "bulk-note";
+    note.textContent = {{ blk_bulk.settings.bulk_link_note | json }};
+    slot.appendChild(note);
     {% endif %}
+    {%- endif -%}
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject); else inject();
+
+  var movers = {
+    trust_row: function () { return document.querySelector(".reassure"); },
+    reviews: function () { return document.getElementById("igSocial"); },
+    gift: function () { return document.getElementById("giftMount"); }
+  };
+
+  Array.prototype.forEach.call(host.querySelectorAll(".dyn-slot"), function (slot) {
+    var type = slot.getAttribute("data-dyn-block");
+    if (type === "bulk_link") { buildBulk(slot); return; }
+    var getNode = movers[type];
+    if (!getNode) return;
+    var node = getNode();
+    if (node) slot.appendChild(node); // move the live node in; ids/listeners are preserved
+  });
+
+  // Drop the ordered stack into the buy-box column, right after the buttons.
+  host.hidden = false;
+  if (detail) {
+    if (cta && cta.nextSibling) detail.insertBefore(host, cta.nextSibling);
+    else detail.appendChild(host);
+  }
 })();
 </script>
 {%- endif -%}
@@ -1593,73 +1641,13 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "text", "id": "model_label", "label": "Model / variant label", "default": "AirPods Pro 3" },
     { "type": "text", "id": "customize_label", "label": "Customize button text", "default": "Customize" },
     { "type": "text", "id": "addcart_label", "label": "Add-to-cart button text", "default": "Add to Cart" },
-    { "type": "header", "content": "Bulk order link (next to Quantity)" },
-    { "type": "checkbox", "id": "show_bulk_link", "label": "Show bulk order button next to Quantity", "default": true },
-    { "type": "url", "id": "bulk_link", "label": "Bulk order page link", "info": "Pick your Bulk order page. The button is hidden until this is set." },
-    { "type": "text", "id": "bulk_link_label", "label": "Button text", "default": "Order in bulk" },
-    { "type": "checkbox", "id": "bulk_link_icon", "label": "Show box icon", "default": true },
-    { "type": "text", "id": "bulk_link_note", "label": "Small note under the button", "default": "Volume pricing from 10+ — save more per item.", "info": "Leave empty to hide." },
-    { "type": "header", "content": "Trust row (under the buttons)" },
-    { "type": "paragraph", "content": "The three short reassurance items shown beneath the buttons. Leave a field blank to hide that item; clear all three to hide the whole row." },
-    { "type": "text", "id": "reassure_1", "label": "Trust item 1", "default": "Free delivery" },
-    { "type": "select", "id": "reassure_1_icon", "label": "Trust item 1 icon", "default": "truck",
-      "options": [
-        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
-        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
-        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
-        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
-        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
-        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
-      ] },
-    { "type": "text", "id": "reassure_2", "label": "Trust item 2", "default": "Made in 3–5 days" },
-    { "type": "select", "id": "reassure_2_icon", "label": "Trust item 2 icon", "default": "clock",
-      "options": [
-        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
-        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
-        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
-        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
-        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
-        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
-      ] },
-    { "type": "text", "id": "reassure_3", "label": "Trust item 3", "default": "Free & easy returns" },
-    { "type": "select", "id": "reassure_3_icon", "label": "Trust item 3 icon", "default": "check",
-      "options": [
-        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
-        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
-        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
-        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
-        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
-        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
-      ] },
     { "type": "text", "id": "custom_print_label", "label": "Popup price caption", "info": "Small line under the price in the customizer popup.", "default": "Custom print" },
-
-    { "type": "header", "content": "Reviews / social ⭐" },
-    { "type": "paragraph", "content": "An Instagram-style action bar appears under the trust badges: Like, Comment, Share and Save (wishlist), with the count next to each icon. The Comment count and the reviews shown when you tap it come from Judge.me (make sure Judge.me is installed and its widget is enabled). Like and Share counts are numbers you set below." },
-    { "type": "checkbox", "id": "show_social", "label": "Show the Instagram action bar", "default": true },
-    { "type": "paragraph", "content": "Reviews (with a star rating) can only be written by customers who bought this product — they get a green ✓ Purchased badge, and each buyer can review once. Any signed-in shopper can still reply to reviews." },
-    { "type": "number", "id": "like_base", "label": "Like count (starting number)", "default": 144 },
-    { "type": "number", "id": "share_base", "label": "Share count (starting number, 0 = hide)", "default": 0 },
-    { "type": "text", "id": "firebase_db_url", "label": "Firebase database URL (for REAL shared counts)", "info": "Optional. Paste your Firebase Realtime Database URL (e.g. https://your-project-default-rtdb.firebaseio.com) to make Likes and Shares real numbers shared across all visitors, counting up from the starting numbers above. Leave blank to just use the numbers above." },
-    { "type": "text", "id": "admin_name", "label": "Owner reply name", "info": "The name shown on your replies when Owner mode is on. Leave blank to use your store name." },
-    { "type": "text", "id": "admin_email", "label": "Owner account email (admin power)", "info": "Easiest way: paste the email of a customer account that signed up on your site. Whenever THAT account is logged in, your replies automatically show the blue ✓ Owner check — no magic word to type. The email is only compared behind the scenes; it never appears in the page's code." },
-    { "type": "text", "id": "admin_key", "label": "Owner secret word (optional backup)", "info": "Optional alternative to the email above. Pick a private word, then open a product page with  ?admin=YOUR-WORD  at the end of the address to turn on Owner mode for that device (turn off with ?admin=off). The word is never shown in the page's code. Leave blank if you're using the owner email above." },
 
     { "type": "header", "content": "Engraving popup" },
     { "type": "text", "id": "engrave_title", "label": "Popup title", "default": "Personalize your AirPods." },
     { "type": "textarea", "id": "engrave_sub", "label": "Popup subtitle", "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them." },
     { "type": "text", "id": "popup_button_label", "label": "Popup button text", "info": "The primary button inside the popup.", "default": "Add to Bag" },
     { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" },
-    { "type": "header", "content": "Gift options (on the product page)" },
-    { "type": "paragraph", "content": "Adds an 'Add gift wrapping — $8' toggle under Quantity plus a free gift note. To charge: if the product has a spare option slot, add a 'Gift wrapping' option (No/Yes, +$8 on Yes) and type its name below for one true line item. If you're at Shopify's 3-option limit, leave it empty and paste a separate Gift Wrapping variant id — it's folded into the item in your cart so it reads as one item (Shopify's checkout still lists it separately)." },
-    { "type": "checkbox", "id": "gift_enabled", "label": "Show gift options", "default": false },
-    { "type": "text", "id": "gift_wrap_option", "label": "Gift wrapping — product OPTION name (recommended)", "info": "e.g. 'Gift wrapping'. The option you added to the product with No / Yes values. One line item, no separate charge." },
-    { "type": "text", "id": "gift_wrapped_value", "label": "Wrapped value", "default": "Yes", "info": "The option value that includes wrapping (the pricier one)." },
-    { "type": "text", "id": "gift_unwrapped_value", "label": "Not-wrapped value", "default": "No", "info": "The base option value (no wrapping)." },
-    { "type": "text", "id": "gift_wrap_money", "label": "Gift wrapping — amount shown on the toggle", "info": "Display only, e.g. $8.", "default": "$8" },
-    { "type": "text", "id": "gift_wrap_variant_id", "label": "Gift wrapping — separate product VARIANT id (older method)", "info": "Only used if the option name above is empty. Adds a separate 'Gift Wrapping' line item." },
-    { "type": "text", "id": "gift_toggle_label", "label": "Toggle label", "default": "This is a gift" },
-    { "type": "text", "id": "gift_wrap_label", "label": "Wrapping checkbox label", "default": "Add gift wrapping" },
-    { "type": "text", "id": "gift_note_label", "label": "Gift note label", "default": "Add a gift note (optional)" },
     { "type": "header", "content": "File uploads (Cloudinary)" },
     { "type": "paragraph", "content": "Lets customers upload files that are saved to the order. Create a free Cloudinary account, add an UNSIGNED upload preset, then paste both below." },
     { "type": "text", "id": "cloudinary_cloud_name", "label": "Cloudinary cloud name" },
@@ -1704,8 +1692,78 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "text", "id": "front_tab_label", "label": "Front tab label", "default": "Front" },
     { "type": "text", "id": "back_tab_label", "label": "Back tab label", "default": "Back" }
   ],
+  "max_blocks": 4,
+  "blocks": [
+    { "type": "bulk_link", "name": "Bulk order link", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "A button linking to your Bulk Order page. Add this block to show it; remove it to hide it. Drag to reorder among the other feature blocks." },
+      { "type": "url", "id": "bulk_link", "label": "Bulk order page link", "info": "Pick your Bulk order page. The button is hidden until this is set." },
+      { "type": "text", "id": "bulk_link_label", "label": "Button text", "default": "Order in bulk" },
+      { "type": "checkbox", "id": "bulk_link_icon", "label": "Show box icon", "default": true },
+      { "type": "text", "id": "bulk_link_note", "label": "Small note under the button", "default": "Volume pricing from 10+ — save more per item.", "info": "Leave empty to hide." }
+    ] },
+    { "type": "gift", "name": "Gift options", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "Adds an 'Add gift wrapping' toggle plus a free gift note. Add this block to show it; remove it to hide it. To charge: if the product has a spare option slot, add a 'Gift wrapping' option (No/Yes, +$8 on Yes) and type its name below for one true line item. If you're at Shopify's 3-option limit, leave it empty and paste a separate Gift Wrapping variant id." },
+      { "type": "text", "id": "gift_wrap_option", "label": "Gift wrapping — product OPTION name (recommended)", "info": "e.g. 'Gift wrapping'. The option you added to the product with No / Yes values. One line item, no separate charge." },
+      { "type": "text", "id": "gift_wrapped_value", "label": "Wrapped value", "default": "Yes", "info": "The option value that includes wrapping (the pricier one)." },
+      { "type": "text", "id": "gift_unwrapped_value", "label": "Not-wrapped value", "default": "No", "info": "The base option value (no wrapping)." },
+      { "type": "text", "id": "gift_wrap_money", "label": "Gift wrapping — amount shown on the toggle", "info": "Display only, e.g. $8.", "default": "$8" },
+      { "type": "text", "id": "gift_wrap_variant_id", "label": "Gift wrapping — separate product VARIANT id (older method)", "info": "Only used if the option name above is empty. Adds a separate 'Gift Wrapping' line item." },
+      { "type": "text", "id": "gift_toggle_label", "label": "Toggle label", "default": "This is a gift" },
+      { "type": "text", "id": "gift_wrap_label", "label": "Wrapping checkbox label", "default": "Add gift wrapping" },
+      { "type": "text", "id": "gift_note_label", "label": "Gift note label", "default": "Add a gift note (optional)" }
+    ] },
+    { "type": "trust_row", "name": "Trust row", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "Three short reassurance items. Add this block to show them; remove it to hide. Leave a field blank to hide that one item." },
+      { "type": "text", "id": "reassure_1", "label": "Trust item 1", "default": "Free delivery" },
+      { "type": "select", "id": "reassure_1_icon", "label": "Trust item 1 icon", "default": "truck",
+        "options": [
+          { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
+          { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
+          { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
+          { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
+          { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
+          { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
+        ] },
+      { "type": "text", "id": "reassure_2", "label": "Trust item 2", "default": "Made in 3–5 days" },
+      { "type": "select", "id": "reassure_2_icon", "label": "Trust item 2 icon", "default": "clock",
+        "options": [
+          { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
+          { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
+          { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
+          { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
+          { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
+          { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
+        ] },
+      { "type": "text", "id": "reassure_3", "label": "Trust item 3", "default": "Free & easy returns" },
+      { "type": "select", "id": "reassure_3_icon", "label": "Trust item 3 icon", "default": "check",
+        "options": [
+          { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
+          { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
+          { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
+          { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
+          { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
+          { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
+        ] }
+    ] },
+    { "type": "reviews", "name": "Reviews / social", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "An Instagram-style Like / Comment / Share / Save bar with reviews. Add this block to show it; remove it to hide. The Comment count and reviews come from Judge.me (install it and enable its widget)." },
+      { "type": "paragraph", "content": "Reviews (with a star rating) can only be written by customers who bought this product — they get a green ✓ Purchased badge, and each buyer can review once. Any signed-in shopper can still reply." },
+      { "type": "number", "id": "like_base", "label": "Like count (starting number)", "default": 144 },
+      { "type": "number", "id": "share_base", "label": "Share count (starting number, 0 = hide)", "default": 0 },
+      { "type": "checkbox", "id": "reviews_verified_only", "label": "Only buyers can post reviews", "default": true },
+      { "type": "text", "id": "firebase_db_url", "label": "Firebase database URL (for REAL shared counts)", "info": "Optional. Paste your Firebase Realtime Database URL to make Likes and Shares real numbers shared across all visitors. Leave blank to just use the numbers above." },
+      { "type": "text", "id": "admin_name", "label": "Owner reply name", "info": "The name shown on your replies when Owner mode is on. Leave blank to use your store name." },
+      { "type": "text", "id": "admin_email", "label": "Owner account email (admin power)", "info": "Paste the email of a customer account that signed up on your site. Whenever THAT account is logged in, your replies automatically show the blue ✓ Owner check. The email is only compared behind the scenes; it never appears in the page's code." },
+      { "type": "text", "id": "admin_key", "label": "Owner secret word (optional backup)", "info": "Optional alternative to the email above. Pick a private word, then open a product page with ?admin=YOUR-WORD to turn on Owner mode for that device (turn off with ?admin=off). Leave blank if you're using the owner email above." }
+    ] }
+  ],
   "presets": [
-    { "name": "Dynamic Customizer" }
+    { "name": "Dynamic Customizer", "blocks": [
+      { "type": "bulk_link" },
+      { "type": "gift" },
+      { "type": "trust_row" },
+      { "type": "reviews" }
+    ] }
   ]
 }
 {% endschema %}
