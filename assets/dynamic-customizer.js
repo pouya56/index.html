@@ -1692,9 +1692,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (vBase && vGift && vBase.price !== vGift.price) { pr.textContent = (giftOn ? vGift : vBase).price; return; }
     }
     pr.textContent = base;
-    // Legacy method: a separate fee variant is added at checkout, so show base + fee.
+    // Separate Gift Wrap product: it's added as its own line, so show base + fee.
     const feeC = cents(giftCfg.wrapMoney);
-    if (giftOn && feeC > 0 && giftCfg.wrapVariantId) pr.textContent = fmt(cents(base) + feeC, base);
+    if (giftOn && feeC > 0 && giftWrapRef()) pr.textContent = fmt(cents(base) + feeC, base);
   }
 
   // The gift-wrap fee field accepts a variant id, a .../variants/ID URL, or the
@@ -1720,12 +1720,21 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     } catch (e) { _wrapIdCache = null; return null; }
   }
 
+  // The separate Gift Wrap product, taken from either field (unless a real
+  // product OPTION already handles wrapping via a pricier variant).
+  function giftWrapRef() {
+    if (_giftVariantActive) return "";
+    const g = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
+    return String(g.wrapVariantId || g.wrapOption || "").trim();
+  }
+
   // Pull the gift-wrap fee from the real Gift Wrap product price (when set by
   // URL/handle) and show it on the toggle + in the page price.
   async function refreshGiftFee() {
     const g = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
-    if (!g.enabled || String(g.wrapOption || "").trim() || !g.wrapVariantId) return;
-    await resolveWrapVariant(g.wrapVariantId);
+    const ref = giftWrapRef();
+    if (!g.enabled || !ref) return;
+    await resolveWrapVariant(ref);
     if (!_wrapPriceMoney) return;
     g.wrapMoney = _wrapPriceMoney;
     const lbl = document.querySelector("#giftMount .dc-gift-label");
@@ -2634,7 +2643,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         if (noteEl && noteEl.value.trim()) props["Gift note"] = noteEl.value.trim();
         const usedGiftVariant = !!(sidesVariant && _giftVariantActive);
         if (!usedGiftVariant) {
-          const wrapId = await resolveWrapVariant(gift.wrapVariantId);
+          const wrapId = await resolveWrapVariant(giftWrapRef());
           if (wrapId) {
             const gq = Math.max(1, (store.get().quantity) || 1);
             // Share a _grp with the item so the cart display folds the wrapping
