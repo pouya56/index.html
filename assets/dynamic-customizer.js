@@ -3895,13 +3895,21 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       var fee = (grp && !isFee(it)) ? feeByGrp[grp] : null;
       var backFee = it.properties && it.properties._back_fee;
       var feeNote = "";
+      var priceCell = fmt(it.final_line_price, cur);
       if (backFee || fee) {
-        var itemTotal = (it.final_line_price || 0) + (fee ? (fee.final_line_price || 0) : 0);
+        // The numbers must add up on screen: base + back print + gift wrap = item total.
+        var cnum = function (s) { var n = parseFloat(String(s).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
+        var backC = backFee ? cnum(backFee) * (it.quantity || 1) : 0;
+        var feeC = fee ? (fee.final_line_price || 0) : 0;
+        var baseC = Math.max(0, (it.final_line_price || 0) - backC);
+        var itemTotal = (it.final_line_price || 0) + feeC;
         feeNote = '<div class="ci-fee">' +
-          (backFee ? "<div>Back print · " + esc(backFee) + "</div>" : "") +
-          (fee ? "<div>" + esc(fee.product_title) + " · " + fmt(fee.final_line_price, cur) + "</div>" : "") +
+          "<div>" + esc(it.product_title) + " · " + fmt(baseC, cur) + "</div>" +
+          (backC ? "<div>Back print · " + fmt(backC, cur) + "</div>" : "") +
+          (fee ? "<div>" + esc(fee.product_title) + " · " + fmt(feeC, cur) + "</div>" : "") +
           "<div><strong>Item total · " + fmt(itemTotal, cur) + "</strong></div>" +
         "</div>";
+        priceCell = fmt(itemTotal, cur);
       }
       return '<div class="dyn-cart-item" data-key="' + esc(it.key) + '"' + (fee ? ' data-fee-key="' + esc(fee.key) + '"' : "") + ">" +
         (it.image ? '<img src="' + esc(it.image) + '" alt="">' : "<div></div>") +
@@ -3910,7 +3918,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         '<div class="dyn-cart-qty"><button data-dec aria-label="Decrease">−</button><span>' + it.quantity + '</span><button data-inc aria-label="Increase">+</button></div>' +
         '<button class="dyn-cart-remove" data-remove>Remove</button>' +
         "</div>" +
-        '<div class="ci-price">' + fmt(it.final_line_price, cur) + "</div>" +
+        '<div class="ci-price">' + priceCell + "</div>" +
         "</div>";
     }).join("");
     footEl.innerHTML =

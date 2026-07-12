@@ -210,8 +210,12 @@
               {%- endfor -%}
               {%- assign back_fee = item.properties["_back_fee"] -%}
               {%- if back_fee != blank or fee_title != blank -%}
+                {%- assign back_cents = back_fee | remove: '$' | remove: ',' | times: 100.0 | round | times: item.quantity -%}
+                {%- assign base_cents = item.final_line_price | minus: back_cents -%}
+                {%- if base_cents < 0 -%}{%- assign base_cents = item.final_line_price -%}{%- assign back_cents = 0 -%}{%- endif -%}
                 <div class="dc-line-fee">
-                  {%- if back_fee != blank -%}<div>Back print · {{ back_fee }}</div>{%- endif -%}
+                  <div>{{ item.product.title }} · {{ base_cents | money }}</div>
+                  {%- if back_cents > 0 -%}<div>Back print · {{ back_cents | money }}</div>{%- endif -%}
                   {%- if fee_title != blank -%}<div>{{ fee_title }} · {{ fee_price | money }}</div>{%- endif -%}
                   <div><b>Item total · {{ line_total | money }}</b></div>
                 </div>

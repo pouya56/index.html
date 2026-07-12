@@ -646,14 +646,21 @@
       var grp = it.properties && it.properties._grp;
       var fee = (grp && !isFee(it)) ? feeByGrp[grp] : null;
       var backFee = it.properties && it.properties._back_fee;
-      var feeNote = "";
+      var feeNote = "", lineMoney = cartMoney(it.final_line_price);
       if (backFee || fee) {
-        var itemTotal = (it.final_line_price || 0) + (fee ? (fee.final_line_price || 0) : 0);
+        // Numbers must add up on screen: base + back print + gift wrap = item total.
+        var cnum = function (s) { var n = parseFloat(String(s).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
+        var backC = backFee ? cnum(backFee) * (it.quantity || 1) : 0;
+        var feeC = fee ? (fee.final_line_price || 0) : 0;
+        var baseC = Math.max(0, (it.final_line_price || 0) - backC);
+        var itemTotal = (it.final_line_price || 0) + feeC;
         feeNote = '<div class="hd-line-fee">' +
-          (backFee ? "<div>Back print · " + esc(backFee) + "</div>" : "") +
-          (fee ? "<div>" + esc(fee.product_title) + " · " + cartMoney(fee.final_line_price) + "</div>" : "") +
+          "<div>" + esc(it.product_title) + " · " + cartMoney(baseC) + "</div>" +
+          (backC ? "<div>Back print · " + cartMoney(backC) + "</div>" : "") +
+          (fee ? "<div>" + esc(fee.product_title) + " · " + cartMoney(feeC) + "</div>" : "") +
           "<div><strong>Item total · " + cartMoney(itemTotal) + "</strong></div>" +
         "</div>";
+        lineMoney = cartMoney(itemTotal);
       }
       // Editable gift note for gift items (they carry a "Gift" or "Gift note" prop).
       var isGiftItem = it.properties && (it.properties.hasOwnProperty("Gift note") || it.properties.Gift);
@@ -668,7 +675,7 @@
         (img ? '<img class="hd-line-img" src="' + img + '" alt="" width="66" height="66" loading="lazy">' : '<span class="hd-line-img"></span>') +
         '<div class="hd-line-main">' +
           '<div class="hd-line-title">' + esc(it.product_title) + "</div>" + variant +
-          '<div class="hd-line-price">' + cartMoney(it.final_line_price) + "</div>" + feeNote +
+          '<div class="hd-line-price">' + lineMoney + "</div>" + feeNote +
           '<div class="hd-line-ctrls">' +
             '<span class="hd-qty">' +
               '<button type="button" data-dec aria-label="Decrease quantity">−</button>' +
