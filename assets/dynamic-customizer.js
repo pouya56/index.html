@@ -1699,7 +1699,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   // The gift-wrap fee field accepts a variant id, a .../variants/ID URL, or the
   // Gift Wrap product's handle / URL — we look up the variant id when needed.
-  let _wrapIdCache;
+  let _wrapIdCache, _wrapPriceMoney = "";
   async function resolveWrapVariant(raw) {
     raw = String(raw || "").trim();
     if (!raw) return null;
@@ -1715,8 +1715,22 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const p = await r.json();
       const v = (p.variants || []).find((x) => x.available) || (p.variants || [])[0];
       _wrapIdCache = v ? String(v.id) : null;
+      if (v && typeof v.price === "number") _wrapPriceMoney = "$" + (v.price / 100).toFixed(2).replace(/\.00$/, "");
       return _wrapIdCache;
     } catch (e) { _wrapIdCache = null; return null; }
+  }
+
+  // Pull the gift-wrap fee from the real Gift Wrap product price (when set by
+  // URL/handle) and show it on the toggle + in the page price.
+  async function refreshGiftFee() {
+    const g = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
+    if (!g.enabled || String(g.wrapOption || "").trim() || !g.wrapVariantId) return;
+    await resolveWrapVariant(g.wrapVariantId);
+    if (!_wrapPriceMoney) return;
+    g.wrapMoney = _wrapPriceMoney;
+    const lbl = document.querySelector("#giftMount .dc-gift-label");
+    if (lbl) lbl.innerHTML = escapeHtml(g.wrapLabel || "Add gift wrapping") + ' — <strong>' + escapeHtml(_wrapPriceMoney) + '</strong>';
+    applyVariantPrice();
   }
 
   function updateCustomizeSummary() {
@@ -2492,6 +2506,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     };
     giftIsGift.onchange = syncGift; syncGift();
     if (giftNote && giftCount) { const c = () => (giftCount.textContent = String(giftNote.value.length)); giftNote.oninput = c; c(); }
+    refreshGiftFee();   // replace the typed fee with the real Gift Wrap product price
   }
 
   // Wipe the canvas back to an empty Front side (both sides cleared, field empty).
