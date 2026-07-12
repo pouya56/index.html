@@ -217,7 +217,6 @@
                   <div>{{ item.product.title }} · {{ base_cents | money }}</div>
                   {%- if back_cents > 0 -%}<div>Back print · {{ back_cents | money }}</div>{%- endif -%}
                   {%- if fee_title != blank -%}<div>{{ fee_title }} · {{ fee_price | money }}</div>{%- endif -%}
-                  <div><b>Item total · {{ line_total | money }}</b></div>
                 </div>
               {%- endif -%}
               {%- if dstate != blank and item.url != blank -%}

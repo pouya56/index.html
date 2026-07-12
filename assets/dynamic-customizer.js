@@ -3956,7 +3956,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           "<div>" + esc(it.product_title) + " · " + fmt(baseC, cur) + "</div>" +
           (backC ? "<div>Back print · " + fmt(backC, cur) + "</div>" : "") +
           (fee ? "<div>" + esc(fee.product_title) + " · " + fmt(feeC, cur) + "</div>" : "") +
-          "<div><strong>Item total · " + fmt(itemTotal, cur) + "</strong></div>" +
         "</div>";
         priceCell = fmt(itemTotal, cur);
       }
