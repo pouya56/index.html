@@ -367,6 +367,13 @@ button { font-family: inherit; cursor: pointer; }
   max-width: 1120px; margin: 0 auto; padding: 40px 22px 128px;
   display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 72px; align-items: start;
 }
+.dyn-topbar { max-width: 1120px; margin: 0 auto; padding: 26px 22px 0; display: flex; align-items: center; }
+.dyn-topbar.is-left { justify-content: flex-start; }
+.dyn-topbar.is-center { justify-content: center; }
+.dyn-logo { display: inline-flex; align-items: center; text-decoration: none; transition: opacity .16s; }
+.dyn-logo:hover { opacity: .72; }
+.dyn-logo img { display: block; height: auto; max-width: 60vw; }
+.dyn-logo.dyn-logo-text { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink, #1d1d1f); }
 .gallery {
   position: sticky; top: 28px;
   display: flex; flex-direction: column; gap: 16px;
@@ -1100,6 +1107,11 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
   <!-- Header (logo + glass bar + search) is now its own section: dynamic-header.liquid -->
 
+  <!-- Logo masthead (links home) — filled by the injector after {% endraw %} -->
+  <div class="dyn-topbar is-center" id="dynTopbar" hidden>
+    <a class="dyn-logo" id="dynTopLogo" href="/" aria-label="Home"></a>
+  </div>
+
   <!-- Product page -->
   <main class="product">
     <div class="gallery">
@@ -1555,6 +1567,32 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {% endraw %}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
+{%- if section.settings.show_top_logo -%}
+{%- assign top_logo = section.settings.top_logo | default: settings.logo -%}
+<script>
+(function () {
+  var bar = document.getElementById("dynTopbar");
+  var a = document.getElementById("dynTopLogo");
+  if (!bar || !a) return;
+  a.setAttribute("href", {{ routes.root_url | default: '/' | json }});
+  bar.className = "dyn-topbar is-{{ section.settings.top_logo_align | default: 'center' }}";
+  {%- if top_logo != blank -%}
+  var img = document.createElement("img");
+  img.src = {{ top_logo | image_url: width: 500 | json }};
+  img.alt = {{ shop.name | json }};
+  img.width = {{ section.settings.top_logo_width | default: 130 }};
+  img.height = {{ section.settings.top_logo_width | default: 130 | divided_by: top_logo.aspect_ratio | round }};
+  img.style.width = "{{ section.settings.top_logo_width | default: 130 }}px";
+  a.appendChild(img);
+  {%- else -%}
+  a.textContent = {{ shop.name | json }};
+  a.className += " dyn-logo-text";
+  {%- endif -%}
+  bar.hidden = false;
+})();
+</script>
+{%- endif -%}
+
 {%- comment -%} FEATURE BLOCKS: ordered anchors + reparent the live feature nodes into them.
    Every feature is found by a stable id/selector, so moving the node keeps the app's
    wiring intact — the app fills each node in place, wherever the block order puts it. {%- endcomment -%}
@@ -1654,6 +1692,11 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         { "value": "sublimation", "label": "Sublimation" },
         { "value": "engraving", "label": "Engraving" }
       ] },
+    { "type": "header", "content": "Logo (top of page, links home)" },
+    { "type": "checkbox", "id": "show_top_logo", "label": "Show logo at top", "default": true },
+    { "type": "image_picker", "id": "top_logo", "label": "Logo image", "info": "Leave empty to use your theme logo." },
+    { "type": "range", "id": "top_logo_width", "label": "Logo width", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 130 },
+    { "type": "select", "id": "top_logo_align", "label": "Logo position", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" } ], "default": "center" },
     { "type": "header", "content": "Product details" },
     { "type": "product", "id": "product_ref", "label": "Product (non-product pages only)", "info": "Only used when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown." },
     { "type": "paragraph", "content": "Made to order / always orderable is set PER PRODUCT in Shopify (not here — one template is shared by every product). Open the product → each variant's Inventory → tick \"Continue selling when out of stock\": those variations stay orderable. Products left in normal tracking show sold-out variations as unavailable. So tick it for the Mug and leave the T-shirt normal. (Optional: tag a product \"made-to-order\" to force it orderable in the storefront regardless.)" },
