@@ -43,12 +43,18 @@
 {%- assign blk_trust = blank -%}
 {%- assign blk_reviews = blank -%}
 {%- assign blk_gift = blank -%}
+{%- assign blk_logo = blank -%}
+{%- assign blk_cloud = blank -%}
+{%- assign blk_back = blank -%}
 {%- for block in section.blocks -%}
   {%- case block.type -%}
     {%- when 'bulk_link' -%}{%- assign blk_bulk = block -%}
     {%- when 'trust_row' -%}{%- assign blk_trust = block -%}
     {%- when 'reviews' -%}{%- assign blk_reviews = block -%}
     {%- when 'gift' -%}{%- assign blk_gift = block -%}
+    {%- when 'logo_top' -%}{%- assign blk_logo = block -%}
+    {%- when 'file_uploads' -%}{%- assign blk_cloud = block -%}
+    {%- when 'back_side' -%}{%- assign blk_back = block -%}
   {%- endcase -%}
 {%- endfor -%}
 <script type="application/json" id="dyn-config">
@@ -84,8 +90,8 @@
     "accountUrl": {{ routes.account_url | default: '/account' | json }},
     "searchUrl": {{ routes.search_url | default: '/search' | json }},
     "accountsEnabled": {% if shop.customer_accounts_enabled %}true{% else %}false{% endif %},
-    "cloudName": {{ section.settings.cloudinary_cloud_name | default: '' | json }},
-    "uploadPreset": {{ section.settings.cloudinary_upload_preset | default: '' | json }},
+    "cloudName": {{ blk_cloud.settings.cloudinary_cloud_name | default: '' | json }},
+    "uploadPreset": {{ blk_cloud.settings.cloudinary_upload_preset | default: '' | json }},
     "onProductPage": {% if dyn_product %}true{% else %}false{% endif %}
   },
   "settings": {
@@ -109,7 +115,7 @@
       "w": {{ section.settings.print_w | default: 56 }},
       "h": {{ section.settings.print_h | default: 40 }}
     },
-    "enableBack": {% if section.settings.enable_back %}true{% else %}false{% endif %},
+    "enableBack": {% if blk_back != blank %}true{% else %}false{% endif %},
     "frontImage": {% if section.settings.front_image %}{{ section.settings.front_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "exampleImage": {% if section.settings.example_image %}{{ section.settings.example_image | image_url: width: 1000 | json }}{% else %}""{% endif %},
     "sampleImage": {% if section.settings.sample_image %}{{ section.settings.sample_image | image_url: width: 1200 | json }}{% else %}""{% endif %},
@@ -122,21 +128,21 @@
     "labelBackPreview": {{ section.settings.label_back_preview | default: '' | json }},
     "labelText": {{ section.settings.label_text | default: '' | json }},
     "labelBackText": {{ section.settings.label_back_text | default: '' | json }},
-    "backImage": {% if section.settings.back_image %}{{ section.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
+    "backImage": {% if blk_back.settings.back_image %}{{ blk_back.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "printBack": {
-      "show": {% if section.settings.back_print_show %}true{% else %}false{% endif %},
-      "x": {{ section.settings.back_print_x | default: 22 }},
-      "y": {{ section.settings.back_print_y | default: 30 }},
-      "w": {{ section.settings.back_print_w | default: 56 }},
-      "h": {{ section.settings.back_print_h | default: 40 }}
+      "show": {% if blk_back.settings.back_print_show %}true{% else %}false{% endif %},
+      "x": {{ blk_back.settings.back_print_x | default: 22 }},
+      "y": {{ blk_back.settings.back_print_y | default: 30 }},
+      "w": {{ blk_back.settings.back_print_w | default: 56 }},
+      "h": {{ blk_back.settings.back_print_h | default: 40 }}
     },
-    "backFeeVariantId": {{ section.settings.back_fee_variant_id | default: '' | json }},
-    "backFeeMoney": {{ section.settings.back_fee_money | default: '' | json }},
-    "sidesOption": {{ section.settings.sides_option_name | default: '' | json }},
-    "sidesFrontValue": {{ section.settings.sides_front_value | default: '' | json }},
-    "sidesBothValue": {{ section.settings.sides_both_value | default: '' | json }},
-    "frontTabLabel": {{ section.settings.front_tab_label | default: '' | json }},
-    "backTabLabel": {{ section.settings.back_tab_label | default: '' | json }},
+    "backFeeVariantId": {{ blk_back.settings.back_fee_variant_id | default: '' | json }},
+    "backFeeMoney": {{ blk_back.settings.back_fee_money | default: '' | json }},
+    "sidesOption": {{ blk_back.settings.sides_option_name | default: '' | json }},
+    "sidesFrontValue": {{ blk_back.settings.sides_front_value | default: '' | json }},
+    "sidesBothValue": {{ blk_back.settings.sides_both_value | default: '' | json }},
+    "frontTabLabel": {{ blk_back.settings.front_tab_label | default: 'Front' | json }},
+    "backTabLabel": {{ blk_back.settings.back_tab_label | default: 'Back' | json }},
     "eyebrow": {{ section.settings.eyebrow | default: '' | json }},
     "title": {{ section.settings.title | default: '' | json }},
     "price": {{ section.settings.price | default: '' | json }},
@@ -1567,22 +1573,22 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {% endraw %}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
-{%- if section.settings.show_top_logo -%}
-{%- assign top_logo = section.settings.top_logo | default: settings.logo -%}
+{%- if blk_logo != blank -%}
+{%- assign top_logo = blk_logo.settings.top_logo | default: settings.logo -%}
 <script>
 (function () {
   var bar = document.getElementById("dynTopbar");
   var a = document.getElementById("dynTopLogo");
   if (!bar || !a) return;
   a.setAttribute("href", {{ routes.root_url | default: '/' | json }});
-  bar.className = "dyn-topbar is-{{ section.settings.top_logo_align | default: 'center' }}";
+  bar.className = "dyn-topbar is-{{ blk_logo.settings.top_logo_align | default: 'center' }}";
   {%- if top_logo != blank -%}
   var img = document.createElement("img");
   img.src = {{ top_logo | image_url: width: 500 | json }};
   img.alt = {{ shop.name | json }};
-  img.width = {{ section.settings.top_logo_width | default: 130 }};
-  img.height = {{ section.settings.top_logo_width | default: 130 | divided_by: top_logo.aspect_ratio | round }};
-  img.style.width = "{{ section.settings.top_logo_width | default: 130 }}px";
+  img.width = {{ blk_logo.settings.top_logo_width | default: 130 }};
+  img.height = {{ blk_logo.settings.top_logo_width | default: 130 | divided_by: top_logo.aspect_ratio | round }};
+  img.style.width = "{{ blk_logo.settings.top_logo_width | default: 130 }}px";
   a.appendChild(img);
   {%- else -%}
   a.textContent = {{ shop.name | json }};
@@ -1692,11 +1698,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         { "value": "sublimation", "label": "Sublimation" },
         { "value": "engraving", "label": "Engraving" }
       ] },
-    { "type": "header", "content": "Logo (top of page, links home)" },
-    { "type": "checkbox", "id": "show_top_logo", "label": "Show logo at top", "default": true },
-    { "type": "image_picker", "id": "top_logo", "label": "Logo image", "info": "Leave empty to use your theme logo." },
-    { "type": "range", "id": "top_logo_width", "label": "Logo width", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 130 },
-    { "type": "select", "id": "top_logo_align", "label": "Logo position", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" } ], "default": "center" },
     { "type": "header", "content": "Product details" },
     { "type": "product", "id": "product_ref", "label": "Product (non-product pages only)", "info": "Only used when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown." },
     { "type": "paragraph", "content": "Made to order / always orderable is set PER PRODUCT in Shopify (not here — one template is shared by every product). Open the product → each variant's Inventory → tick \"Continue selling when out of stock\": those variations stay orderable. Products left in normal tracking show sold-out variations as unavailable. So tick it for the Mug and leave the T-shirt normal. (Optional: tag a product \"made-to-order\" to force it orderable in the storefront regardless.)" },
@@ -1712,12 +1713,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "textarea", "id": "engrave_sub", "label": "Popup subtitle", "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them." },
     { "type": "text", "id": "popup_button_label", "label": "Popup button text", "info": "The primary button inside the popup.", "default": "Add to Bag" },
     { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" },
-    { "type": "header", "content": "File uploads (Cloudinary)" },
-    { "type": "paragraph", "content": "Lets customers upload files that are saved to the order. Create a free Cloudinary account, add an UNSIGNED upload preset, then paste both below." },
-    { "type": "text", "id": "cloudinary_cloud_name", "label": "Cloudinary cloud name" },
-    { "type": "text", "id": "cloudinary_upload_preset", "label": "Cloudinary unsigned upload preset" },
-    { "type": "header", "content": "Printable area (Upload customizer)" },
-    { "type": "paragraph", "content": "The box on the product where the customer's design must stay. Percentages of the product image, so set it per product. Left/Top is the top-left corner of the box." },
+    { "type": "header", "content": "Printable area" },
+    { "type": "paragraph", "content": "The box on the product where the design must stay (percentages of the product image — set per product). Left/Top is the box's top-left corner." },
     { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
     { "type": "image_picker", "id": "example_image", "label": "Example design (placeholder)", "info": "A faded sample shown in the print area to show customers where their design goes. It disappears when they upload. Leave empty to hide." },
     { "type": "image_picker", "id": "sample_image", "label": "Finished sample — FRONT", "info": "Photo of the finished front. Shown behind the 'See a finished sample' button. On the Front tab, the button shows THIS photo." },
@@ -1737,27 +1734,38 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "range", "id": "print_y", "label": "Area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },
     { "type": "range", "id": "print_w", "label": "Area width", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 56 },
     { "type": "range", "id": "print_h", "label": "Area height", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 40 },
-    { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes. Customers place, size and rotate each text/photo themselves.", "default": "#1d1d1f" },
-    { "type": "header", "content": "Back side (Front / Back tabs)" },
-    { "type": "paragraph", "content": "Tick 'Enable back side' to give customers Front / Back tabs. A separate back image and the back fee are BOTH optional. The FRONT/BACK finished-sample photos above follow whichever tab the customer is on." },
-    { "type": "checkbox", "id": "enable_back", "label": "Enable back side (adds Front / Back tabs)", "default": false },
-    { "type": "image_picker", "id": "back_image", "label": "Back image (optional)", "info": "Photo of the product's back. Optional — if empty, the back uses the same surface as the front." },
-    { "type": "paragraph", "content": "Charge for the back — pick ONE method. RECOMMENDED: 'Print sides' option below shows as one item at checkout. The 'Back fee' fields are the older method that adds a separate line." },
-    { "type": "text", "id": "sides_option_name", "label": "Print sides — product OPTION name (recommended)", "info": "Single line item. Add an option to THIS product (e.g. 'Print sides') with a cheaper 'Front only' and a pricier 'Front + Back' value, then type the option's exact name here. The customizer auto-picks the right variant, so the back charge shows as ONE item — no separate fee line. Leave empty to use the Back-fee fields instead." },
-    { "type": "text", "id": "sides_front_value", "label": "Print sides — front-only value", "default": "Front only", "info": "The option value at the base (front-only) price." },
-    { "type": "text", "id": "sides_both_value", "label": "Print sides — front + back value", "default": "Front + Back", "info": "The higher-priced value, selected automatically when the customer adds a design to the back." },
-    { "type": "text", "id": "back_fee_variant_id", "label": "Back fee — product VARIANT id (older method)", "info": "Only used if 'Print sides' above is empty. Adds a SEPARATE line item for the back charge. Paste your fee product's numeric variant id." },
-    { "type": "text", "id": "back_fee_money", "label": "Back fee — amount shown on the tab", "info": "Display only, e.g. $5. Shows on the Back tab regardless of which charge method you use." },
-    { "type": "checkbox", "id": "back_print_show", "label": "Show the back printable-area outline", "default": true },
-    { "type": "range", "id": "back_print_x", "label": "Back area left", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 22 },
-    { "type": "range", "id": "back_print_y", "label": "Back area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },
-    { "type": "range", "id": "back_print_w", "label": "Back area width", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 56 },
-    { "type": "range", "id": "back_print_h", "label": "Back area height", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 40 },
-    { "type": "text", "id": "front_tab_label", "label": "Front tab label", "default": "Front" },
-    { "type": "text", "id": "back_tab_label", "label": "Back tab label", "default": "Back" }
+    { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes. Customers place, size and rotate each text/photo themselves.", "default": "#1d1d1f" }
   ],
-  "max_blocks": 4,
+  "max_blocks": 7,
   "blocks": [
+    { "type": "logo_top", "name": "Logo (top of page)", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "Shows your logo at the top of the product page, linked to your home page. Add this block to show it." },
+      { "type": "image_picker", "id": "top_logo", "label": "Logo image", "info": "Leave empty to use your theme logo." },
+      { "type": "range", "id": "top_logo_width", "label": "Logo width", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 130 },
+      { "type": "select", "id": "top_logo_align", "label": "Logo position", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" } ], "default": "center" }
+    ] },
+    { "type": "file_uploads", "name": "File uploads (Cloudinary)", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "Optional. Lets customers upload files saved to the order via Cloudinary. Create a free Cloudinary account, add an UNSIGNED upload preset, then paste both below. Add this block only if you use Cloudinary." },
+      { "type": "text", "id": "cloudinary_cloud_name", "label": "Cloudinary cloud name" },
+      { "type": "text", "id": "cloudinary_upload_preset", "label": "Cloudinary unsigned upload preset" }
+    ] },
+    { "type": "back_side", "name": "Back side (Front / Back tabs)", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "Add this block to give customers Front / Back tabs in the design popup. The back image and the back fee are both optional; the finished-sample photos follow whichever tab the customer is on." },
+      { "type": "image_picker", "id": "back_image", "label": "Back image (optional)", "info": "Photo of the product's back. If empty, the back uses the same surface as the front." },
+      { "type": "paragraph", "content": "Charge for the back — pick ONE method. Recommended: the 'Print sides' option shows as one item at checkout. The 'Back fee' fields are the older method that adds a separate line." },
+      { "type": "text", "id": "sides_option_name", "label": "Print sides — product OPTION name (recommended)", "info": "One line item. Add an option to the product (e.g. 'Print sides') with a cheaper 'Front only' and a pricier 'Front + Back' value, then type the option's exact name here. Leave empty to use the Back-fee fields instead." },
+      { "type": "text", "id": "sides_front_value", "label": "Print sides — front-only value", "default": "Front only" },
+      { "type": "text", "id": "sides_both_value", "label": "Print sides — front + back value", "default": "Front + Back" },
+      { "type": "text", "id": "back_fee_variant_id", "label": "Back fee — product VARIANT id (older method)", "info": "Only used if 'Print sides' above is empty. Adds a separate line item for the back charge." },
+      { "type": "text", "id": "back_fee_money", "label": "Back fee — amount shown on the tab", "info": "Display only, e.g. $5." },
+      { "type": "checkbox", "id": "back_print_show", "label": "Show the back printable-area outline", "default": true },
+      { "type": "range", "id": "back_print_x", "label": "Back area left", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 22 },
+      { "type": "range", "id": "back_print_y", "label": "Back area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },
+      { "type": "range", "id": "back_print_w", "label": "Back area width", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 56 },
+      { "type": "range", "id": "back_print_h", "label": "Back area height", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 40 },
+      { "type": "text", "id": "front_tab_label", "label": "Front tab label", "default": "Front" },
+      { "type": "text", "id": "back_tab_label", "label": "Back tab label", "default": "Back" }
+    ] },
     { "type": "bulk_link", "name": "Bulk order link", "limit": 1, "settings": [
       { "type": "paragraph", "content": "A button linking to your Bulk Order page. Add this block to show it; remove it to hide it. Drag to reorder among the other feature blocks." },
       { "type": "url", "id": "bulk_link", "label": "Bulk order page link", "info": "Pick your Bulk order page. The button is hidden until this is set." },
@@ -1823,6 +1831,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   ],
   "presets": [
     { "name": "Dynamic Customizer", "blocks": [
+      { "type": "logo_top" },
       { "type": "bulk_link" },
       { "type": "gift" },
       { "type": "trust_row" },
