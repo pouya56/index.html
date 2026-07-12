@@ -3893,7 +3893,16 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (it.properties) Object.keys(it.properties).forEach(function (k) { if (k.charAt(0) !== "_" && it.properties[k]) opts.push(esc(k) + ": " + esc(it.properties[k])); });
       var grp = it.properties && it.properties._grp;
       var fee = (grp && !isFee(it)) ? feeByGrp[grp] : null;
-      var feeNote = fee ? '<div class="ci-fee">+ ' + esc(fee.product_title) + " · " + fmt(fee.final_line_price, cur) + "</div>" : "";
+      var backFee = it.properties && it.properties._back_fee;
+      var feeNote = "";
+      if (backFee || fee) {
+        var itemTotal = (it.final_line_price || 0) + (fee ? (fee.final_line_price || 0) : 0);
+        feeNote = '<div class="ci-fee">' +
+          (backFee ? "<div>Back print · " + esc(backFee) + "</div>" : "") +
+          (fee ? "<div>" + esc(fee.product_title) + " · " + fmt(fee.final_line_price, cur) + "</div>" : "") +
+          "<div><strong>Item total · " + fmt(itemTotal, cur) + "</strong></div>" +
+        "</div>";
+      }
       return '<div class="dyn-cart-item" data-key="' + esc(it.key) + '"' + (fee ? ' data-fee-key="' + esc(fee.key) + '"' : "") + ">" +
         (it.image ? '<img src="' + esc(it.image) + '" alt="">' : "<div></div>") +
         '<div><div class="ci-title">' + esc(it.product_title) + "</div>" +
