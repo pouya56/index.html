@@ -39,7 +39,6 @@
 {%- assign blk_gift = blank -%}
 {%- assign blk_logo = blank -%}
 {%- assign blk_cloud = blank -%}
-{%- assign blk_back = blank -%}
 {%- assign blk_text = blank -%}
 {%- assign blk_engrave = blank -%}
 {%- assign blk_print = blank -%}
@@ -54,7 +53,6 @@
     {%- when 'gift' -%}{%- assign blk_gift = block -%}
     {%- when 'logo_top' -%}{%- assign blk_logo = block -%}
     {%- when 'file_uploads' -%}{%- assign blk_cloud = block -%}
-    {%- when 'back_side' -%}{%- assign blk_back = block -%}
     {%- when 'product_text' -%}{%- assign blk_text = block -%}
     {%- when 'engrave_popup' -%}{%- assign blk_engrave = block -%}
     {%- when 'print_area' -%}{%- assign blk_print = block -%}
@@ -128,7 +126,7 @@
       "w": {{ fpos[2] | plus: 0 }},
       "h": {{ fpos[3] | plus: 0 }}
     },
-    "enableBack": {% if blk_back != blank %}true{% else %}false{% endif %},
+    "enableBack": {% if blk_print.settings.enable_back %}true{% else %}false{% endif %},
     "frontImage": {% if blk_print.settings.front_image %}{{ blk_print.settings.front_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "exampleImage": {% if blk_print.settings.example_image %}{{ blk_print.settings.example_image | image_url: width: 1000 | json }}{% else %}""{% endif %},
     "sampleImage": {% if blk_print.settings.sample_image %}{{ blk_print.settings.sample_image | image_url: width: 1200 | json }}{% else %}""{% endif %},
@@ -141,22 +139,22 @@
     "labelBackPreview": {{ blk_labels.settings.label_back_preview | default: 'Preview Back' | json }},
     "labelText": {{ blk_labels.settings.label_text | default: 'Text' | json }},
     "labelBackText": {{ blk_labels.settings.label_back_text | default: 'Back text' | json }},
-    "backImage": {% if blk_back.settings.back_image %}{{ blk_back.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
-    {%- assign bpos = blk_back.settings.back_pos | default: '22, 30, 56, 40' | replace: ' ', '' | split: ',' -%}
+    "backImage": {% if blk_print.settings.back_image %}{{ blk_print.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
+    {%- assign bpos = blk_print.settings.back_pos | default: '22, 30, 56, 40' | replace: ' ', '' | split: ',' -%}
     "printBack": {
-      "show": {% if blk_back.settings.back_print_show %}true{% else %}false{% endif %},
+      "show": {% if blk_print.settings.back_print_show %}true{% else %}false{% endif %},
       "x": {{ bpos[0] | plus: 0 }},
       "y": {{ bpos[1] | plus: 0 }},
       "w": {{ bpos[2] | plus: 0 }},
       "h": {{ bpos[3] | plus: 0 }}
     },
-    "backFeeVariantId": {{ blk_back.settings.back_fee_variant_id | default: '' | json }},
-    "backFeeMoney": {{ blk_back.settings.back_fee_money | default: '' | json }},
-    "sidesOption": {{ blk_back.settings.sides_option_name | default: '' | json }},
-    "sidesFrontValue": {{ blk_back.settings.sides_front_value | default: '' | json }},
-    "sidesBothValue": {{ blk_back.settings.sides_both_value | default: '' | json }},
-    "frontTabLabel": {{ blk_back.settings.front_tab_label | default: 'Front' | json }},
-    "backTabLabel": {{ blk_back.settings.back_tab_label | default: 'Back' | json }},
+    "backFeeVariantId": {{ blk_print.settings.back_fee_variant_id | default: '' | json }},
+    "backFeeMoney": {{ blk_print.settings.back_fee_money | default: '' | json }},
+    "sidesOption": {{ blk_print.settings.sides_option_name | default: '' | json }},
+    "sidesFrontValue": {{ blk_print.settings.sides_front_value | default: '' | json }},
+    "sidesBothValue": {{ blk_print.settings.sides_both_value | default: '' | json }},
+    "frontTabLabel": {{ blk_print.settings.front_tab_label | default: 'Front' | json }},
+    "backTabLabel": {{ blk_print.settings.back_tab_label | default: 'Back' | json }},
     "eyebrow": {{ blk_text.settings.eyebrow | default: '' | json }},
     "title": {{ section.settings.title | default: '' | json }},
     "price": {{ section.settings.price | default: '' | json }},
@@ -1812,7 +1810,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {
   "name": "Dynamic Customizer",
   "settings": [],
-  "max_blocks": 13,
+  "max_blocks": 12,
   "blocks": [
     { "type": "print_method", "name": "Print method", "limit": 1, "settings": [
       { "type": "select", "id": "customizer_type", "label": "Print method / style", "default": "uv",
@@ -1851,11 +1849,24 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
       { "type": "image_picker", "id": "example_image", "label": "Example design (placeholder)", "info": "A faded sample shown in the print area to show where the design goes. It disappears when they upload. Leave empty to hide." },
       { "type": "image_picker", "id": "sample_image", "label": "Finished sample — FRONT", "info": "Photo of the finished front, shown behind the 'See a finished sample' button." },
-      { "type": "image_picker", "id": "sample_image_2", "label": "Finished sample — BACK (optional)", "info": "Photo of the finished back. Shown on the Back tab. Needs the Back side block. Leave empty to always show the front sample." },
+      { "type": "image_picker", "id": "sample_image_2", "label": "Finished sample — BACK (optional)", "info": "Photo of the finished back. Shown on the Back tab. Needs 'Enable back side' on below. Leave empty to always show the front sample." },
       { "type": "text", "id": "sample_button_label", "label": "Sample button text", "default": "See a finished sample" },
       { "type": "text", "id": "sample_caption", "label": "Sample caption (in popup)", "info": "Text under the finished-product photo in the popup.", "default": "How your finished product will look" },
       { "type": "checkbox", "id": "print_show", "label": "Show the printable-area outline to customers", "default": true },
-      { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes.", "default": "#1d1d1f" }
+      { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes.", "default": "#1d1d1f" },
+      { "type": "header", "content": "Back side (optional)" },
+      { "type": "checkbox", "id": "enable_back", "label": "Enable back side (Front / Back tabs)", "default": false, "info": "Gives customers Front / Back tabs in the design popup." },
+      { "type": "image_picker", "id": "back_image", "label": "Back image (optional)", "info": "Photo of the product's back. If empty, the back uses the same surface as the front." },
+      { "type": "text", "id": "back_pos", "label": "Back print area position", "default": "22, 30, 56, 40", "info": "Four numbers — Left, Top, Width, Height (percent). Use ?setarea=back (or the Back tab in the ?setarea=1 tool) to set it visually, then paste here." },
+      { "type": "checkbox", "id": "back_print_show", "label": "Show the back printable-area outline", "default": true },
+      { "type": "text", "id": "front_tab_label", "label": "Front tab label", "default": "Front" },
+      { "type": "text", "id": "back_tab_label", "label": "Back tab label", "default": "Back" },
+      { "type": "paragraph", "content": "Charge for the back — pick ONE method. Recommended: the 'Print sides' option shows as one item at checkout. The 'Back fee' fields are the older method that adds a separate line." },
+      { "type": "text", "id": "sides_option_name", "label": "Print sides — product OPTION name (recommended)", "info": "One line item. Add an option to the product (e.g. 'Print sides') with a cheaper 'Front only' and a pricier 'Front + Back' value, then type the option's exact name here. Leave empty to use the Back-fee fields instead." },
+      { "type": "text", "id": "sides_front_value", "label": "Print sides — front-only value", "default": "Front only" },
+      { "type": "text", "id": "sides_both_value", "label": "Print sides — front + back value", "default": "Front + Back" },
+      { "type": "text", "id": "back_fee_variant_id", "label": "Back fee — product VARIANT id (older method)", "info": "Only used if 'Print sides' above is empty. Adds a separate line item for the back charge." },
+      { "type": "text", "id": "back_fee_money", "label": "Back fee — amount shown on the tab", "info": "Display only, e.g. $5." }
     ] },
     { "type": "order_labels", "name": "Order labels", "limit": 1, "settings": [
       { "type": "paragraph", "content": "Each attached file shows on the order as a download link with the label below. Leave blank to use the defaults." },
@@ -1876,20 +1887,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "paragraph", "content": "Optional. Lets customers upload files saved to the order via Cloudinary. Create a free Cloudinary account, add an UNSIGNED upload preset, then paste both below. Add this block only if you use Cloudinary." },
       { "type": "text", "id": "cloudinary_cloud_name", "label": "Cloudinary cloud name" },
       { "type": "text", "id": "cloudinary_upload_preset", "label": "Cloudinary unsigned upload preset" }
-    ] },
-    { "type": "back_side", "name": "Back side (Front/Back)", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Add this block to give customers Front / Back tabs in the design popup. The back image and the back fee are both optional; the finished-sample photos follow whichever tab the customer is on." },
-      { "type": "image_picker", "id": "back_image", "label": "Back image (optional)", "info": "Photo of the product's back. If empty, the back uses the same surface as the front." },
-      { "type": "paragraph", "content": "Charge for the back — pick ONE method. Recommended: the 'Print sides' option shows as one item at checkout. The 'Back fee' fields are the older method that adds a separate line." },
-      { "type": "text", "id": "sides_option_name", "label": "Print sides — product OPTION name (recommended)", "info": "One line item. Add an option to the product (e.g. 'Print sides') with a cheaper 'Front only' and a pricier 'Front + Back' value, then type the option's exact name here. Leave empty to use the Back-fee fields instead." },
-      { "type": "text", "id": "sides_front_value", "label": "Print sides — front-only value", "default": "Front only" },
-      { "type": "text", "id": "sides_both_value", "label": "Print sides — front + back value", "default": "Front + Back" },
-      { "type": "text", "id": "back_fee_variant_id", "label": "Back fee — product VARIANT id (older method)", "info": "Only used if 'Print sides' above is empty. Adds a separate line item for the back charge." },
-      { "type": "text", "id": "back_fee_money", "label": "Back fee — amount shown on the tab", "info": "Display only, e.g. $5." },
-      { "type": "checkbox", "id": "back_print_show", "label": "Show the back printable-area outline", "default": true },
-      { "type": "text", "id": "back_pos", "label": "Back print area position", "default": "22, 30, 56, 40", "info": "Four numbers — Left, Top, Width, Height (percent). Use ?setarea=back on the product URL to set it visually, then paste here." },
-      { "type": "text", "id": "front_tab_label", "label": "Front tab label", "default": "Front" },
-      { "type": "text", "id": "back_tab_label", "label": "Back tab label", "default": "Back" }
     ] },
     { "type": "bulk_link", "name": "Bulk order link", "limit": 1, "settings": [
       { "type": "paragraph", "content": "A button linking to your Bulk Order page. Add this block to show it; remove it to hide it. Drag to reorder among the other feature blocks." },
