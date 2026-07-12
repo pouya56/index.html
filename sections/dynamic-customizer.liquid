@@ -1611,6 +1611,86 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 </script>
 {%- endif -%}
 
+{%- comment -%} Visual print-area positioner. Open any product page with ?setarea=1 to
+   drag/resize the print box on the product image and read off the four numbers.
+   Hidden from customers (only shows with the URL flag). {%- endcomment -%}
+<script>
+(function () {
+  if (!/[?&#]setarea\b/.test(location.href)) return;
+  var cfgEl = document.getElementById("dyn-config");
+  if (!cfgEl) return;
+  var cfg; try { cfg = JSON.parse(cfgEl.textContent); } catch (e) { return; }
+  var s = cfg.settings || {}, shop = cfg.shopify || {};
+  var imgSrc = s.frontImage || shop.productMainImage || (shop.productImages && shop.productImages[0]) || "";
+  var p = s.print || {}, box = { x: +p.x || 22, y: +p.y || 30, w: +p.w || 56, h: +p.h || 40 };
+
+  var st = document.createElement("style");
+  st.textContent = ".pa-tool{position:fixed;inset:0;z-index:100000;background:rgba(20,20,25,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;}"
+    + ".pa-stage{position:relative;max-width:min(560px,90vw);max-height:70vh;box-shadow:0 20px 60px rgba(0,0,0,.5);border-radius:10px;overflow:hidden;background:#fff;}"
+    + ".pa-stage img{display:block;width:100%;height:auto;-webkit-user-drag:none;user-select:none;}"
+    + ".pa-box{position:absolute;border:2px solid #0071e3;background:rgba(0,113,227,.14);cursor:move;box-sizing:border-box;}"
+    + ".pa-box .pa-h{position:absolute;right:-8px;bottom:-8px;width:16px;height:16px;border-radius:50%;background:#0071e3;border:2px solid #fff;cursor:nwse-resize;}"
+    + ".pa-tag{position:absolute;top:-24px;left:0;background:#0071e3;color:#fff;font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px;white-space:nowrap;}"
+    + ".pa-panel{margin-top:18px;background:#fff;border-radius:14px;padding:16px 18px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.3);}"
+    + ".pa-nums{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;font-variant-numeric:tabular-nums;}"
+    + ".pa-nums b{display:block;font-size:22px;color:#1d1d1f;}.pa-nums span{font-size:11px;color:#6e6e73;text-transform:uppercase;letter-spacing:.03em;}"
+    + ".pa-row{display:flex;gap:10px;justify-content:center;}"
+    + ".pa-btn{height:40px;padding:0 18px;border-radius:999px;border:0;font:inherit;font-size:14px;font-weight:600;cursor:pointer;}"
+    + ".pa-copy{background:#1d1d1f;color:#fff;}.pa-close{background:#f0f0f2;color:#1d1d1f;}"
+    + ".pa-hint{font-size:12.5px;color:#6e6e73;margin:10px 0 0;line-height:1.5;}";
+  document.head.appendChild(st);
+
+  var root = document.createElement("div"); root.className = "pa-tool";
+  root.innerHTML = '<div class="pa-stage" id="paStage">'
+    + (imgSrc ? '<img src="' + imgSrc + '" alt="">' : '<div style="padding:80px;color:#888">No product image found</div>')
+    + '<div class="pa-box" id="paBox"><div class="pa-tag" id="paTag"></div><div class="pa-h" id="paH"></div></div></div>'
+    + '<div class="pa-panel"><div class="pa-nums">'
+    + '<div><b id="paL">0</b><span>Left</span></div><div><b id="paT">0</b><span>Top</span></div>'
+    + '<div><b id="paW">0</b><span>Width</span></div><div><b id="paHt">0</b><span>Height</span></div></div>'
+    + '<div class="pa-row"><button class="pa-btn pa-copy" id="paCopy">Copy the 4 numbers</button>'
+    + '<button class="pa-btn pa-close" id="paCloseBtn">Done</button></div>'
+    + '<p class="pa-hint">Drag the box to move it, drag the blue dot to resize. Then type these into the Printable area block: Left, Top, Width, Height.</p></div>';
+  document.body.appendChild(root);
+
+  var stage = root.querySelector("#paStage"), boxEl = root.querySelector("#paBox");
+  var L = root.querySelector("#paL"), T = root.querySelector("#paT"), W = root.querySelector("#paW"), H = root.querySelector("#paHt"), tag = root.querySelector("#paTag");
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function render() {
+    box.x = clamp(box.x, 0, 100 - box.w); box.y = clamp(box.y, 0, 100 - box.h);
+    boxEl.style.left = box.x + "%"; boxEl.style.top = box.y + "%"; boxEl.style.width = box.w + "%"; boxEl.style.height = box.h + "%";
+    var r = [Math.round(box.x), Math.round(box.y), Math.round(box.w), Math.round(box.h)];
+    L.textContent = r[0]; T.textContent = r[1]; W.textContent = r[2]; H.textContent = r[3];
+    tag.textContent = r[0] + " · " + r[1] + " · " + r[2] + " · " + r[3];
+  }
+  render();
+
+  var mode = null, sx = 0, sy = 0, o = null;
+  function rect() { return stage.getBoundingClientRect(); }
+  function down(e, m) { e.preventDefault(); mode = m; var pt = e.touches ? e.touches[0] : e; sx = pt.clientX; sy = pt.clientY; o = { x: box.x, y: box.y, w: box.w, h: box.h }; }
+  function move(e) {
+    if (!mode) return; var pt = e.touches ? e.touches[0] : e; var rc = rect();
+    var dx = (pt.clientX - sx) / rc.width * 100, dy = (pt.clientY - sy) / rc.height * 100;
+    if (mode === "move") { box.x = o.x + dx; box.y = o.y + dy; }
+    else { box.w = clamp(o.w + dx, 5, 100 - box.x); box.h = clamp(o.h + dy, 5, 100 - box.y); }
+    render();
+  }
+  function up() { mode = null; }
+  boxEl.addEventListener("mousedown", function (e) { if (e.target.id !== "paH") down(e, "move"); });
+  boxEl.addEventListener("touchstart", function (e) { if (e.target.id !== "paH") down(e, "move"); }, { passive: false });
+  root.querySelector("#paH").addEventListener("mousedown", function (e) { e.stopPropagation(); down(e, "size"); });
+  root.querySelector("#paH").addEventListener("touchstart", function (e) { e.stopPropagation(); down(e, "size"); }, { passive: false });
+  document.addEventListener("mousemove", move); document.addEventListener("touchmove", move, { passive: false });
+  document.addEventListener("mouseup", up); document.addEventListener("touchend", up);
+
+  root.querySelector("#paCopy").addEventListener("click", function () {
+    var txt = "Left " + Math.round(box.x) + ", Top " + Math.round(box.y) + ", Width " + Math.round(box.w) + ", Height " + Math.round(box.h);
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(function () {});
+    this.textContent = "Copied ✓"; var b = this; setTimeout(function () { b.textContent = "Copy the 4 numbers"; }, 1500);
+  });
+  root.querySelector("#paCloseBtn").addEventListener("click", function () { root.remove(); });
+})();
+</script>
+
 {%- comment -%} FEATURE BLOCKS: ordered anchors + reparent the live feature nodes into them.
    Every feature is found by a stable id/selector, so moving the node keeps the app's
    wiring intact — the app fills each node in place, wherever the block order puts it. {%- endcomment -%}
@@ -1735,6 +1815,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" }
     ] },
     { "type": "print_area", "name": "Printable area", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "Easier way to set the box: open this product page with ?setarea=1 at the end of the URL, drag/resize the box on the image, then copy the 4 numbers here. (The sliders below still work too.)" },
       { "type": "paragraph", "content": "The box on the product where the design must stay (percentages of the product image — set per product). Left/Top is the box's top-left corner." },
       { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
       { "type": "image_picker", "id": "example_image", "label": "Example design (placeholder)", "info": "A faded sample shown in the print area to show where the design goes. It disappears when they upload. Leave empty to hide." },
