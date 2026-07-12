@@ -8,7 +8,7 @@
   Sidebar: Orders and Profile are direct links to Shopify's native customer
   account pages (https://shopify.com/<shop.id>/account/orders and /account/profile),
   which hold order details, tracking, name, email and addresses (a theme can't
-  change those). Wishlist / Saved Designs / Reviews are in-page tabs, saved in
+  change those). Wishlist / Reviews are in-page tabs, saved in
   the shopper's browser (no app needed); the profile photo is too. Point your
   header account icon here by setting the header's "Account page" URL to this
   page (default /pages/account).
@@ -114,7 +114,7 @@
     .dyn-acct .da-track { display:flex; align-items:center; gap:6px; }
     .dyn-acct .da-track svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.7; }
 
-    /* Grid tabs (wishlist / designs) */
+    /* Grid tabs */
     .dyn-acct .da-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:18px; }
     .dyn-acct .da-tile { border:1px solid var(--line); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
     .dyn-acct .da-tile-img { aspect-ratio:1/1; background:var(--panel); position:relative; display:block; }
@@ -195,7 +195,6 @@
     <aside class="da-nav">
       <a class="da-navlink" href="https://shopify.com/{{ shop.id }}/account/orders" title="Opens your Shopify orders page">Orders <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
       <button type="button" class="da-tab is-active" data-tab="wishlist">Wishlist</button>
-      <button type="button" class="da-tab" data-tab="designs">Saved Designs</button>
       <button type="button" class="da-tab" data-tab="reviews">Reviews</button>
       <a class="da-navlink" href="https://shopify.com/{{ shop.id }}/account/profile" title="Opens your Shopify profile page">Profile <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
       <a class="da-logout" href="{{ routes.account_logout_url }}">Log out</a>
@@ -208,43 +207,6 @@
         <h1 class="da-h">Wishlist</h1>
         <p class="da-sub">Products you saved with the ♡ / bookmark button.</p>
         <div id="daWish"></div>
-      </div>
-
-      {%- comment -%} ---------- SAVED DESIGNS (the custom designs from past orders) ---------- {%- endcomment -%}
-      <div class="da-panel" data-panel="designs">
-        <h1 class="da-h">Saved Designs</h1>
-        <p class="da-sub">The custom designs from your orders — order any of them again.</p>
-        {%- capture design_cards -%}
-          {%- for order in customer.orders -%}
-            {%- for line in order.line_items -%}
-              {%- assign preview_url = '' -%}
-              {%- for prop in line.properties -%}
-                {%- assign pn = prop.first | downcase -%}
-                {%- if pn contains 'preview' -%}
-                  {%- assign pv = prop.last -%}
-                  {%- if pv contains 'http' and preview_url == '' -%}{%- assign preview_url = pv -%}{%- endif -%}
-                {%- endif -%}
-              {%- endfor -%}
-              {%- if preview_url != '' -%}
-                {%- if line.product -%}{%- assign purl = line.product.url -%}{%- else -%}{%- assign purl = order.customer_url -%}{%- endif -%}
-                <div class="da-tile">
-                  <a class="da-tile-img" href="{{ purl }}"><img src="{{ preview_url }}" alt="{{ line.title | escape }}" width="600" height="600" loading="lazy"></a>
-                  <div class="da-tile-b">
-                    <a class="da-tile-name" href="{{ purl }}">{{ line.title }}</a>
-                    <div class="da-tile-price">{{ order.name }} · {{ order.created_at | date: "%b %-d, %Y" }}</div>
-                    <div class="da-tile-actions"><a class="da-btn sm" href="{{ purl }}">Order again</a></div>
-                  </div>
-                </div>
-              {%- endif -%}
-            {%- endfor -%}
-          {%- endfor -%}
-        {%- endcapture -%}
-        {%- assign design_cards_trim = design_cards | strip -%}
-        {%- if design_cards_trim != '' -%}
-          <div class="da-grid">{{ design_cards }}</div>
-        {%- else -%}
-          <div class="da-empty">Your custom designs from past orders will show up here.</div>
-        {%- endif -%}
       </div>
 
       {%- comment -%} ---------- REVIEWS ---------- {%- endcomment -%}
@@ -374,8 +336,6 @@
     window.addEventListener("dyn-wishlist-change", renderWish);
     renderWish();
 
-    /* Saved Designs are rendered server-side from the customer's past orders. */
-
     /* ---- Reviews tab — lists purchased products; prompt to review, or show the
        review they wrote (from dyn_myreviews, saved when they post a review). ---- */
     var rvEl = document.getElementById("daReviews");
@@ -427,7 +387,7 @@
   "tag": "section",
   "class": "dynamic-account-section",
   "settings": [
-    { "type": "paragraph", "content": "A tabbed account dashboard. Wishlist, Saved Designs and Reviews are in-page tabs; Orders and Profile link out to Shopify’s native account pages (order details, tracking, name, email, addresses). Add it to a page (e.g. a page called “Account” → /pages/account) and point your account link there. The shopper must be logged in." },
+    { "type": "paragraph", "content": "A tabbed account dashboard. Wishlist and Reviews are in-page tabs; Orders and Profile link out to Shopify’s native account pages (order details, tracking, name, email, addresses). Add it to a page (e.g. a page called “Account” → /pages/account) and point your account link there. The shopper must be logged in." },
 
     { "type": "header", "content": "Layout (match Shopify’s account page)" },
     { "type": "paragraph", "content": "Nudge these two until the logo and tabs line up with Shopify’s own Orders/Profile page when you switch between them." },

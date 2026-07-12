@@ -1016,7 +1016,6 @@
                   <div class="dh-pop-title">Hi, {{ customer.first_name | default: 'there' }}</div>
                   <a class="dh-pop-link" href="https://shopify.com/{{ shop.id }}/account/orders">Orders <svg class="dh-pop-ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
                   <a class="dh-pop-link" href="{{ account_page }}?tab=wishlist">Wishlist</a>
-                  <a class="dh-pop-link" href="{{ account_page }}?tab=designs">Saved Designs</a>
                   <a class="dh-pop-link" href="{{ account_page }}?tab=reviews">Reviews</a>
                   <a class="dh-pop-link" href="https://shopify.com/{{ shop.id }}/account/profile">Profile <svg class="dh-pop-ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
                   <a class="dh-pop-link" href="{{ routes.account_logout_url }}">Log out</a>
@@ -1998,7 +1997,7 @@
     { "type": "checkbox", "id": "show_account", "label": "Show account button", "default": true, "info": "Apple-style person icon. Clicking opens a small login menu. When a customer is logged in it shows their initial + account links." },
     { "type": "image_picker", "id": "account_avatar", "label": "Avatar photo (optional)", "info": "Shown instead of the person icon. Per-customer photos need a separate app; this is a single store-wide photo for now." },
     { "type": "url", "id": "login_url", "label": "Log in link", "info": "Where the Log in / Sign up button goes. Leave blank to use your store's secure Shopify login." },
-    { "type": "url", "id": "account_page_url", "label": "Account page (custom dashboard)", "info": "The page where you added the Dynamic Account section (Wishlist / Saved Designs / Reviews). Leave blank to use /pages/account." },
+    { "type": "url", "id": "account_page_url", "label": "Account page (custom dashboard)", "info": "The page where you added the Dynamic Account section (Wishlist / Reviews). Leave blank to use /pages/account." },
     { "type": "url", "id": "register_url", "label": "Create account link", "info": "Optional. Not needed for passwordless accounts (the Log in / Sign up button covers sign-up)." },
 
     { "type": "header", "content": "Apps grid (top-right, 9 dots)" },
