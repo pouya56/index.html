@@ -1443,26 +1443,30 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     let sidesIdx = -1, sidesFront = "", sidesBoth = "";
     if (sidesName) {
       sidesIdx = options.findIndex((o) => String(o.name || "").trim().toLowerCase() === sidesName);
-      if (sidesIdx >= 0) {
-        const vals = options[sidesIdx].values || [];
-        const findVal = (want) => vals.find((v) => String(v).trim().toLowerCase() === String(want).trim().toLowerCase()) || "";
-        sidesFront = findVal(DS.sidesFrontValue || "Front only");
-        sidesBoth = findVal(DS.sidesBothValue || "Front + Back");
-        // If the value names don't match, auto-detect by price: the cheapest
-        // value is "front only", the priciest is the "front + back" upcharge.
-        if (!sidesFront || !sidesBoth) {
-          const cents = (str) => { const n = parseFloat(String(str).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
-          const minFor = (val) => { let m = Infinity; variants.forEach((vv) => { if ((vv.options || [])[sidesIdx] === val) { const c = cents(vv.price); if (c && c < m) m = c; } }); return m === Infinity ? 0 : m; };
-          const priced = vals.map((v) => ({ v: v, p: minFor(v) })).filter((x) => x.p > 0).sort((a, b) => a.p - b.p);
-          if (priced.length >= 2 && priced[0].p !== priced[priced.length - 1].p) {
-            if (!sidesFront) sidesFront = priced[0].v;
-            if (!sidesBoth) sidesBoth = priced[priced.length - 1].v;
-          }
+    } else if (DS.enableBack) {
+      // Back side is on but no option name was typed — auto-find a Print-sides option.
+      const isSides = (nm) => { const n = String(nm || "").trim().toLowerCase(); return n === "print sides" || n === "print side" || n === "sides" || n === "side" || n.indexOf("print side") >= 0; };
+      sidesIdx = options.findIndex((o) => isSides(o.name) && (o.values || []).length >= 2);
+    }
+    if (sidesIdx >= 0) {
+      const vals = options[sidesIdx].values || [];
+      const findVal = (want) => vals.find((v) => String(v).trim().toLowerCase() === String(want).trim().toLowerCase()) || "";
+      sidesFront = findVal(DS.sidesFrontValue || "Front only");
+      sidesBoth = findVal(DS.sidesBothValue || "Front + Back");
+      // If the value names don't match, auto-detect by price: the cheapest
+      // value is "front only", the priciest is the "front + back" upcharge.
+      if (!sidesFront || !sidesBoth) {
+        const cents = (str) => { const n = parseFloat(String(str).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
+        const minFor = (val) => { let m = Infinity; variants.forEach((vv) => { if ((vv.options || [])[sidesIdx] === val) { const c = cents(vv.price); if (c && c < m) m = c; } }); return m === Infinity ? 0 : m; };
+        const priced = vals.map((v) => ({ v: v, p: minFor(v) })).filter((x) => x.p > 0).sort((a, b) => a.p - b.p);
+        if (priced.length >= 2 && priced[0].p !== priced[priced.length - 1].p) {
+          if (!sidesFront) sidesFront = priced[0].v;
+          if (!sidesBoth) sidesBoth = priced[priced.length - 1].v;
         }
-        if (!sidesFront) sidesFront = vals[0] || "";
-        if (!sidesBoth) sidesIdx = -1;           // can't map the upcharge value — fall back to the fee line
-        else if (sidesFront) selected[sidesIdx] = sidesFront;   // start on the base (front-only) price
       }
+      if (!sidesFront) sidesFront = vals[0] || "";
+      if (!sidesBoth) sidesIdx = -1;           // can't map the upcharge value — fall back to the fee line
+      else if (sidesFront) selected[sidesIdx] = sidesFront;   // start on the base (front-only) price
     }
     // Single-line-item gift wrapping: if the product has a "Gift wrapping" option
     // (e.g. No / Yes at a higher price), we hide it and drive it from the gift
