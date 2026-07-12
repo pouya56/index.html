@@ -1616,10 +1616,12 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
    read off the four numbers. Hidden from customers (only shows with the URL flag). {%- endcomment -%}
 <script>
 (function () {
-  if (!/[?&#]setarea\b/.test(location.href)) return;
   var cfgEl = document.getElementById("dyn-config");
   if (!cfgEl) return;
   var cfg; try { cfg = JSON.parse(cfgEl.textContent); } catch (e) { return; }
+  var _open = false, _styled = false;
+  function openTool() {
+  if (_open) return; _open = true;
   var s = cfg.settings || {}, shop = cfg.shopify || {};
   var prodImg = shop.productMainImage || (shop.productImages && shop.productImages[0]) || "";
   var sides = [{ key: "front", label: "Front", img: s.frontImage || prodImg, field: "Print area position", p: s.print || {} }];
@@ -1627,6 +1629,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   sides.forEach(function (sd) { var p = sd.p; sd.box = { x: +p.x || 22, y: +p.y || 30, w: +p.w || 56, h: +p.h || 40 }; });
   var cur = (/[?&#]setarea=back\b/.test(location.href) && sides.length > 1) ? 1 : 0;
 
+  if (!_styled) { _styled = true;
   var st = document.createElement("style");
   st.textContent = ".pa-tool{position:fixed;inset:0;z-index:100000;background:rgba(20,20,25,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;}"
     + ".pa-stage{position:relative;line-height:0;box-shadow:0 20px 60px rgba(0,0,0,.5);border-radius:10px;background:#fff;}"
@@ -1645,7 +1648,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     + ".pa-btn{height:40px;padding:0 18px;border-radius:999px;border:0;font:inherit;font-size:14px;font-weight:600;cursor:pointer;}"
     + ".pa-copy{background:#1d1d1f;color:#fff;}.pa-close{background:#f0f0f2;color:#1d1d1f;}"
     + ".pa-hint{font-size:12.5px;color:#6e6e73;margin:10px 0 0;line-height:1.5;}";
-  document.head.appendChild(st);
+  document.head.appendChild(st); }
 
   var tabsHtml = sides.length > 1 ? ('<div class="pa-tabs">' + sides.map(function (sd, i) { return '<button class="pa-tab" data-side="' + i + '">' + sd.label + '</button>'; }).join("") + '</div>') : "";
   var root = document.createElement("div"); root.className = "pa-tool";
@@ -1716,7 +1719,20 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(function () {});
     this.textContent = "Copied " + txt; var self = this; setTimeout(function () { self.textContent = "Copy the 4 numbers"; }, 1800);
   });
-  root.querySelector("#paCloseBtn").addEventListener("click", function () { root.remove(); });
+  root.querySelector("#paCloseBtn").addEventListener("click", function () { root.remove(); _open = false; });
+  }
+
+  var auto = /[?&#]setarea\b/.test(location.href);
+  var design = !!(window.Shopify && window.Shopify.designMode);
+  if (!auto && !design) return;
+  if (auto) openTool();
+  if (design) {
+    var launch = document.createElement("button");
+    launch.type = "button"; launch.textContent = "◳ Set print area";
+    launch.style.cssText = "position:fixed;right:16px;bottom:16px;z-index:99999;height:46px;padding:0 20px;border:0;border-radius:999px;background:#0071e3;color:#fff;font:600 14px/1 -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.3);cursor:pointer;";
+    launch.addEventListener("click", openTool);
+    document.body.appendChild(launch);
+  }
 })();
 </script>
 
@@ -1844,7 +1860,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" }
     ] },
     { "type": "print_area", "name": "Printable area", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Set the box visually: open this product page with ?setarea=1 on the end of the URL. The tool shows your Front (and Back, if you added a back image) design images with Front/Back tabs — drag/resize on each, tap Copy, paste into the matching field." },
+      { "type": "paragraph", "content": "Set the box visually: while editing here, click the blue “◳ Set print area” button on the product preview (bottom-right). Drag/resize the box (Front/Back tabs if a back image is set), tap Copy, and paste into the matching field below. (You can also open the live product page with ?setarea=1.)" },
       { "type": "text", "id": "print_pos", "label": "Print area position", "default": "22, 30, 56, 40", "info": "Four numbers — Left, Top, Width, Height (percent). Paste what the ?setarea=1 tool copies, or edit by hand." },
       { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
       { "type": "image_picker", "id": "example_image", "label": "Example design (placeholder)", "info": "A faded sample shown in the print area to show where the design goes. It disappears when they upload. Leave empty to hide." },
