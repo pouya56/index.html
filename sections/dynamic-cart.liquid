@@ -322,7 +322,6 @@
       total += (unit + feeUnit) * q;
     });
     setSub(total);
-    if (!list.querySelector(".dc-line")) window.location.reload(); // cart emptied - show empty state
   }
 
   function send(updates) {
@@ -341,7 +340,20 @@
   function setLine(ln, qty) {
     var key = ln.getAttribute("data-key"), feeKey = ln.getAttribute("data-fee-key");
     var updates = {}; updates[key] = qty; if (feeKey) updates[feeKey] = qty;
-    if (qty <= 0) { ln.remove(); recalc(); queue(updates); return; }
+    if (qty <= 0) {
+      ln.remove(); recalc();
+      if (!list.querySelector(".dc-line")) {
+        // Last line: tell the server FIRST, then reload for the empty state —
+        // reloading early cancels the delete and the item reappears.
+        fetch("/cart/update.js", {
+          method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({ updates: updates })
+        }).then(function () { syncHeader(); window.location.reload(); })
+          .catch(function () { window.location.reload(); });
+        return;
+      }
+      queue(updates); return;
+    }
     ln.setAttribute("data-qty", qty);
     var valEl = ln.querySelector(".dc-qty-val"); if (valEl) valEl.textContent = qty;
     var unit = parseInt(ln.getAttribute("data-unit"), 10) || 0;
