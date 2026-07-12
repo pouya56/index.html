@@ -120,12 +120,13 @@
       "wrapLabel": {{ blk_gift.settings.gift_wrap_label | default: 'Add gift wrapping' | json }},
       "noteLabel": {{ blk_gift.settings.gift_note_label | default: 'Add a gift note (optional)' | json }}
     },
+    {%- assign fpos = blk_print.settings.print_pos | default: '22, 30, 56, 40' | replace: ' ', '' | split: ',' -%}
     "print": {
       "show": {% if blk_print == blank or blk_print.settings.print_show %}true{% else %}false{% endif %},
-      "x": {{ blk_print.settings.print_x | default: 22 }},
-      "y": {{ blk_print.settings.print_y | default: 30 }},
-      "w": {{ blk_print.settings.print_w | default: 56 }},
-      "h": {{ blk_print.settings.print_h | default: 40 }}
+      "x": {{ fpos[0] | plus: 0 }},
+      "y": {{ fpos[1] | plus: 0 }},
+      "w": {{ fpos[2] | plus: 0 }},
+      "h": {{ fpos[3] | plus: 0 }}
     },
     "enableBack": {% if blk_back != blank %}true{% else %}false{% endif %},
     "frontImage": {% if blk_print.settings.front_image %}{{ blk_print.settings.front_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
@@ -141,12 +142,13 @@
     "labelText": {{ blk_labels.settings.label_text | default: 'Text' | json }},
     "labelBackText": {{ blk_labels.settings.label_back_text | default: 'Back text' | json }},
     "backImage": {% if blk_back.settings.back_image %}{{ blk_back.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
+    {%- assign bpos = blk_back.settings.back_pos | default: '22, 30, 56, 40' | replace: ' ', '' | split: ',' -%}
     "printBack": {
       "show": {% if blk_back.settings.back_print_show %}true{% else %}false{% endif %},
-      "x": {{ blk_back.settings.back_print_x | default: 22 }},
-      "y": {{ blk_back.settings.back_print_y | default: 30 }},
-      "w": {{ blk_back.settings.back_print_w | default: 56 }},
-      "h": {{ blk_back.settings.back_print_h | default: 40 }}
+      "x": {{ bpos[0] | plus: 0 }},
+      "y": {{ bpos[1] | plus: 0 }},
+      "w": {{ bpos[2] | plus: 0 }},
+      "h": {{ bpos[3] | plus: 0 }}
     },
     "backFeeVariantId": {{ blk_back.settings.back_fee_variant_id | default: '' | json }},
     "backFeeMoney": {{ blk_back.settings.back_fee_money | default: '' | json }},
@@ -1621,8 +1623,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   if (!cfgEl) return;
   var cfg; try { cfg = JSON.parse(cfgEl.textContent); } catch (e) { return; }
   var s = cfg.settings || {}, shop = cfg.shopify || {};
-  var imgSrc = s.frontImage || shop.productMainImage || (shop.productImages && shop.productImages[0]) || "";
-  var p = s.print || {}, box = { x: +p.x || 22, y: +p.y || 30, w: +p.w || 56, h: +p.h || 40 };
+  var isBack = /[?&#]setarea=back\b/.test(location.href);
+  var imgSrc = (isBack && s.backImage) || s.frontImage || shop.productMainImage || (shop.productImages && shop.productImages[0]) || "";
+  var p = (isBack ? s.printBack : s.print) || {}, box = { x: +p.x || 22, y: +p.y || 30, w: +p.w || 56, h: +p.h || 40 };
 
   var st = document.createElement("style");
   st.textContent = ".pa-tool{position:fixed;inset:0;z-index:100000;background:rgba(20,20,25,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;}"
@@ -1649,7 +1652,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     + '<div><b id="paW">0</b><span>Width</span></div><div><b id="paHt">0</b><span>Height</span></div></div>'
     + '<div class="pa-row"><button class="pa-btn pa-copy" id="paCopy">Copy the 4 numbers</button>'
     + '<button class="pa-btn pa-close" id="paCloseBtn">Done</button></div>'
-    + '<p class="pa-hint">Drag the box to move it, drag the blue dot to resize. Then type these into the Printable area block: Left, Top, Width, Height.</p></div>';
+    + '<p class="pa-hint">Drag the box to move it, drag the blue dot to resize. Tap Copy, then paste into the ' + (isBack ? "Back print area position" : "Print area position") + ' field.</p></div>';
   document.body.appendChild(root);
 
   var stage = root.querySelector("#paStage"), boxEl = root.querySelector("#paBox");
@@ -1683,9 +1686,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   document.addEventListener("mouseup", up); document.addEventListener("touchend", up);
 
   root.querySelector("#paCopy").addEventListener("click", function () {
-    var txt = "Left " + Math.round(box.x) + ", Top " + Math.round(box.y) + ", Width " + Math.round(box.w) + ", Height " + Math.round(box.h);
+    var txt = Math.round(box.x) + ", " + Math.round(box.y) + ", " + Math.round(box.w) + ", " + Math.round(box.h);
     if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(function () {});
-    this.textContent = "Copied ✓"; var b = this; setTimeout(function () { b.textContent = "Copy the 4 numbers"; }, 1500);
+    this.textContent = "Copied " + txt; var b = this; setTimeout(function () { b.textContent = "Copy the 4 numbers"; }, 1800);
   });
   root.querySelector("#paCloseBtn").addEventListener("click", function () { root.remove(); });
 })();
@@ -1815,8 +1818,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" }
     ] },
     { "type": "print_area", "name": "Printable area", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Easier way to set the box: open this product page with ?setarea=1 at the end of the URL, drag/resize the box on the image, then copy the 4 numbers here. (The sliders below still work too.)" },
-      { "type": "paragraph", "content": "The box on the product where the design must stay (percentages of the product image — set per product). Left/Top is the box's top-left corner." },
+      { "type": "paragraph", "content": "Set the box visually: open this product page with ?setarea=1 on the end of the URL, drag/resize the box on the image, tap Copy, and paste into the field below." },
+      { "type": "text", "id": "print_pos", "label": "Print area position", "default": "22, 30, 56, 40", "info": "Four numbers — Left, Top, Width, Height (percent). Paste what the ?setarea=1 tool copies, or edit by hand." },
       { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
       { "type": "image_picker", "id": "example_image", "label": "Example design (placeholder)", "info": "A faded sample shown in the print area to show where the design goes. It disappears when they upload. Leave empty to hide." },
       { "type": "image_picker", "id": "sample_image", "label": "Finished sample — FRONT", "info": "Photo of the finished front, shown behind the 'See a finished sample' button." },
@@ -1824,10 +1827,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "text", "id": "sample_button_label", "label": "Sample button text", "default": "See a finished sample" },
       { "type": "text", "id": "sample_caption", "label": "Sample caption (in popup)", "info": "Text under the finished-product photo in the popup.", "default": "How your finished product will look" },
       { "type": "checkbox", "id": "print_show", "label": "Show the printable-area outline to customers", "default": true },
-      { "type": "range", "id": "print_x", "label": "Area left", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 22 },
-      { "type": "range", "id": "print_y", "label": "Area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },
-      { "type": "range", "id": "print_w", "label": "Area width", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 56 },
-      { "type": "range", "id": "print_h", "label": "Area height", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 40 },
       { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes.", "default": "#1d1d1f" }
     ] },
     { "type": "order_labels", "name": "Order labels", "limit": 1, "settings": [
@@ -1860,10 +1859,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "text", "id": "back_fee_variant_id", "label": "Back fee — product VARIANT id (older method)", "info": "Only used if 'Print sides' above is empty. Adds a separate line item for the back charge." },
       { "type": "text", "id": "back_fee_money", "label": "Back fee — amount shown on the tab", "info": "Display only, e.g. $5." },
       { "type": "checkbox", "id": "back_print_show", "label": "Show the back printable-area outline", "default": true },
-      { "type": "range", "id": "back_print_x", "label": "Back area left", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 22 },
-      { "type": "range", "id": "back_print_y", "label": "Back area top", "min": 0, "max": 95, "step": 1, "unit": "%", "default": 30 },
-      { "type": "range", "id": "back_print_w", "label": "Back area width", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 56 },
-      { "type": "range", "id": "back_print_h", "label": "Back area height", "min": 5, "max": 100, "step": 1, "unit": "%", "default": 40 },
+      { "type": "text", "id": "back_pos", "label": "Back print area position", "default": "22, 30, 56, 40", "info": "Four numbers — Left, Top, Width, Height (percent). Use ?setarea=back on the product URL to set it visually, then paste here." },
       { "type": "text", "id": "front_tab_label", "label": "Front tab label", "default": "Front" },
       { "type": "text", "id": "back_tab_label", "label": "Back tab label", "default": "Back" }
     ] },
