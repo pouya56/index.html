@@ -1137,12 +1137,12 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     </div>
 
     <section class="detail">
-      <div class="eyebrow" id="pEyebrow">Ceramic Mug</div>
-      <h1 class="headline" id="pName">Personalized Ceramic Mug</h1>
+      <div class="eyebrow" id="pEyebrow"></div>
+      <h1 class="headline" id="pName"></h1>
 
       <div class="price-row">
-        <span class="price" id="pPrice">$20</span>
-        <span class="price-note" id="pPriceNote">Free shipping</span>
+        <span class="price" id="pPrice"></span>
+        <span class="price-note" id="pPriceNote"></span>
       </div>
 
       <div class="desc" id="pDesc"></div>
@@ -1578,6 +1578,19 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 </script>
 
 {% endraw %}
+{%- comment -%} Instant pre-fill: paint the REAL title/price the moment the shell
+   exists, so nothing flashes while the deferred app JS loads. {%- endcomment -%}
+{%- if dyn_product -%}
+<script>
+(function () {
+  var set = function (id, v) { var el = document.getElementById(id); if (el && v) el.textContent = v; };
+  set("pEyebrow", {{ dyn_product.vendor | default: '' | json }});
+  set("pName", {{ dyn_product.title | json }});
+  set("pPrice", {{ dyn_product.selected_or_first_available_variant.price | money | json }});
+  set("pPriceNote", {{ section.settings.price_note | default: '' | json }});
+})();
+</script>
+{%- endif -%}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
 {%- if section.settings.show_top_logo -%}
