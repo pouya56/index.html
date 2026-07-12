@@ -39,7 +39,6 @@
 {%- assign blk_gift = blank -%}
 {%- assign blk_logo = blank -%}
 {%- assign blk_cloud = blank -%}
-{%- assign blk_text = blank -%}
 {%- assign blk_engrave = blank -%}
 {%- assign blk_print = blank -%}
 {%- assign blk_labels = blank -%}
@@ -53,7 +52,6 @@
     {%- when 'gift' -%}{%- assign blk_gift = block -%}
     {%- when 'logo_top' -%}{%- assign blk_logo = block -%}
     {%- when 'file_uploads' -%}{%- assign blk_cloud = block -%}
-    {%- when 'product_text' -%}{%- assign blk_text = block -%}
     {%- when 'engrave_popup' -%}{%- assign blk_engrave = block -%}
     {%- when 'print_area' -%}{%- assign blk_print = block -%}
     {%- when 'order_labels' -%}{%- assign blk_labels = block -%}
@@ -155,15 +153,15 @@
     "sidesBothValue": {{ blk_print.settings.sides_both_value | default: '' | json }},
     "frontTabLabel": {{ blk_print.settings.front_tab_label | default: 'Front' | json }},
     "backTabLabel": {{ blk_print.settings.back_tab_label | default: 'Back' | json }},
-    "eyebrow": {{ blk_text.settings.eyebrow | default: '' | json }},
-    "title": {{ section.settings.title | default: '' | json }},
-    "price": {{ section.settings.price | default: '' | json }},
-    "priceNote": {{ blk_text.settings.price_note | default: '' | json }},
-    "description": {{ section.settings.description | default: '' | json }},
-    "modelLabel": {{ blk_text.settings.model_label | default: '' | json }},
-    "customizeLabel": {{ blk_text.settings.customize_label | default: 'Customize' | json }},
-    "addcartLabel": {{ blk_text.settings.addcart_label | default: 'Add to Cart' | json }},
-    "customPrintLabel": {{ blk_text.settings.custom_print_label | default: 'Custom print' | json }},
+    "eyebrow": {{ dyn_product.vendor | default: '' | json }},
+    "title": {{ dyn_product.title | default: '' | json }},
+    "price": "",
+    "priceNote": {{ 'Free shipping' | json }},
+    "description": {{ dyn_product.description | default: '' | json }},
+    "modelLabel": "",
+    "customizeLabel": {{ 'Customize' | json }},
+    "addcartLabel": {{ 'Add to Cart' | json }},
+    "customPrintLabel": {{ 'Custom print' | json }},
     "reassure": [
       {{ blk_trust.settings.reassure_1 | default: '' | json }},
       {{ blk_trust.settings.reassure_2 | default: '' | json }},
@@ -1826,7 +1824,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {
   "name": "Dynamic Customizer",
   "settings": [],
-  "max_blocks": 12,
+  "max_blocks": 11,
   "blocks": [
     { "type": "print_method", "name": "Print method", "limit": 1, "settings": [
       { "type": "select", "id": "customizer_type", "label": "Print method / style", "default": "uv",
@@ -1842,15 +1840,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "paragraph", "content": "Only needed when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown." },
       { "type": "product", "id": "product_ref", "label": "Product (non-product pages only)" },
       { "type": "paragraph", "content": "Made to order / always orderable is set PER PRODUCT in Shopify: open the product → each variant's Inventory → tick \"Continue selling when out of stock\". (Optional: tag a product \"made-to-order\" to force it orderable regardless.)" }
-    ] },
-    { "type": "product_text", "name": "Product text", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "The small copy around the buy box. Leave a field blank to use the app's default." },
-      { "type": "text", "id": "eyebrow", "label": "Eyebrow (small label above title)", "default": "AirPods Pro 3" },
-      { "type": "text", "id": "price_note", "label": "Price note", "default": "Free shipping" },
-      { "type": "text", "id": "model_label", "label": "Model / variant label", "default": "AirPods Pro 3" },
-      { "type": "text", "id": "customize_label", "label": "Customize button text", "default": "Customize" },
-      { "type": "text", "id": "addcart_label", "label": "Add-to-cart button text", "default": "Add to Cart" },
-      { "type": "text", "id": "custom_print_label", "label": "Popup price caption", "info": "Small line under the price in the customizer popup.", "default": "Custom print" }
     ] },
     { "type": "engrave_popup", "name": "Engraving popup text", "limit": 1, "settings": [
       { "type": "paragraph", "content": "The heading and helper text inside the design popup." },
@@ -1972,7 +1961,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "print_method" },
       { "type": "product_source" },
       { "type": "logo_top" },
-      { "type": "product_text" },
       { "type": "engrave_popup" },
       { "type": "print_area" },
       { "type": "order_labels" },
