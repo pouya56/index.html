@@ -3955,7 +3955,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         feeNote = '<div class="ci-fee">' +
           "<div>" + esc(it.product_title) + " · " + fmt(baseC, cur) + "</div>" +
           (backC ? "<div>Back print · " + fmt(backC, cur) + "</div>" : "") +
-          (fee ? "<div>" + esc(fee.product_title) + " · " + fmt(feeC, cur) + "</div>" : "") +
+          (fee ? "<div>" + esc(fee.product_title) + " · " + fmt(feeC, cur) +
+                 ' <button type="button" class="ci-fee-remove" data-remove-fee>Remove</button></div>' : "") +
         "</div>";
         priceCell = fmt(itemTotal, cur);
       }
@@ -3982,6 +3983,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (dec) dec.onclick = function () { applyUpdates(upd(Math.max(0, qty - 1))); };
       if (inc) inc.onclick = function () { applyUpdates(upd(qty + 1)); };
       if (rm) rm.onclick = function () { applyUpdates(upd(0)); };
+      // Remove only the gift-wrap fee line; the item itself stays in the bag.
+      var rmFee = row.querySelector("[data-remove-fee]");
+      if (rmFee && feeKey) rmFee.onclick = function () { var o = {}; o[feeKey] = 0; applyUpdates(o); };
     });
   }
 

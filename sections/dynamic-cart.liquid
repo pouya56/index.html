@@ -64,6 +64,9 @@
   .dyn-cart .dc-line-opt { font-size: 13.5px; color: var(--ink-soft); margin-top: 4px; line-height: 1.4; }
   .dyn-cart .dc-line-opt b { font-weight: 500; color: var(--ink); }
   .dyn-cart .dc-line-fee { font-size: 13px; color: var(--ink-faint); margin-top: 8px; }
+  .dyn-cart .dc-fee-remove { background: none; border: none; padding: 0; margin-left: 6px; font: inherit; font-size: 12px;
+    color: var(--accent, #0071e3); cursor: pointer; text-decoration: underline; }
+  .dyn-cart .dc-fee-remove:hover { opacity: .75; }
   .dyn-cart .dc-line-actions { display: flex; gap: 16px; margin-top: 10px; }
   .dyn-cart .dc-line-edit { color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none; }
   .dyn-cart .dc-line-edit:hover { text-decoration: underline; }
@@ -216,7 +219,7 @@
                 <div class="dc-line-fee">
                   <div>{{ item.product.title }} · {{ base_cents | money }}</div>
                   {%- if back_cents > 0 -%}<div>Back print · {{ back_cents | money }}</div>{%- endif -%}
-                  {%- if fee_title != blank -%}<div>{{ fee_title }} · {{ fee_price | money }}</div>{%- endif -%}
+                  {%- if fee_title != blank -%}<div>{{ fee_title }} · {{ fee_price | money }} <button type="button" class="dc-fee-remove" data-remove-fee="{{ fee_key }}">Remove</button></div>{%- endif -%}
                 </div>
               {%- endif -%}
               {%- if dstate != blank and item.url != blank -%}
@@ -347,6 +350,18 @@
 
   if (list) list.addEventListener("click", function (e) {
     if (e.target.closest(".dc-details > summary")) return; // let the dropdown toggle
+    // Remove just the gift-wrap fee line; the item itself stays in the cart.
+    var feeBtn = e.target.closest("[data-remove-fee]");
+    if (feeBtn) {
+      var feeKey = feeBtn.getAttribute("data-remove-fee");
+      if (!feeKey) return;
+      feeBtn.disabled = true; feeBtn.textContent = "Removing…";
+      fetch("/cart/change.js", { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ id: feeKey, quantity: 0 }) })
+        .then(function () { syncHeader(); window.location.reload(); })
+        .catch(function () { window.location.reload(); });
+      return;
+    }
     var ln = e.target.closest(".dc-line"); if (!ln) return;
     var cur = parseInt(ln.getAttribute("data-qty"), 10) || 0;
     if (e.target.closest("[data-remove]")) { setLine(ln, 0); return; }
