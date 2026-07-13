@@ -1455,8 +1455,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     let sidesIdx = -1, sidesFront = "", sidesBoth = "";
     if (sidesName) {
       sidesIdx = options.findIndex((o) => String(o.name || "").trim().toLowerCase() === sidesName);
-    } else if (DS.enableBack) {
-      // Back side is on but no option name was typed — auto-find a Print-sides option.
+    } else if (DS.enableBack || DS.methodUploadBack === true) {
+      // Back side is on (Printable-area checkbox OR the method block's BACK
+      // toggle) but no option name was typed — auto-find a Print-sides option.
       const isSides = (nm) => { const n = String(nm || "").trim().toLowerCase(); return n === "print sides" || n === "print side" || n === "sides" || n === "side" || n.indexOf("print side") >= 0; };
       sidesIdx = options.findIndex((o) => isSides(o.name) && (o.values || []).length >= 2);
     }
