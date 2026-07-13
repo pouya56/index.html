@@ -2108,8 +2108,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       hint.style.display = (okSide && canMore) ? "" : "none";
       hint.classList.toggle("mini", layers.length > 0);
     }
-    const clip = q2('.ios-compose [data-drop="design"]');
-    if (clip) clip.style.display = sideUploadAllowed(currentSide) ? "" : "none";
     // Example placeholder: hide as soon as the customer adds any design.
     const example = q2("#upExample");
     if (example) example.style.display = (layers && layers.length) ? "none" : "";
@@ -2400,7 +2398,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const noun = product.engraveNoun || (window.DYN_SHOPIFY && window.DYN_SHOPIFY.productTitle) || product.name || "product";
     const priceStr = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.priceMoney) || D.pricing.money(product.base);
     const photoOnly = !!(product && product.photoOnly);
-    const noUpload = !photoOnly && !!(product && product.noUpload);
     // The click-to-upload box and the typing keyboard are independent — a method
     // block can turn on either or both. Without block settings, keep the old
     // behavior: photo-only shows the box, otherwise the compose bar alone.
@@ -2450,10 +2447,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             // The compose bar (typing keyboard) only appears when typing is on.
             (!showCompose ? '' :
               '<div class="ios-compose">' +
-                (noUpload ? '' :
-                '<button type="button" class="ios-plus" data-drop="design" aria-label="Upload your design (PNG, JPG, SVG, PDF)" title="Upload your design">' +
-                  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
-                '</button>') +
                 '<div class="ios-field"><textarea id="upText" class="engrave-input" maxlength="60" rows="1" placeholder="' + escapeHtml(ePlaceholder) + '" autocomplete="off"></textarea></div>' +
                 (emojiEnabled() ?
                 '<button type="button" class="kbd-arrow" id="kbdArrow" aria-label="Show keyboard" aria-expanded="false" title="Keyboard">' +
@@ -2463,7 +2456,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' +
                 '</button>' +
               '</div>' +
-              '<div class="engrave-tools">' + kbdHtml() + '</div>') +
+              (emojiEnabled() ? '<div class="engrave-tools">' + kbdHtml() + '</div>' : '')) +
           '</div>' +
         '</div>' +
         '<div class="modal-foot"><div class="price-breakdown"><div class="price-breakdown-toggle" style="cursor:default">' +
@@ -2501,9 +2494,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       d.onclick = () => input.click();
       d.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } };
     });
-    ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("drag"); }));
-    ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("drag"); }));
-    drop.addEventListener("drop", (e) => { if (e.dataTransfer.files[0]) accept(e.dataTransfer.files[0]); });
+    if (drop) {
+      ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("drag"); }));
+      ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("drag"); }));
+      drop.addEventListener("drop", (e) => { if (e.dataTransfer.files[0]) accept(e.dataTransfer.files[0]); });
+    }
     input.onchange = (e) => { if (e.target.files[0]) accept(e.target.files[0]); input.value = ""; };
     const txt = q2("#upText");
     if (txt) {
@@ -2885,9 +2880,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>` : ""}
           </div>
-          <div class="engrave-tools">
+          ${emojiEnabled() ? `<div class="engrave-tools">
             ${kbdHtml()}
-          </div>
+          </div>` : ""}
         </div>
         <div class="modal-foot">
           <div class="price-breakdown">
