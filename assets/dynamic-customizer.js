@@ -179,8 +179,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 (function (root) {
   "use strict";
 
-  const money = (cents) =>
-    "$" + (cents / 100).toFixed(2).replace(/\.00$/, "");
+  const money = (cents) => "$" + (cents / 100).toFixed(2);
 
   function compute(product, state) {
     const items = [];
@@ -1682,7 +1681,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const giftOn = !!(giftCfg.enabled && giftEl && giftEl.checked);
     const hasBack = (sideLayers.back || []).some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text));
     const cents = (s) => { const n = parseFloat(String(s).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
-    const fmt = (c, sample) => { const sym = (String(sample).match(/^[^\d.-]*/) || [""])[0] || "$"; return sym + (c / 100).toFixed(2).replace(/\.00$/, ""); };
+    const fmt = (c, sample) => { const sym = (String(sample).match(/^[^\d.-]*/) || [""])[0] || "$"; return sym + (c / 100).toFixed(2); };
     let base = (window.DYN_SHOPIFY || {}).priceMoney || pr.textContent;
     if (typeof _sidesResolve === "function" && _sidesResolve) {
       const vBase = _sidesResolve(hasBack, false);
@@ -1715,7 +1714,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const p = await r.json();
       const v = (p.variants || []).find((x) => x.available) || (p.variants || [])[0];
       _wrapIdCache = v ? String(v.id) : null;
-      if (v && typeof v.price === "number") _wrapPriceMoney = "$" + (v.price / 100).toFixed(2).replace(/\.00$/, "");
+      if (v && typeof v.price === "number") _wrapPriceMoney = "$" + (v.price / 100).toFixed(2);
       return _wrapIdCache;
     } catch (e) { _wrapIdCache = null; return null; }
   }
@@ -2677,7 +2676,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         const vFront = _sidesResolve(false, giftOn);
         const c = (s) => { const n = parseFloat(String(s).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
         const diff = c(sidesVariant.price) - (vFront ? c(vFront.price) : 0);
-        if (diff > 0) props["_back_fee"] = "$" + (diff / 100).toFixed(2).replace(/\.00$/, "");
+        if (diff > 0) props["_back_fee"] = "$" + (diff / 100).toFixed(2);
       }
       const extraItems = [];
       if (!sidesVariant && hasBackDesign && S.backFeeVariantId) {
