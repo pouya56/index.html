@@ -1918,7 +1918,13 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   "blocks": [
     { "type": "method_uv", "name": "Print method: UV", "limit": 1, "settings": [
       { "type": "paragraph", "content": "This product is UV-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
-      { "type": "text", "id": "method_label", "label": "Method name on the order", "default": "UV", "info": "Saved with each order line so fulfilment knows the method." },
+      { "type": "select", "id": "method_label", "label": "Method name on the order", "default": "UV", "info": "Saved with each order line so fulfilment knows the method.",
+        "options": [
+          { "value": "DTF", "label": "DTF" },
+          { "value": "UV", "label": "UV" },
+          { "value": "Engraving", "label": "Engraving" },
+          { "value": "Sublimation", "label": "Sublimation" }
+        ] },
       { "type": "header", "content": "What the customer can do" },
       { "type": "checkbox", "id": "allow_upload", "label": "Click to upload — FRONT", "default": true, "info": "The 'Click to upload your design' box on the front side. Combine it with the keyboard by turning both on." },
       { "type": "checkbox", "id": "allow_upload_back", "label": "Click to upload — BACK", "default": false, "info": "Turn on to give the popup Front/Back tabs with an upload box on the back. The back image and print area come from the Printable area block (optional)." },
@@ -1932,7 +1938,13 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     ] },
     { "type": "method_dtf", "name": "Print method: DTF", "limit": 1, "settings": [
       { "type": "paragraph", "content": "This product is DTF-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
-      { "type": "text", "id": "method_label", "label": "Method name on the order", "default": "DTF", "info": "Saved with each order line so fulfilment knows the method." },
+      { "type": "select", "id": "method_label", "label": "Method name on the order", "default": "DTF", "info": "Saved with each order line so fulfilment knows the method.",
+        "options": [
+          { "value": "DTF", "label": "DTF" },
+          { "value": "UV", "label": "UV" },
+          { "value": "Engraving", "label": "Engraving" },
+          { "value": "Sublimation", "label": "Sublimation" }
+        ] },
       { "type": "header", "content": "What the customer can do" },
       { "type": "checkbox", "id": "allow_upload", "label": "Click to upload — FRONT", "default": true, "info": "The 'Click to upload your design' box on the front side. Combine it with the keyboard by turning both on." },
       { "type": "checkbox", "id": "allow_upload_back", "label": "Click to upload — BACK", "default": false, "info": "Turn on to give the popup Front/Back tabs with an upload box on the back. The back image and print area come from the Printable area block (optional)." },
@@ -1946,7 +1958,13 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     ] },
     { "type": "method_sublimation", "name": "Print: Sublimation", "limit": 1, "settings": [
       { "type": "paragraph", "content": "This product is sublimation-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
-      { "type": "text", "id": "method_label", "label": "Method name on the order", "default": "Sublimation", "info": "Saved with each order line so fulfilment knows the method." },
+      { "type": "select", "id": "method_label", "label": "Method name on the order", "default": "Sublimation", "info": "Saved with each order line so fulfilment knows the method.",
+        "options": [
+          { "value": "DTF", "label": "DTF" },
+          { "value": "UV", "label": "UV" },
+          { "value": "Engraving", "label": "Engraving" },
+          { "value": "Sublimation", "label": "Sublimation" }
+        ] },
       { "type": "header", "content": "What the customer can do" },
       { "type": "checkbox", "id": "allow_upload", "label": "Click to upload — FRONT", "default": true, "info": "The 'Click to upload your design' box on the front side. Combine it with the keyboard by turning both on." },
       { "type": "checkbox", "id": "allow_upload_back", "label": "Click to upload — BACK", "default": false, "info": "Turn on to give the popup Front/Back tabs with an upload box on the back. The back image and print area come from the Printable area block (optional)." },
@@ -1960,7 +1978,13 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     ] },
     { "type": "method_engraving", "name": "Print: Engraving", "limit": 1, "settings": [
       { "type": "paragraph", "content": "This product is engraved. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
-      { "type": "text", "id": "method_label", "label": "Method name on the order", "default": "Engraving", "info": "Saved with each order line so fulfilment knows the method." },
+      { "type": "select", "id": "method_label", "label": "Method name on the order", "default": "Engraving", "info": "Saved with each order line so fulfilment knows the method.",
+        "options": [
+          { "value": "DTF", "label": "DTF" },
+          { "value": "UV", "label": "UV" },
+          { "value": "Engraving", "label": "Engraving" },
+          { "value": "Sublimation", "label": "Sublimation" }
+        ] },
       { "type": "header", "content": "What the customer can do" },
       { "type": "checkbox", "id": "allow_upload", "label": "Click to upload — FRONT", "default": false, "info": "The 'Click to upload your design' box on the front side. Combine it with the keyboard by turning both on." },
       { "type": "checkbox", "id": "allow_upload_back", "label": "Click to upload — BACK", "default": false, "info": "Turn on to give the popup Front/Back tabs with an upload box on the back. The back image and print area come from the Printable area block (optional)." },
