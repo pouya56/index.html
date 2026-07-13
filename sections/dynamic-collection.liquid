@@ -1468,8 +1468,18 @@
   var activeBtn = tabs ? tabs.querySelector(".dc-tab.is-active") : null;
   currentCat = activeBtn ? activeBtn.getAttribute("data-cat") : "__all";
   applyFilters();
-  // Arrived from the hero with ?q= (their Enter) — land on the results/message.
-  if (query) setTimeout(jumpAfterEnter, 120);
+  // Arrived from the hero with ?q= (their Enter) — land on the results/message
+  // immediately, so the top of the shop page never flashes into view first.
+  if (query) {
+    try { history.scrollRestoration = "manual"; } catch (e) {}
+    jumpAfterEnter();
+    // Images finishing to load above can shift the layout — re-align once,
+    // unless the shopper has already scrolled somewhere on their own.
+    var _qY = window.pageYOffset || 0;
+    window.addEventListener("load", function () {
+      if (Math.abs((window.pageYOffset || 0) - _qY) < 4) jumpAfterEnter();
+    });
+  }
 
   // Colour swatches: paint the dots from a name->colour map; hovering a dot
   // swaps the card image to that colour's variant photo.
