@@ -1015,7 +1015,7 @@
     if (typeof searchEl !== "undefined" && searchEl) searchEl.value = q;
     badgeFilter = null;
     applyFilters();
-    if (query) jumpToProducts();
+    if (query && !_lastNone) jumpToProducts();
   }
   document.addEventListener("click", function (e) {
     var dym = e.target.closest("#dcDymBtn");
@@ -1045,6 +1045,7 @@
   // Combined filter: current category tab AND the live search query.
   var currentCat = "__all";
   var query = "";
+  var _lastNone = false; // did the last filter pass come up empty?
   var badgeFilter = null; // 'new' | 'best' | 'sale' — clicking a badge filters to it
   var badgeLabels = { "new": "New", "best": "Best sellers", "sale": "On sale" };
   var badgeChip = null, badgeChipTxt = null;
@@ -1128,6 +1129,7 @@
     // No matches at all: clear the page below the category bar and show the
     // message right under it (instead of buried below the banners).
     var none = (visible.length + visibleAll.length) === 0;
+    _lastNone = none;
     if (bannersWrap) bannersWrap.style.display = none ? "none" : "";
     if (bannersHeading) bannersHeading.style.display = none ? "none" : "";
     if (allHeading) allHeading.style.display = none ? "none" : "";
@@ -1171,9 +1173,14 @@
     var y = target.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - barH - 14;
     window.scrollTo({ top: Math.max(0, y), behavior: "auto" }); // instant — no scrolling animation
   }
-  // Every search keystroke lands the shopper right on the products.
+  // Jump once the shopper PAUSES typing — and only if there are results.
+  var _jumpT = 0;
   function maybeJumpForSearch() {
-    if (query.length > 0) jumpToProducts();
+    clearTimeout(_jumpT);
+    if (!query.length) return;
+    _jumpT = setTimeout(function () {
+      if (query.length && !_lastNone) jumpToProducts();
+    }, 550);
   }
 
   // A small chip appears while a badge filter is active, so the shopper can clear it.
@@ -1456,7 +1463,7 @@
   currentCat = activeBtn ? activeBtn.getAttribute("data-cat") : "__all";
   applyFilters();
   // Arrived from the hero with ?q= — land the shopper straight on the results.
-  if (query) setTimeout(jumpToProducts, 120);
+  if (query) setTimeout(function () { if (!_lastNone) jumpToProducts(); }, 120);
 
   // Colour swatches: paint the dots from a name->colour map; hovering a dot
   // swaps the card image to that colour's variant photo.
