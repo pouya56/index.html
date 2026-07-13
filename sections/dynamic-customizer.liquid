@@ -48,10 +48,12 @@
     {%- when 'gift' -%}{%- assign blk_gift = block -%}
     {%- when 'print_area' -%}{%- assign blk_print = block -%}
     {%- when 'print_method' -%}{%- assign blk_method = block -%}
-    {%- when 'method_uv' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'uv' -%}{%- assign blk_m = block -%}{%- endif -%}
-    {%- when 'method_dtf' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'dtf' -%}{%- assign blk_m = block -%}{%- endif -%}
-    {%- when 'method_sublimation' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'sublimation' -%}{%- assign blk_m = block -%}{%- endif -%}
-    {%- when 'method_engraving' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'engraving' -%}{%- assign blk_m = block -%}{%- endif -%}
+    {%- comment -%} One "Print method" block; the method comes from its dropdown. {%- endcomment -%}
+    {%- when 'method_dtf' -%}
+      {%- if cust_method == blank -%}
+        {%- assign blk_m = block -%}
+        {%- assign cust_method = block.settings.method_label | default: 'DTF' | downcase -%}
+      {%- endif -%}
     {%- when 'product_source' -%}{%- assign blk_source = block -%}
   {%- endcase -%}
 {%- endfor -%}
@@ -1914,30 +1916,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "text", "id": "label_text", "label": "Front text label", "default": "Text" },
     { "type": "text", "id": "label_back_text", "label": "Back text label", "default": "Back text" }
   ],
-  "max_blocks": 10,
+  "max_blocks": 7,
   "blocks": [
-    { "type": "method_uv", "name": "Print method: UV", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "This product is UV-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
-      { "type": "select", "id": "method_label", "label": "Method name on the order", "default": "UV", "info": "Saved with each order line so fulfilment knows the method.",
-        "options": [
-          { "value": "DTF", "label": "DTF" },
-          { "value": "UV", "label": "UV" },
-          { "value": "Engraving", "label": "Engraving" },
-          { "value": "Sublimation", "label": "Sublimation" }
-        ] },
-      { "type": "header", "content": "What the customer can do" },
-      { "type": "checkbox", "id": "allow_upload", "label": "Click to upload — FRONT", "default": true, "info": "The 'Click to upload your design' box on the front side. Combine it with the keyboard by turning both on." },
-      { "type": "checkbox", "id": "allow_upload_back", "label": "Click to upload — BACK", "default": false, "info": "Turn on to give the popup Front/Back tabs with an upload box on the back. The back image and print area come from the Printable area block (optional)." },
-      { "type": "checkbox", "id": "allow_text", "label": "Typing keyboard (emoji)", "default": true, "info": "The typing bar with fonts and the emoji picker. Works alone or together with the upload box." },
-      { "type": "text", "id": "text_placeholder", "label": "Text field placeholder", "info": "Shown in the typing bar. Leave empty for 'Add your text'." },
-      { "type": "checkbox", "id": "show_emoji", "label": "Show the emoji picker", "default": true },
-      { "type": "textarea", "id": "emoji_list", "label": "Custom emoji (optional)", "info": "Your own emoji, separated by spaces. Leave empty for the standard set." },
-      { "type": "header", "content": "Popup text (optional)" },
-      { "type": "text", "id": "popup_title", "label": "Popup title", "info": "Leave empty to use the popup text from the section's main settings." },
-      { "type": "textarea", "id": "popup_sub", "label": "Popup subtitle" }
-    ] },
-    { "type": "method_dtf", "name": "Print method: DTF", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "This product is DTF-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
+    { "type": "method_dtf", "name": "Print method", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "Pick how this product is printed — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
       { "type": "select", "id": "method_label", "label": "Method name on the order", "default": "DTF", "info": "Saved with each order line so fulfilment knows the method.",
         "options": [
           { "value": "DTF", "label": "DTF" },
@@ -1956,48 +1938,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "text", "id": "popup_title", "label": "Popup title", "info": "Leave empty to use the popup text from the section's main settings." },
       { "type": "textarea", "id": "popup_sub", "label": "Popup subtitle" }
     ] },
-    { "type": "method_sublimation", "name": "Print: Sublimation", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "This product is sublimation-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
-      { "type": "select", "id": "method_label", "label": "Method name on the order", "default": "Sublimation", "info": "Saved with each order line so fulfilment knows the method.",
-        "options": [
-          { "value": "DTF", "label": "DTF" },
-          { "value": "UV", "label": "UV" },
-          { "value": "Engraving", "label": "Engraving" },
-          { "value": "Sublimation", "label": "Sublimation" }
-        ] },
-      { "type": "header", "content": "What the customer can do" },
-      { "type": "checkbox", "id": "allow_upload", "label": "Click to upload — FRONT", "default": true, "info": "The 'Click to upload your design' box on the front side. Combine it with the keyboard by turning both on." },
-      { "type": "checkbox", "id": "allow_upload_back", "label": "Click to upload — BACK", "default": false, "info": "Turn on to give the popup Front/Back tabs with an upload box on the back. The back image and print area come from the Printable area block (optional)." },
-      { "type": "checkbox", "id": "allow_text", "label": "Typing keyboard (emoji)", "default": false, "info": "The typing bar with fonts and the emoji picker. Works alone or together with the upload box." },
-      { "type": "text", "id": "text_placeholder", "label": "Text field placeholder", "info": "Shown in the typing bar. Leave empty for 'Add your text'." },
-      { "type": "checkbox", "id": "show_emoji", "label": "Show the emoji picker", "default": true },
-      { "type": "textarea", "id": "emoji_list", "label": "Custom emoji (optional)", "info": "Your own emoji, separated by spaces. Leave empty for the standard set." },
-      { "type": "header", "content": "Popup text (optional)" },
-      { "type": "text", "id": "popup_title", "label": "Popup title", "info": "Leave empty to use the popup text from the section's main settings." },
-      { "type": "textarea", "id": "popup_sub", "label": "Popup subtitle" }
-    ] },
-    { "type": "method_engraving", "name": "Print: Engraving", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "This product is engraved. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
-      { "type": "select", "id": "method_label", "label": "Method name on the order", "default": "Engraving", "info": "Saved with each order line so fulfilment knows the method.",
-        "options": [
-          { "value": "DTF", "label": "DTF" },
-          { "value": "UV", "label": "UV" },
-          { "value": "Engraving", "label": "Engraving" },
-          { "value": "Sublimation", "label": "Sublimation" }
-        ] },
-      { "type": "header", "content": "What the customer can do" },
-      { "type": "checkbox", "id": "allow_upload", "label": "Click to upload — FRONT", "default": false, "info": "The 'Click to upload your design' box on the front side. Combine it with the keyboard by turning both on." },
-      { "type": "checkbox", "id": "allow_upload_back", "label": "Click to upload — BACK", "default": false, "info": "Turn on to give the popup Front/Back tabs with an upload box on the back. The back image and print area come from the Printable area block (optional)." },
-      { "type": "checkbox", "id": "allow_text", "label": "Typing keyboard (emoji)", "default": true, "info": "The typing bar with fonts and the emoji picker. Works alone or together with the upload box." },
-      { "type": "text", "id": "text_placeholder", "label": "Text field placeholder", "info": "Shown in the typing bar. Leave empty for 'Add your text'." },
-      { "type": "checkbox", "id": "show_emoji", "label": "Show the emoji picker", "default": true },
-      { "type": "textarea", "id": "emoji_list", "label": "Custom emoji (optional)", "info": "Your own emoji, separated by spaces. Leave empty for the standard set." },
-      { "type": "header", "content": "Popup text (optional)" },
-      { "type": "text", "id": "popup_title", "label": "Popup title", "info": "Leave empty to use the popup text from the section's main settings." },
-      { "type": "textarea", "id": "popup_sub", "label": "Popup subtitle" }
-    ] },
     { "type": "print_method", "name": "Print method (old)", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Old version — use the separate 'Print method: …' blocks instead. This dropdown still works if it's already in your template, but a 'Print method: …' block wins over it." },
+      { "type": "paragraph", "content": "Old version — use the 'Print method' block instead. This dropdown still works if it's already in your template, but the 'Print method' block wins over it." },
       { "type": "select", "id": "customizer_type", "label": "Print method / style", "default": "uv",
         "options": [
           { "value": "uv", "label": "UV" },
@@ -2070,7 +2012,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   ],
   "presets": [
     { "name": "Dynamic Customizer", "blocks": [
-      { "type": "method_uv" },
+      { "type": "method_dtf" },
       { "type": "product_source" },
       { "type": "print_area" },
       { "type": "bulk_link" },
