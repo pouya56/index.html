@@ -1173,14 +1173,16 @@
     var y = target.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - barH - 14;
     window.scrollTo({ top: Math.max(0, y), behavior: "auto" }); // instant — no scrolling animation
   }
-  // Jump once the shopper PAUSES typing — and only if there are results.
-  var _jumpT = 0;
-  function maybeJumpForSearch() {
-    clearTimeout(_jumpT);
+  // Enter decides where to land: matching products — or, when nothing matched,
+  // the "no results" message (so it's never stranded out of view at the top).
+  function jumpAfterEnter() {
     if (!query.length) return;
-    _jumpT = setTimeout(function () {
-      if (query.length && !_lastNone) jumpToProducts();
-    }, 550);
+    if (_lastNone) {
+      if (!noRes) return;
+      var barH = tabsWrap ? tabsWrap.offsetHeight : 0;
+      var y = noRes.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - barH - 14;
+      window.scrollTo({ top: Math.max(0, y), behavior: "auto" });
+    } else jumpToProducts();
   }
 
   // A small chip appears while a badge filter is active, so the shopper can clear it.
@@ -1220,7 +1222,9 @@
       query = searchEl.value.trim().toLowerCase();
       if (query) badgeFilter = null; // typing takes over from a badge filter
       applyFilters();
-      maybeJumpForSearch();
+    });
+    if (!resultsUrl) searchEl.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); jumpAfterEnter(); }
     });
     if (resultsUrl) searchEl.addEventListener("keydown", function (e) {
       if (e.key !== "Enter") return;
@@ -1274,7 +1278,9 @@
     if (query) badgeFilter = null;
     if (searchEl) searchEl.value = inlineInput.value; // keep both boxes in sync
     applyFilters();
-    maybeJumpForSearch();
+  });
+  if (inlineInput) inlineInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !resultsUrl) { e.preventDefault(); jumpAfterEnter(); }
   });
   if (inlineInput && resultsUrl) inlineInput.addEventListener("keydown", function (e) {
     if (e.key !== "Enter") return; e.preventDefault();
@@ -1462,8 +1468,8 @@
   var activeBtn = tabs ? tabs.querySelector(".dc-tab.is-active") : null;
   currentCat = activeBtn ? activeBtn.getAttribute("data-cat") : "__all";
   applyFilters();
-  // Arrived from the hero with ?q= — land the shopper straight on the results.
-  if (query) setTimeout(function () { if (!_lastNone) jumpToProducts(); }, 120);
+  // Arrived from the hero with ?q= (their Enter) — land on the results/message.
+  if (query) setTimeout(jumpAfterEnter, 120);
 
   // Colour swatches: paint the dots from a name->colour map; hovering a dot
   // swaps the card image to that colour's variant photo.
