@@ -1942,6 +1942,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       return (l.kind === "img" && l.url) || (l.kind === "text" && l.text);
     });
   }
+  // Per-side upload permission from the print-method block (front/back toggles).
+  function sideUploadAllowed(side) {
+    const S = window.DYN_SETTINGS || {};
+    const v = (side === "back") ? S.methodUploadBack : S.methodUpload;
+    return v !== false;
+  }
   function applyStageForSide(side) {
     const pa = q2("#printArea"), P = sidePrint(side);
     if (pa) {
@@ -2090,9 +2096,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (apply) apply.disabled = !layers.some(function (l) {
       return (l.kind === "img" && l.url) || (l.kind === "text" && l.text);
     });
-    // Photo-only click-to-upload hint hides once a design is on the print area.
+    // Photo-only click-to-upload hint hides once a design is on the print area,
+    // and on a side where uploading is switched off. Same for the paperclip.
     const hint = q2("#printHint");
-    if (hint) hint.style.display = countKind("img") ? "none" : "";
+    if (hint) hint.style.display = (countKind("img") || !sideUploadAllowed(currentSide)) ? "none" : "";
+    const clip = q2('.ios-compose [data-drop="design"]');
+    if (clip) clip.style.display = sideUploadAllowed(currentSide) ? "" : "none";
     // Example placeholder: hide as soon as the customer adds any design.
     const example = q2("#upExample");
     if (example) example.style.display = (layers && layers.length) ? "none" : "";
@@ -2464,6 +2473,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     });
     const drop = q2('[data-drop="design"]'), input = q2('[data-file="design"]');
     async function accept(file) {
+      if (!sideUploadAllowed(currentSide)) return toast("Uploads aren't available on this side");
       if (file.size > 20 * 1024 * 1024) return toast("File is larger than 20 MB");
       if (countKind("img") >= maxImages()) return toast(maxImages() === 1 ? "One design per item — remove the current one first" : "Up to " + maxImages() + " photos");
       toast("Adding " + file.name + "…");
@@ -3674,8 +3684,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       p.method = S.methodLabel;
       if (p.finishes && p.finishes[0]) p.finishes[0].name = S.methodLabel;
     }
-    if (typeof S.methodUpload === "boolean" || typeof S.methodText === "boolean") {
-      const up = S.methodUpload !== false;
+    if (typeof S.methodUpload === "boolean" || typeof S.methodText === "boolean" || typeof S.methodUploadBack === "boolean") {
+      const up = S.methodUpload !== false || S.methodUploadBack !== false; // any side uploadable
       const tx = S.methodText === true;
       if (!up && !tx) { p.photoOnly = true; p.noUpload = false; } // both off makes no sense — keep the basic upload
       else { p.photoOnly = up && !tx; p.noUpload = !up; }
