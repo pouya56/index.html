@@ -174,6 +174,17 @@
     background: linear-gradient(112deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 60%);
     mix-blend-mode: screen; opacity: 0.6; filter: url(#dhLiquid); }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search::after { filter: none; } }
+  /* Autocomplete dropdown under the hero search bar */
+  .dyn-hero .dh-suggest { position: absolute; top: calc(100% + 10px); left: 0; right: 0; z-index: 30;
+    background: rgba(255,255,255,0.94); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,0.65); border-radius: 18px; box-shadow: 0 18px 50px rgba(0,0,0,0.16); padding: 6px; text-align: left; }
+  .dyn-hero .dh-suggest[hidden] { display: none; }
+  .dyn-hero .dh-sug-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 12px;
+    text-decoration: none; color: var(--ink); font-size: 15px; }
+  .dyn-hero .dh-sug-row:hover { background: rgba(0,0,0,0.05); }
+  .dyn-hero .dh-sug-row img { width: 42px; height: 42px; border-radius: 9px; object-fit: cover; background: var(--bg-panel); flex: none; }
+  .dyn-hero .dh-sug-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dyn-hero .dh-sug-price { flex: none; color: var(--ink-soft); font-size: 13.5px; }
   /* Transparent input in the middle */
   .dyn-hero .dh-search-input { position: relative; z-index: 2; flex: 1 1 auto; min-width: 0; width: 100%; font-family: var(--font); font-size: 17px; color: var(--ink);
     background: transparent; border: none; box-shadow: none; padding: 0 8px; }
@@ -1932,6 +1943,64 @@
   window.addEventListener("dyn-wishlist-change", paint);
   window.addEventListener("storage", function (e) { if (e.key === KEY) paint(); });
   paint();
+})();
+</script>
+
+<script>
+/* Hero autocomplete: as the shopper types, show top product matches from
+   Shopify's predictive search (with the same filler-word/who-for cleanup the
+   shop page uses). Enter still goes to the results page as before. */
+(function () {
+  var input = document.getElementById("dhSearch");
+  var bar = input ? input.closest(".dh-search") : null;
+  if (!input || !bar) return;
+  var STOP = {};
+  "a an the some any of for to from with without and or but my mine your yours our his her their its i me we you he she they them us is are am was were be been being do does did will would can could should that this these those it as at on in into by please want wants need needs looking look find get buy buying something anything gift gifts idea ideas present presents give giving good great nice best perfect really who whom whose what which where when why how have has like about around just".split(/\s+/).forEach(function (w) { STOP[w] = 1; });
+  var WHO = { dad: "men", father: "men", husband: "men", him: "men", man: "men", boyfriend: "men", brother: "men", grandpa: "men",
+    mom: "women", mum: "women", mother: "women", wife: "women", her: "women", woman: "women", girlfriend: "women", sister: "women", grandma: "women",
+    kid: "kids", child: "kids", children: "kids", son: "kids", daughter: "kids", boy: "kids", girl: "kids", baby: "kids" };
+  function cleanTerms(raw) {
+    var out = [];
+    String(raw || "").toLowerCase().split(/[^a-z0-9'&+-]+/).forEach(function (t) {
+      if (!t || STOP[t]) return;
+      if (WHO[t]) t = WHO[t];
+      if (out.indexOf(t) < 0) out.push(t);
+    });
+    return out;
+  }
+  var box = document.createElement("div");
+  box.className = "dh-suggest"; box.hidden = true;
+  bar.appendChild(box);
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
+  function hide() { box.hidden = true; }
+  var deb = 0, seq = 0;
+  input.addEventListener("input", function () {
+    clearTimeout(deb);
+    var raw = input.value.trim();
+    if (raw.length < 2) { hide(); return; }
+    deb = setTimeout(function () {
+      var terms = cleanTerms(raw);
+      if (!terms.length) { hide(); return; }
+      var my = ++seq;
+      fetch("/search/suggest.json?q=" + encodeURIComponent(terms.join(" ")) + "&resources[type]=product&resources[limit]=6", { headers: { Accept: "application/json" } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (my !== seq) return; // stale response
+          var prods = (((d || {}).resources || {}).results || {}).products || [];
+          if (!prods.length || document.activeElement !== input) { hide(); return; }
+          box.innerHTML = prods.map(function (p) {
+            var img = p.featured_image && p.featured_image.url ? p.featured_image.url : (p.image || "");
+            return '<a class="dh-sug-row" href="' + esc(p.url) + '">' +
+              (img ? '<img src="' + esc(img) + '" alt="" width="42" height="42" loading="lazy">' : "") +
+              '<span class="dh-sug-name">' + esc(p.title) + '</span>' +
+              (p.price ? '<span class="dh-sug-price">' + esc(p.price) + "</span>" : "") + "</a>";
+          }).join("");
+          box.hidden = false;
+        }).catch(function () { hide(); });
+    }, 220);
+  });
+  input.addEventListener("keydown", function (e) { if (e.key === "Escape" || e.key === "Enter") hide(); });
+  input.addEventListener("blur", function () { setTimeout(hide, 180); });
 })();
 </script>
 

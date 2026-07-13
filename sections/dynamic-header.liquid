@@ -29,9 +29,7 @@
   "currencyCode": {{ shop.currency | default: 'USD' | json }},
   "logo": {% if section.settings.logo_image %}{{ section.settings.logo_image | image_url: width: 700 | json }}{% else %}""{% endif %},
   "brandText": {{ section.settings.brand_text | default: 'DYNAEIMIC' | json }},
-  "showSearch": {% if section.settings.show_search %}true{% else %}false{% endif %},
-  "searchTitle": {{ section.settings.search_title | default: 'What are you looking for?' | json }},
-  "searchPlaceholder": {{ section.settings.search_placeholder | default: 'Try “a birthday gift for my dad”…' | json }}
+  "showSearch": false
 }
 </script>
 <script>
@@ -274,7 +272,8 @@
           {%- elsif is_wish -%}
             <a class="gb-ico" data-hd-wishlist href="{{ block.settings.link | default: routes.root_url }}" aria-label="{{ lbl | escape }}" title="{{ lbl | escape }}" {{ block.shopify_attributes }}>{{ ico }}<span class="gb-badge" data-hd-wishlist-count hidden>0</span></a>
           {%- elsif is_search -%}
-            <a class="gb-ico" data-hd-search href="{{ block.settings.link | default: routes.search_url }}" aria-label="{{ lbl | escape }}" title="{{ lbl | escape }}" {{ block.shopify_attributes }}>{{ ico }}</a>
+            {%- assign search_dest = block.settings.link | default: section.settings.search_page_url | default: routes.all_products_collection_url -%}
+            <a class="gb-ico" data-hd-search href="{{ search_dest }}" aria-label="{{ lbl | escape }}" title="{{ lbl | escape }}" {{ block.shopify_attributes }}>{{ ico }}</a>
           {%- elsif is_user -%}
             {%- assign acct_default = section.settings.account_url | default: '/pages/account' -%}
             {%- unless customer -%}{%- assign acct_default = routes.account_login_url -%}{%- endunless -%}
@@ -912,16 +911,10 @@
     resultsEl = document.getElementById("hdSearchResults");
     titleEl = document.getElementById("hdSearchTitle");
     closeBtn = document.getElementById("hdSearchClose");
-    if (titleEl && S.searchTitle) titleEl.textContent = S.searchTitle;
-    if (input && S.searchPlaceholder) input.setAttribute("placeholder", S.searchPlaceholder);
 
-    // If search is turned off, drop the overlay; search tabs just follow their href.
-    if (S.showSearch === false && overlay) { overlay.remove(); overlay = null; }
-
-    // Wire every "Open search window" tab.
-    document.querySelectorAll("[data-hd-search]").forEach(function (ico) {
-      if (overlay) ico.addEventListener("click", function (e) { e.preventDefault(); if (overlay.classList.contains("open")) close(); else open(); });
-    });
+    // The search overlay is retired: search tabs are plain links straight to
+    // the shop page, where the one smart search engine lives.
+    if (overlay) { overlay.remove(); overlay = null; }
 
     if (input) {
       input.addEventListener("input", onInput);
@@ -1014,11 +1007,9 @@
     { "type": "image_picker", "id": "logo_image", "label": "Logo image (leave blank to show the wordmark below)" },
     { "type": "text", "id": "brand_text", "label": "Wordmark (shown when no logo image)", "default": "DYNAEIMIC" },
     { "type": "url", "id": "logo_link", "label": "Logo links to" },
-    { "type": "header", "content": "Smart search" },
-    { "type": "checkbox", "id": "show_search", "label": "Enable glass search window", "default": true },
-    { "type": "text", "id": "search_title", "label": "Search window title", "default": "What are you looking for?" },
-    { "type": "text", "id": "search_placeholder", "label": "Search box hint", "default": "Try “a birthday gift for my dad”…" },
-    { "type": "paragraph", "content": "Tip: for the best search results, tag your products (men, women, kids, gift, birthday, wedding, colours, etc.). Shopify search matches on those tags." },
+    { "type": "header", "content": "Search" },
+    { "type": "url", "id": "search_page_url", "label": "Search tab goes to", "info": "Where the bar's search icon sends the shopper — your shop page with the smart search. Defaults to the all-products collection." },
+    { "type": "paragraph", "content": "Tip: for the best search results, tag your products (men, women, kids, gift, birthday, wedding, colours, etc.) — the smart search matches on tags too." },
     { "type": "header", "content": "Checkout" },
     { "type": "url", "id": "precheckout_url", "label": "Show suggestion page before checkout (URL)", "info": "Optional. Paste your 'Dynamic Suggest' page URL (e.g. /pages/style) to show accessories when the cart Checkout button is clicked, before the real checkout. Leave empty to go straight to checkout." }
   ],

@@ -165,6 +165,22 @@
   .dyn-col .dc-inline-input { flex: 1 1 auto; min-width: 0; width: 100%; border: none; background: transparent; font-family: var(--font); font-size: 16px; color: var(--ink); padding: 0; }
   .dyn-col .dc-inline-input::placeholder { color: var(--ink-faint); }
   .dyn-col .dc-inline-input:focus { outline: none; box-shadow: none; }
+  /* Autocomplete dropdown + recent searches under the search pill */
+  .dyn-col .dc-inline-search { position: relative; }
+  .dyn-col .dc-suggest { position: absolute; top: calc(100% + 8px); right: 0; width: min(320px, 88vw); z-index: 40;
+    background: rgba(255,255,255,0.92); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,0.65); border-radius: 16px; box-shadow: 0 18px 50px rgba(0,0,0,0.16); padding: 6px; }
+  .dyn-col .dc-suggest[hidden] { display: none; }
+  .dyn-col .dc-sug-head { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-faint); padding: 8px 10px 4px; }
+  .dyn-col .dc-sug-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; background: none;
+    border-radius: 10px; text-decoration: none; color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; text-align: left; }
+  .dyn-col .dc-sug-row:hover { background: rgba(0,0,0,0.05); }
+  .dyn-col .dc-sug-row img, .dyn-col .dc-sug-ph { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--bg-panel); flex: none; }
+  .dyn-col .dc-sug-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dyn-col .dc-sug-price { flex: none; color: var(--ink-soft); font-size: 13px; }
+  .dyn-col .dc-sug-recent svg { color: var(--ink-faint); flex: none; }
+  .dyn-col .dc-nr-dym { font-size: 15px; color: var(--ink-soft); margin: 0 0 14px; }
+  .dyn-col .dc-nr-dym button { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--accent); cursor: pointer; text-decoration: underline; }
 
   /* Image tabs (Apple-style: picture + label, no box - tiles blend into the page) */
   .dyn-col .dc-tabs.is-images { flex: 1 1 auto; gap: 20px; align-items: flex-start; flex-wrap: nowrap; justify-content: flex-start;
@@ -643,7 +659,7 @@
           {%- if product.images.size > 1 -%}{%- assign img2 = product.images[1] -%}{%- endif -%}
 
           {%- capture card_search -%}{{ product.title }} {{ product.type }} {{ product.vendor }} {% for t in product.tags %}{{ t }} {% endfor %}{% for opt in product.options_with_values %}{{ opt.name }} {% for v in opt.values %}{{ v }} {% endfor %}{% endfor %}{%- endcapture -%}
-          <div class="dc-card" data-cat="{{ card_cat | strip }}" data-flags="{% if is_new %}new {% endif %}{% if is_best %}best {% endif %}{% if on_sale %}sale {% endif %}" data-search="{{ card_search | downcase | strip_newlines | escape }}">
+          <div class="dc-card" data-cat="{{ card_cat | strip }}" data-flags="{% if is_new %}new {% endif %}{% if is_best %}best {% endif %}{% if on_sale %}sale {% endif %}" data-search="{{ card_search | downcase | strip_newlines | escape }}" data-price="{{ product.price }}" data-url="{{ product.url }}" data-thumb="{% if product.featured_image %}{{ product.featured_image | image_url: width: 120 }}{% endif %}">
             <div class="dc-media-wrap">
             <a class="dc-media" href="{{ product.url }}">
               <div class="dc-badges">
@@ -781,6 +797,7 @@
       <div class="dc-noresults" id="dcNoResults">
         <svg class="dc-nr-face" viewBox="0 0 48 48" aria-hidden="true"><circle cx="18" cy="20" r="2" fill="currentColor"/><circle cx="30" cy="20" r="2" fill="currentColor"/><path class="dc-nr-mouth" d="M15 30 Q24 23 33 30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
         <p class="dc-nr-title">{{ section.settings.noresults_title | default: 'No matches — yet.' }}</p>
+        <p class="dc-nr-dym" id="dcDym" hidden>Did you mean <button type="button" id="dcDymBtn"></button>?</p>
         <p class="dc-nr-msg">{{ section.settings.noresults_message | default: "Can't find what you're looking for? Tell us what you had in mind — we might still be able to make it." }}</p>
         <a class="dc-nr-btn" href="{{ section.settings.noresults_url | default: '/pages/contact' }}">{{ section.settings.noresults_link_label | default: 'Contact us' }}</a>
       </div>
@@ -791,6 +808,14 @@
 <noscript>
   <style>.dyn-col .dc-grid .dc-card { opacity: 1 !important; transform: none !important; }</style>
 </noscript>
+
+<script type="application/json" id="dcSmartCfg">
+{
+  "synonyms": {{ section.settings.search_synonyms | default: '' | json }},
+  "fb": {{ section.settings.search_fb_url | default: '' | json }},
+  "cheap": {{ section.settings.cheap_price | default: 25 | times: 100 }}
+}
+</script>
 
 <script>
 (function () {
@@ -815,6 +840,7 @@
   // Optional vertical "all products" grid below the row.
   var gridAll = document.getElementById("dcGridAll");
   var allCards = gridAll ? Array.prototype.slice.call(gridAll.querySelectorAll(".dc-card")) : [];
+  var allOrig = allCards.slice(); // catalog order, restored when the search clears
   var bestHeading = root.querySelector(".dc-grid-heading:not(.dc-allgrid-heading):not(.dc-banners-heading)");
   var allHeading = root.querySelector(".dc-allgrid-heading");
   var bannersWrap = document.getElementById("dcBannersWrap");
@@ -863,24 +889,225 @@
     }
     return d[m][n];
   }
-  function wordHit(q, words) {
-    var tol = q.length <= 5 ? 1 : (q.length <= 8 ? 2 : 3);
-    for (var k = 0; k < words.length; k++) {
-      var w = words[k]; if (!w) continue;
-      if (w.indexOf(q) >= 0) return true;         // exact / substring
-      if (q.length < 3) continue;                 // too short to fuzzy safely
-      if (lev(q, w) <= tol) return true;          // whole-word typo
-      if (w.length > q.length && lev(q, w.slice(0, q.length)) <= tol) return true; // typo at the start of a longer word
+  /* ===================== SMART SEARCH ENGINE =====================
+     Understands typos (Levenshtein above), synonyms, plurals/stems,
+     filler words, who-it's-for + occasion words, and price intent —
+     and scores every match so results can be ranked best-first. */
+  var SMART = (function () { try { return JSON.parse(document.getElementById("dcSmartCfg").textContent) || {}; } catch (e) { return {}; } })();
+  var STOPSET = {};
+  ("a an the some any of for to from with without and or but my mine your yours our his her their its i me we you he she they them us is are am was were be been being do does did will would can could should that this these those it as at on in into by please want wants need needs looking look find get buy buying something anything gift gifts idea ideas present presents give giving good great nice best perfect really who whom whose what which where when why how have has like about around just").split(/\s+/).forEach(function (w) { STOPSET[w] = 1; });
+  var WHO = { dad: "men", father: "men", husband: "men", him: "men", man: "men", boyfriend: "men", brother: "men", grandpa: "men", grandfather: "men", uncle: "men", guy: "men", guys: "men",
+    mom: "women", mum: "women", mother: "women", wife: "women", her: "women", woman: "women", girlfriend: "women", sister: "women", grandma: "women", grandmother: "women", aunt: "women", lady: "women",
+    kid: "kids", child: "kids", children: "kids", son: "kids", daughter: "kids", boy: "kids", girl: "kids", baby: "kids", toddler: "kids", teen: "kids" };
+  var OCC = { bday: "birthday", xmas: "christmas", valentines: "valentine", "father's": "men", "mother's": "women" };
+  // Synonyms: sensible defaults + the merchant's own pairs from the settings
+  // ("cup=mug", one per line or comma-separated). Both directions are applied.
+  var SYN = {};
+  function addSyn(a, b) { if (!a || !b || a === b) return; (SYN[a] = SYN[a] || []).indexOf(b) < 0 && SYN[a].push(b); }
+  "cup=mug,tee=t-shirt,tshirt=t-shirt,shirt=t-shirt,top=t-shirt,journal=notebook,diary=notebook,notepad=notebook,planner=notebook,jumper=hoodie,sweater=hoodie,sweatshirt=hoodie,cap=hat,beanie=hat,tumbler=mug,bottle=tumbler,tote=bag,poster=print,artwork=print,photo=picture".split(",").forEach(function (p) {
+    var kv = p.split("="); addSyn(kv[0], kv[1]); addSyn(kv[1], kv[0]);
+  });
+  String(SMART.synonyms || "").toLowerCase().split(/[\n,]+/).forEach(function (p) {
+    var kv = p.split("="); if (kv.length === 2) { addSyn(kv[0].trim(), kv[1].trim()); addSyn(kv[1].trim(), kv[0].trim()); }
+  });
+  function stem(w) {
+    if (w.length > 4) { w = w.replace(/ies$/, "y").replace(/(ing|ed)$/, ""); }
+    if (w.length > 3) { w = w.replace(/e?s$/, ""); }
+    return w;
+  }
+  // Turn the raw query into search tokens + a price cap ("under $25", "cheap").
+  function smartTokens(raw) {
+    raw = " " + String(raw || "").toLowerCase().trim() + " ";
+    var maxPrice = null;
+    raw = raw.replace(/(?:under|below|less than|max|up to)\s*\$?\s*(\d+)/g, function (_, n) { maxPrice = n * 100; return " "; });
+    raw = raw.replace(/\$\s*(\d+)/g, function (_, n) { maxPrice = n * 100; return " "; });
+    if (/\b(cheap|cheapest|affordable|budget)\b/.test(raw)) { maxPrice = SMART.cheap || 2500; raw = raw.replace(/\b(cheap|cheapest|affordable|budget)\b/g, " "); }
+    var out = [];
+    raw.split(/[^a-z0-9'&+-]+/).forEach(function (t) {
+      if (!t || STOPSET[t]) return;
+      if (WHO[t]) t = WHO[t]; else if (OCC[t]) t = OCC[t];
+      if (out.indexOf(t) < 0) out.push(t);
+    });
+    return { tokens: out, maxPrice: maxPrice };
+  }
+  function variantsOf(t) {
+    var v = [t], s = stem(t);
+    if (s !== t) v.push(s);
+    (SYN[t] || []).forEach(function (x) { if (v.indexOf(x) < 0) { v.push(x); var xs = stem(x); if (xs !== x && v.indexOf(xs) < 0) v.push(xs); } });
+    return v;
+  }
+  // Best score for one token against a card's words (0 = no hit).
+  function tokenScore(tok, words, titleText) {
+    var vars = variantsOf(tok), best = 0;
+    for (var vi = 0; vi < vars.length; vi++) {
+      var q = vars[vi];
+      var tol = q.length <= 5 ? 1 : (q.length <= 8 ? 2 : 3);
+      for (var k = 0; k < words.length; k++) {
+        var w = words[k]; if (!w) continue;
+        var s = 0;
+        if (w === q) s = 6;
+        else if (w.indexOf(q) === 0) s = 4;
+        else if (w.indexOf(q) >= 0) s = 3;
+        else if (stem(w) === stem(q)) s = 4;
+        else if (q.length >= 3) {
+          if (lev(q, w) <= tol) s = 2;
+          else if (w.length > q.length && lev(q, w.slice(0, q.length)) <= tol) s = 2;
+        }
+        if (s) {
+          if (vi > 0) s -= 1;                                   // synonym hit ranks a touch lower
+          if (titleText && titleText.indexOf(w) >= 0) s += 3;   // title hits outrank tag hits
+          if (s > best) best = s;
+        }
+      }
     }
-    return false;
+    return best;
   }
-  function queryMatch(query, text) {
+  // Whole-card score. All tokens must hit (long queries may miss one).
+  function scoreCard(sq, c) {
+    var toks = sq.tokens;
+    if (!toks.length) return 1;
+    var words = (c.getAttribute("data-search") || "").split(/\s+/);
+    var tEl = c.querySelector(".dc-title");
+    var titleText = tEl ? tEl.textContent.toLowerCase() : "";
+    var total = 0, misses = 0, allowed = toks.length >= 3 ? 1 : 0;
+    for (var i = 0; i < toks.length; i++) {
+      var s = tokenScore(toks[i], words, titleText);
+      if (!s) { if (++misses > allowed) return 0; }
+      else total += s;
+    }
+    return total;
+  }
+  function priceOk(sq, c) {
+    if (!sq || !sq.maxPrice) return true;
+    var p = parseInt(c.getAttribute("data-price"), 10);
+    return isNaN(p) ? true : p <= sq.maxPrice;
+  }
+  function queryMatch(query, text) { // kept for callers that just need yes/no
     if (!query) return true;
-    if (text.indexOf(query) >= 0) return true;    // fast path
-    var qw = query.split(/\s+/), tw = text.split(/\s+/), i;
-    for (i = 0; i < qw.length; i++) { if (qw[i] && !wordHit(qw[i], tw)) return false; }
-    return true;
+    var sq = smartTokens(query), fake = { getAttribute: function (k) { return k === "data-search" ? text : ""; }, querySelector: function () { return null; } };
+    return scoreCard(sq, fake) > 0;
   }
+  /* =================== END SMART SEARCH ENGINE =================== */
+
+  /* ---- Smart-search UX: "did you mean", suggestions, recents, miss log ---- */
+  var lastResults = [];
+  // Vocabulary for "Did you mean…?" — every word the catalog actually contains.
+  var VOCAB = (function () {
+    var m = {};
+    allCards.concat(cards).forEach(function (c) {
+      (c.getAttribute("data-search") || "").split(/\s+/).forEach(function (w) {
+        if (w.length >= 3) m[w] = (m[w] || 0) + 1;
+      });
+    });
+    return m;
+  })();
+  function bestCorrection(raw) {
+    var toks = String(raw || "").toLowerCase().split(/[^a-z0-9'&+-]+/).filter(function (t) { return t && !STOPSET[t]; });
+    var fix = null, fixFrom = "";
+    toks.forEach(function (t) {
+      if (fix || VOCAB[t]) return;                 // token already exists — nothing to correct
+      var best = null, bd = 9, w, d;
+      for (w in VOCAB) {
+        d = lev(t, w);
+        if (d < bd || (d === bd && best && VOCAB[w] > VOCAB[best])) { bd = d; best = w; }
+      }
+      if (best && bd <= (t.length <= 4 ? 1 : 2)) { fix = best; fixFrom = t; }
+    });
+    return fix ? String(raw).toLowerCase().replace(fixFrom, fix) : null;
+  }
+  function updateDym(show) {
+    var box = document.getElementById("dcDym"), btn = document.getElementById("dcDymBtn");
+    if (!box || !btn) return;
+    var sug = show ? bestCorrection(query) : null;
+    if (!sug || sug === query) { box.hidden = true; return; }
+    btn.textContent = sug;
+    box.hidden = false;
+  }
+  function setQuery(q) {
+    query = String(q || "").toLowerCase().trim();
+    var si = document.getElementById("dcInlineInput"); if (si) si.value = q;
+    if (typeof searchEl !== "undefined" && searchEl) searchEl.value = q;
+    badgeFilter = null;
+    applyFilters();
+    saveRecent(q);
+  }
+  document.addEventListener("click", function (e) {
+    var dym = e.target.closest("#dcDymBtn");
+    if (dym) { setQuery(dym.textContent); return; }
+    var rec = e.target.closest(".dc-sug-recent");
+    if (rec) {
+      setQuery(rec.getAttribute("data-q") || "");
+      var i = document.getElementById("dcInlineInput"); if (i) i.focus({ preventScroll: true });
+      return;
+    }
+    if (sugBox && !e.target.closest("#dcInlineSearch")) hideSuggest();
+  });
+  // Recent searches (this browser only).
+  function recents() { try { return JSON.parse(localStorage.getItem("dyn_recent_search") || "[]"); } catch (e) { return []; } }
+  function saveRecent(q) {
+    q = String(q || "").trim(); if (q.length < 2) return;
+    try {
+      var r = recents().filter(function (x) { return x !== q; });
+      r.unshift(q); localStorage.setItem("dyn_recent_search", JSON.stringify(r.slice(0, 6)));
+    } catch (e) {}
+  }
+  // Log searches that found nothing (browser list + optional Firebase counter),
+  // so the merchant can see what shoppers wanted and add tags/products.
+  var missT = 0, lastLogged = "";
+  function scheduleMissLog(q) {
+    clearTimeout(missT);
+    missT = setTimeout(function () {
+      q = String(q || "").trim(); if (q.length < 3 || q === lastLogged) return;
+      lastLogged = q;
+      try {
+        var l = JSON.parse(localStorage.getItem("dyn_search_misses") || "[]");
+        l.unshift({ q: q, t: Date.now() }); localStorage.setItem("dyn_search_misses", JSON.stringify(l.slice(0, 50)));
+      } catch (e) {}
+      var fb = String(SMART.fb || "").replace(/\/+$/, "");
+      if (fb) {
+        var key = q.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) || "blank";
+        try { fetch(fb + "/search_misses/" + key + ".json", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ".sv": { "increment": 1 } }) }).catch(function () {}); } catch (e) {}
+      }
+    }, 1200);
+  }
+  // Autocomplete dropdown under the pill: top-ranked products while typing,
+  // recent searches when the box is empty.
+  var sugBox = null;
+  function ensureSugBox() {
+    var host = document.getElementById("dcInlineSearch");
+    if (!host) return null;
+    if (!sugBox) { sugBox = document.createElement("div"); sugBox.className = "dc-suggest"; sugBox.hidden = true; host.appendChild(sugBox); }
+    return sugBox;
+  }
+  function hideSuggest() { if (sugBox) sugBox.hidden = true; }
+  function esc2(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
+  function updateSuggest() {
+    var box = ensureSugBox(); if (!box) return;
+    var input = document.getElementById("dcInlineInput");
+    if (!input || document.activeElement !== input) { box.hidden = true; return; }
+    if (query.length >= 2 && lastResults.length) {
+      box.innerHTML = lastResults.slice(0, 6).map(function (c) {
+        var t = c.querySelector(".dc-title"); var name = t ? t.textContent.trim() : "";
+        var pr = c.querySelector(".dc-now"); var price = pr ? pr.textContent.trim() : "";
+        var link = c.getAttribute("data-url") || "#";
+        var th = c.getAttribute("data-thumb");
+        return '<a class="dc-sug-row" href="' + esc2(link) + '">' +
+          (th ? '<img src="' + esc2(th) + '" alt="" width="40" height="40" loading="lazy">' : '<span class="dc-sug-ph"></span>') +
+          '<span class="dc-sug-name">' + esc2(name) + '</span><span class="dc-sug-price">' + esc2(price) + "</span></a>";
+      }).join("");
+      box.hidden = false;
+    } else if (!query.length) {
+      var r = recents();
+      if (!r.length) { box.hidden = true; return; }
+      box.innerHTML = '<div class="dc-sug-head">Recent searches</div>' + r.map(function (q2) {
+        return '<button type="button" class="dc-sug-row dc-sug-recent" data-q="' + esc2(q2) + '">' +
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>' +
+          '<span class="dc-sug-name">' + esc2(q2) + "</span></button>";
+      }).join("");
+      box.hidden = false;
+    } else box.hidden = true;
+  }
+  /* -------------------- end smart-search UX -------------------- */
 
   // Combined filter: current category tab AND the live search query.
   var currentCat = "__all";
@@ -904,13 +1131,20 @@
     // When the shopper is searching, look across ALL categories (ignore the tab).
     // With no search text, just show the active tab's category.
     var searching = query.length > 0;
+    var sq = searching ? smartTokens(query) : null;
+    function qScore(c) {
+      if (!sq) return 1;
+      var s = scoreCard(sq, c);
+      return (s > 0 && priceOk(sq, c)) ? s : 0;
+    }
     if (tabs) tabs.querySelectorAll(".dc-tab").forEach(function (b) {
       b.classList.toggle("is-active", searching ? b.getAttribute("data-cat") === "__all" : b.getAttribute("data-cat") === currentCat);
     });
     function baseMatch(c) {
       var cc = " " + (c.getAttribute("data-cat") || "") + " ";
       var okCat = currentCat === "__all" || cc.indexOf(" " + currentCat + " ") >= 0;
-      var okQ = !query || queryMatch(query, c.getAttribute("data-search") || "");
+      var score = qScore(c); c._score = score;
+      var okQ = score > 0;
       if (badgeFilter) {
         var fl = " " + (c.getAttribute("data-flags") || "") + " ";
         return fl.indexOf(" " + badgeFilter + " ") >= 0 && okQ;
@@ -920,7 +1154,8 @@
     // Top best-seller row: stays fixed across category tabs (ignores the
     // category), only responding to search text / badge filters.
     function shelfMatch(c) {
-      var okQ = !query || queryMatch(query, c.getAttribute("data-search") || "");
+      var score = qScore(c); c._score = score;
+      var okQ = score > 0;
       if (badgeFilter) {
         var fl = " " + (c.getAttribute("data-flags") || "") + " ";
         return fl.indexOf(" " + badgeFilter + " ") >= 0 && okQ;
@@ -944,6 +1179,11 @@
       c.style.display = m ? "" : "none";
       if (m) visibleAll.push(c);
     });
+    // Google-like ranking: while searching, reorder the grid best-match-first;
+    // when the search clears, restore the catalog order.
+    var ranked = visibleAll.slice().sort(function (a, b) { return (b._score || 0) - (a._score || 0); });
+    if (gridAll) (searching ? ranked : allOrig).forEach(function (c) { gridAll.appendChild(c); });
+    lastResults = searching ? ranked : [];
     // While a category/search is active, make the product grid at least a screen
     // tall so it can scroll up to the top (banners tuck away above; scroll up to see them).
     root.classList.toggle("dc-cat-focused", searching || (currentCat && currentCat !== "__all") || !!badgeFilter);
@@ -969,9 +1209,12 @@
         tabsWrap.insertAdjacentElement("afterend", noRes);
       }
     }
+    updateDym(searching && none);
+    if (searching && none) scheduleMissLog(query);
     grid.scrollLeft = 0;
     reveal(visible);
     updateGridArrows();
+    updateSuggest();
   }
 
   if (tabs) tabs.addEventListener("click", function (e) {
@@ -1077,7 +1320,12 @@
     if (searchBar && searchBar.classList.contains("is-open")) { if (searchEl) searchEl.focus({ preventScroll: true }); } else { openSearch(); }
   });
   if (searchEl) searchEl.addEventListener("blur", function () { setTimeout(closeSearch, 140); });
-  if (inlineInput) inlineInput.addEventListener("blur", function () { setTimeout(closeInline, 140); });
+  if (inlineInput) inlineInput.addEventListener("blur", function () { setTimeout(function () { closeInline(); hideSuggest(); }, 160); });
+  if (inlineInput) inlineInput.addEventListener("focus", function () { updateSuggest(); });
+  if (inlineInput) inlineInput.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { hideSuggest(); return; }
+    if (e.key === "Enter" && !resultsUrl) { saveRecent(inlineInput.value); hideSuggest(); }
+  });
   if (inlineInput) inlineInput.addEventListener("input", function () {
     if (resultsUrl) return;
     query = inlineInput.value.trim().toLowerCase();
@@ -1263,7 +1511,7 @@
   if (!resultsUrl) {
     try {
       var urlQ = new URLSearchParams(window.location.search).get("q");
-      if (urlQ) { if (searchEl) searchEl.value = urlQ; query = urlQ.trim().toLowerCase(); }
+      if (urlQ) { if (searchEl) searchEl.value = urlQ; query = urlQ.trim().toLowerCase(); saveRecent(urlQ); }
     } catch (e) {}
   }
 
@@ -1439,6 +1687,11 @@
     { "type": "text", "id": "empty_link_label", "label": "Empty button label", "default": "Browse all products" },
 
     { "type": "header", "content": "No search results" },
+    { "type": "header", "content": "Smart search" },
+    { "type": "paragraph", "content": "The search already handles typos, plurals, filler words (\"a gift for my dad\" → men), prices (\"under $25\", \"cheap\") and ranks results best-first. Add your own synonyms below." },
+    { "type": "textarea", "id": "search_synonyms", "label": "Extra synonyms", "info": "One pair per line, e.g. cup=mug. Both directions apply. Built-in pairs (cup=mug, tee=t-shirt, journal=notebook…) stay active.", "default": "" },
+    { "type": "range", "id": "cheap_price", "label": "“Cheap” means under", "min": 5, "max": 200, "step": 5, "unit": "$", "default": 25 },
+    { "type": "text", "id": "search_fb_url", "label": "Firebase URL for search analytics (optional)", "info": "Paste the same Firebase Realtime Database URL you use for likes, and searches that found nothing are counted under /search_misses — so you can see what shoppers wanted." },
     { "type": "text", "id": "noresults_title", "label": "Title", "default": "No matches — yet." },
     { "type": "textarea", "id": "noresults_message", "label": "Message", "default": "Can't find what you're looking for? Tell us what you had in mind — we might still be able to make it." },
     { "type": "text", "id": "noresults_link_label", "label": "Button text", "default": "Contact us" },
