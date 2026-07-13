@@ -39,6 +39,7 @@
 {%- assign blk_print = blank -%}
 {%- assign blk_method = blank -%}
 {%- assign blk_source = blank -%}
+{%- assign cust_method = blank -%}
 {%- for block in section.blocks -%}
   {%- case block.type -%}
     {%- when 'bulk_link' -%}{%- assign blk_bulk = block -%}
@@ -46,9 +47,15 @@
     {%- when 'gift' -%}{%- assign blk_gift = block -%}
     {%- when 'print_area' -%}{%- assign blk_print = block -%}
     {%- when 'print_method' -%}{%- assign blk_method = block -%}
+    {%- when 'method_uv' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'uv' -%}{%- endif -%}
+    {%- when 'method_dtf' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'dtf' -%}{%- endif -%}
+    {%- when 'method_sublimation' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'sublimation' -%}{%- endif -%}
+    {%- when 'method_engraving' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'engraving' -%}{%- endif -%}
     {%- when 'product_source' -%}{%- assign blk_source = block -%}
   {%- endcase -%}
 {%- endfor -%}
+{%- comment -%} No method block added? Fall back to the old dropdown block, then UV. {%- endcomment -%}
+{%- if cust_method == blank -%}{%- assign cust_method = blk_method.settings.customizer_type | default: 'uv' -%}{%- endif -%}
 
 {%- if product != blank -%}
   {%- assign dyn_product = product -%}
@@ -93,7 +100,7 @@
     "onProductPage": {% if dyn_product %}true{% else %}false{% endif %}
   },
   "settings": {
-    "customizerType": {{ blk_method.settings.customizer_type | default: 'uv' | json }},
+    "customizerType": {{ cust_method | json }},
     "madeToOrder": {% if dyn_product.tags contains 'made-to-order' or dyn_product.tags contains 'made_to_order' %}true{% else %}false{% endif %},
     {%- assign gw_vid = blk_gift.settings.gift_wrap_variant_id -%}
     {%- assign gw_money = blk_gift.settings.gift_wrap_money -%}
@@ -1891,11 +1898,23 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "text", "id": "label_text", "label": "Front text label", "default": "Text" },
     { "type": "text", "id": "label_back_text", "label": "Back text label", "default": "Back text" }
   ],
-  "max_blocks": 6,
+  "max_blocks": 10,
   "blocks": [
-    { "type": "print_method", "name": "Print method", "limit": 1, "settings": [
+    { "type": "method_uv", "name": "Print method: UV", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "This product is UV-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." }
+    ] },
+    { "type": "method_dtf", "name": "Print method: DTF", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "This product is DTF-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." }
+    ] },
+    { "type": "method_sublimation", "name": "Print: Sublimation", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "This product is sublimation-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." }
+    ] },
+    { "type": "method_engraving", "name": "Print: Engraving", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "This product is engraved. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." }
+    ] },
+    { "type": "print_method", "name": "Print method (old)", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "Old version — use the separate 'Print method: …' blocks instead. This dropdown still works if it's already in your template, but a 'Print method: …' block wins over it." },
       { "type": "select", "id": "customizer_type", "label": "Print method / style", "default": "uv",
-        "info": "All four use the same design popup. The chosen method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template.",
         "options": [
           { "value": "uv", "label": "UV" },
           { "value": "dtf", "label": "DTF" },
@@ -1967,7 +1986,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   ],
   "presets": [
     { "name": "Dynamic Customizer", "blocks": [
-      { "type": "print_method" },
+      { "type": "method_uv" },
       { "type": "product_source" },
       { "type": "print_area" },
       { "type": "bulk_link" },
