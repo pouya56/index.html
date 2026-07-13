@@ -138,8 +138,8 @@
     "id": {{ product.id }},
     "handle": {{ product.handle | json }},
     "title": {{ product.title | json }},
-    "image": {{ product.featured_image | image_url: width: 500 | json }},
-    "options": [{%- for o in product.options_with_values -%}{ "name": {{ o.name | json }}, "values": {{ o.values | json }} }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}],
+    "image": {% if product.featured_image %}{{ product.featured_image | image_url: width: 500 | json }}{% else %}null{% endif %},
+    "options": [{%- for o in product.options_with_values -%}{%- assign o_vals = o.values | join: '@@@' | split: '@@@' -%}{ "name": {{ o.name | json }}, "values": {{ o_vals | json }} }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}],
     "variants": [{%- for v in product.variants -%}{ "id": {{ v.id }}, "options": {{ v.options | json }}, "available": {{ v.available }} }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}]
   }{%- unless forloop.last -%},{%- endunless -%}
 {%- endfor -%}
@@ -199,8 +199,17 @@
   var rowsEl = document.getElementById("dboRows");
   var tpl = document.getElementById("dboRowTpl");
   if (!root || !dataEl || !rowsEl || !tpl) return;
-  var PRODUCTS = [];
-  try { PRODUCTS = JSON.parse(dataEl.textContent) || []; } catch (e) { return; }
+  var PRODUCTS = [], LOAD_ERR = false;
+  try { PRODUCTS = JSON.parse(dataEl.textContent) || []; } catch (e) { LOAD_ERR = true; }
+  // Option values can arrive as plain names or (newer Shopify) as objects.
+  function valNames(o) {
+    return (o && o.values ? o.values : []).map(function (v) {
+      return (v && typeof v === "object") ? String(v.name || v.title || "") : String(v);
+    });
+  }
+  PRODUCTS.forEach(function (p) {
+    (p.options || []).forEach(function (o) { o.values = valNames(o); });
+  });
 
   var addBtn = document.getElementById("dboAdd");
   var submitBtn = document.getElementById("dboSubmit");
@@ -240,6 +249,15 @@
   // ---- product picker ----
   function buildPicker() {
     pickerGrid.innerHTML = "";
+    if (LOAD_ERR || !PRODUCTS.length) {
+      var msg = document.createElement("div");
+      msg.style.cssText = "grid-column:1/-1;padding:30px 10px;text-align:center;color:#6e6e73;font-size:14.5px;line-height:1.5;";
+      msg.textContent = LOAD_ERR
+        ? "The product list couldn’t be loaded — please refresh the page. If it keeps happening, re-save the section in the theme editor."
+        : "No products found — pick a collection with products in the section settings.";
+      pickerGrid.appendChild(msg);
+      return;
+    }
     PRODUCTS.forEach(function (p) {
       var t = document.createElement("button"); t.type = "button"; t.className = "dbo-tile"; t.setAttribute("data-id", p.id); t.setAttribute("data-name", (p.title || "").toLowerCase());
       t.innerHTML = (p.image ? '<img class="dbo-tile-img" src="' + p.image + '" alt="">' : '<div class="dbo-tile-img"></div>') + '<div class="dbo-tile-name">' + esc(p.title) + '</div>';
