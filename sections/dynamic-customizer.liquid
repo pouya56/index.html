@@ -127,7 +127,8 @@
       "wrapLabel": {{ blk_gift.settings.gift_wrap_label | default: 'Add gift wrapping' | json }},
       "noteLabel": {{ blk_gift.settings.gift_note_label | default: 'Add a gift note (optional)' | json }}
     },
-    {%- assign fpos = blk_print.settings.print_pos | default: '22, 30, 56, 40' | replace: ' ', '' | split: ',' -%}
+    {%- comment -%} Tolerant parse: spaces ignored, a '.' typo counts as a comma. {%- endcomment -%}
+    {%- assign fpos = blk_print.settings.print_pos | default: '22, 30, 56, 40' | replace: ' ', '' | replace: '.', ',' | split: ',' -%}
     "print": {
       "show": {% if blk_print == blank or blk_print.settings.print_show %}true{% else %}false{% endif %},
       "x": {{ fpos[0] | plus: 0 }},
@@ -149,7 +150,7 @@
     "labelText": {{ section.settings.label_text | default: 'Text' | json }},
     "labelBackText": {{ section.settings.label_back_text | default: 'Back text' | json }},
     "backImage": {% if blk_print.settings.back_image %}{{ blk_print.settings.back_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
-    {%- assign bpos = blk_print.settings.back_pos | default: '22, 30, 56, 40' | replace: ' ', '' | split: ',' -%}
+    {%- assign bpos = blk_print.settings.back_pos | default: '22, 30, 56, 40' | replace: ' ', '' | replace: '.', ',' | split: ',' -%}
     "printBack": {
       "show": {% if blk_print.settings.back_print_show %}true{% else %}false{% endif %},
       "x": {{ bpos[0] | plus: 0 }},

@@ -1955,8 +1955,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (pa) {
       pa.style.left = (P.x != null ? P.x : 22) + "%";
       pa.style.top = (P.y != null ? P.y : 30) + "%";
-      pa.style.width = (P.w != null ? P.w : 56) + "%";
-      pa.style.height = (P.h != null ? P.h : 40) + "%";
+      // A malformed position setting can yield 0 — never collapse the area.
+      pa.style.width = (P.w > 0 ? P.w : 56) + "%";
+      pa.style.height = (P.h > 0 ? P.h : 40) + "%";
       pa.classList.toggle("outline", P.show !== false);
     }
     const img = q2(".engrave-frame > img"); if (img) img.src = sideImage(side) || "";
