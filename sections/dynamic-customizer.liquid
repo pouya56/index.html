@@ -349,6 +349,9 @@ button { font-family: inherit; cursor: pointer; }
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   white-space: nowrap;
 }
+/* [hidden] must always win — the inline-flex above otherwise overrides the
+   browser default and hidden buttons (Customize / Add to Cart) stay visible. */
+.btn[hidden] { display: none !important; }
 .btn:active { transform: scale(0.97); }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover { background: var(--accent-hover); }
