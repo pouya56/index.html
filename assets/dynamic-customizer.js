@@ -1455,9 +1455,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     let sidesIdx = -1, sidesFront = "", sidesBoth = "";
     if (sidesName) {
       sidesIdx = options.findIndex((o) => String(o.name || "").trim().toLowerCase() === sidesName);
-    } else if (DS.enableBack || DS.methodUploadBack === true) {
-      // Back side is on (Printable-area checkbox OR the method block's BACK
-      // toggle) but no option name was typed — auto-find a Print-sides option.
+    } else {
+      // Always auto-find a Print-sides option — it's driven by the popup (back
+      // design → pricier variant) and must never show as raw pills. With the
+      // back switched off it simply stays pinned to the front-only value.
       const isSides = (nm) => { const n = String(nm || "").trim().toLowerCase(); return n === "print sides" || n === "print side" || n === "sides" || n === "side" || n.indexOf("print side") >= 0; };
       sidesIdx = options.findIndex((o) => isSides(o.name) && (o.values || []).length >= 2);
     }
