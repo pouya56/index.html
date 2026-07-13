@@ -2001,12 +2001,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     renderUpEls();
   }
 
-  // ---- Zoomable preview of the uploaded design (magnifier chip / double-click) ----
-  let _dpv = null, _dpvUrl = null;
+  // ---- Zoomable preview of the design ON the product (composed view) ----
+  let _dpv = null;
   function dpvClose() {
-    if (!_dpv) return;
-    _dpv.classList.remove("open");
-    if (_dpvUrl) { try { URL.revokeObjectURL(_dpvUrl); } catch (e) {} _dpvUrl = null; }
+    if (_dpv) _dpv.classList.remove("open");
   }
   function ensureDpv() {
     if (_dpv) return _dpv;
@@ -2029,7 +2027,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     _dpv = d;
     return d;
   }
-  function openDesignPreview(layer) {
+  function openDesignPreview() {
     const d = ensureDpv();
     // The preview lives INSIDE the popup, covering the product stage area.
     const host = q2(".engrave-stage") || document.body;
@@ -2037,12 +2035,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const img = d.querySelector("img");
     const zoomEl = d.querySelector(".dpv-zoom");
     const badge = d.querySelector(".dpv-badge");
-    const list = [];
-    ["front", "back"].forEach((s) => (sideLayers[s] || []).forEach((l) => { if (l.kind === "img" && l.url) list.push(l); }));
-    if (!list.length) return;
-    let idx = Math.max(0, list.indexOf(layer));
+    const hasContent = (s) => (sideLayers[s] || []).some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text));
+    const sides = ["front", "back"].filter(hasContent);
+    if (!sides.length) return;
+    let idx = Math.max(0, sides.indexOf(currentSide));
     const prev = d.querySelector(".dpv-prev"), next = d.querySelector(".dpv-next");
-    prev.style.display = next.style.display = list.length > 1 ? "" : "none";
+    prev.style.display = next.style.display = sides.length > 1 ? "" : "none";
 
     let scale = 1, fit = 1, x = 0, y = 0;
     function apply() {
@@ -2057,28 +2055,37 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       scale = s2;
       apply();
     }
-    function load(i) {
-      idx = (i + list.length) % list.length;
-      const l = list[idx];
-      if (_dpvUrl) { try { URL.revokeObjectURL(_dpvUrl); } catch (e) {} _dpvUrl = null; }
-      // Show the ORIGINAL file at full resolution when we still have it.
-      let src = l.cloudUrl || l.url;
-      if (l.file instanceof File && /^image\//.test(l.file.type || "")) {
-        try { _dpvUrl = URL.createObjectURL(l.file); src = _dpvUrl; } catch (e) {}
-      }
+    async function load(i) {
+      idx = (i + sides.length) % sides.length;
+      const side = sides[idx];
       badge.hidden = true;
+      zoomEl.textContent = "…";
+      // Compose the product photo with everything placed on it — the same
+      // render that gets attached to the order.
+      const comp = await compositeSide(sideLayers[side], sideImage(side), sidePrint(side));
+      if (!comp) { dpvClose(); toast("Couldn't build the preview"); return; }
       img.onload = function () {
         fit = Math.min((d.clientWidth * 0.88) / img.naturalWidth, (d.clientHeight * 0.72) / img.naturalHeight, 1);
         scale = fit; x = 0; y = 0; apply();
-        // Print-quality verdict: does the file have enough pixels for how large
-        // it's placed? (layer.scale = % of the print-area width it spans.)
-        const needed = ((l.scale || 100) / 100) * 1500;
-        badge.hidden = false;
-        const ok = img.naturalWidth >= needed;
-        badge.className = "dpv-badge " + (ok ? "ok" : "warn");
-        badge.textContent = ok ? "✓ Sharp — great for printing" : "⚠ Low resolution — may look soft printed this large";
+        // Print-quality verdict: is any design stretched beyond its pixels?
+        // (layer.scale = % of the print-area width it spans.)
+        const imgsL = (sideLayers[side] || []).filter((l) => l.kind === "img" && l.url);
+        if (imgsL.length) {
+          Promise.all(imgsL.map((l) => new Promise((res) => {
+            const t = new Image();
+            t.onload = () => res(t.naturalWidth >= ((l.scale || 100) / 100) * 1500);
+            t.onerror = () => res(true);
+            t.src = l.url;
+          }))).then((oks) => {
+            if (sides[idx] !== side) return; // side changed while checking
+            const ok = oks.every(Boolean);
+            badge.hidden = false;
+            badge.className = "dpv-badge " + (ok ? "ok" : "warn");
+            badge.textContent = ok ? "✓ Sharp — great for printing" : "⚠ A design may print soft at this size";
+          });
+        }
       };
-      img.src = src;
+      img.src = comp;
     }
     prev.onclick = () => load(idx - 1);
     next.onclick = () => load(idx + 1);
@@ -2133,14 +2140,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       el.innerHTML = '<img alt="">' +
         '<span class="rotate-handle" title="Rotate"></span>' +
         '<span class="upload-handle"></span>' +
-        '<button class="up-zoom" type="button" aria-label="Preview design" title="Preview your design">' +
-          '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><path d="M8.5 11h5M11 8.5v5"/></svg></button>' +
         '<button class="up-remove" type="button" aria-label="Remove image">×</button>';
       const im = el.querySelector("img"); if (im) { im.crossOrigin = "anonymous"; if (layer.url) im.src = layer.url; }
-      const zm = el.querySelector(".up-zoom");
-      if (zm) zm.addEventListener("pointerdown", (e) => e.stopPropagation());
-      if (zm) zm.onclick = (e) => { e.stopPropagation(); openDesignPreview(layer); };
-      el.addEventListener("dblclick", (e) => { e.stopPropagation(); openDesignPreview(layer); });
+      el.addEventListener("dblclick", (e) => { e.stopPropagation(); openDesignPreview(); });
     } else {
       el.innerHTML = '<span class="up-txt-content"></span>' +
         '<span class="rotate-handle" title="Rotate"></span>' +
@@ -2240,6 +2242,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const showUp = sideUploadAllowed(currentSide) && countKind("img") < maxImages();
     if (hint) hint.style.display = (showUp && !layers.length) ? "" : "none";
     if (chipUp) chipUp.hidden = !(showUp && layers.length > 0);
+    // The composed-preview chip appears as soon as anything is on this side.
+    const chipPv = q2("#previewChip");
+    if (chipPv) chipPv.hidden = !layers.length;
     // Example placeholder: hide as soon as the customer adds any design.
     const example = q2("#upExample");
     if (example) example.style.display = (layers && layers.length) ? "none" : "";
@@ -2578,6 +2583,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             (showHint ? '<button type="button" class="print-hint-chip" id="printChip" data-drop="design" hidden>' +
               '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
               '<span>Upload</span></button>' : '') +
+            // Composed preview: the design ON the product, big and zoomable.
+            '<button type="button" class="print-hint-chip dpv-chip" id="previewChip" hidden>' +
+              '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>' +
+              '<span>Preview</span></button>' +
           '</div></div>' +
           '<div class="up-controls">' +
             '<input type="file" data-file="design" accept=".png,.jpg,.jpeg,.svg,.pdf" hidden>' +
@@ -2664,6 +2673,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (frame) frame.addEventListener("pointerdown", (e) => {
       if (!e.target.closest(".up-el")) { activeLayerId = null; if (txt) txt.value = ""; renderUpEls(); }
     });
+    const pvChip = q2("#previewChip");
+    if (pvChip) pvChip.onclick = () => openDesignPreview();
     q2("#uploadApply").onclick = onUploadApply;
     renderUpEls();
   }
