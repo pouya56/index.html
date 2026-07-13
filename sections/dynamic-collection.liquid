@@ -897,6 +897,10 @@
   String(SMART.synonyms || "").toLowerCase().split(/[\n,]+/).forEach(function (p) {
     var kv = p.split("="); if (kv.length === 2) { addSyn(kv[0].trim(), kv[1].trim()); addSyn(kv[1].trim(), kv[0].trim()); }
   });
+  // Who-it's-for and occasion words EXPAND rather than replace: "mom" matches
+  // products tagged mom directly, and products tagged women as a synonym.
+  Object.keys(WHO).forEach(function (k) { addSyn(k, WHO[k]); });
+  Object.keys(OCC).forEach(function (k) { addSyn(k, OCC[k]); });
   function stem(w) {
     if (w.length > 4) { w = w.replace(/ies$/, "y").replace(/(ing|ed)$/, ""); }
     if (w.length > 3) { w = w.replace(/e?s$/, ""); }
@@ -912,7 +916,6 @@
     var out = [];
     raw.split(/[^a-z0-9'&+-]+/).forEach(function (t) {
       if (!t || STOPSET[t]) return;
-      if (WHO[t]) t = WHO[t]; else if (OCC[t]) t = OCC[t];
       if (out.indexOf(t) < 0) out.push(t);
     });
     return { tokens: out, maxPrice: maxPrice };
