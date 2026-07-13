@@ -1227,15 +1227,26 @@
     query = "";
     badgeFilter = null;
     currentCat = btn.getAttribute("data-cat"); applyFilters();
-    // Jump down to the products for ANY tab, including "All".
+    jumpToProducts(); // jump down to the products for ANY tab, including "All"
+  });
+
+  // Scroll the product grid up under the sticky bar (used by tabs AND search,
+  // so results are visible immediately instead of sitting below the banners).
+  function jumpToProducts() {
     root.classList.add("dc-cat-focused"); // keep the grid tall enough to reach the top
     var target = allHeading || gridAll || shelfWrap;
-    if (target) {
-      var barH = tabsWrap ? tabsWrap.offsetHeight : 0;
-      var y = target.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - barH - 14;
-      window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
-    }
-  });
+    if (!target) return;
+    var barH = tabsWrap ? tabsWrap.offsetHeight : 0;
+    var y = target.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - barH - 14;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+  }
+  // Jump once when a search STARTS (not on every keystroke).
+  var _wasSearching = false;
+  function maybeJumpForSearch() {
+    var now = query.length > 0;
+    if (now && !_wasSearching) setTimeout(jumpToProducts, 60);
+    _wasSearching = now;
+  }
 
   // A small chip appears while a badge filter is active, so the shopper can clear it.
   (function () {
@@ -1274,6 +1285,7 @@
       query = searchEl.value.trim().toLowerCase();
       if (query) badgeFilter = null; // typing takes over from a badge filter
       applyFilters();
+      maybeJumpForSearch();
     });
     if (resultsUrl) searchEl.addEventListener("keydown", function (e) {
       if (e.key !== "Enter") return;
@@ -1332,6 +1344,7 @@
     if (query) badgeFilter = null;
     if (searchEl) searchEl.value = inlineInput.value; // keep both boxes in sync
     applyFilters();
+    maybeJumpForSearch();
   });
   if (inlineInput && resultsUrl) inlineInput.addEventListener("keydown", function (e) {
     if (e.key !== "Enter") return; e.preventDefault();
@@ -1519,6 +1532,8 @@
   var activeBtn = tabs ? tabs.querySelector(".dc-tab.is-active") : null;
   currentCat = activeBtn ? activeBtn.getAttribute("data-cat") : "__all";
   applyFilters();
+  // Arrived from the hero with ?q= — take the shopper straight to the results.
+  if (query) { _wasSearching = true; setTimeout(jumpToProducts, 120); }
 
   // Colour swatches: paint the dots from a name->colour map; hovering a dot
   // swaps the card image to that colour's variant photo.
