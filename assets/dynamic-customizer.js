@@ -1944,6 +1944,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       return (l.kind === "img" && l.url) || (l.kind === "text" && l.text);
     });
   }
+  // No Print method block in the template = plain product: no Customize popup,
+  // Add to Cart is always available and needs no design.
+  function customizeEnabled() { return (window.DYN_SETTINGS || {}).customizeEnabled !== false; }
   // Per-side upload permission from the print-method block (front/back toggles).
   function sideUploadAllowed(side) {
     const S = window.DYN_SETTINGS || {};
@@ -2595,6 +2598,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   function setDesignReady(on) {
     const add = document.getElementById("pageAddCart");
     const cust = document.getElementById("customizeBtn");
+    if (!customizeEnabled()) { if (add) add.hidden = false; if (cust) cust.hidden = true; return; }
     if (add) add.hidden = !on;
     if (cust) {
       if (on) { cust.classList.remove("btn-primary"); cust.classList.add("btn-ghost"); cust.textContent = "Edit design"; }
@@ -2616,7 +2620,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     });
     layers = sideLayers[currentSide];
     const hasDesign = ["front", "back"].some((s) => sideLayers[s].some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text)));
-    if (!hasDesign) {
+    if (!hasDesign && customizeEnabled()) {
       setDesignReady(false);
       toast("Add your design first");
       openModal();
@@ -2644,13 +2648,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const props = {};
       // Customer-facing: one clean note. Everything else is prefixed "_" so Shopify
       // hides it from the cart/checkout but keeps it on your order (admin) page.
-      props["Personalized"] = hasBackDesign ? "Front + Back" : "Front";
+      // (Plain products — no design — skip all personalization properties.)
+      if (hasDesign) props["Personalized"] = hasBackDesign ? "Front + Back" : "Front";
       if (txts("front").length) props["_" + L.text] = txts("front").map((l) => l.text).join(" | ");
       if (hasBackDesign) {
         if (txts("back").length) props["_" + L.backText] = txts("back").map((l) => l.text).join(" | ");
         props["_Sides"] = "Front + Back";
       }
-      if (product && product.method) props["_Print method"] = product.method;
+      if (hasDesign && product && product.method) props["_Print method"] = product.method;
       // Collect the raw design files + composed previews — Shopify hosts them for
       // free (attached as multipart line-item properties; no third-party host).
       const files = [];
@@ -2671,17 +2676,19 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (hasBackDesign) await collectFiles("back", L.backDesign, "back");
       // Composed preview = the product with the design in the customer's exact
       // position/size/rotation. Visible name so it shows on the order + cart.
-      const compF = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
-      if (compF) files.push({ name: "_" + L.preview, blob: dataURLtoBlob(compF), filename: base + "-front-preview.png" });
-      if (hasBackDesign) {
-        const compB = await compositeSide(sideLayers.back, sideImage("back"), sidePrint("back"));
-        if (compB) files.push({ name: "_" + L.backPreview, blob: dataURLtoBlob(compB), filename: base + "-back-preview.png" });
+      if (hasDesign) {
+        const compF = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
+        if (compF) files.push({ name: "_" + L.preview, blob: dataURLtoBlob(compF), filename: base + "-front-preview.png" });
+        if (hasBackDesign) {
+          const compB = await compositeSide(sideLayers.back, sideImage("back"), sidePrint("back"));
+          if (compB) files.push({ name: "_" + L.backPreview, blob: dataURLtoBlob(compB), filename: base + "-back-preview.png" });
+        }
       }
       const desc = (s) => [
         imgs(s).length ? (imgs(s).length + " image" + (imgs(s).length > 1 ? "s" : "")) : null,
         txts(s).length ? (txts(s).length + " text") : null
       ].filter(Boolean).join(" + ");
-      props["_Customized"] = ("Front: " + (desc("front") || "—")) + (hasBackDesign ? (" · Back: " + desc("back")) : "");
+      if (hasDesign) props["_Customized"] = ("Front: " + (desc("front") || "—")) + (hasBackDesign ? (" · Back: " + desc("back")) : "");
       // Design state keeps positions/text only (image pixels live in the hosted files).
       const ser = (arr) => arr.map((l) => l.kind === "img"
         ? { kind: "img", x: l.x, y: l.y, scale: l.scale, rotate: l.rotate || 0 }
@@ -2744,7 +2751,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         }
       }
       root.Dynamic.lastOrder = { properties: props };
-      $("#customizeSummary") && ($("#customizeSummary").textContent = "Design added");
+      if (hasDesign) $("#customizeSummary") && ($("#customizeSummary").textContent = "Design added");
       const ok = await submitToShopify(props, extraItems, files, sidesVariant ? sidesVariant.id : null);
       if (ok) {
         const wasEditing = !!(editingLineKey || editingGrp);
@@ -3820,6 +3827,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     else buildModal();
     installSampleButton();
     applyDomSettings();
+    setDesignReady(false); // plain products (customize off): shows Add to Cart, hides Customize
     document.querySelectorAll("[data-product]").forEach((b) =>
       b.setAttribute("aria-pressed", String(b.dataset.product === id))
     );

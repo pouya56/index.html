@@ -55,8 +55,10 @@
     {%- when 'product_source' -%}{%- assign blk_source = block -%}
   {%- endcase -%}
 {%- endfor -%}
-{%- comment -%} No Print method block added? Behave like UV (upload + text). {%- endcomment -%}
-{%- if cust_method == blank -%}{%- assign cust_method = 'uv' -%}{%- endif -%}
+{%- comment -%} No Print method block = plain product: no Customize popup, the
+   customer just adds it to the cart. The block IS the customization switch. {%- endcomment -%}
+{%- assign customize_on = true -%}
+{%- if cust_method == blank -%}{%- assign customize_on = false -%}{%- assign cust_method = 'uv' -%}{%- endif -%}
 
 {%- if product != blank -%}
   {%- assign dyn_product = product -%}
@@ -102,6 +104,7 @@
   },
   "settings": {
     "customizerType": {{ cust_method | json }},
+    "customizeEnabled": {% if customize_on %}true{% else %}false{% endif %},
     "methodLabel": {{ blk_m.settings.method_label | default: '' | json }},
     "methodUpload": {% if blk_m != blank %}{% if blk_m.settings.allow_upload %}true{% else %}false{% endif %}{% else %}null{% endif %},
     "methodUploadBack": {% if blk_m != blank %}{% if blk_m.settings.allow_upload_back %}true{% else %}false{% endif %}{% else %}null{% endif %},
@@ -1920,7 +1923,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   "max_blocks": 6,
   "blocks": [
     { "type": "method_dtf", "name": "Print method", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Pick how this product is printed — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
+      { "type": "paragraph", "content": "Pick how this product is printed — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template. REMOVE this block to sell the product without customization: the popup goes away and customers simply add it to the cart." },
       { "type": "select", "id": "method_label", "label": "Method name on the order", "default": "DTF", "info": "Saved with each order line so fulfilment knows the method.",
         "options": [
           { "value": "DTF", "label": "DTF" },
