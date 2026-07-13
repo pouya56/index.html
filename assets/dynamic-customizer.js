@@ -2098,10 +2098,16 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (apply) apply.disabled = !layers.some(function (l) {
       return (l.kind === "img" && l.url) || (l.kind === "text" && l.text);
     });
-    // Photo-only click-to-upload hint hides once a design is on the print area,
-    // and on a side where uploading is switched off. Same for the paperclip.
+    // Click-to-upload box: big while the print area is empty, then it collapses
+    // to a small "Upload" chip at the bottom so it never covers the design/text.
+    // Hidden on a side where uploading is off, or once the image limit is hit.
     const hint = q2("#printHint");
-    if (hint) hint.style.display = (countKind("img") || !sideUploadAllowed(currentSide)) ? "none" : "";
+    if (hint) {
+      const okSide = sideUploadAllowed(currentSide);
+      const canMore = countKind("img") < maxImages();
+      hint.style.display = (okSide && canMore) ? "" : "none";
+      hint.classList.toggle("mini", layers.length > 0);
+    }
     const clip = q2('.ios-compose [data-drop="design"]');
     if (clip) clip.style.display = sideUploadAllowed(currentSide) ? "" : "none";
     // Example placeholder: hide as soon as the customer adds any design.
@@ -2436,7 +2442,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               // Click-to-upload box: the customer uploads by clicking the image itself.
               (showHint ? '<button type="button" class="print-hint" id="printHint" data-drop="design">' +
                 '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
-                '<span>Click to upload your design</span></button>' : '') +
+                '<span class="ph-full">Click to upload your design</span><span class="ph-mini">Upload</span></button>' : '') +
             '</div>' +
           '</div></div>' +
           '<div class="up-controls">' +
