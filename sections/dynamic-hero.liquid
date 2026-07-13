@@ -1947,57 +1947,185 @@
 </script>
 
 <script>
-/* Hero autocomplete: as the shopper types, show top product matches from
-   Shopify's predictive search (with the same filler-word/who-for cleanup the
-   shop page uses). Enter still goes to the results page as before. */
+/* Hero smart autocomplete: the SAME engine as the shop page — typos, synonyms,
+   plurals, filler/who-for words, price intent, ranking, and "did you mean".
+   It loads the catalog once (products.json); Enter still goes to the shop
+   page, where the full engine takes over. */
 (function () {
   var input = document.getElementById("dhSearch");
   var bar = input ? input.closest(".dh-search") : null;
   if (!input || !bar) return;
-  var STOP = {};
-  "a an the some any of for to from with without and or but my mine your yours our his her their its i me we you he she they them us is are am was were be been being do does did will would can could should that this these those it as at on in into by please want wants need needs looking look find get buy buying something anything gift gifts idea ideas present presents give giving good great nice best perfect really who whom whose what which where when why how have has like about around just".split(/\s+/).forEach(function (w) { STOP[w] = 1; });
-  var WHO = { dad: "men", father: "men", husband: "men", him: "men", man: "men", boyfriend: "men", brother: "men", grandpa: "men",
-    mom: "women", mum: "women", mother: "women", wife: "women", her: "women", woman: "women", girlfriend: "women", sister: "women", grandma: "women",
-    kid: "kids", child: "kids", children: "kids", son: "kids", daughter: "kids", boy: "kids", girl: "kids", baby: "kids" };
-  function cleanTerms(raw) {
+
+  /* --- compact copy of the shop-page engine --- */
+  var STOPSET = {};
+  "a an the some any of for to from with without and or but my mine your yours our his her their its i me we you he she they them us is are am was were be been being do does did will would can could should that this these those it as at on in into by please want wants need needs looking look find get buy buying something anything gift gifts idea ideas present presents give giving good great nice best perfect really who whom whose what which where when why how have has like about around just".split(/\s+/).forEach(function (w) { STOPSET[w] = 1; });
+  var WHO = { dad: "men", father: "men", husband: "men", him: "men", man: "men", boyfriend: "men", brother: "men", grandpa: "men", grandfather: "men", uncle: "men",
+    mom: "women", mum: "women", mother: "women", wife: "women", her: "women", woman: "women", girlfriend: "women", sister: "women", grandma: "women", grandmother: "women", aunt: "women",
+    kid: "kids", child: "kids", children: "kids", son: "kids", daughter: "kids", boy: "kids", girl: "kids", baby: "kids", toddler: "kids", teen: "kids" };
+  var OCC = { bday: "birthday", xmas: "christmas", valentines: "valentine" };
+  var SYN = {};
+  function addSyn(a, b) { if (!a || !b || a === b) return; (SYN[a] = SYN[a] || []).indexOf(b) < 0 && SYN[a].push(b); }
+  "cup=mug,tee=t-shirt,tshirt=t-shirt,shirt=t-shirt,top=t-shirt,journal=notebook,diary=notebook,notepad=notebook,planner=notebook,jumper=hoodie,sweater=hoodie,sweatshirt=hoodie,cap=hat,beanie=hat,tumbler=mug,bottle=tumbler,tote=bag,poster=print,artwork=print,photo=picture".split(",").forEach(function (p) {
+    var kv = p.split("="); addSyn(kv[0], kv[1]); addSyn(kv[1], kv[0]);
+  });
+  function lev(a, b) {
+    var m = a.length, n = b.length; if (!m) return n; if (!n) return m;
+    var d = [], i, j;
+    for (i = 0; i <= m; i++) { d[i] = []; d[i][0] = i; }
+    for (j = 0; j <= n; j++) d[0][j] = j;
+    for (i = 1; i <= m; i++) for (j = 1; j <= n; j++) {
+      var cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a.charCodeAt(i - 1) === b.charCodeAt(j - 2) && a.charCodeAt(i - 2) === b.charCodeAt(j - 1)) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+    }
+    return d[m][n];
+  }
+  function stem(w) {
+    if (w.length > 4) { w = w.replace(/ies$/, "y").replace(/(ing|ed)$/, ""); }
+    if (w.length > 3) { w = w.replace(/e?s$/, ""); }
+    return w;
+  }
+  function smartTokens(raw) {
+    raw = " " + String(raw || "").toLowerCase().trim() + " ";
+    var maxPrice = null;
+    raw = raw.replace(/(?:under|below|less than|max|up to)\s*\$?\s*(\d+)/g, function (_, n) { maxPrice = n * 100; return " "; });
+    raw = raw.replace(/\$\s*(\d+)/g, function (_, n) { maxPrice = n * 100; return " "; });
+    if (/\b(cheap|cheapest|affordable|budget)\b/.test(raw)) { maxPrice = 2500; raw = raw.replace(/\b(cheap|cheapest|affordable|budget)\b/g, " "); }
     var out = [];
-    String(raw || "").toLowerCase().split(/[^a-z0-9'&+-]+/).forEach(function (t) {
-      if (!t || STOP[t]) return;
-      if (WHO[t]) t = WHO[t];
+    raw.split(/[^a-z0-9'&+-]+/).forEach(function (t) {
+      if (!t || STOPSET[t]) return;
+      if (WHO[t]) t = WHO[t]; else if (OCC[t]) t = OCC[t];
       if (out.indexOf(t) < 0) out.push(t);
     });
-    return out;
+    return { tokens: out, maxPrice: maxPrice };
   }
+  function variantsOf(t) {
+    var v = [t], s = stem(t);
+    if (s !== t) v.push(s);
+    (SYN[t] || []).forEach(function (x) { if (v.indexOf(x) < 0) { v.push(x); var xs = stem(x); if (xs !== x && v.indexOf(xs) < 0) v.push(xs); } });
+    return v;
+  }
+  function tokenScore(tok, words, titleText) {
+    var vars = variantsOf(tok), best = 0;
+    for (var vi = 0; vi < vars.length; vi++) {
+      var q = vars[vi], tol = q.length <= 5 ? 1 : (q.length <= 8 ? 2 : 3);
+      for (var k = 0; k < words.length; k++) {
+        var w = words[k]; if (!w) continue;
+        var sc = 0;
+        if (w === q) sc = 6;
+        else if (w.indexOf(q) === 0) sc = 4;
+        else if (w.indexOf(q) >= 0) sc = 3;
+        else if (stem(w) === stem(q)) sc = 4;
+        else if (q.length >= 3) {
+          if (lev(q, w) <= tol) sc = 2;
+          else if (w.length > q.length && lev(q, w.slice(0, q.length)) <= tol) sc = 2;
+        }
+        if (sc) {
+          if (vi > 0) sc -= 1;
+          if (titleText && titleText.indexOf(w) >= 0) sc += 3;
+          if (sc > best) best = sc;
+        }
+      }
+    }
+    return best;
+  }
+  function scoreItem(sq, it) {
+    var toks = sq.tokens;
+    if (!toks.length) return 0;
+    var total = 0, misses = 0, allowed = toks.length >= 3 ? 1 : 0;
+    for (var i = 0; i < toks.length; i++) {
+      var sc = tokenScore(toks[i], it.words, it.titleLower);
+      if (!sc) { if (++misses > allowed) return 0; }
+      else total += sc;
+    }
+    return total;
+  }
+
+  /* --- catalog (loaded once, on first focus/typing) --- */
+  var CAT = null, loading = false, _vocab = null;
+  function loadCatalog(cb) {
+    if (CAT) { cb(); return; }
+    if (loading) return; loading = true;
+    fetch("/products.json?limit=250", { headers: { Accept: "application/json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        CAT = (d.products || []).map(function (p) {
+          var opts = [];
+          (p.variants || []).forEach(function (v) { if (v.title && v.title !== "Default Title") opts.push(String(v.title).replace(/\//g, " ")); });
+          var tags = p.tags && p.tags.join ? p.tags.join(" ") : String(p.tags || "");
+          var text = (p.title + " " + (p.product_type || "") + " " + (p.vendor || "") + " " + tags + " " + opts.join(" ")).toLowerCase();
+          var price = p.variants && p.variants[0] ? parseFloat(p.variants[0].price) : NaN;
+          return {
+            title: p.title, url: "/products/" + p.handle,
+            img: p.images && p.images[0] ? p.images[0].src : "",
+            priceCents: isNaN(price) ? null : Math.round(price * 100),
+            words: text.split(/\s+/), titleLower: String(p.title).toLowerCase()
+          };
+        });
+        cb();
+      })
+      .catch(function () { loading = false; });
+  }
+  function bestCorrection(raw) {
+    if (!_vocab) {
+      _vocab = {};
+      CAT.forEach(function (it) { it.words.forEach(function (w) { if (w.length >= 3) _vocab[w] = (_vocab[w] || 0) + 1; }); });
+    }
+    var toks = String(raw || "").toLowerCase().split(/[^a-z0-9'&+-]+/).filter(function (t) { return t && !STOPSET[t]; });
+    var fix = null, from = "";
+    toks.forEach(function (t) {
+      if (fix || _vocab[t]) return;
+      var best = null, bd = 9, w, dd;
+      for (w in _vocab) { dd = lev(t, w); if (dd < bd || (dd === bd && best && _vocab[w] > _vocab[best])) { bd = dd; best = w; } }
+      if (best && bd <= (t.length <= 4 ? 1 : 2)) { fix = best; from = t; }
+    });
+    return fix ? String(raw).toLowerCase().replace(from, fix) : null;
+  }
+
+  /* --- dropdown --- */
   var box = document.createElement("div");
   box.className = "dh-suggest"; box.hidden = true;
   bar.appendChild(box);
   function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
+  function money(c) { return c == null ? "" : "$" + (c / 100).toFixed(2).replace(/\.00$/, ""); }
   function hide() { box.hidden = true; }
-  var deb = 0, seq = 0;
+  function render(q) {
+    var sq = smartTokens(q);
+    var scored = [];
+    (CAT || []).forEach(function (it) {
+      var sc = scoreItem(sq, it);
+      if (sc > 0 && (!sq.maxPrice || it.priceCents == null || it.priceCents <= sq.maxPrice)) scored.push([sc, it]);
+    });
+    scored.sort(function (a, b) { return b[0] - a[0]; });
+    if (scored.length) {
+      box.innerHTML = scored.slice(0, 6).map(function (pair) {
+        var it = pair[1];
+        return '<a class="dh-sug-row" href="' + esc(it.url) + '">' +
+          (it.img ? '<img src="' + esc(it.img) + '" alt="" width="42" height="42" loading="lazy">' : "") +
+          '<span class="dh-sug-name">' + esc(it.title) + '</span><span class="dh-sug-price">' + money(it.priceCents) + "</span></a>";
+      }).join("");
+      box.hidden = false;
+      return;
+    }
+    var fix = bestCorrection(q);
+    if (fix && fix !== q.toLowerCase()) {
+      box.innerHTML = '<button type="button" class="dh-sug-row dh-sug-dym" data-q="' + esc(fix) + '">Did you mean&nbsp;<b>' + esc(fix) + "</b>?</button>";
+      box.hidden = false;
+    } else hide();
+  }
+  box.addEventListener("click", function (e) {
+    var d = e.target.closest(".dh-sug-dym");
+    if (d) { e.preventDefault(); input.value = d.getAttribute("data-q") || ""; try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (x) {} input.focus(); }
+  });
+  var deb = 0;
+  input.addEventListener("focus", function () { loadCatalog(function () {}); });
   input.addEventListener("input", function () {
     clearTimeout(deb);
     var raw = input.value.trim();
     if (raw.length < 2) { hide(); return; }
     deb = setTimeout(function () {
-      var terms = cleanTerms(raw);
-      if (!terms.length) { hide(); return; }
-      var my = ++seq;
-      fetch("/search/suggest.json?q=" + encodeURIComponent(terms.join(" ")) + "&resources[type]=product&resources[limit]=6", { headers: { Accept: "application/json" } })
-        .then(function (r) { return r.json(); })
-        .then(function (d) {
-          if (my !== seq) return; // stale response
-          var prods = (((d || {}).resources || {}).results || {}).products || [];
-          if (!prods.length || document.activeElement !== input) { hide(); return; }
-          box.innerHTML = prods.map(function (p) {
-            var img = p.featured_image && p.featured_image.url ? p.featured_image.url : (p.image || "");
-            return '<a class="dh-sug-row" href="' + esc(p.url) + '">' +
-              (img ? '<img src="' + esc(img) + '" alt="" width="42" height="42" loading="lazy">' : "") +
-              '<span class="dh-sug-name">' + esc(p.title) + '</span>' +
-              (p.price ? '<span class="dh-sug-price">' + esc(p.price) + "</span>" : "") + "</a>";
-          }).join("");
-          box.hidden = false;
-        }).catch(function () { hide(); });
-    }, 220);
+      loadCatalog(function () { if (document.activeElement === input && input.value.trim().length >= 2) render(input.value.trim()); });
+    }, 160);
   });
   input.addEventListener("keydown", function (e) { if (e.key === "Escape" || e.key === "Enter") hide(); });
   input.addEventListener("blur", function () { setTimeout(hide, 180); });
