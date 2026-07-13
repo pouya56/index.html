@@ -2028,10 +2028,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     return d;
   }
   function openDesignPreview() {
-    const d = ensureDpv();
-    // The preview lives INSIDE the popup, covering the product stage area.
-    const host = q2(".engrave-stage") || document.body;
-    if (d.parentNode !== host) host.appendChild(d);
+    const d = ensureDpv(); // full-page overlay on <body>, above the popup
     const img = d.querySelector("img");
     const zoomEl = d.querySelector(".dpv-zoom");
     const badge = d.querySelector(".dpv-badge");
