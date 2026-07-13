@@ -37,7 +37,6 @@
 {%- assign blk_reviews = blank -%}
 {%- assign blk_gift = blank -%}
 {%- assign blk_print = blank -%}
-{%- assign blk_method = blank -%}
 {%- assign blk_source = blank -%}
 {%- assign cust_method = blank -%}
 {%- assign blk_m = blank -%}
@@ -47,7 +46,6 @@
     {%- when 'reviews' -%}{%- assign blk_reviews = block -%}
     {%- when 'gift' -%}{%- assign blk_gift = block -%}
     {%- when 'print_area' -%}{%- assign blk_print = block -%}
-    {%- when 'print_method' -%}{%- assign blk_method = block -%}
     {%- comment -%} One "Print method" block; the method comes from its dropdown. {%- endcomment -%}
     {%- when 'method_dtf' -%}
       {%- if cust_method == blank -%}
@@ -57,8 +55,8 @@
     {%- when 'product_source' -%}{%- assign blk_source = block -%}
   {%- endcase -%}
 {%- endfor -%}
-{%- comment -%} No method block added? Fall back to the old dropdown block, then UV. {%- endcomment -%}
-{%- if cust_method == blank -%}{%- assign cust_method = blk_method.settings.customizer_type | default: 'uv' -%}{%- endif -%}
+{%- comment -%} No Print method block added? Behave like UV (upload + text). {%- endcomment -%}
+{%- if cust_method == blank -%}{%- assign cust_method = 'uv' -%}{%- endif -%}
 
 {%- if product != blank -%}
   {%- assign dyn_product = product -%}
@@ -1916,7 +1914,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "text", "id": "label_text", "label": "Front text label", "default": "Text" },
     { "type": "text", "id": "label_back_text", "label": "Back text label", "default": "Back text" }
   ],
-  "max_blocks": 7,
+  "max_blocks": 6,
   "blocks": [
     { "type": "method_dtf", "name": "Print method", "limit": 1, "settings": [
       { "type": "paragraph", "content": "Pick how this product is printed — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
@@ -1937,16 +1935,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "header", "content": "Popup text (optional)" },
       { "type": "text", "id": "popup_title", "label": "Popup title", "info": "Leave empty to use the popup text from the section's main settings." },
       { "type": "textarea", "id": "popup_sub", "label": "Popup subtitle" }
-    ] },
-    { "type": "print_method", "name": "Print method (old)", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Old version — use the 'Print method' block instead. This dropdown still works if it's already in your template, but the 'Print method' block wins over it." },
-      { "type": "select", "id": "customizer_type", "label": "Print method / style", "default": "uv",
-        "options": [
-          { "value": "uv", "label": "UV" },
-          { "value": "dtf", "label": "DTF" },
-          { "value": "sublimation", "label": "Sublimation" },
-          { "value": "engraving", "label": "Engraving" }
-        ] }
     ] },
     { "type": "product_source", "name": "Product source", "limit": 1, "settings": [
       { "type": "paragraph", "content": "Only needed when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown." },
