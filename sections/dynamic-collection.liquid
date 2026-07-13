@@ -165,20 +165,7 @@
   .dyn-col .dc-inline-input { flex: 1 1 auto; min-width: 0; width: 100%; border: none; background: transparent; font-family: var(--font); font-size: 16px; color: var(--ink); padding: 0; }
   .dyn-col .dc-inline-input::placeholder { color: var(--ink-faint); }
   .dyn-col .dc-inline-input:focus { outline: none; box-shadow: none; }
-  /* Autocomplete dropdown + recent searches under the search pill */
   .dyn-col .dc-inline-search { position: relative; }
-  .dyn-col .dc-suggest { position: absolute; top: calc(100% + 8px); right: 0; width: min(320px, 88vw); z-index: 40;
-    background: rgba(255,255,255,0.92); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
-    border: 1px solid rgba(255,255,255,0.65); border-radius: 16px; box-shadow: 0 18px 50px rgba(0,0,0,0.16); padding: 6px; }
-  .dyn-col .dc-suggest[hidden] { display: none; }
-  .dyn-col .dc-sug-head { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-faint); padding: 8px 10px 4px; }
-  .dyn-col .dc-sug-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; background: none;
-    border-radius: 10px; text-decoration: none; color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; text-align: left; }
-  .dyn-col .dc-sug-row:hover { background: rgba(0,0,0,0.05); }
-  .dyn-col .dc-sug-row img, .dyn-col .dc-sug-ph { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--bg-panel); flex: none; }
-  .dyn-col .dc-sug-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .dyn-col .dc-sug-price { flex: none; color: var(--ink-soft); font-size: 13px; }
-  .dyn-col .dc-sug-recent svg { color: var(--ink-faint); flex: none; }
   .dyn-col .dc-nr-dym { font-size: 15px; color: var(--ink-soft); margin: 0 0 14px; }
   .dyn-col .dc-nr-dym button { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--accent); cursor: pointer; text-decoration: underline; }
 
@@ -989,8 +976,7 @@
   }
   /* =================== END SMART SEARCH ENGINE =================== */
 
-  /* ---- Smart-search UX: "did you mean", suggestions, recents, miss log ---- */
-  var lastResults = [];
+  /* ---- Smart-search UX: "did you mean" + zero-result logging ---- */
   // Vocabulary for "Did you mean…?" — every word the catalog actually contains.
   var VOCAB = (function () {
     var m = {};
@@ -1029,28 +1015,12 @@
     if (typeof searchEl !== "undefined" && searchEl) searchEl.value = q;
     badgeFilter = null;
     applyFilters();
-    saveRecent(q);
+    if (query) jumpToProducts();
   }
   document.addEventListener("click", function (e) {
     var dym = e.target.closest("#dcDymBtn");
-    if (dym) { setQuery(dym.textContent); return; }
-    var rec = e.target.closest(".dc-sug-recent");
-    if (rec) {
-      setQuery(rec.getAttribute("data-q") || "");
-      var i = document.getElementById("dcInlineInput"); if (i) i.focus({ preventScroll: true });
-      return;
-    }
-    if (sugBox && !e.target.closest("#dcInlineSearch")) hideSuggest();
+    if (dym) setQuery(dym.textContent);
   });
-  // Recent searches (this browser only).
-  function recents() { try { return JSON.parse(localStorage.getItem("dyn_recent_search") || "[]"); } catch (e) { return []; } }
-  function saveRecent(q) {
-    q = String(q || "").trim(); if (q.length < 2) return;
-    try {
-      var r = recents().filter(function (x) { return x !== q; });
-      r.unshift(q); localStorage.setItem("dyn_recent_search", JSON.stringify(r.slice(0, 6)));
-    } catch (e) {}
-  }
   // Log searches that found nothing (browser list + optional Firebase counter),
   // so the merchant can see what shoppers wanted and add tags/products.
   var missT = 0, lastLogged = "";
@@ -1069,43 +1039,6 @@
         try { fetch(fb + "/search_misses/" + key + ".json", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ".sv": { "increment": 1 } }) }).catch(function () {}); } catch (e) {}
       }
     }, 1200);
-  }
-  // Autocomplete dropdown under the pill: top-ranked products while typing,
-  // recent searches when the box is empty.
-  var sugBox = null;
-  function ensureSugBox() {
-    var host = document.getElementById("dcInlineSearch");
-    if (!host) return null;
-    if (!sugBox) { sugBox = document.createElement("div"); sugBox.className = "dc-suggest"; sugBox.hidden = true; host.appendChild(sugBox); }
-    return sugBox;
-  }
-  function hideSuggest() { if (sugBox) sugBox.hidden = true; }
-  function esc2(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
-  function updateSuggest() {
-    var box = ensureSugBox(); if (!box) return;
-    var input = document.getElementById("dcInlineInput");
-    if (!input || document.activeElement !== input) { box.hidden = true; return; }
-    if (query.length >= 2 && lastResults.length) {
-      box.innerHTML = lastResults.slice(0, 6).map(function (c) {
-        var t = c.querySelector(".dc-title"); var name = t ? t.textContent.trim() : "";
-        var pr = c.querySelector(".dc-now"); var price = pr ? pr.textContent.trim() : "";
-        var link = c.getAttribute("data-url") || "#";
-        var th = c.getAttribute("data-thumb");
-        return '<a class="dc-sug-row" href="' + esc2(link) + '">' +
-          (th ? '<img src="' + esc2(th) + '" alt="" width="40" height="40" loading="lazy">' : '<span class="dc-sug-ph"></span>') +
-          '<span class="dc-sug-name">' + esc2(name) + '</span><span class="dc-sug-price">' + esc2(price) + "</span></a>";
-      }).join("");
-      box.hidden = false;
-    } else if (!query.length) {
-      var r = recents();
-      if (!r.length) { box.hidden = true; return; }
-      box.innerHTML = '<div class="dc-sug-head">Recent searches</div>' + r.map(function (q2) {
-        return '<button type="button" class="dc-sug-row dc-sug-recent" data-q="' + esc2(q2) + '">' +
-          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>' +
-          '<span class="dc-sug-name">' + esc2(q2) + "</span></button>";
-      }).join("");
-      box.hidden = false;
-    } else box.hidden = true;
   }
   /* -------------------- end smart-search UX -------------------- */
 
@@ -1183,7 +1116,6 @@
     // when the search clears, restore the catalog order.
     var ranked = visibleAll.slice().sort(function (a, b) { return (b._score || 0) - (a._score || 0); });
     if (gridAll) (searching ? ranked : allOrig).forEach(function (c) { gridAll.appendChild(c); });
-    lastResults = searching ? ranked : [];
     // While a category/search is active, make the product grid at least a screen
     // tall so it can scroll up to the top (banners tuck away above; scroll up to see them).
     root.classList.toggle("dc-cat-focused", searching || (currentCat && currentCat !== "__all") || !!badgeFilter);
@@ -1214,7 +1146,6 @@
     grid.scrollLeft = 0;
     reveal(visible);
     updateGridArrows();
-    updateSuggest();
   }
 
   if (tabs) tabs.addEventListener("click", function (e) {
@@ -1238,14 +1169,11 @@
     if (!target) return;
     var barH = tabsWrap ? tabsWrap.offsetHeight : 0;
     var y = target.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - barH - 14;
-    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+    window.scrollTo({ top: Math.max(0, y), behavior: "auto" }); // instant — no scrolling animation
   }
-  // Jump once when a search STARTS (not on every keystroke).
-  var _wasSearching = false;
+  // Every search keystroke lands the shopper right on the products.
   function maybeJumpForSearch() {
-    var now = query.length > 0;
-    if (now && !_wasSearching) setTimeout(jumpToProducts, 60);
-    _wasSearching = now;
+    if (query.length > 0) jumpToProducts();
   }
 
   // A small chip appears while a badge filter is active, so the shopper can clear it.
@@ -1332,12 +1260,7 @@
     if (searchBar && searchBar.classList.contains("is-open")) { if (searchEl) searchEl.focus({ preventScroll: true }); } else { openSearch(); }
   });
   if (searchEl) searchEl.addEventListener("blur", function () { setTimeout(closeSearch, 140); });
-  if (inlineInput) inlineInput.addEventListener("blur", function () { setTimeout(function () { closeInline(); hideSuggest(); }, 160); });
-  if (inlineInput) inlineInput.addEventListener("focus", function () { updateSuggest(); });
-  if (inlineInput) inlineInput.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { hideSuggest(); return; }
-    if (e.key === "Enter" && !resultsUrl) { saveRecent(inlineInput.value); hideSuggest(); }
-  });
+  if (inlineInput) inlineInput.addEventListener("blur", function () { setTimeout(closeInline, 160); });
   if (inlineInput) inlineInput.addEventListener("input", function () {
     if (resultsUrl) return;
     query = inlineInput.value.trim().toLowerCase();
@@ -1524,7 +1447,7 @@
   if (!resultsUrl) {
     try {
       var urlQ = new URLSearchParams(window.location.search).get("q");
-      if (urlQ) { if (searchEl) searchEl.value = urlQ; query = urlQ.trim().toLowerCase(); saveRecent(urlQ); }
+      if (urlQ) { if (searchEl) searchEl.value = urlQ; query = urlQ.trim().toLowerCase(); }
     } catch (e) {}
   }
 
@@ -1532,8 +1455,8 @@
   var activeBtn = tabs ? tabs.querySelector(".dc-tab.is-active") : null;
   currentCat = activeBtn ? activeBtn.getAttribute("data-cat") : "__all";
   applyFilters();
-  // Arrived from the hero with ?q= — take the shopper straight to the results.
-  if (query) { _wasSearching = true; setTimeout(jumpToProducts, 120); }
+  // Arrived from the hero with ?q= — land the shopper straight on the results.
+  if (query) setTimeout(jumpToProducts, 120);
 
   // Colour swatches: paint the dots from a name->colour map; hovering a dot
   // swaps the card image to that colour's variant photo.
