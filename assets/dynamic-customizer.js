@@ -2031,6 +2031,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   }
   function openDesignPreview(layer) {
     const d = ensureDpv();
+    // The preview lives INSIDE the popup, covering the product stage area.
+    const host = q2(".engrave-stage") || document.body;
+    if (d.parentNode !== host) host.appendChild(d);
     const img = d.querySelector("img");
     const zoomEl = d.querySelector(".dpv-zoom");
     const badge = d.querySelector(".dpv-badge");
@@ -2065,7 +2068,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       }
       badge.hidden = true;
       img.onload = function () {
-        fit = Math.min((window.innerWidth * 0.86) / img.naturalWidth, (window.innerHeight * 0.76) / img.naturalHeight, 1);
+        fit = Math.min((d.clientWidth * 0.88) / img.naturalWidth, (d.clientHeight * 0.72) / img.naturalHeight, 1);
         scale = fit; x = 0; y = 0; apply();
         // Print-quality verdict: does the file have enough pixels for how large
         // it's placed? (layer.scale = % of the print-area width it spans.)
