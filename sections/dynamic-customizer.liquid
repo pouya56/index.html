@@ -40,6 +40,7 @@
 {%- assign blk_method = blank -%}
 {%- assign blk_source = blank -%}
 {%- assign cust_method = blank -%}
+{%- assign blk_m = blank -%}
 {%- for block in section.blocks -%}
   {%- case block.type -%}
     {%- when 'bulk_link' -%}{%- assign blk_bulk = block -%}
@@ -47,10 +48,10 @@
     {%- when 'gift' -%}{%- assign blk_gift = block -%}
     {%- when 'print_area' -%}{%- assign blk_print = block -%}
     {%- when 'print_method' -%}{%- assign blk_method = block -%}
-    {%- when 'method_uv' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'uv' -%}{%- endif -%}
-    {%- when 'method_dtf' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'dtf' -%}{%- endif -%}
-    {%- when 'method_sublimation' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'sublimation' -%}{%- endif -%}
-    {%- when 'method_engraving' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'engraving' -%}{%- endif -%}
+    {%- when 'method_uv' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'uv' -%}{%- assign blk_m = block -%}{%- endif -%}
+    {%- when 'method_dtf' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'dtf' -%}{%- assign blk_m = block -%}{%- endif -%}
+    {%- when 'method_sublimation' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'sublimation' -%}{%- assign blk_m = block -%}{%- endif -%}
+    {%- when 'method_engraving' -%}{%- if cust_method == blank -%}{%- assign cust_method = 'engraving' -%}{%- assign blk_m = block -%}{%- endif -%}
     {%- when 'product_source' -%}{%- assign blk_source = block -%}
   {%- endcase -%}
 {%- endfor -%}
@@ -101,6 +102,8 @@
   },
   "settings": {
     "customizerType": {{ cust_method | json }},
+    "methodLabel": {{ blk_m.settings.method_label | default: '' | json }},
+    "methodPhotoOnly": {% if blk_m != blank %}{% if blk_m.settings.photo_only %}true{% else %}false{% endif %}{% else %}null{% endif %},
     "madeToOrder": {% if dyn_product.tags contains 'made-to-order' or dyn_product.tags contains 'made_to_order' %}true{% else %}false{% endif %},
     {%- assign gw_vid = blk_gift.settings.gift_wrap_variant_id -%}
     {%- assign gw_money = blk_gift.settings.gift_wrap_money -%}
@@ -176,8 +179,8 @@
       {{ section.settings.reassure_2_icon | default: 'clock' | json }},
       {{ section.settings.reassure_3_icon | default: 'check' | json }}
     ],
-    "engraveTitle": {{ section.settings.engrave_title | default: '' | json }},
-    "engraveSub": {{ section.settings.engrave_sub | default: '' | json }},
+    "engraveTitle": {{ blk_m.settings.popup_title | default: section.settings.engrave_title | default: '' | json }},
+    "engraveSub": {{ blk_m.settings.popup_sub | default: section.settings.engrave_sub | default: '' | json }},
     "popupButtonLabel": {{ section.settings.popup_button_label | default: 'Add to Bag' | json }},
     "popupPlaceholder": {{ section.settings.popup_placeholder | default: 'Add your text' | json }},
     "engrave": {
@@ -1901,16 +1904,36 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   "max_blocks": 10,
   "blocks": [
     { "type": "method_uv", "name": "Print method: UV", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "This product is UV-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." }
+      { "type": "paragraph", "content": "This product is UV-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
+      { "type": "text", "id": "method_label", "label": "Method name on the order", "default": "UV", "info": "Saved with each order line so fulfilment knows the method." },
+      { "type": "checkbox", "id": "photo_only", "label": "Single design only", "default": false, "info": "On: one design, uploaded by clicking the product photo. Off: several designs plus text boxes." },
+      { "type": "header", "content": "Popup text (optional)" },
+      { "type": "text", "id": "popup_title", "label": "Popup title", "info": "Leave empty to use the popup text from the section's main settings." },
+      { "type": "textarea", "id": "popup_sub", "label": "Popup subtitle" }
     ] },
     { "type": "method_dtf", "name": "Print method: DTF", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "This product is DTF-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." }
+      { "type": "paragraph", "content": "This product is DTF-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
+      { "type": "text", "id": "method_label", "label": "Method name on the order", "default": "DTF", "info": "Saved with each order line so fulfilment knows the method." },
+      { "type": "checkbox", "id": "photo_only", "label": "Single design only", "default": true, "info": "On: one design, uploaded by clicking the product photo. Off: several designs plus text boxes." },
+      { "type": "header", "content": "Popup text (optional)" },
+      { "type": "text", "id": "popup_title", "label": "Popup title", "info": "Leave empty to use the popup text from the section's main settings." },
+      { "type": "textarea", "id": "popup_sub", "label": "Popup subtitle" }
     ] },
     { "type": "method_sublimation", "name": "Print: Sublimation", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "This product is sublimation-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." }
+      { "type": "paragraph", "content": "This product is sublimation-printed. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
+      { "type": "text", "id": "method_label", "label": "Method name on the order", "default": "Sublimation", "info": "Saved with each order line so fulfilment knows the method." },
+      { "type": "checkbox", "id": "photo_only", "label": "Single design only", "default": true, "info": "On: one design, uploaded by clicking the product photo. Off: several designs plus text boxes." },
+      { "type": "header", "content": "Popup text (optional)" },
+      { "type": "text", "id": "popup_title", "label": "Popup title", "info": "Leave empty to use the popup text from the section's main settings." },
+      { "type": "textarea", "id": "popup_sub", "label": "Popup subtitle" }
     ] },
     { "type": "method_engraving", "name": "Print: Engraving", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "This product is engraved. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." }
+      { "type": "paragraph", "content": "This product is engraved. Add ONE print-method block per template — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template." },
+      { "type": "text", "id": "method_label", "label": "Method name on the order", "default": "Engraving", "info": "Saved with each order line so fulfilment knows the method." },
+      { "type": "checkbox", "id": "photo_only", "label": "Single design only", "default": false, "info": "On: one design, uploaded by clicking the product photo. Off: several designs plus text boxes." },
+      { "type": "header", "content": "Popup text (optional)" },
+      { "type": "text", "id": "popup_title", "label": "Popup title", "info": "Leave empty to use the popup text from the section's main settings." },
+      { "type": "textarea", "id": "popup_sub", "label": "Popup subtitle" }
     ] },
     { "type": "print_method", "name": "Print method (old)", "limit": 1, "settings": [
       { "type": "paragraph", "content": "Old version — use the separate 'Print method: …' blocks instead. This dropdown still works if it's already in your template, but a 'Print method: …' block wins over it." },

@@ -3654,6 +3654,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const S = window.DYN_SETTINGS || {};
     if (!p) return;
     const _shop = window.DYN_SHOPIFY || {};
+    // Per-method block settings: order label + single-design mode.
+    if (S.methodLabel) {
+      p.method = S.methodLabel;
+      if (p.finishes && p.finishes[0]) p.finishes[0].name = S.methodLabel;
+    }
+    if (typeof S.methodPhotoOnly === "boolean") p.photoOnly = S.methodPhotoOnly;
     p.tagline = S.title || _shop.productTitle || p.tagline;
     p.name = S.eyebrow || "";
     if (S.description) { p.description = S.description; p._descHtml = false; }
