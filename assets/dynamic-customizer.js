@@ -2393,9 +2393,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const priceStr = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.priceMoney) || D.pricing.money(product.base);
     const photoOnly = !!(product && product.photoOnly);
     const noUpload = !photoOnly && !!(product && product.noUpload);
+    // The click-to-upload box and the typing keyboard are independent — a method
+    // block can turn on either or both. Without block settings, keep the old
+    // behavior: photo-only shows the box, otherwise the compose bar alone.
+    const hasBlockToggles = !!(product && typeof product.allowText === "boolean");
+    const showHint = hasBlockToggles ? !(product && product.noUpload) : photoOnly;
+    const showCompose = hasBlockToggles ? product.allowText : !photoOnly;
     const exampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.exampleImage) || "";
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
-    const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (photoOnly
+    const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (!showCompose
       ? ("Click the image to upload your design, then drag, resize or rotate it on your " + noun + ".")
       : ("Add photos and text — tap to select, then drag, resize or rotate each on your " + noun + ". Up to " + MAX_IMG + " of each."));
     // Popup button says "Add design" — it saves the design and returns to the
@@ -2425,16 +2431,16 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               (exampleImg ? '<img class="up-example" id="upExample" src="' + exampleImg + '" alt="Example design">' : '') +
               '<span class="print-area-label">Print area</span>' +
               '<div class="up-guide up-guide-v" id="guideV"></div><div class="up-guide up-guide-h" id="guideH"></div>' +
-              // Photo-only (e.g. DTF): the customer uploads by clicking the image itself.
-              (photoOnly ? '<button type="button" class="print-hint" id="printHint" data-drop="design">' +
+              // Click-to-upload box: the customer uploads by clicking the image itself.
+              (showHint ? '<button type="button" class="print-hint" id="printHint" data-drop="design">' +
                 '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
                 '<span>Click to upload your design</span></button>' : '') +
             '</div>' +
           '</div></div>' +
           '<div class="up-controls">' +
             '<input type="file" data-file="design" accept=".png,.jpg,.jpeg,.svg,.pdf" hidden>' +
-            // Photo-only has no compose bar — you upload by clicking the image above.
-            (photoOnly ? '' :
+            // The compose bar (typing keyboard) only appears when typing is on.
+            (!showCompose ? '' :
               '<div class="ios-compose">' +
                 (noUpload ? '' :
                 '<button type="button" class="ios-plus" data-drop="design" aria-label="Upload your design (PNG, JPG, SVG, PDF)" title="Upload your design">' +
@@ -3687,8 +3693,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (typeof S.methodUpload === "boolean" || typeof S.methodText === "boolean" || typeof S.methodUploadBack === "boolean") {
       const up = S.methodUpload !== false || S.methodUploadBack !== false; // any side uploadable
       const tx = S.methodText === true;
-      if (!up && !tx) { p.photoOnly = true; p.noUpload = false; } // both off makes no sense — keep the basic upload
-      else { p.photoOnly = up && !tx; p.noUpload = !up; }
+      if (!up && !tx) { p.photoOnly = true; p.noUpload = false; p.allowText = false; } // both off makes no sense — keep the basic upload
+      else { p.photoOnly = up && !tx; p.noUpload = !up; p.allowText = tx; }
     }
     p.tagline = S.title || _shop.productTitle || p.tagline;
     p.name = S.eyebrow || "";
