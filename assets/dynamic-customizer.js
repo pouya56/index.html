@@ -1888,8 +1888,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   function backEnabled() {
     const S = window.DYN_SETTINGS || {};
-    // Only needs "Enable back side"; a separate back image and the back fee are optional.
-    return !!(S.enableBack && (product && product.uploadMode));
+    // The Front/Back tabs come from "Enable back side" (Printable area block)
+    // OR the method block's back-upload toggle — either one is enough. A
+    // separate back image and the back fee stay optional.
+    return !!((S.enableBack || S.methodUploadBack === true) && (product && product.uploadMode));
   }
   // Find a back image for the current variant colour by matching a product image
   // whose ALT TEXT contains the colour name AND the word "back" (e.g. alt "Red back").
