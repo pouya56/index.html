@@ -2098,16 +2098,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (apply) apply.disabled = !layers.some(function (l) {
       return (l.kind === "img" && l.url) || (l.kind === "text" && l.text);
     });
-    // Click-to-upload box: big while the print area is empty, then it collapses
-    // to a small "Upload" chip at the bottom so it never covers the design/text.
-    // Hidden on a side where uploading is off, or once the image limit is hit.
-    const hint = q2("#printHint");
-    if (hint) {
-      const okSide = sideUploadAllowed(currentSide);
-      const canMore = countKind("img") < maxImages();
-      hint.style.display = (okSide && canMore) ? "" : "none";
-      hint.classList.toggle("mini", layers.length > 0);
-    }
+    // Click-to-upload: the big box while the print area is empty, then the small
+    // chip at the image's bottom-right corner — the design/text is never covered.
+    // Both hide on a side where uploading is off, or once the image limit is hit.
+    const hint = q2("#printHint"), chipUp = q2("#printChip");
+    const showUp = sideUploadAllowed(currentSide) && countKind("img") < maxImages();
+    if (hint) hint.style.display = (showUp && !layers.length) ? "" : "none";
+    if (chipUp) chipUp.hidden = !(showUp && layers.length > 0);
     // Example placeholder: hide as soon as the customer adds any design.
     const example = q2("#upExample");
     if (example) example.style.display = (layers && layers.length) ? "none" : "";
@@ -2265,8 +2262,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const r = frame.getBoundingClientRect(), v = vals(), sx = e.clientX, sy = e.clientY;
       try { rh.setPointerCapture(e.pointerId); } catch (_) {}
       const move = (ev) => {
-        const nw = Math.max(5, Math.min(100 - v.x, v.w + ((ev.clientX - sx) / r.width) * 100));
-        const nh = Math.max(5, Math.min(100 - v.y, v.h + ((ev.clientY - sy) / r.height) * 100));
+        const nw = Math.max(2, Math.min(100 - v.x, v.w + ((ev.clientX - sx) / r.width) * 100));
+        const nh = Math.max(2, Math.min(100 - v.y, v.h + ((ev.clientY - sy) / r.height) * 100));
         pa.style.width = nw + "%"; pa.style.height = nh + "%"; draw();
       };
       const up = () => { rh.removeEventListener("pointermove", move); rh.removeEventListener("pointerup", up); };
@@ -2439,8 +2436,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               // Click-to-upload box: the customer uploads by clicking the image itself.
               (showHint ? '<button type="button" class="print-hint" id="printHint" data-drop="design">' +
                 '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
-                '<span class="ph-full">Click to upload your design</span><span class="ph-mini">Upload</span></button>' : '') +
+                '<span>Click to upload your design</span></button>' : '') +
             '</div>' +
+            // Small upload chip pinned to the image's bottom-right corner; takes
+            // over from the big box once something is on the print area.
+            (showHint ? '<button type="button" class="print-hint-chip" id="printChip" data-drop="design" hidden>' +
+              '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
+              '<span>Upload</span></button>' : '') +
           '</div></div>' +
           '<div class="up-controls">' +
             '<input type="file" data-file="design" accept=".png,.jpg,.jpeg,.svg,.pdf" hidden>' +

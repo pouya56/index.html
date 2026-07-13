@@ -897,15 +897,17 @@ button { font-family: inherit; cursor: pointer; }
   transition: background .15s ease; }
 .print-hint:hover { background: rgba(0,113,227,0.1); }
 .print-hint svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.print-hint .ph-mini { display: none; }
-/* Once anything is on the print area, the box collapses into a small chip hanging under it. */
-.print-hint.mini { inset: auto; top: calc(100% + 8px); left: 0; right: 0; margin: 0 auto; width: max-content; max-width: 88%;
-  flex-direction: row; gap: 6px; padding: 6px 12px; border-radius: 999px;
-  border-style: solid; border-width: 1px; background: rgba(0,113,227,0.12); font-size: 11.5px;
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-.print-hint.mini svg { width: 15px; height: 15px; }
-.print-hint.mini .ph-full { display: none; }
-.print-hint.mini .ph-mini { display: inline; }
+/* Once anything is on the print area, the big box gives way to a small chip
+   pinned to the image's bottom-right corner. */
+.print-hint-chip { position: absolute; right: 10px; bottom: 10px; z-index: 6; pointer-events: auto; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 999px;
+  border: 1px solid rgba(0,113,227,0.5); background: rgba(255,255,255,0.85); color: var(--accent);
+  font: inherit; font-size: 11.5px; font-weight: 600;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.12); transition: background .15s ease; }
+.print-hint-chip:hover { background: rgba(232,242,253,0.95); }
+.print-hint-chip svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.print-hint-chip[hidden] { display: none; }
 /* Faded example design shown in the print area until the customer uploads their own. */
 .up-example { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
   opacity: 0.3; pointer-events: none; z-index: 1; }
@@ -1740,10 +1742,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     if (drag.c === "move") { b.x = o.x + dx; b.y = o.y + dy; }
     else {
       var right = o.x + o.w, bottom = o.y + o.h;
-      if (drag.c.indexOf("w") >= 0) { b.x = clamp(o.x + dx, 0, right - 5); b.w = right - b.x; }
-      if (drag.c.indexOf("e") >= 0) { b.w = clamp(o.w + dx, 5, 100 - o.x); }
-      if (drag.c.indexOf("n") >= 0) { b.y = clamp(o.y + dy, 0, bottom - 5); b.h = bottom - b.y; }
-      if (drag.c.indexOf("s") >= 0) { b.h = clamp(o.h + dy, 5, 100 - o.y); }
+      if (drag.c.indexOf("w") >= 0) { b.x = clamp(o.x + dx, 0, right - 2); b.w = right - b.x; }
+      if (drag.c.indexOf("e") >= 0) { b.w = clamp(o.w + dx, 2, 100 - o.x); }
+      if (drag.c.indexOf("n") >= 0) { b.y = clamp(o.y + dy, 0, bottom - 2); b.h = bottom - b.y; }
+      if (drag.c.indexOf("s") >= 0) { b.h = clamp(o.h + dy, 2, 100 - o.y); }
     }
     render();
   });
