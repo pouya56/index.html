@@ -1122,6 +1122,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     "#25324a", "#b7c4b0", "#e8cdc9", "#000000",
   ];
   const EMOJI = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","🙂","😉","😍","🥰","😘","😜","😛","🤩","🥳","😎","😏","😢","😭","😠","😡","😱","😴","🤤","🤗","🤔","🙄","😬","😮","🤯","🥺","😷","🤒","🤢","🤮","🤠","😈","👻","💀","🤖","👽","👾","🎃","🐶","🐱","🦄","🐻","🐼","🐸","🐵","🐷","🐰","🦊","❤","🧡","💛","💚","💙","💜","🖤","💕","💖","⭐","✨","🔥","⚡","👍","👎","👊","✌","🤟","👌","🙌","🙏","💪"];
+  // Merchant-editable emoji picker (per print-method block settings).
+  function emojiEnabled() { return (window.DYN_SETTINGS || {}).showEmoji !== false; }
+  function emojiSet() {
+    const raw = String((window.DYN_SETTINGS || {}).emojiList || "").trim();
+    if (!raw) return EMOJI;
+    let list;
+    if (/[\s,]/.test(raw)) list = raw.split(/[\s,]+/).filter(Boolean);
+    else if (window.Intl && Intl.Segmenter) list = Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(raw), (s) => s.segment).filter((c) => c.trim());
+    else list = Array.from(raw).filter((c) => c.trim());
+    return list.length ? list : EMOJI;
+  }
 
   var _kbdFont = "";
   function kbdHtml() {
@@ -1184,10 +1195,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       update();
     }
     function render() {
-      const pageCount = Math.ceil(EMOJI.length / EMO_PER_PAGE) || 1;
+      const EMO = emojiSet();
+      const pageCount = Math.ceil(EMO.length / EMO_PER_PAGE) || 1;
       let pages = "";
       for (let pg = 0; pg < pageCount; pg++) {
-        const cells = EMOJI.slice(pg * EMO_PER_PAGE, (pg + 1) * EMO_PER_PAGE)
+        const cells = EMO.slice(pg * EMO_PER_PAGE, (pg + 1) * EMO_PER_PAGE)
           .map(function (e) { return key(e, "ios-emokey", e); }).join("");
         pages += '<div class="emo-page">' + cells + '</div>';
       }
@@ -2371,6 +2383,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const noun = product.engraveNoun || (window.DYN_SHOPIFY && window.DYN_SHOPIFY.productTitle) || product.name || "product";
     const priceStr = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.priceMoney) || D.pricing.money(product.base);
     const photoOnly = !!(product && product.photoOnly);
+    const noUpload = !photoOnly && !!(product && product.noUpload);
     const exampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.exampleImage) || "";
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
     const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (photoOnly
@@ -2414,13 +2427,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             // Photo-only has no compose bar — you upload by clicking the image above.
             (photoOnly ? '' :
               '<div class="ios-compose">' +
+                (noUpload ? '' :
                 '<button type="button" class="ios-plus" data-drop="design" aria-label="Upload your design (PNG, JPG, SVG, PDF)" title="Upload your design">' +
                   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
-                '</button>' +
+                '</button>') +
                 '<div class="ios-field"><textarea id="upText" class="engrave-input" maxlength="60" rows="1" placeholder="' + escapeHtml(ePlaceholder) + '" autocomplete="off"></textarea></div>' +
+                (emojiEnabled() ?
                 '<button type="button" class="kbd-arrow" id="kbdArrow" aria-label="Show keyboard" aria-expanded="false" title="Keyboard">' +
                   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
-                '</button>' +
+                '</button>' : '') +
                 '<button type="button" class="ios-plus" id="addTextBtn" aria-label="Add a text box" title="Add text">' +
                   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' +
                 '</button>' +
@@ -2842,9 +2857,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           <div class="engrave-input-wrap">
             <textarea id="engraveInput" class="engrave-input" maxlength="30" rows="1"
               placeholder="YOUR ENGRAVING" autocomplete="off" aria-label="Your engraving"></textarea>
-            <button type="button" class="kbd-arrow" id="kbdArrow" aria-label="Show keyboard" aria-expanded="false" title="Keyboard">
+            ${emojiEnabled() ? `<button type="button" class="kbd-arrow" id="kbdArrow" aria-label="Show keyboard" aria-expanded="false" title="Keyboard">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-            </button>
+            </button>` : ""}
           </div>
           <div class="engrave-tools">
             ${kbdHtml()}
@@ -3036,10 +3051,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         <label>Size <span id="fontSizeVal" style="float:right;color:var(--ink-faint)">46</span></label>
         <input type="range" id="fontSize" min="16" max="120" value="46" style="width:100%">
       </div>
-      <div class="field">
+      ${emojiEnabled() ? `<div class="field">
         <label>Emoji</label>
-        <div class="emoji-grid">${EMOJI.map((e) => `<button class="emoji-btn" data-emoji="${e}">${e}</button>`).join("")}</div>
-      </div>`;
+        <div class="emoji-grid">${emojiSet().map((e) => `<button class="emoji-btn" data-emoji="${e}">${e}</button>`).join("")}</div>
+      </div>` : ""}`;
   }
 
   function paneUpload(kind) {
@@ -3654,12 +3669,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const S = window.DYN_SETTINGS || {};
     if (!p) return;
     const _shop = window.DYN_SHOPIFY || {};
-    // Per-method block settings: order label + single-design mode.
+    // Per-method block settings: order label + what the customer can do.
     if (S.methodLabel) {
       p.method = S.methodLabel;
       if (p.finishes && p.finishes[0]) p.finishes[0].name = S.methodLabel;
     }
-    if (typeof S.methodPhotoOnly === "boolean") p.photoOnly = S.methodPhotoOnly;
+    if (typeof S.methodUpload === "boolean" || typeof S.methodText === "boolean") {
+      const up = S.methodUpload !== false;
+      const tx = S.methodText === true;
+      if (!up && !tx) { p.photoOnly = true; p.noUpload = false; } // both off makes no sense — keep the basic upload
+      else { p.photoOnly = up && !tx; p.noUpload = !up; }
+    }
     p.tagline = S.title || _shop.productTitle || p.tagline;
     p.name = S.eyebrow || "";
     if (S.description) { p.description = S.description; p._descHtml = false; }
