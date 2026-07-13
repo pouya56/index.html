@@ -2001,6 +2001,126 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     renderUpEls();
   }
 
+  // ---- Zoomable preview of the uploaded design (magnifier chip / double-click) ----
+  let _dpv = null, _dpvUrl = null;
+  function dpvClose() {
+    if (!_dpv) return;
+    _dpv.classList.remove("open");
+    if (_dpvUrl) { try { URL.revokeObjectURL(_dpvUrl); } catch (e) {} _dpvUrl = null; }
+  }
+  function ensureDpv() {
+    if (_dpv) return _dpv;
+    const d = document.createElement("div");
+    d.className = "dpv";
+    d.innerHTML =
+      '<img alt="Design preview">' +
+      '<button type="button" class="dpv-close" aria-label="Close preview">✕</button>' +
+      '<button type="button" class="dpv-nav dpv-prev" aria-label="Previous design"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>' +
+      '<button type="button" class="dpv-nav dpv-next" aria-label="Next design"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>' +
+      '<div class="dpv-hint">Scroll or pinch to zoom · drag to move · double-click for 100%</div>' +
+      '<div class="dpv-hud"><span class="dpv-zoom">100%</span><span class="dpv-badge" hidden></span></div>';
+    document.body.appendChild(d);
+    d.addEventListener("click", (e) => e.stopPropagation());
+    d.querySelector(".dpv-close").onclick = dpvClose;
+    // Capture-phase so Escape closes the preview, not the design popup behind it.
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && d.classList.contains("open")) { e.stopImmediatePropagation(); dpvClose(); }
+    }, true);
+    _dpv = d;
+    return d;
+  }
+  function openDesignPreview(layer) {
+    const d = ensureDpv();
+    const img = d.querySelector("img");
+    const zoomEl = d.querySelector(".dpv-zoom");
+    const badge = d.querySelector(".dpv-badge");
+    const list = [];
+    ["front", "back"].forEach((s) => (sideLayers[s] || []).forEach((l) => { if (l.kind === "img" && l.url) list.push(l); }));
+    if (!list.length) return;
+    let idx = Math.max(0, list.indexOf(layer));
+    const prev = d.querySelector(".dpv-prev"), next = d.querySelector(".dpv-next");
+    prev.style.display = next.style.display = list.length > 1 ? "" : "none";
+
+    let scale = 1, fit = 1, x = 0, y = 0;
+    function apply() {
+      img.style.transform = "translate(-50%, -50%) translate(" + x + "px," + y + "px) scale(" + scale + ")";
+      zoomEl.textContent = Math.round(scale * 100) + "%"; // 100% = the file's real pixels
+    }
+    function setScale(s2, px, py) {
+      s2 = Math.max(fit * 0.5, Math.min(6, s2));
+      const k = s2 / scale;
+      x = px - (px - x) * k;   // keep the point under the cursor/pinch fixed
+      y = py - (py - y) * k;
+      scale = s2;
+      apply();
+    }
+    function load(i) {
+      idx = (i + list.length) % list.length;
+      const l = list[idx];
+      if (_dpvUrl) { try { URL.revokeObjectURL(_dpvUrl); } catch (e) {} _dpvUrl = null; }
+      // Show the ORIGINAL file at full resolution when we still have it.
+      let src = l.cloudUrl || l.url;
+      if (l.file instanceof File && /^image\//.test(l.file.type || "")) {
+        try { _dpvUrl = URL.createObjectURL(l.file); src = _dpvUrl; } catch (e) {}
+      }
+      badge.hidden = true;
+      img.onload = function () {
+        fit = Math.min((window.innerWidth * 0.86) / img.naturalWidth, (window.innerHeight * 0.76) / img.naturalHeight, 1);
+        scale = fit; x = 0; y = 0; apply();
+        // Print-quality verdict: does the file have enough pixels for how large
+        // it's placed? (layer.scale = % of the print-area width it spans.)
+        const needed = ((l.scale || 100) / 100) * 1500;
+        badge.hidden = false;
+        const ok = img.naturalWidth >= needed;
+        badge.className = "dpv-badge " + (ok ? "ok" : "warn");
+        badge.textContent = ok ? "✓ Sharp — great for printing" : "⚠ Low resolution — may look soft printed this large";
+      };
+      img.src = src;
+    }
+    prev.onclick = () => load(idx - 1);
+    next.onclick = () => load(idx + 1);
+
+    d.onwheel = (e) => {
+      e.preventDefault();
+      const r = d.getBoundingClientRect();
+      setScale(scale * Math.exp(-e.deltaY * 0.0016), e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2);
+    };
+    const ptrs = new Map();
+    let lastDist = 0, dragging = false, sx = 0, sy = 0;
+    d.onpointerdown = (e) => {
+      if (e.target.closest("button")) return;
+      ptrs.set(e.pointerId, e);
+      try { d.setPointerCapture(e.pointerId); } catch (err) {}
+      if (ptrs.size === 1) { dragging = true; sx = e.clientX - x; sy = e.clientY - y; d.classList.add("drag"); }
+      else if (ptrs.size === 2) { dragging = false; const a = Array.from(ptrs.values()); lastDist = Math.hypot(a[0].clientX - a[1].clientX, a[0].clientY - a[1].clientY); }
+    };
+    d.onpointermove = (e) => {
+      if (!ptrs.has(e.pointerId)) return;
+      ptrs.set(e.pointerId, e);
+      if (ptrs.size === 2) {
+        const a = Array.from(ptrs.values());
+        const dist = Math.hypot(a[0].clientX - a[1].clientX, a[0].clientY - a[1].clientY);
+        if (lastDist > 0) {
+          const r = d.getBoundingClientRect();
+          const mx = (a[0].clientX + a[1].clientX) / 2 - r.left - r.width / 2;
+          const my = (a[0].clientY + a[1].clientY) / 2 - r.top - r.height / 2;
+          setScale(scale * (dist / lastDist), mx, my);
+        }
+        lastDist = dist;
+      } else if (dragging) { x = e.clientX - sx; y = e.clientY - sy; apply(); }
+    };
+    d.onpointerup = d.onpointercancel = (e) => { ptrs.delete(e.pointerId); dragging = false; lastDist = 0; d.classList.remove("drag"); };
+    d.ondblclick = (e) => {
+      if (e.target.closest("button")) return;
+      const r = d.getBoundingClientRect();
+      if (Math.abs(scale - fit) < 0.001 && fit < 1) setScale(1, e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2);
+      else { scale = fit; x = 0; y = 0; apply(); }
+    };
+
+    d.classList.add("open");
+    load(idx);
+  }
+
   function createLayerEl(layer) {
     const pa = q2("#printArea"); if (!pa) return null;
     const el = document.createElement("div");
@@ -2010,8 +2130,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       el.innerHTML = '<img alt="">' +
         '<span class="rotate-handle" title="Rotate"></span>' +
         '<span class="upload-handle"></span>' +
+        '<button class="up-zoom" type="button" aria-label="Preview design" title="Preview your design">' +
+          '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><path d="M8.5 11h5M11 8.5v5"/></svg></button>' +
         '<button class="up-remove" type="button" aria-label="Remove image">×</button>';
       const im = el.querySelector("img"); if (im) { im.crossOrigin = "anonymous"; if (layer.url) im.src = layer.url; }
+      const zm = el.querySelector(".up-zoom");
+      if (zm) zm.addEventListener("pointerdown", (e) => e.stopPropagation());
+      if (zm) zm.onclick = (e) => { e.stopPropagation(); openDesignPreview(layer); };
+      el.addEventListener("dblclick", (e) => { e.stopPropagation(); openDesignPreview(layer); });
     } else {
       el.innerHTML = '<span class="up-txt-content"></span>' +
         '<span class="rotate-handle" title="Rotate"></span>' +

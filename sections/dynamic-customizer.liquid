@@ -873,10 +873,36 @@ button { font-family: inherit; cursor: pointer; }
 .rotate-handle::before { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 10px;
   background: var(--accent); transform: translateX(-50%); }
 .rotate-handle:active { cursor: grabbing; }
-.upload-handle, .up-remove, .rotate-handle { opacity: 0; transition: opacity .2s ease; }
+/* Magnifier chip on an uploaded design — opens the zoomable preview. */
+.up-zoom { position: absolute; left: -11px; bottom: -11px; width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; color: var(--accent); border: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  display: grid; place-items: center; cursor: zoom-in; padding: 0; z-index: 3; }
+.up-zoom svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.upload-handle, .up-remove, .rotate-handle, .up-zoom { opacity: 0; transition: opacity .2s ease; }
 .up-el:hover .upload-handle, .up-el.selected .upload-handle,
 .up-el:hover .up-remove, .up-el.selected .up-remove,
+.up-el:hover .up-zoom, .up-el.selected .up-zoom,
 .up-el:hover .rotate-handle, .up-el.selected .rotate-handle { opacity: 1; }
+/* Fullscreen zoomable preview of the uploaded design file */
+.dpv { position: fixed; inset: 0; z-index: 100001; background: rgba(12,12,16,0.92); display: none; overflow: hidden; touch-action: none; }
+.dpv.open { display: block; }
+.dpv img { position: absolute; left: 50%; top: 50%; max-width: none; cursor: grab; user-select: none; -webkit-user-drag: none; }
+.dpv.drag img { cursor: grabbing; }
+.dpv-close { position: absolute; top: 18px; right: 18px; z-index: 3; width: 40px; height: 40px; border-radius: 50%; border: 0;
+  background: rgba(255,255,255,0.14); color: #fff; font-size: 18px; cursor: pointer; }
+.dpv-close:hover { background: rgba(255,255,255,0.25); }
+.dpv-hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 3; display: flex; align-items: center; gap: 10px; }
+.dpv-zoom { background: rgba(255,255,255,0.14); color: #fff; font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.dpv-badge { font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; }
+.dpv-badge.ok { background: rgba(26,127,55,0.92); color: #fff; }
+.dpv-badge.warn { background: rgba(255,159,10,0.95); color: #1d1d1f; }
+.dpv-nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; width: 42px; height: 42px; border-radius: 50%; border: 0;
+  background: rgba(255,255,255,0.14); color: #fff; cursor: pointer; display: grid; place-items: center; }
+.dpv-nav svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.dpv-nav:hover { background: rgba(255,255,255,0.25); }
+.dpv-prev { left: 16px; } .dpv-next { right: 16px; }
+.dpv-hint { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.75); font-size: 12.5px; z-index: 3; }
+@media (max-width: 640px) { .dpv-hint { display: none; } }
 .up-el { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; cursor: move; touch-action: none;
   outline: 1.5px dashed transparent; outline-offset: 5px; border-radius: 2px; transition: outline-color .2s ease; }
 .up-el:hover, .up-el.selected { outline-color: rgba(0,113,227,0.7); }
