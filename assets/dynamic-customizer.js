@@ -1964,6 +1964,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       pa.style.width = (P.w > 0 ? P.w : 56) + "%";
       pa.style.height = (P.h > 0 ? P.h : 40) + "%";
       pa.classList.toggle("outline", P.show !== false);
+      pa.classList.toggle("circle", P.shape === "circle");
     }
     const img = q2(".engrave-frame > img"); if (img) img.src = sideImage(side) || "";
   }
@@ -2421,7 +2422,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         const aX = (P.x != null ? P.x : 22) / 100 * W, aY = (P.y != null ? P.y : 30) / 100 * H,
               aW = (P.w != null ? P.w : 56) / 100 * W, aH = (P.h != null ? P.h : 40) / 100 * H;
         ctx.save();
-        ctx.beginPath(); ctx.rect(aX, aY, aW, aH); ctx.clip();
+        ctx.beginPath();
+        if (P.shape === "circle") ctx.ellipse(aX + aW / 2, aY + aH / 2, aW / 2, aH / 2, 0, 0, Math.PI * 2);
+        else ctx.rect(aX, aY, aW, aH);
+        ctx.clip();
         const imgLayers = layersArr.filter((l) => l.kind === "img" && l.url);
         const imgMap = {};
         let pending = imgLayers.length;

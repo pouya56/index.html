@@ -134,6 +134,7 @@
     {%- assign fpos = blk_print.settings.print_pos | default: '22, 30, 56, 40' | replace: ' ', '' | replace: '.', ',' | split: ',' -%}
     "print": {
       "show": {% if blk_print == blank or blk_print.settings.print_show %}true{% else %}false{% endif %},
+      "shape": {{ blk_print.settings.print_shape | default: 'rect' | json }},
       "x": {{ fpos[0] | plus: 0 }},
       "y": {{ fpos[1] | plus: 0 }},
       "w": {{ fpos[2] | plus: 0 }},
@@ -156,6 +157,7 @@
     {%- assign bpos = blk_print.settings.back_pos | default: '22, 30, 56, 40' | replace: ' ', '' | replace: '.', ',' | split: ',' -%}
     "printBack": {
       "show": {% if blk_print.settings.back_print_show %}true{% else %}false{% endif %},
+      "shape": {{ blk_print.settings.back_shape | default: 'rect' | json }},
       "x": {{ bpos[0] | plus: 0 }},
       "y": {{ bpos[1] | plus: 0 }},
       "w": {{ bpos[2] | plus: 0 }},
@@ -909,6 +911,10 @@ button { font-family: inherit; cursor: pointer; }
   container-type: inline-size; z-index: 5; pointer-events: none; border-radius: 3px; }
 
 .print-area.outline { outline: 1.8px dashed #0071e3; outline-offset: 0; }
+/* Circle / oval print area: round outline, round upload box, clipped example. */
+.print-area.circle { border-radius: 50%; }
+.print-area.circle .print-hint { border-radius: 50%; }
+.print-area.circle .up-example { clip-path: ellipse(50% 50% at 50% 50%); }
 
 .print-area-label { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 5px;
   font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #0071e3;
@@ -1746,6 +1752,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   function selectSide(i) {
     cur = i;
     imgEl.src = sides[cur].img || "";
+    // Circle-shaped areas draw as an oval in the tool too.
+    boxEl.style.borderRadius = (sides[cur].p && sides[cur].p.shape === "circle") ? "50%" : "0";
     Array.prototype.forEach.call(root.querySelectorAll(".pa-tab"), function (t, ti) { t.classList.toggle("on", ti === cur); });
     hint.textContent = "Drag to move, drag the blue dot to resize. Tap Copy, then paste into the “" + sides[cur].field + "” field" + (sides.length > 1 ? " of the " + sides[cur].label + " block." : ".");
     render();
@@ -1975,6 +1983,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     { "type": "print_area", "name": "Printable area", "limit": 1, "settings": [
       { "type": "paragraph", "content": "Set the box visually: while editing here, click the blue “◳ Set print area” button on the product preview (bottom-right). Drag/resize the box (Front/Back tabs if a back image is set), tap Copy, and paste into the matching field below. (You can also open the live product page with ?setarea=1.)" },
       { "type": "text", "id": "print_pos", "label": "Print area position", "default": "22, 30, 56, 40", "info": "Four numbers — Left, Top, Width, Height (percent). Paste what the ?setarea=1 tool copies, or edit by hand." },
+      { "type": "select", "id": "print_shape", "label": "Print area shape", "default": "rect", "info": "Circle: the area becomes an oval inside the box — make Width and Height equal for a perfect circle (plates, coasters, ornaments). Designs are clipped to it on previews and order files.", "options": [ { "value": "rect", "label": "Rectangle" }, { "value": "circle", "label": "Circle / oval" } ] },
       { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
       { "type": "image_picker", "id": "example_image", "label": "Example design (placeholder)", "info": "A faded sample shown in the print area to show where the design goes. It disappears when they upload. Leave empty to hide." },
       { "type": "image_picker", "id": "sample_image", "label": "Finished sample — FRONT", "info": "Photo of the finished front, shown behind the 'See a finished sample' button." },
@@ -1987,6 +1996,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       { "type": "checkbox", "id": "enable_back", "label": "Enable back side (Front / Back tabs)", "default": false, "info": "Gives customers Front / Back tabs in the design popup." },
       { "type": "image_picker", "id": "back_image", "label": "Back image (optional)", "info": "Photo of the product's back. If empty, the back uses the same surface as the front." },
       { "type": "text", "id": "back_pos", "label": "Back print area position", "default": "22, 30, 56, 40", "info": "Four numbers — Left, Top, Width, Height (percent). Use ?setarea=back (or the Back tab in the ?setarea=1 tool) to set it visually, then paste here." },
+      { "type": "select", "id": "back_shape", "label": "Back print area shape", "default": "rect", "options": [ { "value": "rect", "label": "Rectangle" }, { "value": "circle", "label": "Circle / oval" } ] },
       { "type": "checkbox", "id": "back_print_show", "label": "Show the back printable-area outline", "default": true },
       { "type": "text", "id": "front_tab_label", "label": "Front tab label", "default": "Front" },
       { "type": "text", "id": "back_tab_label", "label": "Back tab label", "default": "Back" },
