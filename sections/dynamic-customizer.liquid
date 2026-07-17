@@ -1728,14 +1728,14 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
    the buttons — corners stay true, the middle stretches, and the drop shadow
    follows the pillow's actual silhouette. (Lives OUTSIDE the raw block so the
    Liquid evaluates.) {%- endcomment -%}
-{%- assign cta_slice = section.settings.cta_pillow_slice | default: 110 -%}
+{%- assign cta_slice = section.settings.cta_pillow_slice_pct | default: 33 -%}
 {%- assign cta_ring = section.settings.cta_pillow_ring | default: 28 -%}
 <style>
 #customizeBtn.btn-primary, #pageAddCart.btn-primary {
   background: none; box-shadow: none; border-radius: 0; overflow: visible;
   border: 0 solid transparent;
   border-image-source: url({{ section.settings.cta_pillow | image_url: width: 1000 }});
-  border-image-slice: {{ cta_slice }} fill;
+  border-image-slice: {{ cta_slice }}% fill;
   border-image-width: {{ cta_ring }}px;
   border-image-repeat: stretch;
   padding: {{ cta_ring | times: 0.7 | round }}px {{ cta_ring | times: 1.5 | round }}px;
@@ -2341,14 +2341,14 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     },
     {
       "type": "range",
-      "id": "cta_pillow_slice",
-      "label": "Corner size IN the image",
-      "min": 40,
-      "max": 300,
-      "step": 10,
-      "unit": "px",
-      "default": 110,
-      "info": "How much of the image's corners to keep un-stretched. Raise it if corners look squashed."
+      "id": "cta_pillow_slice_pct",
+      "label": "Corner slice",
+      "min": 10,
+      "max": 49,
+      "step": 1,
+      "unit": "%",
+      "default": 33,
+      "info": "How much of each image edge stays un-stretched. Percentages can never overlap, so the middle always fills."
     },
     {
       "type": "range",
