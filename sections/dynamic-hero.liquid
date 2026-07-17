@@ -1376,12 +1376,17 @@
     var randSrc = document.querySelector("[data-dh-random]");
     var rlist = [];
     try { rlist = randSrc ? (JSON.parse(randSrc.textContent) || []) : []; } catch (e) {}
-    var lastR = null;
+    var lastR = null, rBag = [];
     function pickAndOpen(urls) {
       if (!urls.length) return false;
-      var u;
-      if (urls.length === 1) { u = urls[0]; }
-      else { do { u = urls[Math.floor(Math.random() * urls.length)]; } while (u === lastR); }
+      /* Shuffle-bag: every product is shown ONCE before any can appear again. */
+      if (!rBag.length) {
+        rBag = urls.filter(function (v, i, a) { return a.indexOf(v) === i; }); // unique products only
+      }
+      var i = Math.floor(Math.random() * rBag.length);
+      var u = rBag.splice(i, 1)[0];
+      /* Fresh bag could start with the product we just showed — swap it for another. */
+      if (u === lastR && rBag.length) { var j = Math.floor(Math.random() * rBag.length); u = rBag.splice(j, 1, u)[0]; }
       lastR = u;
       if (u) { openSlide(u, true); return true; }
       return false;
