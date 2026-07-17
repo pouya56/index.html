@@ -1,0 +1,20 @@
+{
+  "name": "Dynamic buttons",
+  "settings": [
+    { "type": "header", "content": "Button image skins (all pages)" },
+    { "type": "paragraph", "content": "Used on every product page's Dynamic Customizer unless that template sets its own image. Wide transparent PNGs, no text." },
+    { "type": "image_picker", "id": "cta_img_customize", "label": "Customize button image" },
+    { "type": "range", "id": "cta_img_customize_w", "label": "Customize image size", "min": 30, "max": 100, "step": 5, "unit": "%", "default": 100 },
+    { "type": "image_picker", "id": "cta_img_addcart", "label": "Add to Cart button image" },
+    { "type": "range", "id": "cta_img_addcart_w", "label": "Add to Cart image size", "min": 30, "max": 100, "step": 5, "unit": "%", "default": 100 },
+    { "type": "image_picker", "id": "cta_img_adddesign", "label": "Add design button image (popup)" },
+    { "type": "range", "id": "cta_img_adddesign_h", "label": "Add design image height", "min": 36, "max": 96, "step": 2, "unit": "px", "default": 54 },
+    { "type": "checkbox", "id": "cta_img_text", "label": "Show text on image buttons", "default": true },
+    { "type": "header", "content": "Button effects (all pages)" },
+    { "type": "checkbox", "id": "fx_lift", "label": "Hover lift", "default": false },
+    { "type": "checkbox", "id": "fx_breathe", "label": "Idle breathing", "default": false },
+    { "type": "checkbox", "id": "fx_squish", "label": "Jelly squish on click", "default": false },
+    { "type": "checkbox", "id": "fx_gloss", "label": "Gloss sweep", "default": false },
+    { "type": "checkbox", "id": "fx_confetti", "label": "Confetti when added to cart", "default": false }
+  ]
+}

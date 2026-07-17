@@ -1723,22 +1723,39 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 </script>
 
 {% endraw %}
+{%- comment -%} Button skins & effects resolve from THIS section first, then from
+   Theme settings (Theme settings -> Dynamic buttons) — so one global setup can
+   cover every product page, with per-template overrides. {%- endcomment -%}
+{%- assign img_cz = section.settings.cta_img_customize | default: settings.cta_img_customize -%}
+{%- assign img_ac = section.settings.cta_img_addcart | default: settings.cta_img_addcart -%}
+{%- assign img_ad = section.settings.cta_img_adddesign | default: settings.cta_img_adddesign -%}
+{%- if img_cz != blank -%}{%- assign img_cz_w = section.settings.cta_img_customize_w | default: 100 -%}{%- else -%}{%- assign img_cz_w = settings.cta_img_customize_w | default: 100 -%}{%- endif -%}
+{%- if img_ac != blank -%}{%- assign img_ac_w = section.settings.cta_img_addcart_w | default: 100 -%}{%- else -%}{%- assign img_ac_w = settings.cta_img_addcart_w | default: 100 -%}{%- endif -%}
+{%- if img_ad != blank -%}{%- assign img_ad_h = section.settings.cta_img_adddesign_h | default: 54 -%}{%- else -%}{%- assign img_ad_h = settings.cta_img_adddesign_h | default: 54 -%}{%- endif -%}
+{%- assign img_text_on = true -%}
+{%- unless img_text_on -%}{%- assign img_text_on = false -%}{%- endunless -%}
+{%- if settings.cta_img_text == false -%}{%- assign img_text_on = false -%}{%- endif -%}
+{%- assign fxo_lift = false -%}{%- if section.settings.fx_lift or settings.fx_lift -%}{%- assign fxo_lift = true -%}{%- endif -%}
+{%- assign fxo_breathe = false -%}{%- if section.settings.fx_breathe or settings.fx_breathe -%}{%- assign fxo_breathe = true -%}{%- endif -%}
+{%- assign fxo_squish = false -%}{%- if section.settings.fx_squish or settings.fx_squish -%}{%- assign fxo_squish = true -%}{%- endif -%}
+{%- assign fxo_gloss = false -%}{%- if section.settings.fx_gloss or settings.fx_gloss -%}{%- assign fxo_gloss = true -%}{%- endif -%}
+{%- assign fxo_confetti = false -%}{%- if section.settings.fx_confetti or settings.fx_confetti -%}{%- assign fxo_confetti = true -%}{%- endif -%}
 {%- comment -%} Image button skins: each uploaded image IS its button — shown
    whole, at its own proportions, with a silhouette drop shadow. Separate
    images for Customize and Add to Cart. (Lives OUTSIDE the raw block so the
    Liquid evaluates.) {%- endcomment -%}
-{%- if section.settings.cta_img_customize != blank -%}
+{%- if img_cz != blank -%}
 <style>
 #customizeBtn.btn-primary {
-  background: url({{ section.settings.cta_img_customize | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+  background: url({{ img_cz | image_url: width: 1200 }}) center / 100% 100% no-repeat;
   box-shadow: none; border-radius: 0; border: none; overflow: visible;
-  aspect-ratio: {{ section.settings.cta_img_customize.aspect_ratio }};
-  width: {{ section.settings.cta_img_customize_w | default: 100 }}%; margin-left: auto; margin-right: auto;
+  aspect-ratio: {{ img_cz.aspect_ratio }};
+  width: {{ img_cz_w }}%; margin-left: auto; margin-right: auto;
   padding: 0;
   filter: drop-shadow(0 16px 22px rgba(60, 60, 90, 0.3));
 }
 #customizeBtn.btn-primary::before, #customizeBtn.btn-primary::after { display: none; }
-{%- unless section.settings.cta_img_text -%}
+{%- unless img_text_on -%}
 #customizeBtn.btn-primary { font-size: 0; text-shadow: none; }
 {%- endunless -%}
 #customizeBtn.btn-primary:hover {
@@ -1746,18 +1763,18 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 }
 </style>
 {%- endif -%}
-{%- if section.settings.cta_img_addcart != blank -%}
+{%- if img_ac != blank -%}
 <style>
 #pageAddCart.btn-primary {
-  background: url({{ section.settings.cta_img_addcart | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+  background: url({{ img_ac | image_url: width: 1200 }}) center / 100% 100% no-repeat;
   box-shadow: none; border-radius: 0; border: none; overflow: visible;
-  aspect-ratio: {{ section.settings.cta_img_addcart.aspect_ratio }};
-  width: {{ section.settings.cta_img_addcart_w | default: 100 }}%; margin-left: auto; margin-right: auto;
+  aspect-ratio: {{ img_ac.aspect_ratio }};
+  width: {{ img_ac_w }}%; margin-left: auto; margin-right: auto;
   padding: 0;
   filter: drop-shadow(0 16px 22px rgba(60, 60, 90, 0.3));
 }
 #pageAddCart.btn-primary::before, #pageAddCart.btn-primary::after { display: none; }
-{%- unless section.settings.cta_img_text -%}
+{%- unless img_text_on -%}
 #pageAddCart.btn-primary { font-size: 0; text-shadow: none; }
 {%- endunless -%}
 #pageAddCart.btn-primary:hover {
@@ -1765,31 +1782,31 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 }
 </style>
 {%- endif -%}
-{%- if section.settings.cta_img_adddesign != blank -%}
+{%- if img_ad != blank -%}
 <style>
 #uploadApply.btn-primary {
-  background: url({{ section.settings.cta_img_adddesign | image_url: width: 900 }}) center / 100% 100% no-repeat;
+  background: url({{ img_ad | image_url: width: 900 }}) center / 100% 100% no-repeat;
   box-shadow: none; border-radius: 0; border: none; overflow: visible;
-  height: {{ section.settings.cta_img_adddesign_h | default: 54 }}px; aspect-ratio: {{ section.settings.cta_img_adddesign.aspect_ratio }};
+  height: {{ img_ad_h }}px; aspect-ratio: {{ img_ad.aspect_ratio }};
   padding: 0;
   filter: drop-shadow(0 10px 16px rgba(60, 60, 90, 0.3));
 }
-{%- unless section.settings.cta_img_text -%}
+{%- unless img_text_on -%}
 #uploadApply.btn-primary { font-size: 0; text-shadow: none; }
 {%- endunless -%}
 #uploadApply.btn-primary:hover:not([disabled]) {
   /* Re-assert the image: the pink cushion's hover rule otherwise repaints the background */
-  background: url({{ section.settings.cta_img_adddesign | image_url: width: 900 }}) center / 100% 100% no-repeat;
+  background: url({{ img_ad | image_url: width: 900 }}) center / 100% 100% no-repeat;
   box-shadow: none;
   filter: drop-shadow(0 14px 20px rgba(60, 60, 90, 0.38)) brightness(1.04);
 }
 #uploadApply.btn-primary[disabled] { filter: drop-shadow(0 10px 16px rgba(60, 60, 90, 0.25)) grayscale(0.4) opacity(0.6); }
 </style>
 {%- endif -%}
-{%- if section.settings.fx_lift or section.settings.fx_breathe or section.settings.fx_squish or section.settings.fx_gloss or section.settings.fx_confetti -%}
+{%- if fxo_lift or fxo_breathe or fxo_squish or fxo_gloss or fxo_confetti -%}
 {%- comment -%} Optional button effects — each is a checkbox in "Button effects". {%- endcomment -%}
 <style>
-{%- if section.settings.fx_breathe -%}
+{%- if fxo_breathe -%}
 @media (prefers-reduced-motion: no-preference) {
   #customizeBtn.btn-primary, #pageAddCart.btn-primary, #uploadApply.btn-primary:not([disabled]) {
     animation: dynFxBreathe 3.4s ease-in-out infinite;
@@ -1797,13 +1814,13 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 }
 @keyframes dynFxBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025); } }
 {%- endif -%}
-{%- if section.settings.fx_lift -%}
+{%- if fxo_lift -%}
 #customizeBtn.btn-primary, #pageAddCart.btn-primary, #uploadApply.btn-primary { transition: transform .18s ease, filter .2s ease, box-shadow .2s ease; }
 #customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover, #uploadApply.btn-primary:hover:not([disabled]) {
   animation: none; transform: translateY(-4px) scale(1.02);
 }
 {%- endif -%}
-{%- if section.settings.fx_squish -%}
+{%- if fxo_squish -%}
 #customizeBtn.btn-primary.dyn-fx-squish, #pageAddCart.btn-primary.dyn-fx-squish, #uploadApply.btn-primary.dyn-fx-squish {
   animation: dynFxSquish .5s cubic-bezier(.3, 1.6, .4, 1); transform-origin: 50% 100%;
 }
@@ -1815,29 +1832,29 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 }
 @media (prefers-reduced-motion: reduce) { .dyn-fx-squish { animation: none !important; } }
 {%- endif -%}
-{%- if section.settings.fx_gloss -%}
-{%- if section.settings.cta_img_customize != blank -%}
+{%- if fxo_gloss -%}
+{%- if img_cz != blank -%}
 #customizeBtn.btn-primary { position: relative; }
 #customizeBtn.btn-primary::after { content: "" !important; display: block !important; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.55) 50%, transparent 58%) no-repeat; background-size: 260% 100%;
-  -webkit-mask: url({{ section.settings.cta_img_customize | image_url: width: 1200 }}) center / 100% 100% no-repeat;
-  mask: url({{ section.settings.cta_img_customize | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+  -webkit-mask: url({{ img_cz | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+  mask: url({{ img_cz | image_url: width: 1200 }}) center / 100% 100% no-repeat;
   animation: dynFxGloss 5.5s ease-in-out infinite; }
 {%- endif -%}
-{%- if section.settings.cta_img_addcart != blank -%}
+{%- if img_ac != blank -%}
 #pageAddCart.btn-primary { position: relative; }
 #pageAddCart.btn-primary::after { content: "" !important; display: block !important; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.55) 50%, transparent 58%) no-repeat; background-size: 260% 100%;
-  -webkit-mask: url({{ section.settings.cta_img_addcart | image_url: width: 1200 }}) center / 100% 100% no-repeat;
-  mask: url({{ section.settings.cta_img_addcart | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+  -webkit-mask: url({{ img_ac | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+  mask: url({{ img_ac | image_url: width: 1200 }}) center / 100% 100% no-repeat;
   animation: dynFxGloss 5.5s ease-in-out infinite; animation-delay: 1.1s; }
 {%- endif -%}
-{%- if section.settings.cta_img_adddesign != blank -%}
+{%- if img_ad != blank -%}
 #uploadApply.btn-primary { position: relative; }
 #uploadApply.btn-primary::after { content: "" !important; display: block !important; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.55) 50%, transparent 58%) no-repeat; background-size: 260% 100%;
-  -webkit-mask: url({{ section.settings.cta_img_adddesign | image_url: width: 900 }}) center / 100% 100% no-repeat;
-  mask: url({{ section.settings.cta_img_adddesign | image_url: width: 900 }}) center / 100% 100% no-repeat;
+  -webkit-mask: url({{ img_ad | image_url: width: 900 }}) center / 100% 100% no-repeat;
+  mask: url({{ img_ad | image_url: width: 900 }}) center / 100% 100% no-repeat;
   animation: dynFxGloss 5.5s ease-in-out infinite; animation-delay: 2.2s; }
 {%- endif -%}
 @keyframes dynFxGloss { 0% { background-position: 220% 0; } 55% { background-position: -60% 0; } 100% { background-position: -60% 0; } }
@@ -1848,7 +1865,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 </style>
 <script>
 (function () {
-  {%- if section.settings.fx_squish -%}
+  {%- if fxo_squish -%}
   ["customizeBtn", "pageAddCart", "uploadApply"].forEach(function (id) {
     var b = document.getElementById(id); if (!b) return;
     b.addEventListener("click", function () {
@@ -1859,7 +1876,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     });
   });
   {%- endif -%}
-  {%- if section.settings.fx_confetti -%}
+  {%- if fxo_confetti -%}
   var COLORS = ["#ff5c8a", "#ffb340", "#4cd964", "#5ac8fa", "#af7aff", "#ffd60a"];
   window.addEventListener("dyn:added-to-cart", function () {
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
