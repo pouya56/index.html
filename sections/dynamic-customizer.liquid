@@ -1737,6 +1737,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   filter: drop-shadow(0 16px 22px rgba(60, 60, 90, 0.3));
 }
 #customizeBtn.btn-primary::before, #customizeBtn.btn-primary::after { display: none; }
+{%- unless section.settings.cta_img_text -%}
+#customizeBtn.btn-primary { font-size: 0; text-shadow: none; }
+{%- endunless -%}
 #customizeBtn.btn-primary:hover {
   filter: drop-shadow(0 20px 28px rgba(60, 60, 90, 0.38)) brightness(1.04);
 }
@@ -1752,6 +1755,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   filter: drop-shadow(0 16px 22px rgba(60, 60, 90, 0.3));
 }
 #pageAddCart.btn-primary::before, #pageAddCart.btn-primary::after { display: none; }
+{%- unless section.settings.cta_img_text -%}
+#pageAddCart.btn-primary { font-size: 0; text-shadow: none; }
+{%- endunless -%}
 #pageAddCart.btn-primary:hover {
   filter: drop-shadow(0 20px 28px rgba(60, 60, 90, 0.38)) brightness(1.04);
 }
@@ -2351,6 +2357,13 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       "type": "image_picker",
       "id": "cta_img_addcart",
       "label": "Add to Cart button image"
+    },
+    {
+      "type": "checkbox",
+      "id": "cta_img_text",
+      "label": "Show text on image buttons",
+      "default": true,
+      "info": "Off: the image stands alone (bake any wording into the image itself). Screen readers still hear the button's name."
     }
   ],
   "max_blocks": 6,
