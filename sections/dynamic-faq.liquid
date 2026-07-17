@@ -16,8 +16,11 @@
   .dyn-faq { max-width: 1080px; margin: 40px auto 96px; padding: 0 22px;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: inherit; -webkit-font-smoothing: antialiased; }
-  .dyn-faq-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 4px 22px; }
+  .dyn-faq-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 4px 10px; }
   .dyn-faq-head h2 { font-size: clamp(28px, 3.6vw, 44px); font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+  .dyn-faq-intro { margin: 0 4px 26px; font-size: 16.5px; line-height: 1.6; opacity: 0.68; max-width: 68ch; }
+  .dyn-faq-cat { margin: 44px 4px 10px; font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.55; }
+  .dyn-faq-cat:first-of-type { margin-top: 8px; }
   .dyn-faq-item { border-top: 1px solid #e8e8ed; }
   .dyn-faq-item:last-of-type { border-bottom: 1px solid #e8e8ed; }
   .dyn-faq-item > summary {
@@ -43,12 +46,21 @@
       <svg class="dyn-faq-ico" viewBox="0 0 24 24" style="transform:rotate(180deg)" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg>
     </div>
   {% endif %}
+  {% if section.settings.intro != blank %}
+    <p class="dyn-faq-intro">{{ section.settings.intro }}</p>
+  {% endif %}
 
+  {% assign faq_first = true %}
   {% for block in section.blocks %}
-    <details class="dyn-faq-item"{% if forloop.first and section.settings.open_first %} open{% endif %} {{ block.shopify_attributes }}>
-      <summary>{{ block.settings.question }}<svg class="dyn-faq-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></summary>
-      <div class="dyn-faq-answer">{{ block.settings.answer }}</div>
-    </details>
+    {% if block.type == 'category' %}
+      <h3 class="dyn-faq-cat" {{ block.shopify_attributes }}>{{ block.settings.title }}</h3>
+    {% else %}
+      <details class="dyn-faq-item"{% if faq_first and section.settings.open_first %} open{% endif %} {{ block.shopify_attributes }}>
+        <summary>{{ block.settings.question }}<svg class="dyn-faq-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></summary>
+        <div class="dyn-faq-answer">{{ block.settings.answer }}</div>
+      </details>
+      {% assign faq_first = false %}
+    {% endif %}
   {% else %}
     <p class="dyn-faq-empty">Add your first question with “Add Question”.</p>
   {% endfor %}
@@ -59,28 +71,325 @@
   "name": "Dynamic FAQ",
   "tag": "section",
   "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Frequently Asked Questions" },
-    { "type": "checkbox", "id": "open_first", "label": "Open first question by default", "default": true }
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Frequently Asked Questions"
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "label": "Intro text",
+      "default": "Everything you need to know about ordering, personalizing, and receiving your DYNAEIMIC pieces. Can’t find your answer? Reach out through our Contact page — we’re happy to help."
+    },
+    {
+      "type": "checkbox",
+      "id": "open_first",
+      "label": "Open first question by default",
+      "default": true
+    }
   ],
   "blocks": [
+    {
+      "type": "category",
+      "name": "Category title",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Category title",
+          "default": "Category"
+        }
+      ]
+    },
     {
       "type": "faq",
       "name": "Question",
       "settings": [
-        { "type": "text", "id": "question", "label": "Question", "default": "Your question here?" },
-        { "type": "richtext", "id": "answer", "label": "Answer", "default": "<p>Type your answer here.</p>" }
+        {
+          "type": "text",
+          "id": "question",
+          "label": "Question",
+          "default": "Your question here?"
+        },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "Answer",
+          "default": "<p>Type your answer here.</p>"
+        }
       ]
     }
   ],
-  "max_blocks": 25,
+  "max_blocks": 60,
   "presets": [
     {
       "name": "Dynamic FAQ",
       "blocks": [
-        { "type": "faq", "settings": { "question": "Are AirPods Pro 3 covered by insurance benefits?", "answer": "<p>If you are using the Hearing Aid feature on your AirPods Pro 3 to help with perceived mild to moderate hearing loss, some insurance providers may allow you to receive reimbursement for your order. Please check with your insurance provider.</p>" } },
-        { "type": "faq", "settings": { "question": "Where are the hearing health features available?", "answer": "<p>The Hearing Test, Hearing Aid, and Hearing Protection features are available in over 100 countries and regions. Availability varies by market, so check local support for the latest list.</p>" } },
-        { "type": "faq", "settings": { "question": "What products can be covered by AppleCare One?", "answer": "<p>AppleCare One lets you cover multiple eligible devices under a single plan — including AirPods, iPhone, iPad, Apple Watch, and Mac — with accidental damage protection and priority support.</p>" } },
-        { "type": "faq", "settings": { "question": "Which languages are supported with Live Translation?", "answer": "<p>Live Translation supports a growing set of languages, including English, Spanish, French, German, Portuguese, and more, with additional languages added over time through software updates.</p>" } }
+        {
+          "type": "category",
+          "settings": {
+            "title": "About DYNAEIMIC"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "What is DYNAEIMIC?",
+            "answer": "<p>DYNAEIMIC is a premium personalization and custom gifting studio based in New York City. We design and produce meaningful, made-to-order gifts and personalized pieces — from engraved glassware and full-color photo keepsakes to custom apparel and corporate gifting. Most of what we make is fully custom, built one order at a time.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Do you have a physical storefront?",
+            "answer": "<p>We operate as a NYC-based studio rather than a walk-in retail shop. You can order online anytime, and we offer local courier delivery across New York City in addition to nationwide shipping.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "What makes DYNAEIMIC different?",
+            "answer": "<p>Two things. First, we’re a custom studio at heart — the majority of our work is made specifically for you, not pulled off a shelf. Second, we’re local: we can hand-deliver within NYC and even bring live, on-site personalization to your event.</p>"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "title": "Custom Orders & Personalization"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "How do custom orders work?",
+            "answer": "<p>It’s a simple, proof-first process:</p><p><strong>1. Tell us what you want</strong> — choose a product and share your details (names, dates, artwork, logo, photos, message).</p><p><strong>2. We send a digital proof</strong> — a mockup showing exactly how your piece will look.</p><p><strong>3. You approve</strong> — check spelling, layout, and colors, then give us the green light.</p><p><strong>4. We make and deliver</strong> — production begins only after your approval, and we ship or hand-deliver when it’s ready.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "What is a proof, and why do I have to approve it?",
+            "answer": "<p>A proof is a digital preview of your finished piece. Because every custom item is made-to-order and personalized, we confirm every detail with you before we produce anything. This is your chance to catch a typo, adjust the layout, or tweak sizing — once you approve, we make it exactly as shown.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "How many revisions do I get?",
+            "answer": "<p>Your order includes two rounds of proof revisions at no extra charge. Additional revisions may be available for a small fee, depending on the complexity of the request.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "What can I personalize?",
+            "answer": "<p>Names, dates, monograms, initials, custom messages, logos, and photos are all fair game. If you have an idea that isn’t listed on a product page, <a href=\"/pages/contact\">ask us</a> — custom work is what we do best.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "What file formats do you accept for logos and artwork?",
+            "answer": "<p>For the cleanest results, please send high-resolution files. Vector files (SVG, AI, EPS, or PDF) are ideal for logos and text. High-resolution PNG or JPG works well for photos and detailed images. If your file isn’t print-ready, we’ll let you know and help you get it there.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Can you match a specific color or font?",
+            "answer": "<p>In most cases, yes. Let us know the exact font or color (a Pantone or hex code is perfect) and we’ll do our best to match it. Some materials and printing methods have color limitations, which we’ll flag on your proof.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Can you put photos on a gift?",
+            "answer": "<p>Absolutely. We produce full-color photo keepsakes and printed pieces. For the best result, send us the highest-resolution version of your photo you have.</p>"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "title": "Products & Personalization Methods"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "What personalization methods do you offer?",
+            "answer": "<p>We work across several techniques, and we’ll recommend the best one for your project:</p><p><strong>Laser engraving</strong> — precise, permanent marks on glass, crystal, metal, wood, leather, and more, including curved items like bottles and glassware.</p><p><strong>UV printing</strong> — durable, full-color printing on hard goods and photo keepsakes.</p><p><strong>Sublimation</strong> — vibrant, all-over color on mugs, drinkware, and select apparel and accessories.</p><p><strong>DTF transfers</strong> — full-color designs pressed onto apparel and fabric.</p><p><strong>Embroidery</strong> — a classic, textured finish for hats, apparel, and accessories.</p><p><strong>Custom buttons &amp; pins</strong> — great for events, giveaways, and branding.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "What materials can you work with?",
+            "answer": "<p>Glass, crystal, metal, wood, leather, ceramic, acrylic, and a range of fabrics and garments. If you’re not sure whether your item or idea is a good fit, just <a href=\"/pages/contact\">ask</a>.</p>"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "title": "Weddings"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Do you make wedding favors and gifts?",
+            "answer": "<p>Yes — weddings are one of our specialties. We produce personalized favors, party gifts, bridal-party pieces, and keepsakes, and we’re happy to coordinate on quantities and timelines for your date.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Can you do live personalization at my event?",
+            "answer": "<p>Yes. As an NYC-based studio, we can bring live, on-site personalization to weddings and events — guests watch their piece get engraved or customized in real time. <a href=\"/pages/contact\">Contact us</a> with your date and location for availability.</p>"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "title": "Corporate & Bulk Orders"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Do you offer corporate gifting?",
+            "answer": "<p>We do. We produce branded gifts, client and employee appreciation pieces, event swag, and onboarding kits — personalized with your logo or a custom message.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Is there a minimum order quantity?",
+            "answer": "<p>Many of our products have no minimum. For bulk and corporate runs, our minimum is typically 10 pieces, depending on the item and method.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Do you offer bulk or volume pricing?",
+            "answer": "<p>Yes — pricing improves as quantity increases. <a href=\"/pages/bulk-order\">Request a quote</a> with your product, quantity, and deadline, and we’ll put together tiered pricing for you.</p>"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "title": "Shipping & Delivery"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Do you ship nationwide?",
+            "answer": "<p>Yes, we ship across the United States.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Do you deliver locally in NYC?",
+            "answer": "<p>We do. One of the perks of being a NYC studio is local courier delivery — a fast, reliable option for New York City addresses, ideal when you’re on a tight timeline. Local delivery options and rates appear at checkout for eligible NYC addresses.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "How much does shipping cost?",
+            "answer": "<p>Shipping is calculated at checkout based on your address, order size, and the delivery method you choose. Local NYC courier and standard nationwide shipping are priced separately.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "When will I receive my order?",
+            "answer": "<p>Your total timeline is production time plus delivery time. Production begins after you approve your proof (see turnaround times below), and delivery time depends on your location and chosen shipping method.</p>"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "title": "Turnaround Times"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "How long does a custom order take?",
+            "answer": "<p>Standard production time is 3–5 business days after proof approval. Keep in mind that the proof-and-approval step happens first, so responding to your proof quickly helps us start production sooner. Larger and bulk orders may need additional time.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Do you offer rush orders?",
+            "answer": "<p>Rush production may be available depending on the product and our current schedule. If you’re working toward a specific date, <a href=\"/pages/contact\">tell us the deadline</a> up front and we’ll let you know what’s possible.</p>"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "title": "Returns & Refunds"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "Can I return a personalized item?",
+            "answer": "<p>Because custom and personalized items are made specifically for you, they generally can’t be returned or exchanged once produced. This is exactly why we send a proof for your approval before making anything — so you can confirm every detail in advance.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "What if my order arrives damaged, defective, or incorrect?",
+            "answer": "<p>If there’s a defect or we made an error on our end, we’ll make it right — please contact us within 7 days of delivery with your order number and photos of the issue, and we’ll arrange a replacement or refund. For full details, see our <a href=\"/policies/refund-policy\">Return &amp; Refund Policy</a>.</p>"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "title": "Payment"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "What payment methods do you accept?",
+            "answer": "<p>We accept all major credit and debit cards and standard secure checkout options through our online store. All payments are processed securely — we never see or store your full card details.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "When am I charged?",
+            "answer": "<p>Payment is collected at the time you place your order, which reserves your spot in our production queue and lets us begin the proof process.</p>"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "title": "Contact"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "How do I get in touch?",
+            "answer": "<p>Reach us through the <a href=\"/pages/contact\">Contact page</a> on our website. We aim to respond within 1–2 business days.</p>"
+          }
+        },
+        {
+          "type": "faq",
+          "settings": {
+            "question": "How do I request a custom quote?",
+            "answer": "<p>For custom, bulk, wedding, or corporate projects, send us a message with your product idea, quantity, any artwork or logos, and your target date. We’ll follow up with pricing and a timeline.</p>"
+          }
+        }
       ]
     }
   ]
