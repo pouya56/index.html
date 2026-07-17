@@ -70,10 +70,12 @@
       border-radius: 50%; background: var(--accent); color: #fff; font: 600 14px/1 var(--font); }
     .dyn-abar .dh-acct-menu .dh-icon-btn { width: 42px; height: 42px; }
 
+    /* Dropdown panels — same liquid glass as the corner buttons */
     .dyn-abar .dh-pop { position: absolute; top: calc(100% + 10px); right: 0; z-index: 30; min-width: 220px;
-      background: rgba(255,255,255,0.72); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
-      border: 1px solid rgba(255,255,255,0.55); border-radius: 20px; padding: 10px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.7); animation: abPop .14s ease; }
+      background: rgba(255,255,255,0.45); -webkit-backdrop-filter: blur(26px) saturate(1.7); backdrop-filter: blur(26px) saturate(1.7);
+      border: 1px solid rgba(255,255,255,0.7); border-radius: 22px; padding: 10px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.18), inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -1px 2px rgba(0,0,0,0.05);
+      animation: abPop .14s ease; }
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
       .dyn-abar .dh-pop { background: #fff; border-color: var(--line); }
     }
@@ -84,7 +86,7 @@
     .dyn-abar .dh-pop-title { font-size: 13px; color: var(--ink-faint); padding: 6px 10px 8px; }
     .dyn-abar .dh-pop-link { display: block; padding: 9px 10px; border-radius: 10px; font-size: 14px; color: var(--ink);
       text-decoration: none; transition: background .14s; }
-    .dyn-abar .dh-pop-link:hover { background: var(--bg-panel); }
+    .dyn-abar .dh-pop-link:hover { background: rgba(255,255,255,0.55); }
     .dyn-abar .dh-pop-ext { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vertical-align: -1px; margin-left: 4px; opacity: .55; }
     .dyn-abar .dh-pop-btn { display: block; text-align: center; margin: 2px 4px 6px; padding: 10px 14px; border-radius: 999px;
       background: var(--ink); color: #fff; font-size: 14px; font-weight: 500; text-decoration: none; transition: opacity .14s; }
@@ -96,13 +98,15 @@
     .dyn-abar .dh-apps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
     .dyn-abar .dh-app { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 12px 6px; border-radius: 12px;
       text-decoration: none; color: var(--ink); transition: background .14s; }
-    .dyn-abar .dh-app:hover { background: var(--bg-panel); }
+    .dyn-abar .dh-app:hover { background: rgba(255,255,255,0.55); }
     .dyn-abar .dh-app-ic { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; }
     .dyn-abar .dh-app-ic img { width: 34px; height: 34px; object-fit: contain; }
     .dyn-abar .dh-app-init { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px;
-      border-radius: 10px; background: var(--bg-panel); color: var(--ink-soft); font: 600 15px/1 var(--font); }
+      border-radius: 10px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.8); color: var(--ink-soft); font: 600 15px/1 var(--font); }
     .dyn-abar .dh-app-svg { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
-      border-radius: 12px; background: var(--bg-panel); color: var(--ink); }
+      border-radius: 12px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.8); color: var(--ink); }
     .dyn-abar .dh-app-svg svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-app-label { font-size: 12px; color: var(--ink-soft); text-align: center; line-height: 1.2; }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
