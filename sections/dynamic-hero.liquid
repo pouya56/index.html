@@ -448,15 +448,16 @@
 
   #dhSlide { position: fixed; inset: 0; z-index: 9999; visibility: hidden; }
   #dhSlide.is-open { visibility: visible; }
-  #dhSlide .dh-slide-scrim { position: absolute; inset: 0; background: rgba(0,0,0,.35); opacity: 0; transition: opacity .5s ease; }
+  #dhSlide .dh-slide-scrim { position: absolute; inset: 0; background: rgba(0,0,0,.22); opacity: 0; transition: opacity .5s ease; }
   #dhSlide.is-open .dh-slide-scrim { opacity: 1; }
-  /* Liquid-glass pop-up — truly translucent: the page shows through the blur */
+  /* Liquid-glass pop-up — visionOS-style: nearly clear, heavy blur, the room
+     behind stays visible as colour and light through the pane. */
   #dhSlide .dh-slide-panel { position: absolute; inset: 0; width: 100%; height: 100%;
-    background: rgba(255,255,255,0.38); -webkit-backdrop-filter: blur(30px) saturate(1.7) brightness(1.06); backdrop-filter: blur(30px) saturate(1.7) brightness(1.06);
+    background: rgba(255,255,255,0.2); -webkit-backdrop-filter: blur(38px) saturate(1.8) brightness(1.05); backdrop-filter: blur(38px) saturate(1.8) brightness(1.05);
     opacity: 0; transition: opacity .3s ease; overflow: hidden; }
   /* The injected product page brings opaque surfaces — soften them so the glass reads */
-  #dhSlide .dh-slide-inject .gallery-main { background: rgba(245,245,247,0.45); }
-  #dhSlide .dh-slide-inject .gal-thumb { background: rgba(245,245,247,0.5); }
+  #dhSlide .dh-slide-inject .gallery-main { background: rgba(245,245,247,0.3); }
+  #dhSlide .dh-slide-inject .gal-thumb { background: rgba(245,245,247,0.35); }
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { #dhSlide .dh-slide-panel { background: #fff; } }
   #dhSlide.is-open .dh-slide-panel { opacity: 1; }
   /* Half-size mode (used by the "Surprise me" random product) — a centred glass window ~50% of the page */
