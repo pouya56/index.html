@@ -17,6 +17,9 @@
   <span class="dyn-bg-blob dyn-bg-b1"></span>
   <span class="dyn-bg-blob dyn-bg-b2"></span>
   <span class="dyn-bg-blob dyn-bg-b3"></span>
+  {%- if section.settings.react_mouse -%}
+  <span class="dyn-bg-cursor"></span>
+  {%- endif -%}
 </div>
 
 <style>
@@ -74,6 +77,22 @@
   #dynBg-{{ section.id }} .dyn-bg-blob { animation: none !important; }
   {%- endunless -%}
 
+  {%- if section.settings.react_mouse -%}
+  /* A soft pool of light that lazily chases the cursor. Faded in on the first
+     mouse move, faded out when the mouse leaves the window. */
+  #dynBg-{{ section.id }} .dyn-bg-cursor {
+    position: absolute;
+    left: -35vmax; top: -35vmax;
+    width: 70vmax; height: 70vmax;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, {{ c2 }} 0%, transparent 58%);
+    opacity: 0;
+    transition: opacity 0.9s ease;
+    will-change: transform;
+  }
+  #dynBg-{{ section.id }} .dyn-bg-cursor.is-on { opacity: 1; }
+  {%- endif -%}
+
   /* The page sections paint their own solid page color over the whole screen,
      which would hide the wallpaper. Where this section is present, that
      page-level coat goes see-through — cards, panels and drawers keep their
@@ -82,6 +101,54 @@
   .dyn-hero, .dyn-col, .dyn-sug, .dyn-about, .dyn-faq { background: transparent !important; }
   [id^="shopify-section-"]:has(> .dyn-acct), [id^="shopify-section-"]:has(> .dyn-wish) { background: transparent !important; }
 </style>
+
+{%- if section.settings.react_mouse -%}
+<script>
+(function () {
+  var root = document.getElementById("dynBg-{{ section.id }}");
+  if (!root) return;
+  // Mouse-only: skip touch screens and anyone who asked for less motion.
+  if (window.matchMedia) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  }
+  var blobs = root.querySelectorAll(".dyn-bg-blob");
+  var glow = root.querySelector(".dyn-bg-cursor");
+  // How far each glow leans toward the cursor (x, y) — different amounts and
+  // directions per glow, so the movement feels like depth, not a slide.
+  var LEAN = [[3, 2], [-4, 3], [2.5, -2.5]];
+  var tx = 0, ty = 0, mx = 0, my = 0;
+  var gxT = -9999, gyT = -9999, gx = 0, gy = 0, started = false;
+  var raf = null;
+  function tick() {
+    mx += (tx - mx) * 0.05;
+    my += (ty - my) * 0.05;
+    gx += (gxT - gx) * 0.07;
+    gy += (gyT - gy) * 0.07;
+    var vmax = Math.max(window.innerWidth, window.innerHeight) / 100;
+    for (var i = 0; i < blobs.length && i < LEAN.length; i++) {
+      blobs[i].style.translate = (mx * LEAN[i][0] * vmax).toFixed(1) + "px " + (my * LEAN[i][1] * vmax).toFixed(1) + "px";
+    }
+    if (glow) glow.style.transform = "translate(" + gx.toFixed(1) + "px," + gy.toFixed(1) + "px)";
+    // Rest when everything has settled; the next mouse move wakes it up.
+    if (Math.abs(tx - mx) < 0.001 && Math.abs(ty - my) < 0.001 &&
+        Math.abs(gxT - gx) < 0.3 && Math.abs(gyT - gy) < 0.3) { raf = null; return; }
+    raf = requestAnimationFrame(tick);
+  }
+  window.addEventListener("pointermove", function (e) {
+    if (e.pointerType && e.pointerType !== "mouse") return;
+    tx = e.clientX / window.innerWidth - 0.5;
+    ty = e.clientY / window.innerHeight - 0.5;
+    gxT = e.clientX; gyT = e.clientY;
+    if (!started) { started = true; gx = gxT; gy = gyT; if (glow) glow.classList.add("is-on"); }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }, { passive: true });
+  document.documentElement.addEventListener("mouseleave", function () {
+    if (glow) glow.classList.remove("is-on");
+  });
+})();
+</script>
+{%- endif -%}
 
 {% schema %}
 {
@@ -137,6 +204,13 @@
       "label": "Slight movement",
       "default": true,
       "info": "Off: the glows hold still. (People with 'reduce motion' turned on always get the still version.)"
+    },
+    {
+      "type": "checkbox",
+      "id": "react_mouse",
+      "label": "React to the mouse",
+      "default": true,
+      "info": "The glows lean gently toward the cursor, and a soft pool of light follows it. Phones and tablets skip this automatically."
     },
     {
       "type": "color_background",
