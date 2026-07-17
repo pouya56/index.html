@@ -17,6 +17,14 @@
     max-width: 1080px; margin: 40px auto 96px; padding: 0 22px;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: var(--ink); -webkit-font-smoothing: antialiased; }
+  /* Logo on top (links home) */
+  .dyn-faq-topbar { display: flex; align-items: center; margin-bottom: 26px; }
+  .dyn-faq-topbar.is-left { justify-content: flex-start; }
+  .dyn-faq-topbar.is-center { justify-content: center; }
+  .dyn-faq-logo { display: inline-flex; align-items: center; text-decoration: none; transition: opacity .16s; }
+  .dyn-faq-logo:hover { opacity: 0.72; }
+  .dyn-faq-logo img { display: block; height: auto; max-width: 62vw; }
+  .dyn-faq-logo-text { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
   /* Hero card: soft blue, centered, last word of the heading in accent blue */
   .dyn-faq-hero { background: var(--hero); border-radius: 26px; text-align: center; padding: 52px 26px 46px; margin-bottom: 26px; }
   .dyn-faq-hero h2 { font-size: clamp(30px, 4.4vw, 48px); font-weight: 700; letter-spacing: -0.02em; margin: 0; line-height: 1.1; }
@@ -47,6 +55,20 @@
 </style>
 
 <section class="dyn-faq" aria-label="{{ section.settings.heading | escape }}">
+  {%- if section.settings.show_logo -%}
+    {%- assign faq_logo = section.settings.logo | default: settings.logo -%}
+    <div class="dyn-faq-topbar is-{{ section.settings.logo_align | default: 'center' }}">
+      <a href="{{ routes.root_url }}" class="dyn-faq-logo" aria-label="{{ shop.name | escape }} — home">
+        {%- if faq_logo != blank -%}
+          {%- assign lw = section.settings.logo_width | default: 130 -%}
+          {%- assign lh = lw | divided_by: faq_logo.aspect_ratio | round -%}
+          <img src="{{ faq_logo | image_url: width: 500 }}" alt="{{ shop.name | escape }}" width="{{ lw }}" height="{{ lh }}" style="width:{{ lw }}px;">
+        {%- else -%}
+          <span class="dyn-faq-logo-text">{{ shop.name }}</span>
+        {%- endif -%}
+      </a>
+    </div>
+  {%- endif -%}
   {% if section.settings.heading != blank %}
     <div class="dyn-faq-hero">
       <h2>
@@ -84,6 +106,52 @@
   "tag": "section",
   "settings": [
     {
+      "type": "header",
+      "content": "Logo (links to home)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_logo",
+      "label": "Show logo at top",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo image",
+      "info": "Leave empty to use your theme logo."
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "label": "Logo width",
+      "min": 60,
+      "max": 260,
+      "step": 5,
+      "unit": "px",
+      "default": 130
+    },
+    {
+      "type": "select",
+      "id": "logo_align",
+      "label": "Logo position",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
       "type": "text",
       "id": "heading",
       "label": "Heading",
@@ -99,7 +167,7 @@
       "type": "checkbox",
       "id": "open_first",
       "label": "Open first question by default",
-      "default": true
+      "default": false
     }
   ],
   "blocks": [
