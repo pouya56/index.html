@@ -1744,58 +1744,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 }
 </style>
 {%- endif -%}
-{%- if section.settings.can_intact != blank and section.settings.can_crushed != blank -%}
-{%- comment -%} Crushable-can Customize button: the intact can IS the button.
-   Clicking squashes it, crossfades to the crushed render, then opens the
-   design popup; it springs back for next time. {%- endcomment -%}
-<style>
-#customizeBtn.btn-primary {
-  background: none !important; box-shadow: none !important; border: none !important;
-  border-radius: 0 !important; overflow: visible !important; padding: 0;
-  width: auto; min-width: 150px; height: 200px; margin: 0 auto;
-  aspect-ratio: {{ section.settings.can_intact.aspect_ratio }};
-  position: relative; display: inline-flex; align-items: center; justify-content: center;
-  color: #fff; font-weight: 700; text-shadow: 0 2px 6px rgba(70, 30, 50, 0.6);
-  transform-origin: 50% 100%;
-  filter: drop-shadow(0 14px 18px rgba(120, 70, 95, 0.35));
-}
-#customizeBtn.btn-primary::before, #customizeBtn.btn-primary::after {
-  content: "" !important; display: block !important; position: absolute; inset: 0;
-  background: center / contain no-repeat; pointer-events: none;
-  transition: opacity .12s ease .16s;
-}
-#customizeBtn.btn-primary::before { background-image: url({{ section.settings.can_intact | image_url: width: 800 }}); opacity: 1; z-index: -1; }
-#customizeBtn.btn-primary::after  { background-image: url({{ section.settings.can_crushed | image_url: width: 800 }}); opacity: 0; z-index: -1; }
-#customizeBtn.btn-primary.is-crushing { animation: dynCanSquash .42s cubic-bezier(.3, 1.45, .4, 1) forwards; }
-#customizeBtn.btn-primary.is-crushing::before { opacity: 0; }
-#customizeBtn.btn-primary.is-crushing::after { opacity: 1; }
-@keyframes dynCanSquash {
-  0%   { transform: scaleY(1) scaleX(1); }
-  55%  { transform: scaleY(0.52) scaleX(1.14) translateY(6%); }
-  75%  { transform: scaleY(0.72) scaleX(1.04) translateY(3%); }
-  100% { transform: scaleY(0.64) scaleX(1.08) translateY(4%); }
-}
-@media (prefers-reduced-motion: reduce) {
-  #customizeBtn.btn-primary.is-crushing { animation: none; }
-}
-</style>
-<script>
-(function () {
-  var btn = document.getElementById("customizeBtn");
-  if (!btn) return;
-  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  btn.addEventListener("click", function (e) {
-    if (!btn.classList.contains("btn-primary")) return;   // "Edit design" ghost state: open normally
-    if (btn.dataset.crushed || reduced) return;           // programmatic re-click passes through to the app
-    e.stopImmediatePropagation(); e.preventDefault();
-    btn.dataset.crushed = "1";
-    btn.classList.add("is-crushing");
-    setTimeout(function () { btn.click(); }, 430);        // crunch first, then the popup opens
-    setTimeout(function () { btn.classList.remove("is-crushing"); delete btn.dataset.crushed; }, 1500);
-  });
-})();
-</script>
-{%- endif -%}
 {%- comment -%} Instant pre-fill: paint the REAL title/price the moment the shell
    exists, so nothing flashes while the deferred app JS loads. {%- endcomment -%}
 {%- if dyn_product -%}
@@ -2385,24 +2333,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       "type": "image_picker",
       "id": "cta_pillow",
       "label": "Pillow image (transparent PNG)"
-    },
-    {
-      "type": "header",
-      "content": "Crushable can button (optional)"
-    },
-    {
-      "type": "paragraph",
-      "content": "The Customize button becomes a soda can: click it and it crushes, then the design popup opens (it springs back after). Upload BOTH images — same can, same angle, transparent PNGs. Leave either empty to keep the normal button."
-    },
-    {
-      "type": "image_picker",
-      "id": "can_intact",
-      "label": "Can — intact (transparent PNG)"
-    },
-    {
-      "type": "image_picker",
-      "id": "can_crushed",
-      "label": "Can — crushed (transparent PNG)"
     }
   ],
   "max_blocks": 6,
