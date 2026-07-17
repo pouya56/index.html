@@ -1776,6 +1776,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 #uploadApply.btn-primary { font-size: 0; text-shadow: none; }
 {%- endunless -%}
 #uploadApply.btn-primary:hover:not([disabled]) {
+  /* Re-assert the image: the pink cushion's hover rule otherwise repaints the background */
+  background: url({{ section.settings.cta_img_adddesign | image_url: width: 900 }}) center / 100% 100% no-repeat;
+  box-shadow: none;
   filter: drop-shadow(0 14px 20px rgba(60, 60, 90, 0.38)) brightness(1.04);
 }
 #uploadApply.btn-primary[disabled] { filter: drop-shadow(0 10px 16px rgba(60, 60, 90, 0.25)) grayscale(0.4) opacity(0.6); }
