@@ -13,23 +13,35 @@
 {% endcomment %}
 
 <style>
-  .dyn-faq { --ink: #1d1d1f; --soft: #6e6e73; --accent: #0071e3; --panel: #f5f5f7; --hero: #e8f2fd; --line: #e8e8ed;
-    max-width: 1080px; margin: 40px auto 96px; padding: 0 22px;
+  .dyn-faq { --ink: #1d1d1f; --soft: #6e6e73; --accent: #0071e3; --panel: #f5f5f7; --chip: #f0f0f3; --line: #e8e8ed;
+    max-width: 1240px; margin: 28px auto 96px; padding: 0 18px;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: var(--ink); -webkit-font-smoothing: antialiased; }
-  /* Logo on top (links home) */
-  .dyn-faq-topbar { display: flex; align-items: center; margin-bottom: 26px; }
-  .dyn-faq-topbar.is-left { justify-content: flex-start; }
-  .dyn-faq-topbar.is-center { justify-content: center; }
-  .dyn-faq-logo { display: inline-flex; align-items: center; text-decoration: none; transition: opacity .16s; }
-  .dyn-faq-logo:hover { opacity: 0.72; }
-  .dyn-faq-logo img { display: block; height: auto; max-width: 62vw; }
-  .dyn-faq-logo-text { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
-  /* Hero card: soft blue, centered, last word of the heading in accent blue */
-  .dyn-faq-hero { background: var(--hero); border-radius: 26px; text-align: center; padding: 52px 26px 46px; margin-bottom: 26px; }
-  .dyn-faq-hero h2 { font-size: clamp(30px, 4.4vw, 48px); font-weight: 700; letter-spacing: -0.02em; margin: 0; line-height: 1.1; }
-  .dyn-faq-hero h2 .dyn-faq-hi { color: var(--accent); }
-  .dyn-faq-hero p { margin: 14px auto 0; font-size: 14px; line-height: 1.6; color: var(--soft); max-width: 60ch; }
+  /* Big rounded panel that holds everything (showcase look) */
+  .dyn-faq-card { background: #fff; border-radius: 36px; padding: clamp(26px, 4vw, 56px); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  /* Top bar: logo chip · pill nav · button */
+  .dyn-faq-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: clamp(34px, 5vw, 60px); }
+  .dyn-faq-logo { display: inline-flex; align-items: center; justify-content: center; min-width: 56px; height: 56px;
+    border-radius: 50%; background: var(--chip); text-decoration: none; padding: 0 10px; transition: opacity .16s; }
+  .dyn-faq-logo:hover { opacity: 0.75; }
+  .dyn-faq-logo img { display: block; height: auto; }
+  .dyn-faq-logo-text { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; }
+  .dyn-faq-nav { display: flex; align-items: center; gap: clamp(10px, 3vw, 44px); background: var(--chip);
+    border-radius: 999px; padding: 0 clamp(20px, 3vw, 44px); height: 56px; overflow-x: auto; scrollbar-width: none; }
+  .dyn-faq-nav::-webkit-scrollbar { display: none; }
+  .dyn-faq-nav a { font-size: 14.5px; font-weight: 500; color: var(--ink); text-decoration: none; white-space: nowrap; opacity: .85; transition: opacity .14s; }
+  .dyn-faq-nav a:hover { opacity: 1; }
+  .dyn-faq-cta { flex: none; display: inline-flex; align-items: center; justify-content: center; height: 56px; padding: 0 34px;
+    border-radius: 999px; background: var(--ink); color: #fff; font-size: 14.5px; font-weight: 600; text-decoration: none;
+    transition: opacity .16s, transform .1s; }
+  .dyn-faq-cta:hover { opacity: .9; } .dyn-faq-cta:active { transform: scale(.98); }
+  @media (max-width: 760px) { .dyn-faq-nav { display: none; } }
+  /* Split heading: big title left, intro paragraph right */
+  .dyn-faq-head { display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(20px, 4vw, 72px); align-items: start; margin-bottom: clamp(26px, 4vw, 48px); }
+  .dyn-faq-head h2 { margin: 0; font-size: clamp(30px, 4.6vw, 54px); line-height: 1.08; letter-spacing: -0.025em; font-weight: 500; }
+  .dyn-faq-head h2 .dyn-faq-hi { font-weight: 700; color: var(--accent); }
+  .dyn-faq-head p { margin: 6px 0 0; font-size: 15.5px; line-height: 1.75; color: var(--soft); }
+  @media (max-width: 860px) { .dyn-faq-head { grid-template-columns: 1fr; } }
   /* Category titles: big, centered */
   .dyn-faq-cat { grid-column: 1 / -1; text-align: center; margin: 40px 0 12px;
     font-size: clamp(22px, 2.8vw, 30px); font-weight: 700; letter-spacing: -0.02em; }
@@ -55,48 +67,69 @@
 </style>
 
 <section class="dyn-faq" aria-label="{{ section.settings.heading | escape }}">
-  {%- if section.settings.show_logo -%}
-    {%- assign faq_logo = section.settings.logo | default: settings.logo -%}
-    <div class="dyn-faq-topbar is-{{ section.settings.logo_align | default: 'center' }}">
-      <a href="{{ routes.root_url }}" class="dyn-faq-logo" aria-label="{{ shop.name | escape }} — home">
-        {%- if faq_logo != blank -%}
-          {%- assign lw = section.settings.logo_width | default: 130 -%}
-          {%- assign lh = lw | divided_by: faq_logo.aspect_ratio | round -%}
-          <img src="{{ faq_logo | image_url: width: 500 }}" alt="{{ shop.name | escape }}" width="{{ lw }}" height="{{ lh }}" style="width:{{ lw }}px;">
-        {%- else -%}
-          <span class="dyn-faq-logo-text">{{ shop.name }}</span>
-        {%- endif -%}
-      </a>
-    </div>
-  {%- endif -%}
-  {% if section.settings.heading != blank %}
-    <div class="dyn-faq-hero">
-      <h2>
-        {%- assign hw = section.settings.heading | split: ' ' -%}
-        {%- for w in hw -%}
-          {%- if forloop.last and hw.size > 1 -%}<span class="dyn-faq-hi">{{ w }}</span>
-          {%- else -%}{{ w }} {% endif -%}
-        {%- endfor -%}
-      </h2>
-      {% if section.settings.intro != blank %}<p>{{ section.settings.intro }}</p>{% endif %}
-    </div>
-  {% endif %}
+  <div class="dyn-faq-card">
 
-  <div class="dyn-faq-grid">
-    {% assign faq_first = true %}
-    {% for block in section.blocks %}
-      {% if block.type == 'category' %}
-        <h3 class="dyn-faq-cat" {{ block.shopify_attributes }}>{{ block.settings.title }}</h3>
+    {%- assign nav_n = 0 -%}
+    {%- for block in section.blocks -%}{%- if block.type == 'nav_link' -%}{%- assign nav_n = nav_n | plus: 1 -%}{%- endif -%}{%- endfor -%}
+    {%- if section.settings.show_logo or nav_n > 0 or section.settings.cta_label != blank -%}
+      <div class="dyn-faq-top">
+        {%- if section.settings.show_logo -%}
+          {%- assign faq_logo = section.settings.logo | default: settings.logo -%}
+          <a href="{{ routes.root_url }}" class="dyn-faq-logo" aria-label="{{ shop.name | escape }} — home">
+            {%- if faq_logo != blank -%}
+              {%- assign lw = section.settings.logo_width | default: 36 -%}
+              {%- assign lh = lw | divided_by: faq_logo.aspect_ratio | round -%}
+              <img src="{{ faq_logo | image_url: width: 300 }}" alt="{{ shop.name | escape }}" width="{{ lw }}" height="{{ lh }}" style="width:{{ lw }}px;">
+            {%- else -%}
+              <span class="dyn-faq-logo-text">{{ shop.name }}</span>
+            {%- endif -%}
+          </a>
+        {%- else -%}<span></span>{%- endif -%}
+        {%- if nav_n > 0 -%}
+          <nav class="dyn-faq-nav" aria-label="FAQ shortcuts">
+            {%- for block in section.blocks -%}
+              {%- if block.type == 'nav_link' -%}
+                <a href="{{ block.settings.link | default: '#' }}" {{ block.shopify_attributes }}>{{ block.settings.label | default: 'Link' }}</a>
+              {%- endif -%}
+            {%- endfor -%}
+          </nav>
+        {%- endif -%}
+        {%- if section.settings.cta_label != blank -%}
+          <a class="dyn-faq-cta" href="{{ section.settings.cta_link | default: '/pages/contact' }}">{{ section.settings.cta_label }}</a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {% if section.settings.heading != blank or section.settings.intro != blank %}
+      <div class="dyn-faq-head">
+        <h2>
+          {%- assign hw = section.settings.heading | split: ' ' -%}
+          {%- for w in hw -%}
+            {%- if forloop.last and hw.size > 1 -%}<span class="dyn-faq-hi">{{ w }}</span>
+            {%- else -%}{{ w }} {% endif -%}
+          {%- endfor -%}
+        </h2>
+        {% if section.settings.intro != blank %}<p>{{ section.settings.intro }}</p>{% endif %}
+      </div>
+    {% endif %}
+
+    <div class="dyn-faq-grid">
+      {% assign faq_first = true %}
+      {% for block in section.blocks %}
+        {% if block.type == 'category' %}
+          <h3 class="dyn-faq-cat" {{ block.shopify_attributes }}>{{ block.settings.title }}</h3>
+        {% elsif block.type == 'faq' %}
+          <details class="dyn-faq-item"{% if faq_first and section.settings.open_first %} open{% endif %} {{ block.shopify_attributes }}>
+            <summary>{{ block.settings.question }}<svg class="dyn-faq-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></summary>
+            <div class="dyn-faq-answer">{{ block.settings.answer }}</div>
+          </details>
+          {% assign faq_first = false %}
+        {% endif %}
       {% else %}
-        <details class="dyn-faq-item"{% if faq_first and section.settings.open_first %} open{% endif %} {{ block.shopify_attributes }}>
-          <summary>{{ block.settings.question }}<svg class="dyn-faq-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></summary>
-          <div class="dyn-faq-answer">{{ block.settings.answer }}</div>
-        </details>
-        {% assign faq_first = false %}
-      {% endif %}
-    {% else %}
-      <p class="dyn-faq-empty">Add your first question with “Add Question”.</p>
-    {% endfor %}
+        <p class="dyn-faq-empty">Add your first question with “Add Question”.</p>
+      {% endfor %}
+    </div>
+
   </div>
 </section>
 
@@ -119,33 +152,31 @@
       "type": "image_picker",
       "id": "logo",
       "label": "Logo image",
-      "info": "Leave empty to use your theme logo."
+      "info": "Shown in a round chip, top-left. Leave empty to use your theme logo (or store name)."
     },
     {
       "type": "range",
       "id": "logo_width",
       "label": "Logo width",
-      "min": 60,
-      "max": 260,
-      "step": 5,
+      "min": 20,
+      "max": 120,
+      "step": 2,
       "unit": "px",
-      "default": 130
+      "default": 36,
+      "info": "Inside the round chip — small works best."
     },
     {
-      "type": "select",
-      "id": "logo_align",
-      "label": "Logo position",
-      "options": [
-        {
-          "value": "left",
-          "label": "Left"
-        },
-        {
-          "value": "center",
-          "label": "Center"
-        }
-      ],
-      "default": "center"
+      "type": "text",
+      "id": "cta_label",
+      "label": "Button text (top-right)",
+      "default": "Contact us",
+      "info": "The black pill button. Leave empty to hide."
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "Button link",
+      "info": "Defaults to /pages/contact."
     },
     {
       "type": "header",
@@ -171,6 +202,24 @@
     }
   ],
   "blocks": [
+    {
+      "type": "nav_link",
+      "name": "Nav link (top pill)",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Link"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    },
     {
       "type": "category",
       "name": "Category title",
@@ -207,6 +256,27 @@
     {
       "name": "Dynamic FAQ",
       "blocks": [
+        {
+          "type": "nav_link",
+          "settings": {
+            "label": "Shop",
+            "link": "/collections/all"
+          }
+        },
+        {
+          "type": "nav_link",
+          "settings": {
+            "label": "Bulk orders",
+            "link": "/pages/bulk-order"
+          }
+        },
+        {
+          "type": "nav_link",
+          "settings": {
+            "label": "Contact",
+            "link": "/pages/contact"
+          }
+        },
         {
           "type": "category",
           "settings": {
