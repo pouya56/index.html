@@ -17,8 +17,9 @@
   <style>
     #shopify-section-{{ section.id }} .dyn-abar { background: {{ ab_bg }}; }
     {%- if section.settings.overlay -%}
-    /* Float over the page: pull the whole section out of flow so it takes no row. */
-    #shopify-section-{{ section.id }} { position: absolute; top: 0; left: 0; right: 0; z-index: 60; pointer-events: none; }
+    /* Float over the page: pull the whole section out of flow so it takes no row.
+       With "Follow while scrolling" on, it's fixed — the corner buttons stay put. */
+    #shopify-section-{{ section.id }} { position: {% if section.settings.overlay_follow %}fixed{% else %}absolute{% endif %}; top: 0; left: 0; right: 0; z-index: 60; pointer-events: none; }
     #shopify-section-{{ section.id }} .dyn-abar { background: transparent; }
     #shopify-section-{{ section.id }} .dyn-abar .dh-menu, #shopify-section-{{ section.id }} .dyn-abar .ab-back { pointer-events: auto; }
     /* Match the homepage corner links: 20px from top, 26px from the side. */
@@ -305,6 +306,7 @@
 
     { "type": "header", "content": "Bar style" },
     { "type": "checkbox", "id": "overlay", "label": "Float over the page (no row)", "default": true, "info": "Sits on top of the page at the top-right — like the homepage corners — instead of taking its own row. Turn off for a normal bar." },
+    { "type": "checkbox", "id": "overlay_follow", "label": "Follow while scrolling (float mode)", "default": true, "info": "Keeps the corner buttons visible in the corners as you scroll down the page." },
     { "type": "range", "id": "overlay_top", "min": 0, "max": 80, "step": 2, "unit": "px", "label": "Distance from top (float mode)", "default": 20, "info": "Match your homepage corner links (they use 20px)." },
     { "type": "range", "id": "overlay_side", "min": 0, "max": 80, "step": 2, "unit": "px", "label": "Distance from side (float mode)", "default": 26 },
     { "type": "checkbox", "id": "transparent_bg", "label": "Transparent background (normal bar only)", "default": true },
