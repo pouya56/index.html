@@ -1723,24 +1723,37 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 </script>
 
 {% endraw %}
-{%- if section.settings.cta_pillow != blank -%}
-{%- comment -%} REAL pillow skin for the CTAs: the uploaded PNG is 9-sliced onto
-   the buttons — corners stay true, the middle stretches, and the drop shadow
-   follows the pillow's actual silhouette. (Lives OUTSIDE the raw block so the
+{%- comment -%} Image button skins: each uploaded image IS its button — shown
+   whole, at its own proportions, with a silhouette drop shadow. Separate
+   images for Customize and Add to Cart. (Lives OUTSIDE the raw block so the
    Liquid evaluates.) {%- endcomment -%}
+{%- if section.settings.cta_img_customize != blank -%}
 <style>
-#customizeBtn.btn-primary, #pageAddCart.btn-primary {
-  /* The uploaded image IS the button — shown whole, at its own proportions. */
-  background: url({{ section.settings.cta_pillow | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+#customizeBtn.btn-primary {
+  background: url({{ section.settings.cta_img_customize | image_url: width: 1200 }}) center / 100% 100% no-repeat;
   box-shadow: none; border-radius: 0; border: none; overflow: visible;
-  aspect-ratio: {{ section.settings.cta_pillow.aspect_ratio }};
+  aspect-ratio: {{ section.settings.cta_img_customize.aspect_ratio }};
   padding: 0;
-  filter: drop-shadow(0 16px 22px rgba(15, 60, 140, 0.35));
+  filter: drop-shadow(0 16px 22px rgba(60, 60, 90, 0.3));
 }
-#customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before,
-#customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after { display: none; }
-#customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover {
-  filter: drop-shadow(0 20px 28px rgba(15, 60, 140, 0.42)) brightness(1.04);
+#customizeBtn.btn-primary::before, #customizeBtn.btn-primary::after { display: none; }
+#customizeBtn.btn-primary:hover {
+  filter: drop-shadow(0 20px 28px rgba(60, 60, 90, 0.38)) brightness(1.04);
+}
+</style>
+{%- endif -%}
+{%- if section.settings.cta_img_addcart != blank -%}
+<style>
+#pageAddCart.btn-primary {
+  background: url({{ section.settings.cta_img_addcart | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+  box-shadow: none; border-radius: 0; border: none; overflow: visible;
+  aspect-ratio: {{ section.settings.cta_img_addcart.aspect_ratio }};
+  padding: 0;
+  filter: drop-shadow(0 16px 22px rgba(60, 60, 90, 0.3));
+}
+#pageAddCart.btn-primary::before, #pageAddCart.btn-primary::after { display: none; }
+#pageAddCart.btn-primary:hover {
+  filter: drop-shadow(0 20px 28px rgba(60, 60, 90, 0.38)) brightness(1.04);
 }
 </style>
 {%- endif -%}
@@ -2323,16 +2336,21 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     },
     {
       "type": "header",
-      "content": "Pillow button skin (optional)"
+      "content": "Button image skins (optional)"
     },
     {
       "type": "paragraph",
-      "content": "For truly realistic inflatable buttons: generate a WIDE blank pillow image (transparent PNG, no text — e.g. 1000×280px) and pick it here. Customize and Add to Cart wear it, stretching to fit; leave empty to use the drawn style."
+      "content": "Each image IS its button, shown exactly as uploaded (the button takes the image's proportions). Use WIDE transparent PNGs with no text — the labels are drawn on top. Leave empty to keep the normal button."
     },
     {
       "type": "image_picker",
-      "id": "cta_pillow",
-      "label": "Pillow image (transparent PNG)"
+      "id": "cta_img_customize",
+      "label": "Customize button image"
+    },
+    {
+      "type": "image_picker",
+      "id": "cta_img_addcart",
+      "label": "Add to Cart button image"
     }
   ],
   "max_blocks": 6,
