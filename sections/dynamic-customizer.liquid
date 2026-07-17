@@ -1730,14 +1730,11 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
    Liquid evaluates.) {%- endcomment -%}
 <style>
 #customizeBtn.btn-primary, #pageAddCart.btn-primary {
-  background: none; box-shadow: none; border-radius: 0; overflow: visible;
-  border: 0 solid transparent;
-  border-image-source: url({{ section.settings.cta_pillow | image_url: width: 1000 }});
-  border-image-slice: 33% fill;
-  border-image-width: 28px;
-  border-image-repeat: stretch;
-  padding: 20px 42px;
-  min-height: 73px;
+  /* The uploaded image IS the button — shown whole, at its own proportions. */
+  background: url({{ section.settings.cta_pillow | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+  box-shadow: none; border-radius: 0; border: none; overflow: visible;
+  aspect-ratio: {{ section.settings.cta_pillow.aspect_ratio }};
+  padding: 0;
   filter: drop-shadow(0 16px 22px rgba(15, 60, 140, 0.35));
 }
 #customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before,
