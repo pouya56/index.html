@@ -1,22 +1,34 @@
 {%- comment -%}
-  Dynamic Background — a barely-there animated wallpaper that sits BEHIND the
-  whole page. Three soft color glows drift slowly, like light through water.
-  Pure CSS: nothing to download, nothing to load. Add the section anywhere on
-  a page (top or bottom, it doesn't matter — it pins itself behind everything).
+  Dynamic Background — an animated wallpaper that sits BEHIND the whole page.
+  Two looks:
+   - "Soft color glows": three pale glows drift slowly, like light through water.
+   - "Sunlight & shadow": a painted wall with warm window light falling across
+     it — bright diagonal panes, soft shadow in the corners.
+  Pure CSS: nothing to download. Add the section anywhere on a page (top or
+  bottom, it doesn't matter — it pins itself behind everything).
 {%- endcomment -%}
 
+{%- assign look = section.settings.look | default: 'glow' -%}
 {%- assign bg_alpha = section.settings.strength | divided_by: 100.0 -%}
 {%- assign c1 = section.settings.color_1 | color_modify: 'alpha', bg_alpha -%}
 {%- assign c2 = section.settings.color_2 | color_modify: 'alpha', bg_alpha -%}
 {%- assign c3 = section.settings.color_3 | color_modify: 'alpha', bg_alpha -%}
+{%- assign sun_a = section.settings.strength | times: 2.2 | divided_by: 100.0 | at_most: 0.8 -%}
+{%- assign shade_a = section.settings.strength | times: 1.5 | divided_by: 100.0 | at_most: 0.5 -%}
 {%- assign spd = section.settings.speed -%}
 {%- assign spd2 = spd | times: 1.35 | round -%}
 {%- assign spd3 = spd | times: 1.7 | round -%}
 
 <div class="dyn-bg" id="dynBg-{{ section.id }}" aria-hidden="true">
+  {%- if look == 'sun' -%}
+  <span class="dyn-bg-shade"></span>
+  <span class="dyn-bg-blob dyn-bg-s1"></span>
+  <span class="dyn-bg-blob dyn-bg-s2"></span>
+  {%- else -%}
   <span class="dyn-bg-blob dyn-bg-b1"></span>
   <span class="dyn-bg-blob dyn-bg-b2"></span>
   <span class="dyn-bg-blob dyn-bg-b3"></span>
+  {%- endif -%}
   {%- if section.settings.react_mouse -%}
   <span class="dyn-bg-cursor"></span>
   {%- endif -%}
@@ -29,7 +41,9 @@
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
-    {%- if section.settings.base_tint != blank and section.settings.base_tint != 'rgba(0,0,0,0)' -%}
+    {%- if look == 'sun' -%}
+    background: {{ section.settings.wall_color | default: '#ffb42e' }};
+    {%- elsif section.settings.base_tint != blank and section.settings.base_tint != 'rgba(0,0,0,0)' -%}
     background: {{ section.settings.base_tint }};
     {%- endif -%}
   }
@@ -40,8 +54,46 @@
     border-radius: 50%;
     will-change: transform;
   }
-  /* Each glow is a pre-faded radial gradient — no blur filter needed,
-     so it stays feather-light on phones. Only transform animates (GPU). */
+
+  {%- if look == 'sun' -%}
+  /* Sunlight & shadow: soft corner shade for depth, then two bright diagonal
+     panes of "window light" that creep across the wall, slowly, like the sun
+     moving. Only transform animates (GPU). */
+  #dynBg-{{ section.id }} .dyn-bg-shade {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(45deg, rgba(30, 12, 0, {{ shade_a }}) 0%, rgba(30, 12, 0, 0) 38%),
+      linear-gradient(225deg, rgba(30, 12, 0, {{ shade_a }}) 0%, rgba(30, 12, 0, 0) 42%);
+  }
+  #dynBg-{{ section.id }} .dyn-bg-s1 {
+    top: -26vmax; left: -30vmax;
+    width: 170vmax; height: 30vmax;
+    border-radius: 5vmax;
+    background: rgba(255, 255, 255, {{ sun_a }});
+    filter: blur(26px);
+    transform: rotate(-30deg);
+    animation: dynBgSun1 {{ spd }}s ease-in-out infinite alternate;
+  }
+  #dynBg-{{ section.id }} .dyn-bg-s2 {
+    top: 16vmax; left: -36vmax;
+    width: 180vmax; height: 18vmax;
+    border-radius: 5vmax;
+    background: rgba(255, 255, 255, {{ sun_a | times: 0.72 }});
+    filter: blur(30px);
+    transform: rotate(-30deg);
+    animation: dynBgSun2 {{ spd2 }}s ease-in-out infinite alternate;
+  }
+  @keyframes dynBgSun1 {
+    0%   { transform: rotate(-30deg) translate(0, 0); }
+    100% { transform: rotate(-30deg) translate(5vmax, 3vmax); }
+  }
+  @keyframes dynBgSun2 {
+    0%   { transform: rotate(-30deg) translate(0, 0); }
+    100% { transform: rotate(-30deg) translate(-6vmax, 2vmax); }
+  }
+  {%- else -%}
+  /* Soft color glows: each is a pre-faded radial gradient — no blur filter
+     needed, so it stays feather-light on phones. Only transform animates. */
   #dynBg-{{ section.id }} .dyn-bg-b1 {
     top: -35vmax; left: -25vmax;
     background: radial-gradient(circle at center, {{ c1 }} 0%, transparent 62%);
@@ -69,6 +121,8 @@
     0%   { transform: translate(0, 0) scale(1); }
     100% { transform: translate(12vmax, -12vmax) scale(1.15); }
   }
+  {%- endif -%}
+
   /* Visitors who asked their phone for less motion get a calm, frozen version. */
   @media (prefers-reduced-motion: reduce) {
     #dynBg-{{ section.id }} .dyn-bg-blob { animation: none !important; }
@@ -85,7 +139,7 @@
     left: -35vmax; top: -35vmax;
     width: 70vmax; height: 70vmax;
     border-radius: 50%;
-    background: radial-gradient(circle at center, {{ c2 }} 0%, transparent 58%);
+    background: radial-gradient(circle at center, {% if look == 'sun' %}rgba(255, 255, 255, {{ sun_a | times: 0.8 }}){% else %}{{ c2 }}{% endif %} 0%, transparent 58%);
     opacity: 0;
     transition: opacity 0.9s ease;
     will-change: transform;
@@ -114,8 +168,8 @@
   }
   var blobs = root.querySelectorAll(".dyn-bg-blob");
   var glow = root.querySelector(".dyn-bg-cursor");
-  // How far each glow leans toward the cursor (x, y) — different amounts and
-  // directions per glow, so the movement feels like depth, not a slide.
+  // How far each layer leans toward the cursor (x, y) — different amounts and
+  // directions per layer, so the movement feels like depth, not a slide.
   var LEAN = [[3, 2], [-4, 3], [2.5, -2.5]];
   var tx = 0, ty = 0, mx = 0, my = 0;
   var gxT = -9999, gyT = -9999, gx = 0, gy = 0, started = false;
@@ -156,13 +210,31 @@
   "settings": [
     {
       "type": "paragraph",
-      "content": "A very light wallpaper with slow movement, behind the whole page. Add it once per page — position in the page doesn't matter. Pure CSS: adds zero loading time."
+      "content": "An animated wallpaper behind the whole page. Add it once per page — position in the page doesn't matter. Pure CSS: adds zero loading time."
+    },
+    {
+      "type": "select",
+      "id": "look",
+      "label": "Look",
+      "options": [
+        { "value": "glow", "label": "Soft color glows" },
+        { "value": "sun", "label": "Sunlight & shadow (wall)" }
+      ],
+      "default": "glow"
+    },
+    {
+      "type": "color",
+      "id": "wall_color",
+      "label": "Wall color",
+      "default": "#ffb42e",
+      "info": "Sunlight look only: the painted wall the light falls on."
     },
     {
       "type": "color",
       "id": "color_1",
       "label": "Glow color 1 (top left)",
-      "default": "#5b8def"
+      "default": "#5b8def",
+      "info": "Glow look only (also colors 2 and 3)."
     },
     {
       "type": "color",
@@ -185,7 +257,7 @@
       "step": 2,
       "unit": "%",
       "default": 12,
-      "info": "How visible the glows are. 8-16% is the sweet spot — you should barely notice it."
+      "info": "Glows: 8-16% is the sweet spot. Sunlight: try 14-24% — it drives both the light and the shadow."
     },
     {
       "type": "range",
@@ -203,25 +275,32 @@
       "id": "animate",
       "label": "Slight movement",
       "default": true,
-      "info": "Off: the glows hold still. (People with 'reduce motion' turned on always get the still version.)"
+      "info": "Off: everything holds still. (People with 'reduce motion' turned on always get the still version.)"
     },
     {
       "type": "checkbox",
       "id": "react_mouse",
       "label": "React to the mouse",
       "default": true,
-      "info": "The glows lean gently toward the cursor, and a soft pool of light follows it. Phones and tablets skip this automatically."
+      "info": "The light leans gently toward the cursor, and a soft pool of light follows it. Phones and tablets skip this automatically."
     },
     {
       "type": "color_background",
       "id": "base_tint",
       "label": "Base tint (optional)",
-      "info": "An extra wash of color under the glows — e.g. a whisper of warm white. Leave empty for none."
+      "info": "Glow look only: an extra wash of color under the glows. Leave empty for none."
     }
   ],
   "presets": [
     {
       "name": "Dynamic Background"
+    },
+    {
+      "name": "Dynamic Background — Sunlight",
+      "settings": {
+        "look": "sun",
+        "strength": 18
+      }
     }
   ]
 }
