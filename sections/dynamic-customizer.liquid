@@ -1733,6 +1733,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   background: url({{ section.settings.cta_img_customize | image_url: width: 1200 }}) center / 100% 100% no-repeat;
   box-shadow: none; border-radius: 0; border: none; overflow: visible;
   aspect-ratio: {{ section.settings.cta_img_customize.aspect_ratio }};
+  width: {{ section.settings.cta_img_customize_w | default: 100 }}%; margin-left: auto; margin-right: auto;
   padding: 0;
   filter: drop-shadow(0 16px 22px rgba(60, 60, 90, 0.3));
 }
@@ -1751,6 +1752,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   background: url({{ section.settings.cta_img_addcart | image_url: width: 1200 }}) center / 100% 100% no-repeat;
   box-shadow: none; border-radius: 0; border: none; overflow: visible;
   aspect-ratio: {{ section.settings.cta_img_addcart.aspect_ratio }};
+  width: {{ section.settings.cta_img_addcart_w | default: 100 }}%; margin-left: auto; margin-right: auto;
   padding: 0;
   filter: drop-shadow(0 16px 22px rgba(60, 60, 90, 0.3));
 }
@@ -1768,7 +1770,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 #uploadApply.btn-primary {
   background: url({{ section.settings.cta_img_adddesign | image_url: width: 900 }}) center / 100% 100% no-repeat;
   box-shadow: none; border-radius: 0; border: none; overflow: visible;
-  height: 54px; aspect-ratio: {{ section.settings.cta_img_adddesign.aspect_ratio }};
+  height: {{ section.settings.cta_img_adddesign_h | default: 54 }}px; aspect-ratio: {{ section.settings.cta_img_adddesign.aspect_ratio }};
   padding: 0;
   filter: drop-shadow(0 10px 16px rgba(60, 60, 90, 0.3));
 }
@@ -2375,14 +2377,46 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       "label": "Customize button image"
     },
     {
+      "type": "range",
+      "id": "cta_img_customize_w",
+      "label": "Customize image size",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100,
+      "info": "Width of the button (centered). Height follows the image's shape."
+    },
+    {
       "type": "image_picker",
       "id": "cta_img_addcart",
       "label": "Add to Cart button image"
     },
     {
+      "type": "range",
+      "id": "cta_img_addcart_w",
+      "label": "Add to Cart image size",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
       "type": "image_picker",
       "id": "cta_img_adddesign",
       "label": "Add design button image (popup)"
+    },
+    {
+      "type": "range",
+      "id": "cta_img_adddesign_h",
+      "label": "Add design image height",
+      "min": 36,
+      "max": 96,
+      "step": 2,
+      "unit": "px",
+      "default": 54,
+      "info": "Width follows the image's shape."
     },
     {
       "type": "checkbox",
