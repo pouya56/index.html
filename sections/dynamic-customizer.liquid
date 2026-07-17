@@ -401,6 +401,29 @@ button { font-family: inherit; cursor: pointer; }
 #customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover {
   filter: url(#dynPuff) brightness(1.05) saturate(1.06);
 }
+{%- if section.settings.cta_pillow != blank -%}
+/* REAL pillow skin: the uploaded PNG is 9-sliced onto the buttons — corners
+   stay true, the middle stretches, and the drop shadow follows the pillow's
+   actual silhouette. Overrides the CSS-drawn pillow above. */
+{%- assign cta_slice = section.settings.cta_pillow_slice | default: 110 -%}
+{%- assign cta_ring = section.settings.cta_pillow_ring | default: 28 -%}
+#customizeBtn.btn-primary, #pageAddCart.btn-primary {
+  background: none; box-shadow: none; border-radius: 0; overflow: visible;
+  border: 0 solid transparent;
+  border-image-source: url({{ section.settings.cta_pillow | image_url: width: 1000 }});
+  border-image-slice: {{ cta_slice }} fill;
+  border-image-width: {{ cta_ring }}px;
+  border-image-repeat: stretch;
+  padding: {{ cta_ring | times: 0.7 | round }}px {{ cta_ring | times: 1.5 | round }}px;
+  min-height: {{ cta_ring | times: 2.6 | round }}px;
+  filter: drop-shadow(0 16px 22px rgba(15, 60, 140, 0.35));
+}
+#customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before,
+#customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after { display: none; }
+#customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover {
+  filter: drop-shadow(0 20px 28px rgba(15, 60, 140, 0.42)) brightness(1.04);
+}
+{%- endif -%}
 /* "Add design" (popup) — matte cushion in shocking pink: a soft-touch puffy
    squircle like the reference tiles — pillowed top light, deep under-curve,
    and a soft diagonal shadow on the surface. No gloss: matte. */
@@ -1979,154 +2002,846 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {
   "name": "Dynamic Customizer",
   "settings": [
-    { "type": "header", "content": "Price note" },
-    { "type": "text", "id": "price_note", "label": "Text next to the price", "default": "Free shipping", "info": "Small grey text beside the price. Leave empty to hide it." },
-    { "type": "header", "content": "Logo (top of page, links home)" },
-    { "type": "checkbox", "id": "show_top_logo", "label": "Show logo at top", "default": true },
-    { "type": "image_picker", "id": "top_logo", "label": "Logo image", "info": "Leave empty to use your theme logo." },
-    { "type": "range", "id": "top_logo_width", "label": "Logo width", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 130 },
-    { "type": "select", "id": "top_logo_align", "label": "Logo position", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" } ], "default": "center" },
-    { "type": "header", "content": "Engraving popup text" },
-    { "type": "text", "id": "engrave_title", "label": "Popup title", "default": "Personalize your AirPods." },
-    { "type": "textarea", "id": "engrave_sub", "label": "Popup subtitle", "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them." },
-    { "type": "text", "id": "popup_button_label", "label": "Popup button text", "info": "The primary button inside the popup. It saves the design and returns to the page — the page's Add to Cart does the adding.", "default": "Add design" },
-    { "type": "text", "id": "popup_placeholder", "label": "Popup text-field hint", "info": "Grey hint shown in the empty text box.", "default": "Add your text" },
-    { "type": "header", "content": "Trust row (under the buttons)" },
-    { "type": "paragraph", "content": "Three short reassurance items under the buttons. Leave a field blank to hide that one." },
-    { "type": "text", "id": "reassure_1", "label": "Trust item 1", "default": "Free delivery" },
-    { "type": "select", "id": "reassure_1_icon", "label": "Trust item 1 icon", "default": "truck",
+    {
+      "type": "header",
+      "content": "Price note"
+    },
+    {
+      "type": "text",
+      "id": "price_note",
+      "label": "Text next to the price",
+      "default": "Free shipping",
+      "info": "Small grey text beside the price. Leave empty to hide it."
+    },
+    {
+      "type": "header",
+      "content": "Logo (top of page, links home)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_top_logo",
+      "label": "Show logo at top",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "top_logo",
+      "label": "Logo image",
+      "info": "Leave empty to use your theme logo."
+    },
+    {
+      "type": "range",
+      "id": "top_logo_width",
+      "label": "Logo width",
+      "min": 60,
+      "max": 260,
+      "step": 5,
+      "unit": "px",
+      "default": 130
+    },
+    {
+      "type": "select",
+      "id": "top_logo_align",
+      "label": "Logo position",
       "options": [
-        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
-        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
-        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
-        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
-        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
-        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
-      ] },
-    { "type": "text", "id": "reassure_2", "label": "Trust item 2", "default": "Made in 3–5 days" },
-    { "type": "select", "id": "reassure_2_icon", "label": "Trust item 2 icon", "default": "clock",
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Engraving popup text"
+    },
+    {
+      "type": "text",
+      "id": "engrave_title",
+      "label": "Popup title",
+      "default": "Personalize your AirPods."
+    },
+    {
+      "type": "textarea",
+      "id": "engrave_sub",
+      "label": "Popup subtitle",
+      "default": "Fast, free engraving of emoji with a click. Type in names, initials, or numbers. You can even combine them."
+    },
+    {
+      "type": "text",
+      "id": "popup_button_label",
+      "label": "Popup button text",
+      "info": "The primary button inside the popup. It saves the design and returns to the page — the page's Add to Cart does the adding.",
+      "default": "Add design"
+    },
+    {
+      "type": "text",
+      "id": "popup_placeholder",
+      "label": "Popup text-field hint",
+      "info": "Grey hint shown in the empty text box.",
+      "default": "Add your text"
+    },
+    {
+      "type": "header",
+      "content": "Trust row (under the buttons)"
+    },
+    {
+      "type": "paragraph",
+      "content": "Three short reassurance items under the buttons. Leave a field blank to hide that one."
+    },
+    {
+      "type": "text",
+      "id": "reassure_1",
+      "label": "Trust item 1",
+      "default": "Free delivery"
+    },
+    {
+      "type": "select",
+      "id": "reassure_1_icon",
+      "label": "Trust item 1 icon",
+      "default": "truck",
       "options": [
-        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
-        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
-        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
-        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
-        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
-        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
-      ] },
-    { "type": "text", "id": "reassure_3", "label": "Trust item 3", "default": "Free & easy returns" },
-    { "type": "select", "id": "reassure_3_icon", "label": "Trust item 3 icon", "default": "check",
+        {
+          "value": "truck",
+          "label": "Truck (delivery)"
+        },
+        {
+          "value": "clock",
+          "label": "Clock (turnaround)"
+        },
+        {
+          "value": "check",
+          "label": "Checkmark"
+        },
+        {
+          "value": "shield",
+          "label": "Shield (secure)"
+        },
+        {
+          "value": "returns",
+          "label": "Returns (refresh)"
+        },
+        {
+          "value": "gift",
+          "label": "Gift"
+        },
+        {
+          "value": "star",
+          "label": "Star (quality)"
+        },
+        {
+          "value": "heart",
+          "label": "Heart (handmade)"
+        },
+        {
+          "value": "tag",
+          "label": "Price tag"
+        },
+        {
+          "value": "leaf",
+          "label": "Leaf (eco)"
+        },
+        {
+          "value": "lock",
+          "label": "Lock (secure)"
+        },
+        {
+          "value": "badge",
+          "label": "Badge (guarantee)"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "reassure_2",
+      "label": "Trust item 2",
+      "default": "Made in 3–5 days"
+    },
+    {
+      "type": "select",
+      "id": "reassure_2_icon",
+      "label": "Trust item 2 icon",
+      "default": "clock",
       "options": [
-        { "value": "truck", "label": "Truck (delivery)" }, { "value": "clock", "label": "Clock (turnaround)" },
-        { "value": "check", "label": "Checkmark" }, { "value": "shield", "label": "Shield (secure)" },
-        { "value": "returns", "label": "Returns (refresh)" }, { "value": "gift", "label": "Gift" },
-        { "value": "star", "label": "Star (quality)" }, { "value": "heart", "label": "Heart (handmade)" },
-        { "value": "tag", "label": "Price tag" }, { "value": "leaf", "label": "Leaf (eco)" },
-        { "value": "lock", "label": "Lock (secure)" }, { "value": "badge", "label": "Badge (guarantee)" }
-      ] },
-    { "type": "header", "content": "Order labels (names on the order)" },
-    { "type": "paragraph", "content": "Each attached file shows on the order as a download link with the label below." },
-    { "type": "text", "id": "label_design", "label": "Front artwork label", "default": "Print Front" },
-    { "type": "text", "id": "label_preview", "label": "Front preview label", "default": "Preview Front" },
-    { "type": "text", "id": "label_back_design", "label": "Back artwork label", "default": "Print Back" },
-    { "type": "text", "id": "label_back_preview", "label": "Back preview label", "default": "Preview Back" },
-    { "type": "text", "id": "label_text", "label": "Front text label", "default": "Text" },
-    { "type": "text", "id": "label_back_text", "label": "Back text label", "default": "Back text" }
+        {
+          "value": "truck",
+          "label": "Truck (delivery)"
+        },
+        {
+          "value": "clock",
+          "label": "Clock (turnaround)"
+        },
+        {
+          "value": "check",
+          "label": "Checkmark"
+        },
+        {
+          "value": "shield",
+          "label": "Shield (secure)"
+        },
+        {
+          "value": "returns",
+          "label": "Returns (refresh)"
+        },
+        {
+          "value": "gift",
+          "label": "Gift"
+        },
+        {
+          "value": "star",
+          "label": "Star (quality)"
+        },
+        {
+          "value": "heart",
+          "label": "Heart (handmade)"
+        },
+        {
+          "value": "tag",
+          "label": "Price tag"
+        },
+        {
+          "value": "leaf",
+          "label": "Leaf (eco)"
+        },
+        {
+          "value": "lock",
+          "label": "Lock (secure)"
+        },
+        {
+          "value": "badge",
+          "label": "Badge (guarantee)"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "reassure_3",
+      "label": "Trust item 3",
+      "default": "Free & easy returns"
+    },
+    {
+      "type": "select",
+      "id": "reassure_3_icon",
+      "label": "Trust item 3 icon",
+      "default": "check",
+      "options": [
+        {
+          "value": "truck",
+          "label": "Truck (delivery)"
+        },
+        {
+          "value": "clock",
+          "label": "Clock (turnaround)"
+        },
+        {
+          "value": "check",
+          "label": "Checkmark"
+        },
+        {
+          "value": "shield",
+          "label": "Shield (secure)"
+        },
+        {
+          "value": "returns",
+          "label": "Returns (refresh)"
+        },
+        {
+          "value": "gift",
+          "label": "Gift"
+        },
+        {
+          "value": "star",
+          "label": "Star (quality)"
+        },
+        {
+          "value": "heart",
+          "label": "Heart (handmade)"
+        },
+        {
+          "value": "tag",
+          "label": "Price tag"
+        },
+        {
+          "value": "leaf",
+          "label": "Leaf (eco)"
+        },
+        {
+          "value": "lock",
+          "label": "Lock (secure)"
+        },
+        {
+          "value": "badge",
+          "label": "Badge (guarantee)"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "Order labels (names on the order)"
+    },
+    {
+      "type": "paragraph",
+      "content": "Each attached file shows on the order as a download link with the label below."
+    },
+    {
+      "type": "text",
+      "id": "label_design",
+      "label": "Front artwork label",
+      "default": "Print Front"
+    },
+    {
+      "type": "text",
+      "id": "label_preview",
+      "label": "Front preview label",
+      "default": "Preview Front"
+    },
+    {
+      "type": "text",
+      "id": "label_back_design",
+      "label": "Back artwork label",
+      "default": "Print Back"
+    },
+    {
+      "type": "text",
+      "id": "label_back_preview",
+      "label": "Back preview label",
+      "default": "Preview Back"
+    },
+    {
+      "type": "text",
+      "id": "label_text",
+      "label": "Front text label",
+      "default": "Text"
+    },
+    {
+      "type": "text",
+      "id": "label_back_text",
+      "label": "Back text label",
+      "default": "Back text"
+    },
+    {
+      "type": "header",
+      "content": "Pillow button skin (optional)"
+    },
+    {
+      "type": "paragraph",
+      "content": "For truly realistic inflatable buttons: generate a WIDE blank pillow image (transparent PNG, no text — e.g. 1000×280px) and pick it here. Customize and Add to Cart wear it, stretching to fit; leave empty to use the drawn style."
+    },
+    {
+      "type": "image_picker",
+      "id": "cta_pillow",
+      "label": "Pillow image (transparent PNG)"
+    },
+    {
+      "type": "range",
+      "id": "cta_pillow_slice",
+      "label": "Corner size IN the image",
+      "min": 40,
+      "max": 300,
+      "step": 10,
+      "unit": "px",
+      "default": 110,
+      "info": "How much of the image's corners to keep un-stretched. Raise it if corners look squashed."
+    },
+    {
+      "type": "range",
+      "id": "cta_pillow_ring",
+      "label": "Corner size ON screen",
+      "min": 12,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 28,
+      "info": "Also sets the button's height and padding."
+    }
   ],
   "max_blocks": 6,
   "blocks": [
-    { "type": "method_dtf", "name": "Print method", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Pick how this product is printed — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template. REMOVE this block to sell the product without customization: the popup goes away and customers simply add it to the cart." },
-      { "type": "select", "id": "method_label", "label": "Method name on the order", "default": "DTF", "info": "Saved with each order line so fulfilment knows the method.",
-        "options": [
-          { "value": "DTF", "label": "DTF" },
-          { "value": "UV", "label": "UV" },
-          { "value": "Engraving", "label": "Engraving" },
-          { "value": "Sublimation", "label": "Sublimation" }
-        ] },
-      { "type": "header", "content": "What the customer can do" },
-      { "type": "checkbox", "id": "allow_upload", "label": "Click to upload — FRONT", "default": true, "info": "The 'Click to upload your design' box on the front side. Combine it with the keyboard by turning both on." },
-      { "type": "checkbox", "id": "allow_upload_back", "label": "Click to upload — BACK", "default": false, "info": "Turn on to give the popup Front/Back tabs with an upload box on the back. The back image and print area come from the Printable area block (optional)." },
-      { "type": "checkbox", "id": "allow_text", "label": "Typing keyboard (emoji)", "default": false, "info": "The typing bar with fonts and the emoji picker. Works alone or together with the upload box." },
-      { "type": "text", "id": "text_placeholder", "label": "Text field placeholder", "info": "Shown in the typing bar. Leave empty for 'Add your text'." },
-      { "type": "checkbox", "id": "show_emoji", "label": "Show the emoji picker", "default": true },
-      { "type": "textarea", "id": "emoji_list", "label": "Custom emoji (optional)", "info": "Your own emoji, separated by spaces. Leave empty for the standard set." },
-      { "type": "header", "content": "Popup text (optional)" },
-      { "type": "text", "id": "popup_title", "label": "Popup title", "info": "Leave empty to use the popup text from the section's main settings." },
-      { "type": "textarea", "id": "popup_sub", "label": "Popup subtitle" }
-    ] },
-    { "type": "product_source", "name": "Product source", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Only needed when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown." },
-      { "type": "product", "id": "product_ref", "label": "Product (non-product pages only)" },
-      { "type": "paragraph", "content": "Made to order / always orderable is set PER PRODUCT in Shopify: open the product → each variant's Inventory → tick \"Continue selling when out of stock\". (Optional: tag a product \"made-to-order\" to force it orderable regardless.)" }
-    ] },
-    { "type": "print_area", "name": "Printable area", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Set the box visually: while editing here, click the blue “◳ Set print area” button on the product preview (bottom-right). Drag/resize the box (Front/Back tabs if a back image is set), tap Copy, and paste into the matching field below. (You can also open the live product page with ?setarea=1.)" },
-      { "type": "text", "id": "print_pos", "label": "Print area position", "default": "22, 30, 56, 40", "info": "Four numbers — Left, Top, Width, Height (percent). Paste what the ?setarea=1 tool copies, or edit by hand." },
-      { "type": "select", "id": "print_shape", "label": "Print area shape", "default": "rect", "info": "Circle: the area becomes an oval inside the box — make Width and Height equal for a perfect circle (plates, coasters, ornaments). Designs are clipped to it on previews and order files.", "options": [ { "value": "rect", "label": "Rectangle" }, { "value": "circle", "label": "Circle / oval" } ] },
-      { "type": "image_picker", "id": "front_image", "label": "Front image (design surface)", "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image." },
-      { "type": "image_picker", "id": "example_image", "label": "Example design (placeholder)", "info": "A faded sample shown in the print area to show where the design goes. It disappears when they upload. Leave empty to hide." },
-      { "type": "image_picker", "id": "sample_image", "label": "Finished sample — FRONT", "info": "Photo of the finished front, shown behind the 'See a finished sample' button." },
-      { "type": "image_picker", "id": "sample_image_2", "label": "Finished sample — BACK (optional)", "info": "Photo of the finished back. Shown on the Back tab. Needs 'Enable back side' on below. Leave empty to always show the front sample." },
-      { "type": "text", "id": "sample_button_label", "label": "Sample button text", "default": "See a finished sample" },
-      { "type": "text", "id": "sample_caption", "label": "Sample caption (in popup)", "info": "Text under the finished-product photo in the popup.", "default": "How your finished product will look" },
-      { "type": "checkbox", "id": "print_show", "label": "Show the printable-area outline to customers", "default": true },
-      { "type": "color", "id": "engrave_color", "label": "Default text color", "info": "Starting colour for new text boxes.", "default": "#1d1d1f" },
-      { "type": "header", "content": "Back side (optional)" },
-      { "type": "checkbox", "id": "enable_back", "label": "Enable back side (Front / Back tabs)", "default": false, "info": "Gives customers Front / Back tabs in the design popup." },
-      { "type": "image_picker", "id": "back_image", "label": "Back image (optional)", "info": "Photo of the product's back. If empty, the back uses the same surface as the front." },
-      { "type": "text", "id": "back_pos", "label": "Back print area position", "default": "22, 30, 56, 40", "info": "Four numbers — Left, Top, Width, Height (percent). Use ?setarea=back (or the Back tab in the ?setarea=1 tool) to set it visually, then paste here." },
-      { "type": "select", "id": "back_shape", "label": "Back print area shape", "default": "rect", "options": [ { "value": "rect", "label": "Rectangle" }, { "value": "circle", "label": "Circle / oval" } ] },
-      { "type": "checkbox", "id": "back_print_show", "label": "Show the back printable-area outline", "default": true },
-      { "type": "text", "id": "front_tab_label", "label": "Front tab label", "default": "Front" },
-      { "type": "text", "id": "back_tab_label", "label": "Back tab label", "default": "Back" },
-      { "type": "paragraph", "content": "Charge for the back — pick ONE method. Recommended: the 'Print sides' option shows as one item at checkout. The 'Back fee' fields are the older method that adds a separate line." },
-      { "type": "text", "id": "sides_option_name", "label": "Print sides — product OPTION name (recommended)", "info": "One line item. Add an option to the product (e.g. 'Print sides') with a cheaper 'Front only' and a pricier 'Front + Back' value, then type the option's exact name here. Leave empty to use the Back-fee fields instead." },
-      { "type": "text", "id": "sides_front_value", "label": "Print sides — front-only value", "default": "Front only" },
-      { "type": "text", "id": "sides_both_value", "label": "Print sides — front + back value", "default": "Front + Back" },
-      { "type": "text", "id": "back_fee_variant_id", "label": "Back fee — product VARIANT id (older method)", "info": "Only used if 'Print sides' above is empty. Adds a separate line item for the back charge." },
-      { "type": "text", "id": "back_fee_money", "label": "Back fee — amount shown on the tab", "info": "Display only, e.g. $5." }
-    ] },
-    { "type": "bulk_link", "name": "Bulk order link", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "A button linking to your Bulk Order page. Add this block to show it; remove it to hide it. Drag to reorder among the other feature blocks." },
-      { "type": "url", "id": "bulk_link", "label": "Bulk order page link", "info": "Pick your Bulk order page. The button is hidden until this is set." },
-      { "type": "text", "id": "bulk_link_label", "label": "Button text", "default": "Order in bulk" },
-      { "type": "checkbox", "id": "bulk_link_icon", "label": "Show box icon", "default": true },
-      { "type": "text", "id": "bulk_link_note", "label": "Small note under the button", "default": "Volume pricing from 10+ — save more per item.", "info": "Leave empty to hide." }
-    ] },
-    { "type": "gift", "name": "Gift options", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "Adds an 'Add gift wrapping' toggle plus a free gift note. The simplest way to charge for wrapping: create a 'Gift Wrap' product with the fee as its price, then pick it below — toggling gift wrapping adds it as one grouped line item at its real price." },
-      { "type": "product", "id": "gift_wrap_product", "label": "Gift Wrap product (pick it here)", "info": "Pick your Gift Wrap product. Its price is charged and shown on the toggle automatically." },
-      { "type": "header", "content": "Advanced (only if not using the picker above)" },
-      { "type": "text", "id": "gift_wrap_option", "label": "Gift wrapping — product OPTION name", "info": "Alternative: a 'Gift wrapping' No/Yes option on the product itself (Yes priced higher). One line item, no separate product." },
-      { "type": "text", "id": "gift_wrapped_value", "label": "Wrapped value", "default": "Yes", "info": "The option value that includes wrapping (the pricier one)." },
-      { "type": "text", "id": "gift_unwrapped_value", "label": "Not-wrapped value", "default": "No", "info": "The base option value (no wrapping)." },
-      { "type": "text", "id": "gift_wrap_money", "label": "Gift wrapping — amount shown on the toggle", "info": "Display only, e.g. $8. Ignored when you pick a product above (its real price is used).", "default": "$8" },
-      { "type": "text", "id": "gift_wrap_variant_id", "label": "Gift wrapping — product URL / variant id (older method)", "info": "Alternative to the picker: paste the Gift Wrap product's URL, handle, or variant id." },
-      { "type": "text", "id": "gift_toggle_label", "label": "Toggle label", "default": "This is a gift" },
-      { "type": "text", "id": "gift_wrap_label", "label": "Wrapping checkbox label", "default": "Add gift wrapping" },
-      { "type": "text", "id": "gift_note_label", "label": "Gift note label", "default": "Add a gift note (optional)" }
-    ] },
-    { "type": "reviews", "name": "Reviews / social", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "An Instagram-style Like / Comment / Share / Save bar with reviews. Add this block to show it; remove it to hide. The Comment count and reviews come from Judge.me (install it and enable its widget)." },
-      { "type": "paragraph", "content": "Reviews (with a star rating) can only be written by customers who bought this product — they get a green ✓ Purchased badge, and each buyer can review once. Any signed-in shopper can still reply." },
-      { "type": "number", "id": "like_base", "label": "Like count (starting number)", "default": 144 },
-      { "type": "number", "id": "share_base", "label": "Share count (starting number, 0 = hide)", "default": 0 },
-      { "type": "checkbox", "id": "reviews_verified_only", "label": "Only buyers can post reviews", "default": true },
-      { "type": "text", "id": "firebase_db_url", "label": "Firebase database URL (for REAL shared counts)", "info": "Optional. Paste your Firebase Realtime Database URL to make Likes and Shares real numbers shared across all visitors. Leave blank to just use the numbers above." },
-      { "type": "text", "id": "admin_name", "label": "Owner reply name", "info": "The name shown on your replies when Owner mode is on. Leave blank to use your store name." },
-      { "type": "text", "id": "admin_email", "label": "Owner account email (admin power)", "info": "Paste the email of a customer account that signed up on your site. Whenever THAT account is logged in, your replies automatically show the blue ✓ Owner check. The email is only compared behind the scenes; it never appears in the page's code." },
-      { "type": "text", "id": "admin_key", "label": "Owner secret word (optional backup)", "info": "Optional alternative to the email above. Pick a private word, then open a product page with ?admin=YOUR-WORD to turn on Owner mode for that device (turn off with ?admin=off). Leave blank if you're using the owner email above." }
-    ] }
+    {
+      "type": "method_dtf",
+      "name": "Print method",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Pick how this product is printed — the method is saved on the order so fulfilment knows how to produce it. Set it per product by giving each product its own template. REMOVE this block to sell the product without customization: the popup goes away and customers simply add it to the cart."
+        },
+        {
+          "type": "select",
+          "id": "method_label",
+          "label": "Method name on the order",
+          "default": "DTF",
+          "info": "Saved with each order line so fulfilment knows the method.",
+          "options": [
+            {
+              "value": "DTF",
+              "label": "DTF"
+            },
+            {
+              "value": "UV",
+              "label": "UV"
+            },
+            {
+              "value": "Engraving",
+              "label": "Engraving"
+            },
+            {
+              "value": "Sublimation",
+              "label": "Sublimation"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "What the customer can do"
+        },
+        {
+          "type": "checkbox",
+          "id": "allow_upload",
+          "label": "Click to upload — FRONT",
+          "default": true,
+          "info": "The 'Click to upload your design' box on the front side. Combine it with the keyboard by turning both on."
+        },
+        {
+          "type": "checkbox",
+          "id": "allow_upload_back",
+          "label": "Click to upload — BACK",
+          "default": false,
+          "info": "Turn on to give the popup Front/Back tabs with an upload box on the back. The back image and print area come from the Printable area block (optional)."
+        },
+        {
+          "type": "checkbox",
+          "id": "allow_text",
+          "label": "Typing keyboard (emoji)",
+          "default": false,
+          "info": "The typing bar with fonts and the emoji picker. Works alone or together with the upload box."
+        },
+        {
+          "type": "text",
+          "id": "text_placeholder",
+          "label": "Text field placeholder",
+          "info": "Shown in the typing bar. Leave empty for 'Add your text'."
+        },
+        {
+          "type": "checkbox",
+          "id": "show_emoji",
+          "label": "Show the emoji picker",
+          "default": true
+        },
+        {
+          "type": "textarea",
+          "id": "emoji_list",
+          "label": "Custom emoji (optional)",
+          "info": "Your own emoji, separated by spaces. Leave empty for the standard set."
+        },
+        {
+          "type": "header",
+          "content": "Popup text (optional)"
+        },
+        {
+          "type": "text",
+          "id": "popup_title",
+          "label": "Popup title",
+          "info": "Leave empty to use the popup text from the section's main settings."
+        },
+        {
+          "type": "textarea",
+          "id": "popup_sub",
+          "label": "Popup subtitle"
+        }
+      ]
+    },
+    {
+      "type": "product_source",
+      "name": "Product source",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Only needed when this section is on a home/custom page. On a product page it's ignored — the page's own product is always shown."
+        },
+        {
+          "type": "product",
+          "id": "product_ref",
+          "label": "Product (non-product pages only)"
+        },
+        {
+          "type": "paragraph",
+          "content": "Made to order / always orderable is set PER PRODUCT in Shopify: open the product → each variant's Inventory → tick \"Continue selling when out of stock\". (Optional: tag a product \"made-to-order\" to force it orderable regardless.)"
+        }
+      ]
+    },
+    {
+      "type": "print_area",
+      "name": "Printable area",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Set the box visually: while editing here, click the blue “◳ Set print area” button on the product preview (bottom-right). Drag/resize the box (Front/Back tabs if a back image is set), tap Copy, and paste into the matching field below. (You can also open the live product page with ?setarea=1.)"
+        },
+        {
+          "type": "text",
+          "id": "print_pos",
+          "label": "Print area position",
+          "default": "22, 30, 56, 40",
+          "info": "Four numbers — Left, Top, Width, Height (percent). Paste what the ?setarea=1 tool copies, or edit by hand."
+        },
+        {
+          "type": "select",
+          "id": "print_shape",
+          "label": "Print area shape",
+          "default": "rect",
+          "info": "Circle: the area becomes an oval inside the box — make Width and Height equal for a perfect circle (plates, coasters, ornaments). Designs are clipped to it on previews and order files.",
+          "options": [
+            {
+              "value": "rect",
+              "label": "Rectangle"
+            },
+            {
+              "value": "circle",
+              "label": "Circle / oval"
+            }
+          ]
+        },
+        {
+          "type": "image_picker",
+          "id": "front_image",
+          "label": "Front image (design surface)",
+          "info": "The image the customer designs on (e.g. your mug wrap template). Leave empty to use the product's main image."
+        },
+        {
+          "type": "image_picker",
+          "id": "example_image",
+          "label": "Example design (placeholder)",
+          "info": "A faded sample shown in the print area to show where the design goes. It disappears when they upload. Leave empty to hide."
+        },
+        {
+          "type": "image_picker",
+          "id": "sample_image",
+          "label": "Finished sample — FRONT",
+          "info": "Photo of the finished front, shown behind the 'See a finished sample' button."
+        },
+        {
+          "type": "image_picker",
+          "id": "sample_image_2",
+          "label": "Finished sample — BACK (optional)",
+          "info": "Photo of the finished back. Shown on the Back tab. Needs 'Enable back side' on below. Leave empty to always show the front sample."
+        },
+        {
+          "type": "text",
+          "id": "sample_button_label",
+          "label": "Sample button text",
+          "default": "See a finished sample"
+        },
+        {
+          "type": "text",
+          "id": "sample_caption",
+          "label": "Sample caption (in popup)",
+          "info": "Text under the finished-product photo in the popup.",
+          "default": "How your finished product will look"
+        },
+        {
+          "type": "checkbox",
+          "id": "print_show",
+          "label": "Show the printable-area outline to customers",
+          "default": true
+        },
+        {
+          "type": "color",
+          "id": "engrave_color",
+          "label": "Default text color",
+          "info": "Starting colour for new text boxes.",
+          "default": "#1d1d1f"
+        },
+        {
+          "type": "header",
+          "content": "Back side (optional)"
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_back",
+          "label": "Enable back side (Front / Back tabs)",
+          "default": false,
+          "info": "Gives customers Front / Back tabs in the design popup."
+        },
+        {
+          "type": "image_picker",
+          "id": "back_image",
+          "label": "Back image (optional)",
+          "info": "Photo of the product's back. If empty, the back uses the same surface as the front."
+        },
+        {
+          "type": "text",
+          "id": "back_pos",
+          "label": "Back print area position",
+          "default": "22, 30, 56, 40",
+          "info": "Four numbers — Left, Top, Width, Height (percent). Use ?setarea=back (or the Back tab in the ?setarea=1 tool) to set it visually, then paste here."
+        },
+        {
+          "type": "select",
+          "id": "back_shape",
+          "label": "Back print area shape",
+          "default": "rect",
+          "options": [
+            {
+              "value": "rect",
+              "label": "Rectangle"
+            },
+            {
+              "value": "circle",
+              "label": "Circle / oval"
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "id": "back_print_show",
+          "label": "Show the back printable-area outline",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "front_tab_label",
+          "label": "Front tab label",
+          "default": "Front"
+        },
+        {
+          "type": "text",
+          "id": "back_tab_label",
+          "label": "Back tab label",
+          "default": "Back"
+        },
+        {
+          "type": "paragraph",
+          "content": "Charge for the back — pick ONE method. Recommended: the 'Print sides' option shows as one item at checkout. The 'Back fee' fields are the older method that adds a separate line."
+        },
+        {
+          "type": "text",
+          "id": "sides_option_name",
+          "label": "Print sides — product OPTION name (recommended)",
+          "info": "One line item. Add an option to the product (e.g. 'Print sides') with a cheaper 'Front only' and a pricier 'Front + Back' value, then type the option's exact name here. Leave empty to use the Back-fee fields instead."
+        },
+        {
+          "type": "text",
+          "id": "sides_front_value",
+          "label": "Print sides — front-only value",
+          "default": "Front only"
+        },
+        {
+          "type": "text",
+          "id": "sides_both_value",
+          "label": "Print sides — front + back value",
+          "default": "Front + Back"
+        },
+        {
+          "type": "text",
+          "id": "back_fee_variant_id",
+          "label": "Back fee — product VARIANT id (older method)",
+          "info": "Only used if 'Print sides' above is empty. Adds a separate line item for the back charge."
+        },
+        {
+          "type": "text",
+          "id": "back_fee_money",
+          "label": "Back fee — amount shown on the tab",
+          "info": "Display only, e.g. $5."
+        }
+      ]
+    },
+    {
+      "type": "bulk_link",
+      "name": "Bulk order link",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "A button linking to your Bulk Order page. Add this block to show it; remove it to hide it. Drag to reorder among the other feature blocks."
+        },
+        {
+          "type": "url",
+          "id": "bulk_link",
+          "label": "Bulk order page link",
+          "info": "Pick your Bulk order page. The button is hidden until this is set."
+        },
+        {
+          "type": "text",
+          "id": "bulk_link_label",
+          "label": "Button text",
+          "default": "Order in bulk"
+        },
+        {
+          "type": "checkbox",
+          "id": "bulk_link_icon",
+          "label": "Show box icon",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "bulk_link_note",
+          "label": "Small note under the button",
+          "default": "Volume pricing from 10+ — save more per item.",
+          "info": "Leave empty to hide."
+        }
+      ]
+    },
+    {
+      "type": "gift",
+      "name": "Gift options",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Adds an 'Add gift wrapping' toggle plus a free gift note. The simplest way to charge for wrapping: create a 'Gift Wrap' product with the fee as its price, then pick it below — toggling gift wrapping adds it as one grouped line item at its real price."
+        },
+        {
+          "type": "product",
+          "id": "gift_wrap_product",
+          "label": "Gift Wrap product (pick it here)",
+          "info": "Pick your Gift Wrap product. Its price is charged and shown on the toggle automatically."
+        },
+        {
+          "type": "header",
+          "content": "Advanced (only if not using the picker above)"
+        },
+        {
+          "type": "text",
+          "id": "gift_wrap_option",
+          "label": "Gift wrapping — product OPTION name",
+          "info": "Alternative: a 'Gift wrapping' No/Yes option on the product itself (Yes priced higher). One line item, no separate product."
+        },
+        {
+          "type": "text",
+          "id": "gift_wrapped_value",
+          "label": "Wrapped value",
+          "default": "Yes",
+          "info": "The option value that includes wrapping (the pricier one)."
+        },
+        {
+          "type": "text",
+          "id": "gift_unwrapped_value",
+          "label": "Not-wrapped value",
+          "default": "No",
+          "info": "The base option value (no wrapping)."
+        },
+        {
+          "type": "text",
+          "id": "gift_wrap_money",
+          "label": "Gift wrapping — amount shown on the toggle",
+          "info": "Display only, e.g. $8. Ignored when you pick a product above (its real price is used).",
+          "default": "$8"
+        },
+        {
+          "type": "text",
+          "id": "gift_wrap_variant_id",
+          "label": "Gift wrapping — product URL / variant id (older method)",
+          "info": "Alternative to the picker: paste the Gift Wrap product's URL, handle, or variant id."
+        },
+        {
+          "type": "text",
+          "id": "gift_toggle_label",
+          "label": "Toggle label",
+          "default": "This is a gift"
+        },
+        {
+          "type": "text",
+          "id": "gift_wrap_label",
+          "label": "Wrapping checkbox label",
+          "default": "Add gift wrapping"
+        },
+        {
+          "type": "text",
+          "id": "gift_note_label",
+          "label": "Gift note label",
+          "default": "Add a gift note (optional)"
+        }
+      ]
+    },
+    {
+      "type": "reviews",
+      "name": "Reviews / social",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "An Instagram-style Like / Comment / Share / Save bar with reviews. Add this block to show it; remove it to hide. The Comment count and reviews come from Judge.me (install it and enable its widget)."
+        },
+        {
+          "type": "paragraph",
+          "content": "Reviews (with a star rating) can only be written by customers who bought this product — they get a green ✓ Purchased badge, and each buyer can review once. Any signed-in shopper can still reply."
+        },
+        {
+          "type": "number",
+          "id": "like_base",
+          "label": "Like count (starting number)",
+          "default": 144
+        },
+        {
+          "type": "number",
+          "id": "share_base",
+          "label": "Share count (starting number, 0 = hide)",
+          "default": 0
+        },
+        {
+          "type": "checkbox",
+          "id": "reviews_verified_only",
+          "label": "Only buyers can post reviews",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "firebase_db_url",
+          "label": "Firebase database URL (for REAL shared counts)",
+          "info": "Optional. Paste your Firebase Realtime Database URL to make Likes and Shares real numbers shared across all visitors. Leave blank to just use the numbers above."
+        },
+        {
+          "type": "text",
+          "id": "admin_name",
+          "label": "Owner reply name",
+          "info": "The name shown on your replies when Owner mode is on. Leave blank to use your store name."
+        },
+        {
+          "type": "text",
+          "id": "admin_email",
+          "label": "Owner account email (admin power)",
+          "info": "Paste the email of a customer account that signed up on your site. Whenever THAT account is logged in, your replies automatically show the blue ✓ Owner check. The email is only compared behind the scenes; it never appears in the page's code."
+        },
+        {
+          "type": "text",
+          "id": "admin_key",
+          "label": "Owner secret word (optional backup)",
+          "info": "Optional alternative to the email above. Pick a private word, then open a product page with ?admin=YOUR-WORD to turn on Owner mode for that device (turn off with ?admin=off). Leave blank if you're using the owner email above."
+        }
+      ]
+    }
   ],
   "presets": [
-    { "name": "Dynamic Customizer", "blocks": [
-      { "type": "method_dtf" },
-      { "type": "product_source" },
-      { "type": "print_area" },
-      { "type": "bulk_link" },
-      { "type": "gift" },
-      { "type": "reviews" }
-    ] }
+    {
+      "name": "Dynamic Customizer",
+      "blocks": [
+        {
+          "type": "method_dtf"
+        },
+        {
+          "type": "product_source"
+        },
+        {
+          "type": "print_area"
+        },
+        {
+          "type": "bulk_link"
+        },
+        {
+          "type": "gift"
+        },
+        {
+          "type": "reviews"
+        }
+      ]
+    }
   ]
 }
 {% endschema %}
