@@ -120,7 +120,8 @@
       {%- if blk_img != blank -%}
         {%- if blk_img.settings.image != blank -%}
           <div class="ds-imgwrap" {{ blk_img.shopify_attributes }}>
-            <img src="{{ blk_img.settings.image | image_url: width: 1600 }}" alt="{{ blk_img.settings.alt | escape }}" loading="lazy">
+            <img src="{{ blk_img.settings.image | image_url: width: 1600 }}" alt="{{ blk_img.settings.alt | escape }}"
+              width="{{ blk_img.settings.image.width }}" height="{{ blk_img.settings.image.height }}" loading="lazy">
           </div>
         {%- else -%}
           <div class="ds-imgwrap ds-ph" {{ blk_img.shopify_attributes }}>Pick an image in the Image block</div>
