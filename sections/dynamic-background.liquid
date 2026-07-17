@@ -73,6 +73,14 @@
   {%- unless section.settings.animate -%}
   #dynBg-{{ section.id }} .dyn-bg-blob { animation: none !important; }
   {%- endunless -%}
+
+  /* The page sections paint their own solid page color over the whole screen,
+     which would hide the wallpaper. Where this section is present, that
+     page-level coat goes see-through — cards, panels and drawers keep their
+     own backgrounds. (Scoped to this page only: no wallpaper, no change.) */
+  html, body { background: transparent !important; }
+  .dyn-hero, .dyn-col, .dyn-sug, .dyn-about, .dyn-faq { background: transparent !important; }
+  [id^="shopify-section-"]:has(> .dyn-acct), [id^="shopify-section-"]:has(> .dyn-wish) { background: transparent !important; }
 </style>
 
 {% schema %}
