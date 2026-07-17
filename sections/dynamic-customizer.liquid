@@ -1763,6 +1763,24 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 }
 </style>
 {%- endif -%}
+{%- if section.settings.cta_img_adddesign != blank -%}
+<style>
+#uploadApply.btn-primary {
+  background: url({{ section.settings.cta_img_adddesign | image_url: width: 900 }}) center / 100% 100% no-repeat;
+  box-shadow: none; border-radius: 0; border: none; overflow: visible;
+  height: 54px; aspect-ratio: {{ section.settings.cta_img_adddesign.aspect_ratio }};
+  padding: 0;
+  filter: drop-shadow(0 10px 16px rgba(60, 60, 90, 0.3));
+}
+{%- unless section.settings.cta_img_text -%}
+#uploadApply.btn-primary { font-size: 0; text-shadow: none; }
+{%- endunless -%}
+#uploadApply.btn-primary:hover:not([disabled]) {
+  filter: drop-shadow(0 14px 20px rgba(60, 60, 90, 0.38)) brightness(1.04);
+}
+#uploadApply.btn-primary[disabled] { filter: drop-shadow(0 10px 16px rgba(60, 60, 90, 0.25)) grayscale(0.4) opacity(0.6); }
+</style>
+{%- endif -%}
 {%- comment -%} Instant pre-fill: paint the REAL title/price the moment the shell
    exists, so nothing flashes while the deferred app JS loads. {%- endcomment -%}
 {%- if dyn_product -%}
@@ -2359,11 +2377,16 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       "label": "Add to Cart button image"
     },
     {
+      "type": "image_picker",
+      "id": "cta_img_adddesign",
+      "label": "Add design button image (popup)"
+    },
+    {
       "type": "checkbox",
       "id": "cta_img_text",
       "label": "Show text on image buttons",
       "default": true,
-      "info": "Off: the image stands alone (bake any wording into the image itself). Screen readers still hear the button's name."
+      "info": "Off: the images stand alone (bake any wording into the image itself). Applies to all three image buttons. Screen readers still hear each button's name."
     }
   ],
   "max_blocks": 6,
