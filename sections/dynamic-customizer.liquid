@@ -357,6 +357,24 @@ button { font-family: inherit; cursor: pointer; }
 .btn:active { transform: scale(0.97); }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover { background: var(--accent-hover); }
+/* Customize button — blue liquid glass: translucent tinted pane, etched ring,
+   top light-catch, and the floating two-layer shadow of the glass system. */
+#customizeBtn.btn-primary {
+  background: rgba(0,113,227,0.72);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6);
+  border: 1px solid rgba(255,255,255,0.45);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06), 0 18px 30px -9px rgba(0,113,227,0.5),
+    inset 0 1px 1px rgba(255,255,255,0.55), inset 0 -2px 4px rgba(0,40,90,0.18);
+  transition: background var(--dur-fast) var(--ease-out), box-shadow .2s ease, transform var(--dur-fast) var(--ease-out);
+}
+#customizeBtn.btn-primary:hover {
+  background: rgba(0,113,227,0.84);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05), 0 24px 38px -10px rgba(0,113,227,0.55),
+    inset 0 1px 1px rgba(255,255,255,0.6), inset 0 -2px 4px rgba(0,40,90,0.18);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #customizeBtn.btn-primary { background: var(--accent); }
+}
 .btn-secondary {
   background: transparent; color: var(--accent);
   border: 1px solid var(--line);
