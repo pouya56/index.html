@@ -2414,9 +2414,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (!layersArr || !layersArr.length || !imageUrl) { resolve(null); return; }
       const prod = new Image(); prod.crossOrigin = "anonymous";
       prod.onload = () => {
-        const W = prod.naturalWidth || 900, H = prod.naturalHeight || 900;
+        // Cap the canvas — full-resolution previews were slow to encode and upload.
+        const nw = prod.naturalWidth || 900, nh = prod.naturalHeight || 900;
+        const sc = Math.min(1, 1200 / Math.max(nw, nh));
+        const W = Math.round(nw * sc), H = Math.round(nh * sc);
         const c = document.createElement("canvas"); c.width = W; c.height = H;
         const ctx = c.getContext("2d");
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H); // JPEG has no alpha
         try { ctx.drawImage(prod, 0, 0, W, H); } catch (_) {}
         P = P || {};
         const aX = (P.x != null ? P.x : 22) / 100 * W, aY = (P.y != null ? P.y : 30) / 100 * H,
@@ -2457,7 +2461,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             }
           });
           try { ctx.restore(); } catch (_) {}
-          try { resolve(c.toDataURL("image/png")); } catch (e) { resolve(null); }
+          try { resolve(c.toDataURL("image/jpeg", 0.85)); } catch (e) { resolve(null); }
         };
         if (!pending) { paint(); return; }
         imgLayers.forEach((layer) => {
@@ -2825,18 +2829,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           }
         }
       }
-      await collectFiles("front", L.design, "front");
-      if (hasBackDesign) await collectFiles("back", L.backDesign, "back");
-      // Composed preview = the product with the design in the customer's exact
-      // position/size/rotation. Visible name so it shows on the order + cart.
+      // Everything independent runs at once — file gathering and both previews.
+      const jobs = [collectFiles("front", L.design, "front")];
+      if (hasBackDesign) jobs.push(collectFiles("back", L.backDesign, "back"));
       if (hasDesign) {
-        const compF = await compositeSide(sideLayers.front, sideImage("front"), sidePrint("front"));
-        if (compF) files.push({ name: "_" + L.preview, blob: dataURLtoBlob(compF), filename: base + "-front-preview.png" });
+        jobs.push(compositeSide(sideLayers.front, sideImage("front"), sidePrint("front")).then((compF) => {
+          if (compF) files.push({ name: "_" + L.preview, blob: dataURLtoBlob(compF), filename: base + "-front-preview.jpg" });
+        }));
         if (hasBackDesign) {
-          const compB = await compositeSide(sideLayers.back, sideImage("back"), sidePrint("back"));
-          if (compB) files.push({ name: "_" + L.backPreview, blob: dataURLtoBlob(compB), filename: base + "-back-preview.png" });
+          jobs.push(compositeSide(sideLayers.back, sideImage("back"), sidePrint("back")).then((compB) => {
+            if (compB) files.push({ name: "_" + L.backPreview, blob: dataURLtoBlob(compB), filename: base + "-back-preview.jpg" });
+          }));
         }
       }
+      await Promise.all(jobs);
       const desc = (s) => [
         imgs(s).length ? (imgs(s).length + " image" + (imgs(s).length > 1 ? "s" : "")) : null,
         txts(s).length ? (txts(s).length + " text") : null
