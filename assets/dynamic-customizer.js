@@ -2490,11 +2490,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift *{box-sizing:border-box}' +
       '.dc-gift-toggle{display:inline-flex;align-items:center;gap:12px;cursor:pointer;user-select:none}' +
       '.dc-gift-toggle-input{position:absolute;opacity:0;width:0;height:0}' +
-      '.dc-gift-track{position:relative;width:50px;height:30px;border-radius:999px;flex:none;background:rgba(120,120,128,.22);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:inset 0 1px 3px rgba(0,0,0,.18),inset 0 0 0 1px rgba(255,255,255,.22);transition:background .28s,box-shadow .28s}' +
-      '.dc-gift-track::before{content:"";position:absolute;left:2px;right:2px;top:1px;height:45%;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0));pointer-events:none}' +
-      '.dc-gift-knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#fff,#eef0f2);box-shadow:0 2px 5px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.9);transition:transform .28s cubic-bezier(.4,1.25,.5,1)}' +
-      '.dc-gift-toggle-input:checked+.dc-gift-track{background:linear-gradient(180deg,rgba(76,222,128,.92),rgba(40,199,84,.92));-webkit-backdrop-filter:blur(8px) saturate(1.5);backdrop-filter:blur(8px) saturate(1.5);box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -2px 4px rgba(0,90,35,.28),0 2px 9px rgba(52,199,89,.5),inset 0 0 0 1px rgba(255,255,255,.28)}' +
-      '.dc-gift-toggle-input:checked+.dc-gift-track .dc-gift-knob{transform:translateX(20px)}' +
+      /* Frosted glass pill; the knob is a soft blob glowing THROUGH the pane */
+      '.dc-gift-track{position:relative;width:54px;height:32px;border-radius:999px;flex:none;overflow:hidden;' +
+        'background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(10px) saturate(1.4);backdrop-filter:blur(10px) saturate(1.4);' +
+        'box-shadow:0 2px 4px rgba(0,0,0,.05),0 12px 20px -7px rgba(29,29,31,.22),inset 0 1px 1px rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.6);' +
+        'transition:box-shadow .3s}' +
+      '.dc-gift-track::before{content:"";position:absolute;left:3px;right:3px;top:2px;height:42%;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(255,255,255,0));pointer-events:none;z-index:2}' +
+      '.dc-gift-knob{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;' +
+        'background:#a2a7ad;filter:blur(5px);opacity:.7;transform:scale(1.18);' +
+        'transition:transform .32s cubic-bezier(.4,1.25,.5,1),background .25s,opacity .25s}' +
+      '.dc-gift-toggle-input:checked+.dc-gift-track .dc-gift-knob{transform:translateX(22px) scale(1.25);background:#34c759;opacity:.92}' +
+      '.dc-gift-toggle-input:checked+.dc-gift-track{box-shadow:0 2px 4px rgba(0,0,0,.05),0 14px 24px -7px rgba(52,199,89,.35),inset 0 1px 1px rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.6)}' +
+      '.dc-gift-toggle-input:focus-visible+.dc-gift-track{outline:2px solid var(--ga);outline-offset:2px}' +
       '.dc-gift-label{font-size:15px;font-weight:500}' +
       '.dc-gift-panel{margin-top:14px;padding:16px 18px;background:var(--gp);border:1px solid var(--gl);border-radius:14px;display:grid;gap:14px}' +
       '.dc-gift-panel[hidden]{display:none}' +
