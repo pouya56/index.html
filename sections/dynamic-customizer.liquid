@@ -1729,11 +1729,13 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 {%- assign img_cz = section.settings.cta_img_customize | default: settings.cta_img_customize -%}
 {%- assign img_ac = section.settings.cta_img_addcart | default: settings.cta_img_addcart -%}
 {%- assign img_ad = section.settings.cta_img_adddesign | default: settings.cta_img_adddesign -%}
+{%- assign img_ck = section.settings.cta_img_checkout | default: settings.cta_img_checkout -%}
 {%- if img_cz != blank -%}{%- assign img_cz_w = section.settings.cta_img_customize_w | default: 100 -%}{%- else -%}{%- assign img_cz_w = settings.cta_img_customize_w | default: 100 -%}{%- endif -%}
 {%- if img_ac != blank -%}{%- assign img_ac_w = section.settings.cta_img_addcart_w | default: 100 -%}{%- else -%}{%- assign img_ac_w = settings.cta_img_addcart_w | default: 100 -%}{%- endif -%}
 {%- if img_ad != blank -%}{%- assign img_ad_h = section.settings.cta_img_adddesign_h | default: 54 -%}{%- else -%}{%- assign img_ad_h = settings.cta_img_adddesign_h | default: 54 -%}{%- endif -%}
+{%- if img_ck != blank -%}{%- assign img_ck_w = section.settings.cta_img_checkout_w | default: 100 -%}{%- else -%}{%- assign img_ck_w = settings.cta_img_checkout_w | default: 100 -%}{%- endif -%}
 {%- assign img_text_on = true -%}
-{%- unless img_text_on -%}{%- assign img_text_on = false -%}{%- endunless -%}
+{%- unless section.settings.cta_img_text -%}{%- assign img_text_on = false -%}{%- endunless -%}
 {%- if settings.cta_img_text == false -%}{%- assign img_text_on = false -%}{%- endif -%}
 {%- assign fxo_lift = false -%}{%- if section.settings.fx_lift or settings.fx_lift -%}{%- assign fxo_lift = true -%}{%- endif -%}
 {%- assign fxo_breathe = false -%}{%- if section.settings.fx_breathe or settings.fx_breathe -%}{%- assign fxo_breathe = true -%}{%- endif -%}
@@ -1782,6 +1784,25 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 }
 </style>
 {%- endif -%}
+{%- if img_ck != blank -%}
+<style>
+#dynCartCheckout.btn-primary {
+  background: url({{ img_ck | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+  box-shadow: none; border-radius: 0; border: none; overflow: visible;
+  aspect-ratio: {{ img_ck.aspect_ratio }};
+  width: {{ img_ck_w }}%; margin-left: auto; margin-right: auto;
+  padding: 0; text-decoration: none;
+  filter: drop-shadow(0 16px 22px rgba(60, 60, 90, 0.3));
+}
+#dynCartCheckout.btn-primary::before, #dynCartCheckout.btn-primary::after { display: none; }
+{%- unless img_text_on -%}
+#dynCartCheckout.btn-primary { font-size: 0; text-shadow: none; }
+{%- endunless -%}
+#dynCartCheckout.btn-primary:hover {
+  filter: drop-shadow(0 20px 28px rgba(60, 60, 90, 0.38)) brightness(1.04);
+}
+</style>
+{%- endif -%}
 {%- if img_ad != blank -%}
 <style>
 #uploadApply.btn-primary {
@@ -1808,15 +1829,15 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 <style>
 {%- if fxo_breathe -%}
 @media (prefers-reduced-motion: no-preference) {
-  #customizeBtn.btn-primary, #pageAddCart.btn-primary, #uploadApply.btn-primary:not([disabled]) {
+  #customizeBtn.btn-primary, #pageAddCart.btn-primary, #dynCartCheckout.btn-primary, #uploadApply.btn-primary:not([disabled]) {
     animation: dynFxBreathe 3.4s ease-in-out infinite;
   }
 }
 @keyframes dynFxBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025); } }
 {%- endif -%}
 {%- if fxo_lift -%}
-#customizeBtn.btn-primary, #pageAddCart.btn-primary, #uploadApply.btn-primary { transition: transform .18s ease, filter .2s ease, box-shadow .2s ease; }
-#customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover, #uploadApply.btn-primary:hover:not([disabled]) {
+#customizeBtn.btn-primary, #pageAddCart.btn-primary, #dynCartCheckout.btn-primary, #uploadApply.btn-primary { transition: transform .18s ease, filter .2s ease, box-shadow .2s ease; }
+#customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover, #dynCartCheckout.btn-primary:hover, #uploadApply.btn-primary:hover:not([disabled]) {
   animation: none; transform: translateY(-4px) scale(1.02);
 }
 {%- endif -%}
@@ -1857,9 +1878,17 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   mask: url({{ img_ad | image_url: width: 900 }}) center / 100% 100% no-repeat;
   animation: dynFxGloss 5.5s ease-in-out infinite; animation-delay: 2.2s; }
 {%- endif -%}
+{%- if img_ck != blank -%}
+#dynCartCheckout.btn-primary { position: relative; }
+#dynCartCheckout.btn-primary::after { content: "" !important; display: block !important; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.55) 50%, transparent 58%) no-repeat; background-size: 260% 100%;
+  -webkit-mask: url({{ img_ck | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+  mask: url({{ img_ck | image_url: width: 1200 }}) center / 100% 100% no-repeat;
+  animation: dynFxGloss 5.5s ease-in-out infinite; animation-delay: 3.3s; }
+{%- endif -%}
 @keyframes dynFxGloss { 0% { background-position: 220% 0; } 55% { background-position: -60% 0; } 100% { background-position: -60% 0; } }
 @media (prefers-reduced-motion: reduce) {
-  #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after, #uploadApply.btn-primary::after { animation: none !important; }
+  #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after, #dynCartCheckout.btn-primary::after, #uploadApply.btn-primary::after { animation: none !important; }
 }
 {%- endif -%}
 </style>
@@ -2521,6 +2550,21 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     },
     {
       "type": "image_picker",
+      "id": "cta_img_checkout",
+      "label": "Checkout button image (cart drawer)"
+    },
+    {
+      "type": "range",
+      "id": "cta_img_checkout_w",
+      "label": "Checkout image size",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "image_picker",
       "id": "cta_img_adddesign",
       "label": "Add design button image (popup)"
     },
@@ -2540,7 +2584,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       "id": "cta_img_text",
       "label": "Show text on image buttons",
       "default": true,
-      "info": "Off: the images stand alone (bake any wording into the image itself). Applies to all three image buttons. Screen readers still hear each button's name."
+      "info": "Off: the images stand alone (bake any wording into the image itself). Applies to all image buttons. Screen readers still hear each button's name."
     },
     {
       "type": "header",

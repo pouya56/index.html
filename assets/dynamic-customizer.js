@@ -4189,7 +4189,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     footEl.innerHTML =
       '<div class="dyn-cart-subtotal"><span>Subtotal</span><span>' + fmt(cart.total_price, cur) + "</span></div>" +
       '<div class="dyn-cart-note">Shipping &amp; taxes calculated at checkout.</div>' +
-      '<a class="btn btn-primary btn-block" href="/checkout">Checkout</a>' +
+      '<a class="btn btn-primary btn-block" id="dynCartCheckout" href="/checkout">Checkout</a>' +
       '<a class="btn btn-ghost btn-block" href="' + ((window.DYN_SHOPIFY && window.DYN_SHOPIFY.cartUrl) || "/cart") + '">View full cart</a>';
     itemsEl.querySelectorAll(".dyn-cart-item").forEach(function (row) {
       var key = row.getAttribute("data-key"), feeKey = row.getAttribute("data-fee-key");

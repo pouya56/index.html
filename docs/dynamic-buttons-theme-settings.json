@@ -7,6 +7,8 @@
     { "type": "range", "id": "cta_img_customize_w", "label": "Customize image size", "min": 30, "max": 100, "step": 5, "unit": "%", "default": 100 },
     { "type": "image_picker", "id": "cta_img_addcart", "label": "Add to Cart button image" },
     { "type": "range", "id": "cta_img_addcart_w", "label": "Add to Cart image size", "min": 30, "max": 100, "step": 5, "unit": "%", "default": 100 },
+    { "type": "image_picker", "id": "cta_img_checkout", "label": "Checkout button image (cart drawer)" },
+    { "type": "range", "id": "cta_img_checkout_w", "label": "Checkout image size", "min": 30, "max": 100, "step": 5, "unit": "%", "default": 100 },
     { "type": "image_picker", "id": "cta_img_adddesign", "label": "Add design button image (popup)" },
     { "type": "range", "id": "cta_img_adddesign_h", "label": "Add design image height", "min": 36, "max": 96, "step": 2, "unit": "px", "default": 54 },
     { "type": "checkbox", "id": "cta_img_text", "label": "Show text on image buttons", "default": true },
