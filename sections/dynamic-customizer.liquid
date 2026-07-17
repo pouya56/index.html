@@ -388,6 +388,31 @@ button { font-family: inherit; cursor: pointer; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   #customizeBtn.btn-primary { background: #1d1d1f; }
 }
+/* "Add design" (popup) — fluffy pink plush: soft gradients, a furry halo, and a
+   turbulence filter that ruffles the edges (and text) like fabric. */
+#uploadApply.btn-primary {
+  background: radial-gradient(130% 170% at 28% 18%, #ffc9e1, #f77fb4 55%, #e75c9d);
+  color: #fff; border: none;
+  text-shadow: 0 1px 2px rgba(150, 30, 90, 0.4);
+  box-shadow:
+    0 6px 18px rgba(231, 92, 157, 0.5),
+    0 0 0 5px rgba(247, 143, 183, 0.30),
+    0 0 18px 9px rgba(247, 143, 183, 0.38),
+    inset 0 2px 6px rgba(255, 255, 255, 0.75),
+    inset 0 -5px 9px rgba(180, 40, 105, 0.38);
+  filter: url(#dynFluff);
+  transition: background var(--dur-fast) var(--ease-out), box-shadow .2s ease, transform var(--dur-fast) var(--ease-out);
+}
+#uploadApply.btn-primary:hover:not([disabled]) {
+  background: radial-gradient(130% 170% at 28% 18%, #ffd4e8, #f98dbc 55%, #eb69a6);
+  box-shadow:
+    0 8px 22px rgba(231, 92, 157, 0.55),
+    0 0 0 6px rgba(247, 143, 183, 0.34),
+    0 0 22px 11px rgba(247, 143, 183, 0.42),
+    inset 0 2px 6px rgba(255, 255, 255, 0.8),
+    inset 0 -5px 9px rgba(180, 40, 105, 0.38);
+}
+#uploadApply.btn-primary[disabled] { filter: url(#dynFluff) grayscale(0.45) opacity(0.6); }
 .btn-secondary {
   background: transparent; color: var(--accent);
   border: 1px solid var(--line);
@@ -1218,6 +1243,14 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   <div class="dyn-topbar is-center" id="dynTopbar" hidden>
     <a class="dyn-logo" id="dynTopLogo" href="/" aria-label="Home"></a>
   </div>
+
+  <!-- Fluffy-edge filter for the pink "Add design" button -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="dynFluff" x="-10%" y="-25%" width="120%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.09 0.14" numOctaves="3" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
 
   <!-- Product page -->
   <main class="product">
