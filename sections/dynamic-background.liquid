@@ -1,0 +1,146 @@
+{%- comment -%}
+  Dynamic Background — a barely-there animated wallpaper that sits BEHIND the
+  whole page. Three soft color glows drift slowly, like light through water.
+  Pure CSS: nothing to download, nothing to load. Add the section anywhere on
+  a page (top or bottom, it doesn't matter — it pins itself behind everything).
+{%- endcomment -%}
+
+{%- assign bg_alpha = section.settings.strength | divided_by: 100.0 -%}
+{%- assign c1 = section.settings.color_1 | color_modify: 'alpha', bg_alpha -%}
+{%- assign c2 = section.settings.color_2 | color_modify: 'alpha', bg_alpha -%}
+{%- assign c3 = section.settings.color_3 | color_modify: 'alpha', bg_alpha -%}
+{%- assign spd = section.settings.speed -%}
+{%- assign spd2 = spd | times: 1.35 | round -%}
+{%- assign spd3 = spd | times: 1.7 | round -%}
+
+<div class="dyn-bg" id="dynBg-{{ section.id }}" aria-hidden="true">
+  <span class="dyn-bg-blob dyn-bg-b1"></span>
+  <span class="dyn-bg-blob dyn-bg-b2"></span>
+  <span class="dyn-bg-blob dyn-bg-b3"></span>
+</div>
+
+<style>
+  #dynBg-{{ section.id }} {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    {%- if section.settings.base_tint != blank and section.settings.base_tint != 'rgba(0,0,0,0)' -%}
+    background: {{ section.settings.base_tint }};
+    {%- endif -%}
+  }
+  #dynBg-{{ section.id }} .dyn-bg-blob {
+    position: absolute;
+    width: 95vmax;
+    height: 95vmax;
+    border-radius: 50%;
+    will-change: transform;
+  }
+  /* Each glow is a pre-faded radial gradient — no blur filter needed,
+     so it stays feather-light on phones. Only transform animates (GPU). */
+  #dynBg-{{ section.id }} .dyn-bg-b1 {
+    top: -35vmax; left: -25vmax;
+    background: radial-gradient(circle at center, {{ c1 }} 0%, transparent 62%);
+    animation: dynBgDrift1 {{ spd }}s ease-in-out infinite alternate;
+  }
+  #dynBg-{{ section.id }} .dyn-bg-b2 {
+    top: -10vmax; right: -35vmax;
+    background: radial-gradient(circle at center, {{ c2 }} 0%, transparent 62%);
+    animation: dynBgDrift2 {{ spd2 }}s ease-in-out infinite alternate;
+  }
+  #dynBg-{{ section.id }} .dyn-bg-b3 {
+    bottom: -40vmax; left: 10vmax;
+    background: radial-gradient(circle at center, {{ c3 }} 0%, transparent 62%);
+    animation: dynBgDrift3 {{ spd3 }}s ease-in-out infinite alternate;
+  }
+  @keyframes dynBgDrift1 {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(14vmax, 10vmax) scale(1.18); }
+  }
+  @keyframes dynBgDrift2 {
+    0%   { transform: translate(0, 0) scale(1.12); }
+    100% { transform: translate(-16vmax, 14vmax) scale(0.94); }
+  }
+  @keyframes dynBgDrift3 {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(12vmax, -12vmax) scale(1.15); }
+  }
+  /* Visitors who asked their phone for less motion get a calm, frozen version. */
+  @media (prefers-reduced-motion: reduce) {
+    #dynBg-{{ section.id }} .dyn-bg-blob { animation: none !important; }
+  }
+  {%- unless section.settings.animate -%}
+  #dynBg-{{ section.id }} .dyn-bg-blob { animation: none !important; }
+  {%- endunless -%}
+</style>
+
+{% schema %}
+{
+  "name": "Dynamic Background",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "A very light wallpaper with slow movement, behind the whole page. Add it once per page — position in the page doesn't matter. Pure CSS: adds zero loading time."
+    },
+    {
+      "type": "color",
+      "id": "color_1",
+      "label": "Glow color 1 (top left)",
+      "default": "#5b8def"
+    },
+    {
+      "type": "color",
+      "id": "color_2",
+      "label": "Glow color 2 (top right)",
+      "default": "#ff5c8a"
+    },
+    {
+      "type": "color",
+      "id": "color_3",
+      "label": "Glow color 3 (bottom)",
+      "default": "#a78bfa"
+    },
+    {
+      "type": "range",
+      "id": "strength",
+      "label": "Strength",
+      "min": 4,
+      "max": 40,
+      "step": 2,
+      "unit": "%",
+      "default": 12,
+      "info": "How visible the glows are. 8-16% is the sweet spot — you should barely notice it."
+    },
+    {
+      "type": "range",
+      "id": "speed",
+      "label": "Drift time",
+      "min": 10,
+      "max": 60,
+      "step": 5,
+      "unit": "s",
+      "default": 30,
+      "info": "Seconds for one slow drift. Higher = calmer."
+    },
+    {
+      "type": "checkbox",
+      "id": "animate",
+      "label": "Slight movement",
+      "default": true,
+      "info": "Off: the glows hold still. (People with 'reduce motion' turned on always get the still version.)"
+    },
+    {
+      "type": "color_background",
+      "id": "base_tint",
+      "label": "Base tint (optional)",
+      "info": "An extra wash of color under the glows — e.g. a whisper of warm white. Leave empty for none."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Dynamic Background"
+    }
+  ]
+}
+{% endschema %}
