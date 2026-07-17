@@ -2926,6 +2926,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         } catch (e) {}
         if (window.DynamicCart && window.DynamicCart.refresh) { try { window.DynamicCart.refresh(); } catch (e) {} }
         toast(wasEditing ? "Design updated" : "Added to Bag");
+        // Success signal for optional page effects (e.g. confetti burst)
+        try { window.dispatchEvent(new CustomEvent("dyn:added-to-cart")); } catch (e) {}
         // Clear the canvas so the next time it opens the customer starts fresh
         // (can upload a different design without the old one still there).
         resetUploadDesign();
