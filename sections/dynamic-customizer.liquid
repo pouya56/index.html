@@ -1728,18 +1728,16 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
    the buttons — corners stay true, the middle stretches, and the drop shadow
    follows the pillow's actual silhouette. (Lives OUTSIDE the raw block so the
    Liquid evaluates.) {%- endcomment -%}
-{%- assign cta_slice = section.settings.cta_pillow_slice_pct | default: 33 -%}
-{%- assign cta_ring = section.settings.cta_pillow_ring | default: 28 -%}
 <style>
 #customizeBtn.btn-primary, #pageAddCart.btn-primary {
   background: none; box-shadow: none; border-radius: 0; overflow: visible;
   border: 0 solid transparent;
   border-image-source: url({{ section.settings.cta_pillow | image_url: width: 1000 }});
-  border-image-slice: {{ cta_slice }}% fill;
-  border-image-width: {{ cta_ring }}px;
+  border-image-slice: 33% fill;
+  border-image-width: 28px;
   border-image-repeat: stretch;
-  padding: {{ cta_ring | times: 0.7 | round }}px {{ cta_ring | times: 1.5 | round }}px;
-  min-height: {{ cta_ring | times: 2.6 | round }}px;
+  padding: 20px 42px;
+  min-height: 73px;
   filter: drop-shadow(0 16px 22px rgba(15, 60, 140, 0.35));
 }
 #customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before,
@@ -2338,28 +2336,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       "type": "image_picker",
       "id": "cta_pillow",
       "label": "Pillow image (transparent PNG)"
-    },
-    {
-      "type": "range",
-      "id": "cta_pillow_slice_pct",
-      "label": "Corner slice",
-      "min": 10,
-      "max": 49,
-      "step": 1,
-      "unit": "%",
-      "default": 33,
-      "info": "How much of each image edge stays un-stretched. Percentages can never overlap, so the middle always fills."
-    },
-    {
-      "type": "range",
-      "id": "cta_pillow_ring",
-      "label": "Corner size ON screen",
-      "min": 12,
-      "max": 60,
-      "step": 2,
-      "unit": "px",
-      "default": 28,
-      "info": "Also sets the button's height and padding."
     }
   ],
   "max_blocks": 6,
