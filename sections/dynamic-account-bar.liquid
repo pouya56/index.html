@@ -28,7 +28,9 @@
     {%- if section.settings.peek_scroll -%}
     /* Peek-a-boo: slip away on scroll down, glide back on scroll up. */
     {%- if section.settings.overlay -%}
-    #shopify-section-{{ section.id }} { transition: transform 0.3s ease; will-change: transform; }
+    /* No will-change here: it would turn the wrapper into the containing
+       block for the fixed, screen-centered apps window. */
+    #shopify-section-{{ section.id }} { transition: transform 0.3s ease; }
     #shopify-section-{{ section.id }}.ab-peek-hide { transform: translateY(-130%); }
     {%- else -%}
     #shopify-section-{{ section.id }} .dyn-abar.is-sticky { transition: transform 0.3s ease; }
@@ -104,21 +106,49 @@
     .dyn-abar a.dh-pop-cta { text-decoration: none; }
     .dyn-abar .dh-pop-note { font-size: 12px; color: var(--ink-soft); line-height: 1.5; padding: 0 10px 10px; }
     .dyn-abar .dh-acct-pop { min-width: 260px; }
-    .dyn-abar .dh-apps-pop { min-width: 280px; }
-    .dyn-abar .dh-apps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-    .dyn-abar .dh-app { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 12px 6px; border-radius: 12px;
-      text-decoration: none; color: var(--ink); transition: background .14s; }
-    .dyn-abar .dh-app:hover { background: rgba(255,255,255,0.55); }
-    .dyn-abar .dh-app-ic { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; }
-    .dyn-abar .dh-app-ic img { width: 34px; height: 34px; object-fit: contain; }
-    .dyn-abar .dh-app-init { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px;
-      border-radius: 10px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.8); color: var(--ink-soft); font: 600 15px/1 var(--font); }
-    .dyn-abar .dh-app-svg { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
-      border-radius: 12px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7);
+
+    /* 9-dots: a big floating glass window, centered like a visionOS control
+       panel — heavy frost, deep floating shadow, roomy rounded tiles. */
+    .dyn-abar .dh-apps-pop { position: fixed; top: 50%; left: 50%; right: auto;
+      transform: translate(-50%, -50%);
+      width: min(560px, 92vw); max-height: min(78vh, 640px); overflow-y: auto;
+      padding: 22px 22px 24px; border-radius: 32px;
+      background: rgba(255,255,255,0.38);
+      -webkit-backdrop-filter: blur(34px) saturate(1.9) brightness(1.04); backdrop-filter: blur(34px) saturate(1.9) brightness(1.04);
+      border: 1px solid rgba(255,255,255,0.65);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08), 0 70px 110px -24px rgba(29,29,31,0.5),
+        inset 0 1px 1px rgba(255,255,255,0.95), inset 0 -1px 2px rgba(0,0,0,0.05);
+      animation: abWin .2s cubic-bezier(.2, .9, .3, 1.1); }
+    @keyframes abWin { from { opacity: 0; transform: translate(-50%, -50%) scale(0.94); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .dyn-abar .dh-apps-pop { background: rgba(255,255,255,0.96); }
+    }
+    .dyn-abar .dh-apps-pop::before { left: 18px; right: 18px; top: 3px; height: 54px; border-radius: 24px; }
+    .dyn-abar .dh-apps-pop .dh-pop-title { font-size: 19px; font-weight: 700; color: var(--ink); padding: 6px 8px 16px; }
+    .dyn-abar .dh-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .dyn-abar .dh-app { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px 14px; border-radius: 20px;
+      text-decoration: none; color: var(--ink); transition: background .16s, transform .12s, box-shadow .16s;
+      background: rgba(255,255,255,0.34); border: 1px solid rgba(255,255,255,0.55);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.03); }
+    .dyn-abar .dh-app:hover { background: rgba(255,255,255,0.6); transform: translateY(-2px);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.95), 0 10px 22px -6px rgba(29,29,31,0.22); }
+    .dyn-abar .dh-app:active { transform: scale(0.96); }
+    .dyn-abar .dh-app-ic { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; }
+    .dyn-abar .dh-app-ic img { width: 44px; height: 44px; object-fit: contain; }
+    .dyn-abar .dh-app-init { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px;
+      border-radius: 13px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.8); color: var(--ink-soft); font: 600 18px/1 var(--font); }
+    .dyn-abar .dh-app-svg { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px;
+      border-radius: 14px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7);
       box-shadow: inset 0 1px 1px rgba(255,255,255,0.8); color: var(--ink); }
-    .dyn-abar .dh-app-svg svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .dyn-abar .dh-app-label { font-size: 12px; color: var(--ink-soft); text-align: center; line-height: 1.2; }
+    .dyn-abar .dh-app-svg svg { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .dyn-abar .dh-app-label { font-size: 13px; color: var(--ink-soft); text-align: center; line-height: 1.25; }
+    @media (max-width: 520px) {
+      .dyn-abar .dh-apps-pop { width: 94vw; padding: 16px 14px 18px; border-radius: 26px; }
+      .dyn-abar .dh-apps-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-apps-pop, .dyn-abar .dh-app { animation: none !important; transition: none !important; } }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
   </style>
 
