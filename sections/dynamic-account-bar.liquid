@@ -178,13 +178,15 @@
     .dyn-abar .dh-w-frow .fd { flex: 1 1 auto; text-align: left; }
     .dyn-abar .dh-w-frow .fi { font-size: 17px; line-height: 1; }
     .dyn-abar .dh-w-frow .ft { min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
-    /* The clock floats bare, like an app icon on a home screen — no box. */
-    .dyn-abar .dh-w-clock { display: flex; justify-content: center; align-items: center; padding: 4px 0; }
+    /* Right side: bare clock on the left, quote + Saved stacked beside it,
+       both cards exactly the same size (they split the height equally). */
+    .dyn-abar .dh-w-right { flex-direction: row; align-items: stretch; }
+    .dyn-abar .dh-w-clock { display: flex; justify-content: center; align-items: center; flex: none; align-self: center; padding: 0; }
     .dyn-abar .dh-w-face { width: 132px; height: 132px; display: block; filter: drop-shadow(0 10px 22px rgba(0,0,0,0.32)); }
-    .dyn-abar .dh-w-minis { display: flex; gap: 9px; flex: 1 1 auto; }
-    .dyn-abar .dh-w-mini { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding: 11px 9px; min-width: 0; }
-    .dyn-abar .dh-w-plant { width: 24px; height: 24px; fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-    .dyn-abar .dh-w-mlines { font-size: 15px; font-weight: 600; line-height: 1.45; color: #fff; }
+    .dyn-abar .dh-w-minis { display: flex; flex-direction: column; gap: 9px; flex: 1 1 auto; min-width: 0; }
+    .dyn-abar .dh-w-mini { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 5px; padding: 10px 9px; min-width: 0; }
+    .dyn-abar .dh-w-plant { width: 20px; height: 20px; flex: none; fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .dyn-abar .dh-w-mlines { font-size: 13px; font-weight: 600; line-height: 1.4; color: #fff; }
     /* Live "Saved" tile — the visitor's wishlist as an app-icon carousel:
        one square product at a time (latest first), swipe or tap the dots to
        browse; each square links to its product. Hidden when empty. */
@@ -192,11 +194,11 @@
       padding: 10px 10px 9px; border-radius: 20px; background: #fff;
       box-shadow: 0 10px 22px rgba(0,0,0,0.22); }
     .dyn-abar .dh-w-saved[hidden] { display: none; }
-    .dyn-abar .dh-w-savedtrack { display: flex; width: 100%; overflow-x: auto; scroll-snap-type: x mandatory;
+    .dyn-abar .dh-w-savedtrack { display: flex; width: 100%; flex: 1 1 auto; min-height: 0; overflow-x: auto; scroll-snap-type: x mandatory;
       border-radius: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     .dyn-abar .dh-w-savedtrack::-webkit-scrollbar { display: none; }
-    .dyn-abar .dh-w-savedtrack a { flex: 0 0 100%; scroll-snap-align: start; display: block; }
-    .dyn-abar .dh-w-savedtrack img, .dyn-abar .dh-w-savedph { display: block; width: 100%; aspect-ratio: 1;
+    .dyn-abar .dh-w-savedtrack a { flex: 0 0 100%; scroll-snap-align: start; display: block; height: 100%; }
+    .dyn-abar .dh-w-savedtrack img, .dyn-abar .dh-w-savedph { display: block; width: 100%; height: 100%;
       object-fit: contain; border-radius: 12px; background: #f5f5f7; }
     .dyn-abar .dh-w-saveddots { display: flex; gap: 5px; justify-content: center; padding-top: 8px; }
     .dyn-abar .dh-w-saveddots button { width: 6px; height: 6px; border-radius: 50%; border: none; padding: 0;
