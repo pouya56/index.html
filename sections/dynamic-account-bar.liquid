@@ -111,8 +111,8 @@
        glass: barely-there white fill, strong blur + saturation so the page's
        colors bloom through, bright etched rim, no painted-white gloss. */
     .dyn-abar .dh-apps-pop { top: calc(100% + 12px); right: 0;
-      width: min(560px, calc(100vw - 28px)); max-height: min(78vh, 640px); overflow-y: auto;
-      padding: 22px 22px 24px; border-radius: 32px;
+      width: min(840px, calc(100vw - 28px)); max-height: min(84vh, 900px); overflow-y: auto;
+      padding: 30px 30px 34px; border-radius: 40px;
       background: linear-gradient(125deg, rgba(255,255,255,0.30), rgba(255,255,255,0.10) 45%, rgba(255,255,255,0.22));
       -webkit-backdrop-filter: blur(26px) saturate(2.1) contrast(1.04) brightness(1.06); backdrop-filter: blur(26px) saturate(2.1) contrast(1.04) brightness(1.06);
       border: 1px solid rgba(255,255,255,0.55);
@@ -127,29 +127,33 @@
     }
     /* Kill the inherited white gloss cap — it painted the glass solid. Keep a
        whisper of a specular streak instead. */
-    .dyn-abar .dh-apps-pop::before { left: 18px; right: 18px; top: 3px; height: 54px; border-radius: 24px; opacity: 0.3; }
-    .dyn-abar .dh-apps-pop .dh-pop-title { font-size: 19px; font-weight: 700; color: var(--ink); padding: 6px 8px 16px; }
-    .dyn-abar .dh-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .dyn-abar .dh-app { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px 14px; border-radius: 20px;
+    .dyn-abar .dh-apps-pop::before { left: 24px; right: 24px; top: 4px; height: 76px; border-radius: 32px; opacity: 0.3; }
+    .dyn-abar .dh-apps-pop .dh-pop-title { font-size: 25px; font-weight: 700; color: var(--ink); padding: 8px 12px 22px; }
+    .dyn-abar .dh-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .dyn-abar .dh-app { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 28px 10px 22px; border-radius: 26px;
       text-decoration: none; color: var(--ink); transition: background .16s, transform .12s, box-shadow .16s;
       background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.40);
       box-shadow: inset 0 1px 1px rgba(255,255,255,0.55), 0 1px 2px rgba(0,0,0,0.03); }
     .dyn-abar .dh-app:hover { background: rgba(255,255,255,0.42); transform: translateY(-2px);
       box-shadow: inset 0 1px 1px rgba(255,255,255,0.9), 0 10px 22px -6px rgba(29,29,31,0.22); }
     .dyn-abar .dh-app:active { transform: scale(0.96); }
-    .dyn-abar .dh-app-ic { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; }
-    .dyn-abar .dh-app-ic img { width: 44px; height: 44px; object-fit: contain; }
-    .dyn-abar .dh-app-init { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px;
-      border-radius: 13px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.8); color: var(--ink-soft); font: 600 18px/1 var(--font); }
-    .dyn-abar .dh-app-svg { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px;
-      border-radius: 14px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7);
+    .dyn-abar .dh-app-ic { display: inline-flex; align-items: center; justify-content: center; width: 66px; height: 66px; }
+    .dyn-abar .dh-app-ic img { width: 66px; height: 66px; object-fit: contain; }
+    .dyn-abar .dh-app-init { display: inline-flex; align-items: center; justify-content: center; width: 66px; height: 66px;
+      border-radius: 19px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.8); color: var(--ink-soft); font: 600 26px/1 var(--font); }
+    .dyn-abar .dh-app-svg { display: inline-flex; align-items: center; justify-content: center; width: 72px; height: 72px;
+      border-radius: 21px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7);
       box-shadow: inset 0 1px 1px rgba(255,255,255,0.8); color: var(--ink); }
-    .dyn-abar .dh-app-svg svg { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .dyn-abar .dh-app-label { font-size: 13px; color: var(--ink-soft); text-align: center; line-height: 1.25; }
+    .dyn-abar .dh-app-svg svg { width: 37px; height: 37px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .dyn-abar .dh-app-label { font-size: 15px; color: var(--ink-soft); text-align: center; line-height: 1.25; }
     @media (max-width: 520px) {
-      .dyn-abar .dh-apps-pop { width: 94vw; padding: 16px 14px 18px; border-radius: 26px; }
-      .dyn-abar .dh-apps-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .dyn-abar .dh-apps-pop { width: calc(100vw - 16px); padding: 18px 16px 22px; border-radius: 30px; }
+      .dyn-abar .dh-apps-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .dyn-abar .dh-app { padding: 20px 8px 16px; }
+      .dyn-abar .dh-app-ic, .dyn-abar .dh-app-ic img, .dyn-abar .dh-app-init { width: 52px; height: 52px; }
+      .dyn-abar .dh-app-svg { width: 56px; height: 56px; }
+      .dyn-abar .dh-app-svg svg { width: 29px; height: 29px; }
     }
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-apps-pop, .dyn-abar .dh-app { animation: none !important; transition: none !important; } }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
