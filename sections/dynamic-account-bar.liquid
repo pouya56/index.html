@@ -185,6 +185,17 @@
     .dyn-abar .dh-w-mini { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding: 11px 9px; min-width: 0; }
     .dyn-abar .dh-w-plant { width: 24px; height: 24px; fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-w-mlines { font-size: 15px; font-weight: 600; line-height: 1.45; color: #fff; }
+    /* Live "Saved" tile — the visitor's own wishlist, like an app-icon tile:
+       white rounded card with the latest saved products. Hidden when empty. */
+    .dyn-abar .dh-w-saved { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+      padding: 12px; border-radius: 20px; background: #fff; text-decoration: none;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.22); transition: transform .12s; }
+    .dyn-abar .dh-w-saved:hover { transform: translateY(-2px); }
+    .dyn-abar .dh-w-saved[hidden] { display: none; }
+    .dyn-abar .dh-w-savedgrid { display: grid; gap: 6px; width: 100%; }
+    .dyn-abar .dh-w-savedgrid img, .dyn-abar .dh-w-savedph { display: block; width: 100%; aspect-ratio: 1;
+      object-fit: contain; border-radius: 10px; background: #f5f5f7; }
+    .dyn-abar .dh-w-savedct { font-size: 11px; font-weight: 600; color: #6e6e73; }
     @media (max-width: 520px) {
       /* Anchored-to-the-button would poke past the left screen edge on a
          phone — pin the window to the viewport instead. */
@@ -270,6 +281,10 @@
                   <svg class="dh-w-plant" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13C12 9.5 9.5 7 5.5 7 5.5 10.5 8 13 12 13Z"/><path d="M12 11c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6Z"/></svg>
                   <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
                 </div>
+                <a class="dh-w-mini dh-w-saved" id="dynAbSaved" href="/pages/wishlist" hidden>
+                  <span class="dh-w-savedgrid" id="dynAbSavedGrid"></span>
+                  <span class="dh-w-savedct" id="dynAbSavedCt"></span>
+                </a>
               </div>
             </div>
           </div>
@@ -565,8 +580,32 @@
       elFocus.textContent = qBag.pop();
     }
     pickQuote();
+    /* Saved tile: mirrors the browser-stored wishlist, live. Updates the
+       moment something is saved or removed anywhere on the site. */
+    var savedCard = document.getElementById("dynAbSaved"),
+        savedGrid = document.getElementById("dynAbSavedGrid"),
+        savedCt = document.getElementById("dynAbSavedCt");
+    function escA(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    function renderSaved() {
+      if (!savedCard) return;
+      var list = [];
+      try { var a = JSON.parse(localStorage.getItem("dyn_wishlist") || "[]"); if (a && a.length) list = a; } catch (e) {}
+      if (!list.length) { savedCard.hidden = true; return; }
+      var pick = list.slice(0, 4);
+      savedGrid.style.gridTemplateColumns = pick.length === 1 ? "1fr" : "1fr 1fr";
+      var html = "";
+      for (var i = 0; i < pick.length; i++) {
+        html += pick[i].image ? '<img src="' + escA(pick[i].image) + '" alt="" loading="lazy">' : '<span class="dh-w-savedph"></span>';
+      }
+      savedGrid.innerHTML = html;
+      savedCt.textContent = "Saved · " + list.length + (list.length === 1 ? " item" : " items");
+      savedCard.hidden = false;
+    }
+    renderSaved();
+    window.addEventListener("dyn-wishlist-change", renderSaved);
+    window.addEventListener("storage", function (e) { if (e && e.key === "dyn_wishlist") renderSaved(); });
     var apBtn = document.querySelector(".dyn-abar .dh-apps-btn");
-    if (apBtn) { apBtn.addEventListener("click", function () { loadWx(); pickQuote(); }); } else { loadWx(); }
+    if (apBtn) { apBtn.addEventListener("click", function () { loadWx(); pickQuote(); renderSaved(); }); } else { loadWx(); }
   })();
   {%- endif -%}
   {%- if section.settings.peek_scroll -%}
