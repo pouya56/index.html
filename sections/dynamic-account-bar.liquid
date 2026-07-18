@@ -136,7 +136,8 @@
     .dyn-abar .dh-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     /* Tiles: dark smoked glass on the light pane — deep translucent gray,
        light icons and labels, a faint top bevel catching the light. */
-    .dyn-abar .dh-app { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 8px 16px; border-radius: 20px;
+    .dyn-abar .dh-app { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+      aspect-ratio: 1 / 1; padding: 10px 8px; border-radius: 20px;
       text-decoration: none; color: #fff; transition: background .16s, transform .12s;
       background: rgba(42, 42, 47, 0.28); border: 1px solid rgba(255,255,255,0.10);
       box-shadow: none; }
@@ -217,7 +218,7 @@
          phone — pin the window to the viewport instead. */
       .dyn-abar .dh-apps-pop { position: fixed; left: 8px; right: 8px; top: 84px; width: auto; padding: 18px 16px 22px; border-radius: 30px; }
       .dyn-abar .dh-apps-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-      .dyn-abar .dh-app { padding: 16px 8px 13px; }
+      .dyn-abar .dh-app { padding: 8px; }
       .dyn-abar .dh-app-ic, .dyn-abar .dh-app-ic img, .dyn-abar .dh-app-init { width: 42px; height: 42px; }
       .dyn-abar .dh-app-svg { width: 46px; height: 46px; }
       .dyn-abar .dh-app-svg svg { width: 24px; height: 24px; }
