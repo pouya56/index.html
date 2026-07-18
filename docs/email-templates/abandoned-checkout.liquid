@@ -1,4 +1,4 @@
-{% capture email_title %}Your invoice is ready{% endcapture %}
+{% capture email_title %}You left something behind{% endcapture %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,26 +44,15 @@
                 <td class="dyn-pad" style="padding: 38px 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
 
                   <!-- Eyebrow -->
-                  <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #86868b; padding-bottom: 10px;">Invoice {{ order_name }}</div>
+                  <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #86868b; padding-bottom: 10px;">Still thinking it over?</div>
 
                   <!-- Title + intro -->
-                  <div style="font-size: 27px; line-height: 1.2; font-weight: 700; color: #1d1d1f; padding-bottom: 10px;">Your invoice is ready</div>
-                  <div style="font-size: 15px; line-height: 1.55; color: #6e6e73; padding-bottom: 24px;">Hi {% if customer.first_name %}{{ customer.first_name }}{% else %}there{% endif %} &mdash; here&rsquo;s everything we prepared for you. Review it below and complete your purchase whenever you&rsquo;re ready.</div>
+                  <div style="font-size: 27px; line-height: 1.2; font-weight: 700; color: #1d1d1f; padding-bottom: 10px;">You left something behind</div>
+                  <div style="font-size: 15px; line-height: 1.55; color: #6e6e73; padding-bottom: 24px;">Hi {% if customer.first_name %}{{ customer.first_name }}{% else %}there{% endif %} &mdash; your picks are saved and waiting. Finish checking out and we&rsquo;ll get them made for you.</div>
 
-                  {% if custom_message %}
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
-                    <tr>
-                      <td style="background: #f5f5f7; border-radius: 16px; padding: 16px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #1d1d1f;">
-                        {{ custom_message }}
-                      </td>
-                    </tr>
-                  </table>
-                  {% endif %}
-{% if invoice_url %}
                   <div style="padding: 2px 0 26px;">
-                    <a href="{{ invoice_url }}" style="display: inline-block; background: #1d1d1f; color: #ffffff; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 30px; border-radius: 999px;">Complete your purchase</a>
+                    <a href="{{ url }}" style="display: inline-block; background: #1d1d1f; color: #ffffff; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 30px; border-radius: 999px;">Complete your order</a>
                   </div>
-{% endif %}
 
 
                   <!-- Items -->
@@ -86,55 +75,7 @@
                     {% endfor %}
                   </table>
 
-                  <!-- Totals -->
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-                    <tr>
-                      <td style="padding: 14px 0 4px; font-size: 14px; color: #6e6e73;">Subtotal</td>
-                      <td align="right" style="padding: 14px 0 4px; font-size: 14px; color: #1d1d1f;">{{ subtotal_price | money }}</td>
-                    </tr>
-                    {% if total_discounts > 0 %}
-                    <tr>
-                      <td style="padding: 4px 0; font-size: 14px; color: #6e6e73;">Discounts</td>
-                      <td align="right" style="padding: 4px 0; font-size: 14px; color: #ff5c8a; font-weight: 600;">&minus;{{ total_discounts | money }}</td>
-                    </tr>
-                    {% endif %}
-                    {% if shipping_price %}
-                    <tr>
-                      <td style="padding: 4px 0; font-size: 14px; color: #6e6e73;">Shipping</td>
-                      <td align="right" style="padding: 4px 0; font-size: 14px; color: #1d1d1f;">{% if shipping_price > 0 %}{{ shipping_price | money }}{% else %}Free{% endif %}</td>
-                    </tr>
-                    {% endif %}
-                    {% if tax_price > 0 %}
-                    <tr>
-                      <td style="padding: 4px 0; font-size: 14px; color: #6e6e73;">Taxes</td>
-                      <td align="right" style="padding: 4px 0; font-size: 14px; color: #1d1d1f;">{{ tax_price | money }}</td>
-                    </tr>
-                    {% endif %}
-                    <tr>
-                      <td style="padding: 14px 0 0; border-top: 1px solid #e8e8ed; font-size: 16px; font-weight: 700; color: #1d1d1f;">Total</td>
-                      <td align="right" style="padding: 14px 0 0; border-top: 1px solid #e8e8ed; font-size: 16px; font-weight: 700; color: #1d1d1f;">{{ total_price | money_with_currency }}</td>
-                    </tr>
-                  </table>
 
-                  <!-- Addresses -->
-                  {% if shipping_address or billing_address %}
-                  <table role="presentation" class="dyn-cols" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 28px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-                    <tr>
-                      {% if shipping_address %}
-                      <td valign="top" width="50%" style="padding-right: 12px;">
-                        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #86868b; padding-bottom: 6px;">Ships to</div>
-                        <div style="font-size: 14px; line-height: 1.55; color: #1d1d1f;">{{ shipping_address | format_address }}</div>
-                      </td>
-                      {% endif %}
-                      {% if billing_address %}
-                      <td valign="top" width="50%">
-                        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #86868b; padding-bottom: 6px;">Billed to</div>
-                        <div style="font-size: 14px; line-height: 1.55; color: #1d1d1f;">{{ billing_address | format_address }}</div>
-                      </td>
-                      {% endif %}
-                    </tr>
-                  </table>
-                  {% endif %}
 
                 </td>
               </tr>
