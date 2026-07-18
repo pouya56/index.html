@@ -25,7 +25,7 @@
 {%- assign veil_o = veil_num | divided_by: 44.0 -%}
 
 <div class="dyn-bg" id="dynBg-{{ section.id }}" aria-hidden="true"
-  {%- if look == 'weather' %} data-lat="{{ section.settings.weather_lat | default: '40.71' }}" data-lon="{{ section.settings.weather_lon | default: '-74.01' }}" data-alpha="{{ bg_alpha }}" data-animate="{% if section.settings.animate %}1{% else %}0{% endif %}" data-force="{{ section.settings.force_scene | default: 'auto' }}"{% endif -%}>
+  {%- if look == 'weather' %} data-lat="{{ section.settings.weather_lat | default: '40.71' }}" data-lon="{{ section.settings.weather_lon | default: '-74.01' }}" data-alpha="{{ bg_alpha }}" data-animate="{% if section.settings.animate %}1{% else %}0{% endif %}" data-force="{{ section.settings.force_scene | default: 'auto' }}" data-veil="{{ veil_o }}"{% endif -%}>
   {%- if look == 'sun' -%}
   <span class="dyn-bg-shade"></span>
   <span class="dyn-bg-blob dyn-bg-s1"></span>
@@ -177,6 +177,24 @@
   /* The veil: white wash that tames the sky. Strength 40 = none (full Apple
      color), lower strength = softer, more pastel page. */
   #dynBg-{{ section.id }} .dyn-bg-veil { position: absolute; inset: 0; background: #fff; opacity: {{ veil_o }}; }
+  /* Dark skies (night, rain, storm at full vividness): text sitting DIRECTLY
+     on the sky flips to light so it stays readable. Anything inside white
+     cards keeps its normal dark ink. The script toggles the html class. */
+  html.dyn-sky-dark .dyn-hero .dh-corner-link,
+  html.dyn-sky-dark .dyn-hero .dh-copyright,
+  html.dyn-sky-dark .dyn-hero .dh-copyright a { color: rgba(255,255,255,0.88); }
+  html.dyn-sky-dark .dyn-hero .dh-corner-link:hover { color: #fff; }
+  html.dyn-sky-dark .dyn-hero .dh-search-input { color: #fff; }
+  html.dyn-sky-dark .dyn-hero .dh-search-input::placeholder { color: rgba(255,255,255,0.7); }
+  html.dyn-sky-dark .dyn-hero .dh-search-plus,
+  html.dyn-sky-dark .dyn-hero .dh-search-go { color: #fff; background: rgba(255,255,255,0.2); }
+  html.dyn-sky-dark .dyn-hero .dh-search-plus:hover,
+  html.dyn-sky-dark .dyn-hero .dh-search-go:hover { background: rgba(255,255,255,0.32); }
+  html.dyn-sky-dark .dyn-hero .dh-gbtn { color: #fff; }
+  html.dyn-sky-dark .dyn-abar .dh-icon-btn,
+  html.dyn-sky-dark .dyn-abar .ab-back { color: #fff; background: rgba(255,255,255,0.2); }
+  html.dyn-sky-dark .dyn-abar .dh-icon-btn:hover,
+  html.dyn-sky-dark .dyn-abar .ab-back:hover { color: #fff; background: rgba(255,255,255,0.32); }
   @media (prefers-reduced-motion: reduce) {
     #dynBg-{{ section.id }} .dyn-bg-parts i { animation: none !important; }
     #dynBg-{{ section.id }} .dbg-rain, #dynBg-{{ section.id }} .dbg-snow, #dynBg-{{ section.id }} .dbg-flash { display: none; }
@@ -329,6 +347,7 @@
     var g = SKY[name];
     root.style.background = "linear-gradient(180deg, " + g[0] + " 0%, " + g[1] + " 55%, " + g[2] + " 100%)";
   }
+  var veilO = parseFloat(root.getAttribute("data-veil") || "0");
   function scene(code, isDay) {
     parts.innerHTML = "";
     if (night) night.hidden = !!isDay;
@@ -337,6 +356,10 @@
       : (code >= 71 && code <= 86) ? "snow"
       : (code === 45 || code === 48) ? "fog"
       : code === 3 ? "cloudy" : code === 2 ? "partly" : "clear";
+    // A heavy veil keeps the page pastel, so dark ink still reads; only flip
+    // the on-sky text to white when the sky is genuinely dark.
+    var darkSky = veilO < 0.35 && (!isDay || kind === "storm" || kind === "rain");
+    document.documentElement.classList.toggle("dyn-sky-dark", darkSky);
     var i;
     if (kind === "clear") {
       if (isDay) {
