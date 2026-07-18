@@ -18,6 +18,11 @@
 {%- assign spd = section.settings.speed -%}
 {%- assign spd2 = spd | times: 1.35 | round -%}
 {%- assign spd3 = spd | times: 1.7 | round -%}
+{%- comment -%} Live weather: strength doubles as vividness — 40% shows the
+   full Apple-style sky, lower values lay a white veil over it. {%- endcomment -%}
+{%- assign veil_num = 40 | minus: section.settings.strength -%}
+{%- if veil_num < 0 -%}{%- assign veil_num = 0 -%}{%- endif -%}
+{%- assign veil_o = veil_num | divided_by: 44.0 -%}
 
 <div class="dyn-bg" id="dynBg-{{ section.id }}" aria-hidden="true"
   {%- if look == 'weather' %} data-lat="{{ section.settings.weather_lat | default: '40.71' }}" data-lon="{{ section.settings.weather_lon | default: '-74.01' }}" data-alpha="{{ bg_alpha }}" data-animate="{% if section.settings.animate %}1{% else %}0{% endif %}" data-force="{{ section.settings.force_scene | default: 'auto' }}"{% endif -%}>
@@ -31,6 +36,7 @@
   <span class="dyn-bg-blob dyn-bg-b3 dyn-bg-w3"></span>
   <span class="dyn-bg-parts" id="dynBgParts-{{ section.id }}"></span>
   <span class="dyn-bg-night" id="dynBgNight-{{ section.id }}" hidden></span>
+  <span class="dyn-bg-veil"></span>
   {%- else -%}
   <span class="dyn-bg-blob dyn-bg-b1"></span>
   <span class="dyn-bg-blob dyn-bg-b2"></span>
@@ -135,8 +141,9 @@
   }
   #dynBg-{{ section.id }} .dyn-bg-parts { position: absolute; inset: 0; overflow: hidden; }
   #dynBg-{{ section.id }} .dyn-bg-parts i { position: absolute; display: block; pointer-events: none; }
-  #dynBg-{{ section.id }} .dbg-rain { top: -24px; width: 2px; height: 16px; border-radius: 2px;
-    background: linear-gradient(rgba(110, 130, 160, 0), rgba(110, 130, 160, 0.55)); animation: dynBgRain linear infinite; }
+  #dynBg-{{ section.id }} .dbg-rain { top: -24px; width: 2px; height: 18px; border-radius: 2px;
+    background: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,0.65));
+    box-shadow: 0 0 2px rgba(80, 100, 130, 0.35); animation: dynBgRain linear infinite; }
   @keyframes dynBgRain { to { transform: translateY(115vh); } }
   #dynBg-{{ section.id }} .dbg-snow { top: -10px; width: 6px; height: 6px; border-radius: 50%;
     background: #fff; box-shadow: 0 0 0 1px rgba(140, 150, 175, 0.35), 0 1px 3px rgba(100, 115, 145, 0.4);
@@ -150,7 +157,7 @@
     animation: dynBgCloud ease-in-out infinite alternate; }
   @keyframes dynBgCloud { to { transform: translateX(9vmax); } }
   #dynBg-{{ section.id }} .dbg-sun { top: -22vmax; right: -22vmax; width: 74vmax; height: 74vmax; border-radius: 50%;
-    background: radial-gradient(circle at center, rgba(255, 208, 100, 0.42) 0%, transparent 60%);
+    background: radial-gradient(circle at center, rgba(255, 224, 130, 0.7) 0%, rgba(255, 200, 90, 0.25) 38%, transparent 62%);
     animation: dynBgSunPulse 7s ease-in-out infinite alternate; }
   @keyframes dynBgSunPulse { to { transform: scale(1.08); } }
   #dynBg-{{ section.id }} .dbg-star { width: 3px; height: 3px; border-radius: 50%; background: #fff;
@@ -166,7 +173,10 @@
     93.8% { opacity: 0; }
     94.4% { opacity: 0.3; }
   }
-  #dynBg-{{ section.id }} .dyn-bg-night { position: absolute; inset: 0; background: rgba(10, 16, 60, 0.28); }
+  #dynBg-{{ section.id }} .dyn-bg-night { position: absolute; inset: 0; background: rgba(8, 12, 48, 0.35); }
+  /* The veil: white wash that tames the sky. Strength 40 = none (full Apple
+     color), lower strength = softer, more pastel page. */
+  #dynBg-{{ section.id }} .dyn-bg-veil { position: absolute; inset: 0; background: #fff; opacity: {{ veil_o }}; }
   @media (prefers-reduced-motion: reduce) {
     #dynBg-{{ section.id }} .dyn-bg-parts i { animation: none !important; }
     #dynBg-{{ section.id }} .dbg-rain, #dynBg-{{ section.id }} .dbg-snow, #dynBg-{{ section.id }} .dbg-flash { display: none; }
@@ -304,6 +314,21 @@
   function glowVar(n, rgb) { root.style.setProperty("--wg" + n, "rgba(" + rgb.join(",") + "," + alpha + ")"); }
   function part(cls, style) { var i = document.createElement("i"); i.className = cls; i.style.cssText = style || ""; parts.appendChild(i); }
   function rnd(a, b) { return (a + Math.random() * (b - a)); }
+  /* Full-bleed sky gradients, Apple Weather style. */
+  var SKY = {
+    clearDay: ["#3d7dd8", "#6aaef7", "#a8d4ff"],
+    clearNight: ["#050a1e", "#101f45", "#23386b"],
+    partly: ["#5c8fd6", "#8fb8e8", "#c3d9f2"],
+    cloudy: ["#6a7f99", "#93a4b8", "#c0cad6"],
+    rain: ["#3d4d63", "#5a6c85", "#8395ab"],
+    storm: ["#1d2635", "#37455c", "#55647c"],
+    snow: ["#8fa3bd", "#b9c6d8", "#e6ecf3"],
+    fog: ["#97a0ab", "#b7bec7", "#d9dde2"]
+  };
+  function sky(name) {
+    var g = SKY[name];
+    root.style.background = "linear-gradient(180deg, " + g[0] + " 0%, " + g[1] + " 55%, " + g[2] + " 100%)";
+  }
   function scene(code, isDay) {
     parts.innerHTML = "";
     if (night) night.hidden = !!isDay;
@@ -315,27 +340,34 @@
     var i;
     if (kind === "clear") {
       if (isDay) {
+        sky("clearDay");
         glowVar(1, [255, 184, 46]); glowVar(2, [255, 130, 90]); glowVar(3, [120, 180, 255]);
         part("dbg-sun");
       } else {
+        sky("clearNight");
         glowVar(1, [50, 70, 170]); glowVar(2, [110, 90, 200]); glowVar(3, [30, 50, 120]);
-        for (i = 0; i < 16; i++) part("dbg-star", "left:" + rnd(0, 100).toFixed(1) + "%;top:" + rnd(0, 60).toFixed(1) + "%;animation-duration:" + rnd(1.5, 4).toFixed(1) + "s;animation-delay:" + rnd(0, 2).toFixed(1) + "s;");
+        for (i = 0; i < 18; i++) part("dbg-star", "left:" + rnd(0, 100).toFixed(1) + "%;top:" + rnd(0, 65).toFixed(1) + "%;animation-duration:" + rnd(1.5, 4).toFixed(1) + "s;animation-delay:" + rnd(0, 2).toFixed(1) + "s;");
       }
     } else if (kind === "partly") {
+      sky("partly");
       glowVar(1, [255, 200, 120]); glowVar(2, [150, 180, 220]); glowVar(3, [180, 190, 210]);
       if (isDay) part("dbg-sun");
       for (i = 0; i < 2; i++) part("dbg-cloud", "top:" + (8 + i * 26) + "vmax;left:" + (i * 30 - 10) + "vmax;animation-duration:" + rnd(24, 40).toFixed(0) + "s;");
     } else if (kind === "cloudy") {
+      sky("cloudy");
       glowVar(1, [140, 150, 170]); glowVar(2, [170, 175, 190]); glowVar(3, [120, 130, 150]);
       for (i = 0; i < 3; i++) part("dbg-cloud", "top:" + (i * 20 - 4) + "vmax;left:" + (i * 24 - 14) + "vmax;animation-duration:" + rnd(22, 42).toFixed(0) + "s;");
     } else if (kind === "fog") {
+      sky("fog");
       glowVar(1, [180, 180, 190]); glowVar(2, [200, 200, 210]); glowVar(3, [170, 170, 180]);
       for (i = 0; i < 3; i++) part("dbg-fog", "top:" + (12 + i * 26) + "vh;animation-duration:" + rnd(26, 44).toFixed(0) + "s;");
     } else if (kind === "snow") {
+      sky("snow");
       glowVar(1, [180, 200, 230]); glowVar(2, [210, 220, 240]); glowVar(3, [160, 180, 220]);
       if (!still) for (i = 0; i < 20; i++) part("dbg-snow", "left:" + rnd(0, 100).toFixed(1) + "%;animation-duration:" + rnd(7, 14).toFixed(1) + "s;animation-delay:-" + rnd(0, 14).toFixed(1) + "s;opacity:" + rnd(0.4, 0.9).toFixed(2) + ";");
     } else {
       var storm = kind === "storm";
+      sky(storm ? "storm" : "rain");
       if (storm) { glowVar(1, [70, 80, 110]); glowVar(2, [90, 100, 140]); glowVar(3, [50, 60, 90]); }
       else { glowVar(1, [90, 120, 160]); glowVar(2, [110, 140, 180]); glowVar(3, [80, 100, 140]); }
       for (i = 0; i < 2; i++) part("dbg-cloud", "top:" + (i * 22 - 6) + "vmax;left:" + (i * 34 - 12) + "vmax;animation-duration:" + rnd(20, 34).toFixed(0) + "s;");
@@ -454,7 +486,7 @@
       "step": 2,
       "unit": "%",
       "default": 12,
-      "info": "Glows: 8-16% is the sweet spot. Sunlight: try 14-24% — it drives both the light and the shadow."
+      "info": "Glows: 8-16% is the sweet spot. Sunlight: try 14-24%. Live weather: this is how vivid the sky is — 40% is the full Apple-Weather color, lower lays a soft white veil over it."
     },
     {
       "type": "range",
