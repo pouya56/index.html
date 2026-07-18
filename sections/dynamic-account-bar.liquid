@@ -181,9 +181,8 @@
     .dyn-abar .dh-w-motto { font-size: 11px; color: rgba(255,255,255,0.85); margin-top: 6px; }
     .dyn-abar .dh-w-minis { display: flex; gap: 9px; flex: 1 1 auto; }
     .dyn-abar .dh-w-mini { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding: 11px 9px; min-width: 0; }
-    .dyn-abar .dh-w-mlabel { align-self: flex-start; font-size: 10.5px; color: rgba(255,255,255,0.85); }
-    .dyn-abar .dh-w-plant { width: 22px; height: 22px; margin-top: 2px; fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-    .dyn-abar .dh-w-mlines { font-size: 11px; line-height: 1.5; color: rgba(255,255,255,0.88); }
+    .dyn-abar .dh-w-plant { width: 24px; height: 24px; fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .dyn-abar .dh-w-mlines { font-size: 15px; font-weight: 600; line-height: 1.45; color: #fff; }
     @media (max-width: 520px) {
       /* Anchored-to-the-button would poke past the left screen edge on a
          phone — pin the window to the viewport instead. */
@@ -255,7 +254,6 @@
               </div>
               <div class="dh-w-minis">
                 <div class="dh-widget dh-w-mini">
-                  <div class="dh-w-mlabel">{{ section.settings.focus_title | default: 'Focus' }}</div>
                   <svg class="dh-w-plant" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13C12 9.5 9.5 7 5.5 7 5.5 10.5 8 13 12 13Z"/><path d="M12 11c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6Z"/></svg>
                   <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
                 </div>
@@ -597,7 +595,6 @@
     { "type": "text", "id": "weather_lon", "label": "Longitude", "default": "-74.01", "info": "Find both on Google Maps: right-click your city, the numbers appear first." },
     { "type": "select", "id": "weather_unit", "label": "Temperature unit", "options": [ { "value": "f", "label": "Fahrenheit" }, { "value": "c", "label": "Celsius" } ], "default": "f" },
     { "type": "text", "id": "widget_motto", "label": "Line under the clock", "default": "Keep going, keep growing." },
-    { "type": "text", "id": "focus_title", "label": "Focus card title", "default": "Focus" },
     { "type": "textarea", "id": "focus_quotes", "label": "Focus sentences (one per line)", "info": "A random one shows each time the window opens, never repeating until all have had a turn. Leave empty for the built-in set of 18." },
     { "type": "paragraph", "content": "Add “App link” blocks below to fill the grid. With none added, a sensible default set (Shop, Search, Contact, Account, Cart, policies…) shows automatically." },
 
