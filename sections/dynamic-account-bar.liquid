@@ -262,14 +262,18 @@
     var root = document.getElementById("dynAbar");
     if (!root) return;
 
-    /* Back button — go to the previous page; if there isn't one (opened directly),
-       fall back to the home page so it never dead-ends. */
+    /* Back button — go to the previous page (e.g. 9-dots: Shop -> FAQ -> back
+       lands on Shop). Home is only the fallback for a dead end: the page was
+       opened directly and there is nothing to go back to. The timer is
+       cancelled the moment the browser actually starts leaving this page, so
+       a slow back-navigation is never mistaken for "no history". */
     var HOME = {{ routes.root_url | json }};
     var backBtn = document.getElementById("dynAbarBack");
     if (backBtn) backBtn.addEventListener("click", function () {
-      var here = location.href;
+      if (history.length <= 1) { location.href = HOME; return; }
+      var fallback = setTimeout(function () { location.href = HOME; }, 1500);
+      window.addEventListener("pagehide", function () { clearTimeout(fallback); }, { once: true });
       history.back();
-      setTimeout(function () { if (location.href === here) { location.href = HOME; } }, 350);
     });
 
     var menus = Array.prototype.slice.call(root.querySelectorAll(".dh-menu"));
