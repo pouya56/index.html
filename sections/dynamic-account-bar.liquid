@@ -162,10 +162,10 @@
     /* Strong double shadow so the bare greeting stays readable on bright walls. */
     .dyn-abar .dh-w-greethead { padding: 2px 5px 0; color: #fff;
       text-shadow: 0 1px 3px rgba(0,0,0,0.5), 0 2px 14px rgba(0,0,0,0.35); }
-    .dyn-abar .dh-w-greet { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #fff; }
-    .dyn-abar .dh-w-greet svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
-    .dyn-abar .dh-w-day { font-size: 20px; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.12; margin-top: 3px; }
-    .dyn-abar .dh-w-sub { font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; margin-top: 3px; }
+    .dyn-abar .dh-w-greet { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; color: #fff; }
+    .dyn-abar .dh-w-greet svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
+    .dyn-abar .dh-w-day { font-size: 30px; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.12; margin-top: 4px; }
+    .dyn-abar .dh-w-sub { font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; margin-top: 4px; }
     .dyn-abar .dh-w-weather { flex: 1 1 auto; }
     /* Weather, widget style: big emoji + temp/condition, divider, day list. */
     .dyn-abar .dh-w-now { display: flex; align-items: center; gap: 12px; padding: 2px 2px 0; }
@@ -178,10 +178,9 @@
     .dyn-abar .dh-w-frow .fd { flex: 1 1 auto; text-align: left; }
     .dyn-abar .dh-w-frow .fi { font-size: 17px; line-height: 1; }
     .dyn-abar .dh-w-frow .ft { min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
-    .dyn-abar .dh-w-clock { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 13px; }
-    .dyn-abar .dh-w-time { font-size: 27px; font-weight: 200; line-height: 1; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
-    .dyn-abar .dh-w-ampm { font-size: 10.5px; font-weight: 500; margin-left: 4px; color: rgba(255,255,255,0.8); }
-    .dyn-abar .dh-w-motto { font-size: 11px; color: rgba(255,255,255,0.85); margin-top: 6px; }
+    .dyn-abar .dh-w-clock { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 14px; }
+    .dyn-abar .dh-w-face { width: 124px; height: 124px; display: block; filter: drop-shadow(0 8px 18px rgba(0,0,0,0.28)); }
+    .dyn-abar .dh-w-motto { font-size: 11px; color: rgba(255,255,255,0.85); margin-top: 9px; }
     .dyn-abar .dh-w-minis { display: flex; gap: 9px; flex: 1 1 auto; }
     .dyn-abar .dh-w-mini { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding: 11px 9px; min-width: 0; }
     .dyn-abar .dh-w-plant { width: 24px; height: 24px; fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
@@ -198,8 +197,9 @@
       .dyn-abar .dh-apps-head { grid-template-columns: 1fr; gap: 8px; margin-bottom: 8px; }
       .dyn-abar .dh-w-left, .dyn-abar .dh-w-right { gap: 8px; }
       .dyn-abar .dh-widget { padding: 11px 12px; border-radius: 14px; }
-      .dyn-abar .dh-w-day { font-size: 18px; }
-      .dyn-abar .dh-w-time { font-size: 24px; }
+      .dyn-abar .dh-w-day { font-size: 24px; }
+      .dyn-abar .dh-w-sub { font-size: 12px; }
+      .dyn-abar .dh-w-face { width: 104px; height: 104px; }
       .dyn-abar .dh-w-temp { font-size: 24px; }
       .dyn-abar .dh-w-minis { gap: 8px; }
     }
@@ -249,7 +249,21 @@
             </div>
             <div class="dh-w-right">
               <div class="dh-widget dh-w-clock">
-                <div class="dh-w-time"><span id="dynAbTime">--:--</span><span class="dh-w-ampm" id="dynAbAmpm"></span></div>
+                <svg class="dh-w-face" viewBox="0 0 200 200" aria-hidden="true">
+                  <rect x="4" y="4" width="192" height="192" rx="48" fill="#ffffff"/>
+                  <g id="dynAbTicks"></g>
+                  <g fill="#1d1d1f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="30" font-weight="600" text-anchor="middle">
+                    <text x="100" y="62">12</text>
+                    <text x="150" y="111">3</text>
+                    <text x="100" y="160">6</text>
+                    <text x="50" y="111">9</text>
+                  </g>
+                  <g id="dynAbHr"><line x1="100" y1="104" x2="100" y2="62" stroke="#1d1d1f" stroke-width="9" stroke-linecap="round"/></g>
+                  <g id="dynAbMin"><line x1="100" y1="104" x2="100" y2="40" stroke="#1d1d1f" stroke-width="6.5" stroke-linecap="round"/></g>
+                  <g id="dynAbSec"><line x1="100" y1="114" x2="100" y2="34" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round"/></g>
+                  <circle cx="100" cy="100" r="5.5" fill="#ff9f0a"/>
+                  <circle cx="100" cy="100" r="2.2" fill="#ffffff"/>
+                </svg>
                 <div class="dh-w-motto">{{ section.settings.widget_motto | default: 'Keep going, keep growing.' }}</div>
               </div>
               <div class="dh-w-minis">
@@ -440,23 +454,37 @@
     var head = document.getElementById("dynAbWidgets");
     if (!head) return;
     var elGreet = document.getElementById("dynAbGreet"), elDay = document.getElementById("dynAbDay"),
-        elDate = document.getElementById("dynAbDate"), elTime = document.getElementById("dynAbTime"),
-        elAmpm = document.getElementById("dynAbAmpm"), elWxIc = document.getElementById("dynAbWxIc"),
+        elDate = document.getElementById("dynAbDate"), elWxIc = document.getElementById("dynAbWxIc"),
         elWxTemp = document.getElementById("dynAbWxTemp"), elWxCond = document.getElementById("dynAbWxCond"),
         elWxFc = document.getElementById("dynAbWxFc");
     var DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    /* Apple-style analog face: 60 ticks (long black on the hours, short gray
+       between), built once; hands rotate every second, orange seconds hand. */
+    var ticksG = document.getElementById("dynAbTicks");
+    if (ticksG) {
+      var NS = "http://www.w3.org/2000/svg", t = "";
+      for (var ti = 0; ti < 60; ti++) {
+        var a = ti * 6 * Math.PI / 180, hourTick = ti % 5 === 0;
+        var r1 = hourTick ? 74 : 84, r2 = 92;
+        t += '<line x1="' + (100 + r1 * Math.sin(a)).toFixed(1) + '" y1="' + (100 - r1 * Math.cos(a)).toFixed(1) +
+             '" x2="' + (100 + r2 * Math.sin(a)).toFixed(1) + '" y2="' + (100 - r2 * Math.cos(a)).toFixed(1) +
+             '" stroke="' + (hourTick ? "#1d1d1f" : "#b9b9be") + '" stroke-width="' + (hourTick ? 3 : 2) + '" stroke-linecap="round"/>';
+      }
+      ticksG.innerHTML = t;
+    }
+    var gHr = document.getElementById("dynAbHr"), gMin = document.getElementById("dynAbMin"), gSec = document.getElementById("dynAbSec");
     function tick() {
-      var d = new Date(), h = d.getHours(), mm = d.getMinutes();
+      var d = new Date(), h = d.getHours(), mm = d.getMinutes(), ss = d.getSeconds();
       elGreet.textContent = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
       elDay.textContent = DAYS[d.getDay()];
       elDate.textContent = d.getDate() + " " + MONTHS[d.getMonth()] + ", " + d.getFullYear();
-      var hh = h % 12; if (hh === 0) hh = 12;
-      elTime.textContent = hh + ":" + (mm < 10 ? "0" : "") + mm;
-      elAmpm.textContent = h < 12 ? "AM" : "PM";
+      if (gHr) gHr.setAttribute("transform", "rotate(" + (((h % 12) + mm / 60) * 30).toFixed(2) + " 100 100)");
+      if (gMin) gMin.setAttribute("transform", "rotate(" + ((mm + ss / 60) * 6).toFixed(2) + " 100 100)");
+      if (gSec) gSec.setAttribute("transform", "rotate(" + (ss * 6) + " 100 100)");
     }
     tick();
-    setInterval(tick, 15000);
+    setInterval(tick, 1000);
     function wxEmoji(code) {
       if (code === 0 || code === 1) return "☀️";
       if (code === 2) return "⛅";
