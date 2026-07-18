@@ -178,9 +178,9 @@
     .dyn-abar .dh-w-frow .fd { flex: 1 1 auto; text-align: left; }
     .dyn-abar .dh-w-frow .fi { font-size: 17px; line-height: 1; }
     .dyn-abar .dh-w-frow .ft { min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
-    .dyn-abar .dh-w-clock { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 14px; }
-    .dyn-abar .dh-w-face { width: 124px; height: 124px; display: block; filter: drop-shadow(0 8px 18px rgba(0,0,0,0.28)); }
-    .dyn-abar .dh-w-motto { font-size: 11px; color: rgba(255,255,255,0.85); margin-top: 9px; }
+    /* The clock floats bare, like an app icon on a home screen — no box. */
+    .dyn-abar .dh-w-clock { display: flex; justify-content: center; align-items: center; padding: 4px 0; }
+    .dyn-abar .dh-w-face { width: 132px; height: 132px; display: block; filter: drop-shadow(0 10px 22px rgba(0,0,0,0.32)); }
     .dyn-abar .dh-w-minis { display: flex; gap: 9px; flex: 1 1 auto; }
     .dyn-abar .dh-w-mini { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding: 11px 9px; min-width: 0; }
     .dyn-abar .dh-w-plant { width: 24px; height: 24px; fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
@@ -248,7 +248,7 @@
               </div>
             </div>
             <div class="dh-w-right">
-              <div class="dh-widget dh-w-clock">
+              <div class="dh-w-clock">
                 <svg class="dh-w-face" viewBox="0 0 200 200" aria-hidden="true">
                   <rect x="4" y="4" width="192" height="192" rx="48" fill="#ffffff"/>
                   <g id="dynAbTicks"></g>
@@ -264,7 +264,6 @@
                   <circle cx="100" cy="100" r="5.5" fill="#ff9f0a"/>
                   <circle cx="100" cy="100" r="2.2" fill="#ffffff"/>
                 </svg>
-                <div class="dh-w-motto">{{ section.settings.widget_motto | default: 'Keep going, keep growing.' }}</div>
               </div>
               <div class="dh-w-minis">
                 <div class="dh-widget dh-w-mini">
@@ -619,7 +618,6 @@
     { "type": "text", "id": "weather_lat", "label": "Latitude", "default": "40.71" },
     { "type": "text", "id": "weather_lon", "label": "Longitude", "default": "-74.01", "info": "Find both on Google Maps: right-click your city, the numbers appear first." },
     { "type": "select", "id": "weather_unit", "label": "Temperature unit", "options": [ { "value": "f", "label": "Fahrenheit" }, { "value": "c", "label": "Celsius" } ], "default": "f" },
-    { "type": "text", "id": "widget_motto", "label": "Line under the clock", "default": "Keep going, keep growing." },
     { "type": "textarea", "id": "focus_quotes", "label": "Focus sentences (one per line)", "info": "A random one shows each time the window opens, never repeating until all have had a turn. Leave empty for the built-in set of 18." },
     { "type": "paragraph", "content": "Add “App link” blocks below to fill the grid. With none added, a sensible default set (Shop, Search, Contact, Account, Cart, policies…) shows automatically." },
 
