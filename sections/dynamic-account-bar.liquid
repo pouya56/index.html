@@ -152,21 +152,28 @@
       color: #fff; }
     .dyn-abar .dh-app-svg svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-app-label { font-size: 13px; color: rgba(255,255,255,0.88); text-align: center; line-height: 1.25; }
-    /* Dashboard widgets, iOS-lock-screen style (at 80% scale): bare greeting,
-       weather card with 5-day forecast, clock + motto, Focus and Battery minis. */
-    .dyn-abar .dh-apps-head { display: grid; grid-template-columns: 1fr 1.05fr; gap: 9px; margin-bottom: 9px; align-items: stretch; }
-    .dyn-abar .dh-w-left, .dyn-abar .dh-w-right { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
-    .dyn-abar .dh-widget { border-radius: 16px; padding: 12px 14px; color: #fff;
+    /* macOS-style widget board: a 4-column grid the widgets flow through.
+       Drag any widget (clock, quote, weather, Saved) to rearrange — the board
+       reflows live and the order is remembered per browser. */
+    .dyn-abar .dh-apps-head { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 126px;
+      grid-auto-flow: dense; gap: 12px; margin-bottom: 12px; }
+    .dyn-abar .dh-apps-head [data-wid] { cursor: grab; }
+    .dyn-abar .dh-apps-head [data-wid]:active { cursor: grabbing; }
+    .dyn-abar .dh-apps-head .is-drag { opacity: 0.45; transform: scale(0.97); }
+    .dyn-abar .dh-w-greethead { grid-column: span 2; }
+    .dyn-abar .dh-w-clock, .dyn-abar .dh-w-quote { grid-column: span 1; grid-row: span 1; }
+    .dyn-abar .dh-w-weather, .dyn-abar .dh-w-saved { grid-column: span 2; grid-row: span 2; }
+    .dyn-abar .dh-widget { border-radius: 20px; padding: 12px 14px; color: #fff;
       background: rgba(42, 42, 47, 0.28); border: 1px solid rgba(255,255,255,0.10);
       box-shadow: none; }
     /* Strong double shadow so the bare greeting stays readable on bright walls. */
     .dyn-abar .dh-w-greethead { padding: 2px 5px 0; color: #fff;
+      display: flex; flex-direction: column; justify-content: center;
       text-shadow: 0 1px 3px rgba(0,0,0,0.5), 0 2px 14px rgba(0,0,0,0.35); }
     .dyn-abar .dh-w-greet { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; color: #fff; }
     .dyn-abar .dh-w-greet svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
     .dyn-abar .dh-w-day { font-size: 30px; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.12; margin-top: 4px; }
     .dyn-abar .dh-w-sub { font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; margin-top: 4px; }
-    .dyn-abar .dh-w-weather { flex: 1 1 auto; }
     /* Weather, widget style: big emoji + temp/condition, divider, day list. */
     .dyn-abar .dh-w-now { display: flex; align-items: center; gap: 12px; padding: 2px 2px 0; }
     .dyn-abar .dh-w-nowic { font-size: 38px; line-height: 1; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.18)); }
@@ -178,13 +185,10 @@
     .dyn-abar .dh-w-frow .fd { flex: 1 1 auto; text-align: left; }
     .dyn-abar .dh-w-frow .fi { font-size: 17px; line-height: 1; }
     .dyn-abar .dh-w-frow .ft { min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
-    /* Right side: bare clock on the left, quote + Saved stacked beside it,
-       both cards exactly the same size (they split the height equally). */
-    .dyn-abar .dh-w-right { flex-direction: row; align-items: stretch; }
-    .dyn-abar .dh-w-clock { display: flex; justify-content: center; align-items: center; flex: none; align-self: center; padding: 0; }
-    .dyn-abar .dh-w-face { width: 132px; height: 132px; display: block; filter: drop-shadow(0 10px 22px rgba(0,0,0,0.32)); }
-    .dyn-abar .dh-w-minis { display: flex; flex-direction: column; gap: 9px; flex: 1 1 auto; min-width: 0; }
-    .dyn-abar .dh-w-mini { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 5px; padding: 10px 9px; min-width: 0; }
+    /* Clock and quote: equal squares, side by side (one grid cell each). */
+    .dyn-abar .dh-w-clock { display: flex; justify-content: center; align-items: center; padding: 0; }
+    .dyn-abar .dh-w-face { width: 100%; max-width: 126px; height: auto; display: block; filter: drop-shadow(0 10px 22px rgba(0,0,0,0.32)); }
+    .dyn-abar .dh-w-mini { min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 5px; padding: 10px 9px; min-width: 0; }
     .dyn-abar .dh-w-plant { width: 20px; height: 20px; flex: none; fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-w-mlines { font-size: 13px; font-weight: 600; line-height: 1.4; color: #fff; }
     /* Live "Saved" tile — the visitor's wishlist as an app-icon carousel:
@@ -213,14 +217,12 @@
       .dyn-abar .dh-app-ic, .dyn-abar .dh-app-ic img, .dyn-abar .dh-app-init { width: 42px; height: 42px; }
       .dyn-abar .dh-app-svg { width: 46px; height: 46px; }
       .dyn-abar .dh-app-svg svg { width: 24px; height: 24px; }
-      .dyn-abar .dh-apps-head { grid-template-columns: 1fr; gap: 8px; margin-bottom: 8px; }
-      .dyn-abar .dh-w-left, .dyn-abar .dh-w-right { gap: 8px; }
-      .dyn-abar .dh-widget { padding: 11px 12px; border-radius: 14px; }
+      .dyn-abar .dh-apps-head { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; gap: 10px; margin-bottom: 10px; }
+      .dyn-abar .dh-widget { padding: 11px 12px; border-radius: 16px; }
       .dyn-abar .dh-w-day { font-size: 24px; }
       .dyn-abar .dh-w-sub { font-size: 12px; }
-      .dyn-abar .dh-w-face { width: 104px; height: 104px; }
+      .dyn-abar .dh-w-face { max-width: 116px; }
       .dyn-abar .dh-w-temp { font-size: 24px; }
-      .dyn-abar .dh-w-minis { gap: 8px; }
     }
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-apps-pop, .dyn-abar .dh-app { animation: none !important; transition: none !important; } }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
@@ -247,28 +249,15 @@
                data-lon="{{ section.settings.weather_lon | default: '-74.01' }}"
                data-unit="{{ section.settings.weather_unit | default: 'f' }}"
                data-city="{{ section.settings.weather_city | default: 'New York' | escape }}">
-            <div class="dh-w-left">
-              <div class="dh-w-greethead">
-                <div class="dh-w-greet"><span id="dynAbGreet">Hello</span>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></svg>
-                </div>
-                <div class="dh-w-day" id="dynAbDay"></div>
-                <div class="dh-w-sub" id="dynAbDate"></div>
+            <div class="dh-w-greethead">
+              <div class="dh-w-greet"><span id="dynAbGreet">Hello</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></svg>
               </div>
-              <div class="dh-widget dh-w-weather">
-                <div class="dh-w-now">
-                  <span class="dh-w-nowic" id="dynAbWxIc"></span>
-                  <span class="dh-w-nowtx">
-                    <span class="dh-w-temp" id="dynAbWxTemp">--&deg;</span>
-                    <span class="dh-w-cond" id="dynAbWxCond">&nbsp;</span>
-                  </span>
-                </div>
-                <div class="dh-w-fc" id="dynAbWxFc"></div>
-              </div>
+              <div class="dh-w-day" id="dynAbDay"></div>
+              <div class="dh-w-sub" id="dynAbDate"></div>
             </div>
-            <div class="dh-w-right">
-              <div class="dh-w-clock">
-                <svg class="dh-w-face" viewBox="0 0 200 200" aria-hidden="true">
+            <div class="dh-w-clock" data-wid="clock">
+              <svg class="dh-w-face" viewBox="0 0 200 200" aria-hidden="true">
                   <rect x="4" y="4" width="192" height="192" rx="48" fill="#ffffff"/>
                   <g id="dynAbTicks"></g>
                   <g fill="#1d1d1f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="30" font-weight="600" text-anchor="middle">
@@ -283,17 +272,24 @@
                   <circle cx="100" cy="100" r="5.5" fill="#ff9f0a"/>
                   <circle cx="100" cy="100" r="2.2" fill="#ffffff"/>
                 </svg>
+            </div>
+            <div class="dh-widget dh-w-mini dh-w-quote" data-wid="quote">
+              <svg class="dh-w-plant" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13C12 9.5 9.5 7 5.5 7 5.5 10.5 8 13 12 13Z"/><path d="M12 11c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6Z"/></svg>
+              <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
+            </div>
+            <div class="dh-widget dh-w-weather" data-wid="weather">
+              <div class="dh-w-now">
+                <span class="dh-w-nowic" id="dynAbWxIc"></span>
+                <span class="dh-w-nowtx">
+                  <span class="dh-w-temp" id="dynAbWxTemp">--&deg;</span>
+                  <span class="dh-w-cond" id="dynAbWxCond">&nbsp;</span>
+                </span>
               </div>
-              <div class="dh-w-minis">
-                <div class="dh-widget dh-w-mini">
-                  <svg class="dh-w-plant" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13C12 9.5 9.5 7 5.5 7 5.5 10.5 8 13 12 13Z"/><path d="M12 11c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6Z"/></svg>
-                  <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
-                </div>
-                <div class="dh-w-mini dh-w-saved" id="dynAbSaved" hidden>
-                  <div class="dh-w-savedtrack" id="dynAbSavedTrack"></div>
-                  <div class="dh-w-saveddots" id="dynAbSavedDots"></div>
-                </div>
-              </div>
+              <div class="dh-w-fc" id="dynAbWxFc"></div>
+            </div>
+            <div class="dh-w-mini dh-w-saved" id="dynAbSaved" data-wid="saved" hidden>
+              <div class="dh-w-savedtrack" id="dynAbSavedTrack"></div>
+              <div class="dh-w-saveddots" id="dynAbSavedDots"></div>
             </div>
           </div>
           {%- elsif section.settings.apps_title != blank -%}<div class="dh-pop-title">{{ section.settings.apps_title }}</div>{%- endif -%}
@@ -606,8 +602,8 @@
       if (!list.length) { savedCard.hidden = true; return; }
       var pick = list.slice(0, 8), html = "", dots = "", i;
       for (i = 0; i < pick.length; i++) {
-        html += '<a href="' + escA(pick[i].url || "/pages/wishlist") + '" aria-label="' + escA(pick[i].title || "Saved product") + '">' +
-                (pick[i].image ? '<img src="' + escA(pick[i].image) + '" alt="" loading="lazy">' : '<span class="dh-w-savedph"></span>') + '</a>';
+        html += '<a draggable="false" href="' + escA(pick[i].url || "/pages/wishlist") + '" aria-label="' + escA(pick[i].title || "Saved product") + '">' +
+                (pick[i].image ? '<img draggable="false" src="' + escA(pick[i].image) + '" alt="" loading="lazy">' : '<span class="dh-w-savedph"></span>') + '</a>';
         dots += '<button type="button"' + (i === 0 ? ' class="is-on"' : '') + ' data-i="' + i + '" aria-label="Saved item ' + (i + 1) + '"></button>';
       }
       savedTrack.innerHTML = html;
@@ -628,6 +624,44 @@
     renderSaved();
     window.addEventListener("dyn-wishlist-change", renderSaved);
     window.addEventListener("storage", function (e) { if (e && e.key === "dyn_wishlist") renderSaved(); });
+    /* macOS-style rearranging: drag a widget over another and they trade
+       places, the grid reflowing live. The order is remembered per browser. */
+    var ORDER_KEY = "dyn_widget_order";
+    (function () {
+      var els = head.querySelectorAll("[data-wid]"), i;
+      try {
+        var ord = JSON.parse(localStorage.getItem(ORDER_KEY) || "null");
+        if (ord && ord.length) {
+          for (i = 0; i < ord.length; i++) {
+            var el = head.querySelector('[data-wid="' + ord[i] + '"]');
+            if (el) head.appendChild(el);
+          }
+        }
+      } catch (e) {}
+      for (i = 0; i < els.length; i++) els[i].setAttribute("draggable", "true");
+      var dragEl = null;
+      head.addEventListener("dragstart", function (e) {
+        var t = e.target.closest ? e.target.closest("[data-wid]") : null;
+        if (!t) return;
+        dragEl = t; t.classList.add("is-drag");
+        try { e.dataTransfer.setData("text/plain", t.getAttribute("data-wid")); e.dataTransfer.effectAllowed = "move"; } catch (err) {}
+      });
+      head.addEventListener("dragover", function (e) {
+        if (!dragEl) return;
+        e.preventDefault();
+        var t = e.target.closest ? e.target.closest("[data-wid]") : null;
+        if (!t || t === dragEl) return;
+        if (dragEl.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING) { t.after(dragEl); } else { t.before(dragEl); }
+      });
+      head.addEventListener("drop", function (e) { e.preventDefault(); });
+      head.addEventListener("dragend", function () {
+        if (dragEl) dragEl.classList.remove("is-drag");
+        dragEl = null;
+        var ids = [], ws = head.querySelectorAll("[data-wid]");
+        for (var k = 0; k < ws.length; k++) ids.push(ws[k].getAttribute("data-wid"));
+        try { localStorage.setItem(ORDER_KEY, JSON.stringify(ids)); } catch (e2) {}
+      });
+    })();
     var apBtn = document.querySelector(".dyn-abar .dh-apps-btn");
     if (apBtn) { apBtn.addEventListener("click", function () { loadWx(); pickQuote(); renderSaved(); }); } else { loadWx(); }
   })();
