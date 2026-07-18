@@ -19,11 +19,18 @@
 {%- assign spd2 = spd | times: 1.35 | round -%}
 {%- assign spd3 = spd | times: 1.7 | round -%}
 
-<div class="dyn-bg" id="dynBg-{{ section.id }}" aria-hidden="true">
+<div class="dyn-bg" id="dynBg-{{ section.id }}" aria-hidden="true"
+  {%- if look == 'weather' %} data-lat="{{ section.settings.weather_lat | default: '40.71' }}" data-lon="{{ section.settings.weather_lon | default: '-74.01' }}" data-alpha="{{ bg_alpha }}" data-animate="{% if section.settings.animate %}1{% else %}0{% endif %}"{% endif -%}>
   {%- if look == 'sun' -%}
   <span class="dyn-bg-shade"></span>
   <span class="dyn-bg-blob dyn-bg-s1"></span>
   <span class="dyn-bg-blob dyn-bg-s2"></span>
+  {%- elsif look == 'weather' -%}
+  <span class="dyn-bg-blob dyn-bg-b1 dyn-bg-w1"></span>
+  <span class="dyn-bg-blob dyn-bg-b2 dyn-bg-w2"></span>
+  <span class="dyn-bg-blob dyn-bg-b3 dyn-bg-w3"></span>
+  <span class="dyn-bg-parts" id="dynBgParts-{{ section.id }}"></span>
+  <span class="dyn-bg-night" id="dynBgNight-{{ section.id }}" hidden></span>
   {%- else -%}
   <span class="dyn-bg-blob dyn-bg-b1"></span>
   <span class="dyn-bg-blob dyn-bg-b2"></span>
@@ -91,6 +98,83 @@
     0%   { transform: rotate(-30deg) translate(0, 0); }
     100% { transform: rotate(-30deg) translate(-6vmax, 2vmax); }
   }
+  {%- elsif look == 'weather' -%}
+  /* Live weather: the glows take the sky's colors (set by the script) and the
+     parts layer carries rain, snow, clouds, sun, fog or stars. */
+  #dynBg-{{ section.id }} {
+    --wg1: rgba(140, 160, 200, {{ bg_alpha }});
+    --wg2: rgba(180, 190, 220, {{ bg_alpha }});
+    --wg3: rgba(160, 170, 210, {{ bg_alpha }});
+  }
+  #dynBg-{{ section.id }} .dyn-bg-b1 {
+    top: -35vmax; left: -25vmax;
+    background: radial-gradient(circle at center, var(--wg1) 0%, transparent 62%);
+    animation: dynBgDrift1 {{ spd }}s ease-in-out infinite alternate;
+  }
+  #dynBg-{{ section.id }} .dyn-bg-b2 {
+    top: -10vmax; right: -35vmax;
+    background: radial-gradient(circle at center, var(--wg2) 0%, transparent 62%);
+    animation: dynBgDrift2 {{ spd2 }}s ease-in-out infinite alternate;
+  }
+  #dynBg-{{ section.id }} .dyn-bg-b3 {
+    bottom: -40vmax; left: 10vmax;
+    background: radial-gradient(circle at center, var(--wg3) 0%, transparent 62%);
+    animation: dynBgDrift3 {{ spd3 }}s ease-in-out infinite alternate;
+  }
+  @keyframes dynBgDrift1 {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(14vmax, 10vmax) scale(1.18); }
+  }
+  @keyframes dynBgDrift2 {
+    0%   { transform: translate(0, 0) scale(1.12); }
+    100% { transform: translate(-16vmax, 14vmax) scale(0.94); }
+  }
+  @keyframes dynBgDrift3 {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(12vmax, -12vmax) scale(1.15); }
+  }
+  #dynBg-{{ section.id }} .dyn-bg-parts { position: absolute; inset: 0; overflow: hidden; }
+  #dynBg-{{ section.id }} .dyn-bg-parts i { position: absolute; display: block; pointer-events: none; }
+  #dynBg-{{ section.id }} .dbg-rain { top: -24px; width: 2px; height: 16px; border-radius: 2px;
+    background: linear-gradient(rgba(110, 130, 160, 0), rgba(110, 130, 160, 0.55)); animation: dynBgRain linear infinite; }
+  @keyframes dynBgRain { to { transform: translateY(115vh); } }
+  #dynBg-{{ section.id }} .dbg-snow { top: -10px; width: 6px; height: 6px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 0 1px rgba(140, 150, 175, 0.35), 0 1px 3px rgba(100, 115, 145, 0.4);
+    animation: dynBgSnow linear infinite; }
+  @keyframes dynBgSnow {
+    50%  { transform: translateY(55vh) translateX(4vmax); }
+    100% { transform: translateY(112vh) translateX(-2vmax); }
+  }
+  #dynBg-{{ section.id }} .dbg-cloud { width: 64vmax; height: 26vmax; border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.30) 0%, transparent 62%);
+    animation: dynBgCloud ease-in-out infinite alternate; }
+  @keyframes dynBgCloud { to { transform: translateX(9vmax); } }
+  #dynBg-{{ section.id }} .dbg-sun { top: -22vmax; right: -22vmax; width: 74vmax; height: 74vmax; border-radius: 50%;
+    background: radial-gradient(circle at center, rgba(255, 208, 100, 0.42) 0%, transparent 60%);
+    animation: dynBgSunPulse 7s ease-in-out infinite alternate; }
+  @keyframes dynBgSunPulse { to { transform: scale(1.08); } }
+  #dynBg-{{ section.id }} .dbg-star { width: 3px; height: 3px; border-radius: 50%; background: #fff;
+    animation: dynBgTwinkle ease-in-out infinite alternate; }
+  @keyframes dynBgTwinkle { from { opacity: 0.15; } to { opacity: 0.9; } }
+  #dynBg-{{ section.id }} .dbg-fog { left: -20%; width: 140%; height: 20vmax; border-radius: 50%;
+    background: linear-gradient(rgba(255,255,255,0.22), rgba(255,255,255,0.05));
+    filter: blur(28px); animation: dynBgCloud ease-in-out infinite alternate; }
+  #dynBg-{{ section.id }} .dbg-flash { inset: 0; background: #fff; opacity: 0; animation: dynBgFlash 9s linear infinite; }
+  @keyframes dynBgFlash {
+    0%, 92.9%, 95.1%, 100% { opacity: 0; }
+    93.2% { opacity: 0.45; }
+    93.8% { opacity: 0; }
+    94.4% { opacity: 0.3; }
+  }
+  #dynBg-{{ section.id }} .dyn-bg-night { position: absolute; inset: 0; background: rgba(10, 16, 60, 0.28); }
+  @media (prefers-reduced-motion: reduce) {
+    #dynBg-{{ section.id }} .dyn-bg-parts i { animation: none !important; }
+    #dynBg-{{ section.id }} .dbg-rain, #dynBg-{{ section.id }} .dbg-snow, #dynBg-{{ section.id }} .dbg-flash { display: none; }
+  }
+  {%- unless section.settings.animate -%}
+  #dynBg-{{ section.id }} .dyn-bg-parts i { animation: none !important; }
+  #dynBg-{{ section.id }} .dbg-rain, #dynBg-{{ section.id }} .dbg-snow, #dynBg-{{ section.id }} .dbg-flash { display: none; }
+  {%- endunless -%}
   {%- else -%}
   /* Soft color glows: each is a pre-faded radial gradient — no blur filter
      needed, so it stays feather-light on phones. Only transform animates. */
@@ -204,6 +288,79 @@
 </script>
 {%- endif -%}
 
+{%- if look == 'weather' -%}
+<script>
+(function () {
+  /* Live weather look: ask Open-Meteo (no key) for the sky at the set spot,
+     then paint it — glow colors plus rain / snow / clouds / sun / fog / stars,
+     with a soft navy wash after dark. Cached for 30 minutes. */
+  var root = document.getElementById("dynBg-{{ section.id }}");
+  var parts = document.getElementById("dynBgParts-{{ section.id }}");
+  var night = document.getElementById("dynBgNight-{{ section.id }}");
+  if (!root || !parts) return;
+  var alpha = parseFloat(root.getAttribute("data-alpha") || "0.12");
+  var still = root.getAttribute("data-animate") !== "1" ||
+    (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  function glowVar(n, rgb) { root.style.setProperty("--wg" + n, "rgba(" + rgb.join(",") + "," + alpha + ")"); }
+  function part(cls, style) { var i = document.createElement("i"); i.className = cls; i.style.cssText = style || ""; parts.appendChild(i); }
+  function rnd(a, b) { return (a + Math.random() * (b - a)); }
+  function scene(code, isDay) {
+    parts.innerHTML = "";
+    if (night) night.hidden = !!isDay;
+    var kind = code >= 95 ? "storm"
+      : ((code >= 80 && code <= 82) || (code >= 51 && code <= 67)) ? "rain"
+      : (code >= 71 && code <= 86) ? "snow"
+      : (code === 45 || code === 48) ? "fog"
+      : code === 3 ? "cloudy" : code === 2 ? "partly" : "clear";
+    var i;
+    if (kind === "clear") {
+      if (isDay) {
+        glowVar(1, [255, 184, 46]); glowVar(2, [255, 130, 90]); glowVar(3, [120, 180, 255]);
+        part("dbg-sun");
+      } else {
+        glowVar(1, [50, 70, 170]); glowVar(2, [110, 90, 200]); glowVar(3, [30, 50, 120]);
+        for (i = 0; i < 16; i++) part("dbg-star", "left:" + rnd(0, 100).toFixed(1) + "%;top:" + rnd(0, 60).toFixed(1) + "%;animation-duration:" + rnd(1.5, 4).toFixed(1) + "s;animation-delay:" + rnd(0, 2).toFixed(1) + "s;");
+      }
+    } else if (kind === "partly") {
+      glowVar(1, [255, 200, 120]); glowVar(2, [150, 180, 220]); glowVar(3, [180, 190, 210]);
+      if (isDay) part("dbg-sun");
+      for (i = 0; i < 2; i++) part("dbg-cloud", "top:" + (8 + i * 26) + "vmax;left:" + (i * 30 - 10) + "vmax;animation-duration:" + rnd(24, 40).toFixed(0) + "s;");
+    } else if (kind === "cloudy") {
+      glowVar(1, [140, 150, 170]); glowVar(2, [170, 175, 190]); glowVar(3, [120, 130, 150]);
+      for (i = 0; i < 3; i++) part("dbg-cloud", "top:" + (i * 20 - 4) + "vmax;left:" + (i * 24 - 14) + "vmax;animation-duration:" + rnd(22, 42).toFixed(0) + "s;");
+    } else if (kind === "fog") {
+      glowVar(1, [180, 180, 190]); glowVar(2, [200, 200, 210]); glowVar(3, [170, 170, 180]);
+      for (i = 0; i < 3; i++) part("dbg-fog", "top:" + (12 + i * 26) + "vh;animation-duration:" + rnd(26, 44).toFixed(0) + "s;");
+    } else if (kind === "snow") {
+      glowVar(1, [180, 200, 230]); glowVar(2, [210, 220, 240]); glowVar(3, [160, 180, 220]);
+      if (!still) for (i = 0; i < 20; i++) part("dbg-snow", "left:" + rnd(0, 100).toFixed(1) + "%;animation-duration:" + rnd(7, 14).toFixed(1) + "s;animation-delay:-" + rnd(0, 14).toFixed(1) + "s;opacity:" + rnd(0.4, 0.9).toFixed(2) + ";");
+    } else {
+      var storm = kind === "storm";
+      if (storm) { glowVar(1, [70, 80, 110]); glowVar(2, [90, 100, 140]); glowVar(3, [50, 60, 90]); }
+      else { glowVar(1, [90, 120, 160]); glowVar(2, [110, 140, 180]); glowVar(3, [80, 100, 140]); }
+      for (i = 0; i < 2; i++) part("dbg-cloud", "top:" + (i * 22 - 6) + "vmax;left:" + (i * 34 - 12) + "vmax;animation-duration:" + rnd(20, 34).toFixed(0) + "s;");
+      if (!still) {
+        for (i = 0; i < (storm ? 26 : 20); i++) part("dbg-rain", "left:" + rnd(0, 100).toFixed(1) + "%;animation-duration:" + rnd(0.9, 1.5).toFixed(2) + "s;animation-delay:-" + rnd(0, 1.5).toFixed(2) + "s;");
+        if (storm) part("dbg-flash");
+      }
+    }
+  }
+  try {
+    var c = JSON.parse(localStorage.getItem("dyn_bgwx") || "null");
+    if (c && Date.now() - c.ts < 1800000) { scene(c.code, c.isDay); return; }
+  } catch (e) {}
+  var u = "https://api.open-meteo.com/v1/forecast?latitude=" + root.getAttribute("data-lat") +
+          "&longitude=" + root.getAttribute("data-lon") + "&current=weather_code,is_day";
+  fetch(u).then(function (r) { return r.json(); }).then(function (j) {
+    if (!j || !j.current) return;
+    var code = j.current.weather_code || 0, isDay = j.current.is_day !== 0;
+    try { localStorage.setItem("dyn_bgwx", JSON.stringify({ code: code, isDay: isDay, ts: Date.now() })); } catch (e) {}
+    scene(code, isDay);
+  }).catch(function () {});
+})();
+</script>
+{%- endif -%}
+
 {% schema %}
 {
   "name": "Dynamic Background",
@@ -218,9 +375,24 @@
       "label": "Look",
       "options": [
         { "value": "glow", "label": "Soft color glows" },
-        { "value": "sun", "label": "Sunlight & shadow (wall)" }
+        { "value": "sun", "label": "Sunlight & shadow (wall)" },
+        { "value": "weather", "label": "Live weather (auto)" }
       ],
       "default": "glow"
+    },
+    {
+      "type": "text",
+      "id": "weather_lat",
+      "label": "Weather latitude",
+      "default": "40.71",
+      "info": "Live weather look only."
+    },
+    {
+      "type": "text",
+      "id": "weather_lon",
+      "label": "Weather longitude",
+      "default": "-74.01",
+      "info": "Right-click your city on Google Maps to read both numbers. Free Open-Meteo service, no key needed."
     },
     {
       "type": "color",
@@ -300,6 +472,13 @@
       "settings": {
         "look": "sun",
         "strength": 18
+      }
+    },
+    {
+      "name": "Dynamic Background — Live weather",
+      "settings": {
+        "look": "weather",
+        "strength": 16
       }
     }
   ]
