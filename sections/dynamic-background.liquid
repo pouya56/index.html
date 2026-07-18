@@ -20,7 +20,7 @@
 {%- assign spd3 = spd | times: 1.7 | round -%}
 
 <div class="dyn-bg" id="dynBg-{{ section.id }}" aria-hidden="true"
-  {%- if look == 'weather' %} data-lat="{{ section.settings.weather_lat | default: '40.71' }}" data-lon="{{ section.settings.weather_lon | default: '-74.01' }}" data-alpha="{{ bg_alpha }}" data-animate="{% if section.settings.animate %}1{% else %}0{% endif %}"{% endif -%}>
+  {%- if look == 'weather' %} data-lat="{{ section.settings.weather_lat | default: '40.71' }}" data-lon="{{ section.settings.weather_lon | default: '-74.01' }}" data-alpha="{{ bg_alpha }}" data-animate="{% if section.settings.animate %}1{% else %}0{% endif %}" data-force="{{ section.settings.force_scene | default: 'auto' }}"{% endif -%}>
   {%- if look == 'sun' -%}
   <span class="dyn-bg-shade"></span>
   <span class="dyn-bg-blob dyn-bg-s1"></span>
@@ -345,6 +345,13 @@
       }
     }
   }
+  /* Preview override: the 'Test a scene' setting, or ?sky=rain on any page
+     URL (clear, night, partly, cloudy, rain, storm, snow, fog). */
+  var MAP = { clear: [0, 1], day: [0, 1], night: [0, 0], partly: [2, 1], cloudy: [3, 1],
+              rain: [61, 1], showers: [80, 1], storm: [95, 1], snow: [71, 1], fog: [45, 1] };
+  var qs = (location.search.match(/[?&]sky=([a-z]+)/) || [])[1];
+  var force = qs || root.getAttribute("data-force") || "auto";
+  if (force !== "auto" && MAP[force]) { scene(MAP[force][0], MAP[force][1]); return; }
   try {
     var c = JSON.parse(localStorage.getItem("dyn_bgwx") || "null");
     if (c && Date.now() - c.ts < 1800000) { scene(c.code, c.isDay); return; }
@@ -393,6 +400,24 @@
       "label": "Weather longitude",
       "default": "-74.01",
       "info": "Right-click your city on Google Maps to read both numbers. Free Open-Meteo service, no key needed."
+    },
+    {
+      "type": "select",
+      "id": "force_scene",
+      "label": "Test a scene",
+      "options": [
+        { "value": "auto", "label": "Off — real weather" },
+        { "value": "clear", "label": "Clear day" },
+        { "value": "night", "label": "Clear night" },
+        { "value": "partly", "label": "Partly cloudy" },
+        { "value": "cloudy", "label": "Cloudy" },
+        { "value": "rain", "label": "Rain" },
+        { "value": "storm", "label": "Thunderstorm" },
+        { "value": "snow", "label": "Snow" },
+        { "value": "fog", "label": "Fog" }
+      ],
+      "default": "auto",
+      "info": "Preview any scene instantly. Set back to 'Off' before publishing so the real sky takes over."
     },
     {
       "type": "color",
