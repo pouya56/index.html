@@ -110,43 +110,41 @@
     /* 9-dots: a big glass window hanging from the corner button. REAL liquid
        glass: barely-there white fill, strong blur + saturation so the page's
        colors bloom through, bright etched rim, no painted-white gloss. */
+    /* Matte frosted glass — flat, even frost with no gloss cap, no angled
+       sheen, no bright bevels. Just blur, a whisper of white, a quiet rim. */
     .dyn-abar .dh-apps-pop { top: calc(100% + 12px); right: 0;
       width: min(590px, calc(100vw - 28px)); max-height: min(84vh, 700px); overflow-y: auto;
       padding: 22px 22px 24px; border-radius: 30px;
-      background: linear-gradient(125deg, rgba(255,255,255,0.30), rgba(255,255,255,0.10) 45%, rgba(255,255,255,0.22));
-      -webkit-backdrop-filter: blur(26px) saturate(2.1) contrast(1.04) brightness(1.06); backdrop-filter: blur(26px) saturate(2.1) contrast(1.04) brightness(1.06);
-      border: 1px solid rgba(255,255,255,0.55);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.08), 0 60px 100px -24px rgba(29,29,31,0.45),
-        inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -1px 2px rgba(0,0,0,0.10),
-        inset 1px 0 1px rgba(255,255,255,0.35), inset -1px 0 1px rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.12);
+      -webkit-backdrop-filter: blur(26px) saturate(1.6); backdrop-filter: blur(26px) saturate(1.6);
+      border: 1px solid rgba(255,255,255,0.22);
+      box-shadow: 0 30px 80px -24px rgba(0,0,0,0.5);
       animation: abWin .2s cubic-bezier(.2, .9, .3, 1.1); transform-origin: top right; }
     @keyframes abWin { from { opacity: 0; transform: scale(0.94) translateY(-6px); }
       to { opacity: 1; transform: scale(1) translateY(0); } }
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
       .dyn-abar .dh-apps-pop { background: rgba(255,255,255,0.96); }
     }
-    /* Kill the inherited white gloss cap — it painted the glass solid. Keep a
-       whisper of a specular streak instead. */
-    .dyn-abar .dh-apps-pop::before { left: 18px; right: 18px; top: 3px; height: 54px; border-radius: 24px; opacity: 0.3; }
+    /* No gloss cap at all — matte glass. */
+    .dyn-abar .dh-apps-pop::before { display: none; }
     .dyn-abar .dh-apps-pop .dh-pop-title { font-size: 19px; font-weight: 700; color: var(--ink); padding: 6px 8px 16px; }
     .dyn-abar .dh-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     /* Tiles: dark smoked glass on the light pane — deep translucent gray,
        light icons and labels, a faint top bevel catching the light. */
     .dyn-abar .dh-app { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 8px 16px; border-radius: 20px;
-      text-decoration: none; color: #fff; transition: background .16s, transform .12s, box-shadow .16s;
-      background: rgba(42, 42, 47, 0.28); border: 1px solid rgba(255,255,255,0.16);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.20), 0 2px 6px rgba(0,0,0,0.10); }
-    .dyn-abar .dh-app:hover { background: rgba(42, 42, 47, 0.40); transform: translateY(-2px);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.28), 0 12px 24px -6px rgba(0,0,0,0.35); }
+      text-decoration: none; color: #fff; transition: background .16s, transform .12s;
+      background: rgba(42, 42, 47, 0.28); border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: none; }
+    .dyn-abar .dh-app:hover { background: rgba(42, 42, 47, 0.45); transform: translateY(-2px); }
     .dyn-abar .dh-app:active { transform: scale(0.96); }
     .dyn-abar .dh-app-ic { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; }
     .dyn-abar .dh-app-ic img { width: 46px; height: 46px; object-fit: contain; }
     .dyn-abar .dh-app-init { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px;
-      border-radius: 14px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.20);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.22); color: rgba(255,255,255,0.9); font: 600 19px/1 var(--font); }
+      border-radius: 14px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.9); font: 600 19px/1 var(--font); }
     .dyn-abar .dh-app-svg { display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px;
-      border-radius: 15px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.20);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.22); color: #fff; }
+      border-radius: 15px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.12);
+      color: #fff; }
     .dyn-abar .dh-app-svg svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-app-label { font-size: 13px; color: rgba(255,255,255,0.88); text-align: center; line-height: 1.25; }
     /* Dashboard widgets, iOS-lock-screen style (at 80% scale): bare greeting,
@@ -154,8 +152,8 @@
     .dyn-abar .dh-apps-head { display: grid; grid-template-columns: 1fr 1.05fr; gap: 9px; margin-bottom: 9px; align-items: stretch; }
     .dyn-abar .dh-w-left, .dyn-abar .dh-w-right { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
     .dyn-abar .dh-widget { border-radius: 16px; padding: 12px 14px; color: #fff;
-      background: rgba(42, 42, 47, 0.28); border: 1px solid rgba(255,255,255,0.16);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.20), 0 2px 6px rgba(0,0,0,0.10); }
+      background: rgba(42, 42, 47, 0.28); border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: none; }
     /* Strong double shadow so the bare greeting stays readable on bright walls. */
     .dyn-abar .dh-w-greethead { padding: 2px 5px 0; color: #fff;
       text-shadow: 0 1px 3px rgba(0,0,0,0.5), 0 2px 14px rgba(0,0,0,0.35); }
