@@ -107,32 +107,35 @@
     .dyn-abar .dh-pop-note { font-size: 12px; color: var(--ink-soft); line-height: 1.5; padding: 0 10px 10px; }
     .dyn-abar .dh-acct-pop { min-width: 260px; }
 
-    /* 9-dots: a big floating glass window, centered like a visionOS control
-       panel — heavy frost, deep floating shadow, roomy rounded tiles. */
-    .dyn-abar .dh-apps-pop { position: fixed; top: 50%; left: 50%; right: auto;
-      transform: translate(-50%, -50%);
-      width: min(560px, 92vw); max-height: min(78vh, 640px); overflow-y: auto;
+    /* 9-dots: a big glass window hanging from the corner button. REAL liquid
+       glass: barely-there white fill, strong blur + saturation so the page's
+       colors bloom through, bright etched rim, no painted-white gloss. */
+    .dyn-abar .dh-apps-pop { top: calc(100% + 12px); right: 0;
+      width: min(560px, calc(100vw - 28px)); max-height: min(78vh, 640px); overflow-y: auto;
       padding: 22px 22px 24px; border-radius: 32px;
-      background: rgba(255,255,255,0.38);
-      -webkit-backdrop-filter: blur(34px) saturate(1.9) brightness(1.04); backdrop-filter: blur(34px) saturate(1.9) brightness(1.04);
-      border: 1px solid rgba(255,255,255,0.65);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.08), 0 70px 110px -24px rgba(29,29,31,0.5),
-        inset 0 1px 1px rgba(255,255,255,0.95), inset 0 -1px 2px rgba(0,0,0,0.05);
-      animation: abWin .2s cubic-bezier(.2, .9, .3, 1.1); }
-    @keyframes abWin { from { opacity: 0; transform: translate(-50%, -50%) scale(0.94); }
-      to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+      background: linear-gradient(125deg, rgba(255,255,255,0.30), rgba(255,255,255,0.10) 45%, rgba(255,255,255,0.22));
+      -webkit-backdrop-filter: blur(26px) saturate(2.1) contrast(1.04) brightness(1.06); backdrop-filter: blur(26px) saturate(2.1) contrast(1.04) brightness(1.06);
+      border: 1px solid rgba(255,255,255,0.55);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08), 0 60px 100px -24px rgba(29,29,31,0.45),
+        inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -1px 2px rgba(0,0,0,0.10),
+        inset 1px 0 1px rgba(255,255,255,0.35), inset -1px 0 1px rgba(255,255,255,0.35);
+      animation: abWin .2s cubic-bezier(.2, .9, .3, 1.1); transform-origin: top right; }
+    @keyframes abWin { from { opacity: 0; transform: scale(0.94) translateY(-6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); } }
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
       .dyn-abar .dh-apps-pop { background: rgba(255,255,255,0.96); }
     }
-    .dyn-abar .dh-apps-pop::before { left: 18px; right: 18px; top: 3px; height: 54px; border-radius: 24px; }
+    /* Kill the inherited white gloss cap — it painted the glass solid. Keep a
+       whisper of a specular streak instead. */
+    .dyn-abar .dh-apps-pop::before { left: 18px; right: 18px; top: 3px; height: 54px; border-radius: 24px; opacity: 0.3; }
     .dyn-abar .dh-apps-pop .dh-pop-title { font-size: 19px; font-weight: 700; color: var(--ink); padding: 6px 8px 16px; }
     .dyn-abar .dh-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .dyn-abar .dh-app { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px 14px; border-radius: 20px;
       text-decoration: none; color: var(--ink); transition: background .16s, transform .12s, box-shadow .16s;
-      background: rgba(255,255,255,0.34); border: 1px solid rgba(255,255,255,0.55);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.03); }
-    .dyn-abar .dh-app:hover { background: rgba(255,255,255,0.6); transform: translateY(-2px);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.95), 0 10px 22px -6px rgba(29,29,31,0.22); }
+      background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.40);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.55), 0 1px 2px rgba(0,0,0,0.03); }
+    .dyn-abar .dh-app:hover { background: rgba(255,255,255,0.42); transform: translateY(-2px);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.9), 0 10px 22px -6px rgba(29,29,31,0.22); }
     .dyn-abar .dh-app:active { transform: scale(0.96); }
     .dyn-abar .dh-app-ic { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; }
     .dyn-abar .dh-app-ic img { width: 44px; height: 44px; object-fit: contain; }
