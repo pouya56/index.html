@@ -142,6 +142,10 @@
       box-shadow: none; }
     .dyn-abar .dh-app:hover { background: rgba(42, 42, 47, 0.45); transform: translateY(-2px); }
     .dyn-abar .dh-app:active { transform: scale(0.96); }
+    /* App tiles rearrange like the widgets: grab, drag over another, done. */
+    .dyn-abar .dh-app { cursor: grab; }
+    .dyn-abar .dh-app:active { cursor: grabbing; }
+    .dyn-abar .dh-app.is-drag { opacity: 0.45; transform: scale(0.97); }
     .dyn-abar .dh-app-ic { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; }
     .dyn-abar .dh-app-ic img { width: 46px; height: 46px; object-fit: contain; }
     .dyn-abar .dh-app-init { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px;
@@ -321,11 +325,11 @@
                       {%- else -%}{%- assign app_href = '#' -%}
                     {%- endcase -%}
                   {%- endif -%}
-                  <a class="dh-app" href="{{ app_href }}" {{ block.shopify_attributes }}>
+                  <a class="dh-app" data-aid="{{ block.id }}" href="{{ app_href }}" {{ block.shopify_attributes }}>
                     <span class="dh-app-ic">
                       {%- if block.settings.image != blank -%}
                         {%- assign aiw = block.settings.image.width | times: 30 | divided_by: block.settings.image.height -%}
-                        <img src="{{ block.settings.image | image_url: width: 90 }}" alt="" width="{{ aiw }}" height="30">
+                        <img draggable="false" src="{{ block.settings.image | image_url: width: 90 }}" alt="" width="{{ aiw }}" height="30">
                       {%- elsif block.settings.icon != 'none' -%}
                         <span class="dh-app-svg" aria-hidden="true">
                         {%- case block.settings.icon -%}
@@ -360,18 +364,18 @@
           {%- else -%}
             {%- comment -%} No App link blocks added yet — show a sensible default set of pages. {%- endcomment -%}
             <div class="dh-apps-grid">
-              <a class="dh-app" href="{{ routes.all_products_collection_url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><path d="M4 9h16l-1 11H5L4 9Z"/><path d="M4 9l1.4-4.2A1 1 0 0 1 6.3 4h11.4a1 1 0 0 1 .95.7L20 9"/><path d="M9 13a3 3 0 0 0 6 0"/></svg></span></span><span class="dh-app-label">Shop</span></a>
-              <a class="dh-app" href="{{ routes.search_url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span></span><span class="dh-app-label">Search</span></a>
-              <a class="dh-app" href="/pages/contact"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span></span><span class="dh-app-label">Contact</span></a>
-              <a class="dh-app" href="/pages/about"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8"/></svg></span></span><span class="dh-app-label">About</span></a>
-              <a class="dh-app" href="/blogs/news"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg></span></span><span class="dh-app-label">Blog</span></a>
-              <a class="dh-app" href="{{ routes.account_url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span></span><span class="dh-app-label">Account</span></a>
-              <a class="dh-app" href="{{ routes.cart_url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2 3h3l2.5 13h11l2-8H6"/></svg></span></span><span class="dh-app-label">Cart</span></a>
-              <a class="dh-app" href="/pages/gift-card"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="4.5" rx="1"/><path d="M5 12.5V20h14v-7.5"/><path d="M12 8v12"/><path d="M12 8C11 5.5 7.5 5.5 7.5 7.6 7.5 9 9.6 8 12 8Zm0 0c1-2.5 4.5-2.5 4.5-.4C16.5 9 14.4 8 12 8Z"/></svg></span></span><span class="dh-app-label">Gift cards</span></a>
-              <a class="dh-app" href="{{ routes.root_url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></span></span><span class="dh-app-label">Home</span></a>
+              <a class="dh-app" data-aid="shop" href="{{ routes.all_products_collection_url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><path d="M4 9h16l-1 11H5L4 9Z"/><path d="M4 9l1.4-4.2A1 1 0 0 1 6.3 4h11.4a1 1 0 0 1 .95.7L20 9"/><path d="M9 13a3 3 0 0 0 6 0"/></svg></span></span><span class="dh-app-label">Shop</span></a>
+              <a class="dh-app" data-aid="search" href="{{ routes.search_url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span></span><span class="dh-app-label">Search</span></a>
+              <a class="dh-app" data-aid="contact" href="/pages/contact"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span></span><span class="dh-app-label">Contact</span></a>
+              <a class="dh-app" data-aid="about" href="/pages/about"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8"/></svg></span></span><span class="dh-app-label">About</span></a>
+              <a class="dh-app" data-aid="blog" href="/blogs/news"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg></span></span><span class="dh-app-label">Blog</span></a>
+              <a class="dh-app" data-aid="account" href="{{ routes.account_url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span></span><span class="dh-app-label">Account</span></a>
+              <a class="dh-app" data-aid="cart" href="{{ routes.cart_url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2 3h3l2.5 13h11l2-8H6"/></svg></span></span><span class="dh-app-label">Cart</span></a>
+              <a class="dh-app" data-aid="gift" href="/pages/gift-card"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="4.5" rx="1"/><path d="M5 12.5V20h14v-7.5"/><path d="M12 8v12"/><path d="M12 8C11 5.5 7.5 5.5 7.5 7.6 7.5 9 9.6 8 12 8Zm0 0c1-2.5 4.5-2.5 4.5-.4C16.5 9 14.4 8 12 8Z"/></svg></span></span><span class="dh-app-label">Gift cards</span></a>
+              <a class="dh-app" data-aid="home" href="{{ routes.root_url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></span></span><span class="dh-app-label">Home</span></a>
               {%- for policy in shop.policies -%}
                 {%- if policy != blank and policy.url != blank -%}
-                  <a class="dh-app" href="{{ policy.url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5"/><line x1="8.5" y1="13" x2="15.5" y2="13"/><line x1="8.5" y1="16.5" x2="13.5" y2="16.5"/></svg></span></span><span class="dh-app-label">{{ policy.title }}</span></a>
+                  <a class="dh-app" data-aid="policy-{{ policy.title | handleize }}" href="{{ policy.url }}"><span class="dh-app-ic"><span class="dh-app-svg"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5"/><line x1="8.5" y1="13" x2="15.5" y2="13"/><line x1="8.5" y1="16.5" x2="13.5" y2="16.5"/></svg></span></span><span class="dh-app-label">{{ policy.title }}</span></a>
                 {%- endif -%}
               {%- endfor -%}
             </div>
@@ -666,6 +670,46 @@
     if (apBtn) { apBtn.addEventListener("click", function () { loadWx(); pickQuote(); renderSaved(); }); } else { loadWx(); }
   })();
   {%- endif -%}
+  (function () {
+    /* App tiles rearrange exactly like the widgets: drag one over another and
+       they trade places; the order is remembered per browser. */
+    var grid = document.querySelector(".dyn-abar .dh-apps-grid");
+    if (!grid) return;
+    var KEY = "dyn_app_order", i;
+    try {
+      var ord = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (ord && ord.length) {
+        for (i = 0; i < ord.length; i++) {
+          var el = grid.querySelector('[data-aid="' + ord[i] + '"]');
+          if (el) grid.appendChild(el);
+        }
+      }
+    } catch (e) {}
+    var items = grid.querySelectorAll(".dh-app");
+    for (i = 0; i < items.length; i++) items[i].setAttribute("draggable", "true");
+    var dragEl = null;
+    grid.addEventListener("dragstart", function (e) {
+      var t = e.target.closest ? e.target.closest(".dh-app") : null;
+      if (!t) return;
+      dragEl = t; t.classList.add("is-drag");
+      try { e.dataTransfer.setData("text/plain", t.getAttribute("data-aid") || ""); e.dataTransfer.effectAllowed = "move"; } catch (err) {}
+    });
+    grid.addEventListener("dragover", function (e) {
+      if (!dragEl) return;
+      e.preventDefault();
+      var t = e.target.closest ? e.target.closest(".dh-app") : null;
+      if (!t || t === dragEl) return;
+      if (dragEl.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING) { t.after(dragEl); } else { t.before(dragEl); }
+    });
+    grid.addEventListener("drop", function (e) { e.preventDefault(); });
+    grid.addEventListener("dragend", function () {
+      if (dragEl) dragEl.classList.remove("is-drag");
+      dragEl = null;
+      var ids = [], its = grid.querySelectorAll(".dh-app"), k;
+      for (k = 0; k < its.length; k++) ids.push(its[k].getAttribute("data-aid"));
+      try { localStorage.setItem(KEY, JSON.stringify(ids)); } catch (e2) {}
+    });
+  })();
   {%- if section.settings.peek_scroll -%}
   (function () {
     /* Hide on scroll down, show on scroll up. Always visible near the top,
