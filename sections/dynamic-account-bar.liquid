@@ -164,17 +164,17 @@
     .dyn-abar .dh-w-day { font-size: 20px; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.12; margin-top: 3px; }
     .dyn-abar .dh-w-sub { font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; margin-top: 3px; }
     .dyn-abar .dh-w-weather { flex: 1 1 auto; }
-    .dyn-abar .dh-w-city { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: rgba(255,255,255,0.9); }
-    .dyn-abar .dh-w-city svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-    .dyn-abar .dh-w-now { display: flex; align-items: center; gap: 9px; margin-top: 6px; }
-    .dyn-abar .dh-w-nowic svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-    .dyn-abar .dh-w-temp { font-size: 28px; font-weight: 200; line-height: 1; }
-    .dyn-abar .dh-w-cond { font-size: 11.5px; color: rgba(255,255,255,0.9); margin-top: 5px; }
-    .dyn-abar .dh-w-feels { font-size: 10.5px; color: rgba(255,255,255,0.75); margin-top: 2px; }
-    .dyn-abar .dh-w-fc { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin-top: 9px; text-align: center; }
-    .dyn-abar .dh-w-fd { display: block; font-size: 9.5px; color: rgba(255,255,255,0.8); }
-    .dyn-abar .dh-w-fc svg { width: 13px; height: 13px; margin: 3px auto 2px; display: block; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-    .dyn-abar .dh-w-ft { display: block; font-size: 9px; color: rgba(255,255,255,0.75); }
+    /* Weather, widget style: big emoji + temp/condition, divider, day list. */
+    .dyn-abar .dh-w-now { display: flex; align-items: center; gap: 12px; padding: 2px 2px 0; }
+    .dyn-abar .dh-w-nowic { font-size: 38px; line-height: 1; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.18)); }
+    .dyn-abar .dh-w-nowtx { display: flex; flex-direction: column; }
+    .dyn-abar .dh-w-temp { font-size: 30px; font-weight: 300; line-height: 1.05; }
+    .dyn-abar .dh-w-cond { font-size: 12.5px; color: rgba(255,255,255,0.88); }
+    .dyn-abar .dh-w-fc { margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.22); padding-top: 4px; }
+    .dyn-abar .dh-w-frow { display: flex; align-items: center; gap: 8px; padding: 5px 2px; font-size: 13px; color: rgba(255,255,255,0.92); }
+    .dyn-abar .dh-w-frow .fd { flex: 1 1 auto; text-align: left; }
+    .dyn-abar .dh-w-frow .fi { font-size: 17px; line-height: 1; }
+    .dyn-abar .dh-w-frow .ft { min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
     .dyn-abar .dh-w-clock { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 13px; }
     .dyn-abar .dh-w-time { font-size: 27px; font-weight: 200; line-height: 1; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
     .dyn-abar .dh-w-ampm { font-size: 10.5px; font-weight: 500; margin-left: 4px; color: rgba(255,255,255,0.8); }
@@ -234,16 +234,13 @@
                 <div class="dh-w-sub" id="dynAbDate"></div>
               </div>
               <div class="dh-widget dh-w-weather">
-                <div class="dh-w-city">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-                  <span>{{ section.settings.weather_city | default: 'New York' }}</span>
-                </div>
                 <div class="dh-w-now">
                   <span class="dh-w-nowic" id="dynAbWxIc"></span>
-                  <span class="dh-w-temp" id="dynAbWxTemp">--&deg;</span>
+                  <span class="dh-w-nowtx">
+                    <span class="dh-w-temp" id="dynAbWxTemp">--&deg;</span>
+                    <span class="dh-w-cond" id="dynAbWxCond">&nbsp;</span>
+                  </span>
                 </div>
-                <div class="dh-w-cond" id="dynAbWxCond">&nbsp;</div>
-                <div class="dh-w-feels" id="dynAbWxFeels">&nbsp;</div>
                 <div class="dh-w-fc" id="dynAbWxFc"></div>
               </div>
             </div>
@@ -443,7 +440,7 @@
         elDate = document.getElementById("dynAbDate"), elTime = document.getElementById("dynAbTime"),
         elAmpm = document.getElementById("dynAbAmpm"), elWxIc = document.getElementById("dynAbWxIc"),
         elWxTemp = document.getElementById("dynAbWxTemp"), elWxCond = document.getElementById("dynAbWxCond"),
-        elWxFeels = document.getElementById("dynAbWxFeels"), elWxFc = document.getElementById("dynAbWxFc");
+        elWxFc = document.getElementById("dynAbWxFc");
     var DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     function tick() {
@@ -457,16 +454,15 @@
     }
     tick();
     setInterval(tick, 15000);
-    function wxIcon(code) {
-      var p;
-      if (code === 0 || code === 1) p = '<circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>';
-      else if (code === 2) p = '<path d="M5 12a4 4 0 0 1 7.6-1.7"/><path d="M12 5.5v-2M5.5 8.5L4 7M15 6.6l1.2-1.6"/><path d="M8 18h8.5a3.5 3.5 0 1 0-.9-6.9A5 5 0 0 0 8 12.4 3 3 0 0 0 8 18Z"/>';
-      else if (code === 45 || code === 48) p = '<path d="M4 9h16M4 13h16M6 17h12"/>';
-      else if (code >= 71 && code <= 86 && code !== 80 && code !== 81 && code !== 82) p = '<path d="M7 15h9.5a3.5 3.5 0 1 0-.9-6.9A5 5 0 0 0 7 9.4 3 3 0 0 0 7 15Z"/><path d="M8.5 18.5v.01M12 19.5v.01M15.5 18.5v.01"/>';
-      else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) p = '<path d="M7 14h9.5a3.5 3.5 0 1 0-.9-6.9A5 5 0 0 0 7 8.4 3 3 0 0 0 7 14Z"/><path d="M8.5 17l-1 2.5M12 17l-1 2.5M15.5 17l-1 2.5"/>';
-      else if (code >= 95) p = '<path d="M7 13h9.5a3.5 3.5 0 1 0-.9-6.9A5 5 0 0 0 7 7.4 3 3 0 0 0 7 13Z"/><path d="M12.5 13.5 10 17.5h3l-2 4"/>';
-      else p = '<path d="M7 16h9.5a3.5 3.5 0 1 0-.9-6.9A5 5 0 0 0 7 10.4 3 3 0 0 0 7 16Z"/>';
-      return '<svg viewBox="0 0 24 24" aria-hidden="true">' + p + '</svg>';
+    function wxEmoji(code) {
+      if (code === 0 || code === 1) return "☀️";
+      if (code === 2) return "⛅";
+      if (code === 45 || code === 48) return "🌫️";
+      if (code >= 71 && code <= 86 && code !== 80 && code !== 81 && code !== 82) return "❄️";
+      if (code >= 51 && code <= 67) return "🌧️";
+      if (code >= 80 && code <= 82) return "🌦️";
+      if (code >= 95) return "⛈️";
+      return "☁️";
     }
     function wxWord(code) {
       if (code === 0 || code === 1) return "Sunny";
@@ -479,43 +475,41 @@
       if (code >= 95) return "Thunderstorm";
       return "Cloudy";
     }
-    var FDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     function showWx(w) {
-      elWxIc.innerHTML = wxIcon(w.code);
+      elWxIc.textContent = wxEmoji(w.code);
       elWxTemp.textContent = w.t + "°";
       elWxCond.textContent = wxWord(w.code);
-      elWxFeels.textContent = "Feels like " + w.feels + "°";
       if (w.fc && w.fc.length) {
         var html = "";
         for (var i = 0; i < w.fc.length; i++) {
           var f = w.fc[i];
-          html += '<span><span class="dh-w-fd">' + f.d + '</span>' + wxIcon(f.c) +
-                  '<span class="dh-w-ft">' + f.hi + '°/' + f.lo + '°</span></span>';
+          html += '<div class="dh-w-frow"><span class="fd">' + f.d + '</span><span class="fi">' + wxEmoji(f.c) +
+                  '</span><span class="ft">' + f.hi + '°</span></div>';
         }
         elWxFc.innerHTML = html;
       }
     }
     function loadWx() {
       try {
-        var c = JSON.parse(sessionStorage.getItem("dyn_wx2") || "null");
+        var c = JSON.parse(sessionStorage.getItem("dyn_wx3") || "null");
         if (c && Date.now() - c.ts < 1800000) { showWx(c); return; }
       } catch (e) {}
       var u = "https://api.open-meteo.com/v1/forecast?latitude=" + head.getAttribute("data-lat") +
               "&longitude=" + head.getAttribute("data-lon") +
-              "&current=temperature_2m,apparent_temperature,weather_code" +
-              "&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=6&timezone=auto" +
+              "&current=temperature_2m,weather_code" +
+              "&daily=weather_code,temperature_2m_max&forecast_days=4&timezone=auto" +
               (head.getAttribute("data-unit") === "f" ? "&temperature_unit=fahrenheit" : "");
       fetch(u).then(function (r) { return r.json(); }).then(function (j) {
         if (!j || !j.current) return;
-        var w = { t: Math.round(j.current.temperature_2m), feels: Math.round(j.current.apparent_temperature),
-                  code: j.current.weather_code || 0, fc: [], ts: Date.now() };
+        var FULLDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        var w = { t: Math.round(j.current.temperature_2m), code: j.current.weather_code || 0, fc: [], ts: Date.now() };
         if (j.daily && j.daily.time) {
-          for (var i = 1; i < j.daily.time.length && w.fc.length < 5; i++) {
-            w.fc.push({ d: FDAYS[new Date(j.daily.time[i]).getUTCDay()], c: j.daily.weather_code[i] || 0,
-                        hi: Math.round(j.daily.temperature_2m_max[i]), lo: Math.round(j.daily.temperature_2m_min[i]) });
+          for (var i = 1; i < j.daily.time.length && w.fc.length < 3; i++) {
+            w.fc.push({ d: FULLDAYS[new Date(j.daily.time[i]).getUTCDay()], c: j.daily.weather_code[i] || 0,
+                        hi: Math.round(j.daily.temperature_2m_max[i]) });
           }
         }
-        try { sessionStorage.setItem("dyn_wx2", JSON.stringify(w)); } catch (e) {}
+        try { sessionStorage.setItem("dyn_wx3", JSON.stringify(w)); } catch (e) {}
         showWx(w);
       }).catch(function () {});
     }
