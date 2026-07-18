@@ -83,28 +83,33 @@
     .dyn-abar .dh-acct-menu .dh-icon-btn { width: 42px; height: 42px; }
 
     /* Dropdown panels — same liquid glass as the corner buttons */
+    /* Matte frost panel matching the apps window: even 12% frost, quiet rim,
+       one soft shadow — and the menu items are dark smoked rows with white
+       text (like the app tiles), so they read on any background. */
     .dyn-abar .dh-pop { position: absolute; top: calc(100% + 10px); right: 0; z-index: 30; min-width: 220px;
-      background: rgba(255,255,255,0.45); -webkit-backdrop-filter: blur(26px) saturate(1.7); backdrop-filter: blur(26px) saturate(1.7);
-      border: 1px solid rgba(255,255,255,0.7); border-radius: 22px; padding: 10px;
-      box-shadow: 0 30px 70px -20px rgba(29,29,31,0.4);
+      background: rgba(255,255,255,0.12); -webkit-backdrop-filter: blur(26px) saturate(1.6); backdrop-filter: blur(26px) saturate(1.6);
+      border: 1px solid rgba(255,255,255,0.22); border-radius: 24px; padding: 12px;
+      box-shadow: 0 30px 80px -24px rgba(0,0,0,0.5);
       animation: abPop .14s ease; }
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-      .dyn-abar .dh-pop { background: #fff; border-color: var(--line); }
+      .dyn-abar .dh-pop { background: rgba(60, 60, 68, 0.96); }
     }
     /* Matte glass: no gloss cap. */
     .dyn-abar .dh-pop::before { display: none; }
     @keyframes abPop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
     .dyn-abar .dh-pop[hidden] { display: none; }
-    .dyn-abar .dh-pop-title { font-size: 13px; color: var(--ink-faint); padding: 6px 10px 8px; }
-    .dyn-abar .dh-pop-link { display: block; padding: 9px 10px; border-radius: 10px; font-size: 14px; color: var(--ink);
-      text-decoration: none; transition: background .14s; }
-    .dyn-abar .dh-pop-link:hover { background: rgba(255,255,255,0.55); }
+    .dyn-abar .dh-pop-title { font-size: 13px; color: rgba(255,255,255,0.75); padding: 4px 10px 10px; }
+    .dyn-abar .dh-pop-link { display: block; padding: 12px 14px; border-radius: 14px; font-size: 14px; color: #fff;
+      text-decoration: none; transition: background .14s;
+      background: rgba(42, 42, 47, 0.28); border: 1px solid rgba(255,255,255,0.10); margin-bottom: 8px; }
+    .dyn-abar .dh-pop-link:last-child { margin-bottom: 0; }
+    .dyn-abar .dh-pop-link:hover { background: rgba(42, 42, 47, 0.45); }
     .dyn-abar .dh-pop-ext { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vertical-align: -1px; margin-left: 4px; opacity: .55; }
-    .dyn-abar .dh-pop-btn { display: block; text-align: center; margin: 2px 4px 6px; padding: 10px 14px; border-radius: 999px;
-      background: var(--ink); color: #fff; font-size: 14px; font-weight: 500; text-decoration: none; transition: opacity .14s; }
-    .dyn-abar .dh-pop-btn:hover { opacity: .9; }
+    .dyn-abar .dh-pop-btn { display: block; text-align: center; margin: 2px 4px 8px; padding: 11px 14px; border-radius: 999px;
+      background: rgba(42, 42, 47, 0.6); border: 1px solid rgba(255,255,255,0.14); color: #fff; font-size: 14px; font-weight: 500; text-decoration: none; transition: background .14s; }
+    .dyn-abar .dh-pop-btn:hover { background: rgba(42, 42, 47, 0.8); }
     .dyn-abar a.dh-pop-cta { text-decoration: none; }
-    .dyn-abar .dh-pop-note { font-size: 12px; color: var(--ink-soft); line-height: 1.5; padding: 0 10px 10px; }
+    .dyn-abar .dh-pop-note { font-size: 12px; color: rgba(255,255,255,0.72); line-height: 1.5; padding: 0 10px 10px; }
     .dyn-abar .dh-acct-pop { min-width: 260px; }
 
     /* 9-dots: a big glass window hanging from the corner button. REAL liquid
