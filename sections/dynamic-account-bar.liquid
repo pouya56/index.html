@@ -182,7 +182,6 @@
     .dyn-abar .dh-w-mlabel { align-self: flex-start; font-size: 11.5px; color: rgba(255,255,255,0.85); }
     .dyn-abar .dh-w-plant { width: 30px; height: 30px; margin-top: 4px; fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-w-mlines { font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.88); }
-    .dyn-abar .dh-w-ring { width: 54px; height: 54px; }
     @media (max-width: 520px) {
       /* Anchored-to-the-button would poke past the left screen edge on a
          phone — pin the window to the viewport instead. */
@@ -256,20 +255,8 @@
                 <div class="dh-widget dh-w-mini">
                   <div class="dh-w-mlabel">{{ section.settings.focus_title | default: 'Focus' }}</div>
                   <svg class="dh-w-plant" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13C12 9.5 9.5 7 5.5 7 5.5 10.5 8 13 12 13Z"/><path d="M12 11c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6Z"/></svg>
-                  <div class="dh-w-mlines">{{ section.settings.focus_line1 | default: 'Stay calm' }}<br>{{ section.settings.focus_line2 | default: 'Stay positive' }}</div>
+                  <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
                 </div>
-                {%- if section.settings.show_battery -%}
-                <div class="dh-widget dh-w-mini" id="dynAbBatt" hidden>
-                  <div class="dh-w-mlabel">Battery</div>
-                  <svg class="dh-w-ring" viewBox="0 0 60 60" aria-hidden="true">
-                    <circle cx="30" cy="30" r="24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="4.5"/>
-                    <circle id="dynAbBattRing" cx="30" cy="30" r="24" fill="none" stroke="#4cd964" stroke-width="4.5" stroke-linecap="round"
-                      stroke-dasharray="150.8" stroke-dashoffset="150.8" transform="rotate(-90 30 30)"/>
-                    <text id="dynAbBattPct" x="30" y="35" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">--%</text>
-                  </svg>
-                  <div class="dh-w-mlines" id="dynAbBattTxt">&nbsp;</div>
-                </div>
-                {%- endif -%}
               </div>
             </div>
           </div>
@@ -532,28 +519,30 @@
         showWx(w);
       }).catch(function () {});
     }
-    function loadBattery() {
-      var card = document.getElementById("dynAbBatt");
-      if (!card || !navigator.getBattery) return;
-      navigator.getBattery().then(function (b) {
-        var ring = document.getElementById("dynAbBattRing"), pct = document.getElementById("dynAbBattPct"),
-            txt = document.getElementById("dynAbBattTxt"), LEN = 150.8;
-        function upd() {
-          var lv = Math.round(b.level * 100);
-          ring.setAttribute("stroke-dashoffset", (LEN * (1 - b.level)).toFixed(1));
-          ring.setAttribute("stroke", lv <= 20 && !b.charging ? "#ff5c8a" : "#4cd964");
-          pct.textContent = lv + "%";
-          txt.textContent = b.charging ? "Charging" : "Discharging";
-          card.hidden = false;
-        }
-        upd();
-        b.addEventListener("levelchange", upd);
-        b.addEventListener("chargingchange", upd);
-      }).catch(function () {});
+    /* Focus card: a fresh motivation line on every open. Merchant lines from
+       the settings (one per line) win; otherwise the built-in list. A shuffle
+       bag guarantees no repeat until every line has had its turn. */
+    var elFocus = document.getElementById("dynAbFocus");
+    var Q = [];
+    var qRaw = {{ section.settings.focus_quotes | default: '' | json }};
+    if (qRaw) { Q = qRaw.split("\n").map(function (s) { return s.trim(); }).filter(Boolean); }
+    if (!Q.length) {
+      Q = ["Stay calm, stay positive.", "Make something you love today.", "Small steps, big smiles.",
+        "You're doing better than you think.", "Create more, worry less.", "Today is a good day to start.",
+        "Kindness looks good on you.", "Progress, not perfection.", "Your ideas deserve the spotlight.",
+        "Good things take time — keep going.", "Collect moments, not things.", "Be the reason someone smiles today.",
+        "Enjoy the little things.", "You bring the magic.", "Keep it simple, keep it true.",
+        "Turn ideas into keepsakes.", "Every day is a fresh design.", "Stay curious, stay playful."];
     }
-    function loadAll() { loadWx(); loadBattery(); }
+    var qBag = [];
+    function pickQuote() {
+      if (!elFocus || !Q.length) return;
+      if (!qBag.length) { qBag = Q.slice(); for (var i = qBag.length - 1; i > 0; i--) { var r = Math.floor(Math.random() * (i + 1)), t = qBag[i]; qBag[i] = qBag[r]; qBag[r] = t; } }
+      elFocus.textContent = qBag.pop();
+    }
+    pickQuote();
     var apBtn = document.querySelector(".dyn-abar .dh-apps-btn");
-    if (apBtn) { apBtn.addEventListener("click", loadAll, { once: true }); } else { loadAll(); }
+    if (apBtn) { apBtn.addEventListener("click", function () { loadWx(); pickQuote(); }); } else { loadWx(); }
   })();
   {%- endif -%}
   {%- if section.settings.peek_scroll -%}
@@ -607,9 +596,7 @@
     { "type": "select", "id": "weather_unit", "label": "Temperature unit", "options": [ { "value": "f", "label": "Fahrenheit" }, { "value": "c", "label": "Celsius" } ], "default": "f" },
     { "type": "text", "id": "widget_motto", "label": "Line under the clock", "default": "Keep going, keep growing." },
     { "type": "text", "id": "focus_title", "label": "Focus card title", "default": "Focus" },
-    { "type": "text", "id": "focus_line1", "label": "Focus line 1", "default": "Stay calm" },
-    { "type": "text", "id": "focus_line2", "label": "Focus line 2", "default": "Stay positive" },
-    { "type": "checkbox", "id": "show_battery", "label": "Show visitor's battery card", "default": true, "info": "Shows on Chrome and Android; Safari and Firefox don't share battery info, so the Focus card fills the space there." },
+    { "type": "textarea", "id": "focus_quotes", "label": "Focus sentences (one per line)", "info": "A random one shows each time the window opens, never repeating until all have had a turn. Leave empty for the built-in set of 18." },
     { "type": "paragraph", "content": "Add “App link” blocks below to fill the grid. With none added, a sensible default set (Shop, Search, Contact, Account, Cart, policies…) shows automatically." },
 
     { "type": "header", "content": "Bar style" },
