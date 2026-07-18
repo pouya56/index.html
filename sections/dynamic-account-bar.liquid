@@ -25,6 +25,16 @@
     /* Match the homepage corner links: 20px from top, 26px from the side. */
     #shopify-section-{{ section.id }} .ab-inner { padding: {{ section.settings.overlay_top | default: 20 }}px {{ section.settings.overlay_side | default: 26 }}px; }
     {%- endif -%}
+    {%- if section.settings.peek_scroll -%}
+    /* Peek-a-boo: slip away on scroll down, glide back on scroll up. */
+    {%- if section.settings.overlay -%}
+    #shopify-section-{{ section.id }} { transition: transform 0.3s ease; will-change: transform; }
+    #shopify-section-{{ section.id }}.ab-peek-hide { transform: translateY(-130%); }
+    {%- else -%}
+    #shopify-section-{{ section.id }} .dyn-abar.is-sticky { transition: transform 0.3s ease; }
+    #shopify-section-{{ section.id }}.ab-peek-hide .dyn-abar.is-sticky { transform: translateY(-130%); }
+    {%- endif -%}
+    {%- endif -%}
     .dyn-abar {
       --bg: #ffffff; --bg-panel: #f5f5f7;
       --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
@@ -295,6 +305,25 @@
       }
     } catch (e) {}
   })();
+  {%- if section.settings.peek_scroll -%}
+  (function () {
+    /* Hide on scroll down, show on scroll up. Always visible near the top,
+       and it never hides while one of its menus is open. */
+    var bar = document.getElementById("dynAbar");
+    if (!bar) return;
+    var wrap = bar.closest('[id^="shopify-section-"]') || bar.parentElement || bar;
+    var lastY = window.pageYOffset || 0;
+    window.addEventListener("scroll", function () {
+      var y = window.pageYOffset || 0;
+      var d = y - lastY;
+      lastY = y;
+      if (bar.querySelector(".dh-pop:not([hidden])")) return;
+      if (y < 90) { wrap.classList.remove("ab-peek-hide"); return; }
+      if (d > 2) { wrap.classList.add("ab-peek-hide"); }
+      else if (d < -2) { wrap.classList.remove("ab-peek-hide"); }
+    }, { passive: true });
+  })();
+  {%- endif -%}
   </script>
 </div>
 
@@ -324,6 +353,7 @@
     { "type": "header", "content": "Bar style" },
     { "type": "checkbox", "id": "overlay", "label": "Float over the page (no row)", "default": true, "info": "Sits on top of the page at the top-right — like the homepage corners — instead of taking its own row. Turn off for a normal bar." },
     { "type": "checkbox", "id": "overlay_follow", "label": "Follow while scrolling (float mode)", "default": true, "info": "Keeps the corner buttons visible in the corners as you scroll down the page." },
+    { "type": "checkbox", "id": "peek_scroll", "label": "Hide on scroll down, show on scroll up", "default": true, "info": "The bar slips away while scrolling down and glides back the moment you scroll up. Needs 'Follow while scrolling' on (float mode) or 'Stick to top' (normal bar)." },
     { "type": "range", "id": "overlay_top", "min": 0, "max": 80, "step": 2, "unit": "px", "label": "Distance from top (float mode)", "default": 20, "info": "Match your homepage corner links (they use 20px)." },
     { "type": "range", "id": "overlay_side", "min": 0, "max": 80, "step": 2, "unit": "px", "label": "Distance from side (float mode)", "default": 26 },
     { "type": "checkbox", "id": "transparent_bg", "label": "Transparent background (normal bar only)", "default": true },
