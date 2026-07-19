@@ -43,6 +43,14 @@
   <span class="dyn-bg-parts" id="dynBgParts-{{ section.id }}"></span>
   <span class="dyn-bg-night" id="dynBgNight-{{ section.id }}" hidden></span>
   <span class="dyn-bg-veil"></span>
+  {%- elsif look == 'image' -%}
+  {%- if section.settings.bg_image != blank -%}
+  <img class="dyn-bg-img" alt="" loading="eager"
+       src="{{ section.settings.bg_image | image_url: width: 2000 }}"
+       srcset="{{ section.settings.bg_image | image_url: width: 1200 }} 1200w, {{ section.settings.bg_image | image_url: width: 2000 }} 2000w, {{ section.settings.bg_image | image_url: width: 3000 }} 3000w"
+       sizes="100vw"
+       width="{{ section.settings.bg_image.width }}" height="{{ section.settings.bg_image.height }}">
+  {%- endif -%}
   {%- elsif look == 'spheres' -%}
   <span class="dyn-bg-spot dyn-bg-p1"></span>
   <span class="dyn-bg-spot dyn-bg-p2"></span>
@@ -67,7 +75,15 @@
     pointer-events: none;
     {%- if look == 'sun' -%}
     background: {{ section.settings.wall_color | default: '#ffb42e' }};
-    {%- elsif look == 'spheres' -%}
+    {%- elsif look == 'image' -%}
+  {%- if section.settings.bg_image != blank -%}
+  <img class="dyn-bg-img" alt="" loading="eager"
+       src="{{ section.settings.bg_image | image_url: width: 2000 }}"
+       srcset="{{ section.settings.bg_image | image_url: width: 1200 }} 1200w, {{ section.settings.bg_image | image_url: width: 2000 }} 2000w, {{ section.settings.bg_image | image_url: width: 3000 }} 3000w"
+       sizes="100vw"
+       width="{{ section.settings.bg_image.width }}" height="{{ section.settings.bg_image.height }}">
+  {%- endif -%}
+  {%- elsif look == 'spheres' -%}
     background: linear-gradient(180deg, {{ sp_bg_hi }} 0%, {{ sp_bg }} 55%, {{ sp_bg_lo }} 100%);
     {%- elsif section.settings.base_tint != blank and section.settings.base_tint != 'rgba(0,0,0,0)' -%}
     background: {{ section.settings.base_tint }};
@@ -216,6 +232,25 @@
   #dynBg-{{ section.id }} .dyn-bg-parts i { animation: none !important; }
   #dynBg-{{ section.id }} .dbg-rain, #dynBg-{{ section.id }} .dbg-snow, #dynBg-{{ section.id }} .dbg-flash { display: none; }
   {%- endunless -%}
+  {%- elsif look == 'image' -%}
+  {%- if section.settings.bg_image != blank -%}
+  <img class="dyn-bg-img" alt="" loading="eager"
+       src="{{ section.settings.bg_image | image_url: width: 2000 }}"
+       srcset="{{ section.settings.bg_image | image_url: width: 1200 }} 1200w, {{ section.settings.bg_image | image_url: width: 2000 }} 2000w, {{ section.settings.bg_image | image_url: width: 3000 }} 3000w"
+       sizes="100vw"
+       width="{{ section.settings.bg_image.width }}" height="{{ section.settings.bg_image.height }}">
+  {%- endif -%}
+  {%- elsif look == 'image' -%}
+  /* Your image: full-bleed cover, with a slow breathing zoom when movement
+     is on (frozen for reduced-motion visitors). */
+  #dynBg-{{ section.id }} .dyn-bg-img { position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; will-change: transform;
+    {%- if section.settings.animate %} animation: dynBgKen {{ spd | times: 2 }}s ease-in-out infinite alternate;{% endif -%} }
+  @keyframes dynBgKen {
+    0%   { transform: scale(1); }
+    100% { transform: scale(1.08) translate(0.8%, -0.8%); }
+  }
+  @media (prefers-reduced-motion: reduce) { #dynBg-{{ section.id }} .dyn-bg-img { animation: none !important; } }
   {%- elsif look == 'spheres' -%}
   /* Floating spheres: matte 3D balls (highlight up-left, shaded rim) bobbing
      gently over a warm studio backdrop, with soft ground shadows below. */
@@ -420,7 +455,8 @@
         { "value": "glow", "label": "Soft color glows" },
         { "value": "sun", "label": "Sunlight & shadow (wall)" },
         { "value": "weather", "label": "Live weather (auto)" },
-        { "value": "spheres", "label": "Floating spheres (3D)" }
+        { "value": "spheres", "label": "Floating spheres (3D)" },
+        { "value": "image", "label": "Your image" }
       ],
       "default": "glow"
     },
@@ -437,6 +473,12 @@
       "label": "Weather longitude",
       "default": "-74.01",
       "info": "Right-click your city on Google Maps to read both numbers. Free Open-Meteo service, no key needed."
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": "Background image",
+      "info": "Your image look only. A wide photo works best — it fills the whole screen and slowly breathes when 'Slight movement' is on."
     },
     {
       "type": "color",
@@ -559,6 +601,12 @@
       "name": "Dynamic Background — Floating spheres",
       "settings": {
         "look": "spheres"
+      }
+    },
+    {
+      "name": "Dynamic Background — Your image",
+      "settings": {
+        "look": "image"
       }
     }
   ]
