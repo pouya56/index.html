@@ -1021,6 +1021,10 @@
     }
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
+    /* First paint lands DIRECTLY on the remembered spot — is-dragging kills
+       the left/top transition so he doesn't slide in from the CSS default
+       corner on every page change. */
+    menu.classList.add("is-dragging");
     if (saved && typeof saved.x === "number") { place(saved.x, saved.y, true); }
     else {
       /* First visit: start at the top-right default, but run the full
@@ -1028,6 +1032,9 @@
       var r0 = menu.getBoundingClientRect();
       place(r0.left, r0.top, true);
     }
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { menu.classList.remove("is-dragging"); });
+    });
     window.addEventListener("resize", function () {
       var r = menu.getBoundingClientRect();
       place(r.left, r.top, true);
