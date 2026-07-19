@@ -29,6 +29,7 @@
 {%- assign sp1_hi = sp1 | color_lighten: 14 -%}{%- assign sp1_lo = sp1 | color_darken: 16 -%}
 {%- assign sp2_hi = sp2 | color_lighten: 16 -%}{%- assign sp2_lo = sp2 | color_darken: 18 -%}
 {%- assign sp_bg_hi = sp_bg | color_lighten: 7 -%}{%- assign sp_bg_lo = sp_bg | color_darken: 10 -%}
+{%- assign brush = section.settings.brush | default: 'off' -%}
 
 <div class="dyn-bg" id="dynBg-{{ section.id }}" aria-hidden="true"
   {%- if look == 'weather' %} data-lat="{{ section.settings.weather_lat | default: '40.71' }}" data-lon="{{ section.settings.weather_lon | default: '-74.01' }}" data-alpha="{{ bg_alpha }}" data-animate="{% if section.settings.animate %}1{% else %}0{% endif %}" data-force="{{ section.settings.force_scene | default: 'auto' }}" data-veil="{{ veil_o }}"{% endif -%}>
@@ -50,6 +51,13 @@
        srcset="{{ section.settings.bg_image | image_url: width: 1200 }} 1200w, {{ section.settings.bg_image | image_url: width: 2000 }} 2000w, {{ section.settings.bg_image | image_url: width: 3000 }} 3000w"
        sizes="100vw"
        width="{{ section.settings.bg_image.width }}" height="{{ section.settings.bg_image.height }}">
+  {%- if brush != 'off' -%}
+  <canvas class="dyn-bg-brush" id="dynBgBrush-{{ section.id }}"
+    data-mode="{{ brush }}"
+    data-size="{{ section.settings.brush_size | default: 100 }}"
+    {%- if brush == 'paint' %} data-colors="{{ section.settings.brush_colors | default: '#ffd166,#ff9f68,#ff5c8a,#a78bfa,#5b8def,#7fd8be' | escape }}"{% endif -%}
+    {%- if brush == 'reveal' and section.settings.brush_img_color != blank %} data-img="{{ section.settings.brush_img_color | image_url: width: 2000 }}"{% endif -%}></canvas>
+  {%- endif -%}
   {%- endif -%}
   {%- elsif look == 'spheres' -%}
   <span class="dyn-bg-spot dyn-bg-p1"></span>
@@ -229,12 +237,18 @@
      is on (frozen for reduced-motion visitors). */
   #dynBg-{{ section.id }} .dyn-bg-img { position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; will-change: transform;
-    {%- if section.settings.animate %} animation: dynBgKen {{ spd | times: 2 }}s ease-in-out infinite alternate;{% endif -%} }
+    {%- if section.settings.animate and brush == 'off' %} animation: dynBgKen {{ spd | times: 2 }}s ease-in-out infinite alternate;{% endif -%} }
   @keyframes dynBgKen {
     0%   { transform: scale(1); }
     100% { transform: scale(1.08) translate(0.8%, -0.8%); }
   }
   @media (prefers-reduced-motion: reduce) { #dynBg-{{ section.id }} .dyn-bg-img { animation: none !important; } }
+  {%- if brush != 'off' %}
+  /* The brush canvas: sits over the picture, per-visit painting. In paint
+     mode it multiplies into the image so ink lines stay crisp on top. */
+  #dynBg-{{ section.id }} .dyn-bg-brush { position: absolute; inset: 0; width: 100%; height: 100%;
+    {%- if brush == 'paint' %} mix-blend-mode: multiply;{% endif %} }
+  {%- endif %}
   {%- elsif look == 'spheres' -%}
   /* Floating spheres: matte 3D balls (highlight up-left, shaded rim) bobbing
      gently over a warm studio backdrop, with soft ground shadows below. */
@@ -423,6 +437,129 @@
 </script>
 {%- endif -%}
 
+{%- if look == 'image' and brush != 'off' -%}
+<script>
+(function () {
+  /* Mouse brush over the background image.
+     - Watercolor: soft color washes soak into the picture (multiply blend),
+       cycling gently through the palette as the visitor paints.
+     - Reveal: the pointer wipes the picture away to show the colored
+       version underneath, like clearing fog off a window.
+     Fresh page every visit — the painting resets on reload. Works with a
+     finger on phones too. Listens on the window, so buttons stay clickable. */
+  var cv = document.getElementById("dynBgBrush-{{ section.id }}");
+  if (!cv) return;
+  var ctx = cv.getContext("2d");
+  if (!ctx) return;
+  var mode = cv.getAttribute("data-mode");
+  var setSize = parseInt(cv.getAttribute("data-size") || "100", 10);
+  var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  var r = 50, stamp, sctx;
+
+  var img = null, imgReady = false;
+  if (mode === "reveal") {
+    var src = cv.getAttribute("data-img");
+    if (!src) return; /* no colored version uploaded yet */
+    img = new Image();
+    img.onload = function () { imgReady = true; };
+    img.src = src;
+  }
+
+  var colors = [];
+  (cv.getAttribute("data-colors") || "").split(",").forEach(function (h) {
+    h = h.trim().replace("#", "");
+    if (h.length === 3) h = h.charAt(0) + h.charAt(0) + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2);
+    if (h.length === 6) colors.push([parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]);
+  });
+  if (mode === "paint" && !colors.length) colors = [[255, 209, 102], [255, 92, 138], [91, 141, 239]];
+
+  function fit() {
+    /* Resize keeps the painting: copy the old canvas, scale it back on. */
+    var old = null;
+    if (cv.width && cv.height) {
+      old = document.createElement("canvas");
+      old.width = cv.width; old.height = cv.height;
+      old.getContext("2d").drawImage(cv, 0, 0);
+    }
+    cv.width = Math.round(innerWidth * dpr);
+    cv.height = Math.round(innerHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (old) ctx.drawImage(old, 0, 0, innerWidth, innerHeight);
+    r = Math.min(setSize, Math.max(48, innerWidth * 0.14)) / 2;
+    stamp = document.createElement("canvas");
+    stamp.width = stamp.height = Math.max(2, Math.round(r * 2 * dpr));
+    sctx = stamp.getContext("2d");
+  }
+
+  var traveled = 0;
+  function curColor() {
+    /* Glide through the palette: a new hue roughly every 420px of travel. */
+    var t = (traveled / 420) % colors.length;
+    var i0 = Math.floor(t), f = t - i0;
+    var a = colors[i0], b = colors[(i0 + 1) % colors.length];
+    return Math.round(a[0] + (b[0] - a[0]) * f) + "," +
+           Math.round(a[1] + (b[1] - a[1]) * f) + "," +
+           Math.round(a[2] + (b[2] - a[2]) * f);
+  }
+
+  function dab(x, y) {
+    if (mode === "paint") {
+      var col = curColor();
+      var g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, "rgba(" + col + ",0.15)");
+      g.addColorStop(0.7, "rgba(" + col + ",0.06)");
+      g.addColorStop(1, "rgba(" + col + ",0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    } else {
+      if (!imgReady) return;
+      /* Stamp: cut a soft-edged circle of the colored image (cover-mapped
+         to the viewport, same as object-fit) and lay it on the canvas. */
+      var s = Math.max(innerWidth / img.naturalWidth, innerHeight / img.naturalHeight);
+      var dw = img.naturalWidth * s, dh = img.naturalHeight * s;
+      sctx.setTransform(1, 0, 0, 1, 0, 0);
+      sctx.globalCompositeOperation = "source-over";
+      sctx.clearRect(0, 0, stamp.width, stamp.height);
+      sctx.setTransform(dpr, 0, 0, dpr, 0 - (x - r) * dpr, 0 - (y - r) * dpr);
+      sctx.drawImage(img, (innerWidth - dw) / 2, (innerHeight - dh) / 2, dw, dh);
+      sctx.globalCompositeOperation = "destination-in";
+      sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var m = sctx.createRadialGradient(r, r, 0, r, r, r);
+      m.addColorStop(0, "rgba(0,0,0,1)");
+      m.addColorStop(0.6, "rgba(0,0,0,0.9)");
+      m.addColorStop(1, "rgba(0,0,0,0)");
+      sctx.fillStyle = m;
+      sctx.fillRect(0, 0, r * 2, r * 2);
+      ctx.drawImage(stamp, x - r, y - r, r * 2, r * 2);
+    }
+  }
+
+  var last = null;
+  function move(e) {
+    var x = e.clientX, y = e.clientY;
+    if (typeof x !== "number") return;
+    if (last) {
+      var dx = x - last.x, dy = y - last.y, dist = Math.hypot(dx, dy);
+      traveled += dist;
+      /* Fill the gap between events so fast strokes stay solid. */
+      var step = Math.max(6, r * 0.4);
+      for (var i = step; i < dist; i += step) dab(last.x + dx * (i / dist), last.y + dy * (i / dist));
+    }
+    dab(x, y);
+    last = { x: x, y: y };
+  }
+
+  fit();
+  var rT;
+  window.addEventListener("resize", function () { clearTimeout(rT); rT = setTimeout(fit, 120); });
+  window.addEventListener("pointermove", move, { passive: true });
+  window.addEventListener("pointerdown", function (e) { last = null; move(e); }, { passive: true });
+  window.addEventListener("pointercancel", function () { last = null; });
+  window.addEventListener("blur", function () { last = null; });
+})();
+</script>
+{%- endif -%}
+
 {% schema %}
 {
   "name": "Dynamic Background",
@@ -463,6 +600,41 @@
       "id": "bg_image",
       "label": "Background image",
       "info": "Your image look only. A wide photo works best — it fills the whole screen and slowly breathes when 'Slight movement' is on."
+    },
+    {
+      "type": "select",
+      "id": "brush",
+      "label": "Mouse brush",
+      "options": [
+        { "value": "off", "label": "Off" },
+        { "value": "paint", "label": "Watercolor brush" },
+        { "value": "reveal", "label": "Color reveal" }
+      ],
+      "default": "off",
+      "info": "Your image look only. Watercolor: the mouse paints soft color washes onto the picture — lovely on line art. Color reveal: the mouse wipes the picture away to show the colored version underneath. While a brush is on, the slow zoom pauses so the artwork holds still. The painting resets on every visit."
+    },
+    {
+      "type": "image_picker",
+      "id": "brush_img_color",
+      "label": "Colored version (reveal brush)",
+      "info": "Color reveal only: the same picture, in color, at the same proportions — so the two line up exactly."
+    },
+    {
+      "type": "range",
+      "id": "brush_size",
+      "label": "Brush size",
+      "min": 40,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "default": 100
+    },
+    {
+      "type": "text",
+      "id": "brush_colors",
+      "label": "Brush colors",
+      "default": "#ffd166,#ff9f68,#ff5c8a,#a78bfa,#5b8def,#7fd8be",
+      "info": "Watercolor brush only: the colors the brush glides through as you paint, separated by commas."
     },
     {
       "type": "color",
