@@ -1214,21 +1214,6 @@
     atabs.innerHTML = vAcct.map(function (ap, i) {
       return '<button type="button" class="dh-ptab" data-vtab="acct-' + i + '">' + vEsc(ap.label) + "</button>";
     }).join("");
-    /* Signed in, Reviews earns its own spot in the main bar. */
-    if (vCust) {
-      var revIdx = -1;
-      vAcct.forEach(function (ap, i) { if (revIdx < 0 && /review/i.test(ap.label)) revIdx = i; });
-      if (revIdx >= 0) {
-        var rt = document.createElement("button");
-        rt.type = "button";
-        rt.className = "dh-vtab";
-        rt.setAttribute("data-vtab", "acct-" + revIdx);
-        rt.setAttribute("aria-label", "Reviews");
-        rt.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8L6.6 19.6l1-6L3.3 9.4l6-.9z"/></svg>';
-        var acctTabEl = vbar.querySelector('[data-vtab="account"]');
-        vbar.insertBefore(rt, acctTabEl ? acctTabEl.nextSibling : null);
-      }
-    }
     atabs.addEventListener("click", function (e) {
       e.stopPropagation();
       var t = e.target.closest ? e.target.closest(".dh-ptab") : null;
