@@ -146,7 +146,9 @@
     @keyframes abWobble { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
     /* AssistiveTouch-style 9-dots: a floating circle that can be dragged
        anywhere and snaps to the screen edges; the window opens beside it. */
-    .dyn-abar .dh-apps-menu { position: fixed; top: 12px; right: 12px; z-index: 95;
+    /* Above everything — cart drawers, modals, theme popups all stack
+       below him (he's re-homed to the end of <body>, so he wins ties too). */
+    .dyn-abar .dh-apps-menu { position: fixed; top: 12px; right: 12px; z-index: 2147483646;
       transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05), top 0.22s ease; }
     .dyn-abar .dh-apps-menu.is-dragging { transition: none; }
     /* A dark glossy orb with purple and teal glow around the rim, like a
@@ -436,7 +438,7 @@
     /* While the apps window is open on a phone the page behind it freezes
        and dims (the window sits at z-index 95, above the veil). */
     html.dyn-ablock, html.dyn-ablock body { overflow: hidden; overscroll-behavior: none; }
-    html.dyn-ablock body::before { content: ""; position: fixed; inset: 0; z-index: 90;
+    html.dyn-ablock body::before { content: ""; position: fixed; inset: 0; z-index: 2147483000;
       background: rgba(0, 0, 0, 0.45); animation: abDim 0.25s ease; }
     @keyframes abDim { from { opacity: 0; } }
     /* The window's glass is translucent, so the dark veil would gray it out
