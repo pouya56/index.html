@@ -547,11 +547,11 @@
     /* In-window page tabs (Apps view): "All" plus each page as a pill
        across the top of the window; the chosen page renders below in this
        same window. */
-    .dyn-abar .dh-ptabs { display: none; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; justify-content: center; }
+    .dyn-abar .dh-ptabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; justify-content: center; }
+    .dyn-abar .dh-ptabs[hidden] { display: none; }
     /* The Apps view opens with just the centered pills — the pane below
        stays empty until a page is picked. */
     .dyn-abar .dh-apps-pop.is-vision[data-vtab="apps"] .dh-apps-grid { display: none; }
-    .dyn-abar .dh-apps-pop.is-vision.is-ptabs .dh-ptabs { display: flex; }
     .dyn-abar .dh-ptab { border: none; border-radius: 999px; padding: 9px 15px; cursor: pointer;
       font: 600 13.5px/1 -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
       background: rgba(255, 255, 255, 0.5); color: #3a3a3f; transition: background 0.15s, color 0.15s; }
@@ -590,10 +590,6 @@
     .dyn-abar .dh-vgo[hidden] { display: none; }
     .dyn-abar .dh-vgo svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2;
       stroke-linecap: round; stroke-linejoin: round; }
-    .dyn-abar .dh-vacct[hidden] { display: none; }
-    .dyn-abar .dh-vacct { max-width: 480px; margin: 0 auto; }
-    .dyn-abar .dh-vacct .dh-pop-title { color: #1d1d1f; font-size: 19px; font-weight: 700; padding: 4px 10px 14px; }
-    .dyn-abar .dh-vacct .dh-pop-note { color: #66666b; }
     .dyn-abar .dh-apps-pop.is-vision .dh-apps-head { display: flex; flex-wrap: wrap; gap: 16px;
       align-items: center; justify-content: center; margin: 0; }
     .dyn-abar .dh-apps-pop.is-vision .dh-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -1185,11 +1181,36 @@
       pop.setAttribute("data-vtab", t.getAttribute("data-vtab"));
       paintVision();
     });
-    /* Account tab: mirrors the corner account menu inside the window. */
-    var vacct = document.createElement("div");
-    vacct.className = "dh-vacct";
-    vacct.hidden = true;
-    pop.appendChild(vacct);
+    /* Account tab: the corner menu's entries as pills on top; each page
+       opens below in this same window. Log out (and log in) navigate. */
+    var vAcct = [];
+    var atabs = document.createElement("div");
+    atabs.className = "dh-ptabs";
+    atabs.hidden = true;
+    Array.prototype.forEach.call(document.querySelectorAll(".dyn-abar .dh-acct-pop a"), function (a) {
+      var label = (a.textContent || "").trim(), href = a.getAttribute("href") || "#";
+      var abs = href, ext = false;
+      try {
+        var u = new URL(href, location.href);
+        abs = u.href;
+        ext = u.host !== location.host;
+      } catch (eA) {}
+      vAcct.push({ href: abs, label: label, ext: ext,
+        nav: /logout|\/account\/login/.test(abs) });
+    });
+    pop.appendChild(atabs);
+    atabs.innerHTML = vAcct.map(function (ap, i) {
+      return '<button type="button" class="dh-ptab" data-vtab="acct-' + i + '">' + vEsc(ap.label) + "</button>";
+    }).join("");
+    atabs.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var t = e.target.closest ? e.target.closest(".dh-ptab") : null;
+      if (!t) return;
+      var ai = parseInt(t.getAttribute("data-vtab").slice(5), 10);
+      if (vAcct[ai] && vAcct[ai].nav) { location.href = vAcct[ai].href; return; }
+      pop.setAttribute("data-vtab", t.getAttribute("data-vtab"));
+      paintVision();
+    });
     /* Saved & Cart tabs: item grid. */
     var vgrid = document.createElement("div");
     vgrid.className = "dh-vgrid";
@@ -1666,6 +1687,8 @@
       if (innerWidth <= 520) {
         pop.classList.remove("is-vision");
         vbar.classList.remove("is-on");
+        ptabs.hidden = true;
+        atabs.hidden = true;
         /* Full-page window: desktop layout scaled so its width spans the
            screen exactly, stretched to cover the full height; anything
            taller scrolls inside. */
@@ -1711,17 +1734,22 @@
         c.classList.toggle("is-on", c.getAttribute("data-vtab") === tab);
       });
       var app = tab.indexOf("app-") === 0 ? vApps[parseInt(tab.slice(4), 10)] : null;
+      var acct = tab.indexOf("acct-") === 0 ? vAcct[parseInt(tab.slice(5), 10)] : null;
       var isAcct = tab === "account", isSaved = tab === "saved", isCart = tab === "cart";
-      /* The Apps window carries its own page tabs on top. */
-      pop.classList.toggle("is-ptabs", tab === "apps" || !!app);
+      var page = app || acct;
+      /* Which pill strip rides on top. */
+      ptabs.hidden = !(tab === "apps" || app);
+      atabs.hidden = !(isAcct || acct);
       Array.prototype.forEach.call(ptabs.children, function (c) {
         c.classList.toggle("is-on", c.getAttribute("data-vtab") === tab);
       });
-      vprev.hidden = !app;
-      vacct.hidden = !isAcct;
+      Array.prototype.forEach.call(atabs.children, function (c) {
+        c.classList.toggle("is-on", c.getAttribute("data-vtab") === tab);
+      });
+      vprev.hidden = !page;
       vgrid.hidden = !(isSaved || isCart);
       vgo.hidden = !(isSaved || isCart);
-      pop.classList.toggle("is-preview", !!app || isAcct || isSaved || isCart);
+      pop.classList.toggle("is-preview", !!page || isAcct || isSaved || isCart);
       if (isSaved) {
         vgrid.setAttribute("data-kind", "saved");
         vgo.setAttribute("href", "/pages/wishlist");
@@ -1743,26 +1771,21 @@
           vFill(items, "Your cart is empty.", {{ routes.cart_url | json }});
         }).catch(function () { vFill([], "Your cart is empty.", {{ routes.cart_url | json }}); });
       }
-      if (isAcct && !vacct.getAttribute("data-filled")) {
-        vacct.setAttribute("data-filled", "1");
-        var acctPop = document.querySelector(".dyn-abar .dh-acct-pop");
-        vacct.innerHTML = acctPop ? acctPop.innerHTML : '<div class="dh-vload">Account menu unavailable.</div>';
-      }
-      if (app) {
-        vprev.querySelector(".dh-vprev-open").setAttribute("href", app.href);
+      if (page) {
+        vprev.querySelector(".dh-vprev-open").setAttribute("href", page.href);
         var hold = vprev.querySelector(".dh-vprev-hold");
         var extN = vprev.querySelector(".dh-vprev-ext");
-        hold.hidden = !!app.ext;
-        extN.hidden = !app.ext;
+        hold.hidden = !!page.ext;
+        extN.hidden = !page.ext;
         /* The page's ACTUAL content, live in the glass: fetch the page,
            lift its <main> (styles included, scripts stripped) and inject
            it — forms are the real forms and submit normally. */
-        if (!app.ext && vprev.getAttribute("data-url") !== app.href) {
-          vprev.setAttribute("data-url", app.href);
+        if (!page.ext && vprev.getAttribute("data-url") !== page.href) {
+          vprev.setAttribute("data-url", page.href);
           /* No loading flash — the pane stays quiet until the page lands. */
           hold.innerHTML = "";
-          fetch(app.href, { credentials: "same-origin" }).then(function (r2) { return r2.text(); }).then(function (htm) {
-            if (vprev.getAttribute("data-url") !== app.href) return;
+          fetch(page.href, { credentials: "same-origin" }).then(function (r2) { return r2.text(); }).then(function (htm) {
+            if (vprev.getAttribute("data-url") !== page.href) return;
             var doc = new DOMParser().parseFromString(htm, "text/html");
             var main = doc.querySelector("main, #MainContent") || doc.body;
             hold.innerHTML = main.innerHTML;
