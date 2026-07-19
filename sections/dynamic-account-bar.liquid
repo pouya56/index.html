@@ -80,11 +80,20 @@
     /* AssistiveTouch-style 9-dots: a floating circle that can be dragged
        anywhere and snaps to the screen edges; the window opens beside it. */
     .dyn-abar .dh-apps-menu { position: fixed; top: 12px; right: 12px; z-index: 95;
-      touch-action: none; transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05), top 0.22s ease; }
-    .dyn-abar .dh-apps-menu.is-dragging { transition: none; }
+      transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05), top 0.22s ease, opacity 0.3s ease;
+      /* Idle it fades way down (like AssistiveTouch) so it never hides the
+         page; any interaction brings it back to full strength. */
+      opacity: 0.42; }
+    .dyn-abar .dh-apps-menu:hover, .dyn-abar .dh-apps-menu.is-dragging,
+    .dyn-abar .dh-apps-menu:focus-within,
+    .dyn-abar .dh-apps-menu:has(.dh-apps-btn[aria-expanded="true"]) { opacity: 1; }
+    .dyn-abar .dh-apps-menu.is-dragging { transition: opacity 0.3s ease; }
     /* Glass keycap: frosted rounded-square tray with a glossy blue button
        raised inside it (Apple "Send" keycap look), white dots on top. */
     .dyn-abar .dh-apps-btn { width: 64px; height: 64px; border-radius: 20px; cursor: grab;
+      /* touch-action lives HERE, not on the wrapper — the apps window is
+         inside the wrapper and needs touch scrolling to work on phones. */
+      touch-action: none;
       position: relative; overflow: visible; z-index: 1; color: #fff;
       background: rgba(255, 255, 255, 0.3); border: 1px solid rgba(255, 255, 255, 0.7);
       box-shadow: 0 18px 36px -14px rgba(29, 29, 31, 0.38), inset 0 1px 1px rgba(255, 255, 255, 0.8); }
