@@ -118,7 +118,7 @@
     /* Matte frosted glass — flat, even frost with no gloss cap, no angled
        sheen, no bright bevels. Just blur, a whisper of white, a quiet rim. */
     .dyn-abar .dh-apps-pop { top: calc(100% + 12px); right: 0;
-      width: min(590px, calc(100vw - 28px)); max-height: min(88vh, 720px); overflow-y: auto;
+      width: min(590px, calc(100vw - 28px)); max-height: min(92vh, 812px); overflow-y: auto;
       scrollbar-width: none;
       padding: 20px 20px 20px; border-radius: 30px;
       background: rgba(255,255,255,0.12);
@@ -162,7 +162,7 @@
        Clock and quote are pinned on top; drag the Saved card to rearrange — the board
        reflows live and the order is remembered per browser. */
     .dyn-abar .dh-apps-pop::-webkit-scrollbar { display: none; }
-    .dyn-abar .dh-apps-head { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 130px; grid-auto-rows: 108px;
+    .dyn-abar .dh-apps-head { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 130px; grid-auto-rows: auto;
       grid-auto-flow: dense; gap: 10px; margin-bottom: 10px; }
     .dyn-abar .dh-apps-head [data-wid] { cursor: grab; }
     .dyn-abar .dh-apps-head [data-wid]:active { cursor: grabbing; }
@@ -201,7 +201,7 @@
       gap: 7px; padding: 0; background: none; border: none; box-shadow: none; min-height: 0; }
     /* The box fills its two grid columns, so its edges line up exactly with
        the two app tiles beneath it. */
-    .dyn-abar .dh-w-savedbox { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0;
+    .dyn-abar .dh-w-savedbox { display: flex; flex-direction: column; flex: none; height: 290px;
       width: 100%; box-sizing: border-box; padding: 9px 9px 7px; border-radius: 20px;
       background: #fff; box-shadow: 0 10px 22px rgba(0,0,0,0.22); }
     .dyn-abar .dh-w-boxlabel { flex: none; font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.92);
