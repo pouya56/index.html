@@ -1991,7 +1991,7 @@
   .dyn-hero .dh-gbtn.dh-dragobj:active { transform: translate(var(--ddx, 0px), var(--ddy, 0px)) scale(0.97); }
   .dyn-hero .dh-dragobj.is-drag { position: relative; z-index: 60; user-select: none; -webkit-user-select: none; }
   .dyn-hero .dh-dragobj.is-anim { transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
-  html.dh-grabbing, html.dh-grabbing * { cursor: grabbing !important; }
+  html.dh-grabbing, html.dh-grabbing * { cursor: grabbing !important; user-select: none !important; -webkit-user-select: none !important; }
   /* The put-it-back button: hidden until something has been moved, then a
      small liquid-glass circle with a backward arrow. */
   .dyn-hero .dh-reset-btn { position: fixed; right: 20px; bottom: 78px; z-index: 70;
@@ -2191,7 +2191,11 @@
   /* Floating photos: scattered to random spots each visit, bobbing gently.
      The whole layer ignores the pointer, so it can never block a click —
      painting is done by watching the mouse from a distance. */
-  .dyn-hero .dh-floats { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+  .dyn-hero .dh-floats { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden;
+    user-select: none; -webkit-user-select: none; }
+  /* While something is being carried, no text on the page can be selected —
+     otherwise dragging paints blue selection over everything it passes. */
+  html.dh-fnosel, html.dh-fnosel * { user-select: none !important; -webkit-user-select: none !important; }
   .dyn-hero .dh-float { position: absolute; opacity: 0; transform: scale(0.5); transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
   .dyn-hero .dh-float.is-in { opacity: 1; transform: none; }
   .dyn-hero .dh-float-bob { display: block; position: relative;
@@ -2367,7 +2371,7 @@
   function popIt(it) {
     /* Pin meets photo: bang. The put-it-back button revives it. */
     if (it.popped || it.isPin) return;
-    if (dragPend && dragPend.it === it) dragPend = null;
+    if (dragPend && dragPend.it === it) { dragPend = null; document.documentElement.classList.remove("dh-fnosel"); }
     it.popped = true; it.moved = true; it.vx = 0; it.vy = 0;
     it.el.classList.remove("is-held");
     it.el.classList.add("is-pop");
@@ -2469,9 +2473,20 @@
   function hold(d) {
     d.moved = true;
     d.it.el.classList.add("is-held");
+    document.documentElement.classList.add("dh-fnosel");
+    if (window.getSelection) { try { getSelection().removeAllRanges(); } catch (err) {} }
     if (navigator.vibrate) { try { navigator.vibrate(10); } catch (err) {} }
     ensure();
   }
+  /* Grabbing a photo must not start a text selection on the page under it. */
+  window.addEventListener("mousedown", function (e) {
+    if (!hitAt(e.clientX, e.clientY)) return;
+    if (e.target.closest && e.target.closest("a,button,input,select,textarea,label")) return;
+    e.preventDefault();
+  }, true);
+  document.addEventListener("selectstart", function (e) {
+    if (dragPend && dragPend.moved) e.preventDefault();
+  });
   window.addEventListener("pointerdown", function (e) {
     if (e.button != null && e.button !== 0) return;
     var it = hitAt(e.clientX, e.clientY);
@@ -2524,6 +2539,7 @@
   }, { passive: false });
   function endDrag() {
     var d = dragPend;
+    document.documentElement.classList.remove("dh-fnosel");
     if (!d) return;
     clearTimeout(d.timer);
     if (d.moved) {
