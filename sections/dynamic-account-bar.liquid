@@ -534,7 +534,7 @@
       stroke-linecap: round; stroke-linejoin: round; }
     /* The window: one dark smoked pane showing the active tab. */
     .dyn-abar .dh-menu .dh-apps-pop.is-vision { position: fixed; right: auto; bottom: auto;
-      width: 560px; max-width: calc(100vw - 150px); max-height: min(76vh, 640px); overflow-y: auto;
+      width: 840px; max-width: calc(100vw - 240px); max-height: min(86vh, 960px); overflow-y: auto;
       background: rgba(36, 36, 43, 0.62); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 30px;
       -webkit-backdrop-filter: blur(28px) saturate(1.4); backdrop-filter: blur(28px) saturate(1.4);
       box-shadow: 0 34px 80px -24px rgba(0, 0, 0, 0.65); padding: 22px; animation: abWin 0.18s ease; }
@@ -572,10 +572,10 @@
     .dyn-abar .dh-vtab img { width: 30px; height: 30px; object-fit: cover; border-radius: 9px; }
     /* Sizes inside the pane. */
     .dyn-abar .dh-apps-pop.is-vision .dh-w-greethead { width: 100%; padding: 4px 6px 8px; }
-    .dyn-abar .dh-apps-pop.is-vision .dh-w-clock { width: 150px; height: 150px; }
-    .dyn-abar .dh-apps-pop.is-vision .dh-w-quote { width: 150px; height: 150px; aspect-ratio: auto; }
-    .dyn-abar .dh-apps-pop.is-vision #dynAbSaved, .dyn-abar .dh-apps-pop.is-vision #dynAbCart { width: 230px; }
-    .dyn-abar .dh-apps-pop.is-vision .dh-w-savedbox { height: 250px; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-w-clock { width: 210px; height: 210px; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-w-quote { width: 210px; height: 210px; aspect-ratio: auto; }
+    .dyn-abar .dh-apps-pop.is-vision #dynAbSaved, .dyn-abar .dh-apps-pop.is-vision #dynAbCart { width: 300px; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-w-savedbox { height: 320px; }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
   </style>
 
@@ -1540,10 +1540,12 @@
       var br2 = btn.getBoundingClientRect();
       vbar.classList.add("is-on");
       var bw = vbar.offsetWidth, bh = vbar.offsetHeight;
-      var bx = Math.min(Math.max(12, br2.left + br2.width / 2 - bw / 2), innerWidth - bw - 12);
-      var below = br2.top + br2.height / 2 < innerHeight / 2;
-      var by = below ? br2.bottom + 14 : br2.top - 14 - bh;
-      vbar.style.left = Math.round(bx) + "px";
+      /* The bar stands beside him — on whichever side faces the screen
+         center — vertically centered on the orb. */
+      var orbLeftHalf = br2.left + br2.width / 2 < innerWidth / 2;
+      var bx = orbLeftHalf ? br2.right + 14 : br2.left - 14 - bw;
+      var by = br2.top + br2.height / 2 - bh / 2;
+      vbar.style.left = Math.round(Math.min(Math.max(12, bx), innerWidth - bw - 12)) + "px";
       vbar.style.top = Math.round(Math.min(Math.max(12, by), innerHeight - bh - 12)) + "px";
       paintVision();
     });
@@ -1570,7 +1572,7 @@
              scaled to fit the pane. */
           var hw = hold.clientWidth || 500;
           var sc2 = hw / 1000;
-          var hh = Math.round(Math.min(430, innerHeight * 0.5));
+          var hh = Math.round(Math.min(660, innerHeight * 0.62));
           hold.style.height = hh + "px";
           frame.style.transform = "scale(" + sc2 + ")";
           frame.style.height = Math.round(hh / sc2) + "px";
