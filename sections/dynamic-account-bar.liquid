@@ -75,8 +75,9 @@
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
       .dyn-abar .ab-back, .dyn-abar .dh-icon-btn { background: rgba(255,255,255,0.88); }
     }
-    .dyn-abar .dh-apps-btn svg { width: 28px; height: 28px; fill: #fff; position: relative; z-index: 1;
-      filter: drop-shadow(0 1px 1px rgba(0, 40, 120, 0.45)); }
+    .dyn-abar .dh-apps-btn svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.7;
+      stroke-linecap: round; stroke-linejoin: round; position: relative; z-index: 1;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35)); }
     /* AssistiveTouch-style 9-dots: a floating circle that can be dragged
        anywhere and snaps to the screen edges; the window opens beside it. */
     .dyn-abar .dh-apps-menu { position: fixed; top: 12px; right: 12px; z-index: 95;
@@ -88,34 +89,25 @@
     .dyn-abar .dh-apps-menu:focus-within,
     .dyn-abar .dh-apps-menu:has(.dh-apps-btn[aria-expanded="true"]) { opacity: 1; }
     .dyn-abar .dh-apps-menu.is-dragging { transition: opacity 0.3s ease; }
-    /* Glass keycap: frosted rounded-square tray with a glossy blue button
-       raised inside it (Apple "Send" keycap look), white dots on top. */
+    /* Smoke glass: a dark translucent rounded square (same smoked material
+       as the app tiles) with a white fingerprint on top. */
     .dyn-abar .dh-apps-btn { width: 64px; height: 64px; border-radius: 20px; cursor: grab;
       /* touch-action lives HERE, not on the wrapper — the apps window is
          inside the wrapper and needs touch scrolling to work on phones. */
       touch-action: none;
       position: relative; overflow: visible; z-index: 1; color: #fff;
-      background: rgba(255, 255, 255, 0.3); border: 1px solid rgba(255, 255, 255, 0.7);
-      box-shadow: 0 18px 36px -14px rgba(29, 29, 31, 0.38), inset 0 1px 1px rgba(255, 255, 255, 0.8); }
-    .dyn-abar .dh-apps-btn:hover { background: rgba(255, 255, 255, 0.42); color: #fff;
-      box-shadow: 0 20px 40px -14px rgba(29, 29, 31, 0.42), inset 0 1px 1px rgba(255, 255, 255, 0.8); }
+      background: rgba(42, 42, 47, 0.42); border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+    .dyn-abar .dh-apps-btn:hover { background: rgba(42, 42, 47, 0.58); color: #fff;
+      box-shadow: 0 18px 36px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
     .dyn-abar .dh-apps-btn:active { cursor: grabbing; }
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .dyn-abar .dh-apps-btn { background: rgba(52, 52, 58, 0.94); }
+    }
     /* The keycap steps aside while its window is open (tap outside or press
        Escape to close; the window itself stays interactive). */
     .dyn-abar .dh-apps-btn { transition: opacity 0.18s ease, transform 0.18s ease, background 0.16s, box-shadow 0.15s; }
     .dyn-abar .dh-apps-btn[aria-expanded="true"] { opacity: 0; transform: scale(0.5); pointer-events: none; }
-    /* The blue keycap: bright top light, cyan under-glow, dark bottom depth. */
-    .dyn-abar .dh-apps-btn::after { content: ""; position: absolute; inset: 7px; border-radius: 13px;
-      z-index: 0; pointer-events: none;
-      background:
-        radial-gradient(130% 100% at 50% 0%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 42%),
-        radial-gradient(120% 120% at 18% 100%, rgba(94, 223, 255, 0.5), rgba(94, 223, 255, 0) 55%),
-        linear-gradient(160deg, #4da2ff 0%, #2b7bff 52%, #1c5cf2 100%);
-      box-shadow: 0 6px 14px -4px rgba(20, 70, 190, 0.55),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -7px 12px -6px rgba(0, 20, 90, 0.45);
-      transition: transform 0.12s ease, box-shadow 0.12s ease; }
-    .dyn-abar .dh-apps-btn:active::after { transform: translateY(1px) scale(0.985);
-      box-shadow: 0 3px 8px -3px rgba(20, 70, 190, 0.5), inset 0 -5px 10px -6px rgba(0, 20, 90, 0.45); }
     /* Siri ring: a thin rainbow band spinning around the tray's edge.
        The gradient angle animates (not the element — rotating a square mask
        would poke through the corners). */
@@ -317,7 +309,7 @@
     {%- if section.settings.show_apps -%}
       <div class="dh-menu dh-apps-menu">
         <button type="button" class="dh-icon-btn dh-apps-btn" aria-haspopup="true" aria-expanded="false" aria-label="{{ section.settings.apps_title | default: 'Apps' | escape }}">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="5" r="1.6"/><circle cx="12" cy="5" r="1.6"/><circle cx="19" cy="5" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/><circle cx="5" cy="19" r="1.6"/><circle cx="12" cy="19" r="1.6"/><circle cx="19" cy="19" r="1.6"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>
         </button>
         <div class="dh-pop dh-apps-pop" hidden>
           {%- if section.settings.show_widgets -%}
