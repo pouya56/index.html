@@ -543,7 +543,11 @@
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
       .dyn-abar .dh-vbar, .dyn-abar .dh-menu .dh-apps-pop.is-vision { background: rgba(255, 255, 255, 0.93); }
     }
-    .dyn-abar .dh-apps-pop.is-vision .dh-pop-x, .dyn-abar .dh-apps-pop.is-vision .dh-pop-title { display: none; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-pop-x, .dyn-abar .dh-apps-pop.is-vision > .dh-pop-title { display: none; }
+    .dyn-abar .dh-vacct[hidden] { display: none; }
+    .dyn-abar .dh-vacct { max-width: 480px; margin: 0 auto; }
+    .dyn-abar .dh-vacct .dh-pop-title { color: #1d1d1f; font-size: 19px; font-weight: 700; padding: 4px 10px 14px; }
+    .dyn-abar .dh-vacct .dh-pop-note { color: #66666b; }
     .dyn-abar .dh-apps-pop.is-vision .dh-apps-head { display: flex; flex-wrap: wrap; gap: 16px;
       align-items: center; justify-content: center; margin: 0; }
     .dyn-abar .dh-apps-pop.is-vision .dh-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -1069,7 +1073,8 @@
       '<button type="button" class="dh-vtab is-on" data-vtab="widgets" aria-label="Widgets"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button>' +
       '<button type="button" class="dh-vtab" data-vtab="saved" aria-label="Saved"><svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1Z"/></svg></button>' +
       '<button type="button" class="dh-vtab" data-vtab="cart" aria-label="Cart"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2 3h3l2.5 13h11l2-8H6"/></svg></button>' +
-      '<button type="button" class="dh-vtab" data-vtab="apps" aria-label="Apps"><svg viewBox="0 0 24 24"><circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/><circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/></svg></button>';
+      '<button type="button" class="dh-vtab" data-vtab="apps" aria-label="Apps"><svg viewBox="0 0 24 24"><circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/><circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/></svg></button>' +
+      '<button type="button" class="dh-vtab" data-vtab="account" aria-label="Account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></button>';
     host.appendChild(vbar);
     /* Every app gets its own tab; its window shows a live preview of the
        page (same-shop links embed; outside links get an Open button). */
@@ -1102,6 +1107,11 @@
       '<div class="dh-vprev-hold"></div>' +
       '<div class="dh-vprev-ext" hidden>This link opens outside the shop \u2014 use Open page.</div>';
     pop.appendChild(vprev);
+    /* Account tab: mirrors the corner account menu inside the window. */
+    var vacct = document.createElement("div");
+    vacct.className = "dh-vacct";
+    vacct.hidden = true;
+    pop.appendChild(vacct);
     var KEY = "dyn_abar_apps_pos";
     function zones() {
       /* Things the circle must not cover: corner links, back button,
@@ -1567,8 +1577,15 @@
         c.classList.toggle("is-on", c.getAttribute("data-vtab") === tab);
       });
       var app = tab.indexOf("app-") === 0 ? vApps[parseInt(tab.slice(4), 10)] : null;
+      var isAcct = tab === "account";
       vprev.hidden = !app;
-      pop.classList.toggle("is-preview", !!app);
+      vacct.hidden = !isAcct;
+      pop.classList.toggle("is-preview", !!app || isAcct);
+      if (isAcct && !vacct.getAttribute("data-filled")) {
+        vacct.setAttribute("data-filled", "1");
+        var acctPop = document.querySelector(".dyn-abar .dh-acct-pop");
+        vacct.innerHTML = acctPop ? acctPop.innerHTML : '<div class="dh-vload">Account menu unavailable.</div>';
+      }
       if (app) {
         vprev.querySelector(".dh-vprev-title").textContent = app.label;
         vprev.querySelector(".dh-vprev-open").setAttribute("href", app.href);
