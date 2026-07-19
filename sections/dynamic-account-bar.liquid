@@ -100,6 +100,10 @@
     .dyn-abar .dh-apps-btn:hover { background: rgba(255, 255, 255, 0.42); color: #fff;
       box-shadow: 0 20px 40px -14px rgba(29, 29, 31, 0.42), inset 0 1px 1px rgba(255, 255, 255, 0.8); }
     .dyn-abar .dh-apps-btn:active { cursor: grabbing; }
+    /* The keycap steps aside while its window is open (tap outside or press
+       Escape to close; the window itself stays interactive). */
+    .dyn-abar .dh-apps-btn { transition: opacity 0.18s ease, transform 0.18s ease, background 0.16s, box-shadow 0.15s; }
+    .dyn-abar .dh-apps-btn[aria-expanded="true"] { opacity: 0; transform: scale(0.5); pointer-events: none; }
     /* The blue keycap: bright top light, cyan under-glow, dark bottom depth. */
     .dyn-abar .dh-apps-btn::after { content: ""; position: absolute; inset: 7px; border-radius: 13px;
       z-index: 0; pointer-events: none;
