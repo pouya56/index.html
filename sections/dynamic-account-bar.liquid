@@ -146,6 +146,18 @@
       100% { transform: scale(1); }
     }
     .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye { transform: scaleY(0.15); }
+    /* Angry: furrowed slanted glare, red heat, trembling with rage. */
+    .dyn-abar .dh-apps-btn.is-angry { animation: abRage 0.28s linear infinite;
+      border-color: rgba(255, 105, 95, 0.65);
+      box-shadow: 0 0 30px rgba(255, 60, 50, 0.55), 0 14px 30px -10px rgba(0, 0, 0, 0.55),
+        inset 0 0 18px rgba(255, 70, 60, 0.42), inset 0 2px 6px rgba(255, 255, 255, 0.1); }
+    @keyframes abRage { 0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(-1.5px, 1px) rotate(-2deg); }
+      50% { transform: translate(1.5px, -1px) rotate(2deg); }
+      75% { transform: translate(-1px, -1px) rotate(-1deg); } }
+    .dyn-abar .dh-orb-eyes.is-angry .dh-orb-eye:first-child { transform: rotate(22deg) scaleY(0.5); }
+    .dyn-abar .dh-orb-eyes.is-angry .dh-orb-eye:last-child { transform: rotate(-22deg) scaleY(0.5); }
+    .dyn-abar .dh-orb-eyes.is-angry .dh-orb-eye::after { transform: translate(0, 1.5px); }
     /* Siri ring: a thin rainbow band spinning around the tray's edge.
        The gradient angle animates (not the element — rotating a square mask
        would poke through the corners). */
@@ -931,6 +943,10 @@
         if (!pop.hidden) { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); }
       }
       place(drag.bx + dx, drag.by + dy, false);
+      /* Track release speed so a hard throw into the wall reads as a slam. */
+      var t = Date.now();
+      if (drag.lt) drag.v = (Math.abs(e.clientX - drag.lx) + Math.abs(e.clientY - drag.ly)) / Math.max(1, t - drag.lt);
+      drag.lx = e.clientX; drag.ly = e.clientY; drag.lt = t;
     }, { passive: true });
     function endDrag() {
       if (!drag) return;
@@ -940,6 +956,13 @@
         var p = place(r.left, r.top, true);
         try { localStorage.setItem(KEY, JSON.stringify(p)); } catch (e) {}
         squelch = Date.now() + 350;
+        /* Three hard throws in a row → furious. */
+        if (!noMotion && (drag.v || 0) > 1.2) {
+          var nowS = Date.now();
+          slamN = (nowS - lastSlam < 8000) ? slamN + 1 : 1;
+          lastSlam = nowS;
+          if (slamN >= 3) enrage();
+        }
       }
       drag = null;
     }
@@ -969,7 +992,7 @@
         }
         lastPt = { x: px, y: py, t: now };
         lastFollow = now;
-        if (now < dizzyUntil) return;
+        if (now < dizzyUntil || now < angryUntil) return;
         if (travel > 1300) {
           travel = 0;
           dizzyUntil = now + 2800;
@@ -1010,7 +1033,7 @@
          watches the page go by while you scroll. */
       var coarse = window.matchMedia && matchMedia("(pointer: coarse)").matches;
       setInterval(function () {
-        if (asleep || Date.now() < dizzyUntil || Date.now() - lastFollow < (coarse ? 2200 : 4000)) return;
+        if (asleep || Date.now() < dizzyUntil || Date.now() < angryUntil || Date.now() - lastFollow < (coarse ? 2200 : 4000)) return;
         if (Math.random() < (coarse ? 0.8 : 0.72)) {
           var a = Math.random() * Math.PI * 2;
           eyes.style.setProperty("--ex", (Math.cos(a) * (2 + Math.random() * 5)).toFixed(1) + "px");
@@ -1023,7 +1046,7 @@
       if (coarse) {
         (function yawn() {
           setTimeout(function () {
-            if (!asleep && Date.now() > dizzyUntil) {
+            if (!asleep && Date.now() > dizzyUntil && Date.now() > angryUntil) {
               eyes.classList.add("is-yawn");
               setTimeout(function () { eyes.classList.remove("is-yawn"); }, 1150);
             }
@@ -1035,7 +1058,7 @@
           wake();
           var y = window.scrollY || 0, down = y > lastScroll;
           lastScroll = y;
-          if (Date.now() < dizzyUntil) return;
+          if (Date.now() < dizzyUntil || Date.now() < angryUntil) return;
           eyes.style.setProperty("--ex", "0px");
           eyes.style.setProperty("--ey", down ? "4px" : "-4px");
           lastFollow = Date.now();
@@ -1043,7 +1066,7 @@
       }
       (function blink() {
         setTimeout(function () {
-          if (asleep || Date.now() < dizzyUntil) { blink(); return; }
+          if (asleep || Date.now() < dizzyUntil || Date.now() < angryUntil) { blink(); return; }
           eyes.classList.add("is-blink");
           setTimeout(function () {
             eyes.classList.remove("is-blink");
@@ -1063,18 +1086,41 @@
        then re-dispatched so the normal toggle takes over. Closing clicks,
        drag releases (squelched earlier in capture), and reduced-motion
        visitors skip the theatrics. */
-    var punching = false;
+    var punching = false, punchN = 0, lastPunch = 0, angryUntil = 0, slamN = 0, lastSlam = 0;
     var noMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    /* Rage: 5 seconds of red trembling glare. While angry he refuses to
+       open. Cools down with a blink. */
+    function enrage() {
+      angryUntil = Date.now() + 5000;
+      punchN = 0; slamN = 0;
+      btn.classList.add("is-angry");
+      if (eyes) eyes.classList.add("is-angry");
+      setTimeout(function () {
+        btn.classList.remove("is-angry");
+        if (eyes) {
+          eyes.classList.remove("is-angry");
+          eyes.classList.add("is-blink");
+          setTimeout(function () { eyes.classList.remove("is-blink"); }, 140);
+        }
+      }, 5000);
+    }
     btn.addEventListener("click", function (e) {
-      if (noMotion || !pop.hidden) return;
+      if (!pop.hidden) return;
+      if (Date.now() < angryUntil) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+      if (noMotion) return;
       if (punching) { punching = false; return; }
       e.preventDefault();
       e.stopImmediatePropagation();
+      /* Three quick punches cross the line. */
+      var now = Date.now();
+      punchN = (now - lastPunch < 4000) ? punchN + 1 : 1;
+      lastPunch = now;
       btn.classList.add("is-punched");
       if (eyes) eyes.classList.add("is-dazed");
       setTimeout(function () {
         btn.classList.remove("is-punched");
         if (eyes) eyes.classList.remove("is-dazed");
+        if (punchN >= 3) { enrage(); return; }
         punching = true;
         btn.click();
       }, 430);
