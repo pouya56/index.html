@@ -279,6 +279,8 @@
     .dyn-abar .dh-w-saveddots button.is-on { background: #1d1d1f; transform: scale(1.25); }
     /* Phones keep the exact desktop layout — the window is laid out at its
        desktop width and scaled down to fit (see the positioning script). */
+    /* While the apps window is open on a phone the page behind it freezes. */
+    html.dyn-ablock, html.dyn-ablock body { overflow: hidden; overscroll-behavior: none; }
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-apps-pop, .dyn-abar .dh-app { animation: none !important; transition: none !important; } }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
   </style>
@@ -854,6 +856,17 @@
     }
     window.addEventListener("pointerup", endDrag, { passive: true });
     window.addEventListener("pointercancel", endDrag, { passive: true });
+    /* Phone: freeze the page while the window is open. Watching the hidden
+       attribute catches every close path (outside tap, Escape, drag). */
+    function syncLock() {
+      document.documentElement.classList.toggle("dyn-ablock", !pop.hidden && innerWidth <= 520);
+    }
+    new MutationObserver(syncLock).observe(pop, { attributes: true, attributeFilter: ["hidden"] });
+    document.addEventListener("touchmove", function (e) {
+      /* iOS can rubber-band through overflow:hidden — block moves that
+         start outside the window itself. */
+      if (document.documentElement.classList.contains("dyn-ablock") && !pop.contains(e.target)) e.preventDefault();
+    }, { passive: false });
     /* Position the window beside wherever the circle lives (runs after the
        generic open/close toggle, which was wired earlier). */
     btn.addEventListener("click", function () {
@@ -872,12 +885,9 @@
         var s = (innerWidth - 16) / (pop.offsetWidth || 590);
         pop.style.transform = "scale(" + s + ")";
         pop.style.animation = "none";
-        pop.style.maxHeight = "none";
         var vh = Math.min(pop.offsetHeight, 812) * s;
-        var top = (r.top + r.height / 2 < innerHeight / 2)
-          ? Math.min(r.bottom + 10, innerHeight - vh - 8)
-          : Math.max(8, r.top - 10 - vh);
-        if (top < 8) top = 8;
+        /* Centered on the screen, wherever the button is. */
+        var top = Math.max(8, (innerHeight - vh) / 2);
         pop.style.top = top + "px";
         pop.style.maxHeight = Math.min(812, (innerHeight - top - 8) / s) + "px";
         return;
