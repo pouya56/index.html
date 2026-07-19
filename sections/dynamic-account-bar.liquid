@@ -515,42 +515,48 @@
       .dyn-abar .dh-orb-eyes.is-nervous::after { width: 9px; height: 12px; right: -12px; top: -10px; }
       .dyn-abar .dh-orb-eyes.is-sad::before { width: 7.5px; height: 10px; right: 5px; top: 21px; }
     }
-    /* Vision-style windows (tablet/desktop): opening the orb doesn't show
-       a boxed window — the widgets and app tiles hover as individual glass
-       panels arranged over the page (widgets on top, Saved/Cart beneath,
-       apps in centered rows), no darkening behind. The pop becomes an
-       invisible full-screen stage; clicks on empty space fall through to
-       the page (which closes everything). */
-    .dyn-abar .dh-menu .dh-apps-pop.is-scatter { position: fixed; left: 0; right: 0; top: 0; bottom: 0;
-      width: auto; max-height: none; background: none; border: none; box-shadow: none;
-      -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: 0; padding: 0;
-      overflow: visible; pointer-events: none; animation: none; }
-    .dyn-abar .dh-apps-pop.is-scatter .dh-pop-title, .dyn-abar .dh-apps-pop.is-scatter .dh-pop-x { display: none; }
-    .dyn-abar .dh-apps-pop.is-scatter .dh-apps-head,
-    .dyn-abar .dh-apps-pop.is-scatter .dh-apps-grid { display: contents; }
-    .dyn-abar .dh-apps-pop.is-scatter .dh-apps-head > *,
-    .dyn-abar .dh-apps-pop.is-scatter .dh-apps-grid > * { position: absolute; margin: 0; pointer-events: auto;
-      animation: abScatterIn 0.45s cubic-bezier(0.3, 1.3, 0.5, 1) backwards; }
-    @keyframes abScatterIn { from { opacity: 0; transform: scale(0.55); } }
-    /* Each panel carries its own frosted blur — there's no window behind
-       them and no dark veil, so they must read over any page. */
-    .dyn-abar .dh-apps-pop.is-scatter .dh-app,
-    .dyn-abar .dh-apps-pop.is-scatter .dh-widget { background: rgba(42, 42, 47, 0.45);
-      -webkit-backdrop-filter: blur(18px) saturate(1.5); backdrop-filter: blur(18px) saturate(1.5); }
-    /* Floating card sizes (the grid used to size them). The bare greeting
-       gets its own smoked card so it reads over any page. */
-    .dyn-abar .dh-apps-pop.is-scatter .dh-w-greethead { width: 250px; border-radius: 22px; padding: 16px 20px;
-      background: rgba(42, 42, 47, 0.5); border: 1px solid rgba(255, 255, 255, 0.14);
-      -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4); }
-    .dyn-abar .dh-apps-pop.is-scatter .dh-w-clock { width: 150px; height: 150px; }
-    .dyn-abar .dh-apps-pop.is-scatter .dh-w-quote { width: 150px; height: 150px; aspect-ratio: auto; }
-    .dyn-abar .dh-apps-pop.is-scatter #dynAbSaved, .dyn-abar .dh-apps-pop.is-scatter #dynAbCart { width: 180px; }
-    .dyn-abar .dh-apps-pop.is-scatter .dh-w-savedbox { height: 200px; }
-    .dyn-abar .dh-apps-pop.is-scatter .dh-app { width: 134px; box-sizing: border-box; }
-    @media (prefers-reduced-motion: reduce) {
-      .dyn-abar .dh-apps-pop.is-scatter .dh-apps-head > *,
-      .dyn-abar .dh-apps-pop.is-scatter .dh-apps-grid > * { animation: none; }
-    }
+    /* Vision-style launcher (tablet/desktop): clicking the orb reveals a
+       vertical glass tab bar above or below him; each tab opens one
+       floating smoked-glass window beside it showing that tab's content.
+       No dark filter behind — the page stays live. */
+    .dyn-abar .dh-vbar { position: fixed; z-index: 2147483646; display: none; flex-direction: column;
+      align-items: center; gap: 6px; padding: 10px 8px; border-radius: 999px;
+      background: rgba(40, 40, 47, 0.55); border: 1px solid rgba(255, 255, 255, 0.16);
+      -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
+      box-shadow: 0 22px 50px -18px rgba(0, 0, 0, 0.6); animation: abPop 0.16s ease; }
+    .dyn-abar .dh-vbar.is-on { display: flex; }
+    .dyn-abar .dh-vtab { width: 46px; height: 46px; border-radius: 50%; border: none; padding: 0;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      background: transparent; color: rgba(255, 255, 255, 0.85); transition: background 0.15s, color 0.15s; }
+    .dyn-abar .dh-vtab:hover { background: rgba(255, 255, 255, 0.14); }
+    .dyn-abar .dh-vtab.is-on { background: rgba(255, 255, 255, 0.92); color: #1d1d1f; }
+    .dyn-abar .dh-vtab svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9;
+      stroke-linecap: round; stroke-linejoin: round; }
+    /* The window: one dark smoked pane showing the active tab. */
+    .dyn-abar .dh-menu .dh-apps-pop.is-vision { position: fixed; right: auto; bottom: auto;
+      width: 560px; max-width: calc(100vw - 150px); max-height: min(76vh, 640px); overflow-y: auto;
+      background: rgba(36, 36, 43, 0.62); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 30px;
+      -webkit-backdrop-filter: blur(28px) saturate(1.4); backdrop-filter: blur(28px) saturate(1.4);
+      box-shadow: 0 34px 80px -24px rgba(0, 0, 0, 0.65); padding: 22px; animation: abWin 0.18s ease; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-pop-x, .dyn-abar .dh-apps-pop.is-vision .dh-pop-title { display: none; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-apps-head { display: flex; flex-wrap: wrap; gap: 16px;
+      align-items: center; justify-content: center; margin: 0; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    /* Tab filtering — only the active tab's content shows. */
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-apps-grid,
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] #dynAbSaved,
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] #dynAbCart { display: none; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="saved"] .dh-apps-grid,
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="saved"] .dh-apps-head > :not(#dynAbSaved) { display: none; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="cart"] .dh-apps-grid,
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="cart"] .dh-apps-head > :not(#dynAbCart) { display: none; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="apps"] .dh-apps-head { display: none; }
+    /* Sizes inside the pane. */
+    .dyn-abar .dh-apps-pop.is-vision .dh-w-greethead { width: 100%; padding: 4px 6px 8px; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-w-clock { width: 150px; height: 150px; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-w-quote { width: 150px; height: 150px; aspect-ratio: auto; }
+    .dyn-abar .dh-apps-pop.is-vision #dynAbSaved, .dyn-abar .dh-apps-pop.is-vision #dynAbCart { width: 230px; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-w-savedbox { height: 250px; }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
   </style>
 
@@ -1023,6 +1029,16 @@
     host.style.display = "contents";
     document.body.appendChild(host);
     host.appendChild(menu);
+    /* The Vision tab bar: home (widgets), saved, cart, apps. Lives beside
+       the orb; each tab shows its content in the floating window. */
+    var vbar = document.createElement("div");
+    vbar.className = "dh-vbar";
+    vbar.innerHTML =
+      '<button type="button" class="dh-vtab is-on" data-vtab="widgets" aria-label="Widgets"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button>' +
+      '<button type="button" class="dh-vtab" data-vtab="saved" aria-label="Saved"><svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1Z"/></svg></button>' +
+      '<button type="button" class="dh-vtab" data-vtab="cart" aria-label="Cart"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2 3h3l2.5 13h11l2-8H6"/></svg></button>' +
+      '<button type="button" class="dh-vtab" data-vtab="apps" aria-label="Apps"><svg viewBox="0 0 24 24"><circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/><circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/></svg></button>';
+    host.appendChild(vbar);
     var KEY = "dyn_abar_apps_pos";
     function zones() {
       /* Things the circle must not cover: corner links, back button,
@@ -1423,9 +1439,11 @@
     /* Phone: freeze the page while the window is open. Watching the hidden
        attribute catches every close path (outside tap, Escape, drag). */
     function syncLock() {
-      /* Phone only — the desktop panels float over the live page with no
-         dark filter and no scroll freeze. */
+      /* Phone only — the desktop windows float over the live page with no
+         dark filter and no scroll freeze. The tab bar lives and dies with
+         the window on every close path. */
       document.documentElement.classList.toggle("dyn-ablock", !pop.hidden && innerWidth <= 520);
+      if (pop.hidden) vbar.classList.remove("is-on");
     }
     new MutationObserver(syncLock).observe(pop, { attributes: true, attributeFilter: ["hidden"] });
     document.addEventListener("touchmove", function (e) {
@@ -1439,7 +1457,8 @@
       if (pop.hidden) return;
       var r = btn.getBoundingClientRect();
       if (innerWidth <= 520) {
-        pop.classList.remove("is-scatter");
+        pop.classList.remove("is-vision");
+        vbar.classList.remove("is-on");
         /* Full-page window: desktop layout scaled so its width spans the
            screen exactly, stretched to cover the full height; anything
            taller scrolls inside. */
@@ -1458,43 +1477,46 @@
         pop.style.maxHeight = (innerHeight / s) + "px";
         return;
       }
-      /* Tablet/desktop: arrange everything as floating glass panels —
-         widgets on top, Saved/Cart beneath, apps in centered rows of
-         four — hovering over the page, Vision-style. */
-      pop.classList.add("is-scatter");
-      pop.style.position = ""; pop.style.left = ""; pop.style.right = ""; pop.style.top = "";
-      pop.style.bottom = ""; pop.style.width = ""; pop.style.maxHeight = ""; pop.style.height = "";
+      /* Tablet/desktop: reveal the tab bar above or below the orb and the
+         active tab's window beside it. */
+      pop.classList.add("is-vision");
+      if (!pop.getAttribute("data-vtab")) pop.setAttribute("data-vtab", "widgets");
+      pop.style.left = ""; pop.style.right = ""; pop.style.top = ""; pop.style.bottom = "";
+      pop.style.width = ""; pop.style.maxHeight = ""; pop.style.height = "";
       pop.style.transform = ""; pop.style.animation = "";
-      var head = Array.prototype.slice.call(pop.querySelectorAll(".dh-apps-head > *"));
-      var tiles = Array.prototype.slice.call(pop.querySelectorAll(".dh-apps-grid > *"));
-      var rows = [];
-      var boxes = head.filter(function (el) { return el.id === "dynAbSaved" || el.id === "dynAbCart"; });
-      var tops = head.filter(function (el) { return boxes.indexOf(el) === -1; });
-      if (tops.length) rows.push(tops);
-      if (boxes.length) rows.push(boxes);
-      for (var ci = 0; ci < tiles.length; ci += 4) rows.push(tiles.slice(ci, ci + 4));
-      var GAP = 22, RGAP = 24;
-      var sizes = rows.map(function (row) {
-        var w = 0, h = 0;
-        row.forEach(function (el) { w += el.offsetWidth; h = Math.max(h, el.offsetHeight); });
-        return { w: w + GAP * (row.length - 1), h: h };
-      });
-      var totalH = 0;
-      sizes.forEach(function (sz) { totalH += sz.h; });
-      totalH += RGAP * (rows.length - 1);
-      var y = Math.max(16, (innerHeight - totalH) / 2);
-      var n = 0;
-      rows.forEach(function (row, ri) {
-        var x = Math.max(16, (innerWidth - sizes[ri].w) / 2);
-        row.forEach(function (el) {
-          el.style.left = Math.round(x) + "px";
-          el.style.top = Math.round(y + (sizes[ri].h - el.offsetHeight) / 2) + "px";
-          el.style.animationDelay = (n++ * 40) + "ms";
-          x += el.offsetWidth + GAP;
-        });
-        y += sizes[ri].h + RGAP;
-      });
+      var br2 = btn.getBoundingClientRect();
+      vbar.classList.add("is-on");
+      var bw = vbar.offsetWidth, bh = vbar.offsetHeight;
+      var bx = Math.min(Math.max(12, br2.left + br2.width / 2 - bw / 2), innerWidth - bw - 12);
+      var below = br2.top + br2.height / 2 < innerHeight / 2;
+      var by = below ? br2.bottom + 14 : br2.top - 14 - bh;
+      vbar.style.left = Math.round(bx) + "px";
+      vbar.style.top = Math.round(Math.min(Math.max(12, by), innerHeight - bh - 12)) + "px";
+      paintVision();
     });
+    /* Position the active tab's window beside the bar, toward the screen
+       center, vertically aligned with the bar. */
+    function paintVision() {
+      Array.prototype.forEach.call(vbar.children, function (c) {
+        c.classList.toggle("is-on", c.getAttribute("data-vtab") === pop.getAttribute("data-vtab"));
+      });
+      var vb = vbar.getBoundingClientRect();
+      var pw = pop.offsetWidth || 560;
+      var onLeft = vb.left + vb.width / 2 < innerWidth / 2;
+      pop.style.left = onLeft
+        ? Math.round(vb.right + 16) + "px"
+        : Math.round(Math.max(16, vb.left - 16 - pw)) + "px";
+      var ph2 = pop.offsetHeight;
+      pop.style.top = Math.round(Math.min(Math.max(16, vb.top + vb.height / 2 - ph2 / 2), innerHeight - ph2 - 16)) + "px";
+    }
+    vbar.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var t = e.target.closest ? e.target.closest(".dh-vtab") : null;
+      if (!t || pop.hidden) return;
+      pop.setAttribute("data-vtab", t.getAttribute("data-vtab"));
+      paintVision();
+    });
+
   })();
   </script>
 </div>
