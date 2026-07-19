@@ -201,6 +201,16 @@
     .dyn-abar .dh-app.is-drag { opacity: 0.45; transform: scale(0.97); }
     .dyn-abar .dh-app-ic { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; }
     .dyn-abar .dh-app-ic img { width: 46px; height: 46px; object-fit: contain; }
+    /* Uploaded images fill the whole tile (the .dh-app-ic box stays in the
+       flow as an invisible spacer so image tiles match their siblings'
+       height); the label sits on a soft dark fade for contrast. */
+    .dyn-abar .dh-app.has-img { position: relative; overflow: hidden; isolation: isolate; }
+    .dyn-abar .dh-app.has-img .dh-app-ic img { position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; z-index: -2; }
+    .dyn-abar .dh-app.has-img::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+      height: 48%; z-index: -1; pointer-events: none;
+      background: linear-gradient(0deg, rgba(0, 0, 0, 0.48), rgba(0, 0, 0, 0)); }
+    .dyn-abar .dh-app.has-img .dh-app-label { text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); }
     .dyn-abar .dh-app-init { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px;
       border-radius: 14px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.12);
       color: rgba(255,255,255,0.9); font: 600 19px/1 var(--font); }
@@ -410,11 +420,11 @@
                       {%- else -%}{%- assign app_href = '#' -%}
                     {%- endcase -%}
                   {%- endif -%}
-                  <a class="dh-app" data-aid="{{ block.id }}" href="{{ app_href }}" {{ block.shopify_attributes }}>
+                  <a class="dh-app{% if block.settings.image != blank %} has-img{% endif %}" data-aid="{{ block.id }}" href="{{ app_href }}" {{ block.shopify_attributes }}>
                     <span class="dh-app-ic">
                       {%- if block.settings.image != blank -%}
-                        {%- assign aiw = block.settings.image.width | times: 30 | divided_by: block.settings.image.height -%}
-                        <img draggable="false" src="{{ block.settings.image | image_url: width: 90 }}" alt="" width="{{ aiw }}" height="30">
+                        <img draggable="false" src="{{ block.settings.image | image_url: width: 600 }}" alt="" loading="lazy"
+                          width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}">
                       {%- elsif block.settings.icon != 'none' -%}
                         <span class="dh-app-svg" aria-hidden="true">
                         {%- case block.settings.icon -%}
