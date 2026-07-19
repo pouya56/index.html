@@ -1961,16 +1961,31 @@
   .dyn-hero .dh-dragobj.is-drag { position: relative; z-index: 60; user-select: none; -webkit-user-select: none; }
   .dyn-hero .dh-dragobj.is-anim { transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
   html.dh-grabbing, html.dh-grabbing * { cursor: grabbing !important; }
+  /* The put-it-back button: hidden until something has been moved, then a
+     small liquid-glass circle with a backward arrow. */
+  .dyn-hero .dh-reset-btn { position: fixed; right: 20px; bottom: 78px; z-index: 70;
+    width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.16); backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    color: #1d1d1f; display: grid; place-items: center; cursor: pointer; padding: 0;
+    box-shadow: 0 14px 44px rgba(0,0,0,0.12);
+    opacity: 0; transform: scale(0.6); pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease; }
+  .dyn-hero .dh-reset-btn.is-on { opacity: 1; transform: scale(1); pointer-events: auto; }
+  .dyn-hero .dh-reset-btn:hover { background: rgba(255,255,255,0.32); }
+  .dyn-hero .dh-reset-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.5s ease; }
+  .dyn-hero .dh-reset-btn.is-spin svg { transform: rotate(-360deg); }
+  html.dyn-sky-dark .dyn-hero .dh-reset-btn { color: #fff; }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dyn-hero .dh-reset-btn { background: #fff; } }
 </style>
 <script>
 (function () {
-  /* Movable objects: pick up the logo card, search bar or buttons and leave
-     them anywhere. A real click (under 8px of travel) still clicks; anything
-     further becomes a drag. Each visitor's arrangement is remembered on
-     their device, and double-clicking an empty spot glides everything home. */
+  /* Movable objects: pick up the logo card, search bar or buttons and play.
+     A real click (under 8px of travel) still clicks; anything further becomes
+     a drag. Nothing is stored — a refresh puts everything back — and once
+     something moves, a small glass button appears that glides it all home. */
   var hero = document.getElementById("dynHero");
   if (!hero) return;
-  var KEY = "dyn_hero_places";
   var defs = [
     ["head", ".dh-head"],
     ["search", ".dh-search"],
@@ -1985,13 +2000,20 @@
   });
   if (!Object.keys(els).length) return;
   var pos = {};
-  try { pos = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { pos = {}; }
   function apply(k) {
     var el = els[k], p = pos[k] || [0, 0];
     el.style.setProperty("--ddx", p[0] + "px");
     el.style.setProperty("--ddy", p[1] + "px");
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(pos)); } catch (e) {} }
+  var resetBtn = document.createElement("button");
+  resetBtn.type = "button";
+  resetBtn.className = "dh-reset-btn";
+  resetBtn.setAttribute("aria-label", "Put everything back");
+  resetBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.8-6.5"/><polyline points="3 4.5 3 9.5 8 9.5"/></svg>';
+  hero.appendChild(resetBtn);
+  function updateReset() {
+    resetBtn.classList.toggle("is-on", Object.keys(pos).length > 0);
+  }
   function clamp(k) {
     /* Keep the object at least 6px inside the screen so it can't get lost. */
     var el = els[k], p = pos[k];
@@ -2003,7 +2025,6 @@
     p[1] = Math.min(Math.max(p[1], pad - by), Math.max(pad - by, innerHeight - pad - rc.height - by));
     apply(k);
   }
-  Object.keys(els).forEach(function (k) { apply(k); clamp(k); });
   var rT;
   window.addEventListener("resize", function () {
     clearTimeout(rT);
@@ -2068,12 +2089,12 @@
     drag.el.style.removeProperty("--dds");
     if (drag.moved) {
       clamp(drag.k);
-      /* Dropped basically home? Snap clean so nothing is stored. */
+      /* Dropped basically home? Snap clean, as if never moved. */
       if (pos[drag.k] && Math.abs(pos[drag.k][0]) < 2 && Math.abs(pos[drag.k][1]) < 2) {
         delete pos[drag.k];
         apply(drag.k);
       }
-      save();
+      updateReset();
       squelch = Date.now() + 320;
       drag.el.classList.remove("is-drag");
     }
@@ -2084,12 +2105,17 @@
   window.addEventListener("pointercancel", end, { passive: true });
   function goHome() {
     pos = {};
-    save();
+    updateReset();
     Object.keys(els).forEach(function (k) { els[k].classList.add("is-anim"); apply(k); });
     setTimeout(function () {
       Object.keys(els).forEach(function (k) { els[k].classList.remove("is-anim"); });
     }, 500);
   }
+  resetBtn.addEventListener("click", function () {
+    resetBtn.classList.add("is-spin");
+    goHome();
+    setTimeout(function () { resetBtn.classList.remove("is-spin"); }, 550);
+  });
   hero.addEventListener("dblclick", function (e) {
     if (e.target.closest(".dh-dragobj, a, button, input, .dh-pop, .dh-menu")) return;
     goHome();
@@ -2126,7 +2152,7 @@
     { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
     { "type": "checkbox", "id": "show_description", "label": "Show collection description", "default": true },
-    { "type": "checkbox", "id": "drag_objects", "label": "Movable objects (drag & drop)", "default": true, "info": "Shoppers can pick up the logo, search bar and buttons and leave them anywhere on the screen. Each visitor's arrangement is remembered on their device. Double-clicking an empty spot glides everything back home." },
+    { "type": "checkbox", "id": "drag_objects", "label": "Movable objects (drag & drop)", "default": true, "info": "Shoppers can pick up the logo, search bar and buttons and play with them. As soon as something moves, a small glass button appears that glides everything back to its place — and a refresh always starts fresh. On phones, hold an object a moment to pick it up; quick swipes still scroll." },
 
     { "type": "header", "content": "Search box" },
     { "type": "checkbox", "id": "show_search", "label": "Show live search box", "default": true, "info": "Filters the products already on this page as the shopper types — no page reload." },
