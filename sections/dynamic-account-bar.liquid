@@ -790,13 +790,11 @@
       x = Math.min(Math.max(x, 12), innerWidth - w - 12);
       y = Math.min(Math.max(y, 12), innerHeight - h - 12);
       if (snap) {
-        /* Nearest of the four edges, like AssistiveTouch. */
-        var dl = x - 12, dr = (innerWidth - w - 12) - x, dt = y - 12, db = (innerHeight - h - 12) - y;
-        var m = Math.min(dl, dr, dt, db), fixed;
-        if (m === dt) { y = 12; fixed = avoid(x, y, w, h, "x"); }
-        else if (m === db) { y = innerHeight - h - 12; fixed = avoid(x, y, w, h, "x"); }
-        else if (m === dl) { x = 12; fixed = avoid(x, y, w, h, "y"); }
-        else { x = innerWidth - w - 12; fixed = avoid(x, y, w, h, "y"); }
+        /* Sides only, like AssistiveTouch: hug the nearest of left/right
+           and keep the height where the user left it. */
+        var dl = x - 12, dr = (innerWidth - w - 12) - x;
+        x = (dl <= dr) ? 12 : innerWidth - w - 12;
+        var fixed = avoid(x, y, w, h, "y");
         x = Math.min(Math.max(fixed.x, 12), innerWidth - w - 12);
         y = Math.min(Math.max(fixed.y, 12), innerHeight - h - 12);
       }
