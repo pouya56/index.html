@@ -75,20 +75,41 @@
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
       .dyn-abar .ab-back, .dyn-abar .dh-icon-btn { background: rgba(255,255,255,0.88); }
     }
-    .dyn-abar .dh-apps-btn svg { width: 32px; height: 32px; fill: currentColor; }
+    .dyn-abar .dh-apps-btn svg { width: 28px; height: 28px; fill: #fff; position: relative; z-index: 1;
+      filter: drop-shadow(0 1px 1px rgba(0, 40, 120, 0.45)); }
     /* AssistiveTouch-style 9-dots: a floating circle that can be dragged
        anywhere and snaps to the screen edges; the window opens beside it. */
     .dyn-abar .dh-apps-menu { position: fixed; top: 12px; right: 12px; z-index: 95;
       touch-action: none; transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05), top 0.22s ease; }
     .dyn-abar .dh-apps-menu.is-dragging { transition: none; }
-    .dyn-abar .dh-apps-btn { width: 60px; height: 60px; border-radius: 50%; cursor: grab; position: relative; overflow: visible; z-index: 1; }
+    /* Glass keycap: frosted rounded-square tray with a glossy blue button
+       raised inside it (Apple "Send" keycap look), white dots on top. */
+    .dyn-abar .dh-apps-btn { width: 64px; height: 64px; border-radius: 20px; cursor: grab;
+      position: relative; overflow: visible; z-index: 1; color: #fff;
+      background: rgba(255, 255, 255, 0.3); border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 18px 36px -14px rgba(29, 29, 31, 0.38), inset 0 1px 1px rgba(255, 255, 255, 0.8); }
+    .dyn-abar .dh-apps-btn:hover { background: rgba(255, 255, 255, 0.42); color: #fff;
+      box-shadow: 0 20px 40px -14px rgba(29, 29, 31, 0.42), inset 0 1px 1px rgba(255, 255, 255, 0.8); }
     .dyn-abar .dh-apps-btn:active { cursor: grabbing; }
-    /* Siri ring: a thin rainbow band spinning around the circle's rim.
-       The conic gradient fills the pseudo-element and a mask keeps only the
-       outer 3px, so the colors live right on the edge. */
-    .dyn-abar .dh-apps-btn::before { content: ""; display: none; position: absolute; inset: -3px; border-radius: 50%;
+    /* The blue keycap: bright top light, cyan under-glow, dark bottom depth. */
+    .dyn-abar .dh-apps-btn::after { content: ""; position: absolute; inset: 7px; border-radius: 13px;
+      z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(130% 100% at 50% 0%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 42%),
+        radial-gradient(120% 120% at 18% 100%, rgba(94, 223, 255, 0.5), rgba(94, 223, 255, 0) 55%),
+        linear-gradient(160deg, #4da2ff 0%, #2b7bff 52%, #1c5cf2 100%);
+      box-shadow: 0 6px 14px -4px rgba(20, 70, 190, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -7px 12px -6px rgba(0, 20, 90, 0.45);
+      transition: transform 0.12s ease, box-shadow 0.12s ease; }
+    .dyn-abar .dh-apps-btn:active::after { transform: translateY(1px) scale(0.985);
+      box-shadow: 0 3px 8px -3px rgba(20, 70, 190, 0.5), inset 0 -5px 10px -6px rgba(0, 20, 90, 0.45); }
+    /* Siri ring: a thin rainbow band spinning around the tray's edge.
+       The gradient angle animates (not the element — rotating a square mask
+       would poke through the corners). */
+    @property --abA { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+    .dyn-abar .dh-apps-btn::before { content: ""; display: none; position: absolute; inset: -3px; border-radius: 23px;
       z-index: -1; pointer-events: none; padding: 3px;
-      background: conic-gradient(#4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff);
+      background: conic-gradient(from var(--abA), #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff);
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
       mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude;
@@ -96,7 +117,7 @@
     @supports ((-webkit-mask-composite: xor) or (mask-composite: exclude)) {
       .dyn-abar .dh-apps-btn::before { display: block; }
     }
-    @keyframes abSiri { to { transform: rotate(360deg); } }
+    @keyframes abSiri { to { --abA: 360deg; } }
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-apps-btn::before { animation: none; } }
     .dyn-abar .dh-acct-ic { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.5; }
     .dyn-abar .dh-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; display: block; }
