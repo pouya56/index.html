@@ -611,11 +611,14 @@
     .dyn-abar .dh-apps-pop.is-vision.is-preview .dh-apps-head,
     .dyn-abar .dh-apps-pop.is-vision.is-preview .dh-apps-grid { display: none; }
     .dyn-abar .dh-vprev[hidden] { display: none; }
-    .dyn-abar .dh-vprev-top { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 12px; }
-    .dyn-abar .dh-vprev-title { color: #1d1d1f; font-size: 16px; font-weight: 700; }
-    .dyn-abar .dh-vprev-open { color: #fff; background: rgba(42, 42, 47, 0.85); border-radius: 999px;
-      padding: 8px 16px; font-size: 13px; font-weight: 600; text-decoration: none; }
-    .dyn-abar .dh-vprev-open:hover { background: rgba(42, 42, 47, 1); }
+    .dyn-abar .dh-vprev-top { display: flex; align-items: center; justify-content: flex-end; padding: 0 0 12px; }
+    .dyn-abar .dh-vprev-open { width: 46px; height: 46px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; color: #1d1d1f;
+      background: rgba(255, 255, 255, 0.78); box-shadow: 0 8px 20px -8px rgba(29, 29, 31, 0.35);
+      transition: background 0.15s, transform 0.15s; }
+    .dyn-abar .dh-vprev-open:hover { background: #fff; transform: translateY(-1px); }
+    .dyn-abar .dh-vprev-open svg { width: 20px; height: 20px; fill: none; stroke: currentColor;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-vprev-hold { border-radius: 20px; background: rgba(255, 255, 255, 0.5); padding: 16px 18px; }
     /* Story sections drop their black stage inside the window. */
     .dyn-abar .dh-vprev-hold .dynaeimic-story { background: transparent !important;
@@ -1162,10 +1165,10 @@
     var vprev = document.createElement("div");
     vprev.className = "dh-vprev";
     vprev.hidden = true;
-    vprev.innerHTML = '<div class="dh-vprev-top"><span class="dh-vprev-title"></span>' +
-      '<a class="dh-vprev-open">Open page</a></div>' +
+    vprev.innerHTML = '<div class="dh-vprev-top">' +
+      '<a class="dh-vprev-open" aria-label="Open the full page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg></a></div>' +
       '<div class="dh-vprev-hold"></div>' +
-      '<div class="dh-vprev-ext" hidden>This link opens outside the shop \u2014 use Open page.</div>';
+      '<div class="dh-vprev-ext" hidden>This link opens outside the shop \u2014 use the arrow.</div>';
     pop.insertBefore(ptabs, pop.firstChild);
     pop.appendChild(vprev);
     ptabs.innerHTML = vApps.map(function (ap, i) {
@@ -1746,7 +1749,6 @@
         vacct.innerHTML = acctPop ? acctPop.innerHTML : '<div class="dh-vload">Account menu unavailable.</div>';
       }
       if (app) {
-        vprev.querySelector(".dh-vprev-title").textContent = app.label;
         vprev.querySelector(".dh-vprev-open").setAttribute("href", app.href);
         var hold = vprev.querySelector(".dh-vprev-hold");
         var extN = vprev.querySelector(".dh-vprev-ext");
