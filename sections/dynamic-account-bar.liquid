@@ -699,15 +699,60 @@
     var pop = menu && menu.querySelector(".dh-apps-pop");
     if (!menu || !btn || !pop) return;
     var KEY = "dyn_abar_apps_pos";
+    function zones() {
+      /* Things the circle must not cover: corner links, back button,
+         avatar, copyright — measured live on whatever page we're on. */
+      var out = [];
+      document.querySelectorAll(".dyn-abar .ab-l, .dyn-abar .ab-r, .dh-corner-group, .dh-copyright").forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.width > 4 && r.height > 4) out.push(r);
+      });
+      return out;
+    }
+    function hitZone(x, y, w, h, rs) {
+      for (var i = 0; i < rs.length; i++) {
+        var r = rs[i];
+        if (x < r.right + 10 && x + w > r.left - 10 && y < r.bottom + 10 && y + h > r.top - 10) return r;
+      }
+      return null;
+    }
+    function avoid(x, y, w, h, axis) {
+      /* Slide along the edge until clear of any protected element. */
+      var rs = zones();
+      for (var pass = 0; pass < 4; pass++) {
+        var hit = hitZone(x, y, w, h, rs);
+        if (!hit) break;
+        if (axis === "x") {
+          var lx = hit.left - w - 12, rx = hit.right + 12;
+          if (Math.abs(lx - x) < Math.abs(rx - x) && lx >= 12) x = lx;
+          else x = Math.min(rx, innerWidth - w - 12);
+        } else {
+          var uy = hit.top - h - 12, dy = hit.bottom + 12;
+          if (Math.abs(uy - y) < Math.abs(dy - y) && uy >= 12) y = uy;
+          else y = Math.min(dy, innerHeight - h - 12);
+        }
+      }
+      return { x: x, y: y };
+    }
     function place(x, y, snap) {
       var w = btn.offsetWidth || 60, h = btn.offsetHeight || 60;
+      x = Math.min(Math.max(x, 12), innerWidth - w - 12);
       y = Math.min(Math.max(y, 12), innerHeight - h - 12);
-      if (snap) x = (x + w / 2 < innerWidth / 2) ? 12 : innerWidth - w - 12;
-      else x = Math.min(Math.max(x, 12), innerWidth - w - 12);
+      if (snap) {
+        /* Nearest of the four edges, like AssistiveTouch. */
+        var dl = x - 12, dr = (innerWidth - w - 12) - x, dt = y - 12, db = (innerHeight - h - 12) - y;
+        var m = Math.min(dl, dr, dt, db), fixed;
+        if (m === dt) { y = 12; fixed = avoid(x, y, w, h, "x"); }
+        else if (m === db) { y = innerHeight - h - 12; fixed = avoid(x, y, w, h, "x"); }
+        else if (m === dl) { x = 12; fixed = avoid(x, y, w, h, "y"); }
+        else { x = innerWidth - w - 12; fixed = avoid(x, y, w, h, "y"); }
+        x = Math.min(Math.max(fixed.x, 12), innerWidth - w - 12);
+        y = Math.min(Math.max(fixed.y, 12), innerHeight - h - 12);
+      }
       menu.style.left = x + "px";
       menu.style.top = y + "px";
       menu.style.right = "auto";
-      menu.classList.toggle("is-leftside", x + w / 2 < innerWidth / 2);
+      menu.classList.toggle("is-leftside", x + (btn.offsetWidth || 60) / 2 < innerWidth / 2);
       return { x: x, y: y };
     }
     var saved = null;
