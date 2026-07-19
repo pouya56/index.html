@@ -23,6 +23,12 @@
 {%- assign veil_num = 40 | minus: section.settings.strength -%}
 {%- if veil_num < 0 -%}{%- assign veil_num = 0 -%}{%- endif -%}
 {%- assign veil_o = veil_num | divided_by: 44.0 -%}
+{%- assign sp_bg = section.settings.sphere_bg | default: '#b3a89c' -%}
+{%- assign sp1 = section.settings.sphere_c1 | default: '#ece1c6' -%}
+{%- assign sp2 = section.settings.sphere_c2 | default: '#64798c' -%}
+{%- assign sp1_hi = sp1 | color_lighten: 14 -%}{%- assign sp1_lo = sp1 | color_darken: 16 -%}
+{%- assign sp2_hi = sp2 | color_lighten: 16 -%}{%- assign sp2_lo = sp2 | color_darken: 18 -%}
+{%- assign sp_bg_hi = sp_bg | color_lighten: 7 -%}{%- assign sp_bg_lo = sp_bg | color_darken: 10 -%}
 
 <div class="dyn-bg" id="dynBg-{{ section.id }}" aria-hidden="true"
   {%- if look == 'weather' %} data-lat="{{ section.settings.weather_lat | default: '40.71' }}" data-lon="{{ section.settings.weather_lon | default: '-74.01' }}" data-alpha="{{ bg_alpha }}" data-animate="{% if section.settings.animate %}1{% else %}0{% endif %}" data-force="{{ section.settings.force_scene | default: 'auto' }}" data-veil="{{ veil_o }}"{% endif -%}>
@@ -37,6 +43,14 @@
   <span class="dyn-bg-parts" id="dynBgParts-{{ section.id }}"></span>
   <span class="dyn-bg-night" id="dynBgNight-{{ section.id }}" hidden></span>
   <span class="dyn-bg-veil"></span>
+  {%- elsif look == 'spheres' -%}
+  <span class="dyn-bg-spot dyn-bg-p1"></span>
+  <span class="dyn-bg-spot dyn-bg-p2"></span>
+  <span class="dyn-bg-blob dyn-bg-ball dyn-bg-k1"></span>
+  <span class="dyn-bg-blob dyn-bg-ball dyn-bg-k2"></span>
+  <span class="dyn-bg-blob dyn-bg-ball dyn-bg-k3"></span>
+  <span class="dyn-bg-blob dyn-bg-ball dyn-bg-k4"></span>
+  <span class="dyn-bg-blob dyn-bg-ball dyn-bg-k5"></span>
   {%- else -%}
   <span class="dyn-bg-blob dyn-bg-b1"></span>
   <span class="dyn-bg-blob dyn-bg-b2"></span>
@@ -53,6 +67,8 @@
     pointer-events: none;
     {%- if look == 'sun' -%}
     background: {{ section.settings.wall_color | default: '#ffb42e' }};
+    {%- elsif look == 'spheres' -%}
+    background: linear-gradient(180deg, {{ sp_bg_hi }} 0%, {{ sp_bg }} 55%, {{ sp_bg_lo }} 100%);
     {%- elsif section.settings.base_tint != blank and section.settings.base_tint != 'rgba(0,0,0,0)' -%}
     background: {{ section.settings.base_tint }};
     {%- endif -%}
@@ -200,6 +216,38 @@
   #dynBg-{{ section.id }} .dyn-bg-parts i { animation: none !important; }
   #dynBg-{{ section.id }} .dbg-rain, #dynBg-{{ section.id }} .dbg-snow, #dynBg-{{ section.id }} .dbg-flash { display: none; }
   {%- endunless -%}
+  {%- elsif look == 'spheres' -%}
+  /* Floating spheres: matte 3D balls (highlight up-left, shaded rim) bobbing
+     gently over a warm studio backdrop, with soft ground shadows below. */
+  #dynBg-{{ section.id }} .dyn-bg-ball { width: auto; height: auto; }
+  #dynBg-{{ section.id }} .dyn-bg-k1 { width: 15vmax; height: 15vmax; top: 6%; left: 16%;
+    background: radial-gradient(circle at 32% 28%, {{ sp1_hi }} 0%, {{ sp1 }} 48%, {{ sp1_lo }} 100%);
+    animation: dynBgBobA {{ spd }}s ease-in-out infinite alternate; }
+  #dynBg-{{ section.id }} .dyn-bg-k2 { width: 34vmax; height: 34vmax; top: -8%; right: 2%;
+    background: radial-gradient(circle at 32% 28%, {{ sp2_hi }} 0%, {{ sp2 }} 48%, {{ sp2_lo }} 100%);
+    animation: dynBgBobB {{ spd2 }}s ease-in-out infinite alternate; }
+  #dynBg-{{ section.id }} .dyn-bg-k3 { width: 28vmax; height: 28vmax; top: 26%; left: -7%;
+    background: radial-gradient(circle at 32% 28%, {{ sp2_hi }} 0%, {{ sp2 }} 48%, {{ sp2_lo }} 100%);
+    animation: dynBgBobA {{ spd3 }}s ease-in-out infinite alternate; animation-delay: -4s; }
+  #dynBg-{{ section.id }} .dyn-bg-k4 { width: 17vmax; height: 17vmax; top: 46%; right: 10%;
+    background: radial-gradient(circle at 32% 28%, {{ sp1_hi }} 0%, {{ sp1 }} 48%, {{ sp1_lo }} 100%);
+    animation: dynBgBobB {{ spd }}s ease-in-out infinite alternate; animation-delay: -7s; }
+  #dynBg-{{ section.id }} .dyn-bg-k5 { width: 21vmax; height: 21vmax; bottom: -6%; left: 32%;
+    background: radial-gradient(circle at 32% 28%, {{ sp1_hi }} 0%, {{ sp1 }} 48%, {{ sp1_lo }} 100%);
+    animation: dynBgBobA {{ spd2 }}s ease-in-out infinite alternate; animation-delay: -11s; }
+  @keyframes dynBgBobA {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(1.2vmax, 2.4vmax); }
+  }
+  @keyframes dynBgBobB {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(-1.5vmax, -2.2vmax); }
+  }
+  /* Soft pools of shadow on the "floor". */
+  #dynBg-{{ section.id }} .dyn-bg-spot { position: absolute; border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(45, 36, 26, 0.32) 0%, transparent 65%); filter: blur(14px); }
+  #dynBg-{{ section.id }} .dyn-bg-p1 { bottom: 2%; left: 24%; width: 38vmax; height: 8vmax; }
+  #dynBg-{{ section.id }} .dyn-bg-p2 { bottom: 7%; right: 4%; width: 26vmax; height: 6vmax; }
   {%- else -%}
   /* Soft color glows: each is a pre-faded radial gradient — no blur filter
      needed, so it stays feather-light on phones. Only transform animates. */
@@ -371,7 +419,8 @@
       "options": [
         { "value": "glow", "label": "Soft color glows" },
         { "value": "sun", "label": "Sunlight & shadow (wall)" },
-        { "value": "weather", "label": "Live weather (auto)" }
+        { "value": "weather", "label": "Live weather (auto)" },
+        { "value": "spheres", "label": "Floating spheres (3D)" }
       ],
       "default": "glow"
     },
@@ -388,6 +437,25 @@
       "label": "Weather longitude",
       "default": "-74.01",
       "info": "Right-click your city on Google Maps to read both numbers. Free Open-Meteo service, no key needed."
+    },
+    {
+      "type": "color",
+      "id": "sphere_bg",
+      "label": "Spheres backdrop",
+      "default": "#b3a89c",
+      "info": "Floating spheres look only (also the two sphere colors below)."
+    },
+    {
+      "type": "color",
+      "id": "sphere_c1",
+      "label": "Sphere color 1",
+      "default": "#ece1c6"
+    },
+    {
+      "type": "color",
+      "id": "sphere_c2",
+      "label": "Sphere color 2",
+      "default": "#64798c"
     },
     {
       "type": "select",
@@ -485,6 +553,12 @@
       "settings": {
         "look": "weather",
         "strength": 16
+      }
+    },
+    {
+      "name": "Dynamic Background — Floating spheres",
+      "settings": {
+        "look": "spheres"
       }
     }
   ]
