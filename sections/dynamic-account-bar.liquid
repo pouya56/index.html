@@ -551,6 +551,25 @@
     .dyn-abar .dh-apps-pop.is-vision[data-vtab="cart"] .dh-apps-grid,
     .dyn-abar .dh-apps-pop.is-vision[data-vtab="cart"] .dh-apps-head > :not(#dynAbCart) { display: none; }
     .dyn-abar .dh-apps-pop.is-vision[data-vtab="apps"] .dh-apps-head { display: none; }
+    /* App-page preview tabs: the window shows a scaled live embed of the
+       app's page with its name and an Open button on top. */
+    .dyn-abar .dh-apps-pop.is-vision.is-preview .dh-apps-head,
+    .dyn-abar .dh-apps-pop.is-vision.is-preview .dh-apps-grid { display: none; }
+    .dyn-abar .dh-vprev[hidden] { display: none; }
+    .dyn-abar .dh-vprev-top { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 12px; }
+    .dyn-abar .dh-vprev-title { color: #fff; font-size: 16px; font-weight: 700; }
+    .dyn-abar .dh-vprev-open { color: #fff; background: rgba(255, 255, 255, 0.16); border-radius: 999px;
+      padding: 8px 16px; font-size: 13px; font-weight: 600; text-decoration: none; }
+    .dyn-abar .dh-vprev-open:hover { background: rgba(255, 255, 255, 0.28); }
+    .dyn-abar .dh-vprev-hold { overflow: hidden; border-radius: 18px; background: #fff; }
+    .dyn-abar .dh-vprev-frame { width: 1000px; border: none; display: block; transform-origin: top left; background: #fff; }
+    .dyn-abar .dh-vprev-ext { color: rgba(255, 255, 255, 0.78); font-size: 14px; padding: 34px 10px; text-align: center; }
+    /* The bar can hold many tabs — it scrolls quietly if the screen is short. */
+    .dyn-abar .dh-vbar { max-height: calc(100vh - 24px); overflow-y: auto;
+      scrollbar-width: none; -ms-overflow-style: none; }
+    .dyn-abar .dh-vbar::-webkit-scrollbar { display: none; }
+    .dyn-abar .dh-vtab { flex: none; }
+    .dyn-abar .dh-vtab img { width: 30px; height: 30px; object-fit: cover; border-radius: 9px; }
     /* Sizes inside the pane. */
     .dyn-abar .dh-apps-pop.is-vision .dh-w-greethead { width: 100%; padding: 4px 6px 8px; }
     .dyn-abar .dh-apps-pop.is-vision .dh-w-clock { width: 150px; height: 150px; }
@@ -1019,6 +1038,9 @@
     var btn = menu && menu.querySelector(".dh-apps-btn");
     var pop = menu && menu.querySelector(".dh-apps-pop");
     if (!menu || !btn || !pop) return;
+    /* Inside a page-preview iframe the floating orb stays out of the way
+       (and doesn't recurse). */
+    if (window.top !== window.self) { menu.style.display = "none"; return; }
     /* The bar can carry transforms (sticky peek-hide slides the whole
        section up) and a transformed ancestor hijacks position:fixed —
        the circle would stop following the pointer and ride away with the
@@ -1039,6 +1061,37 @@
       '<button type="button" class="dh-vtab" data-vtab="cart" aria-label="Cart"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2 3h3l2.5 13h11l2-8H6"/></svg></button>' +
       '<button type="button" class="dh-vtab" data-vtab="apps" aria-label="Apps"><svg viewBox="0 0 24 24"><circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/><circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/></svg></button>';
     host.appendChild(vbar);
+    /* Every app gets its own tab; its window shows a live preview of the
+       page (same-shop links embed; outside links get an Open button). */
+    var vApps = [];
+    Array.prototype.forEach.call(pop.querySelectorAll(".dh-apps-grid .dh-app"), function (a, i) {
+      var href = a.getAttribute("href") || "#", label = "App", ext = false, abs = href;
+      var lab = a.querySelector(".dh-app-label");
+      if (lab && lab.textContent) label = lab.textContent.trim();
+      try {
+        var u = new URL(href, location.href);
+        abs = u.href;
+        ext = u.host !== location.host;
+      } catch (e2) {}
+      vApps.push({ href: abs, label: label, ext: ext });
+      var t = document.createElement("button");
+      t.type = "button";
+      t.className = "dh-vtab";
+      t.setAttribute("data-vtab", "app-" + i);
+      t.setAttribute("aria-label", label);
+      var icon = a.querySelector(".dh-app-ic svg, .dh-app-ic img");
+      if (icon) t.appendChild(icon.cloneNode(true));
+      else t.textContent = (label.charAt(0) || "\u2022").toUpperCase();
+      vbar.appendChild(t);
+    });
+    var vprev = document.createElement("div");
+    vprev.className = "dh-vprev";
+    vprev.hidden = true;
+    vprev.innerHTML = '<div class="dh-vprev-top"><span class="dh-vprev-title"></span>' +
+      '<a class="dh-vprev-open">Open page</a></div>' +
+      '<div class="dh-vprev-hold"><iframe class="dh-vprev-frame" title="Page preview"></iframe></div>' +
+      '<div class="dh-vprev-ext" hidden>This link opens outside the shop \u2014 use Open page.</div>';
+    pop.appendChild(vprev);
     var KEY = "dyn_abar_apps_pos";
     function zones() {
       /* Things the circle must not cover: corner links, back button,
@@ -1497,9 +1550,33 @@
     /* Position the active tab's window beside the bar, toward the screen
        center, vertically aligned with the bar. */
     function paintVision() {
+      var tab = pop.getAttribute("data-vtab") || "widgets";
       Array.prototype.forEach.call(vbar.children, function (c) {
-        c.classList.toggle("is-on", c.getAttribute("data-vtab") === pop.getAttribute("data-vtab"));
+        c.classList.toggle("is-on", c.getAttribute("data-vtab") === tab);
       });
+      var app = tab.indexOf("app-") === 0 ? vApps[parseInt(tab.slice(4), 10)] : null;
+      vprev.hidden = !app;
+      pop.classList.toggle("is-preview", !!app);
+      if (app) {
+        vprev.querySelector(".dh-vprev-title").textContent = app.label;
+        vprev.querySelector(".dh-vprev-open").setAttribute("href", app.href);
+        var hold = vprev.querySelector(".dh-vprev-hold");
+        var frame = vprev.querySelector(".dh-vprev-frame");
+        var extN = vprev.querySelector(".dh-vprev-ext");
+        hold.hidden = !!app.ext;
+        extN.hidden = !app.ext;
+        if (!app.ext) {
+          if (frame.getAttribute("src") !== app.href) frame.setAttribute("src", app.href);
+          /* Miniature desktop rendering: the page lays out at 1000px and is
+             scaled to fit the pane. */
+          var hw = hold.clientWidth || 500;
+          var sc2 = hw / 1000;
+          var hh = Math.round(Math.min(430, innerHeight * 0.5));
+          hold.style.height = hh + "px";
+          frame.style.transform = "scale(" + sc2 + ")";
+          frame.style.height = Math.round(hh / sc2) + "px";
+        }
+      }
       var vb = vbar.getBoundingClientRect();
       var pw = pop.offsetWidth || 560;
       var onLeft = vb.left + vb.width / 2 < innerWidth / 2;
