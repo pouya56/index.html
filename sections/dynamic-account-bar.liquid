@@ -169,7 +169,7 @@
     .dyn-abar .dh-apps-head .is-drag { opacity: 0.45; transform: scale(0.97); }
     .dyn-abar .dh-w-greethead { grid-column: span 2; }
     .dyn-abar .dh-w-clock, .dyn-abar .dh-w-quote { grid-column: span 1; grid-row: span 1; }
-    .dyn-abar .dh-w-saved { grid-column: 1 / -1; grid-row: span 2; }
+    .dyn-abar .dh-w-saved { grid-column: span 2; grid-row: span 2; }
     .dyn-abar .dh-widget { border-radius: 20px; padding: 12px 14px; color: #fff;
       background: rgba(42, 42, 47, 0.28); border: 1px solid rgba(255,255,255,0.10);
       box-shadow: none; }
@@ -192,10 +192,19 @@
     /* Live "Saved" tile — the visitor's wishlist as an app-icon carousel:
        one square product at a time (latest first), swipe or tap the dots to
        browse; each square links to its product. Hidden when empty. */
+    /* Saved & Cart previews: a white SQUARE box (carousel + dots inside) with
+       the name written under it. Empty lists show a friendly empty state. */
     .dyn-abar .dh-w-saved { display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 10px 10px 9px; border-radius: 20px; background: #fff;
-      box-shadow: 0 10px 22px rgba(0,0,0,0.22); }
-    .dyn-abar .dh-w-saved[hidden] { display: none; }
+      gap: 7px; padding: 0; background: none; border: none; box-shadow: none; min-height: 0; }
+    .dyn-abar .dh-w-savedbox { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0;
+      aspect-ratio: 1 / 1; box-sizing: border-box; padding: 9px 9px 7px; border-radius: 20px;
+      background: #fff; box-shadow: 0 10px 22px rgba(0,0,0,0.22); }
+    .dyn-abar .dh-w-boxlabel { flex: none; font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.92);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+    .dyn-abar .dh-w-empty { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 6px; color: #86868b; font-size: 12px; font-weight: 600; text-align: center; }
+    .dyn-abar .dh-w-empty svg { width: 26px; height: 26px; fill: none; stroke: #b0b0b5; stroke-width: 1.6;
+      stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-w-savedtrack { display: flex; width: 100%; flex: 1 1 auto; min-height: 0; overflow-x: auto; scroll-snap-type: x mandatory;
       border-radius: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     .dyn-abar .dh-w-savedtrack::-webkit-scrollbar { display: none; }
@@ -270,9 +279,19 @@
               <svg class="dh-w-plant" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13C12 9.5 9.5 7 5.5 7 5.5 10.5 8 13 12 13Z"/><path d="M12 11c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6Z"/></svg>
               <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
             </div>
-            <div class="dh-w-mini dh-w-saved" id="dynAbSaved" data-wid="saved" hidden>
-              <div class="dh-w-savedtrack" id="dynAbSavedTrack"></div>
-              <div class="dh-w-saveddots" id="dynAbSavedDots"></div>
+            <div class="dh-w-mini dh-w-saved" id="dynAbSaved" data-wid="saved">
+              <div class="dh-w-savedbox">
+                <div class="dh-w-savedtrack" id="dynAbSavedTrack"></div>
+                <div class="dh-w-saveddots" id="dynAbSavedDots"></div>
+              </div>
+              <span class="dh-w-boxlabel">Saved</span>
+            </div>
+            <div class="dh-w-mini dh-w-saved" id="dynAbCart" data-wid="cart">
+              <div class="dh-w-savedbox">
+                <div class="dh-w-savedtrack" id="dynAbCartTrack"></div>
+                <div class="dh-w-saveddots" id="dynAbCartDots"></div>
+              </div>
+              <span class="dh-w-boxlabel">Cart</span>
             </div>
           </div>
           {%- elsif section.settings.apps_title != blank -%}<div class="dh-pop-title">{{ section.settings.apps_title }}</div>{%- endif -%}
@@ -504,46 +523,58 @@
       elFocus.textContent = qBag.pop();
     }
     pickQuote();
-    /* Saved tile: the wishlist as a one-square carousel, latest first. Swipe
-       (scroll-snap) or tap a dot to browse; each square opens its product.
-       Live: re-renders the moment something is saved or removed. */
-    var savedCard = document.getElementById("dynAbSaved"),
-        savedTrack = document.getElementById("dynAbSavedTrack"),
-        savedDots = document.getElementById("dynAbSavedDots");
+    /* Saved & Cart previews: one-square carousels with dots (latest first for
+       Saved, cart order for Cart). Swipe or tap a dot to browse; each square
+       opens its product. Both live-update, and empty lists say so. */
     function escA(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
-    function markDot(i) {
-      var ds = savedDots.children;
-      for (var k = 0; k < ds.length; k++) { ds[k].className = k === i ? "is-on" : ""; }
-    }
-    function renderSaved() {
-      if (!savedCard) return;
-      var list = [];
-      try { var a = JSON.parse(localStorage.getItem("dyn_wishlist") || "[]"); if (a && a.length) list = a; } catch (e) {}
-      if (!list.length) { savedCard.hidden = true; return; }
-      var pick = list.slice(0, 8), html = "", dots = "", i;
-      for (i = 0; i < pick.length; i++) {
-        html += '<a draggable="false" href="' + escA(pick[i].url || "/pages/wishlist") + '" aria-label="' + escA(pick[i].title || "Saved product") + '">' +
-                (pick[i].image ? '<img draggable="false" src="' + escA(pick[i].image) + '" alt="" loading="lazy">' : '<span class="dh-w-savedph"></span>') + '</a>';
-        dots += '<button type="button"' + (i === 0 ? ' class="is-on"' : '') + ' data-i="' + i + '" aria-label="Saved item ' + (i + 1) + '"></button>';
-      }
-      savedTrack.innerHTML = html;
-      savedDots.innerHTML = pick.length > 1 ? dots : "";
-      savedTrack.scrollLeft = 0;
-      savedCard.hidden = false;
-    }
-    if (savedTrack) {
-      savedTrack.addEventListener("scroll", function () {
-        var w = savedTrack.clientWidth || 1;
-        markDot(Math.round(savedTrack.scrollLeft / w));
+    function wireCar(track, dots) {
+      track.addEventListener("scroll", function () {
+        var w = track.clientWidth || 1, at = Math.round(track.scrollLeft / w), ds = dots.children;
+        for (var k = 0; k < ds.length; k++) { ds[k].className = k === at ? "is-on" : ""; }
       }, { passive: true });
-      savedDots.addEventListener("click", function (e) {
+      dots.addEventListener("click", function (e) {
         var b = e.target.closest("button"); if (!b) return;
-        savedTrack.scrollTo({ left: (parseInt(b.getAttribute("data-i"), 10) || 0) * savedTrack.clientWidth, behavior: "smooth" });
+        track.scrollTo({ left: (parseInt(b.getAttribute("data-i"), 10) || 0) * track.clientWidth, behavior: "smooth" });
       });
     }
+    function renderCar(track, dots, items, emptyHtml) {
+      if (!track) return;
+      if (!items.length) { track.innerHTML = emptyHtml; dots.innerHTML = ""; return; }
+      var pick = items.slice(0, 8), html = "", dh = "", i;
+      for (i = 0; i < pick.length; i++) {
+        html += '<a draggable="false" href="' + escA(pick[i].url || "#") + '" aria-label="' + escA(pick[i].title || "Product") + '">' +
+                (pick[i].image ? '<img draggable="false" src="' + escA(pick[i].image) + '" alt="" loading="lazy">' : '<span class="dh-w-savedph"></span>') + '</a>';
+        dh += '<button type="button"' + (i === 0 ? ' class="is-on"' : '') + ' data-i="' + i + '" aria-label="Item ' + (i + 1) + '"></button>';
+      }
+      track.innerHTML = html;
+      dots.innerHTML = pick.length > 1 ? dh : "";
+      track.scrollLeft = 0;
+    }
+    var savedTrack = document.getElementById("dynAbSavedTrack"), savedDots = document.getElementById("dynAbSavedDots");
+    var cartTrack = document.getElementById("dynAbCartTrack"), cartDots = document.getElementById("dynAbCartDots");
+    var EMPTY_SAVED = '<div class="dh-w-empty"><svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1Z"/></svg>Nothing saved yet</div>';
+    var EMPTY_CART = '<div class="dh-w-empty"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2 3h3l2.5 13h11l2-8H6"/></svg>Cart is empty</div>';
+    function renderSaved() {
+      var list = [];
+      try { var a = JSON.parse(localStorage.getItem("dyn_wishlist") || "[]"); if (a && a.length) list = a; } catch (e) {}
+      renderCar(savedTrack, savedDots, list, EMPTY_SAVED);
+    }
+    function loadCart() {
+      if (!cartTrack) return;
+      fetch("/cart.js", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (c) {
+        var items = (c && c.items ? c.items : []).map(function (it) {
+          return { image: it.image, url: it.url, title: it.product_title };
+        });
+        renderCar(cartTrack, cartDots, items, EMPTY_CART);
+      }).catch(function () { renderCar(cartTrack, cartDots, [], EMPTY_CART); });
+    }
+    if (savedTrack) wireCar(savedTrack, savedDots);
+    if (cartTrack) wireCar(cartTrack, cartDots);
     renderSaved();
+    loadCart();
     window.addEventListener("dyn-wishlist-change", renderSaved);
     window.addEventListener("storage", function (e) { if (e && e.key === "dyn_wishlist") renderSaved(); });
+    window.addEventListener("dyn:added-to-cart", loadCart);
     /* macOS-style rearranging: drag a widget over another and they trade
        places, the grid reflowing live. The order is remembered per browser. */
     var ORDER_KEY = "dyn_widget_order";
@@ -583,7 +614,7 @@
       });
     })();
     var apBtn = document.querySelector(".dyn-abar .dh-apps-btn");
-    if (apBtn) { apBtn.addEventListener("click", function () { pickQuote(); renderSaved(); }); }
+    if (apBtn) { apBtn.addEventListener("click", function () { pickQuote(); renderSaved(); loadCart(); }); }
   })();
   {%- endif -%}
   (function () {
