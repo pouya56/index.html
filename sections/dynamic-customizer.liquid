@@ -390,30 +390,32 @@ button { font-family: inherit; cursor: pointer; }
 #customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover {
   background: rgba(255, 255, 255, 0.32); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.14);
 }
-/* "Add design" (popup) — matte cushion in shocking pink: a soft-touch puffy
-   squircle like the reference tiles — pillowed top light, deep under-curve,
-   and a soft diagonal shadow on the surface. No gloss: matte. */
+/* "Add design" (popup) — liquid glass, same recipe as Customize / Add to
+   Cart and the hero's Surprise-me button: matte frost, thin bright rim,
+   soft shadow, rainbow glow on hover. */
 #uploadApply.btn-primary {
-  border-radius: 20px; border: none; color: #fff;
-  background: linear-gradient(180deg, #ff59b3, #f5169b 55%, #e00e8b);
-  box-shadow:
-    8px 12px 22px rgba(150, 10, 90, 0.32),
-    0 3px 6px rgba(0, 0, 0, 0.08),
-    inset 0 4px 8px rgba(255, 255, 255, 0.42),
-    inset 0 -7px 12px rgba(150, 0, 85, 0.4),
-    inset 3px 0 6px rgba(255, 255, 255, 0.16),
-    inset -3px 0 6px rgba(150, 0, 85, 0.16);
-  transition: background var(--dur-fast) var(--ease-out), box-shadow .2s ease, transform var(--dur-fast) var(--ease-out);
+  position: relative; overflow: visible; z-index: 1; border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  color: var(--ink); font-weight: 500; text-shadow: none;
+  background: rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.12);
+  transition: background .16s ease, box-shadow .2s ease, transform var(--dur-fast) var(--ease-out);
 }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #uploadApply.btn-primary { background: #fff; border-color: var(--line); }
+}
+#uploadApply.btn-primary::before {
+  content: ""; position: absolute; inset: -4px; border-radius: 22px; z-index: -1; pointer-events: none;
+  background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff);
+  background-size: 300% 100%;
+  animation: dynSiri 6s linear infinite;
+  filter: blur(9px); opacity: 0; transition: opacity .35s ease;
+}
+#uploadApply.btn-primary:hover:not([disabled])::before { opacity: 0.95; }
+@media (prefers-reduced-motion: reduce) { #uploadApply.btn-primary::before { animation: none; } }
 #uploadApply.btn-primary:hover:not([disabled]) {
-  background: linear-gradient(180deg, #ff6cbc, #f827a5 55%, #e61593);
-  box-shadow:
-    10px 15px 26px rgba(150, 10, 90, 0.38),
-    0 3px 6px rgba(0, 0, 0, 0.07),
-    inset 0 4px 8px rgba(255, 255, 255, 0.48),
-    inset 0 -7px 12px rgba(150, 0, 85, 0.4),
-    inset 3px 0 6px rgba(255, 255, 255, 0.16),
-    inset -3px 0 6px rgba(150, 0, 85, 0.16);
+  background: rgba(255, 255, 255, 0.32); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.14);
 }
 #uploadApply.btn-primary[disabled] { opacity: 0.55; }
 .btn-secondary {
@@ -1800,10 +1802,12 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 #uploadApply.btn-primary {
   background: url({{ img_ad | image_url: width: 900 }}) center / 100% 100% no-repeat;
   box-shadow: none; border-radius: 0; border: none; overflow: visible;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
   height: {{ img_ad_h }}px; aspect-ratio: {{ img_ad.aspect_ratio }};
   padding: 0;
   filter: drop-shadow(0 10px 16px rgba(60, 60, 90, 0.3));
 }
+#uploadApply.btn-primary::before { display: none; }
 {%- unless img_text_on -%}
 #uploadApply.btn-primary { font-size: 0; text-shadow: none; }
 {%- endunless -%}
