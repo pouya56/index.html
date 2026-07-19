@@ -141,9 +141,13 @@
   .dyn-hero.dh-landing .dh-head .dh-head-logo { height: clamp(40px, 6.5vw, 60px); }
   .dyn-hero.dh-landing .dh-head .dh-head-video { max-height: clamp(120px, 30vh, 280px); max-width: var(--media-w); }
   .dyn-hero.dh-landing .dh-head h1 { font-size: clamp(30px, 5vw, 46px); }
-  /* min(100%, …) not vw: the wrap has side padding, and a vw-based width
-     overflowed it on phones, pushing the bar off-centre. Desktop: wide. */
-  .dyn-hero.dh-landing .dh-search { width: min(100%, 1200px); max-width: 1200px; margin-top: 30px; margin-bottom: 30px; margin-left: auto; margin-right: auto; }
+  /* The bar outgrows the content column (96vw up to 2400px), so it is
+     centred on the PAGE by margin math instead of auto margins — auto
+     margins left-align an overflowing child, which pushed it off-centre
+     on phones before. */
+  .dyn-hero.dh-landing .dh-search { width: min(96vw, 2400px); max-width: none;
+    margin-top: 30px; margin-bottom: 30px;
+    margin-left: calc(50% - min(96vw, 2400px) / 2); margin-right: 0; }
 
   /* Stacking order over the floating photos (z 1): the search bar is the
      boss (12), the buttons come second (11), the logo third (10). */
