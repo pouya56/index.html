@@ -274,14 +274,23 @@
        Saved and Cart each full width, and apps two per row. The window
        scales down 20% and scrolls (see the positioning script). */
     @media (max-width: 520px) {
-      /* Row 1 (auto) holds the date; every later row is 140px, so the
-         Saved/Cart tiles' 2-row span matches their 290px box exactly. */
-      .dyn-abar .dh-apps-head { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; grid-auto-rows: 140px; }
-      .dyn-abar .dh-w-greethead { grid-column: span 2; }
-      .dyn-abar .dh-w-clock, .dyn-abar .dh-w-quote { grid-column: span 1; }
+      .dyn-abar .dh-apps-head { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; grid-auto-rows: auto; }
+      /* Date banner: fills the whole top row, scaled up. */
+      .dyn-abar .dh-w-greethead { grid-column: span 2; padding: 12px 5px 6px; }
+      .dyn-abar .dh-w-greet { font-size: 19px; }
+      .dyn-abar .dh-w-greet svg { width: 21px; height: 21px; }
+      .dyn-abar .dh-w-day { font-size: 58px; margin-top: 8px; }
+      .dyn-abar .dh-w-sub { font-size: 21px; margin-top: 8px; }
+      /* Clock and quote: true squares, each one grid cell — the same
+         footprint as an app tile in the two-column grid below. */
+      .dyn-abar .dh-w-clock, .dyn-abar .dh-w-quote { grid-column: span 1; grid-row: auto;
+        width: 100%; height: auto; aspect-ratio: 1 / 1; justify-self: stretch; }
+      .dyn-abar .dh-w-face { width: 100%; height: auto; }
+      .dyn-abar .dh-w-plant { width: 30px; height: 30px; }
+      .dyn-abar .dh-w-mlines { font-size: 22px; }
       /* IDs beat classes — the desktop pin rules (#dynAbCart: columns 3-5)
          must be re-pinned to the 2-column grid at the same specificity. */
-      .dyn-abar #dynAbSaved, .dyn-abar #dynAbCart { grid-column: 1 / 3; }
+      .dyn-abar #dynAbSaved, .dyn-abar #dynAbCart { grid-column: 1 / 3; grid-row: auto; }
       .dyn-abar .dh-apps-grid { grid-template-columns: repeat(2, 1fr); }
     }
     /* While the apps window is open on a phone the page behind it freezes
