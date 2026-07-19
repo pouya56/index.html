@@ -547,7 +547,10 @@
     /* In-window page tabs (Apps view): "All" plus each page as a pill
        across the top of the window; the chosen page renders below in this
        same window. */
-    .dyn-abar .dh-ptabs { display: none; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .dyn-abar .dh-ptabs { display: none; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; justify-content: center; }
+    /* The Apps view opens with just the centered pills — the pane below
+       stays empty until a page is picked. */
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="apps"] .dh-apps-grid { display: none; }
     .dyn-abar .dh-apps-pop.is-vision.is-ptabs .dh-ptabs { display: flex; }
     .dyn-abar .dh-ptab { border: none; border-radius: 999px; padding: 9px 15px; cursor: pointer;
       font: 600 13.5px/1 -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
