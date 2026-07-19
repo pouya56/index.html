@@ -1071,10 +1071,14 @@
   {%- assign has_float = false -%}
   {%- for b in section.blocks -%}{%- if b.type == 'float' and b.settings.image != blank -%}{%- assign has_float = true -%}{%- endif -%}{%- endfor -%}
   {%- if has_float -%}
-  <div class="dh-floats" id="dhFloats" data-paint="{{ section.settings.float_paint | default: 'rub' }}" aria-hidden="true">
+  {%- comment -%} Positioning is inlined so the photos never join the page
+     flow while styles are still streaming in — they'd shove the logo and
+     search bar down and snap back (a large layout shift). {%- endcomment -%}
+  <div class="dh-floats" id="dhFloats" data-paint="{{ section.settings.float_paint | default: 'rub' }}" aria-hidden="true"
+    style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden">
     {%- for b in section.blocks -%}
       {%- if b.type == 'float' and b.settings.image != blank -%}
-      <span class="dh-float" data-w="{{ b.settings.size | default: 140 }}" {{ b.shopify_attributes }}>
+      <span class="dh-float" data-w="{{ b.settings.size | default: 140 }}" style="position:absolute;left:-9999px;top:0;width:{{ b.settings.size | default: 140 }}px" {{ b.shopify_attributes }}>
         <span class="dh-float-bob">
           {%- assign fsz = b.settings.size | default: 140 | times: 2 | at_least: 200 | at_most: 640 -%}
           <img class="dh-float-img" src="{{ b.settings.image | image_url: width: fsz }}" alt="" loading="lazy" draggable="false"
@@ -1085,7 +1089,8 @@
       {%- endif -%}
     {%- endfor -%}
     {%- if section.settings.float_pin -%}
-    <span class="dh-float-pin" id="dhFloatPin" aria-hidden="true" data-w="{{ section.settings.pin_size | default: 60 }}">
+    <span class="dh-float-pin" id="dhFloatPin" aria-hidden="true" data-w="{{ section.settings.pin_size | default: 60 }}"
+      style="position:absolute;left:16px;bottom:16px;width:38px">
       {%- if section.settings.pin_image != blank -%}
       {%- assign psz = section.settings.pin_size | default: 60 | times: 2 | at_least: 120 | at_most: 400 -%}
       <img src="{{ section.settings.pin_image | image_url: width: psz }}" alt="" draggable="false" loading="lazy"
