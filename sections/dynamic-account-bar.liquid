@@ -1566,7 +1566,6 @@
         hold.hidden = !!app.ext;
         extN.hidden = !app.ext;
         if (!app.ext) {
-          if (frame.getAttribute("src") !== app.href) frame.setAttribute("src", app.href);
           /* Miniature desktop rendering: the page lays out at 1000px and is
              scaled to fit the pane. */
           var hw = hold.clientWidth || 500;
@@ -1575,6 +1574,23 @@
           hold.style.height = hh + "px";
           frame.style.transform = "scale(" + sc2 + ")";
           frame.style.height = Math.round(hh / sc2) + "px";
+          /* Shopify blocks framing its pages (X-Frame-Options), so fetch the
+             HTML ourselves and render it via srcdoc with a <base> so its
+             styles, images and links resolve against the real page. */
+          if (frame.getAttribute("data-url") !== app.href) {
+            frame.setAttribute("data-url", app.href);
+            frame.removeAttribute("src");
+            frame.srcdoc = '<style>body{font:15px -apple-system,BlinkMacSystemFont,sans-serif;color:#9a9aa2;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}</style>Loading preview\u2026';
+            fetch(app.href, { credentials: "same-origin" }).then(function (r2) { return r2.text(); }).then(function (htm) {
+              if (frame.getAttribute("data-url") !== app.href) return;
+              var base = '<base href="' + app.href.replace(/"/g, "&quot;") + '">';
+              if (/<head[^>]*>/i.test(htm)) htm = htm.replace(/<head[^>]*>/i, function (mm) { return mm + base; });
+              else htm = base + htm;
+              frame.srcdoc = htm;
+            }).catch(function () {
+              frame.srcdoc = '<style>body{font:15px sans-serif;color:#9a9aa2;text-align:center;padding-top:45vh;margin:0}</style>Preview unavailable \u2014 use Open page.';
+            });
+          }
         }
       }
       var vb = vbar.getBoundingClientRect();
