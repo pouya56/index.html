@@ -566,8 +566,9 @@
     .dyn-abar .dh-vprev-open { color: #fff; background: rgba(42, 42, 47, 0.85); border-radius: 999px;
       padding: 8px 16px; font-size: 13px; font-weight: 600; text-decoration: none; }
     .dyn-abar .dh-vprev-open:hover { background: rgba(42, 42, 47, 1); }
-    .dyn-abar .dh-vprev-hold { overflow: hidden; border-radius: 18px; background: #fff; }
-    .dyn-abar .dh-vprev-frame { width: 1000px; border: none; display: block; transform-origin: top left; background: #fff; }
+    .dyn-abar .dh-vprev-hold { border-radius: 20px; background: rgba(255, 255, 255, 0.5); padding: 16px 18px; }
+    .dyn-abar .dh-vprev-hold[hidden] { display: none; }
+    .dyn-abar .dh-vload { color: #66666b; font-size: 14px; padding: 42px 10px; text-align: center; }
     .dyn-abar .dh-vprev-ext { color: #66666b; font-size: 14px; padding: 34px 10px; text-align: center; }
     /* The bar can hold many tabs — it scrolls quietly if the screen is short. */
     .dyn-abar .dh-vbar { max-height: calc(100vh - 24px); overflow-y: auto;
@@ -1098,7 +1099,7 @@
     vprev.hidden = true;
     vprev.innerHTML = '<div class="dh-vprev-top"><span class="dh-vprev-title"></span>' +
       '<a class="dh-vprev-open">Open page</a></div>' +
-      '<div class="dh-vprev-hold"><iframe class="dh-vprev-frame" title="Page preview"></iframe></div>' +
+      '<div class="dh-vprev-hold"></div>' +
       '<div class="dh-vprev-ext" hidden>This link opens outside the shop \u2014 use Open page.</div>';
     pop.appendChild(vprev);
     var KEY = "dyn_abar_apps_pos";
@@ -1572,36 +1573,27 @@
         vprev.querySelector(".dh-vprev-title").textContent = app.label;
         vprev.querySelector(".dh-vprev-open").setAttribute("href", app.href);
         var hold = vprev.querySelector(".dh-vprev-hold");
-        var frame = vprev.querySelector(".dh-vprev-frame");
         var extN = vprev.querySelector(".dh-vprev-ext");
         hold.hidden = !!app.ext;
         extN.hidden = !app.ext;
-        if (!app.ext) {
-          /* Miniature desktop rendering: the page lays out at 1000px and is
-             scaled to fit the pane. */
-          var hw = hold.clientWidth || 500;
-          var sc2 = hw / 1000;
-          var hh = Math.round(Math.min(660, innerHeight * 0.62));
-          hold.style.height = hh + "px";
-          frame.style.transform = "scale(" + sc2 + ")";
-          frame.style.height = Math.round(hh / sc2) + "px";
-          /* Shopify blocks framing its pages (X-Frame-Options), so fetch the
-             HTML ourselves and render it via srcdoc with a <base> so its
-             styles, images and links resolve against the real page. */
-          if (frame.getAttribute("data-url") !== app.href) {
-            frame.setAttribute("data-url", app.href);
-            frame.removeAttribute("src");
-            frame.srcdoc = '<style>body{font:15px -apple-system,BlinkMacSystemFont,sans-serif;color:#9a9aa2;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}</style>Loading preview\u2026';
-            fetch(app.href, { credentials: "same-origin" }).then(function (r2) { return r2.text(); }).then(function (htm) {
-              if (frame.getAttribute("data-url") !== app.href) return;
-              var base = '<base href="' + app.href.replace(/"/g, "&quot;") + '">';
-              if (/<head[^>]*>/i.test(htm)) htm = htm.replace(/<head[^>]*>/i, function (mm) { return mm + base; });
-              else htm = base + htm;
-              frame.srcdoc = htm;
-            }).catch(function () {
-              frame.srcdoc = '<style>body{font:15px sans-serif;color:#9a9aa2;text-align:center;padding-top:45vh;margin:0}</style>Preview unavailable \u2014 use Open page.';
+        /* The page's ACTUAL content, live in the glass: fetch the page,
+           lift its <main> (styles included, scripts stripped) and inject
+           it — forms are the real forms and submit normally. */
+        if (!app.ext && vprev.getAttribute("data-url") !== app.href) {
+          vprev.setAttribute("data-url", app.href);
+          hold.innerHTML = '<div class="dh-vload">Loading page\u2026</div>';
+          fetch(app.href, { credentials: "same-origin" }).then(function (r2) { return r2.text(); }).then(function (htm) {
+            if (vprev.getAttribute("data-url") !== app.href) return;
+            var doc = new DOMParser().parseFromString(htm, "text/html");
+            var main = doc.querySelector("main, #MainContent") || doc.body;
+            Array.prototype.forEach.call(main.querySelectorAll("script"), function (sc) {
+              if (sc.parentNode) sc.parentNode.removeChild(sc);
             });
-          }
+            hold.innerHTML = main.innerHTML;
+            paintVision();
+          }).catch(function () {
+            hold.innerHTML = '<div class="dh-vload">Couldn\u2019t load the page \u2014 use Open page.</div>';
+          });
         }
       }
       var vb = vbar.getBoundingClientRect();
