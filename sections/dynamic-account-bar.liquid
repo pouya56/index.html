@@ -184,7 +184,31 @@
       70% { transform: scale(0.95, 1.05) rotate(-2deg); }
       100% { transform: scale(1); }
     }
-    .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye { transform: scaleY(0.15); }
+    /* Pain after punch: droopy lids, one bloodshot wide eye with a dilated
+       pupil, one purple-bruised eye squeezed to a wince line. */
+    .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye::before { transform: translateY(34%); }
+    .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:first-child {
+      background:
+        radial-gradient(4px 1.2px at 30% 72%, rgba(224, 70, 70, 0.6), transparent 75%),
+        radial-gradient(5px 1.4px at 72% 62%, rgba(224, 70, 70, 0.55), transparent 75%),
+        radial-gradient(4px 1.2px at 52% 86%, rgba(224, 70, 70, 0.5), transparent 75%),
+        linear-gradient(180deg, #ffffff 0%, #f6eaea 60%, #ecd9d9 100%); }
+    .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:first-child::after { width: 14px; height: 18px; }
+    .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:last-child {
+      background: radial-gradient(120% 120% at 35% 30%, #9a86c9 0%, #6d5a9e 55%, #55447f 100%);
+      box-shadow: 0 2px 5px rgba(0, 0, 15, 0.35), inset 0 -2px 4px rgba(40, 25, 70, 0.5); }
+    .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:last-child::after {
+      width: 12px; height: 3px; border-radius: 2px; background: #241d38; transform: rotate(-10deg); }
+    /* Cool (a design was added): sunglasses — dark lenses with a glint,
+       joined by a bridge — and a smug little settle. */
+    .dyn-abar .dh-apps-btn.is-cool { animation: abCoolIn 0.5s cubic-bezier(0.3, 1.4, 0.5, 1); }
+    @keyframes abCoolIn { 0% { transform: translateY(-5px) scale(1.04); } 100% { transform: translateY(0) scale(1); } }
+    .dyn-abar .dh-orb-eyes.is-cool .dh-orb-eye { background: linear-gradient(180deg, #2a2a33 0%, #101016 70%); }
+    .dyn-abar .dh-orb-eyes.is-cool .dh-orb-eye::after { width: 9px; height: 2.5px; border-radius: 2px;
+      background: rgba(255, 255, 255, 0.8); box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+      transform: translate(-2px, -5px) rotate(-24deg); }
+    .dyn-abar .dh-orb-eyes.is-cool::before { content: ""; position: absolute; left: 41%; right: 41%; top: 34%;
+      height: 3px; border-radius: 2px; background: #101016; z-index: 3; }
     /* Angry: furrowed slanted glare, red heat, trembling with rage. */
     .dyn-abar .dh-apps-btn.is-angry { animation: abRage 0.28s linear infinite;
       border-color: rgba(255, 105, 95, 0.65);
@@ -1211,8 +1235,9 @@
       if (eyes) eyes.classList.add("is-dazed");
       setTimeout(function () {
         btn.classList.remove("is-punched");
-        if (eyes) eyes.classList.remove("is-dazed");
-        if (punchN >= 3) { enrage(); return; }
+        if (punchN >= 3) { if (eyes) eyes.classList.remove("is-dazed"); enrage(); return; }
+        /* The pain lingers a moment after the bounce. */
+        setTimeout(function () { if (eyes) eyes.classList.remove("is-dazed"); }, 1000);
         if (punchN === 2) {
           /* He knows what one more punch means. */
           btn.classList.add("is-nervous");
@@ -1269,6 +1294,8 @@
       wishN = n;
     }
     window.addEventListener("dyn-wishlist-change", wishCheck);
+    /* Adding a design earns him sunglasses. */
+    window.addEventListener("dyn-design-added", function () { mood("is-cool", 4200); });
     window.addEventListener("storage", function (e) { if (e && e.key === "dyn_wishlist") wishCheck(); });
     var origFetch = window.fetch;
     if (origFetch) window.fetch = function (u) {

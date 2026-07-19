@@ -2745,6 +2745,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const any = ["front", "back"].some((s) => sideLayers[s].some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text)));
     if (!any) { toast("Add a design first"); return; }
     setDesignReady(true);
+    // Anyone listening (the floating orb) hears that a design was added.
+    try { window.dispatchEvent(new CustomEvent("dyn-design-added")); } catch (e) {}
     const sum = $("#customizeSummary"); if (sum) sum.textContent = "Design saved — not in the bag yet";
     closeModal();
     applyVariantPrice(); // a back design may change the page price
