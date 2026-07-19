@@ -2259,6 +2259,38 @@
       aspect: pimg ? parseInt(pimg.getAttribute("width") || "1", 10) / Math.max(1, parseInt(pimg.getAttribute("height") || "1", 10)) : 1,
       w: 38, h: 38, x: 16, y: 16, vx: 0, vy: 0, moved: false, popped: false };
     if (pin.hasImg) pinEl.classList.add("is-img");
+    /* Only the needle pops. Default: bottom-centre of the picture (for the
+       built-in pushpin, the drawn needle tip). If the uploaded PNG has a
+       transparent background we scan it and find the real lowest point —
+       the metal tip — so the plush head just bumps things around. */
+    pin.tipFx = pin.hasImg ? 0.5 : 0.875;
+    pin.tipFy = pin.hasImg ? 0.97 : 0.875;
+    pin.tipR = 10;
+    if (pin.hasImg) {
+      var probe = new Image();
+      probe.crossOrigin = "anonymous";
+      probe.onload = function () {
+        try {
+          var W = 64, H = Math.max(2, Math.round(W * probe.naturalHeight / probe.naturalWidth));
+          var c = document.createElement("canvas");
+          c.width = W; c.height = H;
+          var cx = c.getContext("2d");
+          cx.drawImage(probe, 0, 0, W, H);
+          var d = cx.getImageData(0, 0, W, H).data;
+          for (var yy = H - 1; yy >= 0; yy--) {
+            var sum = 0, n = 0;
+            for (var xx = 0; xx < W; xx++) if (d[(yy * W + xx) * 4 + 3] > 50) { sum += xx; n++; }
+            if (n && n < W * 0.9) {
+              pin.tipFy = (yy + 1) / H;
+              pin.tipFx = (sum / n + 0.5) / W;
+              break;
+            }
+            if (n) break; /* opaque background: keep the bottom-centre default */
+          }
+        } catch (err) { /* cross-origin canvas blocked: keep the default */ }
+      };
+      probe.src = pimg.currentSrc || pimg.src;
+    }
   }
   var phys = pin ? its.concat([pin]) : its.slice();
 
@@ -2274,6 +2306,7 @@
       pin.x = pin.homeX = 16;
       pin.y = pin.homeY = vh - pin.h - 16;
       pin.vx = pin.vy = 0; pin.moved = false;
+      pin.tipR = Math.max(8, pin.w * 0.12);
       if (pin.hasImg) pin.el.style.width = pw + "px";
       pin.el.style.bottom = "auto";
       render(pin);
@@ -2356,7 +2389,15 @@
         var dy = (b.y + b.h / 2) - (a.y + a.h / 2);
         var d = Math.sqrt(dx * dx + dy * dy), min = ra + rb;
         if (d >= min) continue;
-        if (a.isPin || b.isPin) { popIt(a.isPin ? b : a); continue; }
+        if (a.isPin || b.isPin) {
+          /* Pop only if the needle tip reaches the photo; the head of the
+             pin just pushes and bounces like everything else. */
+          var pn = a.isPin ? a : b, ph = a.isPin ? b : a;
+          var tx = pn.x + pn.tipFx * pn.w, ty = pn.y + pn.tipFy * pn.h;
+          var pr = Math.max(ph.w, ph.h) * 0.42 + pn.tipR;
+          var tdx = (ph.x + ph.w / 2) - tx, tdy = (ph.y + ph.h / 2) - ty;
+          if (tdx * tdx + tdy * tdy < pr * pr) { popIt(ph); continue; }
+        }
         if (!d) { dx = 1; dy = 0; d = 1; }
         var nx = dx / d, ny = dy / d, ov = min - d;
         if (a === held) { b.x += nx * ov; b.y += ny * ov; b.moved = true; }
@@ -2443,7 +2484,20 @@
     d.it.x = Math.min(Math.max(d.bx + dx, 4), Math.max(4, innerWidth - d.it.w - 4));
     d.it.y = Math.min(Math.max(d.by + dy, 4), Math.max(4, innerHeight - d.it.h - 4));
     render(d.it);
-    d.samples.push({ t: e.timeStamp || performance.now(), x: e.clientX, y: e.clientY });
+    var tNow = e.timeStamp || performance.now();
+    var prev = d.samples[d.samples.length - 1];
+    if (prev) {
+      var ms = tNow - prev.t;
+      if (ms > 0 && ms < 120) {
+        /* Carry the hand's live speed, so anything we plough into gets
+           real momentum and knocks the next one on — chain reactions. */
+        var nvx = Math.max(-32, Math.min(32, (e.clientX - prev.x) / ms * 16.7));
+        var nvy = Math.max(-32, Math.min(32, (e.clientY - prev.y) / ms * 16.7));
+        d.it.vx = d.it.vx * 0.4 + nvx * 0.6;
+        d.it.vy = d.it.vy * 0.4 + nvy * 0.6;
+      }
+    }
+    d.samples.push({ t: tNow, x: e.clientX, y: e.clientY });
     if (d.samples.length > 6) d.samples.shift();
     ensure();
   }, { passive: true });
