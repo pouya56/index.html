@@ -1074,7 +1074,7 @@
   {%- comment -%} Positioning is inlined so the photos never join the page
      flow while styles are still streaming in — they'd shove the logo and
      search bar down and snap back (a large layout shift). {%- endcomment -%}
-  <div class="dh-floats" id="dhFloats" data-paint="{{ section.settings.float_paint | default: 'rub' }}" aria-hidden="true"
+  <div class="dh-floats" id="dhFloats" data-paint="{{ section.settings.float_paint | default: 'rub' }}" aria-hidden="true" hidden
     style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden">
     {%- for b in section.blocks -%}
       {%- if b.type == 'float' and b.settings.image != blank -%}
@@ -2431,6 +2431,10 @@
   }
   var placedW = 0, placedH = 0;
   place();
+  /* Only now — with every photo absolutely positioned and placed — does the
+     layer become visible. Until this line it is display:none, so it cannot
+     shift the page no matter when styles or images arrive. */
+  box.removeAttribute("hidden");
   its.forEach(function (it, i) { setTimeout(function () { it.el.classList.add("is-in"); }, 150 + i * 90); });
   var rT;
   window.addEventListener("resize", function () {
