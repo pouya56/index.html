@@ -1952,6 +1952,124 @@
 })();
 </script>
 
+{%- if section.settings.drag_objects -%}
+<style>
+  /* Movable objects: the drag offset lives in CSS variables so the buttons'
+     own press/hover transforms keep working on top of it. */
+  .dyn-hero .dh-dragobj { transform: translate(var(--ddx, 0px), var(--ddy, 0px)); touch-action: none; }
+  .dyn-hero .dh-gbtn.dh-dragobj:active { transform: translate(var(--ddx, 0px), var(--ddy, 0px)) scale(0.97); }
+  .dyn-hero .dh-dragobj.is-drag { position: relative; z-index: 60; user-select: none; -webkit-user-select: none; }
+  .dyn-hero .dh-dragobj.is-anim { transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+  html.dh-grabbing, html.dh-grabbing * { cursor: grabbing !important; }
+</style>
+<script>
+(function () {
+  /* Movable objects: pick up the logo card, search bar or buttons and leave
+     them anywhere. A real click (under 8px of travel) still clicks; anything
+     further becomes a drag. Each visitor's arrangement is remembered on
+     their device, and double-clicking an empty spot glides everything home. */
+  var hero = document.getElementById("dynHero");
+  if (!hero) return;
+  var KEY = "dyn_hero_places";
+  var defs = [
+    ["head", ".dh-head"],
+    ["search", ".dh-search"],
+    ["btn1", "#dhBtnSearch"],
+    ["btn2", ".dh-hero-btns > a.dh-gbtn"],
+    ["btn3", ".dh-goo-wrap"]
+  ];
+  var els = {};
+  defs.forEach(function (d) {
+    var el = hero.querySelector(d[1]);
+    if (el) { els[d[0]] = el; el.classList.add("dh-dragobj"); }
+  });
+  if (!Object.keys(els).length) return;
+  var pos = {};
+  try { pos = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { pos = {}; }
+  function apply(k) {
+    var el = els[k], p = pos[k] || [0, 0];
+    el.style.setProperty("--ddx", p[0] + "px");
+    el.style.setProperty("--ddy", p[1] + "px");
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(pos)); } catch (e) {} }
+  function clamp(k) {
+    /* Keep the object at least 6px inside the screen so it can't get lost. */
+    var el = els[k], p = pos[k];
+    if (!p) return;
+    var rc = el.getBoundingClientRect();
+    var bx = rc.left - p[0], by = rc.top - p[1];
+    var pad = 6;
+    p[0] = Math.min(Math.max(p[0], pad - bx), Math.max(pad - bx, innerWidth - pad - rc.width - bx));
+    p[1] = Math.min(Math.max(p[1], pad - by), Math.max(pad - by, innerHeight - pad - rc.height - by));
+    apply(k);
+  }
+  Object.keys(els).forEach(function (k) { apply(k); clamp(k); });
+  var rT;
+  window.addEventListener("resize", function () {
+    clearTimeout(rT);
+    rT = setTimeout(function () { Object.keys(els).forEach(clamp); }, 150);
+  });
+
+  var drag = null, squelch = 0;
+  document.addEventListener("click", function (e) {
+    if (Date.now() < squelch) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+  Object.keys(els).forEach(function (k) {
+    var el = els[k];
+    el.addEventListener("dragstart", function (e) { e.preventDefault(); });
+    el.addEventListener("pointerdown", function (e) {
+      if (e.button != null && e.button !== 0) return;
+      /* Leave the search bar alone while someone is typing or selecting. */
+      if (k === "search" && document.activeElement && el.contains(document.activeElement)) return;
+      var p = pos[k] || [0, 0];
+      drag = { k: k, el: el, sx: e.clientX, sy: e.clientY, ox: p[0], oy: p[1], moved: false };
+    });
+  });
+  window.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+    if (!drag.moved) {
+      if (dx * dx + dy * dy < 64) return;
+      drag.moved = true;
+      drag.el.classList.add("is-drag");
+      document.documentElement.classList.add("dh-grabbing");
+      if (document.activeElement && drag.el.contains(document.activeElement)) document.activeElement.blur();
+      if (window.getSelection) { try { getSelection().removeAllRanges(); } catch (err) {} }
+    }
+    pos[drag.k] = [drag.ox + dx, drag.oy + dy];
+    apply(drag.k);
+  }, { passive: true });
+  function end() {
+    if (!drag) return;
+    if (drag.moved) {
+      clamp(drag.k);
+      /* Dropped basically home? Snap clean so nothing is stored. */
+      if (pos[drag.k] && Math.abs(pos[drag.k][0]) < 2 && Math.abs(pos[drag.k][1]) < 2) {
+        delete pos[drag.k];
+        apply(drag.k);
+      }
+      save();
+      squelch = Date.now() + 320;
+      drag.el.classList.remove("is-drag");
+    }
+    document.documentElement.classList.remove("dh-grabbing");
+    drag = null;
+  }
+  window.addEventListener("pointerup", end, { passive: true });
+  window.addEventListener("pointercancel", end, { passive: true });
+  hero.addEventListener("dblclick", function (e) {
+    if (e.target.closest(".dh-dragobj, a, button, input, .dh-pop, .dh-menu")) return;
+    pos = {};
+    save();
+    Object.keys(els).forEach(function (k) { els[k].classList.add("is-anim"); apply(k); });
+    setTimeout(function () {
+      Object.keys(els).forEach(function (k) { els[k].classList.remove("is-anim"); });
+    }, 500);
+  });
+})();
+</script>
+{%- endif -%}
+
 {% schema %}
 {
   "name": "Dynamic Hero",
@@ -1967,6 +2085,7 @@
     { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
     { "type": "checkbox", "id": "show_description", "label": "Show collection description", "default": true },
+    { "type": "checkbox", "id": "drag_objects", "label": "Movable objects (drag & drop)", "default": true, "info": "Shoppers can pick up the logo, search bar and buttons and leave them anywhere on the screen. Each visitor's arrangement is remembered on their device. Double-clicking an empty spot glides everything back home." },
 
     { "type": "header", "content": "Search box" },
     { "type": "checkbox", "id": "show_search", "label": "Show live search box", "default": true, "info": "Filters the products already on this page as the shopper types — no page reload." },
