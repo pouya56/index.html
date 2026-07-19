@@ -1039,6 +1039,23 @@
   {%- if section.settings.copyright_text != blank -%}
     <div class="dh-copyright">{{ section.settings.copyright_text }}</div>
   {%- endif -%}
+  {%- assign has_float = false -%}
+  {%- for b in section.blocks -%}{%- if b.type == 'float' and b.settings.image != blank -%}{%- assign has_float = true -%}{%- endif -%}{%- endfor -%}
+  {%- if has_float -%}
+  <div class="dh-floats" id="dhFloats" data-paint="{{ section.settings.float_paint | default: 'rub' }}" aria-hidden="true">
+    {%- for b in section.blocks -%}
+      {%- if b.type == 'float' and b.settings.image != blank -%}
+      <span class="dh-float" data-w="{{ b.settings.size | default: 140 }}" {{ b.shopify_attributes }}>
+        <span class="dh-float-bob">
+          <img class="dh-float-img" src="{{ b.settings.image | image_url: width: 640 }}" alt="" loading="lazy" draggable="false"
+            width="{{ b.settings.image.width }}" height="{{ b.settings.image.height }}">
+          <canvas class="dh-float-paint"></canvas>
+        </span>
+      </span>
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+  {%- endif -%}
   <div class="dh-wrap">
     <div class="dh-head">
       {%- if section.settings.head_link != blank -%}<a class="dh-head-link" href="{{ section.settings.head_link }}" aria-label="{{ shop.name | escape }}">{%- endif -%}
@@ -2137,6 +2154,161 @@
 </script>
 {%- endif -%}
 
+{%- if has_float -%}
+<style>
+  /* Floating photos: scattered to random spots each visit, bobbing gently.
+     The whole layer ignores the pointer, so it can never block a click —
+     painting is done by watching the mouse from a distance. */
+  .dyn-hero .dh-floats { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+  .dyn-hero .dh-float { position: absolute; opacity: 0; transform: scale(0.5); transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
+  .dyn-hero .dh-float.is-in { opacity: 1; transform: none; }
+  .dyn-hero .dh-float-bob { display: block; position: relative;
+    animation: dhFloatBob var(--fd, 6s) ease-in-out var(--fdel, 0s) infinite alternate; will-change: transform; }
+  .dyn-hero .dh-float-img { display: block; width: 100%; height: auto; filter: grayscale(1) opacity(0.92); -webkit-user-drag: none; }
+  .dyn-hero .dh-floats[data-paint="none"] .dh-float-img { filter: none; }
+  .dyn-hero .dh-float-paint { position: absolute; inset: 0; width: 100%; height: 100%; }
+  @keyframes dhFloatBob {
+    0%   { transform: translateY(0) rotate(-2deg); }
+    100% { transform: translateY(-13px) rotate(2.4deg); }
+  }
+  @keyframes dhFloatWig {
+    0%, 100% { transform: none; }
+    30% { transform: rotate(-4deg) scale(1.06); }
+    65% { transform: rotate(3deg); }
+  }
+  .dyn-hero .dh-float.is-wig { animation: dhFloatWig 0.55s ease; }
+  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-float-bob { animation: none; } }
+</style>
+<script>
+(function () {
+  /* Floating photos. Each visit scatters them into fresh random spots that
+     avoid the middle column (logo / search / buttons) and each other. In
+     "rub" style the photo starts as a gray sketch and the mouse or finger
+     rubs the color in; "bloom" sweeps the color across on first touch. */
+  var hero = document.getElementById("dynHero");
+  var box = document.getElementById("dhFloats");
+  if (!hero || !box) return;
+  var mode = box.getAttribute("data-paint") || "rub";
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var its = [];
+  [].slice.call(box.querySelectorAll(".dh-float")).forEach(function (el) {
+    var img = el.querySelector(".dh-float-img");
+    var cv = el.querySelector(".dh-float-paint");
+    var aw = parseInt(img.getAttribute("width") || "1", 10);
+    var ah = parseInt(img.getAttribute("height") || "1", 10);
+    its.push({ el: el, bob: el.querySelector(".dh-float-bob"), img: img, cv: cv,
+      ctx: cv.getContext("2d"), baseW: parseInt(el.getAttribute("data-w") || "140", 10),
+      aspect: aw / Math.max(1, ah), w: 0, h: 0, done: false, last: null });
+    el.querySelector(".dh-float-bob").style.setProperty("--fd", (5 + Math.random() * 4).toFixed(1) + "s");
+    el.querySelector(".dh-float-bob").style.setProperty("--fdel", (-Math.random() * 6).toFixed(1) + "s");
+  });
+  if (!its.length) return;
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function place() {
+    var vw = innerWidth;
+    var vh = Math.max(480, Math.min(hero.offsetHeight || innerHeight, innerHeight));
+    var exW = Math.min(vw * 0.64, 880);
+    var ex = { x0: (vw - exW) / 2, x1: (vw + exW) / 2, y0: 30, y1: vh * 0.74 };
+    var taken = [];
+    its.forEach(function (it) {
+      var w = it.baseW * (vw < 640 ? 0.62 : 1);
+      var h = w / it.aspect;
+      var x = 10, y = 10, ok = false;
+      for (var t = 0; t < 60 && !ok; t++) {
+        x = rand(8, Math.max(9, vw - w - 8));
+        y = rand(8, Math.max(9, vh - h - 8));
+        ok = !(x + w > ex.x0 && x < ex.x1 && y + h > ex.y0 && y < ex.y1);
+        if (ok) for (var j = 0; j < taken.length; j++) {
+          var o = taken[j];
+          if (x < o.x + o.w + 12 && x + w + 12 > o.x && y < o.y + o.h + 12 && y + h + 12 > o.y) { ok = false; break; }
+        }
+      }
+      taken.push({ x: x, y: y, w: w, h: h });
+      it.w = w; it.h = h;
+      it.el.style.left = x + "px";
+      it.el.style.top = y + "px";
+      it.el.style.width = w + "px";
+      it.cv.width = Math.round(w * dpr);
+      it.cv.height = Math.round(h * dpr);
+      it.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      it.done = false; it.last = null;
+    });
+  }
+  place();
+  its.forEach(function (it, i) { setTimeout(function () { it.el.classList.add("is-in"); }, 150 + i * 90); });
+  var rT;
+  window.addEventListener("resize", function () { clearTimeout(rT); rT = setTimeout(place, 200); });
+  if (mode === "none") return;
+
+  /* Soft-edged stamp: cut a feathered circle of the colored photo and lay
+     it on the item's canvas, so the rub looks like real paint. */
+  var st = document.createElement("canvas"), sctx = st.getContext("2d");
+  function stamp(it, lx, ly, r) {
+    if (!it.img.complete || !it.img.naturalWidth) return;
+    var d = Math.max(2, Math.ceil(r * 2 * dpr));
+    if (st.width !== d) { st.width = st.height = d; }
+    sctx.setTransform(1, 0, 0, 1, 0, 0);
+    sctx.globalCompositeOperation = "source-over";
+    sctx.clearRect(0, 0, d, d);
+    sctx.setTransform(dpr, 0, 0, dpr, 0 - (lx - r) * dpr, 0 - (ly - r) * dpr);
+    sctx.drawImage(it.img, 0, 0, it.w, it.h);
+    sctx.globalCompositeOperation = "destination-in";
+    sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var m = sctx.createRadialGradient(r, r, 0, r, r, r);
+    m.addColorStop(0, "rgba(0,0,0,1)");
+    m.addColorStop(0.6, "rgba(0,0,0,0.9)");
+    m.addColorStop(1, "rgba(0,0,0,0)");
+    sctx.fillStyle = m;
+    sctx.fillRect(0, 0, r * 2, r * 2);
+    it.ctx.drawImage(st, lx - r, ly - r, r * 2, r * 2);
+  }
+  function bloom(it) {
+    if (it.done || !it.img.complete || !it.img.naturalWidth) return;
+    it.done = true;
+    it.el.classList.add("is-wig");
+    setTimeout(function () { it.el.classList.remove("is-wig"); }, 600);
+    var t0 = performance.now(), dur = 550, lastX = 0;
+    function frame(now) {
+      var t = Math.min(1, (now - t0) / dur);
+      var x = t * it.w;
+      var c = it.ctx;
+      c.save();
+      c.beginPath();
+      c.rect(lastX - 1, 0, x - lastX + 2, it.h);
+      c.clip();
+      c.drawImage(it.img, 0, 0, it.w, it.h);
+      c.restore();
+      lastX = x;
+      if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  function onMove(e) {
+    var x = e.clientX, y = e.clientY;
+    if (typeof x !== "number") return;
+    for (var i = 0; i < its.length; i++) {
+      var it = its[i];
+      var rc = it.bob.getBoundingClientRect();
+      if (x < rc.left - 4 || x > rc.right + 4 || y < rc.top - 4 || y > rc.bottom + 4) { it.last = null; continue; }
+      if (mode === "bloom") { bloom(it); continue; }
+      var lx = (x - rc.left) * (it.w / rc.width);
+      var ly = (y - rc.top) * (it.h / rc.height);
+      var r = Math.max(20, it.w * 0.16);
+      if (it.last) {
+        var dx = lx - it.last[0], dy = ly - it.last[1], dist = Math.sqrt(dx * dx + dy * dy);
+        var step = r * 0.5;
+        for (var s = step; s < dist; s += step) stamp(it, it.last[0] + dx * (s / dist), it.last[1] + dy * (s / dist), r);
+      }
+      stamp(it, lx, ly, r);
+      it.last = [lx, ly];
+    }
+  }
+  window.addEventListener("pointermove", onMove, { passive: true });
+  window.addEventListener("pointerdown", onMove, { passive: true });
+})();
+</script>
+{%- endif -%}
+
 {% schema %}
 {
   "name": "Dynamic Hero",
@@ -2153,6 +2325,11 @@
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
     { "type": "checkbox", "id": "show_description", "label": "Show collection description", "default": true },
     { "type": "checkbox", "id": "drag_objects", "label": "Movable objects (drag & drop)", "default": true, "info": "Shoppers can pick up the logo, search bar and buttons and play with them. As soon as something moves, a small glass button appears that glides everything back to its place — and a refresh always starts fresh. On phones, hold an object a moment to pick it up; quick swipes still scroll." },
+    { "type": "select", "id": "float_paint", "label": "Floating photos: paint style", "options": [
+      { "value": "rub", "label": "Rub to color in" },
+      { "value": "bloom", "label": "Hover bloom (one sweep)" },
+      { "value": "none", "label": "Always full color" }
+    ], "default": "rub", "info": "For 'Floating photo' blocks. Rub: photos start as a gray sketch and color appears where the mouse (or finger) rubs. Bloom: one touch sweeps the color across. Full color: no painting, just the float." },
 
     { "type": "header", "content": "Search box" },
     { "type": "checkbox", "id": "show_search", "label": "Show live search box", "default": true, "info": "Filters the products already on this page as the shopper types — no page reload." },
@@ -2313,6 +2490,10 @@
       { "type": "image_picker", "id": "image", "label": "Box image (PNG)", "info": "Upload a transparent PNG. It is used exactly as provided — no processing. Add up to 5 of these blocks for 5 different images." },
       { "type": "range", "id": "size", "min": 40, "max": 400, "step": 5, "label": "Size (px)", "default": 110, "info": "Resize this image. Bigger number = bigger box." },
       { "type": "range", "id": "count", "min": 1, "max": 6, "step": 1, "label": "How many of this box", "default": 1, "info": "Leave at 1 for a single box, or increase to drop several copies of the same image." }
+    ]},
+    { "type": "float", "name": "Floating photo 🎈", "settings": [
+      { "type": "image_picker", "id": "image", "label": "Photo (transparent PNG works best)", "info": "Lands in a new random spot on every visit, floats gently, and colors in under the mouse. Decorative only — it never blocks clicks." },
+      { "type": "range", "id": "size", "min": 60, "max": 260, "step": 10, "unit": "px", "label": "Size", "default": 140 }
     ]}
   ],
   "max_blocks": 30,
