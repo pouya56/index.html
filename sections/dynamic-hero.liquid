@@ -2208,7 +2208,18 @@
   .dyn-hero .dh-float.is-in { opacity: 1; transform: none; }
   .dyn-hero .dh-float-bob { display: block; position: relative;
     animation: dhFloatBob var(--fd, 6s) ease-in-out var(--fdel, 0s) infinite alternate; will-change: transform; }
-  .dyn-hero .dh-float-img { display: block; width: 100%; height: auto; filter: grayscale(1) opacity(0.92); -webkit-user-drag: none; }
+  {%- assign fstart = section.settings.float_start | default: 'pastel' -%}
+  /* How the photos rest before the mouse brings out the full color. */
+  .dyn-hero .dh-float-img { display: block; width: 100%; height: auto; -webkit-user-drag: none;
+    {%- case fstart -%}
+    {%- when 'blur' %} filter: blur(4px);
+    {%- when 'dim' %} filter: brightness(0.55) saturate(0.85);
+    {%- when 'sepia' %} filter: sepia(0.85) saturate(0.6) brightness(1.02);
+    {%- when 'ghost' %} filter: opacity(0.45);
+    {%- when 'pop' %} filter: none;
+    {%- when 'gray' %} filter: grayscale(1) opacity(0.92);
+    {%- else %} filter: saturate(0.5) opacity(0.75) brightness(1.15);
+    {%- endcase %} }
   .dyn-hero .dh-floats[data-paint="none"] .dh-float-img { filter: none; }
   .dyn-hero .dh-float-paint { position: absolute; inset: 0; width: 100%; height: 100%; }
   @keyframes dhFloatBob {
@@ -2602,7 +2613,9 @@
   if (mode === "none") return;
 
   /* Soft-edged stamp: cut a feathered circle of the colored photo and lay
-     it on the item's canvas, so the rub looks like real paint. */
+     it on the item's canvas, so the rub looks like real paint. For the
+     'Extra pop' look the revealed version is boosted beyond the original. */
+  var BOOST = {% if fstart == 'pop' %}"saturate(1.55) brightness(1.12)"{% else %}""{% endif %};
   var st = document.createElement("canvas"), sctx = st.getContext("2d");
   function stamp(it, lx, ly, r) {
     if (!it.img.complete || !it.img.naturalWidth) return;
@@ -2612,7 +2625,9 @@
     sctx.globalCompositeOperation = "source-over";
     sctx.clearRect(0, 0, d, d);
     sctx.setTransform(dpr, 0, 0, dpr, 0 - (lx - r) * dpr, 0 - (ly - r) * dpr);
+    if (BOOST) sctx.filter = BOOST;
     sctx.drawImage(it.img, 0, 0, it.w, it.h);
+    if (BOOST) sctx.filter = "none";
     sctx.globalCompositeOperation = "destination-in";
     sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     var m = sctx.createRadialGradient(r, r, 0, r, r, r);
@@ -2629,7 +2644,9 @@
     it.done = true;
     it.el.classList.add("is-wig");
     setTimeout(function () { it.el.classList.remove("is-wig"); }, 600);
+    if (BOOST) it.ctx.filter = BOOST;
     it.ctx.drawImage(it.img, 0, 0, it.w, it.h);
+    if (BOOST) it.ctx.filter = "none";
   }
   function onMove(e) {
     var x = e.clientX, y = e.clientY;
@@ -2679,7 +2696,16 @@
       { "value": "rub", "label": "Rub to color in" },
       { "value": "bloom", "label": "Hover bloom (instant color)" },
       { "value": "none", "label": "Always full color" }
-    ], "default": "rub", "info": "For 'Floating photo' blocks. Rub: photos start as a gray sketch and color appears where the mouse (or finger) rubs. Bloom: one touch fills the color in at once. Full color: no painting, just the float." },
+    ], "default": "rub", "info": "For 'Floating photo' blocks. Rub: the full color appears where the mouse (or finger) rubs. Bloom: one touch fills the color in at once. Full color: no painting, just the float." },
+    { "type": "select", "id": "float_start", "label": "Floating photos: starting look", "options": [
+      { "value": "pastel", "label": "Pastel wash (soft colors)" },
+      { "value": "blur", "label": "Frosted blur (color, out of focus)" },
+      { "value": "dim", "label": "Sleepy dim (color, darkened)" },
+      { "value": "sepia", "label": "Vintage sepia" },
+      { "value": "ghost", "label": "Ghost fade (see-through)" },
+      { "value": "pop", "label": "Extra pop (starts normal, touch boosts)" },
+      { "value": "gray", "label": "Gray sketch (classic)" }
+    ], "default": "pastel", "info": "How the photos rest before a touch brings out the full color. Only used with the Rub and Bloom paint styles." },
     { "type": "checkbox", "id": "float_pin", "label": "Floating photos: pop pin (bottom left)", "default": true, "info": "A pin sits in the bottom-left corner — any touch between the pin and a photo pops the photo. The pin can be grabbed and thrown too. The put-it-back button (or a refresh) brings popped photos back." },
     { "type": "image_picker", "id": "pin_image", "label": "Pin image (optional)", "info": "Upload your own picture for the pin — a transparent PNG works best. Leave empty for the built-in red pushpin." },
     { "type": "range", "id": "pin_size", "label": "Pin size", "min": 30, "max": 160, "step": 10, "unit": "px", "default": 60, "info": "Only used when a pin image is uploaded." },
