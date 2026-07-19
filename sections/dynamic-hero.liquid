@@ -1484,8 +1484,14 @@
   function closeSlide() { slide.classList.remove("is-open"); slide.setAttribute("aria-hidden", "true"); lockScroll(false); }
   document.querySelectorAll("[data-dh-slide]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); openSlide(b.getAttribute("data-dh-slide")); }); });
   slide.querySelectorAll("[data-dh-slide-close]").forEach(function (b) { b.addEventListener("click", closeSlide); });
-  /* Click anywhere outside the panel (the backdrop) to close. */
-  slide.addEventListener("click", function (e) { if (!e.target.closest(".dh-slide-panel")) closeSlide(); });
+  /* Click anywhere outside the panel (the backdrop) to close. If the click's
+     target is no longer in the document, a widget inside the panel (e.g. a
+     review Like button) re-rendered itself mid-click — that's an inside
+     click, not the backdrop. */
+  slide.addEventListener("click", function (e) {
+    if (!document.contains(e.target)) return;
+    if (!e.target.closest(".dh-slide-panel")) closeSlide();
+  });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSlide(); });
   window.dhSlideOpen = openSlide; /* let other buttons (e.g. Surprise me) open a URL in this pop-up */
 
