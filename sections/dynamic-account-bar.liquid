@@ -547,7 +547,7 @@
     /* Saved & Cart tabs: every item is its own glass tile in a grid. */
     .dyn-abar .dh-vgrid[hidden] { display: none; }
     .dyn-abar .dh-vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
-    .dyn-abar .dh-vitem { display: flex; flex-direction: column; gap: 8px; text-decoration: none;
+    .dyn-abar .dh-vitem { position: relative; display: flex; flex-direction: column; gap: 8px; text-decoration: none;
       background: rgba(255, 255, 255, 0.55); border-radius: 18px; padding: 12px;
       box-shadow: 0 10px 24px -12px rgba(29, 29, 31, 0.3); transition: transform 0.15s ease, box-shadow 0.15s ease; }
     .dyn-abar .dh-vitem:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -12px rgba(29, 29, 31, 0.35); }
@@ -558,6 +558,25 @@
     .dyn-abar .dh-vitem-p { color: #66666b; font-size: 12.5px; }
     .dyn-abar .dh-vempty { display: block; text-align: center; color: #66666b; font-size: 14px;
       padding: 46px 10px; text-decoration: none; }
+    /* Per-tile remove button (always visible on touch screens). */
+    .dyn-abar .dh-vdel { position: absolute; top: 8px; right: 8px; z-index: 2; width: 28px; height: 28px;
+      border-radius: 50%; border: none; padding: 0; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(29, 29, 31, 0.55); color: #fff; opacity: 0; transition: opacity 0.15s, background 0.15s; }
+    .dyn-abar .dh-vitem:hover .dh-vdel, .dyn-abar .dh-vdel:focus-visible { opacity: 1; }
+    @media (pointer: coarse) { .dyn-abar .dh-vdel { opacity: 1; } }
+    .dyn-abar .dh-vdel:hover { background: rgba(200, 40, 40, 0.92); }
+    .dyn-abar .dh-vdel svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+    /* Corner arrow: jumps to the full wishlist / cart page. Sticky, so it
+       holds the window's top-right corner while the grid scrolls. */
+    .dyn-abar .dh-vgo { position: sticky; top: 0; float: right; z-index: 6; margin-bottom: -46px;
+      width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      background: rgba(255, 255, 255, 0.78); color: #1d1d1f;
+      box-shadow: 0 8px 20px -8px rgba(29, 29, 31, 0.35); transition: background 0.15s, transform 0.15s; }
+    .dyn-abar .dh-vgo:hover { background: #fff; transform: translateY(-1px); }
+    .dyn-abar .dh-vgo[hidden] { display: none; }
+    .dyn-abar .dh-vgo svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-vacct[hidden] { display: none; }
     .dyn-abar .dh-vacct { max-width: 480px; margin: 0 auto; }
     .dyn-abar .dh-vacct .dh-pop-title { color: #1d1d1f; font-size: 19px; font-weight: 700; padding: 4px 10px 14px; }
@@ -1130,6 +1149,12 @@
     var vgrid = document.createElement("div");
     vgrid.className = "dh-vgrid";
     vgrid.hidden = true;
+    var vgo = document.createElement("a");
+    vgo.className = "dh-vgo";
+    vgo.hidden = true;
+    vgo.setAttribute("aria-label", "Open the full page");
+    vgo.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>';
+    pop.appendChild(vgo);
     pop.appendChild(vgrid);
     function vEsc(x) {
       return String(x == null ? "" : x).replace(/[&<>"']/g, function (c) {
@@ -1143,12 +1168,39 @@
       }
       vgrid.innerHTML = items.map(function (it) {
         return '<a class="dh-vitem" href="' + vEsc(it.url || "#") + '">' +
+          (it.del != null ? '<button type="button" class="dh-vdel" data-del="' + vEsc(it.del) + '" aria-label="Remove">' +
+            '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' : "") +
           (it.image ? '<img src="' + vEsc(it.image) + '" alt="" loading="lazy">' : '<span class="dh-vitem-ph"></span>') +
           '<span class="dh-vitem-t">' + vEsc(it.title || "Product") + "</span>" +
           (it.price ? '<span class="dh-vitem-p">' + vEsc(it.price) + "</span>" : "") +
           "</a>";
       }).join("");
     }
+    /* Removing items: saved comes out of the wishlist (widget + orb hear
+       about it), cart lines are zeroed through Shopify's cart API (which
+       also makes him cry). */
+    vgrid.addEventListener("click", function (e) {
+      var del = e.target.closest ? e.target.closest(".dh-vdel") : null;
+      if (!del) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var key = del.getAttribute("data-del");
+      if (vgrid.getAttribute("data-kind") === "saved") {
+        var l = [];
+        try { l = JSON.parse(localStorage.getItem("dyn_wishlist") || "[]") || []; } catch (e2) {}
+        l = l.filter(function (x) { return String(x.id) !== String(key); });
+        try { localStorage.setItem("dyn_wishlist", JSON.stringify(l)); } catch (e3) {}
+        try { window.dispatchEvent(new Event("dyn-wishlist-change")); } catch (e4) {}
+        paintVision();
+      } else {
+        del.disabled = true;
+        fetch("/cart/change.js", { method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: key, quantity: 0 }) })
+          .then(function () { paintVision(); })
+          .catch(function () { del.disabled = false; });
+      }
+    });
     var KEY = "dyn_abar_apps_pos";
     function zones() {
       /* Things the circle must not cover: corner links, back button,
@@ -1618,17 +1670,24 @@
       vprev.hidden = !app;
       vacct.hidden = !isAcct;
       vgrid.hidden = !(isSaved || isCart);
+      vgo.hidden = !(isSaved || isCart);
       pop.classList.toggle("is-preview", !!app || isAcct || isSaved || isCart);
       if (isSaved) {
+        vgrid.setAttribute("data-kind", "saved");
+        vgo.setAttribute("href", "/pages/wishlist");
         var wl = [];
         try { wl = JSON.parse(localStorage.getItem("dyn_wishlist") || "[]") || []; } catch (eW) {}
-        vFill(wl, "Nothing saved yet \u2014 tap the bookmark on any product to keep it here.", "/pages/wishlist");
+        vFill(wl.map(function (x) {
+          return { url: x.url, image: x.image, title: x.title, price: x.price, del: x.id };
+        }), "Nothing saved yet \u2014 tap the bookmark on any product to keep it here.", "/pages/wishlist");
       } else if (isCart) {
+        vgrid.setAttribute("data-kind", "cart");
+        vgo.setAttribute("href", {{ routes.cart_url | json }});
         vgrid.innerHTML = "";
         fetch("/cart.js", { credentials: "same-origin" }).then(function (rC) { return rC.json(); }).then(function (c) {
           if (pop.getAttribute("data-vtab") !== "cart" || pop.hidden) return;
           var items = ((c && c.items) || []).map(function (it) {
-            return { url: it.url, image: it.image,
+            return { url: it.url, image: it.image, del: it.key,
               title: (it.product_title || "Product") + (it.quantity > 1 ? " \u00d7 " + it.quantity : "") };
           });
           vFill(items, "Your cart is empty.", {{ routes.cart_url | json }});
