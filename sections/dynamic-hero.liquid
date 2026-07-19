@@ -1042,7 +1042,7 @@
   {%- assign has_float = false -%}
   {%- for b in section.blocks -%}{%- if b.type == 'float' and b.settings.image != blank -%}{%- assign has_float = true -%}{%- endif -%}{%- endfor -%}
   {%- if has_float -%}
-  <div class="dh-floats" id="dhFloats" data-paint="{{ section.settings.float_paint | default: 'rub' }}"{% if section.settings.drag_objects %} data-uiphys="1"{% endif %} aria-hidden="true">
+  <div class="dh-floats" id="dhFloats" data-paint="{{ section.settings.float_paint | default: 'rub' }}" aria-hidden="true">
     {%- for b in section.blocks -%}
       {%- if b.type == 'float' and b.settings.image != blank -%}
       <span class="dh-float" data-w="{{ b.settings.size | default: 140 }}" {{ b.shopify_attributes }}>
@@ -2030,13 +2030,6 @@
     if (el) { els[d[0]] = el; el.classList.add("dh-dragobj"); }
   });
   if (!Object.keys(els).length) return;
-  /* When the floating-photos physics world is on the page, it drives the
-     dragging (and throwing) of these objects too — this script then only
-     runs the put-it-back button and the double-click reset. */
-  var physOwned = (function () {
-    var f = document.getElementById("dhFloats");
-    return !!(f && f.getAttribute("data-uiphys") === "1");
-  })();
   var pos = {};
   function apply(k) {
     var el = els[k], p = pos[k] || [0, 0];
@@ -2094,7 +2087,6 @@
   Object.keys(els).forEach(function (k) {
     var el = els[k];
     el.addEventListener("dragstart", function (e) { e.preventDefault(); });
-    if (physOwned) return;
     el.addEventListener("contextmenu", function (e) {
       /* No long-press link menu while a finger is holding the object. */
       if (drag && drag.el === el && drag.touch) e.preventDefault();
@@ -2248,15 +2240,12 @@
 </style>
 <script>
 (function () {
-  /* Floating photos + movable page objects: one tiny physics world.
-     Photos scatter to fresh random spots each visit, bob gently, and
-     paint in under the mouse. When the section's movable-objects setting
-     is on, the logo card, search bar and buttons join the same world.
-     Everything can be grabbed and thrown: items keep the hand's speed,
-     friction slows them, the screen edges are bouncing walls, and a
-     collision pass keeps anything from overlapping — photos and the pin
-     collide as circles, page objects as true rectangles. The pin's
-     needle pops photos only; page objects just get bumped. */
+  /* Floating photos: a tiny physics playground. Photos scatter to fresh
+     random spots each visit, bob gently, and paint in under the mouse.
+     Everything — including the pin — can be grabbed and thrown: it keeps
+     the speed of the hand, friction slows it to a stop, the screen edges
+     are walls it bounces off, and nothing is allowed to overlap. Any
+     touch between the pin and a photo pops the photo. */
   var hero = document.getElementById("dynHero");
   var box = document.getElementById("dhFloats");
   if (!hero || !box) return;
@@ -2318,48 +2307,14 @@
       probe.src = pimg.currentSrc || pimg.src;
     }
   }
-  /* Page objects (logo, search bar, buttons) join the world when the
-     movable-objects setting is on. They are rectangles, never pop, and
-     their "home" is wherever the page laid them out. */
-  var uiIts = [];
-  if (box.getAttribute("data-uiphys") === "1") {
-    [".dh-head", ".dh-search", "#dhBtnSearch", ".dh-hero-btns > a.dh-gbtn", ".dh-goo-wrap"].forEach(function (sel) {
-      var el = hero.querySelector(sel);
-      if (!el) return;
-      uiIts.push({ el: el, ui: true, noPop: true, w: 10, h: 10,
-        x: 0, y: 0, baseX: 0, baseY: 0, vx: 0, vy: 0, moved: false, popped: false });
-    });
-  }
-  var phys = its.concat(uiIts, pin ? [pin] : []);
+  var phys = pin ? its.concat([pin]) : its.slice();
 
   function rand(a, b) { return a + Math.random() * (b - a); }
-  function render(it) {
-    if (it.ui) {
-      it.el.style.setProperty("--ddx", (it.x - it.baseX) + "px");
-      it.el.style.setProperty("--ddy", (it.y - it.baseY) + "px");
-    } else {
-      it.el.style.left = it.x + "px";
-      it.el.style.top = it.y + "px";
-    }
-  }
-  function measureUI(force) {
-    uiIts.forEach(function (u) {
-      if (!force && (u.moved || (dragPend && dragPend.it === u))) return;
-      u.el.style.setProperty("--ddx", "0px");
-      u.el.style.setProperty("--ddy", "0px");
-      var r = u.el.getBoundingClientRect();
-      u.w = r.width; u.h = r.height;
-      u.x = u.baseX = r.left;
-      u.y = u.baseY = r.top;
-      u.vx = 0; u.vy = 0; u.moved = false;
-    });
-  }
+  function render(it) { it.el.style.left = it.x + "px"; it.el.style.top = it.y + "px"; }
   function place() {
     var vw = innerWidth;
     var vh = Math.max(480, Math.min(hero.offsetHeight || innerHeight, innerHeight));
     var taken = [];
-    measureUI(true);
-    uiIts.forEach(function (u) { taken.push({ x: u.x - 8, y: u.y - 8, w: u.w + 16, h: u.h + 16 }); });
     if (pin) {
       var pw = pin.hasImg ? Math.round(pin.baseW * (vw < 640 ? 0.7 : 1)) : 38;
       pin.w = pw; pin.h = pin.hasImg ? pw / pin.aspect : 38;
@@ -2400,14 +2355,13 @@
       it.done = false; it.last = null;
     });
   }
-  var dragPend = null;
   place();
   its.forEach(function (it, i) { setTimeout(function () { it.el.classList.add("is-in"); }, 150 + i * 90); });
-  window.addEventListener("load", function () { measureUI(false); });
   var rT;
   window.addEventListener("resize", function () { clearTimeout(rT); rT = setTimeout(function () { place(); announce(); }, 200); });
 
   /* ---- the tiny physics world ---- */
+  var dragPend = null;
   function heldIt() { return dragPend && dragPend.moved ? dragPend.it : null; }
   function announce() {
     var any = false;
@@ -2416,7 +2370,7 @@
   }
   function popIt(it) {
     /* Pin meets photo: bang. The put-it-back button revives it. */
-    if (it.popped || it.isPin || it.noPop) return;
+    if (it.popped || it.isPin) return;
     if (dragPend && dragPend.it === it) { dragPend = null; document.documentElement.classList.remove("dh-fnosel"); }
     it.popped = true; it.moved = true; it.vx = 0; it.vy = 0;
     it.el.classList.remove("is-held");
@@ -2435,52 +2389,9 @@
     if (it.y < 4) { it.y = 4; it.vy = Math.abs(it.vy) * 0.72; }
     else if (it.y > mxY) { it.y = mxY; it.vy = -Math.abs(it.vy) * 0.72; }
   }
-  function circleRadius(it) { return Math.max(it.w, it.h) * 0.42; }
-  function pairNormal(a, b) {
-    /* Contact normal (a → b) and overlap depth for any pair: photos and
-       the pin are circles, page objects are true rectangles. */
-    var aC = !a.ui, bC = !b.ui, nx, ny, ov, d;
-    if (aC && bC) {
-      var dx = (b.x + b.w / 2) - (a.x + a.w / 2);
-      var dy = (b.y + b.h / 2) - (a.y + a.h / 2);
-      var min = circleRadius(a) + circleRadius(b);
-      d = Math.sqrt(dx * dx + dy * dy);
-      if (d >= min) return null;
-      if (!d) { dx = 1; dy = 0; d = 1; }
-      return { nx: dx / d, ny: dy / d, ov: min - d };
-    }
-    if (aC !== bC) {
-      var c = aC ? a : b, rct = aC ? b : a;
-      var r = circleRadius(c);
-      var cx = c.x + c.w / 2, cy = c.y + c.h / 2;
-      var px = Math.max(rct.x, Math.min(cx, rct.x + rct.w));
-      var py = Math.max(rct.y, Math.min(cy, rct.y + rct.h));
-      var ddx = px - cx, ddy = py - cy;
-      var d2 = ddx * ddx + ddy * ddy;
-      if (d2 >= r * r) return null;
-      if (d2 > 0.0001) {
-        d = Math.sqrt(d2);
-        nx = ddx / d; ny = ddy / d; ov = r - d;
-      } else {
-        /* circle centre inside the rectangle: push out the nearest side */
-        var lft = cx - rct.x, rgt = rct.x + rct.w - cx, tp = cy - rct.y, bt = rct.y + rct.h - cy;
-        var m = Math.min(lft, rgt, tp, bt);
-        nx = m === lft ? -1 : m === rgt ? 1 : 0;
-        ny = nx ? 0 : (m === tp ? -1 : 1);
-        ov = r + m;
-      }
-      /* normal must point a → b */
-      if (aC) return { nx: nx, ny: ny, ov: ov };
-      return { nx: -nx, ny: -ny, ov: ov };
-    }
-    /* both rectangles */
-    var ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
-    var oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
-    if (ox <= 0 || oy <= 0) return null;
-    if (ox < oy) return { nx: (a.x + a.w / 2 < b.x + b.w / 2) ? 1 : -1, ny: 0, ov: ox };
-    return { nx: 0, ny: (a.y + a.h / 2 < b.y + b.h / 2) ? 1 : -1, ov: oy };
-  }
   function collide() {
+    /* Push overlapping pairs apart and trade a bit of speed, so nothing
+       ever sits on top of anything else. A held item is a solid wall. */
     var held = heldIt();
     for (var i = 0; i < phys.length; i++) {
       var a = phys[i];
@@ -2488,34 +2399,38 @@
       for (var j = i + 1; j < phys.length; j++) {
         var b = phys[j];
         if (b.popped) continue;
-        var n = pairNormal(a, b);
-        if (!n) continue;
+        var ra = Math.max(a.w, a.h) * 0.42, rb = Math.max(b.w, b.h) * 0.42;
+        var dx = (b.x + b.w / 2) - (a.x + a.w / 2);
+        var dy = (b.y + b.h / 2) - (a.y + a.h / 2);
+        var d = Math.sqrt(dx * dx + dy * dy), min = ra + rb;
+        if (d >= min) continue;
         if (a.isPin || b.isPin) {
-          /* Pop only if the needle tip reaches a photo; the pin's head —
-             and any touch with page objects — just pushes and bounces. */
+          /* Pop only if the needle tip reaches the photo; the head of the
+             pin just pushes and bounces like everything else. */
           var pn = a.isPin ? a : b, ph = a.isPin ? b : a;
-          if (!ph.noPop) {
-            var tx = pn.x + pn.tipFx * pn.w, ty = pn.y + pn.tipFy * pn.h;
-            var pr = circleRadius(ph) + pn.tipR;
-            var tdx = (ph.x + ph.w / 2) - tx, tdy = (ph.y + ph.h / 2) - ty;
-            if (tdx * tdx + tdy * tdy < pr * pr) { popIt(ph); continue; }
-          }
+          var tx = pn.x + pn.tipFx * pn.w, ty = pn.y + pn.tipFy * pn.h;
+          var pr = Math.max(ph.w, ph.h) * 0.42 + pn.tipR;
+          var tdx = (ph.x + ph.w / 2) - tx, tdy = (ph.y + ph.h / 2) - ty;
+          if (tdx * tdx + tdy * tdy < pr * pr) { popIt(ph); continue; }
         }
-        /* Split the push by size (big things budge less); a held item is
-           an immovable wall. */
-        var wa = a === held ? 0 : 1 / Math.sqrt(a.w * a.h);
-        var wb = b === held ? 0 : 1 / Math.sqrt(b.w * b.h);
-        var tw = wa + wb;
-        if (!tw) continue;
-        a.x -= n.nx * n.ov * (wa / tw); a.y -= n.ny * n.ov * (wa / tw);
-        b.x += n.nx * n.ov * (wb / tw); b.y += n.ny * n.ov * (wb / tw);
-        if (wa) a.moved = true;
-        if (wb) b.moved = true;
-        var vn = (b.vx - a.vx) * n.nx + (b.vy - a.vy) * n.ny;
+        if (!d) { dx = 1; dy = 0; d = 1; }
+        var nx = dx / d, ny = dy / d, ov = min - d;
+        if (a === held) { b.x += nx * ov; b.y += ny * ov; b.moved = true; }
+        else if (b === held) { a.x -= nx * ov; a.y -= ny * ov; a.moved = true; }
+        else {
+          a.x -= nx * ov / 2; a.y -= ny * ov / 2;
+          b.x += nx * ov / 2; b.y += ny * ov / 2;
+          a.moved = true; b.moved = true;
+        }
+        var vn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
         if (vn < 0) {
-          var p = 1.7 * -vn / tw;
-          a.vx -= p * wa * n.nx; a.vy -= p * wa * n.ny;
-          b.vx += p * wb * n.nx; b.vy += p * wb * n.ny;
+          if (a === held) { b.vx -= 1.7 * vn * nx; b.vy -= 1.7 * vn * ny; }
+          else if (b === held) { a.vx += 1.7 * vn * nx; a.vy += 1.7 * vn * ny; }
+          else {
+            var p = 0.85 * -vn;
+            a.vx -= p * nx; a.vy -= p * ny;
+            b.vx += p * nx; b.vy += p * ny;
+          }
         }
         bounds(a); bounds(b);
       }
@@ -2544,8 +2459,8 @@
     if (live) { requestAnimationFrame(step); } else { running = false; }
   }
 
-  /* Grab anything — photos, the pin, or the page objects. Mouse grabs
-     directly; on the phone, hold a moment while a quick swipe scrolls. */
+  /* Grab anything — photos or the pin. Mouse grabs directly; on the phone,
+     hold a moment to pick up while a quick swipe scrolls. */
   function hitAt(x, y) {
     for (var i = phys.length - 1; i >= 0; i--) {
       var it = phys[i];
@@ -2558,11 +2473,6 @@
   function hold(d) {
     d.moved = true;
     d.it.el.classList.add("is-held");
-    if (d.it.ui) {
-      d.it.el.classList.add("is-drag");
-      d.it.el.style.setProperty("--dds", "1.04");
-      if (document.activeElement && d.it.el.contains(document.activeElement)) document.activeElement.blur();
-    }
     document.documentElement.classList.add("dh-fnosel");
     if (window.getSelection) { try { getSelection().removeAllRanges(); } catch (err) {} }
     if (navigator.vibrate) { try { navigator.vibrate(10); } catch (err) {} }
@@ -2570,23 +2480,17 @@
   }
   /* Grabbing a photo must not start a text selection on the page under it. */
   window.addEventListener("mousedown", function (e) {
-    var h = hitAt(e.clientX, e.clientY);
-    if (!h || h.ui) return;
+    if (!hitAt(e.clientX, e.clientY)) return;
     if (e.target.closest && e.target.closest("a,button,input,select,textarea,label")) return;
     e.preventDefault();
   }, true);
   document.addEventListener("selectstart", function (e) {
     if (dragPend && dragPend.moved) e.preventDefault();
   });
-  document.addEventListener("contextmenu", function (e) {
-    if (dragPend && dragPend.touch) e.preventDefault();
-  });
   window.addEventListener("pointerdown", function (e) {
     if (e.button != null && e.button !== 0) return;
     var it = hitAt(e.clientX, e.clientY);
     if (!it) return;
-    /* Leave the search bar alone while someone is typing in it. */
-    if (it.ui && document.activeElement && it.el.contains(document.activeElement)) return;
     it.vx = 0; it.vy = 0;
     dragPend = { it: it, sx: e.clientX, sy: e.clientY, bx: it.x, by: it.y,
       touch: e.pointerType === "touch", moved: false, timer: 0, samples: [] };
@@ -2603,11 +2507,8 @@
       if (dx * dx + dy * dy < 64) return;
       hold(d);
     }
-    /* Walls apply while dragging too (pad for the 4% held-scale). */
-    var mx = d.it.ui ? 6 + d.it.w * 0.02 : 4;
-    var my = d.it.ui ? 6 + d.it.h * 0.02 : 4;
-    d.it.x = Math.min(Math.max(d.bx + dx, mx), Math.max(mx, innerWidth - d.it.w - mx));
-    d.it.y = Math.min(Math.max(d.by + dy, my), Math.max(my, innerHeight - d.it.h - my));
+    d.it.x = Math.min(Math.max(d.bx + dx, 4), Math.max(4, innerWidth - d.it.w - 4));
+    d.it.y = Math.min(Math.max(d.by + dy, 4), Math.max(4, innerHeight - d.it.h - 4));
     render(d.it);
     var tNow = e.timeStamp || performance.now();
     var prev = d.samples[d.samples.length - 1];
@@ -2636,10 +2537,6 @@
     if (dx * dx + dy * dy < 100) { e.preventDefault(); }
     else { clearTimeout(d.timer); dragPend = null; }
   }, { passive: false });
-  var squelch = 0;
-  document.addEventListener("click", function (e) {
-    if (Date.now() < squelch) { e.preventDefault(); e.stopPropagation(); }
-  }, true);
   function endDrag() {
     var d = dragPend;
     document.documentElement.classList.remove("dh-fnosel");
@@ -2647,11 +2544,6 @@
     clearTimeout(d.timer);
     if (d.moved) {
       d.it.el.classList.remove("is-held");
-      if (d.it.ui) {
-        d.it.el.classList.remove("is-drag");
-        d.it.el.style.removeProperty("--dds");
-        squelch = Date.now() + 320;
-      }
       d.it.moved = true;
       /* Let go: the item keeps the hand's speed, then friction wins. */
       var s = d.samples;
@@ -2672,14 +2564,6 @@
   hero.addEventListener("dh:gohome", function () {
     phys.forEach(function (it) {
       it.vx = 0; it.vy = 0;
-      if (it.ui) {
-        if (!it.moved) return;
-        it.el.classList.add("is-anim");
-        it.x = it.baseX; it.y = it.baseY;
-        render(it);
-        it.moved = false;
-        return;
-      }
       if (it.popped) {
         /* Popped photos come back to life at their home spot. */
         it.el.classList.remove("is-gone", "is-pop");
@@ -2698,7 +2582,7 @@
       it.moved = false;
     });
     announce();
-    setTimeout(function () { phys.forEach(function (it) { it.el.classList.remove("is-ret", "is-anim"); }); }, 500);
+    setTimeout(function () { phys.forEach(function (it) { it.el.classList.remove("is-ret"); }); }, 500);
   });
   if (mode === "none") return;
 
