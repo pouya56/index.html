@@ -550,7 +550,8 @@
     {%- for block in section.blocks -%}
       {%- if block.type == 'giftbox' and block.settings.image != blank and gcap < 5 -%}
         {%- assign gcap = gcap | plus: 1 -%}
-        {%- capture gitem -%}{"url":{{ block.settings.image | image_url: width: 600 | json }},"size":{{ block.settings.size | default: 90 }},"count":{{ block.settings.count | default: 2 }}}{%- endcapture -%}
+        {%- assign gsz = block.settings.size | default: 90 | times: 2 | at_least: 160 | at_most: 600 -%}
+        {%- capture gitem -%}{"url":{{ block.settings.image | image_url: width: gsz | json }},"size":{{ block.settings.size | default: 90 }},"count":{{ block.settings.count | default: 2 }}}{%- endcapture -%}
         {%- if gitems == '' -%}{%- assign gitems = gitem -%}{%- else -%}{%- assign gitems = gitems | append: ',' | append: gitem -%}{%- endif -%}
       {%- endif -%}
     {%- endfor -%}
@@ -1075,7 +1076,8 @@
       {%- if b.type == 'float' and b.settings.image != blank -%}
       <span class="dh-float" data-w="{{ b.settings.size | default: 140 }}" {{ b.shopify_attributes }}>
         <span class="dh-float-bob">
-          <img class="dh-float-img" src="{{ b.settings.image | image_url: width: 640 }}" alt="" loading="lazy" draggable="false"
+          {%- assign fsz = b.settings.size | default: 140 | times: 2 | at_least: 200 | at_most: 640 -%}
+          <img class="dh-float-img" src="{{ b.settings.image | image_url: width: fsz }}" alt="" loading="lazy" draggable="false"
             width="{{ b.settings.image.width }}" height="{{ b.settings.image.height }}">
           <canvas class="dh-float-paint"></canvas>
         </span>
@@ -1085,7 +1087,8 @@
     {%- if section.settings.float_pin -%}
     <span class="dh-float-pin" id="dhFloatPin" aria-hidden="true" data-w="{{ section.settings.pin_size | default: 60 }}">
       {%- if section.settings.pin_image != blank -%}
-      <img src="{{ section.settings.pin_image | image_url: width: 400 }}" alt="" draggable="false" loading="lazy"
+      {%- assign psz = section.settings.pin_size | default: 60 | times: 2 | at_least: 120 | at_most: 400 -%}
+      <img src="{{ section.settings.pin_image | image_url: width: psz }}" alt="" draggable="false" loading="lazy"
         width="{{ section.settings.pin_image.width }}" height="{{ section.settings.pin_image.height }}">
       {%- else -%}
       <svg viewBox="0 0 40 40">
