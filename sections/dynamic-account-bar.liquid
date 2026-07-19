@@ -113,6 +113,12 @@
       background: linear-gradient(180deg, #bfe3ff, #58a6f5); opacity: 0; animation: abSweat 1.5s ease 0.1s; }
     @keyframes abSweat { 0% { opacity: 0; transform: translateY(0); } 25% { opacity: 1; }
       100% { opacity: 0.9; transform: translateY(9px); } }
+    /* Pleased (heading to checkout): lids lowered halfway over content
+       little smile-arc eyes. */
+    .dyn-abar .dh-orb-eyes.is-pleased .dh-orb-eye::before { transform: translateY(52%); }
+    .dyn-abar .dh-orb-eyes.is-pleased .dh-orb-eye::after { width: 12px; height: 7px; background: none;
+      border: solid #241d38; border-width: 2.5px 2.5px 0 2.5px; border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+      transform: translateY(4px); }
     /* Surprised (the Surprise button!): eyes popped wide, pupils shrunk. */
     .dyn-abar .dh-orb-eyes.is-surprised .dh-orb-eye { transform: scale(1.14); }
     .dyn-abar .dh-orb-eyes.is-surprised .dh-orb-eye::after { width: 8px; height: 10px; transform: none; }
@@ -494,6 +500,8 @@
       .dyn-abar .dh-orb-eye { width: 30px; height: 39px; }
       .dyn-abar .dh-orb-eye::after { width: 18px; height: 24px; }
       .dyn-abar .dh-orb-eyes.is-surprised .dh-orb-eye::after { width: 12px; height: 15px; }
+      .dyn-abar .dh-orb-eyes.is-pleased .dh-orb-eye::after { width: 18px; height: 10px;
+        border-width: 3.5px 3.5px 0 3.5px; transform: translateY(6px); }
       .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:first-child::after { width: 21px; height: 27px; }
       .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:last-child::after { width: 18px; height: 4.5px; }
       .dyn-abar .dh-orb-eyes.is-cool::before, .dyn-abar .dh-orb-eyes.is-cool::after {
@@ -1345,6 +1353,12 @@
     window.addEventListener("dyn-design-added", function () { mood("is-cool", 4200); });
     /* The Surprise button genuinely surprises him. */
     window.addEventListener("dyn-surprise", function () { mood("is-surprised", 1800); });
+    /* Heading to checkout pleases him. */
+    document.addEventListener("click", function (e) {
+      var t = e.target && e.target.closest &&
+        e.target.closest('[name="checkout"], a[href*="/checkout"], button[formaction*="/checkout"]');
+      if (t) mood("is-pleased", 2200);
+    }, true);
     window.addEventListener("storage", function (e) { if (e && e.key === "dyn_wishlist") wishCheck(); });
     var origFetch = window.fetch;
     if (origFetch) window.fetch = function (u) {
