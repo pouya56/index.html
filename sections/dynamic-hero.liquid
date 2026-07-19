@@ -18,7 +18,7 @@
 <style>
   .dyn-hero {
     --bg: #ffffff; --bg-panel: #f5f5f7;
-    --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
+    --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #737378; /* 4.7:1 on white — passes AA for the small text that uses it */
     --line: #d2d2d7; --accent: #0071e3; --danger: #c0392b;
     --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-head: {% if section.settings.heading_font == 'sans' %}var(--font){% else %}"Cormorant Garamond", Georgia, "Times New Roman", Times, serif{% endif %};
@@ -908,7 +908,7 @@
             <a class="dh-corner-link{% if block.settings.icon_only %} is-icononly{% endif %}" href="{{ block.settings.url | default: '#' }}"{% if block.settings.open_popup and block.settings.url != blank %} data-dh-slide="{{ block.settings.url }}"{% endif %}{% if block.settings.icon_only %} aria-label="{{ block.settings.label | escape }}"{% endif %} {{ block.shopify_attributes }}>
               {%- if block.settings.icon_image != blank -%}
                 {%- assign iw = block.settings.icon_image.width | times: 18 | divided_by: block.settings.icon_image.height -%}
-                <img class="dh-corner-ic" src="{{ block.settings.icon_image | image_url: width: 54 }}" alt="" width="{{ iw }}" height="18">
+                <img class="dh-corner-ic" src="{{ block.settings.icon_image | image_url: width: 54 }}" alt="" width="{{ iw }}" height="18" loading="lazy">
               {%- elsif block.settings.icon != 'none' -%}
                 <span class="dh-corner-ic" aria-hidden="true">
                 {%- case block.settings.icon -%}
@@ -975,7 +975,7 @@
                           <span class="dh-app-ic">
                             {%- if block.settings.image != blank -%}
                               {%- assign aiw = block.settings.image.width | times: 30 | divided_by: block.settings.image.height -%}
-                              <img src="{{ block.settings.image | image_url: width: 90 }}" alt="" width="{{ aiw }}" height="30">
+                              <img src="{{ block.settings.image | image_url: width: 90 }}" alt="" width="{{ aiw }}" height="30" loading="lazy">
                             {%- elsif block.settings.icon != 'none' -%}
                               <span class="dh-app-svg" aria-hidden="true">
                               {%- case block.settings.icon -%}
@@ -1035,7 +1035,7 @@
               <button type="button" class="dh-icon-btn dh-acct-btn" aria-haspopup="true" aria-expanded="false" aria-label="Account">
                 {%- if section.settings.account_avatar != blank -%}
                   {%- assign avw = section.settings.account_avatar.width | times: 30 | divided_by: section.settings.account_avatar.height -%}
-                  <img class="dh-avatar" src="{{ section.settings.account_avatar | image_url: width: 90 }}" alt="Account" width="{{ avw }}" height="30">
+                  <img class="dh-avatar" src="{{ section.settings.account_avatar | image_url: width: 90 }}" alt="Account" width="{{ avw }}" height="30" loading="lazy">
                 {%- elsif customer -%}
                   <span class="dh-avatar dh-avatar-initial" aria-hidden="true">{{ customer.first_name | default: customer.email | slice: 0 | upcase }}</span>
                 {%- else -%}
@@ -1085,7 +1085,7 @@
     {%- if section.settings.float_pin -%}
     <span class="dh-float-pin" id="dhFloatPin" aria-hidden="true" data-w="{{ section.settings.pin_size | default: 60 }}">
       {%- if section.settings.pin_image != blank -%}
-      <img src="{{ section.settings.pin_image | image_url: width: 400 }}" alt="" draggable="false"
+      <img src="{{ section.settings.pin_image | image_url: width: 400 }}" alt="" draggable="false" loading="lazy"
         width="{{ section.settings.pin_image.width }}" height="{{ section.settings.pin_image.height }}">
       {%- else -%}
       <svg viewBox="0 0 40 40">
