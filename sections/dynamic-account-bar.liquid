@@ -169,7 +169,10 @@
     .dyn-abar .dh-apps-head .is-drag { opacity: 0.45; transform: scale(0.97); }
     .dyn-abar .dh-w-greethead { grid-column: span 2; }
     .dyn-abar .dh-w-clock, .dyn-abar .dh-w-quote { grid-column: span 1; grid-row: span 1; }
-    .dyn-abar .dh-w-saved { grid-column: span 2; grid-row: span 2; }
+    /* Pinned: Saved always bottom-left, Cart always bottom-right. */
+    .dyn-abar .dh-w-saved { grid-row: span 2; }
+    .dyn-abar #dynAbSaved { grid-column: 1 / 3; }
+    .dyn-abar #dynAbCart { grid-column: 3 / 5; }
     .dyn-abar .dh-widget { border-radius: 20px; padding: 12px 14px; color: #fff;
       background: rgba(42, 42, 47, 0.28); border: 1px solid rgba(255,255,255,0.10);
       box-shadow: none; }
@@ -281,14 +284,14 @@
               <svg class="dh-w-plant" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13C12 9.5 9.5 7 5.5 7 5.5 10.5 8 13 12 13Z"/><path d="M12 11c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6Z"/></svg>
               <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
             </div>
-            <div class="dh-w-mini dh-w-saved" id="dynAbSaved" data-wid="saved">
+            <div class="dh-w-mini dh-w-saved" id="dynAbSaved">
               <div class="dh-w-savedbox">
                 <div class="dh-w-savedtrack" id="dynAbSavedTrack"></div>
                 <div class="dh-w-saveddots" id="dynAbSavedDots"></div>
               </div>
               <span class="dh-w-boxlabel">Saved</span>
             </div>
-            <div class="dh-w-mini dh-w-saved" id="dynAbCart" data-wid="cart">
+            <div class="dh-w-mini dh-w-saved" id="dynAbCart">
               <div class="dh-w-savedbox">
                 <div class="dh-w-savedtrack" id="dynAbCartTrack"></div>
                 <div class="dh-w-saveddots" id="dynAbCartDots"></div>
@@ -539,12 +542,12 @@
         track.scrollTo({ left: (parseInt(b.getAttribute("data-i"), 10) || 0) * track.clientWidth, behavior: "smooth" });
       });
     }
-    function renderCar(track, dots, items, emptyHtml) {
+    function renderCar(track, dots, items, emptyHtml, pageUrl) {
       if (!track) return;
       if (!items.length) { track.innerHTML = emptyHtml; dots.innerHTML = ""; return; }
       var pick = items.slice(0, 8), html = "", dh = "", i;
       for (i = 0; i < pick.length; i++) {
-        html += '<a draggable="false" href="' + escA(pick[i].url || "#") + '" aria-label="' + escA(pick[i].title || "Product") + '">' +
+        html += '<a draggable="false" href="' + escA(pageUrl) + '" aria-label="' + escA(pick[i].title || "Product") + '">' +
                 (pick[i].image ? '<img draggable="false" src="' + escA(pick[i].image) + '" alt="" loading="lazy">' : '<span class="dh-w-savedph"></span>') + '</a>';
         dh += '<button type="button"' + (i === 0 ? ' class="is-on"' : '') + ' data-i="' + i + '" aria-label="Item ' + (i + 1) + '"></button>';
       }
@@ -559,7 +562,7 @@
     function renderSaved() {
       var list = [];
       try { var a = JSON.parse(localStorage.getItem("dyn_wishlist") || "[]"); if (a && a.length) list = a; } catch (e) {}
-      renderCar(savedTrack, savedDots, list, EMPTY_SAVED);
+      renderCar(savedTrack, savedDots, list, EMPTY_SAVED, "/pages/wishlist");
     }
     function loadCart() {
       if (!cartTrack) return;
@@ -567,8 +570,8 @@
         var items = (c && c.items ? c.items : []).map(function (it) {
           return { image: it.image, url: it.url, title: it.product_title };
         });
-        renderCar(cartTrack, cartDots, items, EMPTY_CART);
-      }).catch(function () { renderCar(cartTrack, cartDots, [], EMPTY_CART); });
+        renderCar(cartTrack, cartDots, items, EMPTY_CART, "{{ routes.cart_url }}");
+      }).catch(function () { renderCar(cartTrack, cartDots, [], EMPTY_CART, "{{ routes.cart_url }}"); });
     }
     if (savedTrack) wireCar(savedTrack, savedDots);
     if (cartTrack) wireCar(cartTrack, cartDots);
