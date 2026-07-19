@@ -2594,9 +2594,9 @@
     it.vx = 0; it.vy = 0;
     dragPend = { it: it, sx: e.clientX, sy: e.clientY, bx: it.x, by: it.y,
       touch: e.pointerType === "touch", moved: false, timer: 0, samples: [] };
-    if (dragPend.touch) dragPend.timer = setTimeout(function () {
-      if (dragPend && dragPend.it === it && !dragPend.moved) hold(dragPend);
-    }, 300);
+    /* Phones grab instantly, same feel as the mouse — a finger on a photo
+       moves the photo, while the empty background still scrolls the page. */
+    if (dragPend.touch) hold(dragPend);
   }, { passive: true });
   window.addEventListener("pointermove", function (e) {
     var d = dragPend;
