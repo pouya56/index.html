@@ -146,6 +146,8 @@
     .dyn-abar .dh-pop::before { display: none; }
     @keyframes abPop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
     .dyn-abar .dh-pop[hidden] { display: none; }
+    /* Close button only exists on the phone's full-page window. */
+    .dyn-abar .dh-pop-x { display: none; }
     .dyn-abar .dh-pop-title { font-size: 13px; color: rgba(255,255,255,0.75); padding: 4px 10px 10px; }
     .dyn-abar .dh-pop-link { display: block; padding: 12px 14px; border-radius: 14px; font-size: 14px; color: #fff;
       text-decoration: none; transition: background .14s;
@@ -292,6 +294,16 @@
          must be re-pinned to the 2-column grid at the same specificity. */
       .dyn-abar #dynAbSaved, .dyn-abar #dynAbCart { grid-column: 1 / 3; grid-row: auto; }
       .dyn-abar .dh-apps-grid { grid-template-columns: repeat(2, 1fr); }
+      /* Full-page window: square corners and a close button that rides the
+         scroll, pinned to the top-right (0-height sticky row, so it doesn't
+         push the widgets down). */
+      .dyn-abar .dh-apps-pop { border-radius: 0; }
+      .dyn-abar .dh-pop-x { display: flex; position: sticky; top: 8px; z-index: 6;
+        margin-left: auto; margin-bottom: -54px; width: 54px; height: 54px;
+        align-items: center; justify-content: center; border: none; border-radius: 50%;
+        padding: 0; cursor: pointer; background: rgba(42, 42, 47, 0.5); color: #fff; }
+      .dyn-abar .dh-pop-x svg { width: 26px; height: 26px; fill: none; stroke: currentColor;
+        stroke-width: 2.2; stroke-linecap: round; }
     }
     /* While the apps window is open on a phone the page behind it freezes
        and dims (the window sits at z-index 95, above the veil). */
@@ -321,6 +333,9 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>
         </button>
         <div class="dh-pop dh-apps-pop" hidden>
+          <button type="button" class="dh-pop-x" aria-label="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
           {%- if section.settings.show_widgets -%}
           <div class="dh-apps-head" id="dynAbWidgets">
             <div class="dh-w-greethead">
@@ -882,6 +897,12 @@
     }
     window.addEventListener("pointerup", endDrag, { passive: true });
     window.addEventListener("pointercancel", endDrag, { passive: true });
+    var xBtn = pop.querySelector(".dh-pop-x");
+    if (xBtn) xBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      pop.hidden = true;
+      btn.setAttribute("aria-expanded", "false");
+    });
     /* Phone: freeze the page while the window is open. Watching the hidden
        attribute catches every close path (outside tap, Escape, drag). */
     function syncLock() {
@@ -899,30 +920,27 @@
       if (pop.hidden) return;
       var r = btn.getBoundingClientRect();
       if (innerWidth <= 520) {
-        /* Same window as desktop, laid out at full desktop width and
-           scaled down so the whole thing fits the phone screen. */
+        /* Full-page window: desktop layout scaled so its width spans the
+           screen exactly, stretched to cover the full height; anything
+           taller scrolls inside. */
         pop.style.position = "fixed";
         pop.style.width = "590px";
         pop.style.right = "auto"; pop.style.bottom = "auto";
         pop.style.transformOrigin = "top left";
         pop.style.maxHeight = "none";
-        /* Measure the real outer width (padding/borders included); fill
-           the screen minus gutters, then 20% smaller than that. */
         var ow = pop.offsetWidth || 590;
-        var s = ((innerWidth - 16) / ow) * 0.8;
+        var s = innerWidth / ow;
         pop.style.transform = "scale(" + s + ")";
         pop.style.animation = "none";
-        /* Centered on the screen, wherever the button is. Content taller
-           than the screen scrolls inside the window. */
-        pop.style.left = Math.max(8, (innerWidth - ow * s) / 2) + "px";
-        var vh = pop.offsetHeight * s, maxVh = innerHeight - 16;
-        if (vh > maxVh) { vh = maxVh; pop.style.maxHeight = (maxVh / s) + "px"; }
-        pop.style.top = Math.max(8, (innerHeight - vh) / 2) + "px";
+        pop.style.left = "0px";
+        pop.style.top = "0px";
+        pop.style.height = (innerHeight / s) + "px";
+        pop.style.maxHeight = (innerHeight / s) + "px";
         return;
       }
       pop.style.position = "absolute";
       pop.style.left = ""; pop.style.right = ""; pop.style.bottom = "auto";
-      pop.style.maxHeight = "";
+      pop.style.maxHeight = ""; pop.style.height = "";
       pop.style.width = ""; pop.style.transform = ""; pop.style.animation = "";
       pop.style.top = "0px";
       var ph = pop.offsetHeight;
