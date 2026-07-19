@@ -143,7 +143,9 @@
   .dyn-hero.dh-landing .dh-head h1 { font-size: clamp(30px, 5vw, 46px); }
   .dyn-hero.dh-landing .dh-search { width: min(96vw, 750px); margin-top: 30px; margin-bottom: 30px; }
 
-  .dyn-hero .dh-head { text-align: center; max-width: 720px; margin: 0 auto; }
+  /* Stacking order over the floating photos (z 1): the search bar is the
+     boss (12), the buttons come second (11), the logo third (10). */
+  .dyn-hero .dh-head { text-align: center; max-width: 720px; margin: 0 auto; position: relative; z-index: 10; }
   .dyn-hero .dh-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(36px, 6vw, 60px);
     line-height: 1.02; margin: 0; letter-spacing: -0.01em; }
   .dyn-hero .dh-head .dh-desc { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 16px auto 0; max-width: 620px; }
@@ -154,7 +156,7 @@
     max-height: clamp(90px, 22vh, 220px); border-radius: 18px; object-fit: cover; background: transparent; }
 
   /* Live search box — ChatGPT-style liquid-glass pill with a "+" and an arrow button */
-  .dyn-hero .dh-search { position: relative; display: flex; align-items: center; gap: 10px; max-width: 784px; margin: 26px auto 0; padding: 9px;
+  .dyn-hero .dh-search { position: relative; z-index: 12; display: flex; align-items: center; gap: 10px; max-width: 784px; margin: 26px auto 0; padding: 9px;
     border-radius: 26px; z-index: 1;
     /* Liquid glass, not frosted milk: a whisper of white, heavy color pull-through. */
     /* Matte frost: flat fill, quiet rim, one drop shadow. */
@@ -198,7 +200,7 @@
   .dyn-hero .dh-search-go:hover::before, .dyn-hero .dh-search-go.has-text::before { opacity: 0.95; }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search-go::before { animation: none; } }
   /* Liquid-glass buttons under the search bar (Google-style) */
-  .dyn-hero .dh-hero-btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
+  .dyn-hero .dh-hero-btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; position: relative; z-index: 11; }
 
   /* "Finding your gift…" loader — full-screen overlay that covers the whole page (moved to <body> so nothing sits on top) */
   .dh-finding { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px;
