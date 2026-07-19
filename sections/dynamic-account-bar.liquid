@@ -196,8 +196,10 @@
        the name written under it. Empty lists show a friendly empty state. */
     .dyn-abar .dh-w-saved { display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 7px; padding: 0; background: none; border: none; box-shadow: none; min-height: 0; }
+    /* The box fills its two grid columns, so its edges line up exactly with
+       the two app tiles beneath it. */
     .dyn-abar .dh-w-savedbox { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0;
-      aspect-ratio: 1 / 1; box-sizing: border-box; padding: 9px 9px 7px; border-radius: 20px;
+      width: 100%; box-sizing: border-box; padding: 9px 9px 7px; border-radius: 20px;
       background: #fff; box-shadow: 0 10px 22px rgba(0,0,0,0.22); }
     .dyn-abar .dh-w-boxlabel { flex: none; font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.92);
       text-shadow: 0 1px 3px rgba(0,0,0,0.35); }
