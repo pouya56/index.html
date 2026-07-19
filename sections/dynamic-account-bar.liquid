@@ -113,6 +113,9 @@
       background: linear-gradient(180deg, #bfe3ff, #58a6f5); opacity: 0; animation: abSweat 1.5s ease 0.1s; }
     @keyframes abSweat { 0% { opacity: 0; transform: translateY(0); } 25% { opacity: 1; }
       100% { opacity: 0.9; transform: translateY(9px); } }
+    /* Surprised (the Surprise button!): eyes popped wide, pupils shrunk. */
+    .dyn-abar .dh-orb-eyes.is-surprised .dh-orb-eye { transform: scale(1.14); }
+    .dyn-abar .dh-orb-eyes.is-surprised .dh-orb-eye::after { width: 8px; height: 10px; transform: none; }
     /* Excited (an item was saved): sparkles dance in his pupils while he
        does the same joyful hops. */
     .dyn-abar .dh-apps-btn.is-excited { animation: abHappy 0.85s cubic-bezier(0.3, 1.5, 0.5, 1) 2; }
@@ -1302,6 +1305,8 @@
     window.addEventListener("dyn-wishlist-change", wishCheck);
     /* Adding a design earns him sunglasses. */
     window.addEventListener("dyn-design-added", function () { mood("is-cool", 4200); });
+    /* The Surprise button genuinely surprises him. */
+    window.addEventListener("dyn-surprise", function () { mood("is-surprised", 1800); });
     window.addEventListener("storage", function (e) { if (e && e.key === "dyn_wishlist") wishCheck(); });
     var origFetch = window.fetch;
     if (origFetch) window.fetch = function (u) {

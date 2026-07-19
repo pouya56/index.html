@@ -1517,6 +1517,8 @@
       return false;
     }
     randBtn.addEventListener("click", function () {
+      /* Anyone listening (the floating orb) hears the surprise. */
+      try { window.dispatchEvent(new CustomEvent("dyn-surprise")); } catch (e) {}
       if (pickAndOpen(rlist)) return;
       /* Inline list empty — fetch products live and open a random one anyway. */
       fetch("/products.json?limit=250", { credentials: "same-origin" })
