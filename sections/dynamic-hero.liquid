@@ -2072,6 +2072,10 @@
     if (Date.now() < squelch) { e.preventDefault(); e.stopPropagation(); }
   }, true);
   function lift() {
+    /* Measure before the lift styling, so the walls use the true size. */
+    var rc = drag.el.getBoundingClientRect();
+    drag.bw = rc.width; drag.bh = rc.height;
+    drag.bx = rc.left - drag.ox; drag.by = rc.top - drag.oy;
     drag.moved = true;
     drag.el.classList.add("is-drag");
     drag.el.style.setProperty("--dds", "1.04");
@@ -2116,7 +2120,14 @@
       if (dx * dx + dy * dy < 64) return;
       lift();
     }
-    pos[drag.k] = [drag.ox + dx, drag.oy + dy];
+    /* The screen edges are walls: the object stops 6px inside, even
+       while the hand keeps going. The held object is scaled up 4%, so
+       pad the walls by the extra 2% that sticks out on each side. */
+    var mx = 6 + drag.bw * 0.02, my = 6 + drag.bh * 0.02;
+    var nx = drag.ox + dx, ny = drag.oy + dy;
+    nx = Math.min(Math.max(nx, mx - drag.bx), Math.max(mx - drag.bx, innerWidth - mx - drag.bw - drag.bx));
+    ny = Math.min(Math.max(ny, my - drag.by), Math.max(my - drag.by, innerHeight - my - drag.bh - drag.by));
+    pos[drag.k] = [nx, ny];
     apply(drag.k);
   }, { passive: true });
   function end() {
