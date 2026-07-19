@@ -1161,11 +1161,13 @@
       '<div class="dh-vprev-ext" hidden>This link opens outside the shop \u2014 use Open page.</div>';
     pop.insertBefore(ptabs, pop.firstChild);
     pop.appendChild(vprev);
-    ptabs.innerHTML = '<button type="button" class="dh-ptab is-on" data-vtab="apps">All</button>' +
-      vApps.map(function (ap, i) {
-        if (ap.ext || ap.home) return "";
-        return '<button type="button" class="dh-ptab" data-vtab="app-' + i + '">' + vEsc(ap.label) + "</button>";
-      }).join("");
+    ptabs.innerHTML = vApps.map(function (ap, i) {
+      if (ap.ext || ap.home) return "";
+      /* Saved has its own core tab — no duplicate pill. */
+      var lab = (ap.label || "").toLowerCase();
+      if (lab === "saved" || ap.href.indexOf("/pages/wishlist") !== -1) return "";
+      return '<button type="button" class="dh-ptab" data-vtab="app-' + i + '">' + vEsc(ap.label) + "</button>";
+    }).join("");
     ptabs.addEventListener("click", function (e) {
       e.stopPropagation();
       var t = e.target.closest ? e.target.closest(".dh-ptab") : null;
