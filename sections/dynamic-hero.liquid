@@ -2028,8 +2028,13 @@
   resetBtn.setAttribute("aria-label", "Put everything back");
   resetBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.8-6.5"/><polyline points="3 4.5 3 9.5 8 9.5"/></svg>';
   hero.appendChild(resetBtn);
+  var extMoved = false;
+  hero.addEventListener("dh:ext-moved", function (e) {
+    extMoved = !!(e.detail && e.detail.moved);
+    updateReset();
+  });
   function updateReset() {
-    resetBtn.classList.toggle("is-on", Object.keys(pos).length > 0);
+    resetBtn.classList.toggle("is-on", Object.keys(pos).length > 0 || extMoved);
   }
   function clamp(k) {
     /* Keep the object at least 6px inside the screen so it can't get lost. */
@@ -2122,6 +2127,8 @@
   window.addEventListener("pointercancel", end, { passive: true });
   function goHome() {
     pos = {};
+    /* Floating photos (and anything else listening) glide home too. */
+    try { hero.dispatchEvent(new CustomEvent("dh:gohome")); } catch (err) {}
     updateReset();
     Object.keys(els).forEach(function (k) { els[k].classList.add("is-anim"); apply(k); });
     setTimeout(function () {
@@ -2177,6 +2184,9 @@
     65% { transform: rotate(3deg); }
   }
   .dyn-hero .dh-float.is-wig { animation: dhFloatWig 0.55s ease; }
+  .dyn-hero .dh-float.is-held { z-index: 5; }
+  .dyn-hero .dh-float.is-held .dh-float-bob { animation-play-state: paused; }
+  .dyn-hero .dh-float.is-ret { transition: left 0.45s cubic-bezier(0.22, 1, 0.36, 1), top 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-float-bob { animation: none; } }
 </style>
 <script>
@@ -2225,6 +2235,7 @@
       }
       taken.push({ x: x, y: y, w: w, h: h });
       it.w = w; it.h = h;
+      it.homeX = x; it.homeY = y; it.moved = false;
       it.el.style.left = x + "px";
       it.el.style.top = y + "px";
       it.el.style.width = w + "px";
@@ -2237,7 +2248,89 @@
   place();
   its.forEach(function (it, i) { setTimeout(function () { it.el.classList.add("is-in"); }, 150 + i * 90); });
   var rT;
-  window.addEventListener("resize", function () { clearTimeout(rT); rT = setTimeout(place, 200); });
+  window.addEventListener("resize", function () { clearTimeout(rT); rT = setTimeout(function () { place(); announce(); }, 200); });
+
+  /* Drag to move, same feel as the other hero objects: mouse just grabs;
+     on the phone, hold a moment to pick up while a quick swipe scrolls.
+     The layer stays pointer-transparent, so we hit-test by hand. */
+  var dragPend = null;
+  function hitFloat(x, y) {
+    for (var i = its.length - 1; i >= 0; i--) {
+      var rc = its[i].bob.getBoundingClientRect();
+      if (x >= rc.left && x <= rc.right && y >= rc.top && y <= rc.bottom) return its[i];
+    }
+    return null;
+  }
+  function hold(d) {
+    d.moved = true;
+    d.it.el.classList.add("is-held");
+    if (navigator.vibrate) { try { navigator.vibrate(10); } catch (err) {} }
+  }
+  function announce() {
+    var any = false;
+    its.forEach(function (it) { if (it.moved) any = true; });
+    try { hero.dispatchEvent(new CustomEvent("dh:ext-moved", { detail: { moved: any } })); } catch (err) {}
+  }
+  window.addEventListener("pointerdown", function (e) {
+    if (e.button != null && e.button !== 0) return;
+    var it = hitFloat(e.clientX, e.clientY);
+    if (!it) return;
+    dragPend = { it: it, sx: e.clientX, sy: e.clientY,
+      bx: parseFloat(it.el.style.left) || 0, by: parseFloat(it.el.style.top) || 0,
+      touch: e.pointerType === "touch", moved: false, timer: 0 };
+    if (dragPend.touch) dragPend.timer = setTimeout(function () {
+      if (dragPend && dragPend.it === it && !dragPend.moved) hold(dragPend);
+    }, 300);
+  }, { passive: true });
+  window.addEventListener("pointermove", function (e) {
+    var d = dragPend;
+    if (!d) return;
+    var dx = e.clientX - d.sx, dy = e.clientY - d.sy;
+    if (!d.moved) {
+      if (d.touch) return;                       /* still waiting for the hold */
+      if (dx * dx + dy * dy < 64) return;
+      hold(d);
+    }
+    var x = Math.min(Math.max(d.bx + dx, 4), Math.max(4, innerWidth - d.it.w - 4));
+    var y = Math.min(Math.max(d.by + dy, 4), Math.max(4, innerHeight - d.it.h - 4));
+    d.it.el.style.left = x + "px";
+    d.it.el.style.top = y + "px";
+  }, { passive: true });
+  window.addEventListener("touchmove", function (e) {
+    var d = dragPend;
+    if (!d || !d.touch || !e.cancelable) return;
+    if (d.moved) { e.preventDefault(); return; }
+    var t = e.touches[0];
+    if (!t) return;
+    var dx = t.clientX - d.sx, dy = t.clientY - d.sy;
+    if (dx * dx + dy * dy < 100) { e.preventDefault(); }
+    else { clearTimeout(d.timer); dragPend = null; }
+  }, { passive: false });
+  function endDrag() {
+    var d = dragPend;
+    if (!d) return;
+    clearTimeout(d.timer);
+    if (d.moved) {
+      d.it.el.classList.remove("is-held");
+      d.it.moved = Math.abs((parseFloat(d.it.el.style.left) || 0) - d.it.homeX) > 2 ||
+                   Math.abs((parseFloat(d.it.el.style.top) || 0) - d.it.homeY) > 2;
+      announce();
+    }
+    dragPend = null;
+  }
+  window.addEventListener("pointerup", endDrag, { passive: true });
+  window.addEventListener("pointercancel", endDrag, { passive: true });
+  hero.addEventListener("dh:gohome", function () {
+    its.forEach(function (it) {
+      if (!it.moved) return;
+      it.el.classList.add("is-ret");
+      it.el.style.left = it.homeX + "px";
+      it.el.style.top = it.homeY + "px";
+      it.moved = false;
+    });
+    announce();
+    setTimeout(function () { its.forEach(function (it) { it.el.classList.remove("is-ret"); }); }, 500);
+  });
   if (mode === "none") return;
 
   /* Soft-edged stamp: cut a feathered circle of the colored photo and lay
@@ -2288,6 +2381,7 @@
     if (typeof x !== "number") return;
     for (var i = 0; i < its.length; i++) {
       var it = its[i];
+      if (dragPend && dragPend.moved && dragPend.it === it) { it.last = null; continue; }
       var rc = it.bob.getBoundingClientRect();
       if (x < rc.left - 4 || x > rc.right + 4 || y < rc.top - 4 || y > rc.bottom + 4) { it.last = null; continue; }
       if (mode === "bloom") { bloom(it); continue; }
@@ -2492,7 +2586,7 @@
       { "type": "range", "id": "count", "min": 1, "max": 6, "step": 1, "label": "How many of this box", "default": 1, "info": "Leave at 1 for a single box, or increase to drop several copies of the same image." }
     ]},
     { "type": "float", "name": "Floating photo 🎈", "settings": [
-      { "type": "image_picker", "id": "image", "label": "Photo (transparent PNG works best)", "info": "Lands in a new random spot on every visit, floats gently, and colors in under the mouse. Decorative only — it never blocks clicks." },
+      { "type": "image_picker", "id": "image", "label": "Photo (transparent PNG works best)", "info": "Lands in a new random spot on every visit, floats gently, colors in under the mouse, and can be dragged anywhere (on phones: hold a moment to pick it up). The put-it-back button returns moved photos to their spot." },
       { "type": "range", "id": "size", "min": 60, "max": 260, "step": 10, "unit": "px", "label": "Size", "default": 140 }
     ]}
   ],
