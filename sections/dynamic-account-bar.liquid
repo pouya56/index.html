@@ -203,12 +203,18 @@
        joined by a bridge — and a smug little settle. */
     .dyn-abar .dh-apps-btn.is-cool { animation: abCoolIn 0.5s cubic-bezier(0.3, 1.4, 0.5, 1); }
     @keyframes abCoolIn { 0% { transform: translateY(-5px) scale(1.04); } 100% { transform: translateY(0) scale(1); } }
-    .dyn-abar .dh-orb-eyes.is-cool .dh-orb-eye { background: linear-gradient(180deg, #2a2a33 0%, #101016 70%); }
-    .dyn-abar .dh-orb-eyes.is-cool .dh-orb-eye::after { width: 9px; height: 2.5px; border-radius: 2px;
-      background: rgba(255, 255, 255, 0.8); box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
-      transform: translate(-2px, -5px) rotate(-24deg); }
-    .dyn-abar .dh-orb-eyes.is-cool::before { content: ""; position: absolute; left: 41%; right: 41%; top: 34%;
-      height: 3px; border-radius: 2px; background: #101016; z-index: 3; }
+    /* Real black frames worn low across both eyes: thick-rimmed lenses that
+       touch in the middle and hang below, eyes peeking over the top (left
+       curious, right unimpressed under a heavy lid). */
+    .dyn-abar .dh-orb-eyes.is-cool .dh-orb-eye:last-child::before { transform: translateY(58%); }
+    .dyn-abar .dh-orb-eyes.is-cool::before, .dyn-abar .dh-orb-eyes.is-cool::after { content: "";
+      position: absolute; z-index: 3; top: 42%; width: 20px; height: 14px;
+      border: 3px solid #16161b; border-radius: 5px 5px 8px 8px;
+      background: linear-gradient(160deg, #34343d 0%, #0e0e13 65%);
+      box-shadow: inset 1.5px 1.5px 2.5px rgba(255, 255, 255, 0.16), 0 2px 5px rgba(0, 0, 10, 0.45);
+      opacity: 1; animation: none; transform: none; }
+    .dyn-abar .dh-orb-eyes.is-cool::before { left: -3px; right: auto; }
+    .dyn-abar .dh-orb-eyes.is-cool::after { right: -3px; }
     /* Angry: furrowed slanted glare, red heat, trembling with rage. */
     .dyn-abar .dh-apps-btn.is-angry { animation: abRage 0.28s linear infinite;
       border-color: rgba(255, 105, 95, 0.65);
