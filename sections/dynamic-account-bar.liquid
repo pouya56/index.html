@@ -113,6 +113,15 @@
       background: linear-gradient(180deg, #bfe3ff, #58a6f5); opacity: 0; animation: abSweat 1.5s ease 0.1s; }
     @keyframes abSweat { 0% { opacity: 0; transform: translateY(0); } 25% { opacity: 1; }
       100% { opacity: 0.9; transform: translateY(9px); } }
+    /* Excited (an item was saved): sparkles dance in his pupils while he
+       does the same joyful hops. */
+    .dyn-abar .dh-apps-btn.is-excited { animation: abHappy 0.85s cubic-bezier(0.3, 1.5, 0.5, 1) 2; }
+    .dyn-abar .dh-orb-eyes.is-excited .dh-orb-eye::after { content: "\2726"; display: flex;
+      align-items: center; justify-content: center; color: #fff;
+      font: 700 9px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.95);
+      animation: abSparkle 0.5s ease-in-out infinite; }
+    @keyframes abSparkle { 50% { transform: scale(1.4) rotate(20deg); } }
     /* Shocked: lids flung up and tilted outward, eyes popped wide. */
     .dyn-abar .dh-orb-eyes.is-shocked .dh-orb-eye { transform: scale(1.08); }
     .dyn-abar .dh-orb-eyes.is-shocked .dh-orb-eye:first-child::before { transform: translateY(12%) rotate(-16deg); }
@@ -1243,6 +1252,22 @@
         else if (c.item_count < prev) mood("is-sad", 2700);
       }).catch(function () {});
     }
+    /* Saving an item excites him (same signals the Saved widget listens to;
+       only additions count — removals are the cart-sad's job). */
+    function wishCount() {
+      try {
+        var a = JSON.parse(localStorage.getItem("dyn_wishlist") || "[]");
+        return a && a.length ? a.length : 0;
+      } catch (e) { return 0; }
+    }
+    var wishN = wishCount();
+    function wishCheck() {
+      var n = wishCount();
+      if (n > wishN) mood("is-excited", 1900);
+      wishN = n;
+    }
+    window.addEventListener("dyn-wishlist-change", wishCheck);
+    window.addEventListener("storage", function (e) { if (e && e.key === "dyn_wishlist") wishCheck(); });
     var origFetch = window.fetch;
     if (origFetch) window.fetch = function (u) {
       var pr = origFetch.apply(this, arguments);
