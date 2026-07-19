@@ -1081,7 +1081,9 @@
       <span class="dh-float" data-w="{{ b.settings.size | default: 140 }}" style="position:absolute;left:-9999px;top:0;width:{{ b.settings.size | default: 140 }}px" {{ b.shopify_attributes }}>
         <span class="dh-float-bob">
           {%- assign fsz = b.settings.size | default: 140 | times: 2 | at_least: 200 | at_most: 640 -%}
-          <img class="dh-float-img" src="{{ b.settings.image | image_url: width: fsz }}" alt="" loading="lazy" draggable="false"
+          {%- comment -%} Not lazy: these sit above the fold and are often the
+             page's largest image on phones — lazy-loading them delays LCP. {%- endcomment -%}
+          <img class="dh-float-img" src="{{ b.settings.image | image_url: width: fsz }}" alt="" draggable="false"
             width="{{ b.settings.image.width }}" height="{{ b.settings.image.height }}">
           <canvas class="dh-float-paint"></canvas>
         </span>

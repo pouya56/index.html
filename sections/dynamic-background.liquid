@@ -46,9 +46,9 @@
   <span class="dyn-bg-veil"></span>
   {%- elsif look == 'image' -%}
   {%- if section.settings.bg_image != blank -%}
-  <img class="dyn-bg-img" alt="" loading="eager"
+  <img class="dyn-bg-img" alt="" loading="eager" fetchpriority="high"
        src="{{ section.settings.bg_image | image_url: width: 2000 }}"
-       srcset="{{ section.settings.bg_image | image_url: width: 1200 }} 1200w, {{ section.settings.bg_image | image_url: width: 2000 }} 2000w, {{ section.settings.bg_image | image_url: width: 3000 }} 3000w"
+       srcset="{{ section.settings.bg_image | image_url: width: 800 }} 800w, {{ section.settings.bg_image | image_url: width: 1200 }} 1200w, {{ section.settings.bg_image | image_url: width: 2000 }} 2000w, {{ section.settings.bg_image | image_url: width: 3000 }} 3000w"
        sizes="100vw"
        width="{{ section.settings.bg_image.width }}" height="{{ section.settings.bg_image.height }}">
   {%- if brush != 'off' -%}
