@@ -747,6 +747,16 @@
     var btn = menu && menu.querySelector(".dh-apps-btn");
     var pop = menu && menu.querySelector(".dh-apps-pop");
     if (!menu || !btn || !pop) return;
+    /* The bar can carry transforms (sticky peek-hide slides the whole
+       section up) and a transformed ancestor hijacks position:fixed —
+       the circle would stop following the pointer and ride away with the
+       bar. Re-home it directly under <body>; the display:contents host
+       keeps the .dyn-abar CSS scope matching. */
+    var host = document.createElement("div");
+    host.className = "dyn-abar";
+    host.style.display = "contents";
+    document.body.appendChild(host);
+    host.appendChild(menu);
     var KEY = "dyn_abar_apps_pos";
     function zones() {
       /* Things the circle must not cover: corner links, back button,
@@ -827,6 +837,9 @@
     }, true);
     btn.addEventListener("pointerdown", function (e) {
       if (e.button != null && e.button !== 0) return;
+      /* Capture keeps every move coming to us even if the pointer crosses
+         iframes or other handlers mid-drag. */
+      try { btn.setPointerCapture(e.pointerId); } catch (err) {}
       var r = menu.getBoundingClientRect();
       drag = { sx: e.clientX, sy: e.clientY, bx: r.left, by: r.top, moved: false };
     });
