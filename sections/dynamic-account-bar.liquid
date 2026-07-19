@@ -134,10 +134,18 @@
       box-shadow: 0 0 34px rgba(160, 120, 255, 0.55), 0 16px 34px -10px rgba(0, 0, 0, 0.6),
         inset 0 0 16px rgba(160, 120, 255, 0.28), inset 0 2px 6px rgba(255, 255, 255, 0.14); }
     .dyn-abar .dh-apps-btn:active { cursor: grabbing; }
-    /* The keycap steps aside while its window is open (tap outside or press
-       Escape to close; the window itself stays interactive). */
-    .dyn-abar .dh-apps-btn { transition: opacity 0.18s ease, transform 0.18s ease, background 0.16s, box-shadow 0.15s; }
-    .dyn-abar .dh-apps-btn[aria-expanded="true"] { opacity: 0; transform: scale(0.5); pointer-events: none; }
+    /* Clicking him lands like a punch: hard squash, knocked sideways, a
+       springy recover with his eyes screwed shut — and only then does the
+       window open. */
+    .dyn-abar .dh-apps-btn.is-punched { animation: abPunch 0.45s cubic-bezier(0.3, 1.4, 0.5, 1); }
+    @keyframes abPunch {
+      0% { transform: scale(1); }
+      18% { transform: scale(0.72, 0.6) rotate(-8deg) translateY(5px); }
+      45% { transform: scale(1.12, 0.92) rotate(5deg) translateY(-3px); }
+      70% { transform: scale(0.95, 1.05) rotate(-2deg); }
+      100% { transform: scale(1); }
+    }
+    .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye { transform: scaleY(0.15); }
     /* Siri ring: a thin rainbow band spinning around the tray's edge.
        The gradient angle animates (not the element — rotating a square mask
        would poke through the corners). */
@@ -1051,6 +1059,26 @@
         }, 1600 + Math.random() * 4200);
       })();
     }
+    /* Punch-to-open: an opening click is held back while he takes the hit,
+       then re-dispatched so the normal toggle takes over. Closing clicks,
+       drag releases (squelched earlier in capture), and reduced-motion
+       visitors skip the theatrics. */
+    var punching = false;
+    var noMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    btn.addEventListener("click", function (e) {
+      if (noMotion || !pop.hidden) return;
+      if (punching) { punching = false; return; }
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      btn.classList.add("is-punched");
+      if (eyes) eyes.classList.add("is-dazed");
+      setTimeout(function () {
+        btn.classList.remove("is-punched");
+        if (eyes) eyes.classList.remove("is-dazed");
+        punching = true;
+        btn.click();
+      }, 430);
+    }, true);
     var xBtn = pop.querySelector(".dh-pop-x");
     if (xBtn) xBtn.addEventListener("click", function (e) {
       e.stopPropagation();
