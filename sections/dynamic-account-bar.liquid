@@ -486,6 +486,27 @@
        too — thicken its frost while the veil is up to keep it bright. */
     html.dyn-ablock .dyn-abar .dh-apps-pop { background: rgba(255, 255, 255, 0.72); }
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-apps-pop, .dyn-abar .dh-app { animation: none !important; transition: none !important; } }
+    /* Desktop: he's 50% bigger — every fixed-px feature scales with him
+       (percent-based parts like the lids follow automatically). */
+    @media (min-width: 900px) {
+      .dyn-abar .dh-apps-btn { width: 96px; height: 96px; }
+      .dyn-abar .dh-orb-eyes { gap: 9px; }
+      .dyn-abar .dh-orb-eye { width: 30px; height: 39px; }
+      .dyn-abar .dh-orb-eye::after { width: 18px; height: 24px; }
+      .dyn-abar .dh-orb-eyes.is-surprised .dh-orb-eye::after { width: 12px; height: 15px; }
+      .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:first-child::after { width: 21px; height: 27px; }
+      .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:last-child::after { width: 18px; height: 4.5px; }
+      .dyn-abar .dh-orb-eyes.is-cool::before, .dyn-abar .dh-orb-eyes.is-cool::after {
+        width: 30px; height: 21px; border-width: 4.5px; left: auto; }
+      .dyn-abar .dh-orb-eyes.is-cool::before { left: -5px; }
+      .dyn-abar .dh-orb-eyes.is-cool::after { right: -5px; }
+      .dyn-abar .dh-apps-btn.is-cool::after { font-size: 21px; right: 6px; top: 32px; }
+      .dyn-abar .dh-orb-eyes.is-happy .dh-orb-eye::after { font-size: 22px; }
+      .dyn-abar .dh-orb-eyes.is-excited .dh-orb-eye::after { font-size: 13px; }
+      .dyn-abar .dh-apps-btn.is-asleep::after, .dyn-abar .dh-apps-btn.is-happy::after { font-size: 22px; }
+      .dyn-abar .dh-orb-eyes.is-nervous::after { width: 9px; height: 12px; right: -12px; top: -10px; }
+      .dyn-abar .dh-orb-eyes.is-sad::before { width: 7.5px; height: 10px; right: 5px; top: 21px; }
+    }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
   </style>
 
@@ -1069,8 +1090,8 @@
         drag.v = (Math.abs(mdx) + Math.abs(mdy)) / Math.max(1, t - drag.lt);
         var md = Math.sqrt(mdx * mdx + mdy * mdy);
         if (eyes && md > 2) {
-          eyes.style.setProperty("--ex", (mdx / md * 7).toFixed(1) + "px");
-          eyes.style.setProperty("--ey", (mdy / md * 4).toFixed(1) + "px");
+          eyes.style.setProperty("--ex", (mdx / md * 7 * (GS || 1)).toFixed(1) + "px");
+          eyes.style.setProperty("--ey", (mdy / md * 4 * (GS || 1)).toFixed(1) + "px");
         }
       }
       drag.lx = e.clientX; drag.ly = e.clientY; drag.lt = t;
@@ -1103,6 +1124,8 @@
     if (eyes && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) {
       /* Page load counts as activity, or he'd doze off instantly. */
       var lastFollow = Date.now(), lastPt = null, travel = 0, dizzyUntil = 0, asleep = false;
+      /* Desktop draws him 50% bigger, so the pupils roam 50% further. */
+      var GS = (window.matchMedia && matchMedia("(min-width: 900px)").matches) ? 1.5 : 1;
       function wake() {
         btn.classList.remove("is-bored");
         if (asleep) { asleep = false; btn.classList.remove("is-asleep"); }
@@ -1141,8 +1164,8 @@
         var dx = px - (r.left + r.width / 2), dy = py - (r.top + r.height / 2);
         var d = Math.sqrt(dx * dx + dy * dy) || 1;
         var m = Math.min(1, d / 110);
-        eyes.style.setProperty("--ex", (dx / d * 7 * m).toFixed(1) + "px");
-        eyes.style.setProperty("--ey", (dy / d * 4 * m).toFixed(1) + "px");
+        eyes.style.setProperty("--ex", (dx / d * 7 * GS * m).toFixed(1) + "px");
+        eyes.style.setProperty("--ey", (dy / d * 4 * GS * m).toFixed(1) + "px");
       }
       /* Nothing moving for 12s → lights out (not while the window is open). */
       setInterval(function () {
@@ -1172,8 +1195,8 @@
         var roll = Math.random();
         if (roll < (coarse ? 0.72 : 0.65)) {
           var a = Math.random() * Math.PI * 2;
-          eyes.style.setProperty("--ex", (Math.cos(a) * (2 + Math.random() * 5)).toFixed(1) + "px");
-          eyes.style.setProperty("--ey", (Math.sin(a) * 3).toFixed(1) + "px");
+          eyes.style.setProperty("--ex", (Math.cos(a) * (2 + Math.random() * 5) * GS).toFixed(1) + "px");
+          eyes.style.setProperty("--ey", (Math.sin(a) * 3 * GS).toFixed(1) + "px");
         } else if (roll < (coarse ? 0.82 : 0.75)) {
           /* A cheeky wink. */
           eyes.classList.add("is-wink");
@@ -1200,7 +1223,7 @@
           lastScroll = y;
           if (Date.now() < dizzyUntil || Date.now() < angryUntil) return;
           eyes.style.setProperty("--ex", "0px");
-          eyes.style.setProperty("--ey", down ? "4px" : "-4px");
+          eyes.style.setProperty("--ey", (down ? 4 * GS : -4 * GS) + "px");
           lastFollow = Date.now();
         }, { passive: true });
       }
