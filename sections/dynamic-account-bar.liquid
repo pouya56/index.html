@@ -277,21 +277,8 @@
     .dyn-abar .dh-w-saveddots button { width: 6px; height: 6px; border-radius: 50%; border: none; padding: 0;
       background: #d2d2d7; cursor: pointer; transition: background .15s, transform .15s; }
     .dyn-abar .dh-w-saveddots button.is-on { background: #1d1d1f; transform: scale(1.25); }
-    @media (max-width: 520px) {
-      /* Anchored-to-the-button would poke past the left screen edge on a
-         phone — pin the window to the viewport instead. */
-      .dyn-abar .dh-apps-pop { position: fixed; left: 8px; right: 8px; top: 84px; width: auto; padding: 18px 16px 22px; border-radius: 30px; }
-      .dyn-abar .dh-apps-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-      .dyn-abar .dh-app { padding: 8px; }
-      .dyn-abar .dh-app-ic, .dyn-abar .dh-app-ic img, .dyn-abar .dh-app-init { width: 42px; height: 42px; }
-      .dyn-abar .dh-app-svg { width: 46px; height: 46px; }
-      .dyn-abar .dh-app-svg svg { width: 24px; height: 24px; }
-      .dyn-abar .dh-apps-head { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; gap: 10px; margin-bottom: 10px; }
-      .dyn-abar .dh-widget { padding: 11px 12px; border-radius: 16px; }
-      .dyn-abar .dh-w-day { font-size: 24px; }
-      .dyn-abar .dh-w-sub { font-size: 12px; }
-      .dyn-abar .dh-w-face { max-width: 116px; }
-    }
+    /* Phones keep the exact desktop layout — the window is laid out at its
+       desktop width and scaled down to fit (see the positioning script). */
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-apps-pop, .dyn-abar .dh-app { animation: none !important; transition: none !important; } }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
   </style>
@@ -873,20 +860,32 @@
       if (pop.hidden) return;
       var r = btn.getBoundingClientRect();
       if (innerWidth <= 520) {
+        /* Same window as desktop, laid out at full desktop width and
+           scaled down so the whole thing fits the phone screen. */
         pop.style.position = "fixed";
-        pop.style.left = "8px";
-        pop.style.right = "8px";
-        if (r.top + r.height / 2 < innerHeight / 2) {
-          pop.style.top = (r.bottom + 10) + "px"; pop.style.bottom = "auto";
-        } else {
-          pop.style.bottom = (innerHeight - r.top + 10) + "px"; pop.style.top = "auto";
-        }
-        pop.style.maxHeight = "min(78vh, 812px)";
+        pop.style.width = "590px";
+        pop.style.left = "8px"; pop.style.right = "auto"; pop.style.bottom = "auto";
+        pop.style.transformOrigin = "top left";
+        pop.style.maxHeight = "none";
+        /* Measure the real outer width (padding/borders included) so the
+           scaled window exactly spans the screen minus the 8px gutters. */
+        var s = (innerWidth - 16) / (pop.offsetWidth || 590);
+        pop.style.transform = "scale(" + s + ")";
+        pop.style.animation = "none";
+        pop.style.maxHeight = "none";
+        var vh = Math.min(pop.offsetHeight, 812) * s;
+        var top = (r.top + r.height / 2 < innerHeight / 2)
+          ? Math.min(r.bottom + 10, innerHeight - vh - 8)
+          : Math.max(8, r.top - 10 - vh);
+        if (top < 8) top = 8;
+        pop.style.top = top + "px";
+        pop.style.maxHeight = Math.min(812, (innerHeight - top - 8) / s) + "px";
         return;
       }
       pop.style.position = "absolute";
       pop.style.left = ""; pop.style.right = ""; pop.style.bottom = "auto";
       pop.style.maxHeight = "";
+      pop.style.width = ""; pop.style.transform = ""; pop.style.animation = "";
       pop.style.top = "0px";
       var ph = pop.offsetHeight;
       var desired = Math.min(Math.max(r.top, 12), innerHeight - ph - 12);
