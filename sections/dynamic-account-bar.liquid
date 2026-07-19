@@ -102,6 +102,21 @@
     .dyn-abar .dh-orb-eyes.is-yawn .dh-orb-eye::before { transform: translateY(45%); }
     /* Playful wink: one lid drops for a beat. */
     .dyn-abar .dh-orb-eyes.is-wink .dh-orb-eye:last-child::before { transform: translateY(96%); transition: transform 0.15s ease; }
+    /* Bored: heavy half-lids and sunk pupils while the idle clock runs. */
+    .dyn-abar .dh-apps-btn.is-bored .dh-orb-eye::before { transform: translateY(56%); transition: transform 0.6s ease; }
+    .dyn-abar .dh-apps-btn.is-bored .dh-orb-eye::after { transform: translate(0, 2px); }
+    /* Nervous: jittery wide eyes and a sweat drop — one more punch... */
+    .dyn-abar .dh-orb-eyes.is-nervous { animation: abJitter 0.18s linear infinite; }
+    @keyframes abJitter { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(0.7px, 0); } }
+    .dyn-abar .dh-orb-eyes.is-nervous::after { content: ""; position: absolute; right: -8px; top: -7px;
+      width: 6px; height: 8px; border-radius: 50% 50% 50% 50% / 35% 35% 65% 65%;
+      background: linear-gradient(180deg, #bfe3ff, #58a6f5); opacity: 0; animation: abSweat 1.5s ease 0.1s; }
+    @keyframes abSweat { 0% { opacity: 0; transform: translateY(0); } 25% { opacity: 1; }
+      100% { opacity: 0.9; transform: translateY(9px); } }
+    /* Shocked: lids flung up and tilted outward, eyes popped wide. */
+    .dyn-abar .dh-orb-eyes.is-shocked .dh-orb-eye { transform: scale(1.08); }
+    .dyn-abar .dh-orb-eyes.is-shocked .dh-orb-eye:first-child::before { transform: translateY(12%) rotate(-16deg); }
+    .dyn-abar .dh-orb-eyes.is-shocked .dh-orb-eye:last-child::before { transform: translateY(12%) rotate(16deg); }
     @keyframes abYawn { 0% { transform: scaleY(1); } 35% { transform: scaleY(0.12); }
       65% { transform: scaleY(0.12); } 100% { transform: scaleY(1); } }
     /* Asleep: lids slide shut, slow breathing, a little "z" floats up. */
@@ -987,9 +1002,18 @@
         if (!pop.hidden) { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); }
       }
       place(drag.bx + dx, drag.by + dy, false);
-      /* Track release speed so a hard throw into the wall reads as a slam. */
+      /* Track release speed so a hard throw into the wall reads as a slam,
+         and let his eyes lead the way while he's carried (curious). */
       var t = Date.now();
-      if (drag.lt) drag.v = (Math.abs(e.clientX - drag.lx) + Math.abs(e.clientY - drag.ly)) / Math.max(1, t - drag.lt);
+      if (drag.lt) {
+        var mdx = e.clientX - drag.lx, mdy = e.clientY - drag.ly;
+        drag.v = (Math.abs(mdx) + Math.abs(mdy)) / Math.max(1, t - drag.lt);
+        var md = Math.sqrt(mdx * mdx + mdy * mdy);
+        if (eyes && md > 2) {
+          eyes.style.setProperty("--ex", (mdx / md * 7).toFixed(1) + "px");
+          eyes.style.setProperty("--ey", (mdy / md * 4).toFixed(1) + "px");
+        }
+      }
       drag.lx = e.clientX; drag.ly = e.clientY; drag.lt = t;
     }, { passive: true });
     function endDrag() {
@@ -1006,6 +1030,7 @@
           slamN = (nowS - lastSlam < 8000) ? slamN + 1 : 1;
           lastSlam = nowS;
           if (slamN >= 3) enrage();
+          else mood("is-shocked", 900);
         }
       }
       drag = null;
@@ -1020,6 +1045,7 @@
       /* Page load counts as activity, or he'd doze off instantly. */
       var lastFollow = Date.now(), lastPt = null, travel = 0, dizzyUntil = 0, asleep = false;
       function wake() {
+        btn.classList.remove("is-bored");
         if (asleep) { asleep = false; btn.classList.remove("is-asleep"); }
       }
       function gaze(px, py) {
@@ -1036,6 +1062,7 @@
         }
         lastPt = { x: px, y: py, t: now };
         lastFollow = now;
+        if (drag && drag.moved) return;
         if (now < dizzyUntil || now < angryUntil) return;
         if (travel > 1300) {
           travel = 0;
@@ -1060,9 +1087,14 @@
       }
       /* Nothing moving for 12s → lights out (not while the window is open). */
       setInterval(function () {
-        if (!asleep && pop.hidden && Date.now() - lastFollow > 12000 && Date.now() > dizzyUntil) {
+        var idle = Date.now() - lastFollow;
+        if (asleep || !pop.hidden || Date.now() < dizzyUntil || Date.now() < angryUntil) return;
+        if (idle > 12000) {
           asleep = true;
+          btn.classList.remove("is-bored");
           btn.classList.add("is-asleep");
+        } else if (idle > 6500) {
+          btn.classList.add("is-bored");
         }
       }, 1000);
       window.addEventListener("pointermove", function (e) { gaze(e.clientX, e.clientY); }, { passive: true });
@@ -1170,6 +1202,15 @@
         btn.classList.remove("is-punched");
         if (eyes) eyes.classList.remove("is-dazed");
         if (punchN >= 3) { enrage(); return; }
+        if (punchN === 2) {
+          /* He knows what one more punch means. */
+          btn.classList.add("is-nervous");
+          if (eyes) eyes.classList.add("is-nervous");
+          setTimeout(function () {
+            btn.classList.remove("is-nervous");
+            if (eyes) eyes.classList.remove("is-nervous");
+          }, 1700);
+        }
         punching = true;
         btn.click();
       }, 430);
@@ -1182,6 +1223,7 @@
       if (noMotion || Date.now() < angryUntil) return;
       asleep = false;
       btn.classList.remove("is-asleep");
+      btn.classList.remove("is-bored");
       lastFollow = Date.now();
       btn.classList.add(cls);
       if (eyes) eyes.classList.add(cls);
