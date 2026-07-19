@@ -1054,6 +1054,15 @@
       </span>
       {%- endif -%}
     {%- endfor -%}
+    {%- if section.settings.float_pin -%}
+    <span class="dh-float-pin" id="dhFloatPin" aria-hidden="true">
+      <svg viewBox="0 0 40 40">
+        <line x1="23" y1="23" x2="35" y2="35" stroke="#9aa0a8" stroke-width="2.6" stroke-linecap="round"/>
+        <circle cx="16" cy="16" r="10.5" fill="#e0403f"/>
+        <circle cx="12.5" cy="12.5" r="3.2" fill="#ff8a80"/>
+      </svg>
+    </span>
+    {%- endif -%}
   </div>
   {%- endif -%}
   <div class="dh-wrap">
@@ -2187,6 +2196,22 @@
   .dyn-hero .dh-float.is-held { z-index: 5; }
   .dyn-hero .dh-float.is-held .dh-float-bob { animation-play-state: paused; }
   .dyn-hero .dh-float.is-ret { transition: left 0.45s cubic-bezier(0.22, 1, 0.36, 1), top 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+  /* The pin: drop a photo on it and the photo pops. */
+  .dyn-hero .dh-float-pin { position: absolute; left: 16px; bottom: 16px; width: 38px; height: 38px;
+    transform: rotate(-32deg); opacity: 0.92; }
+  .dyn-hero .dh-float-pin svg { display: block; width: 100%; height: 100%; }
+  @keyframes dhPinJab {
+    0%, 100% { transform: rotate(-32deg); }
+    40% { transform: rotate(-18deg) scale(1.18); }
+  }
+  .dyn-hero .dh-float-pin.is-jab { animation: dhPinJab 0.3s ease; }
+  @keyframes dhFloatPop {
+    0%   { transform: scale(1); opacity: 1; }
+    35%  { transform: scale(1.28) rotate(7deg); opacity: 1; }
+    100% { transform: scale(0.05) rotate(-16deg); opacity: 0; }
+  }
+  .dyn-hero .dh-float.is-pop { animation: dhFloatPop 0.32s ease-in forwards; }
+  .dyn-hero .dh-float.is-gone { display: none; }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-float-bob { animation: none; } }
 </style>
 <script>
@@ -2235,7 +2260,8 @@
       }
       taken.push({ x: x, y: y, w: w, h: h });
       it.w = w; it.h = h;
-      it.homeX = x; it.homeY = y; it.moved = false;
+      it.homeX = x; it.homeY = y; it.moved = false; it.popped = false;
+      it.el.classList.remove("is-gone", "is-pop");
       it.el.style.left = x + "px";
       it.el.style.top = y + "px";
       it.el.style.width = w + "px";
@@ -2268,8 +2294,21 @@
   }
   function announce() {
     var any = false;
-    its.forEach(function (it) { if (it.moved) any = true; });
+    its.forEach(function (it) { if (it.moved || it.popped) any = true; });
     try { hero.dispatchEvent(new CustomEvent("dh:ext-moved", { detail: { moved: any } })); } catch (err) {}
+  }
+  var pin = document.getElementById("dhFloatPin");
+  function popIt(d) {
+    /* Photo meets pin: bang. The put-it-back button brings it home. */
+    var it = d.it;
+    dragPend = null;
+    it.el.classList.remove("is-held");
+    it.popped = true; it.moved = true;
+    it.el.classList.add("is-pop");
+    if (pin) { pin.classList.add("is-jab"); setTimeout(function () { pin.classList.remove("is-jab"); }, 320); }
+    if (navigator.vibrate) { try { navigator.vibrate([12, 40, 12]); } catch (err) {} }
+    setTimeout(function () { it.el.classList.remove("is-pop"); it.el.classList.add("is-gone"); }, 300);
+    announce();
   }
   window.addEventListener("pointerdown", function (e) {
     if (e.button != null && e.button !== 0) return;
@@ -2295,6 +2334,11 @@
     var y = Math.min(Math.max(d.by + dy, 4), Math.max(4, innerHeight - d.it.h - 4));
     d.it.el.style.left = x + "px";
     d.it.el.style.top = y + "px";
+    if (pin) {
+      var pr = pin.getBoundingClientRect();
+      var br = d.it.bob.getBoundingClientRect();
+      if (br.left < pr.right - 6 && br.right > pr.left + 6 && br.top < pr.bottom - 6 && br.bottom > pr.top + 6) popIt(d);
+    }
   }, { passive: true });
   window.addEventListener("touchmove", function (e) {
     var d = dragPend;
@@ -2322,6 +2366,17 @@
   window.addEventListener("pointercancel", endDrag, { passive: true });
   hero.addEventListener("dh:gohome", function () {
     its.forEach(function (it) {
+      if (it.popped) {
+        /* Popped photos come back to life at their home spot. */
+        it.el.classList.remove("is-gone", "is-pop");
+        it.el.style.left = it.homeX + "px";
+        it.el.style.top = it.homeY + "px";
+        it.el.classList.remove("is-in");
+        void it.el.offsetWidth;
+        it.el.classList.add("is-in");
+        it.popped = false; it.moved = false;
+        return;
+      }
       if (!it.moved) return;
       it.el.classList.add("is-ret");
       it.el.style.left = it.homeX + "px";
@@ -2356,25 +2411,12 @@
     it.ctx.drawImage(st, lx - r, ly - r, r * 2, r * 2);
   }
   function bloom(it) {
+    /* One touch: the color lands all at once, with a happy wiggle. */
     if (it.done || !it.img.complete || !it.img.naturalWidth) return;
     it.done = true;
     it.el.classList.add("is-wig");
     setTimeout(function () { it.el.classList.remove("is-wig"); }, 600);
-    var t0 = performance.now(), dur = 550, lastX = 0;
-    function frame(now) {
-      var t = Math.min(1, (now - t0) / dur);
-      var x = t * it.w;
-      var c = it.ctx;
-      c.save();
-      c.beginPath();
-      c.rect(lastX - 1, 0, x - lastX + 2, it.h);
-      c.clip();
-      c.drawImage(it.img, 0, 0, it.w, it.h);
-      c.restore();
-      lastX = x;
-      if (t < 1) requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
+    it.ctx.drawImage(it.img, 0, 0, it.w, it.h);
   }
   function onMove(e) {
     var x = e.clientX, y = e.clientY;
@@ -2421,9 +2463,10 @@
     { "type": "checkbox", "id": "drag_objects", "label": "Movable objects (drag & drop)", "default": true, "info": "Shoppers can pick up the logo, search bar and buttons and play with them. As soon as something moves, a small glass button appears that glides everything back to its place — and a refresh always starts fresh. On phones, hold an object a moment to pick it up; quick swipes still scroll." },
     { "type": "select", "id": "float_paint", "label": "Floating photos: paint style", "options": [
       { "value": "rub", "label": "Rub to color in" },
-      { "value": "bloom", "label": "Hover bloom (one sweep)" },
+      { "value": "bloom", "label": "Hover bloom (instant color)" },
       { "value": "none", "label": "Always full color" }
-    ], "default": "rub", "info": "For 'Floating photo' blocks. Rub: photos start as a gray sketch and color appears where the mouse (or finger) rubs. Bloom: one touch sweeps the color across. Full color: no painting, just the float." },
+    ], "default": "rub", "info": "For 'Floating photo' blocks. Rub: photos start as a gray sketch and color appears where the mouse (or finger) rubs. Bloom: one touch fills the color in at once. Full color: no painting, just the float." },
+    { "type": "checkbox", "id": "float_pin", "label": "Floating photos: pop pin (bottom left)", "default": true, "info": "A little pushpin sits in the bottom-left corner — drag a photo onto it and the photo pops and disappears. The put-it-back button (or a refresh) brings popped photos back." },
 
     { "type": "header", "content": "Search box" },
     { "type": "checkbox", "id": "show_search", "label": "Show live search box", "default": true, "info": "Filters the products already on this page as the shopper types — no page reload." },
