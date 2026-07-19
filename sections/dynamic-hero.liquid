@@ -465,6 +465,27 @@
   #dhSlide .dh-slide-body { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; background: transparent;
     scrollbar-width: none; -ms-overflow-style: none; }
   #dhSlide .dh-slide-body::-webkit-scrollbar { display: none; width: 0; height: 0; }
+  /* Scroll hints: with the scrollbar hidden, the content fades out at the
+     bottom while there's more below, and a little bouncing chevron teaches
+     first-timers — it retires forever after the first scroll. */
+  #dhSlide .dh-slide-fade { position: absolute; left: 0; right: 0; bottom: 0; height: 76px; pointer-events: none;
+    border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;
+    background: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,0.96));
+    opacity: 0; transition: opacity 0.3s ease; z-index: 2; }
+  #dhSlide .dh-slide-panel.has-more .dh-slide-fade { opacity: 1; }
+  #dhSlide .dh-slide-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+    width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; pointer-events: none;
+    background: rgba(255,255,255,0.92); box-shadow: 0 6px 18px rgba(0,0,0,0.14); color: #1d1d1f;
+    opacity: 0; transition: opacity 0.3s ease; z-index: 3; }
+  #dhSlide .dh-slide-hint svg { width: 16px; height: 16px; stroke: currentColor; fill: none;
+    stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+    animation: dhHintBob 1.6s ease-in-out infinite; }
+  @keyframes dhHintBob {
+    0%, 100% { transform: translateY(-2px); }
+    50% { transform: translateY(3px); }
+  }
+  #dhSlide .dh-slide-panel.has-more.dh-hint-on .dh-slide-hint { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { #dhSlide .dh-slide-hint svg { animation: none; } }
   #dhSlide .dh-slide-inject { padding-top: 0; }
   /* The injected product page brings its own cart drawer — inside the window it
      would flash open on load and is redundant (the site's drawer handles carts). */
@@ -1360,6 +1381,8 @@
   <div class="dh-slide-panel">
     <button type="button" class="dh-slide-close" aria-label="Close" data-dh-slide-close><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
     <div class="dh-slide-body"></div>
+    <span class="dh-slide-fade" aria-hidden="true"></span>
+    <span class="dh-slide-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
   </div>
 </div>
 
@@ -1367,12 +1390,24 @@
 (function () {
   var slide = document.getElementById("dhSlide"); if (!slide) return;
   var sbody = slide.querySelector(".dh-slide-body");
+  var spanel = slide.querySelector(".dh-slide-panel");
   var cache = {};
+  function updateFade() {
+    var more = sbody.scrollHeight - sbody.clientHeight - sbody.scrollTop > 12;
+    spanel.classList.toggle("has-more", more);
+  }
+  sbody.addEventListener("scroll", function () {
+    if (sbody.scrollTop > 30) spanel.classList.remove("dh-hint-on");
+    updateFade();
+  }, { passive: true });
+  window.addEventListener("resize", updateFade);
+  /* Images finishing load change the content height — recheck as they land. */
+  sbody.addEventListener("load", updateFade, true);
   function fallback(url) { return '<div class="dh-slide-text"><p>Couldn’t show this page here. <a class="dh-slide-more" href="' + url + '">Open it →</a></p></div>'; }
   function inject(html, url) {
     var doc = new DOMParser().parseFromString(html, "text/html");
     var el = doc.querySelector("#MainContent") || doc.querySelector("main") || doc.querySelector('[role="main"]') || doc.querySelector(".main-content");
-    if (!el) { sbody.innerHTML = fallback(url); return; }
+    if (!el) { sbody.innerHTML = fallback(url); updateFade(); return; }
     // Pull out only the runnable JavaScript, inject the HTML, then re-run those scripts so
     // interactive sections (tabs, sliders, etc.) work inside the panel. Data scripts
     // (e.g. type="application/json" holding gallery image lists) are LEFT in place so
@@ -1390,6 +1425,10 @@
         wrap.appendChild(s);
       } catch (e) {}
     });
+    spanel.classList.add("dh-hint-on");
+    updateFade();
+    setTimeout(updateFade, 400);
+    setTimeout(updateFade, 1400);
   }
   function lockScroll(on) {
     var de = document.documentElement;
@@ -1407,7 +1446,7 @@
     slide.classList.add("is-open"); slide.setAttribute("aria-hidden", "false"); lockScroll(true);
     if (cache[url]) { inject(cache[url], url); return; }
     sbody.innerHTML = '<div class="dh-slide-loading">Loading…</div>'; sbody.scrollTop = 0;
-    fetch(url, { credentials: "same-origin", cache: "no-store" }).then(function (r) { return r.text(); }).then(function (html) { cache[url] = html; if (slide.classList.contains("is-open")) inject(html, url); }).catch(function () { sbody.innerHTML = fallback(url); });
+    fetch(url, { credentials: "same-origin", cache: "no-store" }).then(function (r) { return r.text(); }).then(function (html) { cache[url] = html; if (slide.classList.contains("is-open")) inject(html, url); }).catch(function () { sbody.innerHTML = fallback(url); updateFade(); });
   }
   function closeSlide() { slide.classList.remove("is-open"); slide.setAttribute("aria-hidden", "true"); lockScroll(false); }
   document.querySelectorAll("[data-dh-slide]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); openSlide(b.getAttribute("data-dh-slide")); }); });
