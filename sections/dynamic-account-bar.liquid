@@ -75,27 +75,25 @@
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
       .dyn-abar .ab-back, .dyn-abar .dh-icon-btn { background: rgba(255,255,255,0.88); }
     }
-    /* The orb's eyes: two silvery pills that glance around (--ex/--ey set
-       by script) and blink (scaleY squash). */
-    .dyn-abar .dh-orb-eyes { display: flex; gap: 9px; align-items: center; justify-content: center;
-      position: relative; z-index: 1;
-      transform: translate(var(--ex, 0px), var(--ey, 0px));
+    /* Cartoon eyes: white glossy ovals with big black pupils. The whites
+       stay put — the pupils roll inside them (--ex/--ey set by script). */
+    .dyn-abar .dh-orb-eyes { display: flex; gap: 6px; align-items: center; justify-content: center;
+      position: relative; z-index: 1; }
+    .dyn-abar .dh-orb-eye { width: 20px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      background: linear-gradient(180deg, #ffffff 0%, #f2f4f7 60%, #d9dde4 100%);
+      box-shadow: 0 2px 5px rgba(0, 0, 15, 0.35), inset 0 -2px 4px rgba(130, 140, 160, 0.35);
+      transition: transform 0.09s ease; }
+    .dyn-abar .dh-orb-eye::after { content: ""; width: 12px; height: 16px; border-radius: 50%;
+      background: radial-gradient(55% 45% at 32% 26%, #4a4a55 0%, #15151c 45%, #060609 100%);
+      transform: translate(calc(var(--ex, 0px) * 0.5), calc(var(--ey, 0px) * 0.9));
       transition: transform 0.3s cubic-bezier(0.3, 0.9, 0.3, 1); }
-    .dyn-abar .dh-orb-eye { width: 9px; height: 23px; border-radius: 5px;
-      background: linear-gradient(180deg, #ffffff 0%, #e8e8f0 55%, #b9b9c8 100%);
-      box-shadow: 0 0 9px rgba(255, 255, 255, 0.4); transition: transform 0.09s ease; }
     .dyn-abar .dh-orb-eyes.is-blink .dh-orb-eye { transform: scaleY(0.08); }
     /* AssistiveTouch-style 9-dots: a floating circle that can be dragged
        anywhere and snaps to the screen edges; the window opens beside it. */
     .dyn-abar .dh-apps-menu { position: fixed; top: 12px; right: 12px; z-index: 95;
-      transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05), top 0.22s ease, opacity 0.3s ease;
-      /* Idle it fades way down (like AssistiveTouch) so it never hides the
-         page; any interaction brings it back to full strength. */
-      opacity: 0.42; }
-    .dyn-abar .dh-apps-menu:hover, .dyn-abar .dh-apps-menu.is-dragging,
-    .dyn-abar .dh-apps-menu:focus-within,
-    .dyn-abar .dh-apps-menu:has(.dh-apps-btn[aria-expanded="true"]) { opacity: 1; }
-    .dyn-abar .dh-apps-menu.is-dragging { transition: opacity 0.3s ease; }
+      transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05), top 0.22s ease; }
+    .dyn-abar .dh-apps-menu.is-dragging { transition: none; }
     /* A dark glossy orb with purple and teal glow around the rim, like a
        little face — the eyes above look around and blink. */
     .dyn-abar .dh-apps-btn { width: 64px; height: 64px; border-radius: 50%; cursor: grab;
