@@ -1110,7 +1110,7 @@
         </video>
       {%- elsif section.settings.heading_logo != blank -%}
         {%- assign hlw = section.settings.heading_logo.width | times: 56 | divided_by: section.settings.heading_logo.height -%}
-        <a href="{{ routes.root_url }}" class="dh-head-logo-link" aria-label="{{ shop.name | escape }} — home"><img class="dh-head-logo" src="{{ section.settings.heading_logo | image_url: width: 700 }}" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56"></a>
+        <a href="{{ routes.root_url }}" class="dh-head-logo-link" aria-label="{{ shop.name | escape }} — home"><img class="dh-head-logo" src="{{ section.settings.heading_logo | image_url: width: 700 }}" srcset="{{ section.settings.heading_logo | image_url: width: 400 }} 400w, {{ section.settings.heading_logo | image_url: width: 700 }} 700w, {{ section.settings.heading_logo | image_url: width: 1000 }} 1000w" sizes="(max-width: 640px) 90vw, 700px" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56" fetchpriority="high"></a>
       {%- else -%}
         <h1>{{ section.settings.heading | default: coll.title | default: 'Store' }}</h1>
       {%- endif -%}
