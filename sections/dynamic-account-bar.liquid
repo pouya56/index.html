@@ -1113,18 +1113,21 @@
        page (same-shop links embed; outside links get an Open button). */
     var vApps = [];
     var vAllApps = Array.prototype.slice.call(pop.querySelectorAll(".dh-apps-grid .dh-app"));
-    /* The last five apps stay out of the bar — they're still in the Apps
-       grid tab, this just keeps the bar short. */
-    vAllApps.slice(0, Math.max(0, vAllApps.length - 5)).forEach(function (a, i) {
-      var href = a.getAttribute("href") || "#", label = "App", ext = false, abs = href;
+    var vRoot = {{ routes.root_url | json }};
+    vAllApps.forEach(function (a, i) {
+      var href = a.getAttribute("href") || "#", label = "App", ext = false, home = false, abs = href;
       var lab = a.querySelector(".dh-app-label");
       if (lab && lab.textContent) label = lab.textContent.trim();
       try {
         var u = new URL(href, location.href);
         abs = u.href;
         ext = u.host !== location.host;
+        home = !ext && (u.pathname === vRoot || u.pathname === "/");
       } catch (e2) {}
-      vApps.push({ href: abs, label: label, ext: ext });
+      vApps.push({ href: abs, label: label, ext: ext, home: home });
+      /* The last five apps stay out of the bar — they're still in the Apps
+         grid tab, this just keeps the bar short. */
+      if (i >= vAllApps.length - 5) return;
       var t = document.createElement("button");
       t.type = "button";
       t.className = "dh-vtab";
@@ -1742,7 +1745,27 @@
       e.stopPropagation();
       var t = e.target.closest ? e.target.closest(".dh-vtab") : null;
       if (!t || pop.hidden) return;
-      pop.setAttribute("data-vtab", t.getAttribute("data-vtab"));
+      var tid = t.getAttribute("data-vtab");
+      if (tid.indexOf("app-") === 0) {
+        var tap = vApps[parseInt(tid.slice(4), 10)];
+        /* Home is a plain door — no window, just go. */
+        if (tap && tap.home) { location.href = tap.href; return; }
+      }
+      pop.setAttribute("data-vtab", tid);
+      paintVision();
+    });
+    /* In the Apps grid, selecting an app opens its page in this same glass
+       window (home and outside links navigate normally). */
+    pop.addEventListener("click", function (e) {
+      if (!pop.classList.contains("is-vision")) return;
+      var a = e.target.closest ? e.target.closest(".dh-apps-grid .dh-app") : null;
+      if (!a) return;
+      var i = vAllApps.indexOf(a);
+      if (i < 0) return;
+      var ap = vApps[i];
+      if (!ap || ap.home || ap.ext) return;
+      e.preventDefault();
+      pop.setAttribute("data-vtab", "app-" + i);
       paintVision();
     });
 
