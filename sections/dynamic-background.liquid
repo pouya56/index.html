@@ -75,15 +75,7 @@
     pointer-events: none;
     {%- if look == 'sun' -%}
     background: {{ section.settings.wall_color | default: '#ffb42e' }};
-    {%- elsif look == 'image' -%}
-  {%- if section.settings.bg_image != blank -%}
-  <img class="dyn-bg-img" alt="" loading="eager"
-       src="{{ section.settings.bg_image | image_url: width: 2000 }}"
-       srcset="{{ section.settings.bg_image | image_url: width: 1200 }} 1200w, {{ section.settings.bg_image | image_url: width: 2000 }} 2000w, {{ section.settings.bg_image | image_url: width: 3000 }} 3000w"
-       sizes="100vw"
-       width="{{ section.settings.bg_image.width }}" height="{{ section.settings.bg_image.height }}">
-  {%- endif -%}
-  {%- elsif look == 'spheres' -%}
+    {%- elsif look == 'spheres' -%}
     background: linear-gradient(180deg, {{ sp_bg_hi }} 0%, {{ sp_bg }} 55%, {{ sp_bg_lo }} 100%);
     {%- elsif section.settings.base_tint != blank and section.settings.base_tint != 'rgba(0,0,0,0)' -%}
     background: {{ section.settings.base_tint }};
@@ -232,14 +224,6 @@
   #dynBg-{{ section.id }} .dyn-bg-parts i { animation: none !important; }
   #dynBg-{{ section.id }} .dbg-rain, #dynBg-{{ section.id }} .dbg-snow, #dynBg-{{ section.id }} .dbg-flash { display: none; }
   {%- endunless -%}
-  {%- elsif look == 'image' -%}
-  {%- if section.settings.bg_image != blank -%}
-  <img class="dyn-bg-img" alt="" loading="eager"
-       src="{{ section.settings.bg_image | image_url: width: 2000 }}"
-       srcset="{{ section.settings.bg_image | image_url: width: 1200 }} 1200w, {{ section.settings.bg_image | image_url: width: 2000 }} 2000w, {{ section.settings.bg_image | image_url: width: 3000 }} 3000w"
-       sizes="100vw"
-       width="{{ section.settings.bg_image.width }}" height="{{ section.settings.bg_image.height }}">
-  {%- endif -%}
   {%- elsif look == 'image' -%}
   /* Your image: full-bleed cover, with a slow breathing zoom when movement
      is on (frozen for reduced-motion visitors). */
