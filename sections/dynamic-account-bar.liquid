@@ -159,7 +159,7 @@
     .dyn-abar .dh-app-svg svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-app-label { font-size: 13px; color: rgba(255,255,255,0.88); text-align: center; line-height: 1.25; }
     /* macOS-style widget board: a 4-column grid the widgets flow through.
-       Drag any widget (clock, quote, Saved) to rearrange — the board
+       Clock and quote are pinned on top; drag the Saved card to rearrange — the board
        reflows live and the order is remembered per browser. */
     .dyn-abar .dh-apps-pop::-webkit-scrollbar { display: none; }
     .dyn-abar .dh-apps-head { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 108px;
@@ -183,7 +183,9 @@
     .dyn-abar .dh-w-sub { font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; margin-top: 4px; }
     /* Clock and quote: equal squares, side by side (one grid cell each). */
     .dyn-abar .dh-w-clock { display: flex; justify-content: center; align-items: center; padding: 0; }
-    .dyn-abar .dh-w-face { height: 96%; width: auto; display: block; filter: drop-shadow(0 10px 22px rgba(0,0,0,0.32)); }
+    .dyn-abar .dh-w-face { height: 100%; width: auto; display: block; filter: drop-shadow(0 10px 22px rgba(0,0,0,0.32)); }
+    /* Quote matches the clock exactly: same square, pinned beside it on top. */
+    .dyn-abar .dh-w-quote { height: 100%; aspect-ratio: 1 / 1; justify-self: center; }
     .dyn-abar .dh-w-mini { min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 5px; padding: 10px 9px; min-width: 0; }
     .dyn-abar .dh-w-plant { width: 20px; height: 20px; flex: none; fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-w-mlines { font-size: 13px; font-weight: 600; line-height: 1.4; color: #fff; }
@@ -247,7 +249,7 @@
               <div class="dh-w-day" id="dynAbDay"></div>
               <div class="dh-w-sub" id="dynAbDate"></div>
             </div>
-            <div class="dh-w-clock" data-wid="clock">
+            <div class="dh-w-clock">
               <svg class="dh-w-face" viewBox="0 0 200 200" aria-hidden="true">
                   <rect x="4" y="4" width="192" height="192" rx="48" fill="#ffffff"/>
                   <g id="dynAbTicks"></g>
@@ -264,7 +266,7 @@
                   <circle cx="100" cy="100" r="2.2" fill="#ffffff"/>
                 </svg>
             </div>
-            <div class="dh-widget dh-w-mini dh-w-quote" data-wid="quote">
+            <div class="dh-widget dh-w-mini dh-w-quote">
               <svg class="dh-w-plant" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13C12 9.5 9.5 7 5.5 7 5.5 10.5 8 13 12 13Z"/><path d="M12 11c0-3.5 2.5-6 6.5-6 0 3.5-2.5 6-6.5 6Z"/></svg>
               <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
             </div>
