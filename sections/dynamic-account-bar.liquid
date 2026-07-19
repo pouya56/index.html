@@ -279,8 +279,15 @@
     .dyn-abar .dh-w-saveddots button.is-on { background: #1d1d1f; transform: scale(1.25); }
     /* Phones keep the exact desktop layout — the window is laid out at its
        desktop width and scaled down to fit (see the positioning script). */
-    /* While the apps window is open on a phone the page behind it freezes. */
+    /* While the apps window is open on a phone the page behind it freezes
+       and dims (the window sits at z-index 95, above the veil). */
     html.dyn-ablock, html.dyn-ablock body { overflow: hidden; overscroll-behavior: none; }
+    html.dyn-ablock body::before { content: ""; position: fixed; inset: 0; z-index: 90;
+      background: rgba(0, 0, 0, 0.45); animation: abDim 0.25s ease; }
+    @keyframes abDim { from { opacity: 0; } }
+    /* The window's glass is translucent, so the dark veil would gray it out
+       too — thicken its frost while the veil is up to keep it bright. */
+    html.dyn-ablock .dyn-abar .dh-apps-pop { background: rgba(255, 255, 255, 0.72); }
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-apps-pop, .dyn-abar .dh-app { animation: none !important; transition: none !important; } }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
   </style>
