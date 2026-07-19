@@ -263,6 +263,7 @@
       background: #fff; box-shadow: 0 10px 22px rgba(0,0,0,0.22); }
     .dyn-abar .dh-w-boxlabel { flex: none; font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.92);
       text-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+    .dyn-abar .dh-w-emptylink { flex: 0 0 100%; display: flex; height: 100%; text-decoration: none; color: inherit; }
     .dyn-abar .dh-w-empty { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 6px; color: #66666b; font-size: 12px; font-weight: 600; text-align: center; }
     .dyn-abar .dh-w-empty svg { width: 26px; height: 26px; fill: none; stroke: #b0b0b5; stroke-width: 1.6;
@@ -277,8 +278,20 @@
     .dyn-abar .dh-w-saveddots button { width: 6px; height: 6px; border-radius: 50%; border: none; padding: 0;
       background: #d2d2d7; cursor: pointer; transition: background .15s, transform .15s; }
     .dyn-abar .dh-w-saveddots button.is-on { background: #1d1d1f; transform: scale(1.25); }
-    /* Phones keep the exact desktop layout — the window is laid out at its
-       desktop width and scaled down to fit (see the positioning script). */
+    /* Phone arrangement: date on top, clock + quote side by side, then
+       Saved and Cart each full width, and apps two per row. The window
+       scales down 20% and scrolls (see the positioning script). */
+    @media (max-width: 520px) {
+      /* Row 1 (auto) holds the date; every later row is 140px, so the
+         Saved/Cart tiles' 2-row span matches their 290px box exactly. */
+      .dyn-abar .dh-apps-head { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; grid-auto-rows: 140px; }
+      .dyn-abar .dh-w-greethead { grid-column: span 2; }
+      .dyn-abar .dh-w-clock, .dyn-abar .dh-w-quote { grid-column: span 1; }
+      /* IDs beat classes — the desktop pin rules (#dynAbCart: columns 3-5)
+         must be re-pinned to the 2-column grid at the same specificity. */
+      .dyn-abar #dynAbSaved, .dyn-abar #dynAbCart { grid-column: 1 / 3; }
+      .dyn-abar .dh-apps-grid { grid-template-columns: repeat(2, 1fr); }
+    }
     /* While the apps window is open on a phone the page behind it freezes
        and dims (the window sits at z-index 95, above the veil). */
     html.dyn-ablock, html.dyn-ablock body { overflow: hidden; overscroll-behavior: none; }
@@ -597,7 +610,12 @@
     }
     function renderCar(track, dots, items, emptyHtml, pageUrl) {
       if (!track) return;
-      if (!items.length) { track.innerHTML = emptyHtml; dots.innerHTML = ""; return; }
+      /* Empty previews still link to their page. */
+      if (!items.length) {
+        track.innerHTML = '<a draggable="false" class="dh-w-emptylink" href="' + escA(pageUrl) + '">' + emptyHtml + '</a>';
+        dots.innerHTML = "";
+        return;
+      }
       var pick = items.slice(0, 8), html = "", dh = "", i;
       for (i = 0; i < pick.length; i++) {
         html += '<a draggable="false" href="' + escA(pageUrl) + '" aria-label="' + escA(pick[i].title || "Product") + '">' +
@@ -893,12 +911,12 @@
         var s = ((innerWidth - 16) / ow) * 0.8;
         pop.style.transform = "scale(" + s + ")";
         pop.style.animation = "none";
-        /* Centered on the screen, wherever the button is. */
+        /* Centered on the screen, wherever the button is. Content taller
+           than the screen scrolls inside the window. */
         pop.style.left = Math.max(8, (innerWidth - ow * s) / 2) + "px";
-        var vh = Math.min(pop.offsetHeight, 812) * s;
-        var top = Math.max(8, (innerHeight - vh) / 2);
-        pop.style.top = top + "px";
-        pop.style.maxHeight = Math.min(812, (innerHeight - top - 8) / s) + "px";
+        var vh = pop.offsetHeight * s, maxVh = innerHeight - 16;
+        if (vh > maxVh) { vh = maxVh; pop.style.maxHeight = (maxVh / s) + "px"; }
+        pop.style.top = Math.max(8, (innerHeight - vh) / 2) + "px";
         return;
       }
       pop.style.position = "absolute";
