@@ -717,19 +717,25 @@
       return null;
     }
     function avoid(x, y, w, h, axis) {
-      /* Slide along the edge until clear of any protected element. */
+      /* Slide along the edge until clear of any protected element. Only
+         moves in directions that actually fit on screen; if the edge is
+         blocked at a dead end, steps off-axis past the blocker instead. */
       var rs = zones();
       for (var pass = 0; pass < 4; pass++) {
         var hit = hitZone(x, y, w, h, rs);
         if (!hit) break;
         if (axis === "x") {
           var lx = hit.left - w - 12, rx = hit.right + 12;
-          if (Math.abs(lx - x) < Math.abs(rx - x) && lx >= 12) x = lx;
-          else x = Math.min(rx, innerWidth - w - 12);
+          var lok = lx >= 12, rok = rx <= innerWidth - w - 12;
+          if (lok && (!rok || Math.abs(lx - x) <= Math.abs(rx - x))) x = lx;
+          else if (rok) x = rx;
+          else y = (hit.bottom + 12 <= innerHeight - h - 12) ? hit.bottom + 12 : Math.max(12, hit.top - h - 12);
         } else {
           var uy = hit.top - h - 12, dy = hit.bottom + 12;
-          if (Math.abs(uy - y) < Math.abs(dy - y) && uy >= 12) y = uy;
-          else y = Math.min(dy, innerHeight - h - 12);
+          var uok = uy >= 12, dok = dy <= innerHeight - h - 12;
+          if (uok && (!dok || Math.abs(uy - y) <= Math.abs(dy - y))) y = uy;
+          else if (dok) y = dy;
+          else x = (hit.right + 12 <= innerWidth - w - 12) ? hit.right + 12 : Math.max(12, hit.left - w - 12);
         }
       }
       return { x: x, y: y };
@@ -758,7 +764,12 @@
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
     if (saved && typeof saved.x === "number") { place(saved.x, saved.y, true); }
-    else { var r0 = menu.getBoundingClientRect(); place(r0.left, r0.top, false); }
+    else {
+      /* First visit: start at the top-right default, but run the full
+         snap-and-avoid so it never sits on the avatar or corner links. */
+      var r0 = menu.getBoundingClientRect();
+      place(r0.left, r0.top, true);
+    }
     window.addEventListener("resize", function () {
       var r = menu.getBoundingClientRect();
       place(r.left, r.top, true);
