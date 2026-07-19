@@ -1112,7 +1112,10 @@
     /* Every app gets its own tab; its window shows a live preview of the
        page (same-shop links embed; outside links get an Open button). */
     var vApps = [];
-    Array.prototype.forEach.call(pop.querySelectorAll(".dh-apps-grid .dh-app"), function (a, i) {
+    var vAllApps = Array.prototype.slice.call(pop.querySelectorAll(".dh-apps-grid .dh-app"));
+    /* The last five apps stay out of the bar — they're still in the Apps
+       grid tab, this just keeps the bar short. */
+    vAllApps.slice(0, Math.max(0, vAllApps.length - 5)).forEach(function (a, i) {
       var href = a.getAttribute("href") || "#", label = "App", ext = false, abs = href;
       var lab = a.querySelector(".dh-app-label");
       if (lab && lab.textContent) label = lab.textContent.trim();
