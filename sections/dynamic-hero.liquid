@@ -1055,12 +1055,17 @@
       {%- endif -%}
     {%- endfor -%}
     {%- if section.settings.float_pin -%}
-    <span class="dh-float-pin" id="dhFloatPin" aria-hidden="true">
+    <span class="dh-float-pin" id="dhFloatPin" aria-hidden="true" data-w="{{ section.settings.pin_size | default: 60 }}">
+      {%- if section.settings.pin_image != blank -%}
+      <img src="{{ section.settings.pin_image | image_url: width: 400 }}" alt="" draggable="false"
+        width="{{ section.settings.pin_image.width }}" height="{{ section.settings.pin_image.height }}">
+      {%- else -%}
       <svg viewBox="0 0 40 40">
         <line x1="23" y1="23" x2="35" y2="35" stroke="#9aa0a8" stroke-width="2.6" stroke-linecap="round"/>
         <circle cx="16" cy="16" r="10.5" fill="#e0403f"/>
         <circle cx="12.5" cy="12.5" r="3.2" fill="#ff8a80"/>
       </svg>
+      {%- endif -%}
     </span>
     {%- endif -%}
   </div>
@@ -2196,15 +2201,19 @@
   .dyn-hero .dh-float.is-held { z-index: 5; }
   .dyn-hero .dh-float.is-held .dh-float-bob { animation-play-state: paused; }
   .dyn-hero .dh-float.is-ret { transition: left 0.45s cubic-bezier(0.22, 1, 0.36, 1), top 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
-  /* The pin: drop a photo on it and the photo pops. */
+  /* The pin: anything it touches pops. Grab and throw it like the photos. */
   .dyn-hero .dh-float-pin { position: absolute; left: 16px; bottom: 16px; width: 38px; height: 38px;
-    transform: rotate(-32deg); opacity: 0.92; }
+    transform: rotate(var(--pinrot, -32deg)); opacity: 0.92; }
+  .dyn-hero .dh-float-pin.is-img { --pinrot: 0deg; height: auto; }
   .dyn-hero .dh-float-pin svg { display: block; width: 100%; height: 100%; }
+  .dyn-hero .dh-float-pin img { display: block; width: 100%; height: auto; -webkit-user-drag: none; }
+  .dyn-hero .dh-float-pin.is-held { z-index: 6; }
   @keyframes dhPinJab {
-    0%, 100% { transform: rotate(-32deg); }
-    40% { transform: rotate(-18deg) scale(1.18); }
+    0%, 100% { transform: rotate(var(--pinrot, -32deg)); }
+    40% { transform: rotate(calc(var(--pinrot, -32deg) + 14deg)) scale(1.18); }
   }
   .dyn-hero .dh-float-pin.is-jab { animation: dhPinJab 0.3s ease; }
+  .dyn-hero .dh-float-pin.is-ret { transition: left 0.45s cubic-bezier(0.22, 1, 0.36, 1), top 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
   @keyframes dhFloatPop {
     0%   { transform: scale(1); opacity: 1; }
     35%  { transform: scale(1.28) rotate(7deg); opacity: 1; }
@@ -2216,10 +2225,12 @@
 </style>
 <script>
 (function () {
-  /* Floating photos. Each visit scatters them into fresh random spots that
-     avoid the middle column (logo / search / buttons) and each other. In
-     "rub" style the photo starts as a gray sketch and the mouse or finger
-     rubs the color in; "bloom" sweeps the color across on first touch. */
+  /* Floating photos: a tiny physics playground. Photos scatter to fresh
+     random spots each visit, bob gently, and paint in under the mouse.
+     Everything — including the pin — can be grabbed and thrown: it keeps
+     the speed of the hand, friction slows it to a stop, the screen edges
+     are walls it bounces off, and nothing is allowed to overlap. Any
+     touch between the pin and a photo pops the photo. */
   var hero = document.getElementById("dynHero");
   var box = document.getElementById("dhFloats");
   if (!hero || !box) return;
@@ -2233,18 +2244,43 @@
     var ah = parseInt(img.getAttribute("height") || "1", 10);
     its.push({ el: el, bob: el.querySelector(".dh-float-bob"), img: img, cv: cv,
       ctx: cv.getContext("2d"), baseW: parseInt(el.getAttribute("data-w") || "140", 10),
-      aspect: aw / Math.max(1, ah), w: 0, h: 0, done: false, last: null });
+      aspect: aw / Math.max(1, ah), w: 0, h: 0, x: 0, y: 0, vx: 0, vy: 0,
+      moved: false, popped: false, done: false, last: null });
     el.querySelector(".dh-float-bob").style.setProperty("--fd", (5 + Math.random() * 4).toFixed(1) + "s");
     el.querySelector(".dh-float-bob").style.setProperty("--fdel", (-Math.random() * 6).toFixed(1) + "s");
   });
   if (!its.length) return;
+  var pinEl = document.getElementById("dhFloatPin");
+  var pin = null;
+  if (pinEl) {
+    var pimg = pinEl.querySelector("img");
+    pin = { el: pinEl, isPin: true, hasImg: !!pimg,
+      baseW: parseInt(pinEl.getAttribute("data-w") || "60", 10),
+      aspect: pimg ? parseInt(pimg.getAttribute("width") || "1", 10) / Math.max(1, parseInt(pimg.getAttribute("height") || "1", 10)) : 1,
+      w: 38, h: 38, x: 16, y: 16, vx: 0, vy: 0, moved: false, popped: false };
+    if (pin.hasImg) pinEl.classList.add("is-img");
+  }
+  var phys = pin ? its.concat([pin]) : its.slice();
+
   function rand(a, b) { return a + Math.random() * (b - a); }
+  function render(it) { it.el.style.left = it.x + "px"; it.el.style.top = it.y + "px"; }
   function place() {
     var vw = innerWidth;
     var vh = Math.max(480, Math.min(hero.offsetHeight || innerHeight, innerHeight));
+    var taken = [];
+    if (pin) {
+      var pw = pin.hasImg ? Math.round(pin.baseW * (vw < 640 ? 0.7 : 1)) : 38;
+      pin.w = pw; pin.h = pin.hasImg ? pw / pin.aspect : 38;
+      pin.x = pin.homeX = 16;
+      pin.y = pin.homeY = vh - pin.h - 16;
+      pin.vx = pin.vy = 0; pin.moved = false;
+      if (pin.hasImg) pin.el.style.width = pw + "px";
+      pin.el.style.bottom = "auto";
+      render(pin);
+      taken.push({ x: pin.x - 10, y: pin.y - 10, w: pin.w + 20, h: pin.h + 20 });
+    }
     var exW = Math.min(vw * 0.64, 880);
     var ex = { x0: (vw - exW) / 2, x1: (vw + exW) / 2, y0: 30, y1: vh * 0.74 };
-    var taken = [];
     its.forEach(function (it) {
       var w = it.baseW * (vw < 640 ? 0.62 : 1);
       var h = w / it.aspect;
@@ -2260,11 +2296,11 @@
       }
       taken.push({ x: x, y: y, w: w, h: h });
       it.w = w; it.h = h;
-      it.homeX = x; it.homeY = y; it.moved = false; it.popped = false;
+      it.x = it.homeX = x; it.y = it.homeY = y;
+      it.vx = 0; it.vy = 0; it.moved = false; it.popped = false;
       it.el.classList.remove("is-gone", "is-pop");
-      it.el.style.left = x + "px";
-      it.el.style.top = y + "px";
       it.el.style.width = w + "px";
+      render(it);
       it.cv.width = Math.round(w * dpr);
       it.cv.height = Math.round(h * dpr);
       it.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -2276,14 +2312,105 @@
   var rT;
   window.addEventListener("resize", function () { clearTimeout(rT); rT = setTimeout(function () { place(); announce(); }, 200); });
 
-  /* Drag to move, same feel as the other hero objects: mouse just grabs;
-     on the phone, hold a moment to pick up while a quick swipe scrolls.
-     The layer stays pointer-transparent, so we hit-test by hand. */
+  /* ---- the tiny physics world ---- */
   var dragPend = null;
-  function hitFloat(x, y) {
-    for (var i = its.length - 1; i >= 0; i--) {
-      var rc = its[i].bob.getBoundingClientRect();
-      if (x >= rc.left && x <= rc.right && y >= rc.top && y <= rc.bottom) return its[i];
+  function heldIt() { return dragPend && dragPend.moved ? dragPend.it : null; }
+  function announce() {
+    var any = false;
+    phys.forEach(function (it) { if (it.moved || it.popped) any = true; });
+    try { hero.dispatchEvent(new CustomEvent("dh:ext-moved", { detail: { moved: any } })); } catch (err) {}
+  }
+  function popIt(it) {
+    /* Pin meets photo: bang. The put-it-back button revives it. */
+    if (it.popped || it.isPin) return;
+    if (dragPend && dragPend.it === it) dragPend = null;
+    it.popped = true; it.moved = true; it.vx = 0; it.vy = 0;
+    it.el.classList.remove("is-held");
+    it.el.classList.add("is-pop");
+    if (pin) { pin.el.classList.add("is-jab"); setTimeout(function () { pin.el.classList.remove("is-jab"); }, 320); }
+    if (navigator.vibrate) { try { navigator.vibrate([12, 40, 12]); } catch (err) {} }
+    setTimeout(function () { it.el.classList.remove("is-pop"); it.el.classList.add("is-gone"); }, 300);
+    announce();
+  }
+  function bounds(it) {
+    /* The screen edges are walls: hit one and bounce back in. */
+    var mxX = Math.max(4, innerWidth - it.w - 4);
+    var mxY = Math.max(4, innerHeight - it.h - 4);
+    if (it.x < 4) { it.x = 4; it.vx = Math.abs(it.vx) * 0.72; }
+    else if (it.x > mxX) { it.x = mxX; it.vx = -Math.abs(it.vx) * 0.72; }
+    if (it.y < 4) { it.y = 4; it.vy = Math.abs(it.vy) * 0.72; }
+    else if (it.y > mxY) { it.y = mxY; it.vy = -Math.abs(it.vy) * 0.72; }
+  }
+  function collide() {
+    /* Push overlapping pairs apart and trade a bit of speed, so nothing
+       ever sits on top of anything else. A held item is a solid wall. */
+    var held = heldIt();
+    for (var i = 0; i < phys.length; i++) {
+      var a = phys[i];
+      if (a.popped) continue;
+      for (var j = i + 1; j < phys.length; j++) {
+        var b = phys[j];
+        if (b.popped) continue;
+        var ra = Math.max(a.w, a.h) * 0.42, rb = Math.max(b.w, b.h) * 0.42;
+        var dx = (b.x + b.w / 2) - (a.x + a.w / 2);
+        var dy = (b.y + b.h / 2) - (a.y + a.h / 2);
+        var d = Math.sqrt(dx * dx + dy * dy), min = ra + rb;
+        if (d >= min) continue;
+        if (a.isPin || b.isPin) { popIt(a.isPin ? b : a); continue; }
+        if (!d) { dx = 1; dy = 0; d = 1; }
+        var nx = dx / d, ny = dy / d, ov = min - d;
+        if (a === held) { b.x += nx * ov; b.y += ny * ov; b.moved = true; }
+        else if (b === held) { a.x -= nx * ov; a.y -= ny * ov; a.moved = true; }
+        else {
+          a.x -= nx * ov / 2; a.y -= ny * ov / 2;
+          b.x += nx * ov / 2; b.y += ny * ov / 2;
+          a.moved = true; b.moved = true;
+        }
+        var vn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+        if (vn < 0) {
+          if (a === held) { b.vx -= 1.7 * vn * nx; b.vy -= 1.7 * vn * ny; }
+          else if (b === held) { a.vx += 1.7 * vn * nx; a.vy += 1.7 * vn * ny; }
+          else {
+            var p = 0.85 * -vn;
+            a.vx -= p * nx; a.vy -= p * ny;
+            b.vx += p * nx; b.vy += p * ny;
+          }
+        }
+        bounds(a); bounds(b);
+      }
+    }
+  }
+  var running = false, lastT = 0;
+  function ensure() { if (!running) { running = true; lastT = performance.now(); requestAnimationFrame(step); } }
+  function step(now) {
+    var dt = Math.min(3, (now - lastT) / 16.7) || 1; lastT = now;
+    var live = !!dragPend;
+    for (var i = 0; i < phys.length; i++) {
+      var it = phys[i];
+      if (it.popped || it === heldIt()) continue;
+      if (it.vx || it.vy) {
+        it.x += it.vx * dt;
+        it.y += it.vy * dt;
+        var f = Math.pow(0.96, dt);
+        it.vx *= f; it.vy *= f;
+        if (it.vx * it.vx + it.vy * it.vy < 0.003) { it.vx = 0; it.vy = 0; }
+        bounds(it);
+        live = true;
+      }
+    }
+    collide();
+    for (var k = 0; k < phys.length; k++) if (!phys[k].popped) render(phys[k]);
+    if (live) { requestAnimationFrame(step); } else { running = false; }
+  }
+
+  /* Grab anything — photos or the pin. Mouse grabs directly; on the phone,
+     hold a moment to pick up while a quick swipe scrolls. */
+  function hitAt(x, y) {
+    for (var i = phys.length - 1; i >= 0; i--) {
+      var it = phys[i];
+      if (it.popped) continue;
+      var rc = it.el.getBoundingClientRect();
+      if (x >= rc.left && x <= rc.right && y >= rc.top && y <= rc.bottom) return it;
     }
     return null;
   }
@@ -2291,32 +2418,15 @@
     d.moved = true;
     d.it.el.classList.add("is-held");
     if (navigator.vibrate) { try { navigator.vibrate(10); } catch (err) {} }
-  }
-  function announce() {
-    var any = false;
-    its.forEach(function (it) { if (it.moved || it.popped) any = true; });
-    try { hero.dispatchEvent(new CustomEvent("dh:ext-moved", { detail: { moved: any } })); } catch (err) {}
-  }
-  var pin = document.getElementById("dhFloatPin");
-  function popIt(d) {
-    /* Photo meets pin: bang. The put-it-back button brings it home. */
-    var it = d.it;
-    dragPend = null;
-    it.el.classList.remove("is-held");
-    it.popped = true; it.moved = true;
-    it.el.classList.add("is-pop");
-    if (pin) { pin.classList.add("is-jab"); setTimeout(function () { pin.classList.remove("is-jab"); }, 320); }
-    if (navigator.vibrate) { try { navigator.vibrate([12, 40, 12]); } catch (err) {} }
-    setTimeout(function () { it.el.classList.remove("is-pop"); it.el.classList.add("is-gone"); }, 300);
-    announce();
+    ensure();
   }
   window.addEventListener("pointerdown", function (e) {
     if (e.button != null && e.button !== 0) return;
-    var it = hitFloat(e.clientX, e.clientY);
+    var it = hitAt(e.clientX, e.clientY);
     if (!it) return;
-    dragPend = { it: it, sx: e.clientX, sy: e.clientY,
-      bx: parseFloat(it.el.style.left) || 0, by: parseFloat(it.el.style.top) || 0,
-      touch: e.pointerType === "touch", moved: false, timer: 0 };
+    it.vx = 0; it.vy = 0;
+    dragPend = { it: it, sx: e.clientX, sy: e.clientY, bx: it.x, by: it.y,
+      touch: e.pointerType === "touch", moved: false, timer: 0, samples: [] };
     if (dragPend.touch) dragPend.timer = setTimeout(function () {
       if (dragPend && dragPend.it === it && !dragPend.moved) hold(dragPend);
     }, 300);
@@ -2330,15 +2440,12 @@
       if (dx * dx + dy * dy < 64) return;
       hold(d);
     }
-    var x = Math.min(Math.max(d.bx + dx, 4), Math.max(4, innerWidth - d.it.w - 4));
-    var y = Math.min(Math.max(d.by + dy, 4), Math.max(4, innerHeight - d.it.h - 4));
-    d.it.el.style.left = x + "px";
-    d.it.el.style.top = y + "px";
-    if (pin) {
-      var pr = pin.getBoundingClientRect();
-      var br = d.it.bob.getBoundingClientRect();
-      if (br.left < pr.right - 6 && br.right > pr.left + 6 && br.top < pr.bottom - 6 && br.bottom > pr.top + 6) popIt(d);
-    }
+    d.it.x = Math.min(Math.max(d.bx + dx, 4), Math.max(4, innerWidth - d.it.w - 4));
+    d.it.y = Math.min(Math.max(d.by + dy, 4), Math.max(4, innerHeight - d.it.h - 4));
+    render(d.it);
+    d.samples.push({ t: e.timeStamp || performance.now(), x: e.clientX, y: e.clientY });
+    if (d.samples.length > 6) d.samples.shift();
+    ensure();
   }, { passive: true });
   window.addEventListener("touchmove", function (e) {
     var d = dragPend;
@@ -2356,21 +2463,31 @@
     clearTimeout(d.timer);
     if (d.moved) {
       d.it.el.classList.remove("is-held");
-      d.it.moved = Math.abs((parseFloat(d.it.el.style.left) || 0) - d.it.homeX) > 2 ||
-                   Math.abs((parseFloat(d.it.el.style.top) || 0) - d.it.homeY) > 2;
+      d.it.moved = true;
+      /* Let go: the item keeps the hand's speed, then friction wins. */
+      var s = d.samples;
+      if (s.length > 1) {
+        var a0 = s[0], a1 = s[s.length - 1], ms = a1.t - a0.t;
+        if (ms > 10 && ms < 300) {
+          d.it.vx = Math.max(-32, Math.min(32, (a1.x - a0.x) / ms * 16.7));
+          d.it.vy = Math.max(-32, Math.min(32, (a1.y - a0.y) / ms * 16.7));
+        }
+      }
       announce();
+      ensure();
     }
     dragPend = null;
   }
   window.addEventListener("pointerup", endDrag, { passive: true });
   window.addEventListener("pointercancel", endDrag, { passive: true });
   hero.addEventListener("dh:gohome", function () {
-    its.forEach(function (it) {
+    phys.forEach(function (it) {
+      it.vx = 0; it.vy = 0;
       if (it.popped) {
         /* Popped photos come back to life at their home spot. */
         it.el.classList.remove("is-gone", "is-pop");
-        it.el.style.left = it.homeX + "px";
-        it.el.style.top = it.homeY + "px";
+        it.x = it.homeX; it.y = it.homeY;
+        render(it);
         it.el.classList.remove("is-in");
         void it.el.offsetWidth;
         it.el.classList.add("is-in");
@@ -2379,12 +2496,12 @@
       }
       if (!it.moved) return;
       it.el.classList.add("is-ret");
-      it.el.style.left = it.homeX + "px";
-      it.el.style.top = it.homeY + "px";
+      it.x = it.homeX; it.y = it.homeY;
+      render(it);
       it.moved = false;
     });
     announce();
-    setTimeout(function () { its.forEach(function (it) { it.el.classList.remove("is-ret"); }); }, 500);
+    setTimeout(function () { phys.forEach(function (it) { it.el.classList.remove("is-ret"); }); }, 500);
   });
   if (mode === "none") return;
 
@@ -2423,6 +2540,7 @@
     if (typeof x !== "number") return;
     for (var i = 0; i < its.length; i++) {
       var it = its[i];
+      if (it.popped) continue;
       if (dragPend && dragPend.moved && dragPend.it === it) { it.last = null; continue; }
       var rc = it.bob.getBoundingClientRect();
       if (x < rc.left - 4 || x > rc.right + 4 || y < rc.top - 4 || y > rc.bottom + 4) { it.last = null; continue; }
@@ -2466,7 +2584,9 @@
       { "value": "bloom", "label": "Hover bloom (instant color)" },
       { "value": "none", "label": "Always full color" }
     ], "default": "rub", "info": "For 'Floating photo' blocks. Rub: photos start as a gray sketch and color appears where the mouse (or finger) rubs. Bloom: one touch fills the color in at once. Full color: no painting, just the float." },
-    { "type": "checkbox", "id": "float_pin", "label": "Floating photos: pop pin (bottom left)", "default": true, "info": "A little pushpin sits in the bottom-left corner — drag a photo onto it and the photo pops and disappears. The put-it-back button (or a refresh) brings popped photos back." },
+    { "type": "checkbox", "id": "float_pin", "label": "Floating photos: pop pin (bottom left)", "default": true, "info": "A pin sits in the bottom-left corner — any touch between the pin and a photo pops the photo. The pin can be grabbed and thrown too. The put-it-back button (or a refresh) brings popped photos back." },
+    { "type": "image_picker", "id": "pin_image", "label": "Pin image (optional)", "info": "Upload your own picture for the pin — a transparent PNG works best. Leave empty for the built-in red pushpin." },
+    { "type": "range", "id": "pin_size", "label": "Pin size", "min": 30, "max": 160, "step": 10, "unit": "px", "default": 60, "info": "Only used when a pin image is uploaded." },
 
     { "type": "header", "content": "Search box" },
     { "type": "checkbox", "id": "show_search", "label": "Show live search box", "default": true, "info": "Filters the products already on this page as the shopper types — no page reload." },
