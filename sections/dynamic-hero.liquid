@@ -142,8 +142,8 @@
   .dyn-hero.dh-landing .dh-head .dh-head-video { max-height: clamp(120px, 30vh, 280px); max-width: var(--media-w); }
   .dyn-hero.dh-landing .dh-head h1 { font-size: clamp(30px, 5vw, 46px); }
   /* min(100%, …) not vw: the wrap has side padding, and a vw-based width
-     overflowed it on phones, pushing the bar off-centre. */
-  .dyn-hero.dh-landing .dh-search { width: min(100%, 750px); margin-top: 30px; margin-bottom: 30px; margin-left: auto; margin-right: auto; }
+     overflowed it on phones, pushing the bar off-centre. Desktop: wide. */
+  .dyn-hero.dh-landing .dh-search { width: min(100%, 1200px); max-width: 1200px; margin-top: 30px; margin-bottom: 30px; margin-left: auto; margin-right: auto; }
 
   /* Stacking order over the floating photos (z 1): the search bar is the
      boss (12), the buttons come second (11), the logo third (10). */
@@ -232,13 +232,9 @@
   /* Matte glass: no gloss streak. */
   .dyn-hero .dh-gbtn::after { display: none; }
   /* "Surprise me" gooey/liquid hover — blobs merge behind the button (Skiper64) */
+  /* Goo/liquid hover retired — the SVG filter rendered as raw rectangles in
+     some browsers. The glass + rainbow glow carries the hover now. */
   .dyn-hero .dh-goo-wrap { position: relative; display: inline-flex; }
-  .dyn-hero .dh-goo { position: absolute; inset: 0; z-index: 0; pointer-events: none; filter: url(#dhGooey); opacity: 0; transition: opacity .3s ease; }
-  .dyn-hero .dh-goo-wrap:hover .dh-goo { opacity: 1; }
-  .dyn-hero .dh-goo-core { position: absolute; inset: 0; border-radius: 18px; background: var(--accent); opacity: .92; }
-  /* One blob that follows the mouse over the button (position set in JS via --gx/--gy/--gs) */
-  .dyn-hero .dh-goo-follow { position: absolute; top: 0; left: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; background: var(--accent);
-    transform: translate(var(--gx, 0px), var(--gy, 0px)) scale(var(--gs, 0)); transition: transform .16s ease-out; will-change: transform; }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-goo-follow { transition: transform .05s linear; } }
   /* "Surprise me" glows on hover */
   .dyn-hero #dhBtnRandom { overflow: visible; position: relative; z-index: 1; }
@@ -1165,7 +1161,6 @@
             {%- if section.settings.show_btn2 -%}<a class="dh-gbtn" href="{{ section.settings.btn2_url | default: routes.all_products_collection_url }}">{{ section.settings.btn2_label | default: 'Shop all' }}</a>{%- endif -%}
             {%- if section.settings.show_btn3 -%}
               <span class="dh-goo-wrap">
-                <span class="dh-goo" aria-hidden="true"><span class="dh-goo-core"></span><span class="dh-goo-blob dh-goo-follow"></span></span>
                 <button type="button" class="dh-gbtn" id="dhBtnRandom">{{ section.settings.btn3_label | default: 'Surprise me' }}</button>
               </span>
             {%- endif -%}
@@ -1799,8 +1794,6 @@
     el.addEventListener("mousemove", onMove, { passive: true });
     el.addEventListener("mouseleave", function () { if (raf) { cancelAnimationFrame(raf); raf = null; } el.style.setProperty(sVar, "0"); });
   }
-  // Surprise me: the gooey blob follows the cursor.
-  followMouse(document.querySelector(".dh-goo-wrap"), "--gx", "--gy", "--gs");
 
   var resultsUrl = (root.getAttribute("data-results-url") || "").trim();
   var findingOn = root.getAttribute("data-finding") === "true";
