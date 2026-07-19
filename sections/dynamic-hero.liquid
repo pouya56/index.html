@@ -1956,7 +1956,7 @@
 <style>
   /* Movable objects: the drag offset lives in CSS variables so the buttons'
      own press/hover transforms keep working on top of it. */
-  .dyn-hero .dh-dragobj { transform: translate(var(--ddx, 0px), var(--ddy, 0px)); touch-action: none; }
+  .dyn-hero .dh-dragobj { transform: translate(var(--ddx, 0px), var(--ddy, 0px)) scale(var(--dds, 1)); touch-action: manipulation; -webkit-touch-callout: none; }
   .dyn-hero .dh-gbtn.dh-dragobj:active { transform: translate(var(--ddx, 0px), var(--ddy, 0px)) scale(0.97); }
   .dyn-hero .dh-dragobj.is-drag { position: relative; z-index: 60; user-select: none; -webkit-user-select: none; }
   .dyn-hero .dh-dragobj.is-anim { transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
@@ -2014,33 +2014,58 @@
   document.addEventListener("click", function (e) {
     if (Date.now() < squelch) { e.preventDefault(); e.stopPropagation(); }
   }, true);
+  function lift() {
+    drag.moved = true;
+    drag.el.classList.add("is-drag");
+    drag.el.style.setProperty("--dds", "1.04");
+    document.documentElement.classList.add("dh-grabbing");
+    if (document.activeElement && drag.el.contains(document.activeElement)) document.activeElement.blur();
+    if (window.getSelection) { try { getSelection().removeAllRanges(); } catch (err) {} }
+    if (navigator.vibrate) { try { navigator.vibrate(10); } catch (err) {} }
+  }
   Object.keys(els).forEach(function (k) {
     var el = els[k];
     el.addEventListener("dragstart", function (e) { e.preventDefault(); });
+    el.addEventListener("contextmenu", function (e) {
+      /* No long-press link menu while a finger is holding the object. */
+      if (drag && drag.el === el && drag.touch) e.preventDefault();
+    });
     el.addEventListener("pointerdown", function (e) {
       if (e.button != null && e.button !== 0) return;
       /* Leave the search bar alone while someone is typing or selecting. */
       if (k === "search" && document.activeElement && el.contains(document.activeElement)) return;
       var p = pos[k] || [0, 0];
-      drag = { k: k, el: el, sx: e.clientX, sy: e.clientY, ox: p[0], oy: p[1], moved: false };
+      drag = { k: k, el: el, sx: e.clientX, sy: e.clientY, ox: p[0], oy: p[1],
+               moved: false, touch: e.pointerType === "touch", timer: 0 };
+      /* Phone: hold a moment to pick the object up, like moving an app icon.
+         A quick swipe scrolls the page as usual. */
+      if (drag.touch) drag.timer = setTimeout(function () { if (drag && drag.el === el && !drag.moved) lift(); }, 300);
     });
+    el.addEventListener("touchmove", function (e) {
+      if (!drag || drag.el !== el || !e.cancelable) return;
+      if (drag.moved) { e.preventDefault(); return; }         /* lifted: we steer, not the page */
+      var t = e.touches[0];
+      if (!t) return;
+      var dx = t.clientX - drag.sx, dy = t.clientY - drag.sy;
+      if (dx * dx + dy * dy < 100) { e.preventDefault(); }    /* jitter during the hold */
+      else { clearTimeout(drag.timer); drag = null; }         /* real swipe → let it scroll */
+    }, { passive: false });
   });
   window.addEventListener("pointermove", function (e) {
     if (!drag) return;
+    if (drag.touch && !drag.moved) return;                    /* still waiting for the hold */
     var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
     if (!drag.moved) {
       if (dx * dx + dy * dy < 64) return;
-      drag.moved = true;
-      drag.el.classList.add("is-drag");
-      document.documentElement.classList.add("dh-grabbing");
-      if (document.activeElement && drag.el.contains(document.activeElement)) document.activeElement.blur();
-      if (window.getSelection) { try { getSelection().removeAllRanges(); } catch (err) {} }
+      lift();
     }
     pos[drag.k] = [drag.ox + dx, drag.oy + dy];
     apply(drag.k);
   }, { passive: true });
   function end() {
     if (!drag) return;
+    clearTimeout(drag.timer);
+    drag.el.style.removeProperty("--dds");
     if (drag.moved) {
       clamp(drag.k);
       /* Dropped basically home? Snap clean so nothing is stored. */
@@ -2057,14 +2082,30 @@
   }
   window.addEventListener("pointerup", end, { passive: true });
   window.addEventListener("pointercancel", end, { passive: true });
-  hero.addEventListener("dblclick", function (e) {
-    if (e.target.closest(".dh-dragobj, a, button, input, .dh-pop, .dh-menu")) return;
+  function goHome() {
     pos = {};
     save();
     Object.keys(els).forEach(function (k) { els[k].classList.add("is-anim"); apply(k); });
     setTimeout(function () {
       Object.keys(els).forEach(function (k) { els[k].classList.remove("is-anim"); });
     }, 500);
+  }
+  hero.addEventListener("dblclick", function (e) {
+    if (e.target.closest(".dh-dragobj, a, button, input, .dh-pop, .dh-menu")) return;
+    goHome();
+  });
+  /* Double-tap an empty spot on the phone: same glide home. */
+  var lastTap = 0, lastTapX = 0, lastTapY = 0;
+  hero.addEventListener("pointerup", function (e) {
+    if (e.pointerType !== "touch") return;
+    if (e.target.closest(".dh-dragobj, a, button, input, .dh-pop, .dh-menu")) return;
+    var now = Date.now();
+    if (now - lastTap < 350 && Math.abs(e.clientX - lastTapX) < 40 && Math.abs(e.clientY - lastTapY) < 40) {
+      goHome();
+      lastTap = 0;
+      return;
+    }
+    lastTap = now; lastTapX = e.clientX; lastTapY = e.clientY;
   });
 })();
 </script>

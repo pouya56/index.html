@@ -556,6 +556,23 @@
   window.addEventListener("pointerdown", function (e) { last = null; move(e); }, { passive: true });
   window.addEventListener("pointercancel", function () { last = null; });
   window.addEventListener("blur", function () { last = null; });
+  /* Phone: when the page has nowhere to scroll (the usual full-screen hero),
+     a finger on empty background paints instead of rubber-banding the page.
+     On pages that do scroll, or on buttons and links, scrolling wins. */
+  var lock = false;
+  function interactive(t) {
+    return !!(t && t.closest && t.closest("a,button,input,select,textarea,label,summary,[role=button]"));
+  }
+  window.addEventListener("touchstart", function (e) {
+    var se = document.scrollingElement || document.documentElement;
+    lock = e.touches.length === 1 && !interactive(e.target) &&
+           se.scrollHeight - innerHeight < 40;
+  }, { passive: true });
+  window.addEventListener("touchmove", function (e) {
+    if (lock && e.cancelable) e.preventDefault();
+  }, { passive: false });
+  window.addEventListener("touchend", function () { lock = false; }, { passive: true });
+  window.addEventListener("touchcancel", function () { lock = false; last = null; }, { passive: true });
 })();
 </script>
 {%- endif -%}
