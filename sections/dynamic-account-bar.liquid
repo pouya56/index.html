@@ -75,7 +75,14 @@
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
       .dyn-abar .ab-back, .dyn-abar .dh-icon-btn { background: rgba(255,255,255,0.88); }
     }
-    .dyn-abar .dh-apps-btn svg { width: 22px; height: 22px; fill: currentColor; }
+    .dyn-abar .dh-apps-btn svg { width: 32px; height: 32px; fill: currentColor; }
+    /* AssistiveTouch-style 9-dots: a floating circle that can be dragged
+       anywhere and snaps to the screen edges; the window opens beside it. */
+    .dyn-abar .dh-apps-menu { position: fixed; top: 12px; right: 12px; z-index: 95;
+      touch-action: none; transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05), top 0.22s ease; }
+    .dyn-abar .dh-apps-menu.is-dragging { transition: none; }
+    .dyn-abar .dh-apps-btn { width: 60px; height: 60px; border-radius: 50%; cursor: grab; }
+    .dyn-abar .dh-apps-btn:active { cursor: grabbing; }
     .dyn-abar .dh-acct-ic { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.5; }
     .dyn-abar .dh-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; display: block; }
     .dyn-abar .dh-avatar-initial { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
@@ -117,7 +124,7 @@
        colors bloom through, bright etched rim, no painted-white gloss. */
     /* Matte frosted glass — flat, even frost with no gloss cap, no angled
        sheen, no bright bevels. Just blur, a whisper of white, a quiet rim. */
-    .dyn-abar .dh-apps-pop { top: calc(100% + 12px); right: 0;
+    .dyn-abar .dh-apps-pop { top: 0; right: calc(100% + 12px);
       width: min(590px, calc(100vw - 28px)); max-height: min(92vh, 812px); overflow-y: auto;
       scrollbar-width: none;
       padding: 20px 20px 20px; border-radius: 30px;
@@ -126,6 +133,7 @@
       border: 1px solid rgba(255,255,255,0.22);
       box-shadow: 0 30px 80px -24px rgba(0,0,0,0.5);
       animation: abWin .2s cubic-bezier(.2, .9, .3, 1.1); transform-origin: top right; }
+    .dyn-abar .dh-apps-menu.is-leftside .dh-apps-pop { left: calc(100% + 12px); right: auto; transform-origin: top left; }
     @keyframes abWin { from { opacity: 0; transform: scale(0.94) translateY(-6px); }
       to { opacity: 1; transform: scale(1) translateY(0); } }
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -681,6 +689,94 @@
     }, { passive: true });
   })();
   {%- endif -%}
+  (function () {
+    /* AssistiveTouch behaviour for the 9-dots: drag the circle anywhere,
+       it snaps to the nearest screen edge on release, the spot is
+       remembered per browser, and the window opens beside it. A plain
+       tap still opens the window. */
+    var menu = document.querySelector(".dyn-abar .dh-apps-menu");
+    var btn = menu && menu.querySelector(".dh-apps-btn");
+    var pop = menu && menu.querySelector(".dh-apps-pop");
+    if (!menu || !btn || !pop) return;
+    var KEY = "dyn_abar_apps_pos";
+    function place(x, y, snap) {
+      var w = btn.offsetWidth || 60, h = btn.offsetHeight || 60;
+      y = Math.min(Math.max(y, 12), innerHeight - h - 12);
+      if (snap) x = (x + w / 2 < innerWidth / 2) ? 12 : innerWidth - w - 12;
+      else x = Math.min(Math.max(x, 12), innerWidth - w - 12);
+      menu.style.left = x + "px";
+      menu.style.top = y + "px";
+      menu.style.right = "auto";
+      menu.classList.toggle("is-leftside", x + w / 2 < innerWidth / 2);
+      return { x: x, y: y };
+    }
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
+    if (saved && typeof saved.x === "number") { place(saved.x, saved.y, true); }
+    else { var r0 = menu.getBoundingClientRect(); place(r0.left, r0.top, false); }
+    window.addEventListener("resize", function () {
+      var r = menu.getBoundingClientRect();
+      place(r.left, r.top, true);
+    });
+    var drag = null, squelch = 0;
+    btn.addEventListener("click", function (e) {
+      if (Date.now() < squelch) { e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
+    btn.addEventListener("pointerdown", function (e) {
+      if (e.button != null && e.button !== 0) return;
+      var r = menu.getBoundingClientRect();
+      drag = { sx: e.clientX, sy: e.clientY, bx: r.left, by: r.top, moved: false };
+    });
+    window.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+      if (!drag.moved) {
+        if (dx * dx + dy * dy < 64) return;
+        drag.moved = true;
+        menu.classList.add("is-dragging");
+        if (!pop.hidden) { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+      }
+      place(drag.bx + dx, drag.by + dy, false);
+    }, { passive: true });
+    function endDrag() {
+      if (!drag) return;
+      if (drag.moved) {
+        menu.classList.remove("is-dragging");
+        var r = menu.getBoundingClientRect();
+        var p = place(r.left, r.top, true);
+        try { localStorage.setItem(KEY, JSON.stringify(p)); } catch (e) {}
+        squelch = Date.now() + 350;
+      }
+      drag = null;
+    }
+    window.addEventListener("pointerup", endDrag, { passive: true });
+    window.addEventListener("pointercancel", endDrag, { passive: true });
+    /* Position the window beside wherever the circle lives (runs after the
+       generic open/close toggle, which was wired earlier). */
+    btn.addEventListener("click", function () {
+      if (pop.hidden) return;
+      var r = btn.getBoundingClientRect();
+      if (innerWidth <= 520) {
+        pop.style.position = "fixed";
+        pop.style.left = "8px";
+        pop.style.right = "8px";
+        if (r.top + r.height / 2 < innerHeight / 2) {
+          pop.style.top = (r.bottom + 10) + "px"; pop.style.bottom = "auto";
+        } else {
+          pop.style.bottom = (innerHeight - r.top + 10) + "px"; pop.style.top = "auto";
+        }
+        pop.style.maxHeight = "min(78vh, 812px)";
+        return;
+      }
+      pop.style.position = "absolute";
+      pop.style.left = ""; pop.style.right = ""; pop.style.bottom = "auto";
+      pop.style.maxHeight = "";
+      pop.style.top = "0px";
+      var ph = pop.offsetHeight;
+      var desired = Math.min(Math.max(r.top, 12), innerHeight - ph - 12);
+      pop.style.top = (desired - r.top) + "px";
+    });
+  })();
   </script>
 </div>
 
