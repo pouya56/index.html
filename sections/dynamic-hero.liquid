@@ -2056,8 +2056,10 @@
   .dyn-hero .dh-dragobj { transform: translate(var(--ddx, 0px), var(--ddy, 0px)) scale(var(--dds, 1)); touch-action: manipulation; -webkit-touch-callout: none; }
   .dyn-hero .dh-gbtn.dh-dragobj:active { transform: translate(var(--ddx, 0px), var(--ddy, 0px)) scale(0.97); }
   /* No lift to the front while dragging: each object keeps its own layer
-     (search bar 12 > buttons 11 > logo 10), so nothing jumps on release. */
-  .dyn-hero .dh-dragobj.is-drag { position: relative; user-select: none; -webkit-user-select: none; }
+     (search bar 12 > buttons 11 > logo 10), so nothing jumps on release.
+     Transitions off while carried — the buttons' 0.12s transform easing
+     otherwise makes them rubber-band behind the hand at different speeds. */
+  .dyn-hero .dh-dragobj.is-drag { position: relative; user-select: none; -webkit-user-select: none; transition: none; }
   .dyn-hero .dh-dragobj.is-anim { transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
   html.dh-grabbing, html.dh-grabbing * { cursor: grabbing !important; user-select: none !important; -webkit-user-select: none !important; }
   /* The put-it-back button: hidden until something has been moved, then a
