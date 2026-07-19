@@ -628,14 +628,6 @@
     .dyn-abar .dh-vprev-hold .dyn-acct .da-topbar,
     .dyn-abar .dh-vprev-hold .dyn-acct .da-nav { display: none !important; }
     .dyn-abar .dh-vprev-hold .dyn-acct .da-wrap { display: block; padding: 0; }
-    /* In-window sign-in card (Shopify's secure login can't be embedded —
-       one clean button instead of a broken frame). */
-    .dyn-abar .dh-vauth { text-align: center; padding: 44px 20px 50px; }
-    .dyn-abar .dh-vauth h3 { color: #1d1d1f; font-size: 21px; margin: 0 0 10px; }
-    .dyn-abar .dh-vauth p { color: #66666b; font-size: 14.5px; margin: 0 auto 22px; max-width: 380px; line-height: 1.5; }
-    .dyn-abar .dh-vauth-btn { display: inline-block; background: rgba(42, 42, 47, 0.9); color: #fff;
-      text-decoration: none; border-radius: 999px; padding: 14px 26px; font-size: 15px; font-weight: 600; }
-    .dyn-abar .dh-vauth-btn:hover { background: #1d1d1f; }
     /* The bar can hold many tabs — it scrolls quietly if the screen is short. */
     .dyn-abar .dh-vbar { max-height: calc(100vh - 24px); overflow-y: auto;
       scrollbar-width: none; -ms-overflow-style: none; }
@@ -1210,9 +1202,10 @@
         abs = u.href;
         ext = u.host !== location.host;
       } catch (eA) {}
+      /* Off-site entries (Profile, Orders on shopify.com) and auth links
+         are plain doors — no window, straight to Shopify's page. */
       vAcct.push({ href: abs, label: label, ext: ext,
-        nav: /logout/.test(abs),
-        auth: /account\/login|customer_authentication|\/authentication/.test(abs) ||
+        nav: ext || /logout|account\/login|customer_authentication|\/authentication/.test(abs) ||
           a.classList.contains("dh-pop-cta") });
     });
     pop.appendChild(atabs);
@@ -1792,19 +1785,6 @@
         vprev.querySelector(".dh-vprev-open").setAttribute("href", page.href);
         var hold = vprev.querySelector(".dh-vprev-hold");
         var extN = vprev.querySelector(".dh-vprev-ext");
-        if (page.auth) {
-          /* Shopify's secure sign-in can't be embedded — show a clean card
-             with one button instead of a broken load. */
-          hold.hidden = false;
-          extN.hidden = true;
-          if (vprev.getAttribute("data-url") !== "auth:" + page.href) {
-            vprev.setAttribute("data-url", "auth:" + page.href);
-            hold.innerHTML = '<div class="dh-vauth"><h3>Sign in to {{ shop.name | escape }}</h3>' +
-              '<p>Shopify emails you a secure one-time code \u2014 no password to remember.</p>' +
-              '<a class="dh-vauth-btn" href="' + vEsc(page.href) + '">Continue to secure sign-in</a></div>';
-          }
-          return;
-        }
         hold.hidden = !!page.ext;
         extN.hidden = !page.ext;
         /* The page's ACTUAL content, live in the glass: fetch the page,
