@@ -521,23 +521,28 @@
        No dark filter behind — the page stays live. */
     .dyn-abar .dh-vbar { position: fixed; z-index: 2147483646; display: none; flex-direction: column;
       align-items: center; gap: 6px; padding: 10px 8px; border-radius: 999px;
-      background: rgba(40, 40, 47, 0.55); border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.65);
       -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
-      box-shadow: 0 22px 50px -18px rgba(0, 0, 0, 0.6); animation: abPop 0.16s ease; }
+      box-shadow: 0 18px 44px -16px rgba(29, 29, 31, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+      animation: abPop 0.16s ease; }
     .dyn-abar .dh-vbar.is-on { display: flex; }
     .dyn-abar .dh-vtab { width: 46px; height: 46px; border-radius: 50%; border: none; padding: 0;
       display: flex; align-items: center; justify-content: center; cursor: pointer;
-      background: transparent; color: rgba(255, 255, 255, 0.85); transition: background 0.15s, color 0.15s; }
-    .dyn-abar .dh-vtab:hover { background: rgba(255, 255, 255, 0.14); }
-    .dyn-abar .dh-vtab.is-on { background: rgba(255, 255, 255, 0.92); color: #1d1d1f; }
+      background: transparent; color: #3a3a3f; transition: background 0.15s, color 0.15s; }
+    .dyn-abar .dh-vtab:hover { background: rgba(255, 255, 255, 0.55); color: #1d1d1f; }
+    .dyn-abar .dh-vtab.is-on { background: rgba(42, 42, 47, 0.85); color: #fff; }
     .dyn-abar .dh-vtab svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9;
       stroke-linecap: round; stroke-linejoin: round; }
     /* The window: one dark smoked pane showing the active tab. */
     .dyn-abar .dh-menu .dh-apps-pop.is-vision { position: fixed; right: auto; bottom: auto;
       width: 840px; max-width: calc(100vw - 240px); max-height: min(86vh, 960px); overflow-y: auto;
-      background: rgba(36, 36, 43, 0.62); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 30px;
-      -webkit-backdrop-filter: blur(28px) saturate(1.4); backdrop-filter: blur(28px) saturate(1.4);
-      box-shadow: 0 34px 80px -24px rgba(0, 0, 0, 0.65); padding: 22px; animation: abWin 0.18s ease; }
+      background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.65); border-radius: 30px;
+      -webkit-backdrop-filter: blur(28px) saturate(1.6); backdrop-filter: blur(28px) saturate(1.6);
+      box-shadow: 0 30px 70px -22px rgba(29, 29, 31, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.85);
+      padding: 22px; animation: abWin 0.18s ease; }
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .dyn-abar .dh-vbar, .dyn-abar .dh-menu .dh-apps-pop.is-vision { background: rgba(255, 255, 255, 0.93); }
+    }
     .dyn-abar .dh-apps-pop.is-vision .dh-pop-x, .dyn-abar .dh-apps-pop.is-vision .dh-pop-title { display: none; }
     .dyn-abar .dh-apps-pop.is-vision .dh-apps-head { display: flex; flex-wrap: wrap; gap: 16px;
       align-items: center; justify-content: center; margin: 0; }
@@ -557,13 +562,13 @@
     .dyn-abar .dh-apps-pop.is-vision.is-preview .dh-apps-grid { display: none; }
     .dyn-abar .dh-vprev[hidden] { display: none; }
     .dyn-abar .dh-vprev-top { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 12px; }
-    .dyn-abar .dh-vprev-title { color: #fff; font-size: 16px; font-weight: 700; }
-    .dyn-abar .dh-vprev-open { color: #fff; background: rgba(255, 255, 255, 0.16); border-radius: 999px;
+    .dyn-abar .dh-vprev-title { color: #1d1d1f; font-size: 16px; font-weight: 700; }
+    .dyn-abar .dh-vprev-open { color: #fff; background: rgba(42, 42, 47, 0.85); border-radius: 999px;
       padding: 8px 16px; font-size: 13px; font-weight: 600; text-decoration: none; }
-    .dyn-abar .dh-vprev-open:hover { background: rgba(255, 255, 255, 0.28); }
+    .dyn-abar .dh-vprev-open:hover { background: rgba(42, 42, 47, 1); }
     .dyn-abar .dh-vprev-hold { overflow: hidden; border-radius: 18px; background: #fff; }
     .dyn-abar .dh-vprev-frame { width: 1000px; border: none; display: block; transform-origin: top left; background: #fff; }
-    .dyn-abar .dh-vprev-ext { color: rgba(255, 255, 255, 0.78); font-size: 14px; padding: 34px 10px; text-align: center; }
+    .dyn-abar .dh-vprev-ext { color: #66666b; font-size: 14px; padding: 34px 10px; text-align: center; }
     /* The bar can hold many tabs — it scrolls quietly if the screen is short. */
     .dyn-abar .dh-vbar { max-height: calc(100vh - 24px); overflow-y: auto;
       scrollbar-width: none; -ms-overflow-style: none; }
@@ -571,7 +576,11 @@
     .dyn-abar .dh-vtab { flex: none; }
     .dyn-abar .dh-vtab img { width: 30px; height: 30px; object-fit: cover; border-radius: 9px; }
     /* Sizes inside the pane. */
-    .dyn-abar .dh-apps-pop.is-vision .dh-w-greethead { width: 100%; padding: 4px 6px 8px; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-w-greethead { width: 100%; padding: 4px 6px 8px;
+      color: #1d1d1f; text-shadow: none; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-w-greet, .dyn-abar .dh-apps-pop.is-vision .dh-w-sub { color: #1d1d1f; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-w-greet svg { filter: none; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-w-boxlabel { color: #1d1d1f; text-shadow: none; }
     .dyn-abar .dh-apps-pop.is-vision .dh-w-clock { width: 210px; height: 210px; }
     .dyn-abar .dh-apps-pop.is-vision .dh-w-quote { width: 210px; height: 210px; aspect-ratio: auto; }
     .dyn-abar .dh-apps-pop.is-vision #dynAbSaved, .dyn-abar .dh-apps-pop.is-vision #dynAbCart { width: 300px; }
