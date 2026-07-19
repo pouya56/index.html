@@ -2095,8 +2095,11 @@
     });
     el.addEventListener("pointerdown", function (e) {
       if (e.button != null && e.button !== 0) return;
+      /* One thing in the hand at a time — shared lock with the photos. */
+      if (drag || window.__dhDrag) return;
       /* Leave the search bar alone while someone is typing or selecting. */
       if (k === "search" && document.activeElement && el.contains(document.activeElement)) return;
+      window.__dhDrag = true;
       var p = pos[k] || [0, 0];
       drag = { k: k, el: el, sx: e.clientX, sy: e.clientY, ox: p[0], oy: p[1],
                moved: false, touch: e.pointerType === "touch", timer: 0 };
@@ -2134,6 +2137,7 @@
   }, { passive: true });
   function end() {
     if (!drag) return;
+    window.__dhDrag = false;
     clearTimeout(drag.timer);
     drag.el.style.removeProperty("--dds");
     if (drag.moved) {
@@ -2373,7 +2377,7 @@
   function popIt(it) {
     /* Pin meets photo: bang. The put-it-back button revives it. */
     if (it.popped || it.isPin) return;
-    if (dragPend && dragPend.it === it) { dragPend = null; document.documentElement.classList.remove("dh-fnosel"); }
+    if (dragPend && dragPend.it === it) { dragPend = null; window.__dhDrag = false; document.documentElement.classList.remove("dh-fnosel"); }
     it.popped = true; it.moved = true; it.vx = 0; it.vy = 0;
     it.el.classList.remove("is-held");
     it.el.classList.add("is-pop");
@@ -2491,8 +2495,14 @@
   });
   window.addEventListener("pointerdown", function (e) {
     if (e.button != null && e.button !== 0) return;
+    /* One thing in the hand at a time — shared lock with the page objects.
+       And the UI sits above the photos, so a press on it never grabs the
+       photo underneath. */
+    if (dragPend || window.__dhDrag) return;
+    if (e.target.closest && e.target.closest(".dh-dragobj, a, button, input, select, textarea, .dh-pop, .dh-menu, .dh-reset-btn")) return;
     var it = hitAt(e.clientX, e.clientY);
     if (!it) return;
+    window.__dhDrag = true;
     it.vx = 0; it.vy = 0;
     dragPend = { it: it, sx: e.clientX, sy: e.clientY, bx: it.x, by: it.y,
       touch: e.pointerType === "touch", moved: false, timer: 0, samples: [] };
@@ -2537,12 +2547,13 @@
     if (!t) return;
     var dx = t.clientX - d.sx, dy = t.clientY - d.sy;
     if (dx * dx + dy * dy < 100) { e.preventDefault(); }
-    else { clearTimeout(d.timer); dragPend = null; }
+    else { clearTimeout(d.timer); dragPend = null; window.__dhDrag = false; }
   }, { passive: false });
   function endDrag() {
     var d = dragPend;
     document.documentElement.classList.remove("dh-fnosel");
     if (!d) return;
+    window.__dhDrag = false;
     clearTimeout(d.timer);
     if (d.moved) {
       d.it.el.classList.remove("is-held");
