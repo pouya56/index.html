@@ -515,11 +515,12 @@
       .dyn-abar .dh-orb-eyes.is-nervous::after { width: 9px; height: 12px; right: -12px; top: -10px; }
       .dyn-abar .dh-orb-eyes.is-sad::before { width: 7.5px; height: 10px; right: 5px; top: 21px; }
     }
-    /* Scatter mode (tablet/desktop): opening the orb doesn't show a boxed
-       window — every widget and app tile floats to its own random spot on
-       the page, hovering like glass info-cards over the dimmed scene.
-       The pop becomes an invisible full-screen stage; clicks on empty
-       space fall through to the page (which closes everything). */
+    /* Vision-style windows (tablet/desktop): opening the orb doesn't show
+       a boxed window — the widgets and app tiles hover as individual glass
+       panels arranged over the page (widgets on top, Saved/Cart beneath,
+       apps in centered rows), no darkening behind. The pop becomes an
+       invisible full-screen stage; clicks on empty space fall through to
+       the page (which closes everything). */
     .dyn-abar .dh-menu .dh-apps-pop.is-scatter { position: fixed; left: 0; right: 0; top: 0; bottom: 0;
       width: auto; max-height: none; background: none; border: none; box-shadow: none;
       -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: 0; padding: 0;
@@ -529,9 +530,13 @@
     .dyn-abar .dh-apps-pop.is-scatter .dh-apps-grid { display: contents; }
     .dyn-abar .dh-apps-pop.is-scatter .dh-apps-head > *,
     .dyn-abar .dh-apps-pop.is-scatter .dh-apps-grid > * { position: absolute; margin: 0; pointer-events: auto;
-      animation: abScatterIn 0.45s cubic-bezier(0.3, 1.3, 0.5, 1) backwards, abBob 4.5s ease-in-out infinite alternate; }
+      animation: abScatterIn 0.45s cubic-bezier(0.3, 1.3, 0.5, 1) backwards; }
     @keyframes abScatterIn { from { opacity: 0; transform: scale(0.55); } }
-    @keyframes abBob { from { translate: 0 -4px; } to { translate: 0 4px; } }
+    /* Each panel carries its own frosted blur — there's no window behind
+       them and no dark veil, so they must read over any page. */
+    .dyn-abar .dh-apps-pop.is-scatter .dh-app,
+    .dyn-abar .dh-apps-pop.is-scatter .dh-widget { background: rgba(42, 42, 47, 0.45);
+      -webkit-backdrop-filter: blur(18px) saturate(1.5); backdrop-filter: blur(18px) saturate(1.5); }
     /* Floating card sizes (the grid used to size them). The bare greeting
        gets its own smoked card so it reads over any page. */
     .dyn-abar .dh-apps-pop.is-scatter .dh-w-greethead { width: 250px; border-radius: 22px; padding: 16px 20px;
@@ -1418,7 +1423,9 @@
     /* Phone: freeze the page while the window is open. Watching the hidden
        attribute catches every close path (outside tap, Escape, drag). */
     function syncLock() {
-      document.documentElement.classList.toggle("dyn-ablock", !pop.hidden);
+      /* Phone only — the desktop panels float over the live page with no
+         dark filter and no scroll freeze. */
+      document.documentElement.classList.toggle("dyn-ablock", !pop.hidden && innerWidth <= 520);
     }
     new MutationObserver(syncLock).observe(pop, { attributes: true, attributeFilter: ["hidden"] });
     document.addEventListener("touchmove", function (e) {
@@ -1451,32 +1458,41 @@
         pop.style.maxHeight = (innerHeight / s) + "px";
         return;
       }
-      /* Tablet/desktop: scatter every widget and app tile to its own
-         random spot, avoiding the orb and each other where room allows. */
+      /* Tablet/desktop: arrange everything as floating glass panels —
+         widgets on top, Saved/Cart beneath, apps in centered rows of
+         four — hovering over the page, Vision-style. */
       pop.classList.add("is-scatter");
       pop.style.position = ""; pop.style.left = ""; pop.style.right = ""; pop.style.top = "";
       pop.style.bottom = ""; pop.style.width = ""; pop.style.maxHeight = ""; pop.style.height = "";
       pop.style.transform = ""; pop.style.animation = "";
-      var items = Array.prototype.slice.call(pop.querySelectorAll(".dh-apps-head > *, .dh-apps-grid > *"));
-      var br = btn.getBoundingClientRect();
-      var placedR = [{ l: br.left - 12, t: br.top - 12, r: br.right + 12, b: br.bottom + 12 }];
-      items.forEach(function (el, idx) {
-        var w = el.offsetWidth || 150, h = el.offsetHeight || 130;
-        var x = 16, y = 16, ok = false, tries = 0;
-        while (!ok && tries++ < 90) {
-          x = 16 + Math.random() * Math.max(1, innerWidth - w - 32);
-          y = 16 + Math.random() * Math.max(1, innerHeight - h - 32);
-          ok = true;
-          for (var k = 0; k < placedR.length; k++) {
-            var q = placedR[k];
-            if (x < q.r + 12 && x + w > q.l - 12 && y < q.b + 12 && y + h > q.t - 12) { ok = false; break; }
-          }
-        }
-        placedR.push({ l: x, t: y, r: x + w, b: y + h });
-        el.style.left = Math.round(x) + "px";
-        el.style.top = Math.round(y) + "px";
-        /* Staggered pop-in, desynchronized bobbing. */
-        el.style.animationDelay = (idx * 45) + "ms, " + (Math.random() * 2).toFixed(2) + "s";
+      var head = Array.prototype.slice.call(pop.querySelectorAll(".dh-apps-head > *"));
+      var tiles = Array.prototype.slice.call(pop.querySelectorAll(".dh-apps-grid > *"));
+      var rows = [];
+      var boxes = head.filter(function (el) { return el.id === "dynAbSaved" || el.id === "dynAbCart"; });
+      var tops = head.filter(function (el) { return boxes.indexOf(el) === -1; });
+      if (tops.length) rows.push(tops);
+      if (boxes.length) rows.push(boxes);
+      for (var ci = 0; ci < tiles.length; ci += 4) rows.push(tiles.slice(ci, ci + 4));
+      var GAP = 22, RGAP = 24;
+      var sizes = rows.map(function (row) {
+        var w = 0, h = 0;
+        row.forEach(function (el) { w += el.offsetWidth; h = Math.max(h, el.offsetHeight); });
+        return { w: w + GAP * (row.length - 1), h: h };
+      });
+      var totalH = 0;
+      sizes.forEach(function (sz) { totalH += sz.h; });
+      totalH += RGAP * (rows.length - 1);
+      var y = Math.max(16, (innerHeight - totalH) / 2);
+      var n = 0;
+      rows.forEach(function (row, ri) {
+        var x = Math.max(16, (innerWidth - sizes[ri].w) / 2);
+        row.forEach(function (el) {
+          el.style.left = Math.round(x) + "px";
+          el.style.top = Math.round(y + (sizes[ri].h - el.offsetHeight) / 2) + "px";
+          el.style.animationDelay = (n++ * 40) + "ms";
+          x += el.offsetWidth + GAP;
+        });
+        y += sizes[ri].h + RGAP;
       });
     });
   })();
