@@ -535,7 +535,7 @@
       stroke-linecap: round; stroke-linejoin: round; }
     /* The window: one dark smoked pane showing the active tab. */
     .dyn-abar .dh-menu .dh-apps-pop.is-vision { position: fixed; right: auto; bottom: auto;
-      width: 840px; max-width: calc(100vw - 240px); max-height: min(86vh, 960px); overflow-y: auto;
+      width: 840px; max-width: calc(100vw - 240px); height: min(80vh, 760px); overflow-y: auto;
       background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.65); border-radius: 30px;
       -webkit-backdrop-filter: blur(28px) saturate(1.6); backdrop-filter: blur(28px) saturate(1.6);
       box-shadow: 0 30px 70px -22px rgba(29, 29, 31, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.85);
@@ -1581,7 +1581,8 @@
            it — forms are the real forms and submit normally. */
         if (!app.ext && vprev.getAttribute("data-url") !== app.href) {
           vprev.setAttribute("data-url", app.href);
-          hold.innerHTML = '<div class="dh-vload">Loading page\u2026</div>';
+          /* No loading flash — the pane stays quiet until the page lands. */
+          hold.innerHTML = "";
           fetch(app.href, { credentials: "same-origin" }).then(function (r2) { return r2.text(); }).then(function (htm) {
             if (vprev.getAttribute("data-url") !== app.href) return;
             var doc = new DOMParser().parseFromString(htm, "text/html");
