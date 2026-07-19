@@ -2417,11 +2417,28 @@
       it.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       it.done = false; it.last = null;
     });
+    placedW = innerWidth; placedH = innerHeight;
   }
+  var placedW = 0, placedH = 0;
   place();
   its.forEach(function (it, i) { setTimeout(function () { it.el.classList.add("is-in"); }, 150 + i * 90); });
   var rT;
-  window.addEventListener("resize", function () { clearTimeout(rT); rT = setTimeout(function () { place(); announce(); }, 200); });
+  window.addEventListener("resize", function () {
+    clearTimeout(rT);
+    rT = setTimeout(function () {
+      /* A scrollbar appearing (or the phone URL bar collapsing) fires a
+         tiny resize — re-scattering visible photos then registers as a
+         huge layout shift (this was desktop CLS 0.6). Small change: just
+         keep everything inside the walls. Real resize: fresh scatter. */
+      if (Math.abs(innerWidth - placedW) < 80 && Math.abs(innerHeight - placedH) < 160) {
+        placedW = innerWidth; placedH = innerHeight;
+        for (var i = 0; i < phys.length; i++) if (!phys[i].popped) { bounds(phys[i]); render(phys[i]); }
+        return;
+      }
+      place();
+      announce();
+    }, 200);
+  });
 
   /* ---- the tiny physics world ---- */
   var dragPend = null;
