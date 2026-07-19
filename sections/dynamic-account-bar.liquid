@@ -89,6 +89,22 @@
       transform: translate(calc(var(--ex, 0px) * 0.5), calc(var(--ey, 0px) * 0.9));
       transition: transform 0.3s cubic-bezier(0.3, 0.9, 0.3, 1); }
     .dyn-abar .dh-orb-eyes.is-blink .dh-orb-eye { transform: scaleY(0.08); }
+    /* Asleep: lids slide shut, slow breathing, a little "z" floats up. */
+    .dyn-abar .dh-apps-btn.is-asleep .dh-orb-eye { transform: scaleY(0.1); transition: transform 0.7s ease; }
+    .dyn-abar .dh-apps-btn.is-asleep { animation: abBreathe 3.4s ease-in-out infinite; }
+    @keyframes abBreathe { 50% { transform: scale(0.96); } }
+    .dyn-abar .dh-apps-btn.is-asleep::after { content: "z"; position: absolute; top: -6px; right: -2px; z-index: 2;
+      font: 700 15px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: rgba(255, 255, 255, 0.92); text-shadow: 0 0 8px rgba(160, 120, 255, 0.9);
+      pointer-events: none; animation: abZzz 2.3s ease-in-out infinite; }
+    @keyframes abZzz { 0% { opacity: 0; transform: translate(0, 6px) scale(0.6); }
+      30% { opacity: 1; } 100% { opacity: 0; transform: translate(8px, -13px) scale(1.25); } }
+    /* Dizzy: pupils go in circles while the whole head wobbles. */
+    .dyn-abar .dh-orb-eyes.is-dizzy .dh-orb-eye::after { animation: abDizzy 0.4s linear infinite; }
+    @keyframes abDizzy { 0%, 100% { transform: translate(0, -3.5px); } 25% { transform: translate(3.5px, 0); }
+      50% { transform: translate(0, 3.5px); } 75% { transform: translate(-3.5px, 0); } }
+    .dyn-abar .dh-apps-btn.is-dizzy { animation: abWobble 0.55s ease-in-out infinite; }
+    @keyframes abWobble { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
     /* AssistiveTouch-style 9-dots: a floating circle that can be dragged
        anywhere and snaps to the screen edges; the window opens beside it. */
     .dyn-abar .dh-apps-menu { position: fixed; top: 12px; right: 12px; z-index: 95;
@@ -921,16 +937,53 @@
        to random glances on their own. Blinks at natural intervals. */
     var eyes = btn.querySelector(".dh-orb-eyes");
     if (eyes && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) {
-      var lastFollow = 0;
+      var lastFollow = 0, lastPt = null, travel = 0, dizzyUntil = 0, asleep = false;
+      function wake() {
+        if (asleep) { asleep = false; btn.classList.remove("is-asleep"); }
+      }
       function gaze(px, py) {
+        var now = Date.now();
+        wake();
+        /* Dizziness: only FAST strokes (>1.4px/ms) rack up "travel";
+           slowing down or pausing lets it drain away. */
+        if (lastPt) {
+          var dt = now - lastPt.t;
+          var dist = Math.sqrt((px - lastPt.x) * (px - lastPt.x) + (py - lastPt.y) * (py - lastPt.y));
+          if (dt > 160) travel = 0;
+          else if (dist / Math.max(dt, 1) > 1.4) travel += dist;
+          else travel *= 0.8;
+        }
+        lastPt = { x: px, y: py, t: now };
+        lastFollow = now;
+        if (now < dizzyUntil) return;
+        if (travel > 1300) {
+          travel = 0;
+          dizzyUntil = now + 2800;
+          eyes.classList.add("is-dizzy");
+          btn.classList.add("is-dizzy");
+          setTimeout(function () {
+            eyes.classList.remove("is-dizzy");
+            btn.classList.remove("is-dizzy");
+            /* Shakes it off with a blink. */
+            eyes.classList.add("is-blink");
+            setTimeout(function () { eyes.classList.remove("is-blink"); }, 150);
+          }, 2800);
+          return;
+        }
         var r = btn.getBoundingClientRect();
         var dx = px - (r.left + r.width / 2), dy = py - (r.top + r.height / 2);
         var d = Math.sqrt(dx * dx + dy * dy) || 1;
         var m = Math.min(1, d / 110);
         eyes.style.setProperty("--ex", (dx / d * 7 * m).toFixed(1) + "px");
         eyes.style.setProperty("--ey", (dy / d * 4 * m).toFixed(1) + "px");
-        lastFollow = Date.now();
       }
+      /* Nothing moving for 12s → lights out (not while the window is open). */
+      setInterval(function () {
+        if (!asleep && pop.hidden && Date.now() - lastFollow > 12000 && Date.now() > dizzyUntil) {
+          asleep = true;
+          btn.classList.add("is-asleep");
+        }
+      }, 1000);
       window.addEventListener("pointermove", function (e) { gaze(e.clientX, e.clientY); }, { passive: true });
       window.addEventListener("touchstart", function (e) {
         if (e.touches && e.touches[0]) gaze(e.touches[0].clientX, e.touches[0].clientY);
@@ -939,7 +992,7 @@
         if (e.touches && e.touches[0]) gaze(e.touches[0].clientX, e.touches[0].clientY);
       }, { passive: true });
       setInterval(function () {
-        if (Date.now() - lastFollow < 4000) return;
+        if (asleep || Date.now() < dizzyUntil || Date.now() - lastFollow < 4000) return;
         if (Math.random() < 0.72) {
           var a = Math.random() * Math.PI * 2;
           eyes.style.setProperty("--ex", (Math.cos(a) * (2 + Math.random() * 5)).toFixed(1) + "px");
@@ -951,6 +1004,7 @@
       }, 2100);
       (function blink() {
         setTimeout(function () {
+          if (asleep || Date.now() < dizzyUntil) { blink(); return; }
           eyes.classList.add("is-blink");
           setTimeout(function () {
             eyes.classList.remove("is-blink");
