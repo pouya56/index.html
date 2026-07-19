@@ -144,10 +144,16 @@
   /* Bar width lives in --sbw; centred on the PAGE by margin math (auto
      margins left-align an overflowing child, which pushed it off-centre
      on phones before). Phones: near-full width. Desktop: half the window. */
-  .dyn-hero.dh-landing .dh-search { --sbw: min(96vw, 640px); width: var(--sbw); max-width: none;
+  .dyn-hero.dh-landing .dh-search { --sbw: 100%; width: var(--sbw); max-width: none;
     margin-top: 30px; margin-bottom: 30px;
     margin-left: calc(50% - var(--sbw) / 2); margin-right: 0; }
   @media (min-width: 900px) { .dyn-hero.dh-landing .dh-search { --sbw: min(48vw, 1200px); } }
+  /* Phones: the landing hero is the whole show — no page scrolling until a
+     search reveals results (the dh-searching class lifts the lock). */
+  @media (max-width: 899px) {
+    html:has(.dyn-hero.dh-landing:not(.dh-searching)) { overflow: hidden; height: 100%; overscroll-behavior: none; }
+    html:has(.dyn-hero.dh-landing:not(.dh-searching)) body { overflow: hidden; height: 100%; overscroll-behavior: none; }
+  }
 
   /* Stacking order over the floating photos (z 1): the search bar is the
      boss (12), the buttons come second (11), the logo third (10). */
