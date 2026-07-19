@@ -379,17 +379,20 @@ button { font-family: inherit; cursor: pointer; }
   background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff);
   background-size: 300% 100%;
   animation: dynSiri 6s linear infinite;
-  filter: blur(9px); opacity: 0; transition: opacity .35s ease;
+  filter: blur(7px); opacity: 0; transition: opacity .35s ease;
 }
-#customizeBtn.btn-primary:hover::before, #pageAddCart.btn-primary:hover::before { opacity: 0.95; }
+#customizeBtn.btn-primary:hover::before, #pageAddCart.btn-primary:hover::before { opacity: 0.7; }
 @keyframes dynSiri { 0% { background-position: 0% 0; } 100% { background-position: 300% 0; } }
 @media (prefers-reduced-motion: reduce) {
   #customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before { animation: none; }
 }
 #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after { display: none; }
 #customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover {
-  background: rgba(255, 255, 255, 0.32); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.32);
+  transform: translateY(-1.5px);
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.18);
 }
+#customizeBtn.btn-primary:active, #pageAddCart.btn-primary:active { transform: scale(0.97); }
 /* "Add design" (popup) — liquid glass, same recipe as Customize / Add to
    Cart and the hero's Surprise-me button: matte frost, thin bright rim,
    soft shadow, rainbow glow on hover. */
@@ -410,13 +413,16 @@ button { font-family: inherit; cursor: pointer; }
   background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff);
   background-size: 300% 100%;
   animation: dynSiri 6s linear infinite;
-  filter: blur(9px); opacity: 0; transition: opacity .35s ease;
+  filter: blur(7px); opacity: 0; transition: opacity .35s ease;
 }
-#uploadApply.btn-primary:hover:not([disabled])::before { opacity: 0.95; }
+#uploadApply.btn-primary:hover:not([disabled])::before { opacity: 0.7; }
 @media (prefers-reduced-motion: reduce) { #uploadApply.btn-primary::before { animation: none; } }
 #uploadApply.btn-primary:hover:not([disabled]) {
-  background: rgba(255, 255, 255, 0.32); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.32);
+  transform: translateY(-1.5px);
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.18);
 }
+#uploadApply.btn-primary:active:not([disabled]) { transform: scale(0.97); }
 #uploadApply.btn-primary[disabled] { opacity: 0.55; }
 .btn-secondary {
   background: transparent; color: var(--accent);

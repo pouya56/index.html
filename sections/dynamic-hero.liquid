@@ -220,8 +220,11 @@
     background: rgba(255,255,255,0.16); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
     box-shadow: 0 14px 44px rgba(0,0,0,0.12);
     transition: transform .12s ease, box-shadow .16s, background .16s; }
-  .dyn-hero .dh-gbtn:hover { background: rgba(255,255,255,0.32); box-shadow: 0 16px 48px rgba(0,0,0,0.14); }
-  .dyn-hero .dh-gbtn:active { transform: scale(0.97); }
+  /* Hover lift composes with the drag offset vars so moved buttons stay put. */
+  .dyn-hero .dh-gbtn:hover { background: rgba(255,255,255,0.32);
+    transform: translate(var(--ddx, 0px), var(--ddy, 0px)) scale(var(--dds, 1)) translateY(-1.5px);
+    box-shadow: 0 18px 52px rgba(0,0,0,0.18); }
+  .dyn-hero .dh-gbtn:active { transform: translate(var(--ddx, 0px), var(--ddy, 0px)) scale(0.97); }
   /* Matte glass: no gloss streak. */
   .dyn-hero .dh-gbtn::after { display: none; }
   /* "Surprise me" gooey/liquid hover — blobs merge behind the button (Skiper64) */
@@ -237,8 +240,8 @@
   .dyn-hero #dhBtnRandom { overflow: visible; position: relative; z-index: 1; }
   .dyn-hero #dhBtnRandom::before { content: ""; position: absolute; inset: -4px; border-radius: 22px; z-index: -1; pointer-events: none;
     background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff); background-size: 300% 100%;
-    animation: dhSiri 6s linear infinite; filter: blur(9px); opacity: 0; transition: opacity .35s ease; }
-  .dyn-hero #dhBtnRandom:hover::before { opacity: 0.95; }
+    animation: dhSiri 6s linear infinite; filter: blur(7px); opacity: 0; transition: opacity .35s ease; }
+  .dyn-hero #dhBtnRandom:hover::before { opacity: 0.7; }
   @media (prefers-reduced-motion: reduce) { .dyn-hero #dhBtnRandom::before { animation: none; } }
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dyn-hero .dh-gbtn { background: #fff; border-color: var(--line); } }
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-gbtn::after { filter: none; } }
