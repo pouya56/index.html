@@ -623,6 +623,19 @@
     .dyn-abar .dh-vprev-hold[hidden] { display: none; }
     .dyn-abar .dh-vload { color: #66666b; font-size: 14px; padding: 42px 10px; text-align: center; }
     .dyn-abar .dh-vprev-ext { color: #66666b; font-size: 14px; padding: 34px 10px; text-align: center; }
+    /* The account page sheds its own chrome inside the window — the pills
+       above do the navigating, so only the active panel shows. */
+    .dyn-abar .dh-vprev-hold .dyn-acct .da-topbar,
+    .dyn-abar .dh-vprev-hold .dyn-acct .da-nav { display: none !important; }
+    .dyn-abar .dh-vprev-hold .dyn-acct .da-wrap { display: block; padding: 0; }
+    /* In-window sign-in card (Shopify's secure login can't be embedded —
+       one clean button instead of a broken frame). */
+    .dyn-abar .dh-vauth { text-align: center; padding: 44px 20px 50px; }
+    .dyn-abar .dh-vauth h3 { color: #1d1d1f; font-size: 21px; margin: 0 0 10px; }
+    .dyn-abar .dh-vauth p { color: #66666b; font-size: 14.5px; margin: 0 auto 22px; max-width: 380px; line-height: 1.5; }
+    .dyn-abar .dh-vauth-btn { display: inline-block; background: rgba(42, 42, 47, 0.9); color: #fff;
+      text-decoration: none; border-radius: 999px; padding: 14px 26px; font-size: 15px; font-weight: 600; }
+    .dyn-abar .dh-vauth-btn:hover { background: #1d1d1f; }
     /* The bar can hold many tabs — it scrolls quietly if the screen is short. */
     .dyn-abar .dh-vbar { max-height: calc(100vh - 24px); overflow-y: auto;
       scrollbar-width: none; -ms-overflow-style: none; }
@@ -1189,6 +1202,8 @@
     atabs.hidden = true;
     Array.prototype.forEach.call(document.querySelectorAll(".dyn-abar .dh-acct-pop a"), function (a) {
       var label = (a.textContent || "").trim(), href = a.getAttribute("href") || "#";
+      /* Saved has its own core tab — no Wishlist pill here. */
+      if (label.toLowerCase() === "wishlist" || href.indexOf("tab=wishlist") !== -1) return;
       var abs = href, ext = false;
       try {
         var u = new URL(href, location.href);
@@ -1196,7 +1211,9 @@
         ext = u.host !== location.host;
       } catch (eA) {}
       vAcct.push({ href: abs, label: label, ext: ext,
-        nav: /logout|\/account\/login/.test(abs) });
+        nav: /logout/.test(abs),
+        auth: /account\/login|customer_authentication|\/authentication/.test(abs) ||
+          a.classList.contains("dh-pop-cta") });
     });
     pop.appendChild(atabs);
     atabs.innerHTML = vAcct.map(function (ap, i) {
@@ -1775,6 +1792,19 @@
         vprev.querySelector(".dh-vprev-open").setAttribute("href", page.href);
         var hold = vprev.querySelector(".dh-vprev-hold");
         var extN = vprev.querySelector(".dh-vprev-ext");
+        if (page.auth) {
+          /* Shopify's secure sign-in can't be embedded — show a clean card
+             with one button instead of a broken load. */
+          hold.hidden = false;
+          extN.hidden = true;
+          if (vprev.getAttribute("data-url") !== "auth:" + page.href) {
+            vprev.setAttribute("data-url", "auth:" + page.href);
+            hold.innerHTML = '<div class="dh-vauth"><h3>Sign in to {{ shop.name | escape }}</h3>' +
+              '<p>Shopify emails you a secure one-time code \u2014 no password to remember.</p>' +
+              '<a class="dh-vauth-btn" href="' + vEsc(page.href) + '">Continue to secure sign-in</a></div>';
+          }
+          return;
+        }
         hold.hidden = !!page.ext;
         extN.hidden = !page.ext;
         /* The page's ACTUAL content, live in the glass: fetch the page,
@@ -1805,6 +1835,18 @@
             Array.prototype.forEach.call(hold.querySelectorAll(".dynaeimic-story"), function (el) {
               el.classList.add("ds-theme-light");
             });
+            /* Deep-linked tabs (?tab=...) activate inside the window — the
+               page's own script reads the browser URL, which is still the
+               page we're standing on. */
+            var mT = (page.href.match(/[?&]tab=([^&#]+)/) || [])[1];
+            if (mT) {
+              Array.prototype.forEach.call(hold.querySelectorAll(".da-tab"), function (tEl) {
+                tEl.classList.toggle("is-active", tEl.getAttribute("data-tab") === mT);
+              });
+              Array.prototype.forEach.call(hold.querySelectorAll(".da-panel"), function (pn) {
+                pn.classList.toggle("is-active", pn.getAttribute("data-panel") === mT);
+              });
+            }
             paintVision();
           }).catch(function () {
             hold.innerHTML = '<div class="dh-vload">Couldn\u2019t load the page \u2014 use Open page.</div>';
