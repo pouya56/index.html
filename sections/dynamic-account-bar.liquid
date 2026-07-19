@@ -80,7 +80,7 @@
     .dyn-abar .dh-orb-eyes { display: flex; gap: 9px; align-items: center; justify-content: center;
       position: relative; z-index: 1;
       transform: translate(var(--ex, 0px), var(--ey, 0px));
-      transition: transform 0.55s cubic-bezier(0.3, 0.9, 0.3, 1); }
+      transition: transform 0.3s cubic-bezier(0.3, 0.9, 0.3, 1); }
     .dyn-abar .dh-orb-eye { width: 9px; height: 23px; border-radius: 5px;
       background: linear-gradient(180deg, #ffffff 0%, #e8e8f0 55%, #b9b9c8 100%);
       box-shadow: 0 0 9px rgba(255, 255, 255, 0.4); transition: transform 0.09s ease; }
@@ -918,11 +918,30 @@
     }
     window.addEventListener("pointerup", endDrag, { passive: true });
     window.addEventListener("pointercancel", endDrag, { passive: true });
-    /* Bring the orb to life: eyes wander to a random glance every couple of
-       seconds (sometimes back to center) and blink at natural intervals. */
+    /* Bring the orb to life: the eyes follow the mouse (or the finger on
+       touch screens); when nobody has moved for a few seconds they wander
+       to random glances on their own. Blinks at natural intervals. */
     var eyes = btn.querySelector(".dh-orb-eyes");
     if (eyes && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+      var lastFollow = 0;
+      function gaze(px, py) {
+        var r = btn.getBoundingClientRect();
+        var dx = px - (r.left + r.width / 2), dy = py - (r.top + r.height / 2);
+        var d = Math.sqrt(dx * dx + dy * dy) || 1;
+        var m = Math.min(1, d / 110);
+        eyes.style.setProperty("--ex", (dx / d * 7 * m).toFixed(1) + "px");
+        eyes.style.setProperty("--ey", (dy / d * 4 * m).toFixed(1) + "px");
+        lastFollow = Date.now();
+      }
+      window.addEventListener("pointermove", function (e) { gaze(e.clientX, e.clientY); }, { passive: true });
+      window.addEventListener("touchstart", function (e) {
+        if (e.touches && e.touches[0]) gaze(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      window.addEventListener("touchmove", function (e) {
+        if (e.touches && e.touches[0]) gaze(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
       setInterval(function () {
+        if (Date.now() - lastFollow < 4000) return;
         if (Math.random() < 0.72) {
           var a = Math.random() * Math.PI * 2;
           eyes.style.setProperty("--ex", (Math.cos(a) * (2 + Math.random() * 5)).toFixed(1) + "px");
