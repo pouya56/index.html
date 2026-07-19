@@ -544,6 +544,16 @@
       .dyn-abar .dh-vbar, .dyn-abar .dh-menu .dh-apps-pop.is-vision { background: rgba(255, 255, 255, 0.93); }
     }
     .dyn-abar .dh-apps-pop.is-vision .dh-pop-x, .dyn-abar .dh-apps-pop.is-vision > .dh-pop-title { display: none; }
+    /* In-window page tabs (Apps view): "All" plus each page as a pill
+       across the top of the window; the chosen page renders below in this
+       same window. */
+    .dyn-abar .dh-ptabs { display: none; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .dyn-abar .dh-apps-pop.is-vision.is-ptabs .dh-ptabs { display: flex; }
+    .dyn-abar .dh-ptab { border: none; border-radius: 999px; padding: 9px 15px; cursor: pointer;
+      font: 600 13.5px/1 -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
+      background: rgba(255, 255, 255, 0.5); color: #3a3a3f; transition: background 0.15s, color 0.15s; }
+    .dyn-abar .dh-ptab:hover { background: rgba(255, 255, 255, 0.78); color: #1d1d1f; }
+    .dyn-abar .dh-ptab.is-on { background: rgba(42, 42, 47, 0.85); color: #fff; }
     /* Saved & Cart tabs: every item is its own glass tile in a grid. */
     .dyn-abar .dh-vgrid[hidden] { display: none; }
     .dyn-abar .dh-vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
@@ -1138,6 +1148,10 @@
       else t.textContent = (label.charAt(0) || "\u2022").toUpperCase();
       vbar.appendChild(t);
     });
+    /* The Apps window's own page tabs: All (the grid) + every same-shop,
+       non-home app by name. */
+    var ptabs = document.createElement("div");
+    ptabs.className = "dh-ptabs";
     var vprev = document.createElement("div");
     vprev.className = "dh-vprev";
     vprev.hidden = true;
@@ -1145,7 +1159,20 @@
       '<a class="dh-vprev-open">Open page</a></div>' +
       '<div class="dh-vprev-hold"></div>' +
       '<div class="dh-vprev-ext" hidden>This link opens outside the shop \u2014 use Open page.</div>';
+    pop.insertBefore(ptabs, pop.firstChild);
     pop.appendChild(vprev);
+    ptabs.innerHTML = '<button type="button" class="dh-ptab is-on" data-vtab="apps">All</button>' +
+      vApps.map(function (ap, i) {
+        if (ap.ext || ap.home) return "";
+        return '<button type="button" class="dh-ptab" data-vtab="app-' + i + '">' + vEsc(ap.label) + "</button>";
+      }).join("");
+    ptabs.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var t = e.target.closest ? e.target.closest(".dh-ptab") : null;
+      if (!t) return;
+      pop.setAttribute("data-vtab", t.getAttribute("data-vtab"));
+      paintVision();
+    });
     /* Account tab: mirrors the corner account menu inside the window. */
     var vacct = document.createElement("div");
     vacct.className = "dh-vacct";
@@ -1673,6 +1700,11 @@
       });
       var app = tab.indexOf("app-") === 0 ? vApps[parseInt(tab.slice(4), 10)] : null;
       var isAcct = tab === "account", isSaved = tab === "saved", isCart = tab === "cart";
+      /* The Apps window carries its own page tabs on top. */
+      pop.classList.toggle("is-ptabs", tab === "apps" || !!app);
+      Array.prototype.forEach.call(ptabs.children, function (c) {
+        c.classList.toggle("is-on", c.getAttribute("data-vtab") === tab);
+      });
       vprev.hidden = !app;
       vacct.hidden = !isAcct;
       vgrid.hidden = !(isSaved || isCart);
