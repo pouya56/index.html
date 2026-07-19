@@ -877,16 +877,18 @@
            scaled down so the whole thing fits the phone screen. */
         pop.style.position = "fixed";
         pop.style.width = "590px";
-        pop.style.left = "8px"; pop.style.right = "auto"; pop.style.bottom = "auto";
+        pop.style.right = "auto"; pop.style.bottom = "auto";
         pop.style.transformOrigin = "top left";
         pop.style.maxHeight = "none";
-        /* Measure the real outer width (padding/borders included) so the
-           scaled window exactly spans the screen minus the 8px gutters. */
-        var s = (innerWidth - 16) / (pop.offsetWidth || 590);
+        /* Measure the real outer width (padding/borders included); fill
+           the screen minus gutters, then 20% smaller than that. */
+        var ow = pop.offsetWidth || 590;
+        var s = ((innerWidth - 16) / ow) * 0.8;
         pop.style.transform = "scale(" + s + ")";
         pop.style.animation = "none";
-        var vh = Math.min(pop.offsetHeight, 812) * s;
         /* Centered on the screen, wherever the button is. */
+        pop.style.left = Math.max(8, (innerWidth - ow * s) / 2) + "px";
+        var vh = Math.min(pop.offsetHeight, 812) * s;
         var top = Math.max(8, (innerHeight - vh) / 2);
         pop.style.top = top + "px";
         pop.style.maxHeight = Math.min(812, (innerHeight - top - 8) / s) + "px";
