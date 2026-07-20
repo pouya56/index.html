@@ -33,13 +33,13 @@
   /* Stickers: bare PNGs — no frame, no caption. A soft shadow lifts them
      off the photo. */
   .dyn-stc .sc-sticker { position: absolute; left: 50%; top: 50%; z-index: 2;
-    width: min(var(--scw, 200px), 40vw); height: auto;
+    width: clamp(40vw, var(--scw, 300px), 60vw); height: auto;
     transform: translate(-50%, -50%); will-change: transform; pointer-events: none;
     filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.28)); }
-  .dyn-stc .sc-ph { display: grid; place-items: center; width: min(var(--scw, 200px), 40vw);
+  .dyn-stc .sc-ph { display: grid; place-items: center; width: clamp(40vw, var(--scw, 300px), 60vw);
     aspect-ratio: 1; border-radius: 26% 74% 61% 39% / 55% 30% 70% 45%;
     background: linear-gradient(140deg, #e8e2f7, #d9e6f5); color: #86868b; font-size: 13px; }
-  @media (max-width: 640px) { .dyn-stc .sc-sticker, .dyn-stc .sc-ph { width: min(calc(var(--scw, 200px) * 0.62), 44vw); } }
+  @media (max-width: 640px) { .dyn-stc .sc-sticker, .dyn-stc .sc-ph { width: clamp(40vw, calc(var(--scw, 260px) * 0.62), 60vw); } }
   @media (prefers-reduced-motion: reduce) {
     .dyn-stc .sc-scroll { height: auto; }
     .dyn-stc .sc-stage { position: static; min-height: 92vh; }
@@ -88,15 +88,29 @@
     var sts = root.querySelectorAll(".sc-sticker");
     if (!scroller || !sts.length) return;
     var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    /* Resting spots (x in vw, y in vh from center): first ones ring the
-       heading, later ones close in over the middle. */
-    var SPOTS = [[-32, -26], [30, -28], [-34, 20], [32, 22], [-14, -32], [16, 30],
-      [-30, -2], [30, -3], [-8, 26], [10, -26], [-18, 8], [18, 6], [-4, -10], [6, 12], [0, 0]];
+    /* Resting spots (x in vw, y in vh from center): a 5×5 blanket over
+       the whole screen — outer ring lands first, the center is buried
+       last. 25 stickers leave no background showing. */
+    /* A concentric 5×5 blanket at 17.5vw / 17.5vh spacing: the outer ring
+       (16) lands first and seals the edges, the middle ring (8) fills next,
+       the centre lands last. Big overlapping shapes leave no background. */
+    var SPOTS = [
+      [-35, -35], [-17.5, -35], [0, -35], [17.5, -35], [35, -35],
+      [35, -17.5], [35, 0], [35, 17.5], [35, 35],
+      [17.5, 35], [0, 35], [-17.5, 35], [-35, 35],
+      [-35, 17.5], [-35, 0], [-35, -17.5],
+      [-14, -14], [0, -15], [14, -14], [15, 0],
+      [14, 14], [0, 15], [-14, 14], [-15, 0],
+      [0, 0]];
     var els = Array.prototype.map.call(sts, function (el, i) {
       var s = SPOTS[i % SPOTS.length];
-      var wob = (Math.floor(i / SPOTS.length) % 2) ? -4 : 3;
-      return { el: el, fx: s[0] + (i >= SPOTS.length ? wob : 0), fy: s[1] + (i >= SPOTS.length ? wob : 0),
-        rot: ((i * 47) % 25) - 12, dir: i % 4 };
+      var edge = (i % SPOTS.length) < 16;
+      var wob = (Math.floor(i / SPOTS.length) % 2) ? -6 : 5;
+      /* Jitter only the inner shapes — the edge ring stays put so the
+         border never opens up. */
+      var jx = edge ? 0 : ((i * 13) % 5) - 2, jy = edge ? 0 : ((i * 7) % 5) - 2;
+      return { el: el, fx: s[0] + jx + (i >= SPOTS.length ? wob : 0), fy: s[1] + jy + (i >= SPOTS.length ? wob : 0),
+        rot: ((i * 47) % 21) - 10, dir: i % 4 };
     });
     function place(p) {
       var n = els.length;
@@ -113,16 +127,22 @@
       });
     }
     if (reduce) { place(1); return; }
-    var tick = false;
+    /* Buttery motion: the displayed progress glides toward the real scroll
+       position a little each frame, so jumpy wheels and touch flicks still
+       produce silky sticker movement. */
+    var target = 0, cur = -1, raf = null;
+    function loop() {
+      cur += (target - cur) * 0.085;
+      if (Math.abs(target - cur) < 0.0006) { cur = target; place(cur); raf = null; return; }
+      place(cur);
+      raf = requestAnimationFrame(loop);
+    }
     function onScroll() {
-      if (tick) return;
-      tick = true;
-      requestAnimationFrame(function () {
-        tick = false;
-        var r = scroller.getBoundingClientRect();
-        var total = r.height - innerHeight;
-        place(total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 1);
-      });
+      var r = scroller.getBoundingClientRect();
+      var total = r.height - innerHeight;
+      target = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 1;
+      if (cur < 0) { cur = target; place(cur); }
+      if (!raf) raf = requestAnimationFrame(loop);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
@@ -137,7 +157,7 @@
   "tag": "section",
   "class": "dynamic-sticker-collage-section",
   "settings": [
-    { "type": "paragraph", "content": "Upload one background photo, then add a Sticker block per PNG. While scrolling, the stickers fly in from the edges and pile over the middle." },
+    { "type": "paragraph", "content": "Upload one background photo, then add a Sticker block per PNG. While scrolling, the stickers glide in from the edges and pile up \u2014 with 25 stickers the pile blankets the whole screen and the background disappears." },
     { "type": "image_picker", "id": "bg_image", "label": "Background photo (fills the screen)" },
     { "type": "range", "id": "veil", "label": "Darken background", "min": 0, "max": 60, "step": 5, "unit": "%", "default": 0 },
     { "type": "text", "id": "heading", "label": "Heading (gets covered by the pile)", "default": "The people behind it" },
@@ -151,7 +171,7 @@
       "type": "sticker", "name": "Sticker",
       "settings": [
         { "type": "image_picker", "id": "image", "label": "PNG image (transparent background)" },
-        { "type": "range", "id": "size", "label": "Size", "min": 90, "max": 360, "step": 10, "unit": "px", "default": 200 }
+        { "type": "range", "id": "size", "label": "Size", "min": 90, "max": 480, "step": 10, "unit": "px", "default": 240, "info": "Stickers never shrink below about a fifth of the screen, so 25 of them always blanket it fully." }
       ]
     }
   ],
@@ -159,9 +179,11 @@
     {
       "name": "Sticker collage",
       "blocks": [
-        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
-        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
-        { "type": "sticker" }, { "type": "sticker" }
+        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
+        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
+        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
+        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
+        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }
       ]
     }
   ]
