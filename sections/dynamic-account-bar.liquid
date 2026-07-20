@@ -87,8 +87,8 @@
     /* Each eye has a soft blue eyelid parked above it (clipped by the eye's
        overflow); emotions slide and tilt it into view. */
     .dyn-abar .dh-orb-eye::before { content: ""; position: absolute; left: -14%; right: -14%; top: -84%; height: 84%;
-      border-radius: 50%; background: linear-gradient(180deg, #a9c9f7 0%, #7fa9ec 100%);
-      box-shadow: 0 1px 3px rgba(30, 60, 120, 0.4); transform: translateY(0); transition: transform 0.3s ease;
+      border-radius: 50%; background: linear-gradient(180deg, #56565f 0%, #2e2e38 100%);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); transform: translateY(0); transition: transform 0.3s ease;
       /* Above the pupil — its transform lifts it into the same paint layer. */
       z-index: 2; }
     .dyn-abar .dh-orb-eye::after { content: ""; width: 12px; height: 16px; border-radius: 50%;
@@ -162,28 +162,29 @@
     .dyn-abar .dh-apps-menu { position: fixed; top: 12px; right: 12px; z-index: 2147483646;
       transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05), top 0.22s ease; }
     .dyn-abar .dh-apps-menu.is-dragging { transition: none; }
-    /* A glassy blue gift box with a pink ribbon bow on the lid — big
-       cartoon eyes, little brows and a smiling mouth on the front face. */
+    /* A black liquid-glass gift box with a gold ribbon bow on the lid —
+       big cartoon eyes, little brows and a smiling mouth on the front. */
     .dyn-abar .dh-apps-btn { width: 64px; height: 64px; border-radius: 22px; cursor: grab;
       /* touch-action lives HERE, not on the wrapper — the apps window is
          inside the wrapper and needs touch scrolling to work on phones. */
       touch-action: none;
       position: relative; overflow: visible; z-index: 1; color: #fff;
       --orb-bg:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.14) 20%, rgba(255, 255, 255, 0) 25%),
-        radial-gradient(90% 60% at 50% 4%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 55%),
-        radial-gradient(85% 85% at 80% 88%, rgba(190, 120, 255, 0.5), rgba(190, 120, 255, 0) 60%),
-        radial-gradient(70% 70% at 15% 82%, rgba(120, 225, 255, 0.42), rgba(120, 225, 255, 0) 55%),
-        linear-gradient(165deg, #8ec1ff 0%, #5b95ff 42%, #6b7bff 72%, #9a70ff 100%);
+        linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.09) 20%, rgba(255, 255, 255, 0) 25%),
+        radial-gradient(90% 60% at 50% 4%, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 55%),
+        radial-gradient(85% 85% at 80% 88%, rgba(232, 180, 80, 0.3), rgba(232, 180, 80, 0) 60%),
+        radial-gradient(70% 70% at 15% 82%, rgba(255, 216, 120, 0.18), rgba(255, 216, 120, 0) 55%),
+        linear-gradient(165deg, rgba(60, 60, 68, 0.9) 0%, rgba(30, 30, 36, 0.88) 45%, rgba(12, 12, 16, 0.92) 100%);
       background: var(--orb-bg);
-      border: 2px solid rgba(255, 255, 255, 0.55);
-      box-shadow: 0 0 26px rgba(120, 140, 255, 0.5), 0 14px 30px -10px rgba(40, 40, 120, 0.5),
-        inset 0 -10px 18px rgba(90, 60, 200, 0.35), inset 0 2px 8px rgba(255, 255, 255, 0.65); }
+      -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
+      border: 2px solid rgba(240, 205, 110, 0.55);
+      box-shadow: 0 0 26px rgba(232, 180, 80, 0.35), 0 14px 30px -10px rgba(0, 0, 0, 0.6),
+        inset 0 -10px 18px rgba(220, 170, 60, 0.2), inset 0 2px 8px rgba(255, 255, 255, 0.35); }
     /* Never white: the generic icon-button hover swaps in a frosty white
        background — re-assert his own body. */
     .dyn-abar .dh-apps-btn:hover { color: #fff; background: var(--orb-bg);
-      box-shadow: 0 0 34px rgba(130, 150, 255, 0.65), 0 16px 34px -10px rgba(40, 40, 120, 0.55),
-        inset 0 -10px 18px rgba(90, 60, 200, 0.4), inset 0 2px 8px rgba(255, 255, 255, 0.7); }
+      box-shadow: 0 0 34px rgba(240, 195, 90, 0.5), 0 16px 34px -10px rgba(0, 0, 0, 0.65),
+        inset 0 -10px 18px rgba(220, 170, 60, 0.26), inset 0 2px 8px rgba(255, 255, 255, 0.4); }
     .dyn-abar .dh-apps-btn:active { cursor: grabbing; }
     /* Clicking him lands like a punch: hard squash, knocked sideways, a
        springy recover with his eyes screwed shut — and only then does the
@@ -281,11 +282,11 @@
     /* The pink ribbon bow sits on the lid; pointer events pass through. */
     .dyn-abar .dh-orb-bow { position: absolute; left: 50%; top: -17px; transform: translateX(-50%);
       width: 58px; height: 27px; pointer-events: none; z-index: 2;
-      filter: drop-shadow(0 2px 3px rgba(150, 50, 180, 0.35)); }
+      filter: drop-shadow(0 2px 3px rgba(160, 110, 20, 0.45)); }
     .dyn-abar .dh-orb-bow svg { display: block; width: 100%; height: 100%; }
     /* Little dark brows over the eyes; anger and sadness tilt them. */
     .dyn-abar .dh-orb-brow { position: absolute; top: 9px; width: 13px; height: 8px;
-      border-top: 3px solid #232052; border-radius: 50% 50% 0 0; pointer-events: none; z-index: 2;
+      border-top: 3px solid #e2b654; border-radius: 50% 50% 0 0; pointer-events: none; z-index: 2;
       transition: transform 0.25s ease; }
     .dyn-abar .dh-orb-brow-l { left: 13px; transform: rotate(-9deg); }
     .dyn-abar .dh-orb-brow-r { right: 13px; transform: rotate(9deg); }
@@ -298,8 +299,8 @@
     /* Open smile with a glossy tongue; emotions reshape it. */
     .dyn-abar .dh-orb-mouth { position: absolute; left: 50%; bottom: 7px; transform: translateX(-50%);
       width: 22px; height: 11px; border-radius: 4px 4px 22px 22px / 3px 3px 18px 18px;
-      background: linear-gradient(180deg, #47204f 0%, #2a1140 60%); overflow: hidden;
-      box-shadow: inset 0 2px 3px rgba(10, 0, 30, 0.55), 0 1px 1.5px rgba(255, 255, 255, 0.4);
+      background: linear-gradient(180deg, #201724 0%, #0a060f 60%); overflow: hidden;
+      box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.7), 0 0 0 1.5px rgba(235, 195, 100, 0.5);
       pointer-events: none; z-index: 1;
       transition: width 0.25s ease, height 0.25s ease, border-radius 0.25s ease, transform 0.25s ease; }
     .dyn-abar .dh-orb-mouth::after { content: ""; position: absolute; left: 50%; bottom: -3px;
@@ -309,7 +310,7 @@
     .dyn-abar .dh-orb-eyes.is-sad ~ .dh-orb-mouth,
     .dyn-abar .dh-apps-btn.is-sad .dh-orb-mouth { width: 15px; height: 8px; bottom: 9px;
       border-radius: 18px 18px 4px 4px / 15px 15px 3px 3px;
-      background: linear-gradient(0deg, #47204f 0%, #2a1140 60%); }
+      background: linear-gradient(0deg, #201724 0%, #0a060f 60%); }
     .dyn-abar .dh-orb-eyes.is-sad ~ .dh-orb-mouth::after,
     .dyn-abar .dh-apps-btn.is-sad .dh-orb-mouth::after { display: none; }
     .dyn-abar .dh-orb-eyes.is-angry ~ .dh-orb-mouth { width: 18px; height: 4.5px; border-radius: 3px; }
@@ -318,7 +319,7 @@
     .dyn-abar .dh-orb-eyes.is-shocked ~ .dh-orb-mouth { width: 12px; height: 12px; border-radius: 50%; }
     .dyn-abar .dh-orb-eyes.is-yawn ~ .dh-orb-mouth { width: 15px; height: 16px; border-radius: 50%; }
     .dyn-abar .dh-orb-eyes.is-pleased ~ .dh-orb-mouth { width: 18px; height: 8px; background: none;
-      border: solid #2a1140; border-width: 0 0 3px 0; border-radius: 0 0 50% 50%;
+      border: solid #e2b654; border-width: 0 0 3px 0; border-radius: 0 0 50% 50%;
       box-shadow: none; overflow: visible; }
     .dyn-abar .dh-orb-eyes.is-pleased ~ .dh-orb-mouth::after { display: none; }
     .dyn-abar .dh-orb-eyes.is-dazed ~ .dh-orb-mouth { width: 12px; height: 5px; border-radius: 3px;
@@ -732,13 +733,13 @@
         <button type="button" class="dh-icon-btn dh-apps-btn" aria-haspopup="true" aria-expanded="false" aria-label="{{ section.settings.apps_title | default: 'Apps' | escape }}">
           <span class="dh-orb-bow" aria-hidden="true"><svg viewBox="0 0 120 56">
             <defs><linearGradient id="dynBowG" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#ffc4ef"/><stop offset="0.5" stop-color="#ff8ad4"/><stop offset="1" stop-color="#c98cff"/>
+              <stop offset="0" stop-color="#ffe9a8"/><stop offset="0.5" stop-color="#eebc4e"/><stop offset="1" stop-color="#c8922e"/>
             </linearGradient></defs>
-            <path d="M60 36 C 30 6, 8 12, 12 27 C 15 40, 40 44, 60 36 Z" fill="url(#dynBowG)" opacity="0.92" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
-            <path d="M60 36 C 90 6, 112 12, 108 27 C 105 40, 80 44, 60 36 Z" fill="url(#dynBowG)" opacity="0.92" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+            <path d="M60 36 C 30 6, 8 12, 12 27 C 15 40, 40 44, 60 36 Z" fill="url(#dynBowG)" opacity="0.92" stroke="rgba(255,240,200,0.85)" stroke-width="2"/>
+            <path d="M60 36 C 90 6, 112 12, 108 27 C 105 40, 80 44, 60 36 Z" fill="url(#dynBowG)" opacity="0.92" stroke="rgba(255,240,200,0.85)" stroke-width="2"/>
             <path d="M54 38 C 47 47, 40 51, 33 53 C 44 53, 53 48, 58 42 Z" fill="url(#dynBowG)" opacity="0.85"/>
             <path d="M66 38 C 73 47, 80 51, 87 53 C 76 53, 67 48, 62 42 Z" fill="url(#dynBowG)" opacity="0.85"/>
-            <ellipse cx="60" cy="34" rx="11" ry="9" fill="url(#dynBowG)" stroke="rgba(255,255,255,0.9)" stroke-width="2"/>
+            <ellipse cx="60" cy="34" rx="11" ry="9" fill="url(#dynBowG)" stroke="rgba(255,244,210,0.95)" stroke-width="2"/>
           </svg></span>
           <span class="dh-orb-brow dh-orb-brow-l" aria-hidden="true"></span>
           <span class="dh-orb-brow dh-orb-brow-r" aria-hidden="true"></span>
