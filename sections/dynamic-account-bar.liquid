@@ -608,6 +608,7 @@
     .dyn-abar .dh-apps-pop.is-vision.is-preview .dh-apps-grid { display: none; }
     .dyn-abar .dh-vprev[hidden] { display: none; }
     .dyn-abar .dh-vprev-top { display: flex; align-items: center; justify-content: flex-end; padding: 0 0 12px; }
+    .dyn-abar .dh-vprev-top[hidden] { display: none; }
     .dyn-abar .dh-vprev-open { width: 46px; height: 46px; border-radius: 50%; display: flex;
       align-items: center; justify-content: center; color: #1d1d1f;
       background: rgba(255, 255, 255, 0.78); box-shadow: 0 8px 20px -8px rgba(29, 29, 31, 0.35);
@@ -623,6 +624,23 @@
     .dyn-abar .dh-vprev-hold[hidden] { display: none; }
     .dyn-abar .dh-vload { color: #66666b; font-size: 14px; padding: 42px 10px; text-align: center; }
     .dyn-abar .dh-vprev-ext { color: #66666b; font-size: 14px; padding: 34px 10px; text-align: center; }
+    /* Log out confirmation card — centered in the glass. */
+    .dyn-abar .dh-vconfirm { max-width: 380px; margin: 10vh auto 0; text-align: center;
+      padding: 34px 26px; border-radius: 22px; background: rgba(255, 255, 255, 0.72);
+      box-shadow: 0 18px 40px -18px rgba(29, 29, 31, 0.35); }
+    .dyn-abar .dh-vconfirm h3 { margin: 0 0 8px; font-size: 22px; font-weight: 700; color: #1d1d1f; }
+    .dyn-abar .dh-vconfirm p { margin: 0 0 22px; font-size: 14px; color: #66666b; }
+    .dyn-abar .dh-vconfirm-row { display: flex; gap: 12px; justify-content: center; }
+    .dyn-abar .dh-vconfirm-yes, .dyn-abar .dh-vconfirm-no { display: inline-flex; align-items: center;
+      justify-content: center; min-width: 116px; padding: 12px 20px; border-radius: 999px;
+      font-size: 14px; font-weight: 600; border: 0; cursor: pointer; text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s; }
+    .dyn-abar .dh-vconfirm-yes { background: #c62828; color: #fff;
+      box-shadow: 0 10px 22px -10px rgba(198, 40, 40, 0.7); }
+    .dyn-abar .dh-vconfirm-yes:hover { background: #b71c1c; transform: translateY(-1px); }
+    .dyn-abar .dh-vconfirm-no { background: rgba(255, 255, 255, 0.85); color: #1d1d1f;
+      box-shadow: 0 8px 20px -10px rgba(29, 29, 31, 0.35); }
+    .dyn-abar .dh-vconfirm-no:hover { background: #fff; transform: translateY(-1px); }
     /* The account page sheds its own chrome inside the window — the pills
        above do the navigating, so only the active panel shows. */
     .dyn-abar .dh-vprev-hold .dyn-acct .da-topbar,
@@ -1204,13 +1222,15 @@
         abs = u.href;
         ext = u.host !== location.host;
       } catch (eA) {}
-      /* Off-site entries (Profile, Orders on shopify.com) and auth links
-         are plain doors — no window, straight to Shopify's page. */
-      vAcct.push({ href: abs, label: label, ext: ext,
-        nav: ext || /logout|account\/login|customer_authentication|\/authentication/.test(abs) ||
-          a.classList.contains("dh-pop-cta") });
+      /* Off-site entries (Orders, Profile on shopify.com) stay out of the
+         window — the corner menu still links there. */
+      if (ext) return;
+      var isOut = /logout/.test(abs);
+      vAcct.push({ href: abs, label: label, ext: false, confirm: isOut,
+        nav: !isOut && (/account\/login|customer_authentication|\/authentication/.test(abs) ||
+          a.classList.contains("dh-pop-cta")) });
     });
-    pop.appendChild(atabs);
+    pop.insertBefore(atabs, vprev);
     atabs.innerHTML = vAcct.map(function (ap, i) {
       return '<button type="button" class="dh-ptab" data-vtab="acct-' + i + '">' + vEsc(ap.label) + "</button>";
     }).join("");
@@ -1221,6 +1241,14 @@
       var ai = parseInt(t.getAttribute("data-vtab").slice(5), 10);
       if (vAcct[ai] && vAcct[ai].nav) { location.href = vAcct[ai].href; return; }
       pop.setAttribute("data-vtab", t.getAttribute("data-vtab"));
+      paintVision();
+    });
+    /* The logout card's Cancel steps back to the account pills. */
+    vprev.addEventListener("click", function (e) {
+      var cNo = e.target.closest ? e.target.closest(".dh-vconfirm-no") : null;
+      if (!cNo) return;
+      e.stopPropagation();
+      pop.setAttribute("data-vtab", "account");
       paintVision();
     });
     /* Saved & Cart tabs: item grid. */
@@ -1783,7 +1811,25 @@
           vFill(items, "Your cart is empty.", {{ routes.cart_url | json }});
         }).catch(function () { vFill([], "Your cart is empty.", {{ routes.cart_url | json }}); });
       }
-      if (page) {
+      if (page && page.confirm) {
+        /* Log out asks first — a quiet card in the glass, never a fetch
+           (fetching the logout URL would sign them out on the spot). */
+        vprev.querySelector(".dh-vprev-top").hidden = true;
+        var holdC = vprev.querySelector(".dh-vprev-hold");
+        holdC.hidden = false;
+        vprev.querySelector(".dh-vprev-ext").hidden = true;
+        if (vprev.getAttribute("data-url") !== "confirm:" + page.href) {
+          vprev.setAttribute("data-url", "confirm:" + page.href);
+          holdC.innerHTML = '<div class="dh-vconfirm">' +
+            "<h3>Log out?</h3>" +
+            "<p>You\u2019ll be signed out of your account on this device.</p>" +
+            '<div class="dh-vconfirm-row">' +
+            '<a class="dh-vconfirm-yes" href="' + vEsc(page.href) + '">Log out</a>' +
+            '<button type="button" class="dh-vconfirm-no">Cancel</button>' +
+            "</div></div>";
+        }
+      } else if (page) {
+        vprev.querySelector(".dh-vprev-top").hidden = false;
         vprev.querySelector(".dh-vprev-open").setAttribute("href", page.href);
         var hold = vprev.querySelector(".dh-vprev-hold");
         var extN = vprev.querySelector(".dh-vprev-ext");
