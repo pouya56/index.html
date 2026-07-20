@@ -92,7 +92,9 @@
       /* Above the pupil — its transform lifts it into the same paint layer. */
       z-index: 2; }
     .dyn-abar .dh-orb-eye::after { content: ""; width: 12px; height: 16px; border-radius: 50%;
-      background: radial-gradient(55% 45% at 32% 26%, #4a4a55 0%, #15151c 45%, #060609 100%);
+      background:
+        radial-gradient(30% 22% at 64% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 75%),
+        radial-gradient(55% 45% at 32% 26%, #4a4a55 0%, #15151c 45%, #060609 100%);
       transform: translate(calc(var(--ex, 0px) * 0.5), calc(var(--ey, 0px) * 0.9));
       transition: transform 0.3s cubic-bezier(0.3, 0.9, 0.3, 1); }
     .dyn-abar .dh-orb-eyes.is-blink .dh-orb-eye { transform: scaleY(0.08); }
@@ -160,27 +162,28 @@
     .dyn-abar .dh-apps-menu { position: fixed; top: 12px; right: 12px; z-index: 2147483646;
       transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05), top 0.22s ease; }
     .dyn-abar .dh-apps-menu.is-dragging { transition: none; }
-    /* A dark glossy orb with purple and teal glow around the rim, like a
-       little face — the eyes above look around and blink. */
-    .dyn-abar .dh-apps-btn { width: 64px; height: 64px; border-radius: 50%; cursor: grab;
+    /* A glassy blue gift box with a pink ribbon bow on the lid — big
+       cartoon eyes, little brows and a smiling mouth on the front face. */
+    .dyn-abar .dh-apps-btn { width: 64px; height: 64px; border-radius: 22px; cursor: grab;
       /* touch-action lives HERE, not on the wrapper — the apps window is
          inside the wrapper and needs touch scrolling to work on phones. */
       touch-action: none;
       position: relative; overflow: visible; z-index: 1; color: #fff;
       --orb-bg:
-        radial-gradient(85% 85% at 68% 76%, rgba(178, 108, 255, 0.4), rgba(178, 108, 255, 0) 58%),
-        radial-gradient(75% 75% at 22% 72%, rgba(88, 216, 228, 0.28), rgba(88, 216, 228, 0) 55%),
-        radial-gradient(90% 90% at 32% 18%, rgba(130, 150, 255, 0.2), rgba(130, 150, 255, 0) 50%),
-        radial-gradient(120% 120% at 50% 38%, #24242e 0%, #0d0d14 72%);
+        linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.14) 20%, rgba(255, 255, 255, 0) 25%),
+        radial-gradient(90% 60% at 50% 4%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 55%),
+        radial-gradient(85% 85% at 80% 88%, rgba(190, 120, 255, 0.5), rgba(190, 120, 255, 0) 60%),
+        radial-gradient(70% 70% at 15% 82%, rgba(120, 225, 255, 0.42), rgba(120, 225, 255, 0) 55%),
+        linear-gradient(165deg, #8ec1ff 0%, #5b95ff 42%, #6b7bff 72%, #9a70ff 100%);
       background: var(--orb-bg);
-      border: 2px solid rgba(165, 165, 190, 0.4);
-      box-shadow: 0 0 26px rgba(150, 110, 255, 0.4), 0 14px 30px -10px rgba(0, 0, 0, 0.55),
-        inset 0 0 16px rgba(160, 120, 255, 0.22), inset 0 2px 6px rgba(255, 255, 255, 0.14); }
+      border: 2px solid rgba(255, 255, 255, 0.55);
+      box-shadow: 0 0 26px rgba(120, 140, 255, 0.5), 0 14px 30px -10px rgba(40, 40, 120, 0.5),
+        inset 0 -10px 18px rgba(90, 60, 200, 0.35), inset 0 2px 8px rgba(255, 255, 255, 0.65); }
     /* Never white: the generic icon-button hover swaps in a frosty white
        background — re-assert his own body. */
     .dyn-abar .dh-apps-btn:hover { color: #fff; background: var(--orb-bg);
-      box-shadow: 0 0 34px rgba(160, 120, 255, 0.55), 0 16px 34px -10px rgba(0, 0, 0, 0.6),
-        inset 0 0 16px rgba(160, 120, 255, 0.28), inset 0 2px 6px rgba(255, 255, 255, 0.14); }
+      box-shadow: 0 0 34px rgba(130, 150, 255, 0.65), 0 16px 34px -10px rgba(40, 40, 120, 0.55),
+        inset 0 -10px 18px rgba(90, 60, 200, 0.4), inset 0 2px 8px rgba(255, 255, 255, 0.7); }
     .dyn-abar .dh-apps-btn:active { cursor: grabbing; }
     /* Clicking him lands like a punch: hard squash, knocked sideways, a
        springy recover with his eyes screwed shut — and only then does the
@@ -275,11 +278,63 @@
       animation: abTear 2s ease-in 0.35s; }
     @keyframes abTear { 0% { opacity: 0; transform: translateY(0); }
       18% { opacity: 1; } 100% { opacity: 0; transform: translateY(17px); } }
+    /* The pink ribbon bow sits on the lid; pointer events pass through. */
+    .dyn-abar .dh-orb-bow { position: absolute; left: 50%; top: -17px; transform: translateX(-50%);
+      width: 58px; height: 27px; pointer-events: none; z-index: 2;
+      filter: drop-shadow(0 2px 3px rgba(150, 50, 180, 0.35)); }
+    .dyn-abar .dh-orb-bow svg { display: block; width: 100%; height: 100%; }
+    /* Little dark brows over the eyes; anger and sadness tilt them. */
+    .dyn-abar .dh-orb-brow { position: absolute; top: 9px; width: 13px; height: 8px;
+      border-top: 3px solid #232052; border-radius: 50% 50% 0 0; pointer-events: none; z-index: 2;
+      transition: transform 0.25s ease; }
+    .dyn-abar .dh-orb-brow-l { left: 13px; transform: rotate(-9deg); }
+    .dyn-abar .dh-orb-brow-r { right: 13px; transform: rotate(9deg); }
+    .dyn-abar .dh-apps-btn.is-angry .dh-orb-brow-l { transform: rotate(20deg) translateY(3px); }
+    .dyn-abar .dh-apps-btn.is-angry .dh-orb-brow-r { transform: rotate(-20deg) translateY(3px); }
+    .dyn-abar .dh-apps-btn.is-sad .dh-orb-brow-l { transform: rotate(-20deg) translateY(2px); }
+    .dyn-abar .dh-apps-btn.is-sad .dh-orb-brow-r { transform: rotate(20deg) translateY(2px); }
+    /* Eyes ride a touch higher to make room for the mouth. */
+    .dyn-abar .dh-orb-eyes { margin-top: -6px; }
+    /* Open smile with a glossy tongue; emotions reshape it. */
+    .dyn-abar .dh-orb-mouth { position: absolute; left: 50%; bottom: 7px; transform: translateX(-50%);
+      width: 22px; height: 11px; border-radius: 4px 4px 22px 22px / 3px 3px 18px 18px;
+      background: linear-gradient(180deg, #47204f 0%, #2a1140 60%); overflow: hidden;
+      box-shadow: inset 0 2px 3px rgba(10, 0, 30, 0.55), 0 1px 1.5px rgba(255, 255, 255, 0.4);
+      pointer-events: none; z-index: 1;
+      transition: width 0.25s ease, height 0.25s ease, border-radius 0.25s ease, transform 0.25s ease; }
+    .dyn-abar .dh-orb-mouth::after { content: ""; position: absolute; left: 50%; bottom: -3px;
+      transform: translateX(-50%); width: 14px; height: 8px;
+      border-radius: 50% 50% 40% 40%; background: linear-gradient(180deg, #ff6f9d, #e73f78);
+      box-shadow: inset 0 2px 2px rgba(255, 255, 255, 0.45); }
+    .dyn-abar .dh-orb-eyes.is-sad ~ .dh-orb-mouth,
+    .dyn-abar .dh-apps-btn.is-sad .dh-orb-mouth { width: 15px; height: 8px; bottom: 9px;
+      border-radius: 18px 18px 4px 4px / 15px 15px 3px 3px;
+      background: linear-gradient(0deg, #47204f 0%, #2a1140 60%); }
+    .dyn-abar .dh-orb-eyes.is-sad ~ .dh-orb-mouth::after,
+    .dyn-abar .dh-apps-btn.is-sad .dh-orb-mouth::after { display: none; }
+    .dyn-abar .dh-orb-eyes.is-angry ~ .dh-orb-mouth { width: 18px; height: 4.5px; border-radius: 3px; }
+    .dyn-abar .dh-orb-eyes.is-angry ~ .dh-orb-mouth::after { display: none; }
+    .dyn-abar .dh-orb-eyes.is-surprised ~ .dh-orb-mouth,
+    .dyn-abar .dh-orb-eyes.is-shocked ~ .dh-orb-mouth { width: 12px; height: 12px; border-radius: 50%; }
+    .dyn-abar .dh-orb-eyes.is-yawn ~ .dh-orb-mouth { width: 15px; height: 16px; border-radius: 50%; }
+    .dyn-abar .dh-orb-eyes.is-pleased ~ .dh-orb-mouth { width: 18px; height: 8px; background: none;
+      border: solid #2a1140; border-width: 0 0 3px 0; border-radius: 0 0 50% 50%;
+      box-shadow: none; overflow: visible; }
+    .dyn-abar .dh-orb-eyes.is-pleased ~ .dh-orb-mouth::after { display: none; }
+    .dyn-abar .dh-orb-eyes.is-dazed ~ .dh-orb-mouth { width: 12px; height: 5px; border-radius: 3px;
+      transform: translateX(-50%) rotate(-8deg); }
+    .dyn-abar .dh-orb-eyes.is-dazed ~ .dh-orb-mouth::after { display: none; }
+    .dyn-abar .dh-apps-btn.is-asleep .dh-orb-mouth { width: 9px; height: 6px; border-radius: 50%; }
+    .dyn-abar .dh-apps-btn.is-asleep .dh-orb-mouth::after,
+    .dyn-abar .dh-apps-btn.is-bored .dh-orb-mouth::after { display: none; }
+    .dyn-abar .dh-apps-btn.is-bored .dh-orb-mouth { width: 14px; height: 6px; }
+    .dyn-abar .dh-orb-eyes.is-happy ~ .dh-orb-mouth,
+    .dyn-abar .dh-orb-eyes.is-excited ~ .dh-orb-mouth { width: 26px; height: 14px; }
     /* Siri ring: a thin rainbow band spinning around the tray's edge.
        The gradient angle animates (not the element — rotating a square mask
        would poke through the corners). */
     @property --abA { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-    .dyn-abar .dh-apps-btn::before { content: ""; display: none; position: absolute; inset: -3px; border-radius: 50%;
+    .dyn-abar .dh-apps-btn::before { content: ""; display: none; position: absolute; inset: -3px; border-radius: inherit;
       z-index: -1; pointer-events: none; padding: 3px;
       background: conic-gradient(from var(--abA), #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff);
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -514,6 +569,21 @@
       .dyn-abar .dh-apps-btn.is-asleep::after, .dyn-abar .dh-apps-btn.is-happy::after { font-size: 22px; }
       .dyn-abar .dh-orb-eyes.is-nervous::after { width: 9px; height: 12px; right: -12px; top: -10px; }
       .dyn-abar .dh-orb-eyes.is-sad::before { width: 7.5px; height: 10px; right: 5px; top: 21px; }
+      .dyn-abar .dh-apps-btn { border-radius: 30px; }
+      .dyn-abar .dh-orb-bow { width: 86px; height: 40px; top: -25px; }
+      .dyn-abar .dh-orb-brow { top: 14px; width: 20px; height: 12px; border-top-width: 4.5px; }
+      .dyn-abar .dh-orb-brow-l { left: 20px; }
+      .dyn-abar .dh-orb-brow-r { right: 20px; }
+      .dyn-abar .dh-orb-eyes { margin-top: -9px; }
+      .dyn-abar .dh-orb-mouth { bottom: 10px; width: 33px; height: 16px;
+        border-radius: 6px 6px 33px 33px / 4px 4px 27px 27px; }
+      .dyn-abar .dh-orb-mouth::after { width: 21px; height: 12px; bottom: -4px; }
+      .dyn-abar .dh-orb-eyes.is-happy ~ .dh-orb-mouth,
+      .dyn-abar .dh-orb-eyes.is-excited ~ .dh-orb-mouth { width: 39px; height: 21px; }
+      .dyn-abar .dh-orb-eyes.is-angry ~ .dh-orb-mouth { width: 27px; height: 7px; }
+      .dyn-abar .dh-orb-eyes.is-surprised ~ .dh-orb-mouth,
+      .dyn-abar .dh-orb-eyes.is-shocked ~ .dh-orb-mouth { width: 18px; height: 18px; }
+      .dyn-abar .dh-orb-eyes.is-yawn ~ .dh-orb-mouth { width: 22px; height: 24px; }
     }
     /* Vision-style launcher (tablet/desktop): clicking the orb reveals a
        vertical glass tab bar above or below him; each tab opens one
@@ -660,7 +730,20 @@
     {%- if section.settings.show_apps -%}
       <div class="dh-menu dh-apps-menu">
         <button type="button" class="dh-icon-btn dh-apps-btn" aria-haspopup="true" aria-expanded="false" aria-label="{{ section.settings.apps_title | default: 'Apps' | escape }}">
+          <span class="dh-orb-bow" aria-hidden="true"><svg viewBox="0 0 120 56">
+            <defs><linearGradient id="dynBowG" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#ffc4ef"/><stop offset="0.5" stop-color="#ff8ad4"/><stop offset="1" stop-color="#c98cff"/>
+            </linearGradient></defs>
+            <path d="M60 36 C 30 6, 8 12, 12 27 C 15 40, 40 44, 60 36 Z" fill="url(#dynBowG)" opacity="0.92" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+            <path d="M60 36 C 90 6, 112 12, 108 27 C 105 40, 80 44, 60 36 Z" fill="url(#dynBowG)" opacity="0.92" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+            <path d="M54 38 C 47 47, 40 51, 33 53 C 44 53, 53 48, 58 42 Z" fill="url(#dynBowG)" opacity="0.85"/>
+            <path d="M66 38 C 73 47, 80 51, 87 53 C 76 53, 67 48, 62 42 Z" fill="url(#dynBowG)" opacity="0.85"/>
+            <ellipse cx="60" cy="34" rx="11" ry="9" fill="url(#dynBowG)" stroke="rgba(255,255,255,0.9)" stroke-width="2"/>
+          </svg></span>
+          <span class="dh-orb-brow dh-orb-brow-l" aria-hidden="true"></span>
+          <span class="dh-orb-brow dh-orb-brow-r" aria-hidden="true"></span>
           <span class="dh-orb-eyes" aria-hidden="true"><span class="dh-orb-eye"></span><span class="dh-orb-eye"></span></span>
+          <span class="dh-orb-mouth" aria-hidden="true"></span>
         </button>
         <div class="dh-pop dh-apps-pop" hidden>
           <button type="button" class="dh-pop-x" aria-label="Close">
