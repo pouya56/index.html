@@ -624,25 +624,8 @@
     .dyn-abar .dh-vprev-hold[hidden] { display: none; }
     .dyn-abar .dh-vload { color: #66666b; font-size: 14px; padding: 42px 10px; text-align: center; }
     .dyn-abar .dh-vprev-ext { color: #66666b; font-size: 14px; padding: 34px 10px; text-align: center; }
-    /* Log out confirmation card — centered in the glass. */
-    .dyn-abar .dh-vconfirm { max-width: 380px; margin: 10vh auto 0; text-align: center;
-      padding: 34px 26px; border-radius: 22px; background: rgba(255, 255, 255, 0.72);
-      box-shadow: 0 18px 40px -18px rgba(29, 29, 31, 0.35); }
-    .dyn-abar .dh-vconfirm h3 { margin: 0 0 8px; font-size: 22px; font-weight: 700; color: #1d1d1f; }
-    .dyn-abar .dh-vconfirm p { margin: 0 0 22px; font-size: 14px; color: #66666b; }
-    .dyn-abar .dh-vconfirm-row { display: flex; gap: 12px; justify-content: center; }
-    .dyn-abar .dh-vconfirm-yes, .dyn-abar .dh-vconfirm-no { display: inline-flex; align-items: center;
-      justify-content: center; min-width: 116px; padding: 12px 20px; border-radius: 999px;
-      font-size: 14px; font-weight: 600; border: 0; cursor: pointer; text-decoration: none;
-      transition: transform 0.15s, box-shadow 0.15s, background 0.15s; }
-    .dyn-abar .dh-vconfirm-yes { background: #c62828; color: #fff;
-      box-shadow: 0 10px 22px -10px rgba(198, 40, 40, 0.7); }
-    .dyn-abar .dh-vconfirm-yes:hover { background: #b71c1c; transform: translateY(-1px); }
-    .dyn-abar .dh-vconfirm-no { background: rgba(255, 255, 255, 0.85); color: #1d1d1f;
-      box-shadow: 0 8px 20px -10px rgba(29, 29, 31, 0.35); }
-    .dyn-abar .dh-vconfirm-no:hover { background: #fff; transform: translateY(-1px); }
-    /* The account page sheds its own chrome inside the window — the pills
-       above do the navigating, so only the active panel shows. */
+    /* The account page sheds its own chrome inside the window — only the
+       active panel (e.g. reviews) shows. */
     .dyn-abar .dh-vprev-hold .dyn-acct .da-topbar,
     .dyn-abar .dh-vprev-hold .dyn-acct .da-nav { display: none !important; }
     .dyn-abar .dh-vprev-hold .dyn-acct .da-wrap { display: block; padding: 0; }
@@ -1204,53 +1187,30 @@
       pop.setAttribute("data-vtab", t.getAttribute("data-vtab"));
       paintVision();
     });
-    /* Account tab: the corner menu's entries as pills on top; each page
-       opens below in this same window. Log out (and log in) navigate. */
+    /* Account: the person icon is a plain door — profile lives on
+       Shopify's own site (signed out it goes to secure login instead).
+       Reviews earns its own tab in the bar once they're signed in and
+       shows the reviews page in the glass window. */
     var vCust = {% if customer %}true{% else %}false{% endif %};
     var vLogin = {{ routes.account_login_url | json }};
-    var vAcct = [];
-    var atabs = document.createElement("div");
-    atabs.className = "dh-ptabs";
-    atabs.hidden = true;
+    var vProf = {{ routes.account_url | json }};
+    var vRev = null;
     Array.prototype.forEach.call(document.querySelectorAll(".dyn-abar .dh-acct-pop a"), function (a) {
-      var label = (a.textContent || "").trim(), href = a.getAttribute("href") || "#";
-      /* Saved has its own core tab — no Wishlist pill here. */
-      if (label.toLowerCase() === "wishlist" || href.indexOf("tab=wishlist") !== -1) return;
-      var abs = href, ext = false;
-      try {
-        var u = new URL(href, location.href);
-        abs = u.href;
-        ext = u.host !== location.host;
-      } catch (eA) {}
-      /* Off-site entries (Orders, Profile on shopify.com) stay out of the
-         window — the corner menu still links there. */
-      if (ext) return;
-      var isOut = /logout/.test(abs);
-      vAcct.push({ href: abs, label: label, ext: false, confirm: isOut,
-        nav: !isOut && (/account\/login|customer_authentication|\/authentication/.test(abs) ||
-          a.classList.contains("dh-pop-cta")) });
+      var label = (a.textContent || "").trim().toLowerCase();
+      var href = a.getAttribute("href") || "#", abs = href;
+      try { abs = new URL(href, location.href).href; } catch (eA) {}
+      if (label === "profile") vProf = abs;
+      if (label === "reviews" || /[?&]tab=reviews/.test(abs)) vRev = abs;
     });
-    pop.insertBefore(atabs, vprev);
-    atabs.innerHTML = vAcct.map(function (ap, i) {
-      return '<button type="button" class="dh-ptab" data-vtab="acct-' + i + '">' + vEsc(ap.label) + "</button>";
-    }).join("");
-    atabs.addEventListener("click", function (e) {
-      e.stopPropagation();
-      var t = e.target.closest ? e.target.closest(".dh-ptab") : null;
-      if (!t) return;
-      var ai = parseInt(t.getAttribute("data-vtab").slice(5), 10);
-      if (vAcct[ai] && vAcct[ai].nav) { location.href = vAcct[ai].href; return; }
-      pop.setAttribute("data-vtab", t.getAttribute("data-vtab"));
-      paintVision();
-    });
-    /* The logout card's Cancel steps back to the account pills. */
-    vprev.addEventListener("click", function (e) {
-      var cNo = e.target.closest ? e.target.closest(".dh-vconfirm-no") : null;
-      if (!cNo) return;
-      e.stopPropagation();
-      pop.setAttribute("data-vtab", "account");
-      paintVision();
-    });
+    if (vCust && vRev) {
+      var revT = document.createElement("button");
+      revT.type = "button";
+      revT.className = "dh-vtab";
+      revT.setAttribute("data-vtab", "reviews");
+      revT.setAttribute("aria-label", "Reviews");
+      revT.innerHTML = '<svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6L12 16.8 6.6 19.6l1.1-6L3.2 9.4l6.1-.8Z"/></svg>';
+      vbar.insertBefore(revT, vbar.querySelector('[data-vtab="account"]'));
+    }
     /* Saved & Cart tabs: item grid. */
     var vgrid = document.createElement("div");
     vgrid.className = "dh-vgrid";
@@ -1728,7 +1688,6 @@
         pop.classList.remove("is-vision");
         vbar.classList.remove("is-on");
         ptabs.hidden = true;
-        atabs.hidden = true;
         /* Full-page window: desktop layout scaled so its width spans the
            screen exactly, stretched to cover the full height; anything
            taller scrolls inside. */
@@ -1774,22 +1733,18 @@
         c.classList.toggle("is-on", c.getAttribute("data-vtab") === tab);
       });
       var app = tab.indexOf("app-") === 0 ? vApps[parseInt(tab.slice(4), 10)] : null;
-      var acct = tab.indexOf("acct-") === 0 ? vAcct[parseInt(tab.slice(5), 10)] : null;
-      var isAcct = tab === "account", isSaved = tab === "saved", isCart = tab === "cart";
-      var page = app || acct;
-      /* Which pill strip rides on top. */
+      var rev = tab === "reviews" && vRev ? { href: vRev, ext: false } : null;
+      var isSaved = tab === "saved", isCart = tab === "cart";
+      var page = app || rev;
+      /* The page-pill strip rides on top only for the Apps tabs. */
       ptabs.hidden = !(tab === "apps" || app);
-      atabs.hidden = !(isAcct || acct);
       Array.prototype.forEach.call(ptabs.children, function (c) {
-        c.classList.toggle("is-on", c.getAttribute("data-vtab") === tab);
-      });
-      Array.prototype.forEach.call(atabs.children, function (c) {
         c.classList.toggle("is-on", c.getAttribute("data-vtab") === tab);
       });
       vprev.hidden = !page;
       vgrid.hidden = !(isSaved || isCart);
       vgo.hidden = !(isSaved || isCart);
-      pop.classList.toggle("is-preview", !!page || isAcct || isSaved || isCart);
+      pop.classList.toggle("is-preview", !!page || isSaved || isCart);
       if (isSaved) {
         vgrid.setAttribute("data-kind", "saved");
         vgo.setAttribute("href", "/pages/wishlist");
@@ -1811,25 +1766,7 @@
           vFill(items, "Your cart is empty.", {{ routes.cart_url | json }});
         }).catch(function () { vFill([], "Your cart is empty.", {{ routes.cart_url | json }}); });
       }
-      if (page && page.confirm) {
-        /* Log out asks first — a quiet card in the glass, never a fetch
-           (fetching the logout URL would sign them out on the spot). */
-        vprev.querySelector(".dh-vprev-top").hidden = true;
-        var holdC = vprev.querySelector(".dh-vprev-hold");
-        holdC.hidden = false;
-        vprev.querySelector(".dh-vprev-ext").hidden = true;
-        if (vprev.getAttribute("data-url") !== "confirm:" + page.href) {
-          vprev.setAttribute("data-url", "confirm:" + page.href);
-          holdC.innerHTML = '<div class="dh-vconfirm">' +
-            "<h3>Log out?</h3>" +
-            "<p>You\u2019ll be signed out of your account on this device.</p>" +
-            '<div class="dh-vconfirm-row">' +
-            '<a class="dh-vconfirm-yes" href="' + vEsc(page.href) + '">Log out</a>' +
-            '<button type="button" class="dh-vconfirm-no">Cancel</button>' +
-            "</div></div>";
-        }
-      } else if (page) {
-        vprev.querySelector(".dh-vprev-top").hidden = false;
+      if (page) {
         vprev.querySelector(".dh-vprev-open").setAttribute("href", page.href);
         var hold = vprev.querySelector(".dh-vprev-hold");
         var extN = vprev.querySelector(".dh-vprev-ext");
@@ -1895,8 +1832,9 @@
       var t = e.target.closest ? e.target.closest(".dh-vtab") : null;
       if (!t || pop.hidden) return;
       var tid = t.getAttribute("data-vtab");
-      /* Signed out there's nothing to window — straight to secure login. */
-      if (tid === "account" && !vCust) { location.href = vLogin; return; }
+      /* The person icon is a door: profile on Shopify's site when signed
+         in, secure login when signed out. */
+      if (tid === "account") { location.href = vCust ? vProf : vLogin; return; }
       if (tid.indexOf("app-") === 0) {
         var tap = vApps[parseInt(tid.slice(4), 10)];
         /* Home is a plain door — no window, just go. */
