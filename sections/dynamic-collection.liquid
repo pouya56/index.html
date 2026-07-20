@@ -58,7 +58,7 @@
   .dyn-col.dc-landing .dc-corner-bl { bottom: 78px; left: 22px; }
   .dyn-col.dc-landing .dc-corner-br { bottom: 78px; right: 22px; }
   @media (max-width: 600px) { .dyn-col.dc-landing .dc-corner { font-size: 13px; } .dyn-col.dc-landing .dc-corner-bl, .dyn-col.dc-landing .dc-corner-br { bottom: 90px; } }
-  .dyn-col.dc-landing .dc-head .dc-head-logo { height: clamp(40px, 6.5vw, 60px); }
+  .dyn-col.dc-landing .dc-head .dc-head-logo { width: min(140px, 60vw); height: auto; }
   .dyn-col.dc-landing .dc-head .dc-head-video { max-height: clamp(120px, 30vh, 280px); max-width: min(88vw, 460px); }
   .dyn-col.dc-landing .dc-head h1 { font-size: clamp(30px, 5vw, 46px); }
   .dyn-col.dc-landing .dc-search { margin-top: 30px; margin-bottom: 30px; }
@@ -68,7 +68,8 @@
     line-height: 1.02; margin: 0; letter-spacing: -0.01em; }
   .dyn-col .dc-head .dc-desc { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 16px auto 0; max-width: 620px; }
   .dyn-col .dc-head .dc-head-logo-link { display: inline-block; line-height: 0; }
-  .dyn-col .dc-head .dc-head-logo { height: clamp(24px, 3.2vw, 34px); width: auto; max-width: min(60vw, 220px); object-fit: contain; margin: 0 auto; display: block; }
+  /* One standard logo size everywhere on the site: 140px wide. */
+  .dyn-col .dc-head .dc-head-logo { width: min(140px, 60vw); height: auto; object-fit: contain; margin: 0 auto; display: block; }
   .dyn-col .dc-head .dc-head-video { display: block; margin: 0 auto; width: auto; max-width: min(82vw, 360px);
     max-height: clamp(90px, 22vh, 220px); border-radius: 18px; object-fit: cover; background: transparent; }
 
@@ -465,6 +466,7 @@
   {%- endif -%}
   <div class="dc-wrap">
     <div class="dc-head">
+      {%- assign dc_logo = section.settings.heading_logo | default: settings.logo -%}
       {%- if section.settings.head_video != blank -%}
         <video class="dc-head-video" autoplay muted playsinline preload="metadata"
           {% if section.settings.head_video.preview_image %}poster="{{ section.settings.head_video.preview_image | image_url: width: 800 }}"{% endif %}>
@@ -472,9 +474,9 @@
             {%- if source.format == 'mp4' -%}<source src="{{ source.url }}" type="{{ source.mime_type }}">{%- endif -%}
           {%- endfor -%}
         </video>
-      {%- elsif section.settings.heading_logo != blank -%}
-        {%- assign hlw = section.settings.heading_logo.width | times: 56 | divided_by: section.settings.heading_logo.height -%}
-        <a href="{{ routes.root_url }}" class="dc-head-logo-link" aria-label="{{ shop.name | escape }} — home"><img class="dc-head-logo" src="{{ section.settings.heading_logo | image_url: width: 700 }}" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56"></a>
+      {%- elsif dc_logo != blank -%}
+        {%- assign hlw = dc_logo.width | times: 56 | divided_by: dc_logo.height -%}
+        <a href="{{ routes.root_url }}" class="dc-head-logo-link" aria-label="{{ shop.name | escape }} — home"><img class="dc-head-logo" src="{{ dc_logo | image_url: width: 700 }}" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56"></a>
       {%- else -%}
         <h1>{{ section.settings.heading | default: coll.title | default: 'Store' }}</h1>
       {%- endif -%}
@@ -530,10 +532,10 @@
       {%- if section.settings.show_tabs and tab_block_count > 0 -%}
         {%- comment -%} Image tabs: merchant-defined blocks with an uploaded picture per category. {%- endcomment -%}
         <div class="dc-tabs-wrap" id="dcTabsWrap">
-        {%- if section.settings.heading_logo != blank -%}
-          {%- assign bar_lw = section.settings.heading_logo.width | times: 40 | divided_by: section.settings.heading_logo.height -%}
+        {%- if dc_logo != blank -%}
+          {%- assign bar_lw = dc_logo.width | times: 40 | divided_by: dc_logo.height -%}
           <a href="{{ routes.root_url }}" class="dc-bar-logo" id="dcBarLogo" aria-label="{{ shop.name | escape }} — home">
-            <img src="{{ section.settings.heading_logo | image_url: width: 400 }}" alt="{{ shop.name | escape }}" width="{{ bar_lw }}" height="40" loading="lazy">
+            <img src="{{ dc_logo | image_url: width: 400 }}" alt="{{ shop.name | escape }}" width="{{ bar_lw }}" height="40" loading="lazy">
           </a>
         {%- endif -%}
         {%- if section.settings.show_search -%}
@@ -1568,7 +1570,7 @@
     { "type": "header", "content": "Content" },
     { "type": "collection", "id": "collection", "label": "Collection", "info": "Leave empty on a Collection template to use the current collection automatically." },
     { "type": "text", "id": "heading", "label": "Heading override", "info": "Leave empty to use the collection title." },
-    { "type": "image_picker", "id": "heading_logo", "label": "Logo instead of heading", "info": "Upload your logo to show it in place of the heading text." },
+    { "type": "image_picker", "id": "heading_logo", "label": "Logo instead of heading", "info": "Leave blank to use the logo from Theme settings → Logo (uploaded once for the whole site)." },
     { "type": "video", "id": "head_video", "label": "Video instead of logo", "info": "Plays muted on loop in place of the logo/heading. Takes priority over the logo when set." },
     { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },

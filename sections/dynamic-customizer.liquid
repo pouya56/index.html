@@ -1962,9 +1962,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   var img = document.createElement("img");
   img.src = {{ top_logo | image_url: width: 500 | json }};
   img.alt = {{ shop.name | json }};
-  img.width = {{ section.settings.top_logo_width | default: 130 }};
-  img.height = {{ section.settings.top_logo_width | default: 130 | divided_by: top_logo.aspect_ratio | round }};
-  img.style.width = "{{ section.settings.top_logo_width | default: 130 }}px";
+  img.width = {{ section.settings.top_logo_width | default: 140 }};
+  img.height = {{ section.settings.top_logo_width | default: 140 | divided_by: top_logo.aspect_ratio | round }};
+  img.style.width = "{{ section.settings.top_logo_width | default: 140 }}px";
   a.appendChild(img);
   {%- else -%}
   a.textContent = {{ shop.name | json }};
@@ -2225,7 +2225,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       "max": 260,
       "step": 5,
       "unit": "px",
-      "default": 130
+      "default": 140,
+      "info": "140px is the standard size used across the site."
     },
     {
       "type": "select",

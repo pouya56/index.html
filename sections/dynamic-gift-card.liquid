@@ -118,9 +118,10 @@
 
       <div class="gc-card">
         <div class="gc-card-top">
-          {%- if section.settings.logo != blank -%}
-            {%- assign logo_w = section.settings.logo.width | times: 26 | divided_by: section.settings.logo.height -%}
-            <img class="gc-logo{% if section.settings.logo_invert %} is-inverted{% endif %}" src="{{ section.settings.logo | image_url: width: 320 }}" alt="{{ shop.name | escape }}" width="{{ logo_w }}" height="26" loading="lazy">
+          {%- assign gc_logo = section.settings.logo | default: settings.logo -%}
+          {%- if gc_logo != blank -%}
+            {%- assign logo_w = gc_logo.width | times: 26 | divided_by: gc_logo.height -%}
+            <img class="gc-logo{% if section.settings.logo_invert %} is-inverted{% endif %}" src="{{ gc_logo | image_url: width: 320 }}" alt="{{ shop.name | escape }}" width="{{ logo_w }}" height="26" loading="lazy">
           {%- else -%}
             <span class="gc-brand">{{ shop.name }}</span>
           {%- endif -%}

@@ -110,7 +110,7 @@
 <section class="dbo" id="dboRoot" data-minqty="{{ section.settings.min_qty | default: 1 }}" data-notify="{{ notify_email }}">
   {%- assign bo_logo = section.settings.logo | default: settings.logo -%}
   {%- if section.settings.show_logo != false -%}
-    {%- assign lw = section.settings.logo_width | default: 130 -%}
+    {%- assign lw = section.settings.logo_width | default: 140 -%}
     <div class="dbo-topbar is-{{ section.settings.logo_align | default: 'center' }}">
       <a href="{{ routes.root_url }}" class="dbo-logo" aria-label="{{ shop.name | escape }} — home">
         {%- if bo_logo != blank -%}
@@ -444,7 +444,7 @@
     { "type": "header", "content": "Logo (links to home)" },
     { "type": "checkbox", "id": "show_logo", "label": "Show logo at top", "default": true },
     { "type": "image_picker", "id": "logo", "label": "Logo image", "info": "Leave empty to use your theme logo." },
-    { "type": "range", "id": "logo_width", "label": "Logo width", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 130 },
+    { "type": "range", "id": "logo_width", "label": "Logo width", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 140, "info": "140px is the standard size used across the site." },
     { "type": "select", "id": "logo_align", "label": "Logo position", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" } ], "default": "center" },
     { "type": "header", "content": "Order settings" },
     { "type": "collection", "id": "collection", "label": "Products available for bulk order", "info": "Choose a collection. Leave empty to allow all products." },

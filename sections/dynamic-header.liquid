@@ -27,7 +27,8 @@
   "cartUrl": {{ routes.cart_url | default: '/cart' | json }},
   "moneyFormat": {{ shop.money_format | json }},
   "currencyCode": {{ shop.currency | default: 'USD' | json }},
-  "logo": {% if section.settings.logo_image %}{{ section.settings.logo_image | image_url: width: 700 | json }}{% else %}""{% endif %},
+  {%- assign hd_logo = section.settings.logo_image | default: settings.logo -%}
+  "logo": {% if hd_logo %}{{ hd_logo | image_url: width: 700 | json }}{% else %}""{% endif %},
   "brandText": {{ section.settings.brand_text | default: 'DYNAEIMIC' | json }},
   "showSearch": false
 }
@@ -292,9 +293,9 @@
       <div class="gb-side gb-left">{{ left_html }}</div>
 
       {%- capture logo_inner -%}
-        {%- if section.settings.logo_image -%}
-          <img src="{{ section.settings.logo_image | image_url: width: 400 }}"
-            width="{{ section.settings.logo_image.width }}" height="{{ section.settings.logo_image.height }}"
+        {%- if hd_logo -%}
+          <img src="{{ hd_logo | image_url: width: 400 }}"
+            width="{{ hd_logo.width }}" height="{{ hd_logo.height }}"
             alt="{{ shop.name | escape }}">
         {%- else -%}
           <span class="gb-word brand-word">{{ section.settings.brand_text | default: 'DYNAEIMIC' }}</span>
@@ -1004,7 +1005,7 @@
     { "type": "checkbox", "id": "hide_on_home", "label": "Hide on the home page", "default": false, "info": "The header disappears on the home page (where the hero already shows your logo + search) but stays on every other page." },
     { "type": "checkbox", "id": "hide_on_password", "label": "Hide on the password page", "default": true, "info": "Hides the header on your store's password/coming-soon page." },
     { "type": "header", "content": "Logo" },
-    { "type": "image_picker", "id": "logo_image", "label": "Logo image (leave blank to show the wordmark below)" },
+    { "type": "image_picker", "id": "logo_image", "label": "Logo image", "info": "Leave blank to use the logo from Theme settings → Logo; the wordmark below shows only when neither is set. Sized to fit the glass bar automatically." },
     { "type": "text", "id": "brand_text", "label": "Wordmark (shown when no logo image)", "default": "DYNAEIMIC" },
     { "type": "url", "id": "logo_link", "label": "Logo links to" },
     { "type": "header", "content": "Search" },

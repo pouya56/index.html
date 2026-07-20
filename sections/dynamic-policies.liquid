@@ -33,7 +33,8 @@
 
   .dyn-pol .dp-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink);
     border-bottom: 1px solid var(--line); padding-bottom: clamp(16px, 2.4vw, 24px); margin-bottom: clamp(24px, 4vw, 40px); }
-  .dyn-pol .dp-brand-logo { height: 22px; width: auto; display: block; object-fit: contain; }
+  /* One standard logo size everywhere on the site: 140px wide. */
+  .dyn-pol .dp-brand-logo { width: min(140px, 60vw); height: auto; display: block; object-fit: contain; }
   .dyn-pol .dp-brand-txt { font-size: 13px; color: var(--ink-soft); letter-spacing: 0.02em; white-space: nowrap; }
   .dyn-pol .dp-head { padding-bottom: clamp(16px, 2.5vw, 26px); margin-bottom: clamp(20px, 3vw, 34px); }
   .dyn-pol .dp-eyebrow { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
@@ -90,11 +91,12 @@
 
 <section class="dyn-pol" id="dynPolicies">
   <div class="dp-wrap">
-    {%- if section.settings.logo_image != blank or section.settings.brand_text != blank -%}
+    {%- assign pol_logo = section.settings.logo_image | default: settings.logo -%}
+    {%- if pol_logo != blank or section.settings.brand_text != blank -%}
       <a class="dp-brand" href="{{ section.settings.brand_link | default: routes.root_url }}">
-        {%- if section.settings.logo_image != blank -%}
-          {%- assign lw = section.settings.logo_image.width | times: 22 | divided_by: section.settings.logo_image.height -%}
-          <img class="dp-brand-logo" src="{{ section.settings.logo_image | image_url: width: 200 }}" alt="{{ shop.name | escape }}" width="{{ lw }}" height="22">
+        {%- if pol_logo != blank -%}
+          {%- assign lh = 140 | divided_by: pol_logo.aspect_ratio | round -%}
+          <img class="dp-brand-logo" src="{{ pol_logo | image_url: width: 320 }}" alt="{{ shop.name | escape }}" width="140" height="{{ lh }}">
         {%- endif -%}
         {%- if section.settings.brand_text != blank -%}<span class="dp-brand-txt">{{ section.settings.brand_text }}</span>{%- endif -%}
       </a>
@@ -188,7 +190,7 @@
   "settings": [
     { "type": "paragraph", "content": "Shows every policy from Settings → Policies as left-hand tabs (Google-style). Enable/edit the actual text in Shopify admin → Settings → Policies." },
     { "type": "header", "content": "Top-left brand" },
-    { "type": "image_picker", "id": "logo_image", "label": "Logo" },
+    { "type": "image_picker", "id": "logo_image", "label": "Logo", "info": "Leave blank to use the logo from Theme settings → Logo." },
     { "type": "text", "id": "brand_text", "label": "Small text next to logo", "default": "Privacy & Terms" },
     { "type": "url", "id": "brand_link", "label": "Logo links to (defaults to home)" },
     { "type": "header", "content": "Subtitle (optional)" },

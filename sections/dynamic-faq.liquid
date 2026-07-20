@@ -76,7 +76,7 @@
           {%- assign faq_logo = section.settings.logo | default: settings.logo -%}
           <a href="{{ routes.root_url }}" class="dyn-faq-logo" aria-label="{{ shop.name | escape }} — home">
             {%- if faq_logo != blank -%}
-              {%- assign lw = section.settings.logo_width | default: 120 -%}
+              {%- assign lw = section.settings.logo_width | default: 140 -%}
               {%- assign lh = lw | divided_by: faq_logo.aspect_ratio | round -%}
               <img src="{{ faq_logo | image_url: width: 300 }}" alt="{{ shop.name | escape }}" width="{{ lw }}" height="{{ lh }}" style="width:{{ lw }}px;">
             {%- else -%}
@@ -161,8 +161,8 @@
       "max": 260,
       "step": 5,
       "unit": "px",
-      "default": 120,
-      "info": "Width of the logo image."
+      "default": 140,
+      "info": "Width of the logo image. 140px is the standard size used across the site."
     },
     {
       "type": "text",
