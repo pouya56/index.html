@@ -1,0 +1,169 @@
+{% comment %}
+  ============================================================================
+  Dynamic Sticker Collage — scroll-driven PNG sticker pile over a photo.
+  ----------------------------------------------------------------------------
+  INSTALL:
+  1. Edit code > Sections > Add a new section > "dynamic-sticker-collage" and
+     REPLACE its contents with this whole file. Save.
+  2. Customize > any page > Add section > "Sticker collage".
+  3. Upload ONE background photo in the section settings, then add one
+     "Sticker" block per PNG. While scrolling, the stickers fly in from the
+     edges and pile toward the middle until they cover the section.
+  ============================================================================
+{% endcomment %}
+
+<style>
+  .dyn-stc { position: relative; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; }
+  .dyn-stc, .dyn-stc *, .dyn-stc *::before, .dyn-stc *::after { box-sizing: border-box; }
+  /* The runway: tall scroll distance; the stage stays pinned while the
+     stickers travel. */
+  .dyn-stc .sc-scroll { position: relative; height: {{ section.settings.scroll_len | default: 300 }}vh; }
+  .dyn-stc .sc-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
+    display: grid; place-items: center; background: {{ section.settings.bg_color | default: '#ffffff' }}; }
+  .dyn-stc .sc-bg { position: absolute; inset: 0; }
+  .dyn-stc .sc-bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .dyn-stc .sc-veil { position: absolute; inset: 0; background: #000;
+    opacity: {{ section.settings.veil | default: 0 | divided_by: 100.0 }}; pointer-events: none; }
+  .dyn-stc .sc-center { position: relative; z-index: 1; text-align: center; max-width: 680px; padding: 0 22px;
+    color: {{ section.settings.text_color | default: '#111113' }}; }
+  .dyn-stc .sc-center h2 { margin: 0; font-weight: 800; text-transform: uppercase;
+    font-size: clamp(30px, 5vw, 64px); line-height: 1.02; letter-spacing: -0.02em; }
+  .dyn-stc .sc-sub { margin: 14px auto 0; max-width: 480px; font-size: 15.5px; line-height: 1.6; opacity: 0.75; }
+  /* Stickers: bare PNGs — no frame, no caption. A soft shadow lifts them
+     off the photo. */
+  .dyn-stc .sc-sticker { position: absolute; left: 50%; top: 50%; z-index: 2;
+    width: min(var(--scw, 200px), 40vw); height: auto;
+    transform: translate(-50%, -50%); will-change: transform; pointer-events: none;
+    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.28)); }
+  .dyn-stc .sc-ph { display: grid; place-items: center; width: min(var(--scw, 200px), 40vw);
+    aspect-ratio: 1; border-radius: 26% 74% 61% 39% / 55% 30% 70% 45%;
+    background: linear-gradient(140deg, #e8e2f7, #d9e6f5); color: #86868b; font-size: 13px; }
+  @media (max-width: 640px) { .dyn-stc .sc-sticker, .dyn-stc .sc-ph { width: min(calc(var(--scw, 200px) * 0.62), 44vw); } }
+  @media (prefers-reduced-motion: reduce) {
+    .dyn-stc .sc-scroll { height: auto; }
+    .dyn-stc .sc-stage { position: static; min-height: 92vh; }
+  }
+</style>
+
+<section class="dyn-stc" id="dynStc-{{ section.id | slice: -6, 6 }}">
+  <div class="sc-scroll">
+    <div class="sc-stage">
+      {%- if section.settings.bg_image != blank -%}
+        <div class="sc-bg" aria-hidden="true">
+          <img src="{{ section.settings.bg_image | image_url: width: 2400 }}"
+            srcset="{{ section.settings.bg_image | image_url: width: 1200 }} 1200w, {{ section.settings.bg_image | image_url: width: 2400 }} 2400w"
+            sizes="100vw" alt="" loading="lazy"
+            width="{{ section.settings.bg_image.width }}" height="{{ section.settings.bg_image.height }}">
+        </div>
+      {%- endif -%}
+      {%- assign stc_veil = section.settings.veil | default: 0 -%}
+      {%- if stc_veil > 0 -%}<div class="sc-veil" aria-hidden="true"></div>{%- endif -%}
+      <div class="sc-center">
+        {%- if section.settings.heading != blank -%}<h2>{{ section.settings.heading }}</h2>{%- endif -%}
+        {%- if section.settings.sub != blank -%}<p class="sc-sub">{{ section.settings.sub }}</p>{%- endif -%}
+      </div>
+      {%- for b in section.blocks -%}
+        {%- if b.type == 'sticker' -%}
+          {%- if b.settings.image != blank -%}
+            <img class="sc-sticker" style="--scw: {{ b.settings.size | default: 200 }}px"
+              src="{{ b.settings.image | image_url: width: 800 }}" alt="" loading="lazy"
+              width="{{ b.settings.image.width }}" height="{{ b.settings.image.height }}" {{ b.shopify_attributes }}>
+          {%- else -%}
+            <div class="sc-sticker sc-ph" style="--scw: {{ b.settings.size | default: 200 }}px" {{ b.shopify_attributes }}>PNG</div>
+          {%- endif -%}
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    /* Scroll progress flies each sticker in from an edge and settles it
+       near the middle; the pile ends up covering the heading.
+       Deterministic per index — no randomness, no jumps between visits. */
+    var root = document.getElementById("dynStc-{{ section.id | slice: -6, 6 }}");
+    if (!root) return;
+    var scroller = root.querySelector(".sc-scroll");
+    var sts = root.querySelectorAll(".sc-sticker");
+    if (!scroller || !sts.length) return;
+    var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    /* Resting spots (x in vw, y in vh from center): first ones ring the
+       heading, later ones close in over the middle. */
+    var SPOTS = [[-32, -26], [30, -28], [-34, 20], [32, 22], [-14, -32], [16, 30],
+      [-30, -2], [30, -3], [-8, 26], [10, -26], [-18, 8], [18, 6], [-4, -10], [6, 12], [0, 0]];
+    var els = Array.prototype.map.call(sts, function (el, i) {
+      var s = SPOTS[i % SPOTS.length];
+      var wob = (Math.floor(i / SPOTS.length) % 2) ? -4 : 3;
+      return { el: el, fx: s[0] + (i >= SPOTS.length ? wob : 0), fy: s[1] + (i >= SPOTS.length ? wob : 0),
+        rot: ((i * 47) % 25) - 12, dir: i % 4 };
+    });
+    function place(p) {
+      var n = els.length;
+      els.forEach(function (s, i) {
+        var start = n > 1 ? (i / n) * 0.72 : 0;
+        var lp = Math.min(1, Math.max(0, (p - start) / 0.28));
+        var e = 1 - Math.pow(1 - lp, 3);
+        var sx = s.dir === 0 ? -80 : s.dir === 1 ? 80 : s.fx * 1.6;
+        var sy = s.dir === 2 ? -80 : s.dir === 3 ? 80 : s.fy * 1.6;
+        var x = sx + (s.fx - sx) * e;
+        var y = sy + (s.fy - sy) * e;
+        var rot = s.rot * (2 - e);
+        s.el.style.transform = "translate(-50%, -50%) translate(" + x.toFixed(2) + "vw, " + y.toFixed(2) + "vh) rotate(" + rot.toFixed(2) + "deg)";
+      });
+    }
+    if (reduce) { place(1); return; }
+    var tick = false;
+    function onScroll() {
+      if (tick) return;
+      tick = true;
+      requestAnimationFrame(function () {
+        tick = false;
+        var r = scroller.getBoundingClientRect();
+        var total = r.height - innerHeight;
+        place(total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 1);
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    onScroll();
+  })();
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Sticker collage",
+  "tag": "section",
+  "class": "dynamic-sticker-collage-section",
+  "settings": [
+    { "type": "paragraph", "content": "Upload one background photo, then add a Sticker block per PNG. While scrolling, the stickers fly in from the edges and pile over the middle." },
+    { "type": "image_picker", "id": "bg_image", "label": "Background photo (fills the screen)" },
+    { "type": "range", "id": "veil", "label": "Darken background", "min": 0, "max": 60, "step": 5, "unit": "%", "default": 0 },
+    { "type": "text", "id": "heading", "label": "Heading (gets covered by the pile)", "default": "The people behind it" },
+    { "type": "textarea", "id": "sub", "label": "Subtitle", "default": "A small team that cares about every single order." },
+    { "type": "color", "id": "text_color", "label": "Text color", "default": "#111113" },
+    { "type": "color", "id": "bg_color", "label": "Background color (no photo)", "default": "#ffffff" },
+    { "type": "range", "id": "scroll_len", "label": "Scroll length", "min": 200, "max": 450, "step": 25, "unit": "vh", "default": 300, "info": "How long the effect lasts while scrolling." }
+  ],
+  "blocks": [
+    {
+      "type": "sticker", "name": "Sticker",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "PNG image (transparent background)" },
+        { "type": "range", "id": "size", "label": "Size", "min": 90, "max": 360, "step": 10, "unit": "px", "default": 200 }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Sticker collage",
+      "blocks": [
+        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
+        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
+        { "type": "sticker" }, { "type": "sticker" }
+      ]
+    }
+  ]
+}
+{% endschema %}
