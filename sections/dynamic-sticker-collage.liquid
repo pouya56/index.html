@@ -19,7 +19,7 @@
   .dyn-stc, .dyn-stc *, .dyn-stc *::before, .dyn-stc *::after { box-sizing: border-box; }
   /* The runway: tall scroll distance; the stage stays pinned while the
      photos travel in. */
-  .dyn-stc .sc-scroll { position: relative; height: {{ section.settings.scroll_len | default: 260 }}vh; }
+  .dyn-stc .sc-scroll { position: relative; height: {{ section.settings.scroll_len | default: 250 }}vh; }
   .dyn-stc .sc-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
     display: grid; place-items: center; background: {{ section.settings.bg_color | default: '#0f0f12' }}; }
   .dyn-stc .sc-bg { position: absolute; inset: 0; }
@@ -217,7 +217,7 @@
     { "type": "range", "id": "spread", "label": "How spread out", "min": 50, "max": 100, "step": 5, "unit": "%", "default": 90, "info": "Lower = tighter cluster in the middle. Higher = spread to the edges." },
     { "type": "checkbox", "id": "floating", "label": "Gentle floating drift", "default": true },
     { "type": "checkbox", "id": "draggable", "label": "Let visitors drag the photos", "default": true },
-    { "type": "range", "id": "scroll_len", "label": "Scroll length", "min": 150, "max": 400, "step": 25, "unit": "vh", "default": 260, "info": "How long the fly-in lasts while scrolling." }
+    { "type": "range", "id": "scroll_len", "label": "Scroll length", "min": 150, "max": 400, "step": 25, "unit": "vh", "default": 250, "info": "How long the fly-in lasts while scrolling." }
   ],
   "blocks": [
     {
