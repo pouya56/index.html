@@ -33,8 +33,8 @@
 
   .dyn-pol .dp-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink);
     border-bottom: 1px solid var(--line); padding-bottom: clamp(16px, 2.4vw, 24px); margin-bottom: clamp(24px, 4vw, 40px); }
-  /* One standard logo size everywhere on the site: 140px wide. */
-  .dyn-pol .dp-brand-logo { width: min(140px, 60vw); height: auto; display: block; object-fit: contain; }
+  /* One site-wide logo size — Theme settings \2192 Logo \2192 Custom logo width. */
+  .dyn-pol .dp-brand-logo { width: min(var(--dyn-lw, 140px), 60vw); height: auto; display: block; object-fit: contain; }
   .dyn-pol .dp-brand-txt { font-size: 13px; color: var(--ink-soft); letter-spacing: 0.02em; white-space: nowrap; }
   .dyn-pol .dp-head { padding-bottom: clamp(16px, 2.5vw, 26px); margin-bottom: clamp(20px, 3vw, 34px); }
   .dyn-pol .dp-eyebrow { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
@@ -95,8 +95,9 @@
     {%- if pol_logo != blank or section.settings.brand_text != blank -%}
       <a class="dp-brand" href="{{ section.settings.brand_link | default: routes.root_url }}">
         {%- if pol_logo != blank -%}
-          {%- assign lh = 140 | divided_by: pol_logo.aspect_ratio | round -%}
-          <img class="dp-brand-logo" src="{{ pol_logo | image_url: width: 320 }}" alt="{{ shop.name | escape }}" width="140" height="{{ lh }}">
+          {%- assign lw = settings.logo_width | default: 140 -%}
+          {%- assign lh = lw | divided_by: pol_logo.aspect_ratio | round -%}
+          <img class="dp-brand-logo" style="--dyn-lw: {{ lw }}px" src="{{ pol_logo | image_url: width: 320 }}" alt="{{ shop.name | escape }}" width="{{ lw }}" height="{{ lh }}">
         {%- endif -%}
         {%- if section.settings.brand_text != blank -%}<span class="dp-brand-txt">{{ section.settings.brand_text }}</span>{%- endif -%}
       </a>

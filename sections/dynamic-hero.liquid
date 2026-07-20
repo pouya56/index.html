@@ -138,7 +138,6 @@
   .dyn-hero .dh-form-links { display: flex; flex-wrap: nowrap; justify-content: space-between; gap: 10px; padding: 2px 8px 4px; }
   .dyn-hero .dh-form-links a { font-size: 11px; white-space: nowrap; color: var(--ink-soft); text-decoration: none; }
   .dyn-hero .dh-form-links a:hover { color: var(--ink); text-decoration: underline; }
-  .dyn-hero.dh-landing .dh-head .dh-head-logo { width: min(140px, 64vw); height: auto; }
   .dyn-hero.dh-landing .dh-head .dh-head-video { max-height: clamp(120px, 30vh, 280px); max-width: var(--media-w); }
   .dyn-hero.dh-landing .dh-head h1 { font-size: clamp(30px, 5vw, 46px); }
   /* Bar width lives in --sbw; centred on the PAGE by margin math (auto
@@ -163,8 +162,8 @@
   .dyn-hero .dh-head .dh-desc { font-size: 16px; color: var(--ink-soft); line-height: 1.55; margin: 16px auto 0; max-width: 620px; }
   .dyn-hero .dh-head-link { display: inline-block; text-decoration: none; color: inherit; cursor: pointer; }
   .dyn-hero .dh-head .dh-head-logo-link { display: inline-block; line-height: 0; }
-  /* One standard logo size everywhere on the site: 140px wide. */
-  .dyn-hero .dh-head .dh-head-logo { width: min(140px, 64vw); height: auto; object-fit: contain; margin: 0 auto; display: block; }
+  /* One site-wide logo size — Theme settings \2192 Logo \2192 Custom logo width. */
+  .dyn-hero .dh-head .dh-head-logo { width: min(var(--dyn-lw, 140px), 64vw); height: auto; object-fit: contain; margin: 0 auto; display: block; }
   .dyn-hero .dh-head .dh-head-video { display: block; margin: 0 auto; width: auto; max-width: min(82vw, 360px);
     max-height: clamp(90px, 22vh, 220px); border-radius: 18px; object-fit: cover; background: transparent; }
 
@@ -1142,7 +1141,7 @@
         </video>
       {%- elsif hero_logo != blank -%}
         {%- assign hlw = hero_logo.width | times: 56 | divided_by: hero_logo.height -%}
-        <a href="{{ routes.root_url }}" class="dh-head-logo-link" aria-label="{{ shop.name | escape }} — home"><img class="dh-head-logo" src="{{ hero_logo | image_url: width: 700 }}" srcset="{{ hero_logo | image_url: width: 400 }} 400w, {{ hero_logo | image_url: width: 700 }} 700w, {{ hero_logo | image_url: width: 1000 }} 1000w" sizes="(max-width: 640px) 90vw, 700px" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56" fetchpriority="high"></a>
+        <a href="{{ routes.root_url }}" class="dh-head-logo-link" aria-label="{{ shop.name | escape }} — home"><img class="dh-head-logo" style="--dyn-lw: {{ settings.logo_width | default: 140 }}px" src="{{ hero_logo | image_url: width: 700 }}" srcset="{{ hero_logo | image_url: width: 400 }} 400w, {{ hero_logo | image_url: width: 700 }} 700w, {{ hero_logo | image_url: width: 1000 }} 1000w" sizes="(max-width: 640px) 90vw, 700px" alt="{{ shop.name | escape }}" width="{{ hlw }}" height="56" fetchpriority="high"></a>
       {%- else -%}
         <h1>{{ section.settings.heading | default: coll.title | default: 'Store' }}</h1>
       {%- endif -%}

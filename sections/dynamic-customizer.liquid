@@ -1962,9 +1962,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   var img = document.createElement("img");
   img.src = {{ top_logo | image_url: width: 500 | json }};
   img.alt = {{ shop.name | json }};
-  img.width = {{ section.settings.top_logo_width | default: 140 }};
-  img.height = {{ section.settings.top_logo_width | default: 140 | divided_by: top_logo.aspect_ratio | round }};
-  img.style.width = "{{ section.settings.top_logo_width | default: 140 }}px";
+  img.width = {{ settings.logo_width | default: 140 }};
+  img.height = {{ settings.logo_width | default: 140 | divided_by: top_logo.aspect_ratio | round }};
+  img.style.width = "{{ settings.logo_width | default: 140 }}px";
   a.appendChild(img);
   {%- else -%}
   a.textContent = {{ shop.name | json }};
@@ -2216,17 +2216,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       "id": "top_logo",
       "label": "Logo image",
       "info": "Leave empty to use your theme logo."
-    },
-    {
-      "type": "range",
-      "id": "top_logo_width",
-      "label": "Logo width",
-      "min": 60,
-      "max": 260,
-      "step": 5,
-      "unit": "px",
-      "default": 140,
-      "info": "140px is the standard size used across the site."
     },
     {
       "type": "select",
