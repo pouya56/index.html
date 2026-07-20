@@ -1,14 +1,15 @@
 {% comment %}
   ============================================================================
-  Dynamic Sticker Collage — scroll-driven PNG sticker pile over a photo.
+  Dynamic Sticker Collage — a scattered, floating, draggable photo wall
+  (The Lot Radio style). Works with ANY number of photos.
   ----------------------------------------------------------------------------
   INSTALL:
   1. Edit code > Sections > Add a new section > "dynamic-sticker-collage" and
      REPLACE its contents with this whole file. Save.
   2. Customize > any page > Add section > "Sticker collage".
-  3. Upload ONE background photo in the section settings, then add one
-     "Sticker" block per PNG. While scrolling, the stickers fly in from the
-     edges and pile toward the middle until they cover the section.
+  3. (Optional) upload a background photo, then add a "Photo" block per image.
+     Use as few or as many as you like — they scatter evenly across the
+     screen, drift gently, glide in as you scroll, and can be dragged around.
   ============================================================================
 {% endcomment %}
 
@@ -17,36 +18,40 @@
     -webkit-font-smoothing: antialiased; }
   .dyn-stc, .dyn-stc *, .dyn-stc *::before, .dyn-stc *::after { box-sizing: border-box; }
   /* The runway: tall scroll distance; the stage stays pinned while the
-     stickers travel. */
-  .dyn-stc .sc-scroll { position: relative; height: {{ section.settings.scroll_len | default: 300 }}vh; }
+     photos travel in. */
+  .dyn-stc .sc-scroll { position: relative; height: {{ section.settings.scroll_len | default: 260 }}vh; }
   .dyn-stc .sc-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
-    display: grid; place-items: center; background: {{ section.settings.bg_color | default: '#ffffff' }}; }
+    display: grid; place-items: center; background: {{ section.settings.bg_color | default: '#0f0f12' }}; }
   .dyn-stc .sc-bg { position: absolute; inset: 0; }
   .dyn-stc .sc-bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .dyn-stc .sc-veil { position: absolute; inset: 0; background: #000;
     opacity: {{ section.settings.veil | default: 0 | divided_by: 100.0 }}; pointer-events: none; }
   .dyn-stc .sc-center { position: relative; z-index: 1; text-align: center; max-width: 680px; padding: 0 22px;
-    color: {{ section.settings.text_color | default: '#111113' }}; }
+    color: {{ section.settings.text_color | default: '#ffffff' }}; pointer-events: none; }
   .dyn-stc .sc-center h2 { margin: 0; font-weight: 800; text-transform: uppercase;
     font-size: clamp(30px, 5vw, 64px); line-height: 1.02; letter-spacing: -0.02em; }
-  .dyn-stc .sc-sub { margin: 14px auto 0; max-width: 480px; font-size: 15.5px; line-height: 1.6; opacity: 0.75; }
-  /* Stickers: bare PNGs — no frame, no caption. A soft shadow lifts them
-     off the photo. */
+  .dyn-stc .sc-sub { margin: 14px auto 0; max-width: 480px; font-size: 15.5px; line-height: 1.6; opacity: 0.8; }
+  /* Photos: bare images — no frame, no caption — with a soft shadow so they
+     lift off the background. Draggable. */
   .dyn-stc .sc-sticker { position: absolute; left: 50%; top: 50%; z-index: 2;
-    width: clamp(40vw, var(--scw, 300px), 60vw); height: auto;
-    transform: translate(-50%, -50%); will-change: transform; pointer-events: none;
-    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.28)); }
-  .dyn-stc .sc-ph { display: grid; place-items: center; width: clamp(40vw, var(--scw, 300px), 60vw);
-    aspect-ratio: 1; border-radius: 26% 74% 61% 39% / 55% 30% 70% 45%;
-    background: linear-gradient(140deg, #e8e2f7, #d9e6f5); color: #86868b; font-size: 13px; }
-  @media (max-width: 640px) { .dyn-stc .sc-sticker, .dyn-stc .sc-ph { width: clamp(40vw, calc(var(--scw, 260px) * 0.62), 60vw); } }
+    width: clamp(120px, var(--scw, 200px), 42vw); height: auto;
+    transform: translate(-50%, -50%); will-change: transform; cursor: grab; touch-action: none;
+    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.34)); }
+  .dyn-stc .sc-sticker.is-drag { cursor: grabbing; z-index: 50; }
+  .dyn-stc .sc-ph { display: grid; place-items: center; width: clamp(120px, var(--scw, 200px), 42vw);
+    aspect-ratio: 3 / 4; border-radius: 10px;
+    background: linear-gradient(140deg, #3a3a44, #23232b); color: #9a9aa2; font-size: 13px; }
+  @media (max-width: 640px) { .dyn-stc .sc-sticker, .dyn-stc .sc-ph { width: clamp(96px, calc(var(--scw, 200px) * 0.7), 44vw); } }
   @media (prefers-reduced-motion: reduce) {
     .dyn-stc .sc-scroll { height: auto; }
     .dyn-stc .sc-stage { position: static; min-height: 92vh; }
   }
 </style>
 
-<section class="dyn-stc" id="dynStc-{{ section.id | slice: -6, 6 }}">
+<section class="dyn-stc" id="dynStc-{{ section.id | slice: -6, 6 }}"
+  data-drag="{{ section.settings.draggable | default: true }}"
+  data-float="{{ section.settings.floating | default: true }}"
+  data-spread="{{ section.settings.spread | default: 88 }}">
   <div class="sc-scroll">
     <div class="sc-stage">
       {%- if section.settings.bg_image != blank -%}
@@ -67,10 +72,10 @@
         {%- if b.type == 'sticker' -%}
           {%- if b.settings.image != blank -%}
             <img class="sc-sticker" style="--scw: {{ b.settings.size | default: 200 }}px"
-              src="{{ b.settings.image | image_url: width: 800 }}" alt="" loading="lazy"
+              src="{{ b.settings.image | image_url: width: 900 }}" alt="" loading="lazy"
               width="{{ b.settings.image.width }}" height="{{ b.settings.image.height }}" {{ b.shopify_attributes }}>
           {%- else -%}
-            <div class="sc-sticker sc-ph" style="--scw: {{ b.settings.size | default: 200 }}px" {{ b.shopify_attributes }}>PNG</div>
+            <div class="sc-sticker sc-ph" style="--scw: {{ b.settings.size | default: 200 }}px" {{ b.shopify_attributes }}>Photo</div>
           {%- endif -%}
         {%- endif -%}
       {%- endfor -%}
@@ -79,74 +84,118 @@
 
   <script>
   (function () {
-    /* Scroll progress flies each sticker in from an edge and settles it
-       near the middle; the pile ends up covering the heading.
-       Deterministic per index — no randomness, no jumps between visits. */
     var root = document.getElementById("dynStc-{{ section.id | slice: -6, 6 }}");
     if (!root) return;
     var scroller = root.querySelector(".sc-scroll");
     var sts = root.querySelectorAll(".sc-sticker");
     if (!scroller || !sts.length) return;
     var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    /* Resting spots (x in vw, y in vh from center): a 5×5 blanket over
-       the whole screen — outer ring lands first, the center is buried
-       last. 25 stickers leave no background showing. */
-    /* A concentric 5×5 blanket at 17.5vw / 17.5vh spacing: the outer ring
-       (16) lands first and seals the edges, the middle ring (8) fills next,
-       the centre lands last. Big overlapping shapes leave no background. */
-    var SPOTS = [
-      [-35, -35], [-17.5, -35], [0, -35], [17.5, -35], [35, -35],
-      [35, -17.5], [35, 0], [35, 17.5], [35, 35],
-      [17.5, 35], [0, 35], [-17.5, 35], [-35, 35],
-      [-35, 17.5], [-35, 0], [-35, -17.5],
-      [-14, -14], [0, -15], [14, -14], [15, 0],
-      [14, 14], [0, 15], [-14, 14], [-15, 0],
-      [0, 0]];
+    var canDrag = root.getAttribute("data-drag") !== "false";
+    var canFloat = root.getAttribute("data-float") !== "false" && !reduce;
+    var spread = (parseFloat(root.getAttribute("data-spread")) || 88) / 100;  /* 0..1 of half-viewport */
+
+    /* Scatter ANY number of photos evenly across the screen with a golden-
+       angle (sunflower) spiral — no fixed count, no clumping. Deterministic:
+       same layout every visit. Ordered outer-first so the wall builds inward. */
+    var N = sts.length;
+    var GA = 2.399963;  /* golden angle in radians */
+    var raw = [];
+    for (var k = 0; k < N; k++) {
+      var t = (k + 0.5) / N;
+      var r = Math.sqrt(t);                 /* even area fill 0..1 */
+      var a = k * GA;
+      raw.push({ k: k, r: r,
+        fx: Math.cos(a) * r * 46 * spread,  /* vw from centre */
+        fy: Math.sin(a) * r * 44 * spread,  /* vh from centre */
+        rot: ((k * 47) % 23) - 11,
+        dir: k % 4,
+        amp: 0.8 + (k % 5) * 0.28,          /* idle drift amplitude */
+        ph: (k % 7) * 0.9 });               /* idle drift phase */
+    }
+    /* Outer photos arrive first. */
+    var order = raw.slice().sort(function (a, b) { return b.r - a.r; });
+    order.forEach(function (o, idx) { o.ord = idx; });
     var els = Array.prototype.map.call(sts, function (el, i) {
-      var s = SPOTS[i % SPOTS.length];
-      var edge = (i % SPOTS.length) < 16;
-      var wob = (Math.floor(i / SPOTS.length) % 2) ? -6 : 5;
-      /* Jitter only the inner shapes — the edge ring stays put so the
-         border never opens up. */
-      var jx = edge ? 0 : ((i * 13) % 5) - 2, jy = edge ? 0 : ((i * 7) % 5) - 2;
-      return { el: el, fx: s[0] + jx + (i >= SPOTS.length ? wob : 0), fy: s[1] + jy + (i >= SPOTS.length ? wob : 0),
-        rot: ((i * 47) % 21) - 10, dir: i % 4 };
+      var o = raw[i];
+      return { el: el, fx: o.fx, fy: o.fy, rot: o.rot, dir: o.dir, amp: o.amp, ph: o.ph,
+        ord: o.ord, dx: 0, dy: 0 };
     });
-    function place(p) {
+
+    var t0 = null;
+    function render(nowMs) {
+      if (t0 === null) t0 = nowMs;
+      var time = (nowMs - t0) / 1000;
       var n = els.length;
-      els.forEach(function (s, i) {
-        var start = n > 1 ? (i / n) * 0.72 : 0;
-        var lp = Math.min(1, Math.max(0, (p - start) / 0.28));
+      els.forEach(function (s) {
+        var start = n > 1 ? (s.ord / n) * 0.68 : 0;
+        var lp = Math.min(1, Math.max(0, (cur - start) / 0.32));
         var e = 1 - Math.pow(1 - lp, 3);
-        var sx = s.dir === 0 ? -80 : s.dir === 1 ? 80 : s.fx * 1.6;
-        var sy = s.dir === 2 ? -80 : s.dir === 3 ? 80 : s.fy * 1.6;
-        var x = sx + (s.fx - sx) * e;
-        var y = sy + (s.fy - sy) * e;
-        var rot = s.rot * (2 - e);
+        var tx = s.fx + s.dx, ty = s.fy + s.dy;
+        /* Fly in from the nearest edge. */
+        var sx = s.dir === 0 ? -75 : s.dir === 1 ? 75 : tx * 1.7;
+        var sy = s.dir === 2 ? -75 : s.dir === 3 ? 75 : ty * 1.7;
+        var x = sx + (tx - sx) * e;
+        var y = sy + (ty - sy) * e;
+        /* Gentle idle drift once settled. */
+        if (canFloat) { x += Math.sin(time * 0.6 + s.ph) * s.amp * e; y += Math.cos(time * 0.5 + s.ph) * s.amp * e; }
+        var rot = s.rot * (e < 1 ? (2 - e) : 1);
         s.el.style.transform = "translate(-50%, -50%) translate(" + x.toFixed(2) + "vw, " + y.toFixed(2) + "vh) rotate(" + rot.toFixed(2) + "deg)";
       });
     }
-    if (reduce) { place(1); return; }
-    /* Buttery motion: the displayed progress glides toward the real scroll
-       position a little each frame, so jumpy wheels and touch flicks still
-       produce silky sticker movement. */
-    var target = 0, cur = -1, raf = null;
-    function loop() {
-      cur += (target - cur) * 0.085;
-      if (Math.abs(target - cur) < 0.0006) { cur = target; place(cur); raf = null; return; }
-      place(cur);
-      raf = requestAnimationFrame(loop);
+
+    /* Smooth scroll: displayed progress eases toward the real scroll spot. */
+    var target = 0, cur = -1, running = false;
+    function frame(now) {
+      cur += (target - cur) * 0.09;
+      if (Math.abs(target - cur) < 0.0004) cur = target;
+      render(now);
+      /* Keep animating while floating, or until the scroll settles. */
+      if (canFloat || Math.abs(target - cur) > 0.0004) { requestAnimationFrame(frame); }
+      else { running = false; }
     }
+    function kick() { if (!running) { running = true; requestAnimationFrame(frame); } }
     function onScroll() {
       var r = scroller.getBoundingClientRect();
       var total = r.height - innerHeight;
       target = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 1;
-      if (cur < 0) { cur = target; place(cur); }
-      if (!raf) raf = requestAnimationFrame(loop);
+      if (cur < 0) cur = target;
+      kick();
     }
+    if (reduce) { cur = target = 1; render(0); }
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
+
+    /* Only animate while the section is on screen (saves battery). */
+    if ("IntersectionObserver" in window && !reduce) {
+      new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) kick(); });
+      }, { threshold: 0 }).observe(root.querySelector(".sc-stage"));
+    }
     onScroll();
+
+    /* Drag: shove any photo around; it keeps drifting around its new spot. */
+    if (canDrag && !reduce) {
+      var drag = null;
+      Array.prototype.forEach.call(sts, function (el, i) {
+        el.addEventListener("pointerdown", function (ev) {
+          drag = { s: els[i], px: ev.clientX, py: ev.clientY, dx: els[i].dx, dy: els[i].dy };
+          el.classList.add("is-drag");
+          el.setPointerCapture && el.setPointerCapture(ev.pointerId);
+          ev.preventDefault();
+        });
+      });
+      window.addEventListener("pointermove", function (ev) {
+        if (!drag) return;
+        drag.s.dx = drag.dx + (ev.clientX - drag.px) / innerWidth * 100;
+        drag.s.dy = drag.dy + (ev.clientY - drag.py) / innerHeight * 100;
+        kick();
+      }, { passive: true });
+      window.addEventListener("pointerup", function () {
+        if (!drag) return;
+        drag.s.el.classList.remove("is-drag");
+        drag = null;
+      });
+    }
   })();
   </script>
 </section>
@@ -157,21 +206,25 @@
   "tag": "section",
   "class": "dynamic-sticker-collage-section",
   "settings": [
-    { "type": "paragraph", "content": "Upload one background photo, then add a Sticker block per PNG. While scrolling, the stickers glide in from the edges and pile up \u2014 with 25 stickers the pile blankets the whole screen and the background disappears." },
-    { "type": "image_picker", "id": "bg_image", "label": "Background photo (fills the screen)" },
-    { "type": "range", "id": "veil", "label": "Darken background", "min": 0, "max": 60, "step": 5, "unit": "%", "default": 0 },
-    { "type": "text", "id": "heading", "label": "Heading (gets covered by the pile)", "default": "The people behind it" },
+    { "type": "paragraph", "content": "Add a Photo block per image — as few or as many as you like. They scatter evenly across the screen, drift gently, glide in as you scroll, and can be dragged around (like thelotradio.com). Optional background photo behind them." },
+    { "type": "image_picker", "id": "bg_image", "label": "Background photo (optional)" },
+    { "type": "range", "id": "veil", "label": "Darken background", "min": 0, "max": 70, "step": 5, "unit": "%", "default": 0 },
+    { "type": "text", "id": "heading", "label": "Heading (behind the photos)", "default": "The people behind it" },
     { "type": "textarea", "id": "sub", "label": "Subtitle", "default": "A small team that cares about every single order." },
-    { "type": "color", "id": "text_color", "label": "Text color", "default": "#111113" },
-    { "type": "color", "id": "bg_color", "label": "Background color (no photo)", "default": "#ffffff" },
-    { "type": "range", "id": "scroll_len", "label": "Scroll length", "min": 200, "max": 450, "step": 25, "unit": "vh", "default": 300, "info": "How long the effect lasts while scrolling." }
+    { "type": "color", "id": "text_color", "label": "Text color", "default": "#ffffff" },
+    { "type": "color", "id": "bg_color", "label": "Background color (no photo)", "default": "#0f0f12" },
+    { "type": "header", "content": "Scatter & motion" },
+    { "type": "range", "id": "spread", "label": "How spread out", "min": 50, "max": 100, "step": 5, "unit": "%", "default": 88, "info": "Lower = tighter cluster in the middle. Higher = spread to the edges." },
+    { "type": "checkbox", "id": "floating", "label": "Gentle floating drift", "default": true },
+    { "type": "checkbox", "id": "draggable", "label": "Let visitors drag the photos", "default": true },
+    { "type": "range", "id": "scroll_len", "label": "Scroll length", "min": 150, "max": 400, "step": 25, "unit": "vh", "default": 260, "info": "How long the fly-in lasts while scrolling." }
   ],
   "blocks": [
     {
-      "type": "sticker", "name": "Sticker",
+      "type": "sticker", "name": "Photo",
       "settings": [
-        { "type": "image_picker", "id": "image", "label": "PNG image (transparent background)" },
-        { "type": "range", "id": "size", "label": "Size", "min": 90, "max": 480, "step": 10, "unit": "px", "default": 240, "info": "Stickers never shrink below about a fifth of the screen, so 25 of them always blanket it fully." }
+        { "type": "image_picker", "id": "image", "label": "Photo (PNG or JPG)" },
+        { "type": "range", "id": "size", "label": "Size", "min": 90, "max": 420, "step": 10, "unit": "px", "default": 200 }
       ]
     }
   ],
@@ -179,11 +232,10 @@
     {
       "name": "Sticker collage",
       "blocks": [
-        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
-        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
-        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
-        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
-        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }
+        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
+        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
+        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" },
+        { "type": "sticker" }, { "type": "sticker" }, { "type": "sticker" }
       ]
     }
   ]
