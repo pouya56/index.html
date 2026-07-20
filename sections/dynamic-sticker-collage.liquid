@@ -51,7 +51,7 @@
 <section class="dyn-stc" id="dynStc-{{ section.id | slice: -6, 6 }}"
   data-drag="{{ section.settings.draggable | default: true }}"
   data-float="{{ section.settings.floating | default: true }}"
-  data-spread="{{ section.settings.spread | default: 88 }}">
+  data-spread="{{ section.settings.spread | default: 90 }}">
   <div class="sc-scroll">
     <div class="sc-stage">
       {%- if section.settings.bg_image != blank -%}
@@ -92,7 +92,7 @@
     var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     var canDrag = root.getAttribute("data-drag") !== "false";
     var canFloat = root.getAttribute("data-float") !== "false" && !reduce;
-    var spread = (parseFloat(root.getAttribute("data-spread")) || 88) / 100;  /* 0..1 of half-viewport */
+    var spread = (parseFloat(root.getAttribute("data-spread")) || 90) / 100;  /* 0..1 of half-viewport */
 
     /* Scatter ANY number of photos evenly across the screen with a golden-
        angle (sunflower) spiral — no fixed count, no clumping. Deterministic:
@@ -214,7 +214,7 @@
     { "type": "color", "id": "text_color", "label": "Text color", "default": "#ffffff" },
     { "type": "color", "id": "bg_color", "label": "Background color (no photo)", "default": "#0f0f12" },
     { "type": "header", "content": "Scatter & motion" },
-    { "type": "range", "id": "spread", "label": "How spread out", "min": 50, "max": 100, "step": 5, "unit": "%", "default": 88, "info": "Lower = tighter cluster in the middle. Higher = spread to the edges." },
+    { "type": "range", "id": "spread", "label": "How spread out", "min": 50, "max": 100, "step": 5, "unit": "%", "default": 90, "info": "Lower = tighter cluster in the middle. Higher = spread to the edges." },
     { "type": "checkbox", "id": "floating", "label": "Gentle floating drift", "default": true },
     { "type": "checkbox", "id": "draggable", "label": "Let visitors drag the photos", "default": true },
     { "type": "range", "id": "scroll_len", "label": "Scroll length", "min": 150, "max": 400, "step": 25, "unit": "vh", "default": 260, "info": "How long the fly-in lasts while scrolling." }
