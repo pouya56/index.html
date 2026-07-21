@@ -44,8 +44,10 @@
     .dyn-fb .fb-bg-layer { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; pointer-events: none; }
     .dyn-fb .fb-bg-layer.is-active { opacity: 1; pointer-events: auto; }
     .dyn-fb .fb-media { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;
-      filter: blur(var(--pb, 0px)); }
-    .dyn-fb .fb-bg-layer.fb-blur .fb-media { transform: scale(1.09); }
+      /* Uniform slight scale on EVERY layer so a blurred tab and the sharp
+         cover sit at the exact same size/position — the image never "moves",
+         it just blurs in place. The overscale also hides the blur's soft edge. */
+      filter: blur(var(--pb, 0px)); transform: scale(1.05); }
     /* Text laid over the photo (per tab + the default cover). */
     .dyn-fb .fb-cap { position: absolute; z-index: 2; max-width: min(620px, 84%);
       padding: clamp(16px, 2.4vw, 26px) clamp(18px, 2.6vw, 30px); pointer-events: none; color: var(--cap-color, #fff); }
