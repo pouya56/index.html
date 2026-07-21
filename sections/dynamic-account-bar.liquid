@@ -1226,19 +1226,37 @@
         ".shopify-chat-button", "button[aria-label*='chat' i]", "[class*='chat-button']",
         "[class*='chat-launcher']", "[class*='ChatButton']", ".gorgias-chat-button",
         "#chat-widget-container button"];
+      /* A plain .click() isn't always enough — some widgets (Shopify Inbox
+         included) open on a full pointer/mouse sequence. Fire the lot. */
+      function fireOpen(el) {
+        if (!el) return false;
+        var opts = { bubbles: true, cancelable: true, composed: true, view: W };
+        try {
+          ["pointerdown", "mousedown", "pointerup", "mouseup", "click"].forEach(function (ty) {
+            var C = ty.indexOf("pointer") === 0 && W.PointerEvent ? W.PointerEvent : W.MouseEvent;
+            try { el.dispatchEvent(new C(ty, opts)); } catch (eF0) {}
+          });
+          if (el.click) el.click();
+          return true;
+        } catch (eF1) { return false; }
+      }
       function tryOpen() {
         /* Un-hide the store's launcher first so it opens reliably; the
            observer re-hides the collapsed bubble a moment later. */
         var f = revealChatLauncher();
-        if (f && f.btn && f.btn.click) { try { f.btn.click(); scheduleRehide(); return true; } catch (eCf) {} }
+        if (f && f.btn && fireOpen(f.btn)) { scheduleRehide(); return true; }
+        if (f && f.host && f.host !== (f && f.btn) && fireOpen(f.host)) { scheduleRehide(); return true; }
         for (var s = 0; s < sels.length; s++) {
           var el = document.querySelector(sels[s]);
           if (!el) continue;
-          if (el.shadowRoot) { var sb = chatPierce(el.shadowRoot, 0); if (sb) { sb.click(); scheduleRehide(); return true; } }
-          if (el.tagName && el.tagName.toLowerCase().indexOf("-") !== -1) continue; /* empty custom el */
-          try { el.click(); scheduleRehide(); return true; } catch (eC2) {}
+          if (el.shadowRoot) {
+            var sb = el.shadowRoot.querySelector(".chat-lifecycle-button, [class*='lifecycle-button'], [class*='launcher']") || chatPierce(el.shadowRoot, 0);
+            if (sb && fireOpen(sb)) { scheduleRehide(); return true; }
+          }
+          if (el.tagName && el.tagName.toLowerCase().indexOf("-") !== -1) { if (fireOpen(el)) { scheduleRehide(); return true; } continue; }
+          if (fireOpen(el)) { scheduleRehide(); return true; }
           var ib = el.querySelector && el.querySelector("button, [role='button']");
-          if (ib) { try { ib.click(); scheduleRehide(); return true; } catch (eC3) {} }
+          if (ib && fireOpen(ib)) { scheduleRehide(); return true; }
         }
         return false;
       }
