@@ -1,0 +1,233 @@
+{%- comment -%}
+  Dynamic Social Proof — an auto-generating "recent purchase" popup. It pulls
+  products from a collection and, on a randomised timer, shows one frosted card
+  at a time pairing a random first name + city + product, e.g.
+  "Emily from Austin purchased a Custom Mug." Tapping it opens the product.
+  Only a first name and city are ever shown — no real customer data is used.
+{%- endcomment -%}
+
+{%- assign coll = section.settings.collection | default: collections.all -%}
+{%- assign pos = section.settings.position | default: 'bottom-left' -%}
+
+{%- assign prod_count = 0 -%}
+{%- for product in coll.products limit: 60 -%}{%- assign prod_count = prod_count | plus: 1 -%}{%- endfor -%}
+
+{%- if prod_count > 0 -%}
+<div
+  class="dyn-sproof dyn-sproof--{{ pos }}"
+  id="dynSP-{{ section.id }}"
+  data-sproof
+  data-pos="{{ pos }}"
+  data-first-min="{{ section.settings.first_min | default: 5 }}"
+  data-first-max="{{ section.settings.first_max | default: 10 }}"
+  data-show-min="{{ section.settings.show_min | default: 4 }}"
+  data-show-max="{{ section.settings.show_max | default: 6 }}"
+  data-gap-min="{{ section.settings.gap_min | default: 10 }}"
+  data-gap-max="{{ section.settings.gap_max | default: 20 }}"
+  data-verb="{{ section.settings.verb | default: 'purchased' | escape }}"
+  data-conn="{{ section.settings.connector | default: 'from' | escape }}"
+  {{ section.shopify_attributes }}
+  aria-live="polite" role="region" aria-label="Recent purchases"
+  hidden
+>
+  <div class="sp-card" data-sp-card role="link" tabindex="0">
+    <span class="sp-ic" aria-hidden="true"><img data-sp-img src="" alt="" width="80" height="80"></span>
+    <span class="sp-body">
+      <span class="sp-top">
+        <span class="sp-title" data-sp-title></span>
+        <span class="sp-time" data-sp-time></span>
+      </span>
+      <span class="sp-text" data-sp-text></span>
+    </span>
+    <button type="button" class="sp-x" data-sp-x aria-label="Dismiss">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+    </button>
+  </div>
+
+  <script type="application/json" data-sp-products>
+    [
+    {%- for product in coll.products limit: 60 -%}
+      {%- unless forloop.first %},{% endunless -%}
+      {"t": {{ product.title | json }}, "u": {{ product.url | json }}, "i": {% if product.featured_image %}{{ product.featured_image | image_url: width: 160 | json }}{% else %}""{% endif %}}
+    {%- endfor -%}
+    ]
+  </script>
+  <script type="application/json" data-sp-names>{{ section.settings.names | default: 'Emily, James, Sophia, Liam, Olivia, Noah, Ava, Ethan, Mia, Lucas, Isabella, Mason, Charlotte, Amelia, Harper, Benjamin, Ella, Henry, Grace, Jack' | json }}</script>
+  <script type="application/json" data-sp-cities>{{ section.settings.cities | default: 'Austin, Denver, Seattle, Chicago, Portland, Boston, Miami, Toronto, London, Nashville, Atlanta, Brooklyn, Dallas, Phoenix, San Diego, Vancouver, Dublin, Manchester, Melbourne, Berlin' | json }}</script>
+</div>
+
+<style>
+  #dynSP-{{ section.id }}.dyn-sproof { position: fixed; z-index: 2147481700;
+    width: min(340px, calc(100vw - 24px)); pointer-events: none; -webkit-font-smoothing: antialiased; }
+  #dynSP-{{ section.id }}.dyn-sproof[hidden] { display: none; }
+  .dyn-sproof--bottom-left { bottom: 16px; left: 16px; }
+  .dyn-sproof--bottom-right { bottom: 16px; right: 16px; }
+  .dyn-sproof--top-left { top: 16px; left: 16px; }
+  .dyn-sproof--top-right { top: 16px; right: 16px; }
+
+  #dynSP-{{ section.id }} .sp-card {
+    box-sizing: border-box; display: flex; align-items: center; gap: 11px; padding: 11px 13px;
+    border-radius: 18px; text-align: left; pointer-events: auto; cursor: pointer;
+    background: rgba(38, 38, 43, {{ section.settings.glass_opacity | default: 62 | divided_by: 100.0 }});
+    -webkit-backdrop-filter: blur(30px) saturate(1.6); backdrop-filter: blur(30px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,0.14);
+    box-shadow: 0 22px 55px -20px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.16);
+    color: #fff; opacity: 0; visibility: hidden;
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease, visibility 0.45s; }
+  .dyn-sproof--bottom-left .sp-card, .dyn-sproof--top-left .sp-card { transform: translateX(-120%); }
+  .dyn-sproof--bottom-right .sp-card, .dyn-sproof--top-right .sp-card { transform: translateX(120%); }
+  #dynSP-{{ section.id }} .sp-card.is-in { opacity: 1; visibility: visible; transform: translateX(0); }
+  #dynSP-{{ section.id }} .sp-card.is-in:active { transform: translateX(0) scale(0.985); }
+
+  #dynSP-{{ section.id }} .sp-ic { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 11px;
+    overflow: hidden; background: #2f2f34; box-shadow: 0 3px 8px rgba(0,0,0,0.28); }
+  #dynSP-{{ section.id }} .sp-ic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #dynSP-{{ section.id }} .sp-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  #dynSP-{{ section.id }} .sp-top { display: flex; align-items: baseline; gap: 8px; }
+  #dynSP-{{ section.id }} .sp-title { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 700;
+    line-height: 1.25; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #dynSP-{{ section.id }} .sp-time { flex: 0 0 auto; font-size: 11.5px; color: rgba(235,235,245,0.55); font-weight: 500; }
+  #dynSP-{{ section.id }} .sp-text { font-size: 13px; line-height: 1.35; color: rgba(235,235,245,0.9);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #dynSP-{{ section.id }} .sp-x { position: absolute; top: -8px; width: 22px; height: 22px;
+    border: none; border-radius: 50%; padding: 0; cursor: pointer; display: none; align-items: center; justify-content: center;
+    background: rgba(70,70,76,0.92); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .dyn-sproof--bottom-left .sp-x, .dyn-sproof--top-left .sp-x { left: -8px; }
+  .dyn-sproof--bottom-right .sp-x, .dyn-sproof--top-right .sp-x { right: -8px; }
+  #dynSP-{{ section.id }} .sp-x svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+  #dynSP-{{ section.id }} .sp-card { position: relative; }
+  #dynSP-{{ section.id }} .sp-card.is-in:hover .sp-x { display: flex; }
+  @media (prefers-reduced-motion: reduce) {
+    #dynSP-{{ section.id }} .sp-card { transition: opacity 0.2s ease, visibility 0.2s !important; transform: none !important; }
+  }
+  @media (max-width: 520px) {
+    #dynSP-{{ section.id }}.dyn-sproof { left: 12px; right: 12px; width: auto; }
+    .dyn-sproof--bottom-left, .dyn-sproof--bottom-right { bottom: 12px; }
+    .dyn-sproof--top-left, .dyn-sproof--top-right { top: 12px; }
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById("dynSP-{{ section.id }}");
+    if (!root) return;
+    var card = root.querySelector("[data-sp-card]");
+    var elTitle = root.querySelector("[data-sp-title]");
+    var elText = root.querySelector("[data-sp-text]");
+    var elTime = root.querySelector("[data-sp-time]");
+    var elImg = root.querySelector("[data-sp-img]");
+
+    function readJSON(sel, fallback) {
+      var n = root.querySelector(sel);
+      if (!n) return fallback;
+      try { return JSON.parse(n.textContent); } catch (e) { return fallback; }
+    }
+    function toList(v) {
+      if (Array.isArray(v)) return v;
+      return String(v || "").split(/[\n,]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+    }
+    var products = readJSON("[data-sp-products]", []);
+    var names = toList(readJSON("[data-sp-names]", ""));
+    var cities = toList(readJSON("[data-sp-cities]", ""));
+    if (!products.length || !names.length || !cities.length) return;
+
+    var verb = root.getAttribute("data-verb") || "purchased";
+    var conn = root.getAttribute("data-conn") || "from";
+    function num(a, d) { var n = parseFloat(root.getAttribute(a)); return isNaN(n) ? d : n; }
+    /* Randomised timing windows (seconds). Guarantee max >= min. */
+    function span(aMin, aMax, dMin, dMax) {
+      var lo = num(aMin, dMin), hi = num(aMax, dMax);
+      if (hi < lo) { var t = lo; lo = hi; hi = t; }
+      return [lo, hi];
+    }
+    var firstW = span("data-first-min", "data-first-max", 5, 10);
+    var showW = span("data-show-min", "data-show-max", 4, 6);
+    var gapW = span("data-gap-min", "data-gap-max", 10, 20);
+
+    function rnd(lo, hi) { return lo + Math.random() * (hi - lo); }
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    var current = null, hideT = null, nextT = null, lastIdx = -1;
+
+    function firstName(n) { return String(n).trim().split(/\s+/)[0]; }
+
+    function populate() {
+      /* Avoid repeating the same product twice in a row when possible. */
+      var idx = Math.floor(Math.random() * products.length);
+      if (products.length > 1 && idx === lastIdx) idx = (idx + 1) % products.length;
+      lastIdx = idx;
+      var p = products[idx];
+      current = p;
+      var mins = Math.floor(rnd(1, 22));
+      elTitle.textContent = firstName(pick(names)) + " " + conn + " " + pick(cities);
+      elText.textContent = verb + " " + p.t;
+      elTime.textContent = mins <= 1 ? "just now" : mins + "m ago";
+      if (p.i) { elImg.src = p.i; elImg.style.display = ""; }
+      else { elImg.removeAttribute("src"); elImg.style.display = "none"; }
+    }
+
+    function showOne() {
+      populate();
+      card.classList.add("is-in");
+      hideT = setTimeout(function () {
+        card.classList.remove("is-in");
+        nextT = setTimeout(showOne, rnd(gapW[0], gapW[1]) * 1000);
+      }, rnd(showW[0], showW[1]) * 1000);
+    }
+
+    card.addEventListener("click", function (e) {
+      if (e.target.closest("[data-sp-x]")) return;
+      if (current && current.u) window.location.href = current.u;
+    });
+    card.addEventListener("keydown", function (e) {
+      if ((e.key === "Enter" || e.key === " ") && current && current.u) { e.preventDefault(); window.location.href = current.u; }
+    });
+    root.querySelector("[data-sp-x]").addEventListener("click", function (e) {
+      e.stopPropagation();
+      clearTimeout(hideT);
+      card.classList.remove("is-in");
+      nextT = setTimeout(showOne, rnd(gapW[0], gapW[1]) * 1000);
+    });
+
+    root.hidden = false;
+    setTimeout(showOne, rnd(firstW[0], firstW[1]) * 1000);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Social proof",
+  "tag": "section",
+  "class": "dynamic-social-proof-section",
+  "settings": [
+    { "type": "paragraph", "content": "Shows an auto-rotating 'recent purchase' popup — a random first name + city paired with a random product from the collection below, e.g. 'Emily from Austin purchased a Custom Mug'. Only a first name and city are ever shown; no real customer data is used." },
+    { "type": "collection", "id": "collection", "label": "Pull products from", "info": "Leave empty to use all products." },
+    { "type": "header", "content": "Wording" },
+    { "type": "text", "id": "verb", "label": "Action word", "default": "purchased" },
+    { "type": "text", "id": "connector", "label": "Name / city joiner", "default": "from" },
+    { "type": "textarea", "id": "names", "label": "First names", "info": "Comma or line separated. First word only is used.", "default": "Emily, James, Sophia, Liam, Olivia, Noah, Ava, Ethan, Mia, Lucas, Isabella, Mason, Charlotte, Amelia, Harper, Benjamin, Ella, Henry, Grace, Jack" },
+    { "type": "textarea", "id": "cities", "label": "Cities", "info": "Comma or line separated.", "default": "Austin, Denver, Seattle, Chicago, Portland, Boston, Miami, Toronto, London, Nashville, Atlanta, Brooklyn, Dallas, Phoenix, San Diego, Vancouver, Dublin, Manchester, Melbourne, Berlin" },
+    { "type": "header", "content": "Placement" },
+    {
+      "type": "select", "id": "position", "label": "Corner", "default": "bottom-left",
+      "options": [
+        { "value": "bottom-left", "label": "Bottom left" },
+        { "value": "bottom-right", "label": "Bottom right" },
+        { "value": "top-left", "label": "Top left" },
+        { "value": "top-right", "label": "Top right" }
+      ]
+    },
+    { "type": "header", "content": "Timing (seconds)" },
+    { "type": "range", "id": "first_min", "label": "First popup — earliest", "min": 0, "max": 30, "step": 1, "unit": "s", "default": 5 },
+    { "type": "range", "id": "first_max", "label": "First popup — latest", "min": 0, "max": 30, "step": 1, "unit": "s", "default": 10 },
+    { "type": "range", "id": "show_min", "label": "Each shows for — min", "min": 2, "max": 15, "step": 1, "unit": "s", "default": 4 },
+    { "type": "range", "id": "show_max", "label": "Each shows for — max", "min": 2, "max": 15, "step": 1, "unit": "s", "default": 6 },
+    { "type": "range", "id": "gap_min", "label": "Wait between — min", "min": 3, "max": 60, "step": 1, "unit": "s", "default": 10 },
+    { "type": "range", "id": "gap_max", "label": "Wait between — max", "min": 3, "max": 60, "step": 1, "unit": "s", "default": 20 },
+    { "type": "header", "content": "Glass" },
+    { "type": "range", "id": "glass_opacity", "label": "Card tint", "min": 20, "max": 90, "step": 5, "unit": "%", "default": 62 }
+  ],
+  "presets": [ { "name": "Social proof" } ]
+}
+{% endschema %}
