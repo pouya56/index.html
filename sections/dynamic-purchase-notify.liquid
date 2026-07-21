@@ -77,13 +77,23 @@
         {%- if block.type == 'sale' -%}
           {%- assign who = block.settings.shopper | default: 'Someone' -%}
           {%- assign where = block.settings.location -%}
+          {%- comment -%} If a real product is picked, its image / title / link
+            / price fill in automatically; otherwise fall back to typed text. {%- endcomment -%}
+          {%- assign prod = block.settings.product -%}
+          {%- assign p_img = block.settings.product_image -%}
+          {%- assign p_name = block.settings.product_title -%}
+          {%- assign p_link = block.settings.link -%}
+          {%- if prod != blank -%}
+            {%- if p_img == blank -%}{%- assign p_img = prod.featured_image -%}{%- endif -%}
+            {%- capture p_name -%}{{ prod.title }}{% if block.settings.show_price %} · {{ prod.price | money }}{% endif %}{%- endcapture -%}
+            {%- assign p_link = block.settings.link | default: prod.url -%}
+          {%- endif -%}
           <div class="dpn-card" data-pnote data-mins="{{ block.settings.minutes_ago | default: 0 }}"
-            {% if block.settings.link != blank %}data-href="{{ block.settings.link }}"{% endif %}
+            {% if p_link != blank %}data-href="{{ p_link }}"{% endif %}
             style="--tile:{{ block.settings.icon_bg | default: '#2f2f34' }};" {{ block.shopify_attributes }}>
             <span class="dpn-ic" aria-hidden="true">
-              {%- if block.settings.product_image != blank -%}
-                <img src="{{ block.settings.product_image | image_url: width: 160 }}" alt="" loading="lazy"
-                  width="{{ block.settings.product_image.width }}" height="{{ block.settings.product_image.height }}">
+              {%- if p_img != blank -%}
+                <img src="{{ p_img | image_url: width: 160 }}" alt="" loading="lazy" width="80" height="80">
               {%- elsif block.settings.emoji != blank -%}
                 <span class="dpn-emoji">{{ block.settings.emoji }}</span>
               {%- else -%}
@@ -96,7 +106,7 @@
                 <span class="dpn-time" data-ptime>{{ block.settings.time_text | escape }}</span>
               </span>
               <span class="dpn-text">
-                {{ block.settings.verb | default: 'just bought' | escape }} {{ block.settings.product_title | escape }}
+                {{ block.settings.verb | default: 'just bought' | escape }} {{ p_name | escape }}
                 {%- if block.settings.verified %} <span class="dpn-check" aria-hidden="true">✓</span>{% endif -%}
               </span>
             </span>
@@ -286,18 +296,22 @@
       "name": "Simulated purchase",
       "settings": [
         { "type": "paragraph", "content": "Simulated — this is not a real order. Use responsibly." },
+        { "type": "header", "content": "Product" },
+        { "type": "product", "id": "product", "label": "Real product from your shop", "info": "Pick one and its image, name, price and link fill in automatically." },
+        { "type": "checkbox", "id": "show_price", "label": "Show the price", "default": false },
+        { "type": "text", "id": "product_title", "label": "…or type a product name", "info": "Used only if no product is picked.", "default": "the A3 Photo Printer" },
+        { "type": "header", "content": "Shopper" },
         { "type": "text", "id": "shopper", "label": "Shopper name", "default": "Sarah M." },
         { "type": "text", "id": "location", "label": "Location", "default": "Toronto, CA" },
         { "type": "text", "id": "verb", "label": "Action", "default": "just bought" },
-        { "type": "text", "id": "product_title", "label": "Product", "default": "the A3 Photo Printer" },
         { "type": "text", "id": "time_text", "label": "Timestamp text", "info": "Leave blank to auto-fill from 'minutes ago'.", "default": "" },
         { "type": "range", "id": "minutes_ago", "label": "…or minutes ago", "min": 0, "max": 1440, "step": 5, "unit": "min", "default": 5 },
         { "type": "checkbox", "id": "verified", "label": "Show a green ✓", "default": true },
-        { "type": "header", "content": "Icon" },
-        { "type": "image_picker", "id": "product_image", "label": "Product image" },
+        { "type": "header", "content": "Icon fallback" },
+        { "type": "image_picker", "id": "product_image", "label": "Icon image", "info": "Used if no product is picked." },
         { "type": "text", "id": "emoji", "label": "…or emoji", "default": "🛍️" },
         { "type": "color", "id": "icon_bg", "label": "Icon tile color", "default": "#2f2f34" },
-        { "type": "url", "id": "link", "label": "Link when tapped" }
+        { "type": "url", "id": "link", "label": "Link when tapped", "info": "Defaults to the product page when a product is picked." }
       ]
     }
   ],

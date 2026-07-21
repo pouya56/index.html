@@ -27,37 +27,62 @@
 >
   <div class="dnoti-stack" data-noti-stack>
     {%- for block in section.blocks -%}
+      {%- comment -%} Work out each card's fields from its type. A "purchase"
+        block pulls a real product from the store (image, title, price, link);
+        a "note" block uses whatever the merchant typed. {%- endcomment -%}
       {%- assign nid = block.settings.note_id | default: block.id -%}
+      {%- assign n_img = block.settings.icon_image -%}
+      {%- assign n_emoji = block.settings.emoji -%}
+      {%- assign n_title = block.settings.title -%}
+      {%- assign n_text = block.settings.text -%}
+      {%- assign n_link = block.settings.link -%}
+      {%- assign n_tile = block.settings.icon_bg | default: '#3a3a3f' -%}
+      {%- if block.type == 'purchase' -%}
+        {%- assign prod = block.settings.product -%}
+        {%- assign n_emoji = '🛍️' -%}
+        {%- assign n_tile = '#2f2f34' -%}
+        {%- if prod != blank -%}
+          {%- assign n_img = prod.featured_image -%}
+          {%- assign n_link = block.settings.link | default: prod.url -%}
+        {%- endif -%}
+        {%- if block.settings.shopper != blank -%}
+          {%- assign n_title = block.settings.shopper -%}
+          {%- if block.settings.location != blank -%}{%- assign n_title = block.settings.shopper | append: ' · ' | append: block.settings.location -%}{%- endif -%}
+          {%- capture n_text -%}{{ block.settings.verb | default: 'just bought' }}{% if prod != blank %} {{ prod.title }}{% if block.settings.show_price %} · {{ prod.price | money }}{% endif %}{% endif %}{%- endcapture -%}
+        {%- else -%}
+          {%- assign n_title = prod.title | default: 'New order' -%}
+          {%- capture n_text -%}{{ block.settings.verb | default: 'Just purchased' }}{% if prod != blank and block.settings.show_price %} · {{ prod.price | money }}{% endif %}{%- endcapture -%}
+        {%- endif -%}
+      {%- endif -%}
       <div
         class="dnoti-card"
         data-note
         data-id="{{ section.id }}-{{ nid }}"
         data-once="{% if block.settings.show_once %}1{% else %}0{% endif %}"
         data-delay="{{ block.settings.delay | default: 0 }}"
-        {% if block.settings.link != blank %}data-href="{{ block.settings.link }}"{% endif %}
+        {% if n_link != blank %}data-href="{{ n_link }}"{% endif %}
         {% if block.settings.auto != blank %}data-auto="{{ block.settings.auto | times: 1000 }}"{% endif %}
-        style="--tile:{{ block.settings.icon_bg | default: '#3a3a3f' }}; --i:{{ forloop.index0 }};"
+        style="--tile:{{ n_tile }}; --i:{{ forloop.index0 }};"
         {{ block.shopify_attributes }}
-        role="{% if block.settings.link != blank %}link{% else %}status{% endif %}"
-        {% if block.settings.link != blank %}tabindex="0"{% endif %}
+        role="{% if n_link != blank %}link{% else %}status{% endif %}"
+        {% if n_link != blank %}tabindex="0"{% endif %}
       >
         <span class="dnoti-ic" aria-hidden="true">
-          {%- if block.settings.icon_image != blank -%}
-            <img src="{{ block.settings.icon_image | image_url: width: 160 }}" alt=""
-              width="{{ block.settings.icon_image.width }}" height="{{ block.settings.icon_image.height }}" loading="lazy">
-          {%- elsif block.settings.emoji != blank -%}
-            <span class="dnoti-emoji">{{ block.settings.emoji }}</span>
+          {%- if n_img != blank -%}
+            <img src="{{ n_img | image_url: width: 160 }}" alt="" width="80" height="80" loading="lazy">
+          {%- elsif n_emoji != blank -%}
+            <span class="dnoti-emoji">{{ n_emoji }}</span>
           {%- else -%}
             <svg viewBox="0 0 24 24" class="dnoti-bell"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
           {%- endif -%}
         </span>
         <span class="dnoti-body">
           <span class="dnoti-top">
-            <span class="dnoti-title">{{ block.settings.title | escape }}</span>
+            <span class="dnoti-title">{{ n_title | escape }}</span>
             <span class="dnoti-time">{{ block.settings.time_text | escape }}</span>
           </span>
-          {%- if block.settings.text != blank -%}
-            <span class="dnoti-text">{{ block.settings.text | escape }}</span>
+          {%- if n_text != blank -%}
+            <span class="dnoti-text">{{ n_text | escape }}</span>
           {%- endif -%}
         </span>
         <button type="button" class="dnoti-x" data-noti-x aria-label="Dismiss notification">
@@ -347,6 +372,26 @@
         { "type": "checkbox", "id": "show_once", "label": "Only show this card once (per browser)", "default": false },
         { "type": "text", "id": "note_id", "label": "Memory ID (optional)", "info": "Change this to re-show a card that visitors already dismissed." }
       ]
+    },
+    {
+      "type": "purchase",
+      "name": "Recent purchase",
+      "settings": [
+        { "type": "paragraph", "content": "Shows a real product from your shop — its image, title, price and link fill in automatically. The shopper name / location is optional social proof (not a real order)." },
+        { "type": "product", "id": "product", "label": "Product" },
+        { "type": "checkbox", "id": "show_price", "label": "Show the price", "default": true },
+        { "type": "text", "id": "shopper", "label": "Shopper name (optional)", "info": "Leave blank to just show the product name as the title." },
+        { "type": "text", "id": "location", "label": "Location (optional)", "default": "" },
+        { "type": "text", "id": "verb", "label": "Action text", "default": "just bought", "info": "With a shopper: 'just bought'. Without: used as the message line, e.g. 'Just purchased'." },
+        { "type": "text", "id": "time_text", "label": "Timestamp text", "default": "2m ago" },
+        { "type": "header", "content": "Action" },
+        { "type": "url", "id": "link", "label": "Link when tapped", "info": "Defaults to the product page." },
+        { "type": "header", "content": "Timing" },
+        { "type": "range", "id": "delay", "label": "Extra delay before this card", "min": 0, "max": 5000, "step": 100, "unit": "ms", "default": 0 },
+        { "type": "range", "id": "auto", "label": "Auto-dismiss this card after", "min": 0, "max": 30, "step": 1, "unit": "s", "default": 0, "info": "0 = use the section default." },
+        { "type": "checkbox", "id": "show_once", "label": "Only show this card once (per browser)", "default": false },
+        { "type": "text", "id": "note_id", "label": "Memory ID (optional)" }
+      ]
     }
   ],
   "presets": [
@@ -354,7 +399,7 @@
       "name": "Notifications",
       "blocks": [
         { "type": "note", "settings": { "title": "Welcome back 👋", "text": "Your favourites are waiting for you.", "time_text": "now", "emoji": "👋", "icon_bg": "#3a7afe" } },
-        { "type": "note", "settings": { "title": "Free shipping today", "text": "On every order over $50 — no code needed.", "time_text": "2m ago", "emoji": "🚚", "icon_bg": "#34c759" } },
+        { "type": "purchase", "settings": { "shopper": "Sarah M.", "location": "Toronto, CA", "verb": "just bought", "time_text": "2m ago", "show_price": true } },
         { "type": "note", "settings": { "title": "New arrivals just dropped", "text": "Fresh designs added to the shop this morning.", "time_text": "1h ago", "emoji": "✨", "icon_bg": "#e8503a" } }
       ]
     }
