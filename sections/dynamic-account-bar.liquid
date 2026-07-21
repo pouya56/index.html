@@ -1715,26 +1715,14 @@
       if (punching) { punching = false; return; }
       e.preventDefault();
       e.stopImmediatePropagation();
-      /* Three quick punches cross the line. */
-      var now = Date.now();
-      punchN = (now - lastPunch < 4000) ? punchN + 1 : 1;
-      lastPunch = now;
+      /* A click just makes him flinch — clicking again never builds up to
+         nervous or angry. */
       btn.classList.add("is-punched");
       if (eyes) eyes.classList.add("is-dazed");
       setTimeout(function () {
         btn.classList.remove("is-punched");
-        if (punchN >= 3) { if (eyes) eyes.classList.remove("is-dazed"); enrage(); return; }
         /* The pain lingers a moment after the bounce. */
         setTimeout(function () { if (eyes) eyes.classList.remove("is-dazed"); }, 1000);
-        if (punchN === 2) {
-          /* He knows what one more punch means. */
-          btn.classList.add("is-nervous");
-          if (eyes) eyes.classList.add("is-nervous");
-          setTimeout(function () {
-            btn.classList.remove("is-nervous");
-            if (eyes) eyes.classList.remove("is-nervous");
-          }, 1700);
-        }
         punching = true;
         btn.click();
       }, 430);
