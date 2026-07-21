@@ -43,7 +43,9 @@
     .dyn-fb .fb-bg { position: absolute; inset: 0; z-index: 0; }
     .dyn-fb .fb-bg-layer { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; pointer-events: none; }
     .dyn-fb .fb-bg-layer.is-active { opacity: 1; pointer-events: auto; }
-    .dyn-fb .fb-media { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+    .dyn-fb .fb-media { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;
+      filter: blur(var(--pb, 0px)); }
+    .dyn-fb .fb-bg-layer.fb-blur .fb-media { transform: scale(1.09); }
     /* Text laid over the photo (per tab + the default cover). */
     .dyn-fb .fb-cap { position: absolute; z-index: 2; max-width: min(620px, 84%);
       padding: clamp(16px, 2.4vw, 26px) clamp(18px, 2.6vw, 30px); pointer-events: none; color: var(--cap-color, #fff); }
@@ -151,7 +153,7 @@
     .dyn-fb .fb-stk-card.is-open .fb-stk-grad { opacity: 1; }
 
     /* Progressive-blur scroll (fades at top & bottom) as a tab's media */
-    .dyn-fb .fb-scroll { position: absolute; top: 6%; bottom: 6%; width: var(--scr-w, 42%); overflow: hidden; }
+    .dyn-fb .fb-scroll { position: absolute; z-index: 2; top: 6%; bottom: 6%; width: var(--scr-w, 42%); overflow: hidden; }
     .dyn-fb .fb-scroll[data-pos="right"] { right: var(--scr-inset, 5%); }
     .dyn-fb .fb-scroll[data-pos="left"] { left: var(--scr-inset, 5%); }
     .dyn-fb .fb-scroll[data-pos="center"] { left: 50%; transform: translateX(-50%); }
@@ -293,7 +295,15 @@
           </div>
         {%- endfor -%}
         {%- for block in scrl -%}
-          <div class="fb-bg-layer{% if has_default == false and colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and forloop.first %} is-active{% endif %}" data-key="b{{ forloop.index0 }}">
+          {%- assign scr_blur = block.settings.photo_blur | default: 18 -%}
+          <div class="fb-bg-layer{% if has_default == false and colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and forloop.first %} is-active{% endif %}{% if scr_blur > 0 and block.settings.image != blank or block.settings.video != blank %} fb-blur{% endif %}" data-key="b{{ forloop.index0 }}" style="--pb:{{ scr_blur }}px">
+            {%- if block.settings.video != blank -%}
+              <video class="fb-media" autoplay muted loop playsinline{% if block.settings.image != blank %} poster="{{ block.settings.image | image_url: width: 40 }}"{% endif %}>
+                {%- for s in block.settings.video.sources -%}<source src="{{ s.url }}" type="{{ s.mime_type }}">{%- endfor -%}
+              </video>
+            {%- elsif block.settings.image != blank -%}
+              <img class="fb-media" src="{{ block.settings.image | image_url: width: 1800 }}" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" alt="{{ block.settings.title | escape }}" loading="lazy">
+            {%- endif -%}
             <div class="fb-scroll" data-pos="{{ block.settings.scr_pos | default: 'right' }}" style="--scr-w:{{ block.settings.scr_width | default: 42 }}%;--scr-inset:{{ block.settings.scr_inset | default: 5 }}%">
               <div class="fb-scroll-inner">{{ block.settings.content }}</div>
               <span class="fb-scroll-blur is-top" aria-hidden="true"></span>
@@ -601,6 +611,9 @@
     { "type": "scroll", "name": "Scroll text (blur)", "settings": [
       { "type": "text", "id": "title", "label": "Tab title", "default": "Story" },
       { "type": "textarea", "id": "detail", "label": "Details", "default": "Scroll to read." },
+      { "type": "image_picker", "id": "image", "label": "Background photo (behind the text)" },
+      { "type": "video", "id": "video", "label": "Background video (optional, overrides image)" },
+      { "type": "range", "id": "photo_blur", "min": 0, "max": 40, "step": 1, "unit": "px", "label": "Blur the photo behind", "default": 18, "info": "0 = sharp photo. Higher = dreamier blur behind the scrolling text." },
       { "type": "richtext", "id": "content", "label": "Scrolling text", "default": "<p>Add your long text here. It scrolls, softly blurring and fading at the top and bottom edges.</p>" },
       { "type": "range", "id": "scr_width", "min": 25, "max": 90, "step": 1, "unit": "%", "label": "Width", "default": 42 },
       { "type": "select", "id": "scr_pos", "label": "Position", "default": "right", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ] },
