@@ -165,6 +165,15 @@
     .dyn-fb .fb-scroll-blur { position: absolute; left: 0; width: 100%; height: 130px; pointer-events: none; z-index: 2; }
     .dyn-fb .fb-scroll-blur.is-top { top: 0; background: linear-gradient(to top, transparent, var(--card)); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent); mask-image: linear-gradient(to bottom, #000 45%, transparent); }
     .dyn-fb .fb-scroll-blur.is-bot { bottom: 0; background: linear-gradient(to bottom, transparent, var(--card)); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); -webkit-mask-image: linear-gradient(to top, #000 45%, transparent); mask-image: linear-gradient(to top, #000 45%, transparent); }
+    /* Over a photo: the text box feathers softly into the image on every edge
+       (a frosted, gently-darkened panel) instead of hard dark top/bottom bars. */
+    .dyn-fb .fb-scroll.on-photo .fb-scroll-inner { z-index: 1; }
+    .dyn-fb .fb-scroll.on-photo::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: 26px;
+      background: linear-gradient(90deg, transparent, rgba(8, 8, 11, var(--scr-scrim, 0.46)) 15%, rgba(8, 8, 11, var(--scr-scrim, 0.46)) 85%, transparent);
+      -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+      mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent); }
+    .dyn-fb .fb-scroll.on-photo .fb-scroll-blur { background: none; -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px); }
 
     .dyn-fb .fb-empty { color: var(--soft); font-size: 15px; padding: 30px; }
 
@@ -314,7 +323,7 @@
             {%- elsif scr_img != blank -%}
               <img class="fb-media" src="{{ scr_img | image_url: width: 1800 }}" width="{{ scr_img.width }}" height="{{ scr_img.height }}" alt="{{ block.settings.title | escape }}" loading="lazy">
             {%- endif -%}
-            <div class="fb-scroll" data-pos="{{ block.settings.scr_pos | default: 'right' }}" style="--scr-w:{{ block.settings.scr_width | default: 42 }}%;--scr-inset:{{ block.settings.scr_inset | default: 5 }}%">
+            <div class="fb-scroll{% if scr_hasmedia %} on-photo{% endif %}" data-pos="{{ block.settings.scr_pos | default: 'right' }}" style="--scr-w:{{ block.settings.scr_width | default: 42 }}%;--scr-inset:{{ block.settings.scr_inset | default: 5 }}%;--scr-scrim:{{ block.settings.scr_scrim | default: 46 | divided_by: 100.0 }}">
               <div class="fb-scroll-inner">{{ block.settings.content }}</div>
               <span class="fb-scroll-blur is-top" aria-hidden="true"></span>
               <span class="fb-scroll-blur is-bot" aria-hidden="true"></span>
@@ -625,6 +634,7 @@
       { "type": "image_picker", "id": "image", "label": "Background photo (behind the text)", "info": "Leave EMPTY to reuse the Default cover photo — then opening this tab looks like the same image just blurs and fades in (no image swap)." },
       { "type": "video", "id": "video", "label": "Background video (optional, overrides image)" },
       { "type": "range", "id": "photo_blur", "min": 0, "max": 40, "step": 1, "unit": "px", "label": "Blur the photo behind", "default": 18, "info": "0 = sharp photo. Higher = dreamier blur behind the scrolling text." },
+      { "type": "range", "id": "scr_scrim", "min": 0, "max": 80, "step": 2, "unit": "%", "label": "Panel behind text (readability)", "default": 46, "info": "A soft dark panel that feathers into the photo so the text stays readable. 0 = none." },
       { "type": "richtext", "id": "content", "label": "Scrolling text", "default": "<p>Add your long text here. It scrolls, softly blurring and fading at the top and bottom edges.</p>" },
       { "type": "range", "id": "scr_width", "min": 25, "max": 90, "step": 1, "unit": "%", "label": "Width", "default": 42 },
       { "type": "select", "id": "scr_pos", "label": "Position", "default": "right", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ] },
