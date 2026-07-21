@@ -165,15 +165,19 @@
     .dyn-fb .fb-scroll-blur { position: absolute; left: 0; width: 100%; height: 130px; pointer-events: none; z-index: 2; }
     .dyn-fb .fb-scroll-blur.is-top { top: 0; background: linear-gradient(to top, transparent, var(--card)); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent); mask-image: linear-gradient(to bottom, #000 45%, transparent); }
     .dyn-fb .fb-scroll-blur.is-bot { bottom: 0; background: linear-gradient(to bottom, transparent, var(--card)); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); -webkit-mask-image: linear-gradient(to top, #000 45%, transparent); mask-image: linear-gradient(to top, #000 45%, transparent); }
-    /* Over a photo: the text box feathers softly into the image on every edge
-       (a frosted, gently-darkened panel) instead of hard dark top/bottom bars. */
-    .dyn-fb .fb-scroll.on-photo .fb-scroll-inner { z-index: 1; }
-    .dyn-fb .fb-scroll.on-photo::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: 26px;
+    /* Over a photo: NO box. The text itself feathers at top & bottom (mask on
+       the text, not an overlay) and stays readable with a soft shadow. */
+    .dyn-fb .fb-scroll.on-photo .fb-scroll-blur { display: none; }
+    .dyn-fb .fb-scroll.on-photo .fb-scroll-inner { z-index: 1;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65), 0 0 20px rgba(0, 0, 0, 0.55);
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+      mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent); }
+    /* Optional soft panel — only when "Panel behind text" is raised above 0. */
+    .dyn-fb .fb-scroll.on-photo.has-scrim::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: 26px;
       background: linear-gradient(90deg, transparent, rgba(8, 8, 11, var(--scr-scrim, 0.46)) 15%, rgba(8, 8, 11, var(--scr-scrim, 0.46)) 85%, transparent);
       -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
       -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
       mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent); }
-    .dyn-fb .fb-scroll.on-photo .fb-scroll-blur { background: none; -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px); }
 
     .dyn-fb .fb-empty { color: var(--soft); font-size: 15px; padding: 30px; }
 
@@ -323,7 +327,8 @@
             {%- elsif scr_img != blank -%}
               <img class="fb-media" src="{{ scr_img | image_url: width: 1800 }}" width="{{ scr_img.width }}" height="{{ scr_img.height }}" alt="{{ block.settings.title | escape }}" loading="lazy">
             {%- endif -%}
-            <div class="fb-scroll{% if scr_hasmedia %} on-photo{% endif %}" data-pos="{{ block.settings.scr_pos | default: 'right' }}" style="--scr-w:{{ block.settings.scr_width | default: 42 }}%;--scr-inset:{{ block.settings.scr_inset | default: 5 }}%;--scr-scrim:{{ block.settings.scr_scrim | default: 46 | divided_by: 100.0 }}">
+            {%- assign scr_scrim_pct = block.settings.scr_scrim | default: 0 -%}
+            <div class="fb-scroll{% if scr_hasmedia %} on-photo{% endif %}{% if scr_scrim_pct > 0 %} has-scrim{% endif %}" data-pos="{{ block.settings.scr_pos | default: 'right' }}" style="--scr-w:{{ block.settings.scr_width | default: 42 }}%;--scr-inset:{{ block.settings.scr_inset | default: 5 }}%;--scr-scrim:{{ scr_scrim_pct | divided_by: 100.0 }}">
               <div class="fb-scroll-inner">{{ block.settings.content }}</div>
               <span class="fb-scroll-blur is-top" aria-hidden="true"></span>
               <span class="fb-scroll-blur is-bot" aria-hidden="true"></span>
@@ -634,7 +639,7 @@
       { "type": "image_picker", "id": "image", "label": "Background photo (behind the text)", "info": "Leave EMPTY to reuse the Default cover photo — then opening this tab looks like the same image just blurs and fades in (no image swap)." },
       { "type": "video", "id": "video", "label": "Background video (optional, overrides image)" },
       { "type": "range", "id": "photo_blur", "min": 0, "max": 40, "step": 1, "unit": "px", "label": "Blur the photo behind", "default": 18, "info": "0 = sharp photo. Higher = dreamier blur behind the scrolling text." },
-      { "type": "range", "id": "scr_scrim", "min": 0, "max": 80, "step": 2, "unit": "%", "label": "Panel behind text (readability)", "default": 46, "info": "A soft dark panel that feathers into the photo so the text stays readable. 0 = none." },
+      { "type": "range", "id": "scr_scrim", "min": 0, "max": 80, "step": 2, "unit": "%", "label": "Panel behind text (optional)", "default": 0, "info": "0 = no box, just text over the photo (readable via a soft shadow). Raise it only if you want a soft dark panel behind the text on very busy photos." },
       { "type": "richtext", "id": "content", "label": "Scrolling text", "default": "<p>Add your long text here. It scrolls, softly blurring and fading at the top and bottom edges.</p>" },
       { "type": "range", "id": "scr_width", "min": 25, "max": 90, "step": 1, "unit": "%", "label": "Width", "default": 42 },
       { "type": "select", "id": "scr_pos", "label": "Position", "default": "right", "options": [ { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" } ] },
