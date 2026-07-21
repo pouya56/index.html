@@ -298,9 +298,13 @@
         {%- endfor -%}
         {%- for block in scrl -%}
           {%- assign scr_blur = block.settings.photo_blur | default: 18 -%}
-          {%- comment -%} Empty photo → reuse the default cover, so opening the tab looks like the same image just blurs/fades in. {%- endcomment -%}
-          {%- assign scr_img = block.settings.image | default: section.settings.default_image -%}
-          {%- assign scr_vid = block.settings.video | default: section.settings.default_video -%}
+          {%- comment -%} Photo behind the text is optional per tab. When on and left empty, it reuses the default cover so opening the tab looks like the same image just blurs/fades in. {%- endcomment -%}
+          {%- if block.settings.show_photo == false -%}
+            {%- assign scr_img = '' -%}{%- assign scr_vid = '' -%}
+          {%- else -%}
+            {%- assign scr_img = block.settings.image | default: section.settings.default_image -%}
+            {%- assign scr_vid = block.settings.video | default: section.settings.default_video -%}
+          {%- endif -%}
           {%- assign scr_hasmedia = false -%}{%- if scr_img != blank or scr_vid != blank -%}{%- assign scr_hasmedia = true -%}{%- endif -%}
           <div class="fb-bg-layer{% if has_default == false and colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and forloop.first %} is-active{% endif %}{% if scr_blur > 0 and scr_hasmedia %} fb-blur{% endif %}" data-key="b{{ forloop.index0 }}" style="--pb:{{ scr_blur }}px">
             {%- if scr_vid != blank -%}
@@ -617,6 +621,7 @@
     { "type": "scroll", "name": "Scroll text (blur)", "settings": [
       { "type": "text", "id": "title", "label": "Tab title", "default": "Story" },
       { "type": "textarea", "id": "detail", "label": "Details", "default": "Scroll to read." },
+      { "type": "checkbox", "id": "show_photo", "label": "Show a photo behind the text", "default": true, "info": "Turn OFF for a plain background on this tab (no photo, no blur)." },
       { "type": "image_picker", "id": "image", "label": "Background photo (behind the text)", "info": "Leave EMPTY to reuse the Default cover photo — then opening this tab looks like the same image just blurs and fades in (no image swap)." },
       { "type": "video", "id": "video", "label": "Background video (optional, overrides image)" },
       { "type": "range", "id": "photo_blur", "min": 0, "max": 40, "step": 1, "unit": "px", "label": "Blur the photo behind", "default": 18, "info": "0 = sharp photo. Higher = dreamier blur behind the scrolling text." },
