@@ -1161,25 +1161,44 @@
         function () { return W.gorgiasChat && W.gorgiasChat.open && (W.gorgiasChat.open(), true); }
       ];
       for (var a = 0; a < apis.length; a++) { try { if (apis[a]()) return; } catch (eC1) {} }
-      var sels = ["#shopify-chat", "[id^='shopify-chat']", ".shopify-chat-button",
-        "button[aria-label*='chat' i]", "[class*='chat-button']", "[class*='chat-launcher']",
-        "[class*='ChatButton']", ".gorgias-chat-button", "#chat-widget-container button"];
-      for (var s = 0; s < sels.length; s++) {
-        var el = document.querySelector(sels[s]);
-        if (!el) continue;
-        if (el.shadowRoot) { var sb = el.shadowRoot.querySelector("button, [role='button']"); if (sb) { sb.click(); return; } }
-        try { el.click(); return; } catch (eC2) {}
-        var ib = el.querySelector && el.querySelector("button, [role='button']");
-        if (ib) { try { ib.click(); return; } catch (eC3) {} }
-      }
-      /* Late-loading widget: try the launchers once more, then link out. */
-      setTimeout(function () {
-        for (var s2 = 0; s2 < sels.length; s2++) {
-          var el2 = document.querySelector(sels[s2]);
-          if (el2) { try { el2.click(); return; } catch (eC4) {} }
+      /* Pierce nested shadow roots to reach a launcher button. Shopify Inbox
+         hides its toggle inside <inbox-online-store-chat>'s shadow DOM. */
+      function pierce(node, depth) {
+        if (!node || depth > 4) return null;
+        var b = node.querySelector && node.querySelector("button, [role='button'], a[href]");
+        if (b) return b;
+        var kids = node.querySelectorAll ? node.querySelectorAll("*") : [];
+        for (var i = 0; i < kids.length; i++) {
+          if (kids[i].shadowRoot) { var r = pierce(kids[i].shadowRoot, depth + 1); if (r) return r; }
         }
-        if (vChatFallback) location.href = vChatFallback;
-      }, 900);
+        return null;
+      }
+      /* Shopify Inbox first, then generic chat launchers. */
+      var sels = ["inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']",
+        ".shopify-chat-button", "button[aria-label*='chat' i]", "[class*='chat-button']",
+        "[class*='chat-launcher']", "[class*='ChatButton']", ".gorgias-chat-button",
+        "#chat-widget-container button"];
+      function tryOpen() {
+        for (var s = 0; s < sels.length; s++) {
+          var el = document.querySelector(sels[s]);
+          if (!el) continue;
+          if (el.shadowRoot) { var sb = pierce(el.shadowRoot, 0); if (sb) { sb.click(); return true; } }
+          if (el.tagName && el.tagName.toLowerCase().indexOf("-") !== -1) continue; /* empty custom el */
+          try { el.click(); return true; } catch (eC2) {}
+          var ib = el.querySelector && el.querySelector("button, [role='button']");
+          if (ib) { try { ib.click(); return true; } catch (eC3) {} }
+        }
+        return false;
+      }
+      if (tryOpen()) return;
+      /* The widget script may still be loading — retry briefly, then link out. */
+      var tries = 0;
+      var poll = setInterval(function () {
+        if (tryOpen() || ++tries >= 8) {
+          clearInterval(poll);
+          if (tries >= 8 && vChatFallback) location.href = vChatFallback;
+        }
+      }, 350);
     }
     /* Every app gets its own tab; its window shows a live preview of the
        page (same-shop links embed; outside links get an Open button). */
