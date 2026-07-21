@@ -1143,6 +1143,51 @@
        apps' own APIs, then clicks a launcher button by common selectors
        (Shopify Inbox included), and finally falls back to a link. */
     var vChatFallback = {{ section.settings.chat_fallback_url | default: '/pages/contact' | json }};
+    var vHideBubble = {% if section.settings.hide_native_bubble == false %}false{% else %}true{% endif %};
+    /* Pierce nested shadow roots to reach a launcher button. Shopify Inbox
+       hides its toggle inside <inbox-online-store-chat>'s shadow DOM. */
+    function chatPierce(node, depth) {
+      if (!node || depth > 4) return null;
+      var b = node.querySelector && node.querySelector("button, [role='button'], a[href]");
+      if (b) return b;
+      var kids = node.querySelectorAll ? node.querySelectorAll("*") : [];
+      for (var i = 0; i < kids.length; i++) {
+        if (kids[i].shadowRoot) { var r = chatPierce(kids[i].shadowRoot, depth + 1); if (r) return r; }
+      }
+      return null;
+    }
+    var chatHosts = ["inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']"];
+    function findChatLauncher() {
+      for (var i = 0; i < chatHosts.length; i++) {
+        var h = document.querySelector(chatHosts[i]);
+        if (h && h.shadowRoot) { var b = chatPierce(h.shadowRoot, 0); if (b) return { host: h, btn: b }; }
+        if (h) return { host: h, btn: h };
+      }
+      return null;
+    }
+    /* Hide the store's own corner bubble — the Chat tab is the only door.
+       We still click the (hidden) launcher to open, and the chat PANEL is a
+       separate element so it stays visible. Runs on load + retries + observes,
+       because the widget script loads late and re-renders. */
+    function hideNativeChat() {
+      if (!vHideBubble) return;
+      var f = findChatLauncher();
+      if (!f || !f.btn) return;
+      try { f.btn.style.setProperty("display", "none", "important"); } catch (eH0) {}
+      if (f.host && f.host.shadowRoot && !f.host.__dynHid) {
+        try {
+          var lbl = f.btn.getAttribute && f.btn.getAttribute("aria-label");
+          var st = document.createElement("style");
+          st.textContent = ".chat-lifecycle-button,[class*='lifecycle-button']" +
+            (lbl ? ",button[aria-label='" + lbl.replace(/'/g, "") + "'],[role='button'][aria-label='" + lbl.replace(/'/g, "") + "']" : "") +
+            "{display:none !important}";
+          f.host.shadowRoot.appendChild(st);
+          f.host.__dynHid = true;
+          var mo = new MutationObserver(function () { hideNativeChat(); });
+          mo.observe(f.host.shadowRoot, { childList: true, subtree: true });
+        } catch (eH1) {}
+      }
+    }
     function openChat() {
       var W = window;
       /* Fold the launcher away so the chat isn't hidden behind it. */
@@ -1161,23 +1206,12 @@
         function () { return W.gorgiasChat && W.gorgiasChat.open && (W.gorgiasChat.open(), true); }
       ];
       for (var a = 0; a < apis.length; a++) { try { if (apis[a]()) return; } catch (eC1) {} }
-      /* Pierce nested shadow roots to reach a launcher button. Shopify Inbox
-         hides its toggle inside <inbox-online-store-chat>'s shadow DOM. */
-      function pierce(node, depth) {
-        if (!node || depth > 4) return null;
-        var b = node.querySelector && node.querySelector("button, [role='button'], a[href]");
-        if (b) return b;
-        var kids = node.querySelectorAll ? node.querySelectorAll("*") : [];
-        for (var i = 0; i < kids.length; i++) {
-          if (kids[i].shadowRoot) { var r = pierce(kids[i].shadowRoot, depth + 1); if (r) return r; }
-        }
-        return null;
-      }
       /* Shopify Inbox first, then generic chat launchers. */
       var sels = ["inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']",
         ".shopify-chat-button", "button[aria-label*='chat' i]", "[class*='chat-button']",
         "[class*='chat-launcher']", "[class*='ChatButton']", ".gorgias-chat-button",
         "#chat-widget-container button"];
+      function pierce(node, depth) { return chatPierce(node, depth); }
       function tryOpen() {
         for (var s = 0; s < sels.length; s++) {
           var el = document.querySelector(sels[s]);
@@ -1199,6 +1233,15 @@
           if (tries >= 8 && vChatFallback) location.href = vChatFallback;
         }
       }, 350);
+    }
+    /* Hide the native chat bubble as soon as it appears (widget loads late). */
+    if (vHideBubble) {
+      hideNativeChat();
+      var hideTries = 0;
+      var hidePoll = setInterval(function () {
+        hideNativeChat();
+        if (++hideTries >= 20) clearInterval(hidePoll);
+      }, 500);
     }
     /* Every app gets its own tab; its window shows a live preview of the
        page (same-shop links embed; outside links get an Open button). */
@@ -1955,6 +1998,7 @@
     { "type": "checkbox", "id": "show_apps", "label": "Show 9-dots apps menu", "default": true },
     { "type": "text", "id": "apps_title", "label": "Apps menu title", "default": "Apps", "info": "Shown only when the dashboard widgets below are off — the greeting takes its place otherwise." },
     { "type": "checkbox", "id": "show_chat", "label": "Show Chat tab", "default": true, "info": "Adds a chat tab beside the launcher that opens your store's chat widget (Shopify Inbox, Tidio, Crisp, Gorgias, Intercom, and more are detected automatically)." },
+    { "type": "checkbox", "id": "hide_native_bubble", "label": "Hide the store's own chat bubble", "default": true, "info": "Removes the separate corner chat button (e.g. Shopify Inbox's 'Live chat') so the tab above is the only way in. The chat window itself still opens normally." },
     { "type": "url", "id": "chat_fallback_url", "label": "Chat fallback link", "info": "Where the Chat tab goes if no chat widget is found on the page. Defaults to your contact page." },
     { "type": "header", "content": "Apps window dashboard" },
     { "type": "checkbox", "id": "show_widgets", "label": "Show greeting, clock & widgets", "default": true, "info": "The dashboard at the top of the 9-dots window: greeting + date, live analog clock, a rotating focus line, and the visitor's saved items." },
