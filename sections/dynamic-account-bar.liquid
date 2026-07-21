@@ -1160,33 +1160,48 @@
     function findChatLauncher() {
       for (var i = 0; i < chatHosts.length; i++) {
         var h = document.querySelector(chatHosts[i]);
-        if (h && h.shadowRoot) { var b = chatPierce(h.shadowRoot, 0); if (b) return { host: h, btn: b }; }
+        if (h && h.shadowRoot) {
+          /* Prefer Shopify Inbox's known launcher; else the first button. */
+          var b = h.shadowRoot.querySelector(".chat-lifecycle-button, [class*='lifecycle-button'], [class*='launcher']")
+            || chatPierce(h.shadowRoot, 0);
+          if (b) return { host: h, btn: b };
+        }
         if (h) return { host: h, btn: h };
       }
       return null;
     }
     /* Hide the store's own corner bubble — the Chat tab is the only door.
-       We still click the (hidden) launcher to open, and the chat PANEL is a
-       separate element so it stays visible. Runs on load + retries + observes,
-       because the widget script loads late and re-renders. */
+       Hiding is NON-destructive (visibility + pointer-events, never
+       display:none) so the widget can still open, and we only ever touch the
+       small collapsed bubble — never the open panel or its close button. */
     function hideNativeChat() {
       if (!vHideBubble) return;
       var f = findChatLauncher();
       if (!f || !f.btn) return;
-      try { f.btn.style.setProperty("display", "none", "important"); } catch (eH0) {}
-      if (f.host && f.host.shadowRoot && !f.host.__dynHid) {
+      try {
+        var r = f.btn.getBoundingClientRect();
+        /* Only hide the small collapsed bubble; leave a big open panel alone. */
+        if (r.width && r.width < 150 && r.height < 150) {
+          f.btn.style.setProperty("visibility", "hidden", "important");
+          f.btn.style.setProperty("pointer-events", "none", "important");
+        }
+      } catch (eH0) {}
+      if (f.host && f.host.shadowRoot && !f.host.__dynObs) {
         try {
-          var lbl = f.btn.getAttribute && f.btn.getAttribute("aria-label");
-          var st = document.createElement("style");
-          st.textContent = ".chat-lifecycle-button,[class*='lifecycle-button']" +
-            (lbl ? ",button[aria-label='" + lbl.replace(/'/g, "") + "'],[role='button'][aria-label='" + lbl.replace(/'/g, "") + "']" : "") +
-            "{display:none !important}";
-          f.host.shadowRoot.appendChild(st);
-          f.host.__dynHid = true;
-          var mo = new MutationObserver(function () { hideNativeChat(); });
-          mo.observe(f.host.shadowRoot, { childList: true, subtree: true });
+          f.host.__dynObs = true;
+          new MutationObserver(function () { hideNativeChat(); })
+            .observe(f.host.shadowRoot, { childList: true, subtree: true });
         } catch (eH1) {}
       }
+    }
+    /* Reveal the launcher just long enough to open it (some widgets refuse to
+       open a hidden button), then let the observer re-hide it. */
+    function revealChatLauncher() {
+      var f = findChatLauncher();
+      if (f && f.btn && f.btn.style) {
+        try { f.btn.style.removeProperty("visibility"); f.btn.style.removeProperty("pointer-events"); } catch (eR0) {}
+      }
+      return f;
     }
     function openChat() {
       var W = window;
@@ -1211,18 +1226,26 @@
         ".shopify-chat-button", "button[aria-label*='chat' i]", "[class*='chat-button']",
         "[class*='chat-launcher']", "[class*='ChatButton']", ".gorgias-chat-button",
         "#chat-widget-container button"];
-      function pierce(node, depth) { return chatPierce(node, depth); }
       function tryOpen() {
+        /* Un-hide the store's launcher first so it opens reliably; the
+           observer re-hides the collapsed bubble a moment later. */
+        var f = revealChatLauncher();
+        if (f && f.btn && f.btn.click) { try { f.btn.click(); scheduleRehide(); return true; } catch (eCf) {} }
         for (var s = 0; s < sels.length; s++) {
           var el = document.querySelector(sels[s]);
           if (!el) continue;
-          if (el.shadowRoot) { var sb = pierce(el.shadowRoot, 0); if (sb) { sb.click(); return true; } }
+          if (el.shadowRoot) { var sb = chatPierce(el.shadowRoot, 0); if (sb) { sb.click(); scheduleRehide(); return true; } }
           if (el.tagName && el.tagName.toLowerCase().indexOf("-") !== -1) continue; /* empty custom el */
-          try { el.click(); return true; } catch (eC2) {}
+          try { el.click(); scheduleRehide(); return true; } catch (eC2) {}
           var ib = el.querySelector && el.querySelector("button, [role='button']");
-          if (ib) { try { ib.click(); return true; } catch (eC3) {} }
+          if (ib) { try { ib.click(); scheduleRehide(); return true; } catch (eC3) {} }
         }
         return false;
+      }
+      function scheduleRehide() {
+        if (!vHideBubble) return;
+        setTimeout(hideNativeChat, 400);
+        setTimeout(hideNativeChat, 1200);
       }
       if (tryOpen()) return;
       /* The widget script may still be loading — retry briefly, then link out. */
