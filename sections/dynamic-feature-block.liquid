@@ -296,13 +296,17 @@
         {%- endfor -%}
         {%- for block in scrl -%}
           {%- assign scr_blur = block.settings.photo_blur | default: 18 -%}
-          <div class="fb-bg-layer{% if has_default == false and colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and forloop.first %} is-active{% endif %}{% if scr_blur > 0 and block.settings.image != blank or block.settings.video != blank %} fb-blur{% endif %}" data-key="b{{ forloop.index0 }}" style="--pb:{{ scr_blur }}px">
-            {%- if block.settings.video != blank -%}
-              <video class="fb-media" autoplay muted loop playsinline{% if block.settings.image != blank %} poster="{{ block.settings.image | image_url: width: 40 }}"{% endif %}>
-                {%- for s in block.settings.video.sources -%}<source src="{{ s.url }}" type="{{ s.mime_type }}">{%- endfor -%}
+          {%- comment -%} Empty photo → reuse the default cover, so opening the tab looks like the same image just blurs/fades in. {%- endcomment -%}
+          {%- assign scr_img = block.settings.image | default: section.settings.default_image -%}
+          {%- assign scr_vid = block.settings.video | default: section.settings.default_video -%}
+          {%- assign scr_hasmedia = false -%}{%- if scr_img != blank or scr_vid != blank -%}{%- assign scr_hasmedia = true -%}{%- endif -%}
+          <div class="fb-bg-layer{% if has_default == false and colors.size == 0 and feats.size == 0 and canv.size == 0 and stak.size == 0 and forloop.first %} is-active{% endif %}{% if scr_blur > 0 and scr_hasmedia %} fb-blur{% endif %}" data-key="b{{ forloop.index0 }}" style="--pb:{{ scr_blur }}px">
+            {%- if scr_vid != blank -%}
+              <video class="fb-media" autoplay muted loop playsinline{% if scr_img != blank %} poster="{{ scr_img | image_url: width: 40 }}"{% endif %}>
+                {%- for s in scr_vid.sources -%}<source src="{{ s.url }}" type="{{ s.mime_type }}">{%- endfor -%}
               </video>
-            {%- elsif block.settings.image != blank -%}
-              <img class="fb-media" src="{{ block.settings.image | image_url: width: 1800 }}" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" alt="{{ block.settings.title | escape }}" loading="lazy">
+            {%- elsif scr_img != blank -%}
+              <img class="fb-media" src="{{ scr_img | image_url: width: 1800 }}" width="{{ scr_img.width }}" height="{{ scr_img.height }}" alt="{{ block.settings.title | escape }}" loading="lazy">
             {%- endif -%}
             <div class="fb-scroll" data-pos="{{ block.settings.scr_pos | default: 'right' }}" style="--scr-w:{{ block.settings.scr_width | default: 42 }}%;--scr-inset:{{ block.settings.scr_inset | default: 5 }}%">
               <div class="fb-scroll-inner">{{ block.settings.content }}</div>
@@ -611,7 +615,7 @@
     { "type": "scroll", "name": "Scroll text (blur)", "settings": [
       { "type": "text", "id": "title", "label": "Tab title", "default": "Story" },
       { "type": "textarea", "id": "detail", "label": "Details", "default": "Scroll to read." },
-      { "type": "image_picker", "id": "image", "label": "Background photo (behind the text)" },
+      { "type": "image_picker", "id": "image", "label": "Background photo (behind the text)", "info": "Leave EMPTY to reuse the Default cover photo — then opening this tab looks like the same image just blurs and fades in (no image swap)." },
       { "type": "video", "id": "video", "label": "Background video (optional, overrides image)" },
       { "type": "range", "id": "photo_blur", "min": 0, "max": 40, "step": 1, "unit": "px", "label": "Blur the photo behind", "default": 18, "info": "0 = sharp photo. Higher = dreamier blur behind the scrolling text." },
       { "type": "richtext", "id": "content", "label": "Scrolling text", "default": "<p>Add your long text here. It scrolls, softly blurring and fading at the top and bottom edges.</p>" },
