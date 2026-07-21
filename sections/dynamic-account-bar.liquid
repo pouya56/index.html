@@ -644,6 +644,22 @@
     .dyn-abar .dh-apps-pop.is-vision .dh-w-quote { width: 210px; height: 210px; aspect-ratio: auto; }
     .dyn-abar .dh-apps-pop.is-vision #dynAbSaved, .dyn-abar .dh-apps-pop.is-vision #dynAbCart { width: 300px; }
     .dyn-abar .dh-apps-pop.is-vision .dh-w-savedbox { height: 320px; }
+    /* Widgets tab layout — no card grid. The date banner and the clock ride
+       the top row side by side ("date and hours on top"); the quote drops to
+       its own full-width panel beneath them, big and centred in the middle. */
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-apps-head {
+      display: flex; flex-wrap: wrap; align-items: stretch; justify-content: center; gap: 18px; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-w-greethead {
+      flex: 1 1 0; min-width: 190px; width: auto; order: 1; justify-content: center; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-w-clock {
+      flex: 0 0 auto; order: 2; width: 150px; height: 150px; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-w-quote {
+      flex: 1 1 100%; order: 3; width: 100%; height: auto; aspect-ratio: auto;
+      min-height: 200px; padding: 34px 36px; justify-content: center; gap: 16px; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-w-quote .dh-w-plant {
+      width: 30px; height: 30px; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-w-mlines {
+      font-size: 30px; font-weight: 500; line-height: 1.32; max-width: 22ch; }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
   </style>
 
