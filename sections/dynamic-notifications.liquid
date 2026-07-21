@@ -1,0 +1,363 @@
+{%- comment -%}
+  Dynamic Notifications — a macOS-style stack of frosted "banner" cards that
+  slide into a corner of the screen, pile up like Notification Center, and fan
+  open when the visitor hovers (or taps) the stack. Each card has an app-style
+  icon, a bold title, a line of text and a timestamp, and can be dismissed.
+{%- endcomment -%}
+
+{%- assign pos = section.settings.position | default: 'top-right' -%}
+{%- assign anim = section.settings.reveal | default: 'slide' -%}
+
+<div
+  class="dyn-noti dyn-noti--{{ pos }}"
+  id="dynNoti-{{ section.id }}"
+  data-noti
+  data-pos="{{ pos }}"
+  data-reveal="{{ anim }}"
+  data-start="{{ section.settings.start_delay | default: 700 }}"
+  data-stagger="{{ section.settings.stagger | default: 260 }}"
+  data-auto="{{ section.settings.auto_dismiss | default: 0 | times: 1000 }}"
+  data-frequency="{{ section.settings.frequency | default: 'session' }}"
+  data-open-hover="{% if section.settings.expand_on_hover == false %}0{% else %}1{% endif %}"
+  {{ section.shopify_attributes }}
+  aria-live="polite"
+  role="region"
+  aria-label="{{ section.settings.aria_label | default: 'Notifications' | escape }}"
+  hidden
+>
+  <div class="dnoti-stack" data-noti-stack>
+    {%- for block in section.blocks -%}
+      {%- assign nid = block.settings.note_id | default: block.id -%}
+      <div
+        class="dnoti-card"
+        data-note
+        data-id="{{ section.id }}-{{ nid }}"
+        data-once="{% if block.settings.show_once %}1{% else %}0{% endif %}"
+        data-delay="{{ block.settings.delay | default: 0 }}"
+        {% if block.settings.link != blank %}data-href="{{ block.settings.link }}"{% endif %}
+        {% if block.settings.auto != blank %}data-auto="{{ block.settings.auto | times: 1000 }}"{% endif %}
+        style="--tile:{{ block.settings.icon_bg | default: '#3a3a3f' }}; --i:{{ forloop.index0 }};"
+        {{ block.shopify_attributes }}
+        role="{% if block.settings.link != blank %}link{% else %}status{% endif %}"
+        {% if block.settings.link != blank %}tabindex="0"{% endif %}
+      >
+        <span class="dnoti-ic" aria-hidden="true">
+          {%- if block.settings.icon_image != blank -%}
+            <img src="{{ block.settings.icon_image | image_url: width: 160 }}" alt=""
+              width="{{ block.settings.icon_image.width }}" height="{{ block.settings.icon_image.height }}" loading="lazy">
+          {%- elsif block.settings.emoji != blank -%}
+            <span class="dnoti-emoji">{{ block.settings.emoji }}</span>
+          {%- else -%}
+            <svg viewBox="0 0 24 24" class="dnoti-bell"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          {%- endif -%}
+        </span>
+        <span class="dnoti-body">
+          <span class="dnoti-top">
+            <span class="dnoti-title">{{ block.settings.title | escape }}</span>
+            <span class="dnoti-time">{{ block.settings.time_text | escape }}</span>
+          </span>
+          {%- if block.settings.text != blank -%}
+            <span class="dnoti-text">{{ block.settings.text | escape }}</span>
+          {%- endif -%}
+        </span>
+        <button type="button" class="dnoti-x" data-noti-x aria-label="Dismiss notification">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+        </button>
+      </div>
+    {%- endfor -%}
+  </div>
+</div>
+
+<style>
+  #dynNoti-{{ section.id }}.dyn-noti { position: fixed; z-index: 2147482000; width: min(384px, calc(100vw - 24px));
+    pointer-events: none; -webkit-font-smoothing: antialiased; }
+  #dynNoti-{{ section.id }}.dyn-noti[hidden] { display: none; }
+  #dynNoti-{{ section.id }} .dnoti-stack { position: relative; width: 100%; }
+  /* Corners — the JS grows the pile away from the anchored edge. */
+  .dyn-noti--top-right { top: 16px; right: 16px; }
+  .dyn-noti--top-left { top: 16px; left: 16px; }
+  .dyn-noti--bottom-right { bottom: 16px; right: 16px; }
+  .dyn-noti--bottom-left { bottom: 16px; left: 16px; }
+
+  #dynNoti-{{ section.id }} .dnoti-card {
+    position: absolute; left: 0; right: 0; box-sizing: border-box;
+    display: flex; align-items: flex-start; gap: 12px; padding: 13px 14px;
+    border-radius: 20px; text-align: left; pointer-events: auto; cursor: default;
+    background: rgba(38, 38, 43, {{ section.settings.glass_opacity | default: 55 | divided_by: 100.0 }});
+    -webkit-backdrop-filter: blur(30px) saturate(1.6); backdrop-filter: blur(30px) saturate(1.6);
+    border: 1px solid rgba(255,255,255,0.14);
+    box-shadow: 0 22px 55px -20px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.16);
+    color: #fff; opacity: 0;
+    transform: translateY(-14px) scale(0.94);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+    will-change: transform, opacity; }
+  .dyn-noti[data-pos^="bottom"] .dnoti-card { transform: translateY(14px) scale(0.94); }
+  #dynNoti-{{ section.id }} .dnoti-card[data-href] { cursor: pointer; }
+  #dynNoti-{{ section.id }} .dnoti-card.is-in { opacity: 1; }
+  #dynNoti-{{ section.id }} .dnoti-card.is-out {
+    opacity: 0 !important; transform: translateX(120%) scale(0.9) !important;
+    transition: transform 0.42s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.42s ease !important; }
+  .dyn-noti--top-left .dnoti-card.is-out, .dyn-noti--bottom-left .dnoti-card.is-out {
+    transform: translateX(-120%) scale(0.9) !important; }
+
+  #dynNoti-{{ section.id }} .dnoti-ic { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    background: var(--tile); box-shadow: 0 3px 8px rgba(0,0,0,0.28); }
+  #dynNoti-{{ section.id }} .dnoti-ic img { width: 100%; height: 100%; object-fit: cover; }
+  #dynNoti-{{ section.id }} .dnoti-emoji { font-size: 24px; line-height: 1; }
+  #dynNoti-{{ section.id }} .dnoti-bell { width: 22px; height: 22px; fill: none; stroke: #fff;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  #dynNoti-{{ section.id }} .dnoti-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  #dynNoti-{{ section.id }} .dnoti-top { display: flex; align-items: baseline; gap: 8px; }
+  #dynNoti-{{ section.id }} .dnoti-title { flex: 1 1 auto; min-width: 0; font-size: 15px; font-weight: 700;
+    line-height: 1.25; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #dynNoti-{{ section.id }} .dnoti-time { flex: 0 0 auto; font-size: 12.5px; color: rgba(235,235,245,0.6); font-weight: 500; }
+  #dynNoti-{{ section.id }} .dnoti-text { font-size: 14px; line-height: 1.35; color: rgba(235,235,245,0.9);
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  #dynNoti-{{ section.id }} .dnoti-x { position: absolute; top: -8px; left: -8px; width: 24px; height: 24px;
+    border: none; border-radius: 50%; padding: 0; cursor: pointer; display: none; align-items: center; justify-content: center;
+    background: rgba(70,70,76,0.92); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .dyn-noti--top-right .dnoti-x, .dyn-noti--bottom-right .dnoti-x { left: auto; right: -8px; }
+  #dynNoti-{{ section.id }} .dnoti-x svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+  #dynNoti-{{ section.id }} .dnoti-card.is-top:hover .dnoti-x,
+  #dynNoti-{{ section.id }} .dnoti-stack.is-open .dnoti-card:hover .dnoti-x { display: flex; }
+  #dynNoti-{{ section.id }} .dnoti-card[data-href]:active { transform: scale(0.985); }
+  /* Piled up: only the front card shows content — the ones behind read as
+     blank frosted slivers peeking out (their translucent text would otherwise
+     bleed through the front card). They fade back in as the stack fans open. */
+  #dynNoti-{{ section.id }} .dnoti-card .dnoti-body,
+  #dynNoti-{{ section.id }} .dnoti-card .dnoti-ic { transition: opacity 0.3s ease; }
+  #dynNoti-{{ section.id }} .dnoti-stack:not(.is-open) .dnoti-card:not(.is-top) .dnoti-body,
+  #dynNoti-{{ section.id }} .dnoti-stack:not(.is-open) .dnoti-card:not(.is-top) .dnoti-ic { opacity: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    #dynNoti-{{ section.id }} .dnoti-card { transition: opacity 0.2s ease !important; }
+  }
+  @media (max-width: 520px) {
+    #dynNoti-{{ section.id }}.dyn-noti { left: 12px; right: 12px; width: auto; }
+    .dyn-noti--top-right, .dyn-noti--top-left { top: 12px; }
+    .dyn-noti--bottom-right, .dyn-noti--bottom-left { bottom: 12px; }
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById("dynNoti-{{ section.id }}");
+    if (!root) return;
+    var stack = root.querySelector("[data-noti-stack]");
+    var cards = [].slice.call(root.querySelectorAll("[data-note]"));
+    if (!cards.length) return;
+
+    var pos = root.getAttribute("data-pos") || "top-right";
+    var fromBottom = pos.indexOf("bottom") === 0;
+    var startDelay = parseInt(root.getAttribute("data-start"), 10) || 0;
+    var stagger = parseInt(root.getAttribute("data-stagger"), 10) || 240;
+    var autoAll = parseInt(root.getAttribute("data-auto"), 10) || 0;
+    var freq = root.getAttribute("data-frequency") || "session";
+    var openHover = root.getAttribute("data-open-hover") !== "0";
+
+    var PEEK = 14;      /* how far each buried card peeks out when piled */
+    var STEP_SC = 0.05; /* scale drop per layer in the pile */
+    var GAP = 12;       /* gap between cards when fanned open */
+
+    /* ---- "already seen" memory ---------------------------------------- */
+    var SEEN_KEY = "dyn_noti_seen";
+    function readSeen() {
+      try {
+        var store = freq === "always" ? null : (freq === "once" ? window.localStorage : window.sessionStorage);
+        if (!store) return {};
+        return JSON.parse(store.getItem(SEEN_KEY) || "{}") || {};
+      } catch (e) { return {}; }
+    }
+    function markSeen(id) {
+      try {
+        var store = freq === "once" ? window.localStorage : (freq === "always" ? null : window.sessionStorage);
+        if (!store) return;
+        var s = readSeen(); s[id] = 1; store.setItem(SEEN_KEY, JSON.stringify(s));
+      } catch (e) {}
+    }
+    var seen = readSeen();
+
+    /* A card is skipped if it's "show once" (or the whole feed is once/session)
+       and we've recorded it before. */
+    var live = cards.filter(function (c) {
+      var once = c.getAttribute("data-once") === "1" || freq !== "always";
+      if (once && seen[c.getAttribute("data-id")]) { c.parentNode.removeChild(c); return false; }
+      return true;
+    });
+    if (!live.length) return;
+    root.hidden = false;
+
+    /* ---- layout: pile vs. fanned-open --------------------------------- */
+    var open = false;
+    function layout() {
+      var y = 0, list = live.slice();
+      for (var i = 0; i < list.length; i++) {
+        var c = list[i];
+        var sign = fromBottom ? -1 : 1;
+        if (open) {
+          c.style.transform = "translateY(" + (sign * y) + "px) scale(1)";
+          c.style.zIndex = String(1000 - i);
+          c.style.opacity = c.classList.contains("is-in") ? "1" : "0";
+          y += c.offsetHeight + GAP;
+        } else {
+          /* Piled: front card readable, the rest peek out beyond it, shrinking. */
+          var depth = Math.min(i, 4);
+          var off = depth * PEEK;
+          var sc = Math.max(1 - depth * STEP_SC, 0.8);
+          c.style.transform = "translateY(" + (sign * off) + "px) scale(" + sc + ")";
+          c.style.zIndex = String(1000 - i);
+          if (c.classList.contains("is-in")) c.style.opacity = i > 4 ? "0" : "1";
+        }
+        c.classList.toggle("is-top", i === 0);
+      }
+      /* Keep the fixed box tall enough to catch hovers over the whole pile/fan. */
+      var h = 0;
+      if (open) { for (var k = 0; k < list.length; k++) h += list[k].offsetHeight + GAP; }
+      else { h = (list[0] ? list[0].offsetHeight : 0) + Math.min(list.length - 1, 4) * PEEK; }
+      stack.style.height = h + "px";
+    }
+
+    function setOpen(v) {
+      if (open === v) return; open = v;
+      stack.classList.toggle("is-open", v);
+      layout();
+    }
+
+    if (openHover) {
+      root.addEventListener("mouseenter", function () { setOpen(true); });
+      root.addEventListener("mouseleave", function () { setOpen(false); });
+      /* Touch: first tap fans open, taps after that act on the cards. */
+      root.addEventListener("click", function (e) {
+        if (!open && !e.target.closest("[data-noti-x]")) { setOpen(true); }
+      }, true);
+    } else {
+      setOpen(true);
+    }
+
+    /* ---- dismissing --------------------------------------------------- */
+    function dismiss(card) {
+      markSeen(card.getAttribute("data-id"));
+      card.classList.add("is-out");
+      var done = false;
+      var finish = function () {
+        if (done) return; done = true;
+        var idx = live.indexOf(card);
+        if (idx > -1) live.splice(idx, 1);
+        if (card.parentNode) card.parentNode.removeChild(card);
+        if (!live.length) { root.hidden = true; return; }
+        layout();
+      };
+      card.addEventListener("transitionend", finish);
+      setTimeout(finish, 480);
+    }
+
+    live.forEach(function (card) {
+      card.querySelector("[data-noti-x]").addEventListener("click", function (e) {
+        e.stopPropagation(); dismiss(card);
+      });
+      var href = card.getAttribute("data-href");
+      if (href) {
+        card.addEventListener("click", function (e) {
+          if (e.target.closest("[data-noti-x]")) return;
+          if (openHover && !open) return; /* first tap just opens the fan */
+          markSeen(card.getAttribute("data-id"));
+          window.location.href = href;
+        });
+        card.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); markSeen(card.getAttribute("data-id")); window.location.href = href; }
+        });
+      }
+    });
+
+    /* ---- reveal: slide the pile in, one card at a time ---------------- */
+    layout();
+    var shown = 0;
+    function revealNext() {
+      if (shown >= live.length) return;
+      var card = live[shown];
+      var extra = parseInt(card.getAttribute("data-delay"), 10) || 0;
+      setTimeout(function () {
+        card.classList.add("is-in");
+        layout();
+        var perAuto = parseInt(card.getAttribute("data-auto"), 10) || autoAll;
+        if (perAuto > 0) setTimeout(function () { if (card.parentNode && !open) dismiss(card); }, perAuto);
+        shown++;
+        revealNext();
+      }, (shown === 0 ? startDelay : stagger) + extra);
+    }
+    revealNext();
+
+    window.addEventListener("resize", layout);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Notifications",
+  "tag": "section",
+  "class": "dynamic-notifications-section",
+  "settings": [
+    { "type": "paragraph", "content": "A macOS-style stack of notification cards that slide into a corner and pile up. Hover (or tap) the stack to fan them open; each card can be dismissed. Add one 'Notification' block per card." },
+    { "type": "header", "content": "Placement" },
+    {
+      "type": "select", "id": "position", "label": "Corner", "default": "top-right",
+      "options": [
+        { "value": "top-right", "label": "Top right" },
+        { "value": "top-left", "label": "Top left" },
+        { "value": "bottom-right", "label": "Bottom right" },
+        { "value": "bottom-left", "label": "Bottom left" }
+      ]
+    },
+    { "type": "header", "content": "Behaviour" },
+    {
+      "type": "select", "id": "frequency", "label": "How often to show", "default": "session",
+      "options": [
+        { "value": "session", "label": "Once per visit" },
+        { "value": "once", "label": "Once ever (per browser)" },
+        { "value": "always", "label": "Every page load" }
+      ],
+      "info": "Dismissed cards are remembered the same way."
+    },
+    { "type": "checkbox", "id": "expand_on_hover", "label": "Fan open on hover / tap", "default": true, "info": "Off = always shown fanned out." },
+    { "type": "range", "id": "start_delay", "label": "First card delay", "min": 0, "max": 4000, "step": 100, "unit": "ms", "default": 700 },
+    { "type": "range", "id": "stagger", "label": "Gap between cards", "min": 80, "max": 800, "step": 20, "unit": "ms", "default": 260 },
+    { "type": "range", "id": "auto_dismiss", "label": "Auto-dismiss after", "min": 0, "max": 30, "step": 1, "unit": "s", "default": 0, "info": "0 = stay until dismissed. Cards paused while the stack is open." },
+    { "type": "header", "content": "Glass" },
+    { "type": "range", "id": "glass_opacity", "label": "Card tint", "min": 20, "max": 90, "step": 5, "unit": "%", "default": 55, "info": "Higher = more solid, lower = more see-through." }
+  ],
+  "blocks": [
+    {
+      "type": "note",
+      "name": "Notification",
+      "settings": [
+        { "type": "text", "id": "title", "label": "Title (bold)", "default": "Welcome to the shop" },
+        { "type": "textarea", "id": "text", "label": "Message", "default": "Free shipping on orders over $50 today." },
+        { "type": "text", "id": "time_text", "label": "Timestamp text", "default": "now", "info": "e.g. now, 8m ago, Yesterday" },
+        { "type": "header", "content": "Icon" },
+        { "type": "image_picker", "id": "icon_image", "label": "Icon image" },
+        { "type": "text", "id": "emoji", "label": "…or an emoji", "info": "Used if no image is set.", "default": "🎉" },
+        { "type": "color", "id": "icon_bg", "label": "Icon tile color", "default": "#e8503a" },
+        { "type": "header", "content": "Action" },
+        { "type": "url", "id": "link", "label": "Link when tapped" },
+        { "type": "header", "content": "Timing" },
+        { "type": "range", "id": "delay", "label": "Extra delay before this card", "min": 0, "max": 5000, "step": 100, "unit": "ms", "default": 0 },
+        { "type": "range", "id": "auto", "label": "Auto-dismiss this card after", "min": 0, "max": 30, "step": 1, "unit": "s", "default": 0, "info": "0 = use the section default." },
+        { "type": "checkbox", "id": "show_once", "label": "Only show this card once (per browser)", "default": false },
+        { "type": "text", "id": "note_id", "label": "Memory ID (optional)", "info": "Change this to re-show a card that visitors already dismissed." }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Notifications",
+      "blocks": [
+        { "type": "note", "settings": { "title": "Welcome back 👋", "text": "Your favourites are waiting for you.", "time_text": "now", "emoji": "👋", "icon_bg": "#3a7afe" } },
+        { "type": "note", "settings": { "title": "Free shipping today", "text": "On every order over $50 — no code needed.", "time_text": "2m ago", "emoji": "🚚", "icon_bg": "#34c759" } },
+        { "type": "note", "settings": { "title": "New arrivals just dropped", "text": "Fresh designs added to the shop this morning.", "time_text": "1h ago", "emoji": "✨", "icon_bg": "#e8503a" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
