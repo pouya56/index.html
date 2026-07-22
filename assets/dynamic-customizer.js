@@ -2495,7 +2495,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       /* Slider toggle (Uiverse.io by Galahhad): grey off -> blue on, white knob slides */
       '.dc-gift-toggle{display:inline-flex;align-items:center;gap:14px;user-select:none}' +
       '.dc-gift-switch{display:inline-flex;flex:none;cursor:pointer}' +
-      '.dc-gift-checkbox,.dc-gift-toggle-input{display:none}' +
+      /* hide the native checkbox robustly (some themes force-show inputs);
+         higher specificity + !important beats input[type=checkbox] theme rules.
+         It stays in the DOM so :checked ~ .dc-gift-slider still drives the slider. */
+      '.dc-gift .dc-gift-checkbox,.dc-gift .dc-gift-toggle-input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;margin:0!important;padding:0!important;border:0!important;pointer-events:none!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;overflow:hidden!important}' +
       '.dc-gift-slider{width:60px;height:30px;background-color:lightgray;border-radius:20px;overflow:hidden;display:flex;align-items:center;border:4px solid transparent;transition:.3s;box-shadow:0 0 10px 0 rgb(0 0 0 / 0.25) inset;cursor:pointer}' +
       '.dc-gift-slider::before{content:"";display:block;width:100%;height:100%;background-color:#fff;transform:translateX(-30px);border-radius:20px;transition:.3s;box-shadow:0 0 10px 3px rgb(0 0 0 / 0.25)}' +
       '.dc-gift-checkbox:checked ~ .dc-gift-slider::before{transform:translateX(30px);box-shadow:0 0 10px 3px rgb(0 0 0 / 0.25)}' +
