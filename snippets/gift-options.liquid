@@ -29,11 +29,16 @@
 {%- assign gift_wrap_price = 800 -%}
 
 <div class="gift-options" data-gift-options data-wrap-id="{{ gift_wrap_variant_id }}">
-  <label class="gift-toggle">
-    <input type="checkbox" class="gift-toggle-input" data-gift-is-gift>
-    <span class="gift-toggle-track"><span class="gift-toggle-knob"></span></span>
-    <span class="gift-toggle-label">{% if gift_wrap_variant_id != blank %}Add gift wrapping — <strong>{{ gift_wrap_price | money }}</strong>{% else %}This is a gift{% endif %}</span>
-  </label>
+  <div class="gift-toggle">
+    <span class="gift-heart-wrap">
+      <input type="checkbox" class="gift-switch" id="giftSwitch" data-gift-is-gift>
+      <label class="love-heart" for="giftSwitch" aria-label="This is a gift">
+        <div class="round"></div>
+        <div class="bottom"></div>
+      </label>
+    </span>
+    <label for="giftSwitch" class="gift-toggle-label">{% if gift_wrap_variant_id != blank %}Add gift wrapping — <strong>{{ gift_wrap_price | money }}</strong>{% else %}This is a gift{% endif %}</label>
+  </div>
 
   <div class="gift-panel" data-gift-panel>
     <div class="gift-panel-inner">
@@ -58,27 +63,51 @@
   }
   .gift-options *, .gift-options *::before, .gift-options *::after { box-sizing: border-box; }
 
-  /* iOS "liquid glass" green toggle for "This is a gift" */
-  .gift-options .gift-toggle { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
-  .gift-options .gift-toggle-input { position: absolute; opacity: 0; width: 0; height: 0; }
-  .gift-options .gift-toggle-track { position: relative; width: 50px; height: 30px; border-radius: 999px; flex: none;
-    background: rgba(120,120,128,0.22); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.22);
-    transition: background .28s ease, box-shadow .28s ease; }
-  /* glass sheen across the top half */
-  .gift-options .gift-toggle-track::before { content: ""; position: absolute; left: 2px; right: 2px; top: 1px; height: 45%;
-    border-radius: 999px; background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0)); pointer-events: none; }
-  .gift-options .gift-toggle-knob { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
-    background: linear-gradient(180deg, #ffffff, #eef0f2); box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.9);
-    transition: transform .28s cubic-bezier(.4,1.25,.5,1); }
-  .gift-options .gift-toggle-input:checked + .gift-toggle-track {
-    background: linear-gradient(180deg, rgba(76,222,128,0.92), rgba(40,199,84,0.92));
-    -webkit-backdrop-filter: blur(8px) saturate(1.5); backdrop-filter: blur(8px) saturate(1.5);
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.6), inset 0 -2px 4px rgba(0,90,35,0.28),
-      0 2px 9px rgba(52,199,89,0.5), inset 0 0 0 1px rgba(255,255,255,0.28); }
-  .gift-options .gift-toggle-input:checked + .gift-toggle-track .gift-toggle-knob { transform: translateX(20px); }
-  .gift-options .gift-toggle-input:focus-visible + .gift-toggle-track { outline: 2px solid #30c754; outline-offset: 2px; }
-  .gift-options .gift-toggle-label { font-size: 15px; font-weight: 500; letter-spacing: 0.01em; }
+  /* Heart toggle (from Uiverse.io by barisdogansutcu), scoped to .gift-options.
+     Unchecked = grey heart outline; checked = it fills red. */
+  .gift-options .gift-toggle { display: inline-flex; align-items: center; gap: 22px; user-select: none; }
+  .gift-options .gift-heart-wrap { position: relative; width: 44px; height: 40px; flex: none; }
+
+  .gift-options .love-heart:before, .gift-options .gift-switch { display: none; }
+
+  .gift-options .love-heart, .gift-options .love-heart::after {
+    border-color: hsl(231deg 28% 86%); border: 1px solid;
+    border-top-left-radius: 100px; border-top-right-radius: 100px;
+    width: 10px; height: 8px; border-bottom: 0; }
+
+  .gift-options .round { position: absolute; z-index: 1; width: 8px; height: 8px;
+    background: hsl(0deg 0% 100%); box-shadow: rgb(0 0 0 / 24%) 0px 0px 4px 0px;
+    border-radius: 100%; left: 0px; bottom: -1px; transition: all .5s ease;
+    animation: gift-check-animation2 .5s forwards; }
+  .gift-options .gift-switch:checked + label .round {
+    transform: translate(0px, 0px); animation: gift-check-animation .5s forwards;
+    background-color: hsl(0deg 0% 100%); }
+
+  @keyframes gift-check-animation {
+    0% { transform: translate(0px, 0px); }
+    50% { transform: translate(0px, 7px); }
+    100% { transform: translate(7px, 7px); } }
+  @keyframes gift-check-animation2 {
+    0% { transform: translate(7px, 7px); }
+    50% { transform: translate(0px, 7px); }
+    100% { transform: translate(0px, 0px); } }
+
+  .gift-options .love-heart { box-sizing: border-box; position: absolute; left: 50%; top: 50%;
+    transform: rotate(-45deg) translate(-50%, -33px) scale(4); display: block;
+    border-color: hsl(231deg 28% 86%); cursor: pointer; }
+  .gift-options .gift-switch:checked + .love-heart,
+  .gift-options .gift-switch:checked + .love-heart::after,
+  .gift-options .gift-switch:checked + .love-heart .bottom {
+    border-color: hsl(347deg 81% 61%); box-shadow: inset 6px -5px 0px 2px hsl(347deg 99% 72%); }
+
+  .gift-options .love-heart::after, .gift-options .love-heart .bottom {
+    content: ""; display: block; box-sizing: border-box; position: absolute; border-color: hsl(231deg 28% 86%); }
+  .gift-options .love-heart::after { right: -9px; transform: rotate(90deg); top: 7px; }
+  .gift-options .love-heart .bottom { width: 11px; height: 11px; border-left: 1px solid; border-bottom: 1px solid;
+    border-color: hsl(231deg 28% 86%); left: -1px; top: 5px; border-radius: 0px 0px 0px 5px; }
+
+  .gift-options .gift-switch:focus-visible + .love-heart { outline: 2px solid var(--accent); outline-offset: 6px; }
+  .gift-options .gift-toggle-label { font-size: 15px; font-weight: 500; letter-spacing: 0.01em; cursor: pointer; }
 
   /* The note is a small FLOATING popup that pops right off the toggle. It's
      absolutely positioned and out of the layout, so opening/closing it never
