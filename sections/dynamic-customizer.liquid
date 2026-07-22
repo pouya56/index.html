@@ -1364,15 +1364,34 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
     <div class="gallery">
       <div class="gallery-main">
-        <div class="gallery-stage" id="galleryStage"></div>
+        <!-- Original single-image stage + arrows kept (hidden) so the app script
+             still finds them, and used as a fallback if the card deck can't load. -->
+        <div class="gallery-stage" id="galleryStage" hidden></div>
+        <button class="gal-arrow" id="galPrev" hidden aria-hidden="true">&#8249;</button>
+        <button class="gal-arrow" id="galNext" hidden aria-hidden="true">&#8250;</button>
+        <!-- Swipeable card-stack deck (Swiper "cards" effect). -->
+        <div class="swiper dyn-cards" id="dynCards"><div class="swiper-wrapper" id="dynCardsWrap"></div></div>
         <!-- Prev / next arrows in a glass pill at the bottom. -->
         <div class="gal-nav">
-          <button class="gal-arrow gal-prev" id="galPrev" aria-label="Previous image">&#8249;</button>
-          <button class="gal-arrow gal-next" id="galNext" aria-label="Next image">&#8250;</button>
+          <button class="gal-arrow gal-prev" id="cardsPrev" aria-label="Previous image">&#8249;</button>
+          <button class="gal-arrow gal-next" id="cardsNext" aria-label="Next image">&#8250;</button>
         </div>
       </div>
       <!-- Thumbnails removed from view; kept hidden so the app's wiring is intact. -->
       <div class="gallery-thumbs" id="galleryThumbs" hidden></div>
+      <script type="application/json" id="dynCardsData">
+        {
+          "product": [{% if dyn_product %}{% for img in dyn_product.images %}{{ img | image_url: width: 1000 | json }}{% unless forloop.last %},{% endunless %}{% endfor %}{% endif %}],
+          "gallery": [
+            {% if section.settings.gallery_1 %}{{ section.settings.gallery_1 | image_url: width: 1000 | json }}{% else %}""{% endif %},
+            {% if section.settings.gallery_2 %}{{ section.settings.gallery_2 | image_url: width: 1000 | json }}{% else %}""{% endif %},
+            {% if section.settings.gallery_3 %}{{ section.settings.gallery_3 | image_url: width: 1000 | json }}{% else %}""{% endif %},
+            {% if section.settings.gallery_4 %}{{ section.settings.gallery_4 | image_url: width: 1000 | json }}{% else %}""{% endif %},
+            {% if section.settings.gallery_5 %}{{ section.settings.gallery_5 | image_url: width: 1000 | json }}{% else %}""{% endif %}
+          ],
+          "demo": [{{ 'gal-1.png' | asset_url | json }}, {{ 'gal-2.png' | asset_url | json }}, {{ 'gal-3.png' | asset_url | json }}, {{ 'gal-4.png' | asset_url | json }}, {{ 'gal-5.png' | asset_url | json }}]
+        }
+      </script>
     </div>
 
     <section class="detail col-right" id="buyBox">
@@ -1492,6 +1511,78 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.1.15/swiper-bundle.min.js" defer></script>
+
+<style>
+  /* Minimal Swiper core + cards CSS (inlined so no extra stylesheet request). */
+  .dyn-cards.swiper { position: relative; z-index: 1; display: block; margin: auto; list-style: none; padding: 0; overflow: visible; }
+  .dyn-cards .swiper-wrapper { position: relative; width: 100%; height: 100%; z-index: 1; display: flex; box-sizing: content-box; transition-property: transform; transition-timing-function: var(--swiper-wrapper-transition-timing-function, initial); }
+  .dyn-cards .swiper-slide { flex-shrink: 0; width: 100%; height: 100%; position: relative; transition-property: transform; display: block; }
+  .dyn-cards.swiper-cards { overflow: visible; }
+  .dyn-cards.swiper-cards .swiper-slide { transform-origin: center bottom; -webkit-backface-visibility: hidden; backface-visibility: hidden; overflow: hidden; }
+  /* The card deck itself. */
+  .dyn-cards { width: 74%; height: 88%; }
+  .dyn-cards .swiper-slide { border-radius: 24px; overflow: hidden; background: var(--bg-panel);
+    box-shadow: 0 34px 70px -26px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.1); cursor: grab; }
+  .dyn-cards .swiper-slide:active { cursor: grabbing; }
+  .dyn-cards .swiper-slide img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+  /* If the deck has no images or Swiper fails to load, fall back to the plain stage. */
+  #galleryStage:not([hidden]) { display: grid; }
+</style>
+
+<script>
+  /* Turn the product photos into a swipeable card-stack deck (Swiper "cards"
+     effect). Reads the same images the app uses; if Swiper or the images are
+     unavailable it reveals the original single-image stage instead. */
+  (function () {
+    var host = document.getElementById("dynCards");
+    var wrap = document.getElementById("dynCardsWrap");
+    var stage = document.getElementById("galleryStage");
+    var oPrev = document.getElementById("galPrev"), oNext = document.getElementById("galNext");
+    var prev = document.getElementById("cardsPrev"), next = document.getElementById("cardsNext");
+    if (!host || !wrap) return;
+
+    function images() {
+      var el = document.getElementById("dynCardsData");
+      if (!el) return [];
+      var d; try { d = JSON.parse(el.textContent); } catch (e) { return []; }
+      var p = (d.product || []).filter(Boolean); if (p.length) return p;
+      var g = (d.gallery || []).filter(Boolean); if (g.length) return g;
+      return (d.demo || []).filter(Boolean);
+    }
+
+    function fallback() {
+      /* Show the app's normal gallery; make the glass pill drive its arrows. */
+      if (host) host.style.display = "none";
+      if (stage) stage.removeAttribute("hidden");
+      if (prev && oPrev) prev.addEventListener("click", function () { oPrev.click(); });
+      if (next && oNext) next.addEventListener("click", function () { oNext.click(); });
+    }
+
+    var imgs = images();
+    if (!imgs.length) { fallback(); return; }
+    wrap.innerHTML = imgs.map(function (u) {
+      return '<div class="swiper-slide"><img src="' + u + '" alt="" loading="lazy"></div>';
+    }).join("");
+
+    var tries = 0;
+    (function waitForSwiper() {
+      if (window.Swiper) {
+        try {
+          var sw = new Swiper(host, {
+            effect: "cards", grabCursor: true, loop: imgs.length > 1,
+            cardsEffect: { slideShadows: true, perSlideOffset: 8, perSlideRotate: 2 }
+          });
+          if (prev) prev.addEventListener("click", function () { sw.slidePrev(); });
+          if (next) next.addEventListener("click", function () { sw.slideNext(); });
+        } catch (e) { fallback(); }
+        return;
+      }
+      if (++tries > 60) { fallback(); return; }   /* ~6s, then give up gracefully */
+      setTimeout(waitForSwiper, 100);
+    })();
+  })();
+</script>
 
 <script>
 /* Instagram-style action bar. Like/Share counts come from your settings; the
