@@ -470,13 +470,29 @@ button { font-family: inherit; cursor: pointer; }
 .dyn-cart-foot .btn { width: 100%; margin-bottom: 8px; }
 
 .product {
-  max-width: 1240px; margin: 0 auto; padding: 40px 22px 128px;
-  display: grid; grid-template-columns: 0.82fr 1.24fr 0.92fr; gap: 48px; align-items: start;
+  max-width: 1280px; margin: 0 auto; padding: 40px 22px 128px;
+  display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 44px; align-items: start;
 }
-/* Three-column layout: name + description (left), image (centre), options +
-   buttons (right). Columns just reuse the existing .detail styling. */
+/* Three-column layout: name + description + thumbnails (left), the main image
+   at ~50% width (centre), variations + price + reviews (right). The buttons all
+   gather in a full-width bar at the bottom. Columns reuse the .detail styling. */
 .col-left { padding-top: 8px; }
 .col-right { padding-top: 8px; }
+.col-left .gallery-thumbs { justify-content: flex-start; margin-top: 26px; }
+/* Bottom action bar — spans all three columns. */
+.dyn-actionbar { grid-column: 1 / -1; margin-top: 44px; }
+.dyn-actionbar-inner {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 14px;
+  background: var(--bg-panel); border: 1px solid var(--line-soft);
+  border-radius: var(--r-xl); padding: 16px 20px;
+}
+.dyn-actionbar .cta-stack { flex-direction: row; flex-wrap: wrap; align-items: center;
+  gap: 12px; margin-top: 0; flex: 1 1 auto; }
+.dyn-actionbar .cta-row { flex: 0 1 auto; }
+.dyn-actionbar .btn-block { width: auto; min-width: 190px; }
+.dyn-actionbar .customize-summary:empty { display: none; }
+.dyn-actionbar #giftMount:empty { display: none; }
+.dyn-actionbar .bulk-link { margin: 0; }
 .dyn-topbar { max-width: 1120px; margin: 0 auto; padding: 26px 22px 0; display: flex; align-items: center; }
 .dyn-topbar.is-left { justify-content: flex-start; }
 .dyn-topbar.is-center { justify-content: center; }
@@ -1278,13 +1294,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     <aside class="detail col-left">
       <div class="eyebrow" id="pEyebrow"></div>
       <h1 class="headline" id="pName"></h1>
-
-      <div class="price-row">
-        <span class="price" id="pPrice"></span>
-        <span class="price-note" id="pPriceNote"></span>
-      </div>
-
       <div class="desc" id="pDesc"></div>
+      <!-- Gallery thumbnails sit under the description. -->
+      <div class="gallery-thumbs" id="galleryThumbs"></div>
     </aside>
 
     <div class="gallery">
@@ -1293,18 +1305,22 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         <div class="gallery-stage" id="galleryStage"></div>
         <button class="gal-arrow gal-next" id="galNext" aria-label="Next image">&#8250;</button>
       </div>
-      <div class="gallery-thumbs" id="galleryThumbs"></div>
     </div>
 
-    <section class="detail col-right">
+    <section class="detail col-right" id="buyBox">
+      <div class="opt-group" id="pSizeGroup">
+        <div class="opt-label">Size</div>
+        <div class="pills" id="pSizes"></div>
+      </div>
+
       <div class="opt-group">
         <div class="opt-label">Model <span id="colorName">AirPods Pro 3</span></div>
         <div class="swatches" id="pColors"></div>
       </div>
 
-      <div class="opt-group" id="pSizeGroup">
-        <div class="opt-label">Size</div>
-        <div class="pills" id="pSizes"></div>
+      <div class="price-row">
+        <span class="price" id="pPrice"></span>
+        <span class="price-note" id="pPriceNote"></span>
       </div>
 
       <div class="opt-group">
@@ -1316,18 +1332,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
             <button id="qtyPlus" aria-label="Increase quantity">+</button>
           </div>
         </div>
-      </div>
-
-      <!-- Gift options mount (filled by the app when enabled in settings) -->
-      <div id="giftMount"></div>
-
-      <div class="cta-stack">
-        <div class="cta-row">
-          <button class="btn btn-primary btn-lg btn-block" id="customizeBtn">Customize</button>
-        </div>
-        <!-- Appears once a design is saved; submits it with the gift-wrap choice. -->
-        <button class="btn btn-primary btn-lg btn-block" id="pageAddCart" hidden>Add to Cart</button>
-        <div class="customize-summary" id="customizeSummary"></div>
       </div>
 
       <div class="reassure">
@@ -1392,6 +1396,24 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         </div>
       </section>
     </section>
+
+    <!-- Bottom action bar: all the actions gathered in one full-width bar.
+         Customize / Add to Cart (+ the edit summary) live here; gift-wrap and
+         bulk-order feature blocks are mounted in here by the script below. -->
+    <div class="dyn-actionbar" id="dynActionBar">
+      <div class="dyn-actionbar-inner">
+        <div class="cta-stack">
+          <div class="cta-row">
+            <button class="btn btn-primary btn-lg btn-block" id="customizeBtn">Customize</button>
+          </div>
+          <!-- Appears once a design is saved; submits it with the gift-wrap choice. -->
+          <button class="btn btn-primary btn-lg btn-block" id="pageAddCart" hidden>Add to Cart</button>
+          <div class="customize-summary" id="customizeSummary"></div>
+        </div>
+        <!-- Gift options mount (filled by the app when enabled in settings) -->
+        <div id="giftMount"></div>
+      </div>
+    </div>
   </main>
 
   <!-- The "Features" panel now lives in its own section (dynamic-features.liquid)
@@ -2126,8 +2148,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 (function () {
   var host = document.getElementById("dynBlocks");
   if (!host) return;
-  var detail = document.querySelector(".detail");
-  var cta = detail ? detail.querySelector(".cta-stack") : null;
+  var detail = document.getElementById("buyBox") || document.querySelector(".detail");
+  var cta = document.querySelector(".cta-stack");
+  var actionBar = document.querySelector(".dyn-actionbar-inner");
   var bulkNoteEl = null;
 
   function buildBulk(slot) {
@@ -2175,13 +2198,16 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
   function after(ref, node) { if (ref && ref.parentNode) ref.parentNode.insertBefore(node, ref.nextSibling); }
 
-  // Bulk → inline next to the quantity stepper; its note sits full-width under the row.
-  if (byType.bulk_link && qtyRow) {
-    qtyRow.appendChild(byType.bulk_link);
-    if (bulkNoteEl) after(qtyRow, bulkNoteEl);
+  // Bulk & gift → into the bottom action bar, alongside Customize / Add to Cart.
+  if (byType.bulk_link) {
+    if (actionBar) { actionBar.appendChild(byType.bulk_link); }
+    else if (qtyRow) { qtyRow.appendChild(byType.bulk_link); }
+    if (bulkNoteEl && byType.bulk_link.parentNode) { after(byType.bulk_link, bulkNoteEl); }
   }
-  // Gift → directly under the Quantity group.
-  if (byType.gift && qtyGroup) { after(qtyGroup, byType.gift); }
+  if (byType.gift) {
+    if (actionBar) { actionBar.appendChild(byType.gift); }
+    else if (qtyGroup) { after(qtyGroup, byType.gift); }
+  }
   // Reviews → below the fixed trust row (which now renders in place after the buttons).
   if (byType.reviews) { after((detail && detail.querySelector(".reassure")) || cta, byType.reviews); }
 
