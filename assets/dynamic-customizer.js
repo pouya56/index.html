@@ -4436,25 +4436,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       return 1;
     }
 
+    // "Your design is ready" card removed per request — the step strip is the cue.
     var card = null;
-    if (customizeFlow) {
-      card = document.createElement("div");
-      card.className = "dyn-ready"; card.id = "dynReady"; card.hidden = true;
-      card.innerHTML =
-        '<img class="dyn-ready-thumb" alt="Your design" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">' +
-        '<div class="dyn-ready-body">' +
-          '<div class="dyn-ready-title">Your design is ready</div>' +
-          '<div class="dyn-ready-sub">Add it to your cart to order it.</div>' +
-          '<div class="dyn-ready-actions">' +
-            '<button type="button" class="dyn-ready-add">Add to cart</button>' +
-            '<button type="button" class="dyn-ready-edit">Edit design</button>' +
-          '</div>' +
-        '</div>';
-      actionBar.parentNode.insertBefore(card, actionBar);
-      card.querySelector(".dyn-ready-add").addEventListener("click", function () { if (addBtn) addBtn.click(); });
-      card.querySelector(".dyn-ready-edit").addEventListener("click", function () { if (customizeBtn) customizeBtn.click(); });
-    }
-    var cardThumb = card ? card.querySelector(".dyn-ready-thumb") : null;
+    var cardThumb = null;
 
     var bar = document.createElement("div");
     bar.className = "dyn-sticky"; bar.id = "dynSticky";
