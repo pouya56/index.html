@@ -545,6 +545,9 @@ button { font-family: inherit; cursor: pointer; }
   box-shadow: 0 14px 30px -12px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.7);
 }
 .gallery-stage { width: 96%; height: 96%; display: grid; place-items: center; position: relative; }
+/* The class rule above overrides the [hidden] attribute — force it off so the
+   card deck is what shows (the stage is only revealed as a fallback). */
+.gallery-stage[hidden] { display: none !important; }
 .gallery-stage img { width: 100%; height: 100%; object-fit: contain; transition: opacity var(--dur) var(--ease-out); }
 .gallery svg { width: 100%; height: 100%; object-fit: contain; }
 .gal-nav .gal-arrow {
