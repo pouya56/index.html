@@ -2772,6 +2772,16 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     setDesignReady(true);
     // Anyone listening (the floating orb) hears that a design was added.
     try { window.dispatchEvent(new CustomEvent("dyn-design-added")); } catch (e) {}
+    // Render a small preview of the saved design so the page can show a
+    // "your design is ready" thumbnail. Fire-and-forget; failure is harmless.
+    try {
+      var _tSide = (sideLayers.front && sideLayers.front.length) ? "front" : "back";
+      compositeSide(sideLayers[_tSide], sideImage(_tSide), sidePrint(_tSide)).then(function (url) {
+        if (!url) return;
+        window.DYN_DESIGN_THUMB = url;
+        try { window.dispatchEvent(new CustomEvent("dyn-design-thumb", { detail: { thumb: url } })); } catch (e) {}
+      });
+    } catch (e) {}
     const sum = $("#customizeSummary"); if (sum) sum.textContent = "Design saved — not in the bag yet";
     closeModal();
     applyVariantPrice(); // a back design may change the page price
