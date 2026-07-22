@@ -80,18 +80,28 @@
   .gift-options .gift-toggle-input:focus-visible + .gift-toggle-track { outline: 2px solid #30c754; outline-offset: 2px; }
   .gift-options .gift-toggle-label { font-size: 15px; font-weight: 500; letter-spacing: 0.01em; }
 
-  /* The note is a FLOATING popover, not part of the layout: it's absolutely
-     positioned just under the toggle, so opening or closing it never pushes
-     the page — nothing around it moves. It just fades/settles into place. */
-  .gift-options .gift-panel { position: absolute; left: 0; top: calc(100% + 12px); width: 100%;
-    z-index: 60; opacity: 0; transform: translateY(-8px) scale(.985); transform-origin: top center;
+  /* The note is a small FLOATING popup that pops right off the toggle. It's
+     absolutely positioned and out of the layout, so opening/closing it never
+     pushes the page — nothing around it moves. A little caret points up at
+     the toggle so it reads as a bubble. */
+  .gift-options .gift-panel { position: absolute; left: 0; top: calc(100% + 11px);
+    width: 300px; max-width: calc(100vw - 40px); z-index: 60;
+    opacity: 0; transform: translateY(-6px) scale(.96); transform-origin: 28px top;
     pointer-events: none; visibility: hidden;
-    transition: opacity .26s ease, transform .32s cubic-bezier(.34,1.35,.5,1), visibility 0s linear .3s; }
+    transition: opacity .2s ease, transform .28s cubic-bezier(.34,1.45,.5,1), visibility 0s linear .28s; }
   .gift-options.is-gift-open .gift-panel { opacity: 1; transform: translateY(0) scale(1);
     pointer-events: auto; visibility: visible; transition-delay: 0s; }
-  .gift-options .gift-note-field { padding: 18px 20px; background: #fff;
-    border: 1px solid var(--line); border-radius: 16px;
-    box-shadow: 0 14px 38px rgba(0,0,0,0.16), 0 3px 10px rgba(0,0,0,0.06); }
+  .gift-options .gift-note-field { position: relative; padding: 13px 14px 12px; background: #fff;
+    border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.06); }
+  /* caret / little arrow pointing up to the toggle */
+  .gift-options .gift-note-field::before { content: ""; position: absolute; top: -6px; left: 22px;
+    width: 11px; height: 11px; background: #fff; border-left: 1px solid var(--line);
+    border-top: 1px solid var(--line); border-radius: 3px 0 0 0; transform: rotate(45deg); }
+  /* compact sizing inside the popup */
+  .gift-options .gift-panel .gift-note-heading { font-size: 13px; margin-bottom: 7px; }
+  .gift-options .gift-panel .gift-note-input { min-height: 58px; padding: 9px 11px; font-size: 14px; border-radius: 10px; }
+  .gift-options .gift-panel .gift-note-count { margin-top: 6px; }
   @media (prefers-reduced-motion: reduce) {
     .gift-options .gift-panel { transition: opacity .12s ease, visibility 0s; transform: none; }
   }
