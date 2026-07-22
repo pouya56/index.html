@@ -502,8 +502,11 @@ button { font-family: inherit; cursor: pointer; }
 .dyn-actionbar { grid-column: 1 / -1; margin-top: 44px; }
 .dyn-actionbar-inner {
   display: flex; align-items: center; flex-wrap: wrap; gap: 14px;
-  background: var(--bg-panel); border: 1px solid var(--line-soft);
-  border-radius: var(--r-xl); padding: 16px 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.60), rgba(255,255,255,0.28));
+  -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 26px 60px -28px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.75);
+  border-radius: 24px; padding: 14px 18px;
 }
 .dyn-actionbar .cta-stack { flex-direction: row; flex-wrap: wrap; align-items: center;
   gap: 12px; margin-top: 0; flex: 1 1 auto; }
@@ -1293,6 +1296,27 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   .faq-item > summary { font-size: 18px; padding: 20px 12px; }
 }
 
+/* Desktop: the whole product fits one screen — no page scroll. The image is
+   bigger (wider centre column, fills the height). If a side box gets taller
+   than the screen (e.g. reviews opened), that box scrolls on its own. */
+@media (min-width: 1041px) {
+  .product {
+    height: 100dvh; box-sizing: border-box; overflow: hidden;
+    grid-template-columns: 0.9fr 2.6fr 0.9fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 26px; padding: 22px; align-items: stretch;
+  }
+  .detail.col-left, #buyBox.col-right {
+    min-height: 0; max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
+    scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.18) transparent;
+  }
+  .detail.col-left::-webkit-scrollbar, #buyBox.col-right::-webkit-scrollbar { width: 7px; }
+  .detail.col-left::-webkit-scrollbar-thumb, #buyBox.col-right::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.18); border-radius: 4px; }
+  .gallery { position: static; min-height: 0; align-items: center; justify-content: center; }
+  .gallery-main { height: 100%; max-height: 100%; max-width: 100%; width: auto; aspect-ratio: 1 / 1; margin: auto; }
+  .dyn-actionbar { margin-top: 0; align-self: end; }
+}
 /* Tablet: image on top, then name/description, then options. */
 @media (max-width: 1040px) and (min-width: 861px) {
   .product { grid-template-columns: 1fr 1fr; gap: 40px; }
