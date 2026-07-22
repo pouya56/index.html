@@ -4447,28 +4447,42 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // Sticky add-to-cart bar removed per request.
     var sThumb = null;
 
-    // Move the variations (Size / Color / Quantity) up to just after the price.
-    // Anchored on the price row itself so it works regardless of how the buttons
-    // are nested on the live page.
-    (function moveVariationsUp() {
+    // Keep the variations (Size / Color / Quantity) positioned right after the
+    // price. The customizer builds these groups asynchronously and rebuilds them
+    // on colour change, so we re-assert the order via an observer. It's
+    // idempotent — a group already in place isn't moved — so it can't loop.
+    function populated(g) { return !!(g && g.querySelector("button,input,.swatch,.pill")); }
+    function positionVariations() {
       var priceRow = priceEl ? (priceEl.closest(".price-row") || priceEl.parentNode) : null;
       if (!priceRow || !priceRow.parentNode) return;
+      var host = priceRow.parentNode;
       var colorEl = document.getElementById("pColors");
       var colorG = colorEl ? (colorEl.closest(".opt-group") || colorEl) : null;
-      var groups = [document.getElementById("pSizeGroup"), colorG, document.getElementById("pQtyGroup")];
+      var sizeG = document.getElementById("pSizeGroup");
+      var qtyG = document.getElementById("pQtyGroup");
+      var groups = [];
+      [sizeG, colorG, qtyG].forEach(function (g) {
+        if (g && groups.indexOf(g) === -1 && g !== priceRow && populated(g)) groups.push(g);
+      });
+      // Hide empty leftover size/qty groups so they don't leave a blank gap.
+      [sizeG, qtyG].forEach(function (g) { if (g && groups.indexOf(g) === -1) g.style.display = populated(g) ? "" : "none"; });
+      if (!groups.length) return;
       var ref = priceRow;
       groups.forEach(function (g) {
-        if (!g || g === ref) return;
-        ref.parentNode.insertBefore(g, ref.nextSibling); // relocates g right after ref
+        if (ref.nextElementSibling !== g) ref.parentNode.insertBefore(g, ref.nextSibling);
         ref = g;
       });
-      // Collapse a doubled divider left between the buttons and the description.
-      var host = priceRow.parentNode;
-      var rules = host.querySelectorAll("hr.dyn-rule");
-      for (var i = 0; i < rules.length - 1; i++) {
-        if (rules[i].nextElementSibling === rules[i + 1]) { rules[i].remove(); break; }
+      // Keep a single divider — the one right before the description.
+      var descAcc = document.getElementById("pDescAcc");
+      var rules = Array.prototype.slice.call(host.querySelectorAll("hr.dyn-rule"));
+      if (rules.length > 1 && descAcc && descAcc.parentNode === host) {
+        rules.forEach(function (r) { if (r.nextElementSibling !== descAcc) r.remove(); });
       }
-    })();
+    }
+    positionVariations();
+    if (typeof MutationObserver !== "undefined") {
+      new MutationObserver(function () { positionVariations(); }).observe(buyBox, { childList: true, subtree: true });
+    }
 
     var nudge = null, idleTimer = null, dismissed = false;
     if (customizeFlow) {
