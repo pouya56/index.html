@@ -1303,29 +1303,39 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
    bigger (wider centre column, fills the height). If a side box gets taller
    than the screen (e.g. reviews opened), that box scrolls on its own. */
 @media (min-width: 1041px) {
+  /* Full-screen photo; the panels float on top and can be dragged. */
   .product {
-    height: 100dvh; box-sizing: border-box; overflow: hidden;
-    grid-template-columns: 0.95fr 1.55fr;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    grid-template-areas:
-      "left  photo"
-      "right photo"
-      "bar   bar";
-    gap: 22px 26px; padding: 22px; align-items: stretch;
+    position: relative; display: block; height: 100dvh; box-sizing: border-box;
+    overflow: hidden; padding: 0; max-width: none;
   }
-  .detail.col-left { grid-area: left; }
-  #buyBox.col-right { grid-area: right; }
-  .gallery { grid-area: photo; }
-  .dyn-actionbar { grid-area: bar; margin-top: 0; }
-  .detail.col-left, #buyBox.col-right {
-    min-height: 0; max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
-    scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.18) transparent;
+  .gallery {
+    position: absolute; inset: 0; margin: 0; z-index: 0; display: block;
+  }
+  .gallery-main {
+    position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+    background: none; border: none; box-shadow: none; border-radius: 0; aspect-ratio: auto;
+  }
+  .gallery-stage { width: 100%; height: 100%; }
+  .gallery-stage img { object-fit: contain; }
+  .gal-nav { bottom: 26px; }
+  /* Floating glass panels — dragged by their grip. */
+  .dyn-draggable { z-index: 10; }
+  .detail.col-left {
+    position: absolute; top: 24px; left: 24px; width: 358px;
+    max-height: calc(100dvh - 130px); overflow-y: auto; overscroll-behavior: contain;
+  }
+  #buyBox.col-right {
+    position: absolute; top: 24px; right: 24px; width: 342px;
+    max-height: calc(100dvh - 130px); overflow-y: auto; overscroll-behavior: contain;
+  }
+  .dyn-actionbar {
+    position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+    width: min(900px, calc(100vw - 48px)); margin: 0;
   }
   .detail.col-left::-webkit-scrollbar, #buyBox.col-right::-webkit-scrollbar { width: 7px; }
   .detail.col-left::-webkit-scrollbar-thumb, #buyBox.col-right::-webkit-scrollbar-thumb {
     background: rgba(0,0,0,0.18); border-radius: 4px; }
-  .gallery { position: static; min-height: 0; align-items: center; justify-content: center; }
-  .gallery-main { height: 100%; max-height: 100%; max-width: 100%; width: auto; aspect-ratio: 1 / 1; margin: auto; }
+  .dyn-draggable .dyn-drag-handle { display: flex; }
 }
 /* Tablet: image on top, then name/description, then options. */
 @media (max-width: 1040px) and (min-width: 861px) {
@@ -1367,13 +1377,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
     <div class="gallery">
       <div class="gallery-main">
-        <!-- Original single-image stage + arrows kept (hidden) so the app script
-             still finds them, and used as a fallback if the card deck can't load. -->
-        <div class="gallery-stage" id="galleryStage" hidden></div>
+        <div class="gallery-stage" id="galleryStage"></div>
         <button class="gal-arrow" id="galPrev" hidden aria-hidden="true">&#8249;</button>
         <button class="gal-arrow" id="galNext" hidden aria-hidden="true">&#8250;</button>
-        <!-- Swipeable card-stack deck (self-contained, no external library). -->
-        <div class="dyn-cards" id="dynCards"></div>
         <!-- Prev / next arrows in a glass pill at the bottom. -->
         <div class="gal-nav">
           <button class="gal-arrow gal-prev" id="cardsPrev" aria-label="Previous image">&#8249;</button>
@@ -1382,19 +1388,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       </div>
       <!-- Thumbnails removed from view; kept hidden so the app's wiring is intact. -->
       <div class="gallery-thumbs" id="galleryThumbs" hidden></div>
-      <script type="application/json" id="dynCardsData">
-        {
-          "product": [{% if dyn_product %}{% for img in dyn_product.images %}{{ img | image_url: width: 1000 | json }}{% unless forloop.last %},{% endunless %}{% endfor %}{% endif %}],
-          "gallery": [
-            {% if section.settings.gallery_1 %}{{ section.settings.gallery_1 | image_url: width: 1000 | json }}{% else %}""{% endif %},
-            {% if section.settings.gallery_2 %}{{ section.settings.gallery_2 | image_url: width: 1000 | json }}{% else %}""{% endif %},
-            {% if section.settings.gallery_3 %}{{ section.settings.gallery_3 | image_url: width: 1000 | json }}{% else %}""{% endif %},
-            {% if section.settings.gallery_4 %}{{ section.settings.gallery_4 | image_url: width: 1000 | json }}{% else %}""{% endif %},
-            {% if section.settings.gallery_5 %}{{ section.settings.gallery_5 | image_url: width: 1000 | json }}{% else %}""{% endif %}
-          ],
-          "demo": [{{ 'gal-1.png' | asset_url | json }}, {{ 'gal-2.png' | asset_url | json }}, {{ 'gal-3.png' | asset_url | json }}, {{ 'gal-4.png' | asset_url | json }}, {{ 'gal-5.png' | asset_url | json }}]
-        }
-      </script>
     </div>
 
     <section class="detail col-right" id="buyBox">
@@ -1515,117 +1508,65 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 <style>
-  /* Self-contained swipeable card-stack deck — no external library. */
-  .dyn-cards { position: relative; width: 74%; height: 88%; margin: auto; touch-action: pan-y; }
-  .dyn-card { position: absolute; inset: 0; border-radius: 24px; overflow: hidden;
-    background: var(--bg-panel); cursor: grab; will-change: transform;
-    box-shadow: 0 34px 70px -26px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.12);
-    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease; }
-  .dyn-card.is-drag { transition: none; cursor: grabbing; }
-  .dyn-card img { width: 100%; height: 100%; object-fit: cover; display: block;
-    pointer-events: none; -webkit-user-drag: none; user-select: none; }
-  /* Fallback stage keeps its normal look when revealed. */
-  #galleryStage:not([hidden]) { display: grid; }
+  /* Full-screen photo with the panels floating on top, draggable by a grip. */
+  .dyn-drag-handle { display: none; align-items: center; justify-content: center;
+    height: 18px; margin: -10px -6px 8px; cursor: grab; touch-action: none;
+    position: sticky; top: -4px; z-index: 2; }
+  .dyn-drag-handle::before { content: ""; width: 42px; height: 5px; border-radius: 3px;
+    background: rgba(0,0,0,0.22); transition: background 0.15s; }
+  .dyn-drag-handle:hover::before { background: rgba(0,0,0,0.34); }
+  .dyn-draggable.is-dragging { cursor: grabbing; box-shadow: 0 40px 90px -30px rgba(0,0,0,0.5); }
+  .dyn-draggable.is-dragging .dyn-drag-handle { cursor: grabbing; }
 </style>
 
 <script>
-  /* Turn the product photos into a swipeable card-stack deck (like the Swiper
-     "cards" effect, but self-contained). Reads the same images the app uses; if
-     there are none it reveals the original single-image stage instead. */
+  /* Full-screen layout: the glass panels float over the photo and can be dragged
+     around by their grip. Desktop only — small screens keep the stacked layout. */
   (function () {
-    var host = document.getElementById("dynCards");
-    var stage = document.getElementById("galleryStage");
+    /* The bottom pill drives the app's own prev/next image arrows. */
     var oPrev = document.getElementById("galPrev"), oNext = document.getElementById("galNext");
-    var prev = document.getElementById("cardsPrev"), next = document.getElementById("cardsNext");
-    if (!host) return;
+    var pPrev = document.getElementById("cardsPrev"), pNext = document.getElementById("cardsNext");
+    if (pPrev && oPrev) pPrev.addEventListener("click", function () { oPrev.click(); });
+    if (pNext && oNext) pNext.addEventListener("click", function () { oNext.click(); });
 
-    function images() {
-      var el = document.getElementById("dynCardsData");
-      if (!el) return [];
-      var d; try { d = JSON.parse(el.textContent); } catch (e) { return []; }
-      var p = (d.product || []).filter(Boolean); if (p.length) return p;
-      var g = (d.gallery || []).filter(Boolean); if (g.length) return g;
-      return (d.demo || []).filter(Boolean);
+    if (!window.matchMedia || !window.matchMedia("(min-width: 1041px)").matches) return;
+
+    function makeDraggable(el) {
+      if (!el) return;
+      el.classList.add("dyn-draggable");
+      var handle = document.createElement("div");
+      handle.className = "dyn-drag-handle";
+      handle.setAttribute("aria-hidden", "true");
+      el.insertBefore(handle, el.firstChild);
+
+      var sx = 0, sy = 0, ox = 0, oy = 0, dragging = false;
+      handle.addEventListener("pointerdown", function (e) {
+        dragging = true;
+        try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+        var r = el.getBoundingClientRect(), pr = el.offsetParent.getBoundingClientRect();
+        ox = r.left - pr.left; oy = r.top - pr.top;
+        sx = e.clientX; sy = e.clientY;
+        el.style.left = ox + "px"; el.style.top = oy + "px";
+        el.style.right = "auto"; el.style.bottom = "auto"; el.style.transform = "none";
+        el.classList.add("is-dragging");
+        e.preventDefault();
+      });
+      handle.addEventListener("pointermove", function (e) {
+        if (!dragging) return;
+        var nx = ox + (e.clientX - sx), ny = oy + (e.clientY - sy);
+        var maxX = (el.offsetParent.clientWidth || window.innerWidth) - el.offsetWidth;
+        var maxY = (el.offsetParent.clientHeight || window.innerHeight) - el.offsetHeight;
+        el.style.left = Math.max(0, Math.min(nx, maxX)) + "px";
+        el.style.top = Math.max(0, Math.min(ny, maxY)) + "px";
+      });
+      function end() { dragging = false; el.classList.remove("is-dragging"); }
+      handle.addEventListener("pointerup", end);
+      handle.addEventListener("pointercancel", end);
     }
 
-    var imgs = images();
-    if (!imgs.length) {
-      host.style.display = "none";
-      if (stage) stage.removeAttribute("hidden");
-      if (prev && oPrev) prev.addEventListener("click", function () { oPrev.click(); });
-      if (next && oNext) next.addEventListener("click", function () { oNext.click(); });
-      return;
-    }
-
-    /* Keep the app's single-image stage out of the way, even if its script
-       tries to re-show it (a class rule can override the [hidden] attribute). */
-    function hideStage() {
-      if (!stage) return;
-      stage.setAttribute("hidden", "");
-      stage.style.setProperty("display", "none", "important");
-    }
-    hideStage();
-    if (stage && window.MutationObserver) {
-      new MutationObserver(hideStage).observe(stage, { attributes: true, attributeFilter: ["hidden", "style", "class"] });
-    }
-
-    /* Build the deck. order[0] is the front card. */
-    var cards = imgs.map(function (u) {
-      var c = document.createElement("div");
-      c.className = "dyn-card";
-      var im = document.createElement("img");
-      im.src = u; im.alt = ""; im.loading = "lazy"; im.draggable = false;
-      c.appendChild(im); host.appendChild(c);
-      return c;
-    });
-    var order = cards.map(function (_, i) { return i; });
-    var VISIBLE = 4, OFFSET = 16, SCALE = 0.05;
-
-    function layout(dragCard, dx) {
-      for (var pos = 0; pos < order.length; pos++) {
-        var c = cards[order[pos]];
-        if (c === dragCard) continue;
-        var d = Math.min(pos, VISIBLE);
-        c.style.zIndex = String(order.length - pos);
-        c.style.opacity = pos > VISIBLE ? "0" : "1";
-        c.style.transform = "translateY(" + (d * OFFSET) + "px) scale(" + (1 - d * SCALE) + ")";
-        c.classList.remove("is-drag");
-      }
-    }
-    layout();
-
-    function advance() { order.push(order.shift()); layout(); }
-    function retreat() { order.unshift(order.pop()); layout(); }
-
-    if (next) next.addEventListener("click", advance);
-    if (prev) prev.addEventListener("click", retreat);
-
-    /* Drag the front card to flip through. */
-    var startX = 0, dx = 0, dragging = false, frontEl = null;
-    function onDown(e) {
-      frontEl = cards[order[0]];
-      if (!frontEl) return;
-      dragging = true; startX = (e.touches ? e.touches[0].clientX : e.clientX);
-      frontEl.classList.add("is-drag");
-      document.addEventListener("pointermove", onMove); document.addEventListener("pointerup", onUp);
-    }
-    function onMove(e) {
-      if (!dragging) return;
-      dx = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
-      frontEl.style.transform = "translateX(" + dx + "px) rotate(" + (dx * 0.04) + "deg)";
-    }
-    function onUp() {
-      if (!dragging) return; dragging = false;
-      document.removeEventListener("pointermove", onMove); document.removeEventListener("pointerup", onUp);
-      frontEl.classList.remove("is-drag");
-      var w = host.clientWidth || 300;
-      if (Math.abs(dx) > w * 0.28) {
-        frontEl.style.transform = "translateX(" + (dx > 0 ? 1 : -1) * (w * 1.6) + "px) rotate(" + (dx > 0 ? 22 : -22) + "deg)";
-        setTimeout(advance, 220);
-      } else { layout(); }
-      dx = 0;
-    }
-    host.addEventListener("pointerdown", onDown);
+    makeDraggable(document.querySelector(".detail.col-left"));
+    makeDraggable(document.getElementById("buyBox"));
+    makeDraggable(document.querySelector(".dyn-actionbar"));
   })();
 </script>
 
