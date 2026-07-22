@@ -1302,10 +1302,18 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 @media (min-width: 1041px) {
   .product {
     height: 100dvh; box-sizing: border-box; overflow: hidden;
-    grid-template-columns: 0.9fr 2.6fr 0.9fr;
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 26px; padding: 22px; align-items: stretch;
+    grid-template-columns: 0.95fr 1.55fr;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "left  photo"
+      "right photo"
+      "bar   bar";
+    gap: 22px 26px; padding: 22px; align-items: stretch;
   }
+  .detail.col-left { grid-area: left; }
+  #buyBox.col-right { grid-area: right; }
+  .gallery { grid-area: photo; }
+  .dyn-actionbar { grid-area: bar; margin-top: 0; }
   .detail.col-left, #buyBox.col-right {
     min-height: 0; max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
     scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.18) transparent;
@@ -1315,7 +1323,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     background: rgba(0,0,0,0.18); border-radius: 4px; }
   .gallery { position: static; min-height: 0; align-items: center; justify-content: center; }
   .gallery-main { height: 100%; max-height: 100%; max-width: 100%; width: auto; aspect-ratio: 1 / 1; margin: auto; }
-  .dyn-actionbar { margin-top: 0; align-self: end; }
 }
 /* Tablet: image on top, then name/description, then options. */
 @media (max-width: 1040px) and (min-width: 861px) {
