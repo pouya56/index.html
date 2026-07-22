@@ -35,12 +35,14 @@
     <span class="gift-toggle-label">{% if gift_wrap_variant_id != blank %}Add gift wrapping — <strong>{{ gift_wrap_price | money }}</strong>{% else %}This is a gift{% endif %}</span>
   </label>
 
-  <div class="gift-panel" data-gift-panel hidden>
-    <div class="gift-note-field">
-      <label class="gift-note-heading" for="giftNoteInput">Add a gift note (optional)</label>
-      <textarea id="giftNoteInput" class="gift-note-input" name="properties[Gift note]"
-        maxlength="250" rows="3" placeholder="Write your message…" data-gift-note disabled></textarea>
-      <div class="gift-note-count"><span data-gift-count>0</span>/250</div>
+  <div class="gift-panel" data-gift-panel>
+    <div class="gift-panel-inner">
+      <div class="gift-note-field">
+        <label class="gift-note-heading" for="giftNoteInput">Add a gift note (optional)</label>
+        <textarea id="giftNoteInput" class="gift-note-input" name="properties[Gift note]"
+          maxlength="250" rows="3" placeholder="Write your message…" data-gift-note disabled></textarea>
+        <div class="gift-note-count"><span data-gift-count>0</span>/250</div>
+      </div>
     </div>
   </div>
 </div>
@@ -77,9 +79,19 @@
   .gift-options .gift-toggle-input:focus-visible + .gift-toggle-track { outline: 2px solid #30c754; outline-offset: 2px; }
   .gift-options .gift-toggle-label { font-size: 15px; font-weight: 500; letter-spacing: 0.01em; }
 
-  .gift-options .gift-panel { margin-top: 14px; padding: 18px 20px; background: var(--panel);
-    border: 1px solid var(--line); border-radius: 16px; display: grid; gap: 16px; }
-  .gift-options .gift-panel[hidden] { display: none; }
+  /* Smooth slide-open instead of an instant show that jumps the page:
+     the collapsing wrapper animates grid-template-rows 0fr -> 1fr; the inner
+     clips with overflow:hidden, and all the visible box styling (padding,
+     border, the top gap) lives on .gift-note-field so it's clipped while closed. */
+  .gift-options .gift-panel { display: grid; grid-template-rows: 0fr; opacity: 0;
+    transition: grid-template-rows .42s cubic-bezier(.4,0,.2,1), opacity .3s ease; }
+  .gift-options.is-gift-open .gift-panel { grid-template-rows: 1fr; opacity: 1; }
+  .gift-options .gift-panel-inner { overflow: hidden; min-height: 0; }
+  .gift-options .gift-note-field { margin-top: 14px; padding: 18px 20px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 16px; }
+  @media (prefers-reduced-motion: reduce) {
+    .gift-options .gift-panel { transition: none; }
+  }
 
   .gift-options .gift-row { display: flex; align-items: center; gap: 11px; cursor: pointer; font-size: 15px; }
   .gift-options .gift-check { width: 19px; height: 19px; accent-color: var(--ink); flex: none; cursor: pointer; margin: 0; }
@@ -118,7 +130,7 @@
 
   function togglePanel() {
     var on = isGift.checked;
-    panel.hidden = !on;
+    box.classList.toggle("is-gift-open", on);  // animates the note panel open/closed (no page jump)
     note.disabled = !on;                 // disabled fields never submit (no stale note)
   }
   isGift.addEventListener("change", togglePanel); togglePanel();
