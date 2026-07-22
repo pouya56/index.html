@@ -377,18 +377,19 @@ button { font-family: inherit; cursor: pointer; }
   content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -2; pointer-events: none;
   background: #ffffff;
 }
-/* Dark circle that grows from the bottom-centre to fill the button on hover. */
+/* Dark circle that grows from wherever the pointer enters (--mx/--my, set by
+   the script) to fill the button on hover. Falls back to the centre. */
 #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after {
-  content: ""; position: absolute; left: 50%; bottom: 0; width: 14px; height: 14px; z-index: -1;
+  content: ""; position: absolute; left: var(--mx, 50%); top: var(--my, 50%); width: 16px; height: 16px; z-index: -1;
   border-radius: 50%; background: #0f0f14; pointer-events: none; display: block;
-  transform: translate(-50%, 50%) scale(0); transform-origin: center;
-  transition: transform .55s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translate(-50%, -50%) scale(0); transform-origin: center;
+  transition: transform .5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 #customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover {
   color: #ffffff; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
 }
 #customizeBtn.btn-primary:hover::after, #pageAddCart.btn-primary:hover::after {
-  transform: translate(-50%, 50%) scale(60);
+  transform: translate(-50%, -50%) scale(60);
 }
 @media (prefers-reduced-motion: reduce) {
   #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after { transition: none; }
@@ -1523,6 +1524,24 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+
+<script>
+  /* The circle-fill on Customize / Add to Cart starts from where the pointer
+     enters (and unfills toward where it leaves). */
+  (function () {
+    ["customizeBtn", "pageAddCart"].forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (!btn) return;
+      function setOrigin(e) {
+        var r = btn.getBoundingClientRect();
+        btn.style.setProperty("--mx", (e.clientX - r.left) + "px");
+        btn.style.setProperty("--my", (e.clientY - r.top) + "px");
+      }
+      btn.addEventListener("pointerenter", setOrigin);
+      btn.addEventListener("pointerleave", setOrigin);
+    });
+  })();
+</script>
 <style>
   /* Self-contained swipeable card-stack deck — no external library. */
   .dyn-cards { position: relative; width: 74%; height: 88%; margin: auto; touch-action: pan-y; }
