@@ -1305,12 +1305,12 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 @media (min-width: 1041px) {
   .product {
     height: 100dvh; box-sizing: border-box; overflow: hidden;
-    grid-template-columns: 0.95fr 1.55fr;
+    grid-template-columns: 1.6fr 0.9fr;
     grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
-      "left  photo"
-      "right photo"
-      "bar   bar";
+      "photo left"
+      "photo right"
+      "photo bar";
     gap: 22px 26px; padding: 22px; align-items: stretch;
   }
   .detail.col-left { grid-area: left; }
