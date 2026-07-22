@@ -479,6 +479,17 @@ button { font-family: inherit; cursor: pointer; }
 .col-left { padding-top: 8px; }
 .col-right { padding-top: 8px; }
 .col-left .gallery-thumbs { justify-content: flex-start; margin-top: 26px; }
+/* Right column (options, price, reviews) presented as a liquid-glass card. */
+#buyBox.col-right {
+  padding: 30px 28px; border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.60), rgba(255,255,255,0.28));
+  -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 26px 60px -28px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.75);
+}
+/* The trust row and its divider read cleaner without their own borders inside the glass. */
+#buyBox.col-right .reassure { margin-top: 30px; }
+#buyBox.col-right .opt-group:first-child { margin-top: 2px; }
 /* Bottom action bar — spans all three columns. */
 .dyn-actionbar { grid-column: 1 / -1; margin-top: 44px; }
 .dyn-actionbar-inner {
