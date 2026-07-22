@@ -2520,7 +2520,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-note-input::placeholder{color:var(--gf)}' +
       '.dc-gift-note-input:focus{outline:none;border-color:var(--ga);box-shadow:0 0 0 3px rgba(0,113,227,.15)}' +
       '.dc-gift-note-input:disabled{opacity:.55}' +
-      '.dc-gift-count{margin-top:8px;text-align:right;font-size:12px;color:var(--gf);font-variant-numeric:tabular-nums}' +
+      '.dc-gift-count{font-size:12px;color:var(--gf);font-variant-numeric:tabular-nums}' +
+      '.dc-gift-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px}' +
+      '.dc-gift-save{-webkit-appearance:none;appearance:none;border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:#0a0a0a;border-radius:10px;padding:8px 16px;transition:transform .12s,box-shadow .2s,background .2s}' +
+      '.dc-gift-save:hover{background:#000;box-shadow:0 6px 16px rgba(0,0,0,.18)}' +
+      '.dc-gift-save:active{transform:translateY(1px)}' +
       '</style>';
     // The toggle IS the gift-wrapping switch when a wrap product is set
     // (turning it on adds the $8 wrapping); otherwise it's a plain gift toggle.
@@ -2532,14 +2536,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         '<div class="dc-gift-toggle">' +
           '<span class="dc-gift-heart-wrap"><input type="checkbox" id="giftIsGift" class="dc-gift-toggle-input">' +
             '<label class="dc-love-heart" for="giftIsGift" aria-label="' + escapeHtml(wrapId ? wrapLabel : toggleLabel) + '"><span class="dc-round"></span><span class="dc-bottom"></span></label></span>' +
-          '<label for="giftIsGift" class="dc-gift-label">' + label + '</label>' +
+          '<span class="dc-gift-label" id="giftLabel" role="button" tabindex="0">' + label + '</span>' +
         '</div>' +
         '<div class="dc-gift-panel" id="giftPanel">' +
           '<div class="dc-gift-card">' +
             '<div class="dc-gift-note"><label class="dc-gift-note-h" for="giftNote">' + escapeHtml(noteLabel) + '</label>' +
             '<textarea id="giftNote" class="dc-gift-note-input" maxlength="250" rows="3" placeholder="Write your message…" disabled></textarea>' +
-            '<div class="dc-gift-count"><span id="giftCount">0</span>/250</div></div>' +
-          '</div>' +
+            '<div class="dc-gift-foot"><span class="dc-gift-count"><span id="giftCount">0</span>/250</span>' +
+              '<button type="button" class="dc-gift-save" id="giftSave">Save</button></div>' +
+          '</div></div>' +
         '</div>' +
       '</div>';
   }
@@ -2709,16 +2714,32 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (!html) return;
     const giftIsGift = mount.querySelector("#giftIsGift");
     if (!giftIsGift) return;
-    const giftPanel = mount.querySelector("#giftPanel"), giftNote = mount.querySelector("#giftNote");
+    const giftNote = mount.querySelector("#giftNote");
     const giftCount = mount.querySelector("#giftCount");
     const giftBlock = mount.querySelector("#giftBlock");
-    const syncGift = () => {
+    const giftSave = mount.querySelector("#giftSave");
+    const giftLabel = mount.querySelector("#giftLabel");
+    const setOpen = (v) => { if (giftBlock) giftBlock.classList.toggle("is-gift-open", v); };  // float popup (no page jump)
+    const focusNote = () => { if (giftNote) { try { giftNote.focus({ preventScroll: true }); } catch (e) { giftNote.focus(); } } };
+    const syncGift = (openIt) => {
       const on = giftIsGift.checked;
-      if (giftBlock) giftBlock.classList.toggle("is-gift-open", on);  // float the note popup open (no page jump)
       if (giftNote) giftNote.disabled = !on;
+      if (!on) setOpen(false);           // gift off → note closed (and won't submit)
+      else if (openIt) { setOpen(true); focusNote(); }  // just turned on → open to write
       applyVariantPrice();   // reflect the wrapping fee in the page price
     };
-    giftIsGift.onchange = syncGift; syncGift();
+    giftIsGift.onchange = () => syncGift(true); syncGift(false);
+    // Save just closes the popup — the note stays in the field and still submits,
+    // and the customer can reopen it to edit by clicking the label again.
+    if (giftSave) giftSave.onclick = () => setOpen(false);
+    if (giftLabel) {
+      const openFromLabel = () => {
+        if (!giftIsGift.checked) { giftIsGift.checked = true; syncGift(true); }  // click label = turn on + open
+        else { setOpen(true); focusNote(); }                                     // already on = reopen to edit
+      };
+      giftLabel.onclick = openFromLabel;
+      giftLabel.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFromLabel(); } };
+    }
     if (giftNote && giftCount) { const c = () => (giftCount.textContent = String(giftNote.value.length)); giftNote.oninput = c; c(); }
     refreshGiftFee();   // replace the typed fee with the real Gift Wrap product price
   }
