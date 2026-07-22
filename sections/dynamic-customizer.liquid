@@ -360,89 +360,38 @@ button { font-family: inherit; cursor: pointer; }
 /* Customize + Add to Cart — liquid glass, same recipe as the hero's
    Surprise-me button: matte frost, thin bright rim, soft drop shadow, and
    the rainbow Siri glow that wakes up on hover. */
-/* Fluid-glass button — black pill with an animated glowing "liquid light" rim. */
-@property --dyn-ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+/* Circle-fill button — light at rest; on hover a dark circle grows from the
+   bottom to fill it and the text flips to white. */
 #customizeBtn.btn-primary, #pageAddCart.btn-primary {
-  position: relative; overflow: visible; z-index: 0; border-radius: 999px;
-  border: none;
+  position: relative; overflow: hidden; z-index: 0; border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   padding-top: 17px; padding-bottom: 17px;
-  color: #fff; font-weight: 600; letter-spacing: 0.02em; text-shadow: none;
-  background: #0a0a0a;
+  color: #14141a; font-weight: 600; letter-spacing: 0.03em; text-shadow: none;
+  background: transparent;
   -webkit-backdrop-filter: none; backdrop-filter: none;
-  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
-  transition: transform var(--dur-fast) var(--ease-out), box-shadow .25s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+  transition: color .35s ease, box-shadow .25s ease, transform var(--dur-fast) var(--ease-out);
 }
-@keyframes dynSiri { 0% { background-position: 0% 0; } 100% { background-position: 300% 0; } }
-@keyframes dynSpin { to { --dyn-ang: 360deg; } }
-/* The bright rotating rim — a conic light masked to just the border. Hidden at
-   rest (the button is plain black); revealed on hover. */
+/* White base fill of the button. */
 #customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before {
-  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 2px; z-index: 1; pointer-events: none;
-  background: conic-gradient(from var(--dyn-ang),
-    rgba(255,255,255,0) 0deg, rgba(255,255,255,0) 34deg, #ffffff 78deg,
-    rgba(255,255,255,0.35) 120deg, rgba(255,255,255,0) 162deg, rgba(255,255,255,0) 214deg,
-    #ffffff 258deg, rgba(255,255,255,0.35) 300deg, rgba(255,255,255,0) 342deg);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-  opacity: 0; transition: opacity .3s ease; animation: dynSpin 3.6s linear infinite;
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -2; pointer-events: none;
+  background: #ffffff;
 }
-/* The soft glowing halo of the same travelling light. */
+/* Dark circle that grows from the bottom-centre to fill the button on hover. */
 #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after {
-  content: ""; position: absolute; inset: -2px; border-radius: inherit; z-index: -1; pointer-events: none; display: block;
-  background: conic-gradient(from var(--dyn-ang),
-    transparent 0deg, transparent 34deg, #ffffff 78deg, transparent 162deg,
-    transparent 214deg, #ffffff 258deg, transparent 342deg);
-  filter: blur(9px); opacity: 0; transition: opacity .3s ease;
-  animation: dynSpin 3.6s linear infinite;
+  content: ""; position: absolute; left: 50%; bottom: 0; width: 14px; height: 14px; z-index: -1;
+  border-radius: 50%; background: #0f0f14; pointer-events: none; display: block;
+  transform: translate(-50%, 50%) scale(0); transform-origin: center;
+  transition: transform .55s cubic-bezier(0.4, 0, 0.2, 1);
 }
 #customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover {
-  transform: translateY(-1.5px); background: #0a0a0a;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+  color: #ffffff; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
 }
-#customizeBtn.btn-primary:hover::before, #pageAddCart.btn-primary:hover::before { opacity: 1; }
-#customizeBtn.btn-primary:hover::after, #pageAddCart.btn-primary:hover::after { opacity: 0.8; filter: blur(12px); }
+#customizeBtn.btn-primary:hover::after, #pageAddCart.btn-primary:hover::after {
+  transform: translate(-50%, 50%) scale(60);
+}
 @media (prefers-reduced-motion: reduce) {
-  #customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before,
-  #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after { animation: none; }
-}
-
-/* Blueprint-bracket hover effect around the Customize button (Uiverse). */
-.dyn-frame {
-  --fr-dot: 6px; --fr-w: 1px; --fr-anim: 0.35s; --fr-dot-color: #8a8a8a; --fr-line-color: #9a9a9a;
-  position: relative; display: flex; justify-content: center; align-items: center; padding: 11px 13px;
-}
-.dyn-frame .btn-block { width: 100%; }
-.dyn-frame .dyn-fr-dot {
-  position: absolute; width: var(--fr-dot); aspect-ratio: 1; border-radius: 50%;
-  background-color: var(--fr-dot-color); transition: all .3s ease-in-out; opacity: 0; pointer-events: none;
-}
-.dyn-frame .dyn-fr-line { position: absolute; transition: all .3s ease-in-out; pointer-events: none; }
-.dyn-frame .dyn-fr-line.horizontal { height: var(--fr-w); width: 100%;
-  background-image: repeating-linear-gradient(90deg, #0000 0 calc(var(--fr-w)*2), var(--fr-line-color) calc(var(--fr-w)*2) calc(var(--fr-w)*4)); }
-.dyn-frame .dyn-fr-line.vertical { width: var(--fr-w); height: 100%;
-  background-image: repeating-linear-gradient(0deg, #0000 0 calc(var(--fr-w)*2), var(--fr-line-color) calc(var(--fr-w)*2) calc(var(--fr-w)*4)); }
-.dyn-frame .dyn-fr-line.top { top: calc(var(--fr-w)*-0.5); transform-origin: top left; transform: rotate(5deg) scaleX(0); }
-.dyn-frame .dyn-fr-line.bottom { bottom: calc(var(--fr-w)*-0.5); transform-origin: bottom right; transform: rotate(5deg) scaleX(0); }
-.dyn-frame .dyn-fr-line.left { left: calc(var(--fr-w)*-0.5); transform-origin: bottom left; transform: rotate(0deg) scaleY(0); }
-.dyn-frame .dyn-fr-line.right { right: calc(var(--fr-w)*-0.5); transform-origin: top right; transform: rotate(5deg) scaleY(0); }
-
-.dyn-frame:has(#customizeBtn:hover) .dyn-fr-dot.tl { top: 50%; left: 20%; animation: dynFrTL var(--fr-anim) ease-in-out forwards; }
-@keyframes dynFrTL { 90% { opacity: .6; } 100% { top: calc(var(--fr-dot)*-0.5); left: calc(var(--fr-dot)*-0.5); opacity: 1; } }
-.dyn-frame:has(#customizeBtn:hover) .dyn-fr-dot.tr { top: 50%; right: 20%; animation: dynFrTR var(--fr-anim) ease-in-out forwards; animation-delay: calc(var(--fr-anim)*0.6); }
-@keyframes dynFrTR { 80% { opacity: .6; } 100% { top: calc(var(--fr-dot)*-0.5); right: calc(var(--fr-dot)*-0.5); opacity: 1; } }
-.dyn-frame:has(#customizeBtn:hover) .dyn-fr-dot.br { bottom: 50%; right: 20%; animation: dynFrBR var(--fr-anim) ease-in-out forwards; animation-delay: calc(var(--fr-anim)*1.2); }
-@keyframes dynFrBR { 80% { opacity: .6; } 100% { bottom: calc(var(--fr-dot)*-0.5); right: calc(var(--fr-dot)*-0.5); opacity: 1; } }
-.dyn-frame:has(#customizeBtn:hover) .dyn-fr-dot.bl { bottom: 50%; left: 20%; animation: dynFrBL var(--fr-anim) ease-in-out forwards; animation-delay: calc(var(--fr-anim)*1.8); }
-@keyframes dynFrBL { 80% { opacity: .6; } 100% { bottom: calc(var(--fr-dot)*-0.5); left: calc(var(--fr-dot)*-0.5); opacity: 1; } }
-
-.dyn-frame:has(#customizeBtn:hover) .dyn-fr-line.top { animation: dynDrawX var(--fr-anim) ease-in-out forwards; animation-delay: calc(var(--fr-anim)*0.8); }
-.dyn-frame:has(#customizeBtn:hover) .dyn-fr-line.right { animation: dynDrawY var(--fr-anim) ease-in-out forwards; animation-delay: calc(var(--fr-anim)*1.4); }
-.dyn-frame:has(#customizeBtn:hover) .dyn-fr-line.bottom { animation: dynDrawX var(--fr-anim) ease-in-out forwards; animation-delay: calc(var(--fr-anim)*2); }
-.dyn-frame:has(#customizeBtn:hover) .dyn-fr-line.left { animation: dynDrawY var(--fr-anim) ease-in-out forwards; animation-delay: calc(var(--fr-anim)*2.4); }
-@keyframes dynDrawX { 100% { transform: rotate(0deg) scaleX(1); } }
-@keyframes dynDrawY { 100% { transform: rotate(0deg) scaleY(1); } }
-@media (prefers-reduced-motion: reduce) {
-  .dyn-frame .dyn-fr-dot, .dyn-frame .dyn-fr-line { animation: none !important; }
+  #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after { transition: none; }
 }
 #customizeBtn.btn-primary:active, #pageAddCart.btn-primary:active { transform: scale(0.97); }
 /* "Add design" (popup) — liquid glass, same recipe as Customize / Add to
@@ -1460,16 +1409,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       <div class="dyn-actionbar" id="dynActionBar">
         <div class="dyn-actionbar-inner">
           <div class="cta-stack">
-            <div class="cta-row dyn-frame">
+            <div class="cta-row">
               <button class="btn btn-primary btn-lg btn-block" id="customizeBtn">Customize</button>
-              <span class="dyn-fr-line horizontal top" aria-hidden="true"></span>
-              <span class="dyn-fr-line horizontal bottom" aria-hidden="true"></span>
-              <span class="dyn-fr-line vertical left" aria-hidden="true"></span>
-              <span class="dyn-fr-line vertical right" aria-hidden="true"></span>
-              <span class="dyn-fr-dot tl" aria-hidden="true"></span>
-              <span class="dyn-fr-dot tr" aria-hidden="true"></span>
-              <span class="dyn-fr-dot br" aria-hidden="true"></span>
-              <span class="dyn-fr-dot bl" aria-hidden="true"></span>
             </div>
             <!-- Appears once a design is saved; submits it with the gift-wrap choice. -->
             <button class="btn btn-primary btn-lg btn-block" id="pageAddCart" hidden>Add to Cart</button>
