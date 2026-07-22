@@ -374,7 +374,8 @@ button { font-family: inherit; cursor: pointer; }
 }
 @keyframes dynSiri { 0% { background-position: 0% 0; } 100% { background-position: 300% 0; } }
 @keyframes dynSpin { to { --dyn-ang: 360deg; } }
-/* The bright rotating rim — a conic light masked to just the border. */
+/* The bright rotating rim — a conic light masked to just the border. Hidden at
+   rest (the button is plain black); revealed on hover. */
 #customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 2px; z-index: 1; pointer-events: none;
   background: conic-gradient(from var(--dyn-ang),
@@ -383,7 +384,7 @@ button { font-family: inherit; cursor: pointer; }
     #ffffff 258deg, rgba(255,255,255,0.35) 300deg, rgba(255,255,255,0) 342deg);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: dynSpin 3.6s linear infinite;
+  opacity: 0; transition: opacity .3s ease; animation: dynSpin 3.6s linear infinite;
 }
 /* The soft glowing halo of the same travelling light. */
 #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after {
@@ -391,14 +392,15 @@ button { font-family: inherit; cursor: pointer; }
   background: conic-gradient(from var(--dyn-ang),
     transparent 0deg, transparent 34deg, #ffffff 78deg, transparent 162deg,
     transparent 214deg, #ffffff 258deg, transparent 342deg);
-  filter: blur(9px); opacity: 0.6;
+  filter: blur(9px); opacity: 0; transition: opacity .3s ease;
   animation: dynSpin 3.6s linear infinite;
 }
 #customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover {
-  transform: translateY(-1.5px); background: #111;
+  transform: translateY(-1.5px); background: #0a0a0a;
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
 }
-#customizeBtn.btn-primary:hover::after, #pageAddCart.btn-primary:hover::after { opacity: 0.85; filter: blur(12px); }
+#customizeBtn.btn-primary:hover::before, #pageAddCart.btn-primary:hover::before { opacity: 1; }
+#customizeBtn.btn-primary:hover::after, #pageAddCart.btn-primary:hover::after { opacity: 0.8; filter: blur(12px); }
 @media (prefers-reduced-motion: reduce) {
   #customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before,
   #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after { animation: none; }
