@@ -4444,29 +4444,23 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     var card = null;
     var cardThumb = null;
 
-    var bar = document.createElement("div");
-    bar.className = "dyn-sticky"; bar.id = "dynSticky";
-    bar.innerHTML =
-      '<img class="dyn-sticky-thumb" alt="" hidden>' +
-      '<div class="dyn-sticky-info"><span class="dyn-sticky-name"></span><span class="dyn-sticky-price"></span></div>' +
-      '<button type="button" class="dyn-sticky-btn"></button>';
-    document.body.appendChild(bar);
-    var sName = bar.querySelector(".dyn-sticky-name"), sPrice = bar.querySelector(".dyn-sticky-price"),
-        sBtn = bar.querySelector(".dyn-sticky-btn"), sThumb = bar.querySelector(".dyn-sticky-thumb");
-    function syncSticky() {
-      if (nameEl) sName.textContent = (nameEl.textContent || "").trim();
-      if (priceEl) sPrice.textContent = (priceEl.textContent || "").trim();
-      sBtn.textContent = primaryIsAdd() ? "Add to Cart" : ((customizeBtn && (customizeBtn.textContent || "").trim()) || "Customize");
-    }
-    sBtn.addEventListener("click", function () {
-      if (primaryIsAdd()) { if (addBtn) addBtn.click(); }
-      else if (customizeBtn) { customizeBtn.click(); }
-    });
-    if ("IntersectionObserver" in window) {
-      new IntersectionObserver(function (ents) {
-        ents.forEach(function (en) { bar.classList.toggle("is-visible", !en.isIntersecting); });
-      }, { threshold: 0, rootMargin: "0px 0px -8px 0px" }).observe(actionBar);
-    } else { bar.classList.add("is-visible"); }
+    // Sticky add-to-cart bar removed per request.
+    var sThumb = null;
+
+    // Move the variations (Size / Color / Quantity) up to just after the price,
+    // above the step strip + buttons.
+    (function moveVariationsUp() {
+      var colorG = document.getElementById("pColors") ? document.getElementById("pColors").closest(".opt-group") : null;
+      var groups = [document.getElementById("pSizeGroup"), colorG, document.getElementById("pQtyGroup")];
+      var anchor = stepEl || actionBar;
+      if (!anchor || anchor.parentNode !== buyBox) return;
+      groups.forEach(function (g) { if (g && g !== anchor && g.parentNode) buyBox.insertBefore(g, anchor); });
+      // Collapse a now-doubled divider left between the buttons and description.
+      var rules = buyBox.querySelectorAll("hr.dyn-rule");
+      for (var i = 0; i < rules.length - 1; i++) {
+        if (rules[i].nextElementSibling === rules[i + 1]) { rules[i].remove(); break; }
+      }
+    })();
 
     var nudge = null, idleTimer = null, dismissed = false;
     if (customizeFlow) {
@@ -4495,7 +4489,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
 
     function refreshAll() {
-      syncSticky();
       setStep(currentStep());
       var ready = designReady() && customizeFlow;
       if (card) card.hidden = !ready;
@@ -4505,7 +4498,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (addBtn) new MutationObserver(refreshAll).observe(addBtn, { attributes: true, attributeFilter: ["hidden"] });
     if (customizeBtn) new MutationObserver(refreshAll).observe(customizeBtn, { attributes: true, attributeFilter: ["hidden"], childList: true, characterData: true, subtree: true });
     if (modalRoot) new MutationObserver(function () { setStep(currentStep()); }).observe(modalRoot, { attributes: true, attributeFilter: ["class"] });
-    if (priceEl) new MutationObserver(syncSticky).observe(priceEl, { childList: true, characterData: true, subtree: true });
 
     window.addEventListener("dyn-design-added", function () { if (window.DYN_DESIGN_THUMB) setThumb(window.DYN_DESIGN_THUMB); refreshAll(); });
     window.addEventListener("dyn-design-thumb", function (e) { setThumb(e && e.detail && e.detail.thumb); });
