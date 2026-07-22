@@ -360,25 +360,37 @@ button { font-family: inherit; cursor: pointer; }
 /* Customize + Add to Cart — liquid glass, same recipe as the hero's
    Surprise-me button: matte frost, thin bright rim, soft drop shadow, and
    the rainbow Siri glow that wakes up on hover. */
+/* Fluid glass button — translucent frosted glass, glossy top sheen, bright rim. */
 #customizeBtn.btn-primary, #pageAddCart.btn-primary {
-  position: relative; overflow: visible; z-index: 1; border-radius: 18px;
-  border: 1px solid #000;
+  position: relative; overflow: hidden; z-index: 1; border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
   padding-top: 16px; padding-bottom: 16px;
-  color: #fff; font-weight: 500; text-shadow: none;
-  background: #000; -webkit-backdrop-filter: none; backdrop-filter: none;
-  box-shadow: -13px 0 30px -8px rgba(255, 122, 47, 0.62), 13px 0 30px -8px rgba(79, 140, 255, 0.66),
-    0 8px 34px -6px rgba(160, 107, 255, 0.5), 0 14px 44px rgba(0, 0, 0, 0.28);
-  transition: box-shadow .3s ease, background .16s ease, transform var(--dur-fast) var(--ease-out);
+  color: var(--ink); font-weight: 600; letter-spacing: 0.02em; text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.60), rgba(255, 255, 255, 0) 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.50), rgba(255, 255, 255, 0.20));
+  -webkit-backdrop-filter: blur(14px) saturate(1.8); backdrop-filter: blur(14px) saturate(1.8);
+  box-shadow: 0 10px 30px -8px rgba(31, 31, 45, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -10px 22px rgba(255, 255, 255, 0.22);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow .25s ease, background .2s ease;
 }
 @keyframes dynSiri { 0% { background-position: 0% 0; } 100% { background-position: 300% 0; } }
-#customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before,
 #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after { display: none; }
-/* Brighter multicolour glow on hover. */
-#customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover {
-  background: #1a1a1a; transform: translateY(-1.5px);
-  box-shadow: -17px 0 42px -8px rgba(255, 122, 47, 0.85), 17px 0 42px -8px rgba(79, 140, 255, 0.9),
-    0 10px 46px -6px rgba(160, 107, 255, 0.65), 0 18px 52px rgba(0, 0, 0, 0.32);
+/* A soft moving sheen sweeps across the glass on hover. */
+#customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 45%; z-index: 2; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  transform: skewX(-18deg); transition: left .6s ease; opacity: 0.9;
 }
+#customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover {
+  transform: translateY(-1.5px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0) 48%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.30));
+  box-shadow: 0 14px 38px -8px rgba(31, 31, 45, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -10px 22px rgba(255, 255, 255, 0.3);
+}
+#customizeBtn.btn-primary:hover::before, #pageAddCart.btn-primary:hover::before { left: 120%; }
 #customizeBtn.btn-primary:active, #pageAddCart.btn-primary:active { transform: scale(0.97); }
 /* "Add design" (popup) — liquid glass, same recipe as Customize / Add to
    Cart and the hero's Surprise-me button: matte frost, thin bright rim,
