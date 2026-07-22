@@ -674,6 +674,8 @@ button { font-family: inherit; cursor: pointer; }
 /* Hidden per request: the "Not customized yet" status and the bulk-order note. */
 #customizeSummary, .customize-summary { display: none !important; }
 .bulk-note { display: none !important; }
+/* Quantity selector removed from view (input kept so the app reads qty = 1). */
+#pQtyGroup[hidden] { display: none !important; }
 .reassure { display: flex; gap: 26px; justify-content: center; margin-top: 34px; flex-wrap: wrap; }
 .reassure-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-faint); }
 .reassure-item svg { width: 16px; height: 16px; stroke: var(--ink-faint); }
@@ -1442,7 +1444,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         <div class="swatches" id="pColors"></div>
       </div>
 
-      <div class="opt-group">
+      <div class="opt-group" id="pQtyGroup" hidden>
         <div class="opt-label">Quantity</div>
         <div class="qty-row">
           <div class="qty">
