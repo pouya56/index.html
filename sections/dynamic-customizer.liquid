@@ -410,11 +410,19 @@ button { font-family: inherit; cursor: pointer; }
   transition: transform .5s ease; animation: none;
 }
 #uploadApply.btn-primary::before { background: linear-gradient(135deg, #ff6347, #f76c6c); transform: rotateY(0deg); }
-#uploadApply.btn-primary::after  { background: linear-gradient(135deg, #36b54a, #00c1d4); transform: rotateY(180deg); }
+/* Green face carries a white check mark (shown once flipped). */
+#uploadApply.btn-primary::after {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12.5l5 5L20 6.5'/%3E%3C/svg%3E") center / 30px no-repeat,
+    linear-gradient(135deg, #36b54a, #00c1d4);
+  transform: rotateY(180deg);
+}
 /* Flips to the green/teal face after it's clicked, and stays. Nothing changes
    on hover — no lift, no colour, no flip. */
 #uploadApply.btn-primary.is-flipped::before { transform: rotateY(180deg); }
 #uploadApply.btn-primary.is-flipped::after  { transform: rotateY(0deg); }
+/* Hide the label once flipped so only the check shows. */
+#uploadApply.btn-primary.is-flipped { color: transparent; text-shadow: none; }
 #uploadApply.btn-primary:hover, #uploadApply.btn-primary:hover:not([disabled]) {
   transform: none !important; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
 }
@@ -1537,12 +1545,18 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       btn.addEventListener("pointerenter", setOrigin);
       btn.addEventListener("pointerleave", setOrigin);
     });
-    /* "Add design" flips to the green face once clicked (delegated, since the
-       button is created by the app). */
+    /* "Add design": on click, flip to the green check for a moment, then let
+       the real action run (which adds the design and closes the window).
+       Capture phase + a re-fired click so we run before the app's handler. */
     document.addEventListener("click", function (e) {
       var t = e.target.closest ? e.target.closest("#uploadApply") : null;
-      if (t) t.classList.add("is-flipped");
-    });
+      if (!t || t.hasAttribute("disabled")) return;
+      if (t.dataset.dynDone) return;              /* the re-fired click passes straight through */
+      e.preventDefault(); e.stopImmediatePropagation();
+      t.classList.add("is-flipped");              /* green face + check mark */
+      t.dataset.dynDone = "1";
+      setTimeout(function () { t.click(); }, 850); /* then the design is added & the window closes */
+    }, true);
   })();
 </script>
 <style>
