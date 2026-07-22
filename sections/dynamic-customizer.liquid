@@ -364,18 +364,18 @@ button { font-family: inherit; cursor: pointer; }
    bottom to fill it and the text flips to white. */
 #customizeBtn.btn-primary, #pageAddCart.btn-primary {
   position: relative; overflow: hidden; z-index: 0; border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   padding-top: 17px; padding-bottom: 17px;
-  color: #14141a; font-weight: 600; letter-spacing: 0.03em; text-shadow: none;
+  color: #ffffff; font-weight: 600; letter-spacing: 0.03em; text-shadow: none;
   background: transparent;
   -webkit-backdrop-filter: none; backdrop-filter: none;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
   transition: color .35s ease, box-shadow .25s ease, transform var(--dur-fast) var(--ease-out);
 }
-/* White base fill of the button. */
+/* Black base fill of the button (at rest). */
 #customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -2; pointer-events: none;
-  background: #ffffff;
+  background: #0a0a0a;
 }
 /* Dark circle that grows from wherever the pointer enters (--mx/--my, set by
    the script) to fill the button on hover. Falls back to the centre. */
