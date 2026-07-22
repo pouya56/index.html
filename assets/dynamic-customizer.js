@@ -2490,32 +2490,33 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const css =
       '<style>' +
       '.dc-gift{--gi:#1d1d1f;--gs:#6e6e73;--gf:#86868b;--gl:#d2d2d7;--gp:#f5f5f7;--ga:#0071e3;' +
-        'margin:20px 0 0;font-family:inherit;color:var(--gi)}' +
+        'position:relative;margin:20px 0 0;font-family:inherit;color:var(--gi)}' +
       '.dc-gift *{box-sizing:border-box}' +
-      '.dc-gift-toggle{display:inline-flex;align-items:center;gap:12px;cursor:pointer;user-select:none}' +
-      '.dc-gift-toggle-input{position:absolute;opacity:0;width:0;height:0}' +
-      /* Frosted glass pill; a raised glossy knob rides ON TOP — green when on */
-      '.dc-gift-track{position:relative;width:54px;height:32px;border-radius:999px;flex:none;' +
-        'background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(10px) saturate(1.4);backdrop-filter:blur(10px) saturate(1.4);' +
-        'box-shadow:0 2px 4px rgba(0,0,0,.05),0 12px 20px -7px rgba(29,29,31,.22),inset 0 1px 2px rgba(0,0,0,.06),inset 0 0 0 1px rgba(255,255,255,.6);' +
-        'transition:box-shadow .3s}' +
-      '.dc-gift-track::before{content:"";position:absolute;left:3px;right:3px;top:2px;height:42%;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,0));pointer-events:none;z-index:1}' +
-      '.dc-gift-knob{position:absolute;top:2px;left:2px;width:28px;height:28px;border-radius:50%;z-index:2;' +
-        'background:linear-gradient(180deg,#ffffff,#e9ebee);' +
-        'box-shadow:0 3px 7px rgba(0,0,0,.22),0 1px 2px rgba(0,0,0,.12),inset 0 1px 1px rgba(255,255,255,.95),inset 0 -1px 2px rgba(0,0,0,.05);' +
-        'transition:transform .32s cubic-bezier(.4,1.25,.5,1),background .25s,box-shadow .25s}' +
-      '.dc-gift-toggle-input:checked+.dc-gift-track .dc-gift-knob{transform:translateX(22px);' +
-        'background:linear-gradient(180deg,#63de83,#2eb852);' +
-        'box-shadow:0 3px 8px rgba(46,184,82,.45),0 1px 2px rgba(0,0,0,.12),inset 0 1px 1px rgba(255,255,255,.7),inset 0 -1px 2px rgba(0,80,30,.18)}' +
-      '.dc-gift-toggle-input:checked+.dc-gift-track{box-shadow:0 2px 4px rgba(0,0,0,.05),0 14px 24px -7px rgba(52,199,89,.32),inset 0 1px 2px rgba(0,0,0,.06),inset 0 0 0 1px rgba(255,255,255,.6)}' +
-      '.dc-gift-toggle-input:focus-visible+.dc-gift-track{outline:2px solid var(--ga);outline-offset:2px}' +
-      '.dc-gift-label{font-size:15px;font-weight:500}' +
-      '.dc-gift-panel{margin-top:14px;padding:16px 18px;background:var(--gp);border:1px solid var(--gl);border-radius:14px;display:grid;gap:14px}' +
-      '.dc-gift-panel[hidden]{display:none}' +
+      /* Heart toggle (Uiverse.io by barisdogansutcu): grey outline off -> red fill on */
+      '.dc-gift-toggle{display:inline-flex;align-items:center;gap:22px;user-select:none}' +
+      '.dc-gift-heart-wrap{position:relative;width:44px;height:40px;flex:none}' +
+      '.dc-love-heart:before,.dc-gift-toggle-input{display:none}' +
+      '.dc-love-heart,.dc-love-heart::after{border-color:hsl(231deg 28% 86%);border:1px solid;border-top-left-radius:100px;border-top-right-radius:100px;width:10px;height:8px;border-bottom:0}' +
+      '.dc-round{position:absolute;z-index:1;width:8px;height:8px;background:#fff;box-shadow:rgb(0 0 0 / 24%) 0 0 4px 0;border-radius:100%;left:0;bottom:-1px;transition:all .5s ease;animation:dc-gift-heart2 .5s forwards}' +
+      '.dc-gift-toggle-input:checked+.dc-love-heart .dc-round{transform:translate(0,0);animation:dc-gift-heart .5s forwards;background-color:#fff}' +
+      '@keyframes dc-gift-heart{0%{transform:translate(0,0)}50%{transform:translate(0,7px)}100%{transform:translate(7px,7px)}}' +
+      '@keyframes dc-gift-heart2{0%{transform:translate(7px,7px)}50%{transform:translate(0,7px)}100%{transform:translate(0,0)}}' +
+      '.dc-love-heart{box-sizing:border-box;position:absolute;left:50%;top:50%;transform:rotate(-45deg) translate(-50%,-33px) scale(4);display:block;border-color:hsl(231deg 28% 86%);cursor:pointer}' +
+      '.dc-gift-toggle-input:checked+.dc-love-heart,.dc-gift-toggle-input:checked+.dc-love-heart::after,.dc-gift-toggle-input:checked+.dc-love-heart .dc-bottom{border-color:hsl(347deg 81% 61%);box-shadow:inset 6px -5px 0 2px hsl(347deg 99% 72%)}' +
+      '.dc-love-heart::after,.dc-love-heart .dc-bottom{content:"";display:block;box-sizing:border-box;position:absolute;border-color:hsl(231deg 28% 86%)}' +
+      '.dc-love-heart::after{right:-9px;transform:rotate(90deg);top:7px}' +
+      '.dc-love-heart .dc-bottom{width:11px;height:11px;border-left:1px solid;border-bottom:1px solid;border-color:hsl(231deg 28% 86%);left:-1px;top:5px;border-radius:0 0 0 5px}' +
+      '.dc-gift-toggle-input:focus-visible+.dc-love-heart{outline:2px solid var(--ga);outline-offset:6px}' +
+      '.dc-gift-label{font-size:15px;font-weight:500;cursor:pointer}' +
+      /* note = small floating popup so opening it never shifts the page */
+      '.dc-gift-panel{position:absolute;left:0;top:calc(100% + 11px);width:300px;max-width:calc(100vw - 40px);z-index:60;opacity:0;transform:translateY(-6px) scale(.96);transform-origin:28px top;pointer-events:none;visibility:hidden;transition:opacity .2s ease,transform .28s cubic-bezier(.34,1.45,.5,1),visibility 0s linear .28s}' +
+      '.dc-gift.is-gift-open .dc-gift-panel{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;visibility:visible;transition-delay:0s}' +
+      '.dc-gift-card{position:relative;padding:13px 14px 12px;background:#fff;border:1px solid var(--gl);border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.15),0 2px 8px rgba(0,0,0,.06)}' +
+      '.dc-gift-card::before{content:"";position:absolute;top:-6px;left:22px;width:11px;height:11px;background:#fff;border-left:1px solid var(--gl);border-top:1px solid var(--gl);border-radius:3px 0 0 0;transform:rotate(45deg)}' +
       '.dc-gift-row{display:flex;align-items:center;gap:11px;cursor:pointer;font-size:15px}' +
       '.dc-gift-check{width:19px;height:19px;accent-color:var(--gi);flex:none;cursor:pointer;margin:0}' +
       '.dc-gift-note-h{display:block;font-size:14px;font-weight:500;margin-bottom:8px}' +
-      '.dc-gift-note-input{width:100%;resize:vertical;min-height:70px;padding:11px 13px;font-family:inherit;font-size:15px;line-height:1.45;color:var(--gi);background:#fff;border:1px solid var(--gl);border-radius:12px;transition:border-color .16s,box-shadow .16s}' +
+      '.dc-gift-note-input{width:100%;resize:vertical;min-height:58px;padding:9px 11px;font-family:inherit;font-size:14px;line-height:1.45;color:var(--gi);background:#fff;border:1px solid var(--gl);border-radius:10px;transition:border-color .16s,box-shadow .16s}' +
       '.dc-gift-note-input::placeholder{color:var(--gf)}' +
       '.dc-gift-note-input:focus{outline:none;border-color:var(--ga);box-shadow:0 0 0 3px rgba(0,113,227,.15)}' +
       '.dc-gift-note-input:disabled{opacity:.55}' +
@@ -2528,13 +2529,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       : escapeHtml(toggleLabel);
     return css +
       '<div class="dc-gift" id="giftBlock">' +
-        '<label class="dc-gift-toggle"><input type="checkbox" id="giftIsGift" class="dc-gift-toggle-input">' +
-          '<span class="dc-gift-track"><span class="dc-gift-knob"></span></span>' +
-          '<span class="dc-gift-label">' + label + '</span></label>' +
-        '<div class="dc-gift-panel" id="giftPanel" hidden>' +
-          '<div class="dc-gift-note"><label class="dc-gift-note-h" for="giftNote">' + escapeHtml(noteLabel) + '</label>' +
-          '<textarea id="giftNote" class="dc-gift-note-input" maxlength="250" rows="3" placeholder="Write your message…" disabled></textarea>' +
-          '<div class="dc-gift-count"><span id="giftCount">0</span>/250</div></div>' +
+        '<div class="dc-gift-toggle">' +
+          '<span class="dc-gift-heart-wrap"><input type="checkbox" id="giftIsGift" class="dc-gift-toggle-input">' +
+            '<label class="dc-love-heart" for="giftIsGift" aria-label="' + escapeHtml(wrapId ? wrapLabel : toggleLabel) + '"><span class="dc-round"></span><span class="dc-bottom"></span></label></span>' +
+          '<label for="giftIsGift" class="dc-gift-label">' + label + '</label>' +
+        '</div>' +
+        '<div class="dc-gift-panel" id="giftPanel">' +
+          '<div class="dc-gift-card">' +
+            '<div class="dc-gift-note"><label class="dc-gift-note-h" for="giftNote">' + escapeHtml(noteLabel) + '</label>' +
+            '<textarea id="giftNote" class="dc-gift-note-input" maxlength="250" rows="3" placeholder="Write your message…" disabled></textarea>' +
+            '<div class="dc-gift-count"><span id="giftCount">0</span>/250</div></div>' +
+          '</div>' +
         '</div>' +
       '</div>';
   }
@@ -2706,9 +2711,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (!giftIsGift) return;
     const giftPanel = mount.querySelector("#giftPanel"), giftNote = mount.querySelector("#giftNote");
     const giftCount = mount.querySelector("#giftCount");
+    const giftBlock = mount.querySelector("#giftBlock");
     const syncGift = () => {
       const on = giftIsGift.checked;
-      if (giftPanel) giftPanel.hidden = !on;
+      if (giftBlock) giftBlock.classList.toggle("is-gift-open", on);  // float the note popup open (no page jump)
       if (giftNote) giftNote.disabled = !on;
       applyVariantPrice();   // reflect the wrapping fee in the page price
     };
