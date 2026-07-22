@@ -471,8 +471,22 @@ button { font-family: inherit; cursor: pointer; }
 
 .product {
   max-width: 1280px; margin: 0 auto; padding: 40px 22px 128px;
-  display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 44px; align-items: start;
+  display: grid; grid-template-columns: 1fr; gap: 44px; align-items: start;
 }
+/* Omega-style detail column: one continuous glass panel, quiet dividers,
+   a prominent primary button and a two-up trust checklist. */
+#buyBox .dyn-actionbar { margin: 20px 0 0; }
+#buyBox .dyn-actionbar-inner {
+  background: none; border: none; box-shadow: none; -webkit-backdrop-filter: none;
+  backdrop-filter: none; border-radius: 0; padding: 0; flex-direction: column;
+  align-items: stretch; gap: 12px;
+}
+#buyBox .cta-stack { margin-top: 0; }
+.dyn-rule { border: 0; border-top: 1px solid var(--line-soft); margin: 24px 0; }
+#buyBox .headline { font-size: clamp(26px, 2.4vw, 36px); text-transform: uppercase; letter-spacing: 0.01em; }
+#buyBox .price { font-size: 30px; }
+#buyBox .reassure { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; margin: 4px 0 0; justify-content: start; }
+#buyBox .reassure-item { justify-content: flex-start; }
 /* Three-column layout: name + description + thumbnails (left), the main image
    at ~50% width (centre), variations + price + reviews (right). The buttons all
    gather in a full-width bar at the bottom. Columns reuse the .detail styling. */
@@ -1305,25 +1319,16 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 @media (min-width: 1041px) {
   .product {
     height: 100dvh; box-sizing: border-box; overflow: hidden;
-    grid-template-columns: 1.6fr 0.9fr;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    grid-template-areas:
-      "photo left"
-      "photo right"
-      "photo bar";
-    gap: 22px 26px; padding: 22px; align-items: stretch;
+    grid-template-columns: 1.5fr 0.92fr;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 26px; padding: 24px; align-items: stretch;
   }
-  .detail.col-left { grid-area: left; }
-  #buyBox.col-right { grid-area: right; }
-  .gallery { grid-area: photo; }
-  .dyn-actionbar { grid-area: bar; margin-top: 0; }
-  .detail.col-left, #buyBox.col-right {
+  #buyBox.col-right {
     min-height: 0; max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
-    scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.18) transparent;
+    padding: 34px 32px; scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.18) transparent;
   }
-  .detail.col-left::-webkit-scrollbar, #buyBox.col-right::-webkit-scrollbar { width: 7px; }
-  .detail.col-left::-webkit-scrollbar-thumb, #buyBox.col-right::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,0.18); border-radius: 4px; }
+  #buyBox.col-right::-webkit-scrollbar { width: 7px; }
+  #buyBox.col-right::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 4px; }
   .gallery { position: static; min-height: 0; align-items: center; justify-content: center; }
   .gallery-main { height: 100%; max-height: 100%; max-width: 100%; width: auto; aspect-ratio: 1 / 1; margin: auto; }
 }
@@ -1359,12 +1364,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
   <!-- Product page -->
   <main class="product">
-    <aside class="detail col-left">
-      <div class="eyebrow" id="pEyebrow"></div>
-      <h1 class="headline" id="pName"></h1>
-      <div class="desc" id="pDesc"></div>
-    </aside>
-
     <div class="gallery">
       <div class="gallery-main">
         <!-- Original single-image stage + arrows kept (hidden) so the app script
@@ -1398,6 +1397,33 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     </div>
 
     <section class="detail col-right" id="buyBox">
+      <div class="eyebrow" id="pEyebrow"></div>
+      <h1 class="headline" id="pName"></h1>
+      <div class="desc" id="pDesc"></div>
+
+      <div class="price-row">
+        <span class="price" id="pPrice"></span>
+        <span class="price-note" id="pPriceNote"></span>
+      </div>
+
+      <!-- Primary actions (Add to Cart / Customize) sit right under the price. -->
+      <div class="dyn-actionbar" id="dynActionBar">
+        <div class="dyn-actionbar-inner">
+          <div class="cta-stack">
+            <div class="cta-row">
+              <button class="btn btn-primary btn-lg btn-block" id="customizeBtn">Customize</button>
+            </div>
+            <!-- Appears once a design is saved; submits it with the gift-wrap choice. -->
+            <button class="btn btn-primary btn-lg btn-block" id="pageAddCart" hidden>Add to Cart</button>
+            <div class="customize-summary" id="customizeSummary"></div>
+          </div>
+          <!-- Gift options mount (filled by the app when enabled in settings) -->
+          <div id="giftMount"></div>
+        </div>
+      </div>
+
+      <hr class="dyn-rule">
+
       <div class="opt-group" id="pSizeGroup">
         <div class="opt-label">Size</div>
         <div class="pills" id="pSizes"></div>
@@ -1406,11 +1432,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       <div class="opt-group">
         <div class="opt-label">Model <span id="colorName">AirPods Pro 3</span></div>
         <div class="swatches" id="pColors"></div>
-      </div>
-
-      <div class="price-row">
-        <span class="price" id="pPrice"></span>
-        <span class="price-note" id="pPriceNote"></span>
       </div>
 
       <div class="opt-group">
@@ -1423,6 +1444,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
           </div>
         </div>
       </div>
+
+      <hr class="dyn-rule">
 
       <div class="reassure">
         <div class="reassure-item" data-reassure-item="0">
@@ -1486,24 +1509,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         </div>
       </section>
     </section>
-
-    <!-- Bottom action bar: all the actions gathered in one full-width bar.
-         Customize / Add to Cart (+ the edit summary) live here; gift-wrap and
-         bulk-order feature blocks are mounted in here by the script below. -->
-    <div class="dyn-actionbar" id="dynActionBar">
-      <div class="dyn-actionbar-inner">
-        <div class="cta-stack">
-          <div class="cta-row">
-            <button class="btn btn-primary btn-lg btn-block" id="customizeBtn">Customize</button>
-          </div>
-          <!-- Appears once a design is saved; submits it with the gift-wrap choice. -->
-          <button class="btn btn-primary btn-lg btn-block" id="pageAddCart" hidden>Add to Cart</button>
-          <div class="customize-summary" id="customizeSummary"></div>
-        </div>
-        <!-- Gift options mount (filled by the app when enabled in settings) -->
-        <div id="giftMount"></div>
-      </div>
-    </div>
   </main>
 
   <!-- The "Features" panel now lives in its own section (dynamic-features.liquid)
