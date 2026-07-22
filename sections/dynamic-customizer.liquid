@@ -537,7 +537,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 /* Prev / next in a floating glass pill centred at the bottom. */
 .gal-nav {
-  position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 3;
+  position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 50;
   display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: 999px;
   background: rgba(255,255,255,0.22);
   -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
@@ -1372,8 +1372,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
         <div class="gallery-stage" id="galleryStage" hidden></div>
         <button class="gal-arrow" id="galPrev" hidden aria-hidden="true">&#8249;</button>
         <button class="gal-arrow" id="galNext" hidden aria-hidden="true">&#8250;</button>
-        <!-- Swipeable card-stack deck (Swiper "cards" effect). -->
-        <div class="swiper dyn-cards" id="dynCards"><div class="swiper-wrapper" id="dynCardsWrap"></div></div>
+        <!-- Swipeable card-stack deck (self-contained, no external library). -->
+        <div class="dyn-cards" id="dynCards"></div>
         <!-- Prev / next arrows in a glass pill at the bottom. -->
         <div class="gal-nav">
           <button class="gal-arrow gal-prev" id="cardsPrev" aria-label="Previous image">&#8249;</button>
@@ -1514,36 +1514,30 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.1.15/swiper-bundle.min.js" defer></script>
-
 <style>
-  /* Minimal Swiper core + cards CSS (inlined so no extra stylesheet request). */
-  .dyn-cards.swiper { position: relative; z-index: 1; display: block; margin: auto; list-style: none; padding: 0; overflow: visible; }
-  .dyn-cards .swiper-wrapper { position: relative; width: 100%; height: 100%; z-index: 1; display: flex; box-sizing: content-box; transition-property: transform; transition-timing-function: var(--swiper-wrapper-transition-timing-function, initial); }
-  .dyn-cards .swiper-slide { flex-shrink: 0; width: 100%; height: 100%; position: relative; transition-property: transform; display: block; }
-  .dyn-cards.swiper-cards { overflow: visible; }
-  .dyn-cards.swiper-cards .swiper-slide { transform-origin: center bottom; -webkit-backface-visibility: hidden; backface-visibility: hidden; overflow: hidden; }
-  /* The card deck itself. */
-  .dyn-cards { width: 74%; height: 88%; }
-  .dyn-cards .swiper-slide { border-radius: 24px; overflow: hidden; background: var(--bg-panel);
-    box-shadow: 0 34px 70px -26px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.1); cursor: grab; }
-  .dyn-cards .swiper-slide:active { cursor: grabbing; }
-  .dyn-cards .swiper-slide img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
-  /* If the deck has no images or Swiper fails to load, fall back to the plain stage. */
+  /* Self-contained swipeable card-stack deck — no external library. */
+  .dyn-cards { position: relative; width: 74%; height: 88%; margin: auto; touch-action: pan-y; }
+  .dyn-card { position: absolute; inset: 0; border-radius: 24px; overflow: hidden;
+    background: var(--bg-panel); cursor: grab; will-change: transform;
+    box-shadow: 0 34px 70px -26px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.12);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease; }
+  .dyn-card.is-drag { transition: none; cursor: grabbing; }
+  .dyn-card img { width: 100%; height: 100%; object-fit: cover; display: block;
+    pointer-events: none; -webkit-user-drag: none; user-select: none; }
+  /* Fallback stage keeps its normal look when revealed. */
   #galleryStage:not([hidden]) { display: grid; }
 </style>
 
 <script>
-  /* Turn the product photos into a swipeable card-stack deck (Swiper "cards"
-     effect). Reads the same images the app uses; if Swiper or the images are
-     unavailable it reveals the original single-image stage instead. */
+  /* Turn the product photos into a swipeable card-stack deck (like the Swiper
+     "cards" effect, but self-contained). Reads the same images the app uses; if
+     there are none it reveals the original single-image stage instead. */
   (function () {
     var host = document.getElementById("dynCards");
-    var wrap = document.getElementById("dynCardsWrap");
     var stage = document.getElementById("galleryStage");
     var oPrev = document.getElementById("galPrev"), oNext = document.getElementById("galNext");
     var prev = document.getElementById("cardsPrev"), next = document.getElementById("cardsNext");
-    if (!host || !wrap) return;
+    if (!host) return;
 
     function images() {
       var el = document.getElementById("dynCardsData");
@@ -1554,36 +1548,84 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       return (d.demo || []).filter(Boolean);
     }
 
-    function fallback() {
-      /* Show the app's normal gallery; make the glass pill drive its arrows. */
-      if (host) host.style.display = "none";
+    var imgs = images();
+    if (!imgs.length) {
+      host.style.display = "none";
       if (stage) stage.removeAttribute("hidden");
       if (prev && oPrev) prev.addEventListener("click", function () { oPrev.click(); });
       if (next && oNext) next.addEventListener("click", function () { oNext.click(); });
+      return;
     }
 
-    var imgs = images();
-    if (!imgs.length) { fallback(); return; }
-    wrap.innerHTML = imgs.map(function (u) {
-      return '<div class="swiper-slide"><img src="' + u + '" alt="" loading="lazy"></div>';
-    }).join("");
+    /* Keep the app's single-image stage out of the way, even if its script
+       tries to re-show it (a class rule can override the [hidden] attribute). */
+    function hideStage() {
+      if (!stage) return;
+      stage.setAttribute("hidden", "");
+      stage.style.setProperty("display", "none", "important");
+    }
+    hideStage();
+    if (stage && window.MutationObserver) {
+      new MutationObserver(hideStage).observe(stage, { attributes: true, attributeFilter: ["hidden", "style", "class"] });
+    }
 
-    var tries = 0;
-    (function waitForSwiper() {
-      if (window.Swiper) {
-        try {
-          var sw = new Swiper(host, {
-            effect: "cards", grabCursor: true, loop: imgs.length > 1,
-            cardsEffect: { slideShadows: true, perSlideOffset: 8, perSlideRotate: 2 }
-          });
-          if (prev) prev.addEventListener("click", function () { sw.slidePrev(); });
-          if (next) next.addEventListener("click", function () { sw.slideNext(); });
-        } catch (e) { fallback(); }
-        return;
+    /* Build the deck. order[0] is the front card. */
+    var cards = imgs.map(function (u) {
+      var c = document.createElement("div");
+      c.className = "dyn-card";
+      var im = document.createElement("img");
+      im.src = u; im.alt = ""; im.loading = "lazy"; im.draggable = false;
+      c.appendChild(im); host.appendChild(c);
+      return c;
+    });
+    var order = cards.map(function (_, i) { return i; });
+    var VISIBLE = 4, OFFSET = 16, SCALE = 0.05;
+
+    function layout(dragCard, dx) {
+      for (var pos = 0; pos < order.length; pos++) {
+        var c = cards[order[pos]];
+        if (c === dragCard) continue;
+        var d = Math.min(pos, VISIBLE);
+        c.style.zIndex = String(order.length - pos);
+        c.style.opacity = pos > VISIBLE ? "0" : "1";
+        c.style.transform = "translateY(" + (d * OFFSET) + "px) scale(" + (1 - d * SCALE) + ")";
+        c.classList.remove("is-drag");
       }
-      if (++tries > 60) { fallback(); return; }   /* ~6s, then give up gracefully */
-      setTimeout(waitForSwiper, 100);
-    })();
+    }
+    layout();
+
+    function advance() { order.push(order.shift()); layout(); }
+    function retreat() { order.unshift(order.pop()); layout(); }
+
+    if (next) next.addEventListener("click", advance);
+    if (prev) prev.addEventListener("click", retreat);
+
+    /* Drag the front card to flip through. */
+    var startX = 0, dx = 0, dragging = false, frontEl = null;
+    function onDown(e) {
+      frontEl = cards[order[0]];
+      if (!frontEl) return;
+      dragging = true; startX = (e.touches ? e.touches[0].clientX : e.clientX);
+      frontEl.classList.add("is-drag");
+      document.addEventListener("pointermove", onMove); document.addEventListener("pointerup", onUp);
+    }
+    function onMove(e) {
+      if (!dragging) return;
+      dx = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
+      frontEl.style.transform = "translateX(" + dx + "px) rotate(" + (dx * 0.04) + "deg)";
+    }
+    function onUp() {
+      if (!dragging) return; dragging = false;
+      document.removeEventListener("pointermove", onMove); document.removeEventListener("pointerup", onUp);
+      frontEl.classList.remove("is-drag");
+      var w = host.clientWidth || 300;
+      if (Math.abs(dx) > w * 0.28) {
+        frontEl.style.transform = "translateX(" + (dx > 0 ? 1 : -1) * (w * 1.6) + "px) rotate(" + (dx > 0 ? 22 : -22) + "deg)";
+        setTimeout(advance, 220);
+      } else { layout(); }
+      dx = 0;
+    }
+    host.addEventListener("pointerdown", onDown);
   })();
 </script>
 
