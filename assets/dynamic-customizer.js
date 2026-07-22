@@ -4452,23 +4452,35 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // on colour change, so we re-assert the order via an observer. It's
     // idempotent — a group already in place isn't moved — so it can't loop.
     function populated(g) { return !!(g && g.querySelector("button,input,.swatch,.pill")); }
+    // Find the variation group(s). The multi-option renderer REPLACES #pColors
+    // (rendered swatches/pills use data-oi and it appends #variantStatus), so we
+    // locate the container by survivors that persist after render, not by #pColors.
+    function findVarGroups() {
+      var out = [];
+      var sizeG = document.getElementById("pSizeGroup");
+      var qtyG = document.getElementById("pQtyGroup");
+      var marker = document.getElementById("pColors")
+                 || document.getElementById("variantStatus")
+                 || document.querySelector("#buyBox [data-oi]");
+      var mg = marker ? (marker.closest(".opt-group") || marker) : null;
+      [sizeG, mg, qtyG].forEach(function (g) {
+        if (g && out.indexOf(g) === -1 && populated(g)) out.push(g);
+      });
+      return out;
+    }
     function positionVariations() {
       var priceRow = priceEl ? (priceEl.closest(".price-row") || priceEl.parentNode) : null;
       if (!priceRow || !priceRow.parentNode) return;
       var host = priceRow.parentNode;
-      var colorEl = document.getElementById("pColors");
-      var colorG = colorEl ? (colorEl.closest(".opt-group") || colorEl) : null;
-      var sizeG = document.getElementById("pSizeGroup");
-      var qtyG = document.getElementById("pQtyGroup");
-      var groups = [];
-      [sizeG, colorG, qtyG].forEach(function (g) {
-        if (g && groups.indexOf(g) === -1 && g !== priceRow && populated(g)) groups.push(g);
+      var groups = findVarGroups();
+      // Hide empty leftover static groups so they don't leave a blank gap.
+      [document.getElementById("pSizeGroup"), document.getElementById("pQtyGroup")].forEach(function (g) {
+        if (g && groups.indexOf(g) === -1) g.style.display = populated(g) ? "" : "none";
       });
-      // Hide empty leftover size/qty groups so they don't leave a blank gap.
-      [sizeG, qtyG].forEach(function (g) { if (g && groups.indexOf(g) === -1) g.style.display = populated(g) ? "" : "none"; });
       if (!groups.length) return;
       var ref = priceRow;
       groups.forEach(function (g) {
+        if (g === priceRow) return;
         if (ref.nextElementSibling !== g) ref.parentNode.insertBefore(g, ref.nextSibling);
         ref = g;
       });
