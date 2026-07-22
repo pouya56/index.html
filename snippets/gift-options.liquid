@@ -65,8 +65,8 @@
 
   /* Heart toggle (from Uiverse.io by barisdogansutcu), scoped to .gift-options.
      Unchecked = grey heart outline; checked = it fills red. */
-  .gift-options .gift-toggle { display: inline-flex; align-items: center; gap: 22px; user-select: none; }
-  .gift-options .gift-heart-wrap { position: relative; width: 44px; height: 40px; flex: none; }
+  .gift-options .gift-toggle { display: inline-flex; align-items: center; gap: 14px; user-select: none; }
+  .gift-options .gift-heart-wrap { position: relative; width: 22px; height: 20px; flex: none; }
 
   .gift-options .love-heart:before, .gift-options .gift-switch { display: none; }
 
@@ -93,7 +93,7 @@
     100% { transform: translate(0px, 0px); } }
 
   .gift-options .love-heart { box-sizing: border-box; position: absolute; left: 50%; top: 50%;
-    transform: rotate(-45deg) translate(-50%, -33px) scale(4); display: block;
+    transform: rotate(-45deg) translate(-50%, -16.5px) scale(2); display: block;
     border-color: hsl(231deg 28% 86%); cursor: pointer; }
   .gift-options .gift-switch:checked + .love-heart,
   .gift-options .gift-switch:checked + .love-heart::after,
@@ -115,7 +115,7 @@
      the toggle so it reads as a bubble. */
   .gift-options .gift-panel { position: absolute; left: 0; top: calc(100% + 11px);
     width: 300px; max-width: calc(100vw - 40px); z-index: 60;
-    opacity: 0; transform: translateY(-6px) scale(.96); transform-origin: 28px top;
+    opacity: 0; transform: translateY(-6px) scale(.96); transform-origin: 14px top;
     pointer-events: none; visibility: hidden;
     transition: opacity .2s ease, transform .28s cubic-bezier(.34,1.45,.5,1), visibility 0s linear .28s; }
   .gift-options.is-gift-open .gift-panel { opacity: 1; transform: translateY(0) scale(1);
@@ -124,7 +124,7 @@
     border: 1px solid var(--line); border-radius: 14px;
     box-shadow: 0 12px 30px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.06); }
   /* caret / little arrow pointing up to the toggle */
-  .gift-options .gift-note-field::before { content: ""; position: absolute; top: -6px; left: 22px;
+  .gift-options .gift-note-field::before { content: ""; position: absolute; top: -6px; left: 11px;
     width: 11px; height: 11px; background: #fff; border-left: 1px solid var(--line);
     border-top: 1px solid var(--line); border-radius: 3px 0 0 0; transform: rotate(45deg); }
   /* compact sizing inside the popup */

@@ -2493,15 +2493,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         'position:relative;margin:20px 0 0;font-family:inherit;color:var(--gi)}' +
       '.dc-gift *{box-sizing:border-box}' +
       /* Heart toggle (Uiverse.io by barisdogansutcu): grey outline off -> red fill on */
-      '.dc-gift-toggle{display:inline-flex;align-items:center;gap:22px;user-select:none}' +
-      '.dc-gift-heart-wrap{position:relative;width:44px;height:40px;flex:none}' +
+      '.dc-gift-toggle{display:inline-flex;align-items:center;gap:14px;user-select:none}' +
+      '.dc-gift-heart-wrap{position:relative;width:22px;height:20px;flex:none}' +
       '.dc-love-heart:before,.dc-gift-toggle-input{display:none}' +
       '.dc-love-heart,.dc-love-heart::after{border-color:hsl(231deg 28% 86%);border:1px solid;border-top-left-radius:100px;border-top-right-radius:100px;width:10px;height:8px;border-bottom:0}' +
       '.dc-round{position:absolute;z-index:1;width:8px;height:8px;background:#fff;box-shadow:rgb(0 0 0 / 24%) 0 0 4px 0;border-radius:100%;left:0;bottom:-1px;transition:all .5s ease;animation:dc-gift-heart2 .5s forwards}' +
       '.dc-gift-toggle-input:checked+.dc-love-heart .dc-round{transform:translate(0,0);animation:dc-gift-heart .5s forwards;background-color:#fff}' +
       '@keyframes dc-gift-heart{0%{transform:translate(0,0)}50%{transform:translate(0,7px)}100%{transform:translate(7px,7px)}}' +
       '@keyframes dc-gift-heart2{0%{transform:translate(7px,7px)}50%{transform:translate(0,7px)}100%{transform:translate(0,0)}}' +
-      '.dc-love-heart{box-sizing:border-box;position:absolute;left:50%;top:50%;transform:rotate(-45deg) translate(-50%,-33px) scale(4);display:block;border-color:hsl(231deg 28% 86%);cursor:pointer}' +
+      '.dc-love-heart{box-sizing:border-box;position:absolute;left:50%;top:50%;transform:rotate(-45deg) translate(-50%,-16.5px) scale(2);display:block;border-color:hsl(231deg 28% 86%);cursor:pointer}' +
       '.dc-gift-toggle-input:checked+.dc-love-heart,.dc-gift-toggle-input:checked+.dc-love-heart::after,.dc-gift-toggle-input:checked+.dc-love-heart .dc-bottom{border-color:hsl(347deg 81% 61%);box-shadow:inset 6px -5px 0 2px hsl(347deg 99% 72%)}' +
       '.dc-love-heart::after,.dc-love-heart .dc-bottom{content:"";display:block;box-sizing:border-box;position:absolute;border-color:hsl(231deg 28% 86%)}' +
       '.dc-love-heart::after{right:-9px;transform:rotate(90deg);top:7px}' +
@@ -2509,10 +2509,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-toggle-input:focus-visible+.dc-love-heart{outline:2px solid var(--ga);outline-offset:6px}' +
       '.dc-gift-label{font-size:15px;font-weight:500;cursor:pointer}' +
       /* note = small floating popup so opening it never shifts the page */
-      '.dc-gift-panel{position:absolute;left:0;top:calc(100% + 11px);width:300px;max-width:calc(100vw - 40px);z-index:60;opacity:0;transform:translateY(-6px) scale(.96);transform-origin:28px top;pointer-events:none;visibility:hidden;transition:opacity .2s ease,transform .28s cubic-bezier(.34,1.45,.5,1),visibility 0s linear .28s}' +
+      '.dc-gift-panel{position:absolute;left:0;top:calc(100% + 9px);width:300px;max-width:calc(100vw - 40px);z-index:60;opacity:0;transform:translateY(-6px) scale(.96);transform-origin:14px top;pointer-events:none;visibility:hidden;transition:opacity .2s ease,transform .28s cubic-bezier(.34,1.45,.5,1),visibility 0s linear .28s}' +
       '.dc-gift.is-gift-open .dc-gift-panel{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;visibility:visible;transition-delay:0s}' +
       '.dc-gift-card{position:relative;padding:13px 14px 12px;background:#fff;border:1px solid var(--gl);border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.15),0 2px 8px rgba(0,0,0,.06)}' +
-      '.dc-gift-card::before{content:"";position:absolute;top:-6px;left:22px;width:11px;height:11px;background:#fff;border-left:1px solid var(--gl);border-top:1px solid var(--gl);border-radius:3px 0 0 0;transform:rotate(45deg)}' +
+      '.dc-gift-card::before{content:"";position:absolute;top:-6px;left:11px;width:11px;height:11px;background:#fff;border-left:1px solid var(--gl);border-top:1px solid var(--gl);border-radius:3px 0 0 0;transform:rotate(45deg)}' +
       '.dc-gift-row{display:flex;align-items:center;gap:11px;cursor:pointer;font-size:15px}' +
       '.dc-gift-check{width:19px;height:19px;accent-color:var(--gi);flex:none;cursor:pointer;margin:0}' +
       '.dc-gift-note-h{display:block;font-size:14px;font-weight:500;margin-bottom:8px}' +
