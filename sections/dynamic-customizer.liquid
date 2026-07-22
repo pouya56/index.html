@@ -504,6 +504,22 @@ button { font-family: inherit; cursor: pointer; }
 /* Clean detail column — no card, just content on the page (Omega style). */
 #buyBox.col-right { padding: 8px 0 0; }
 #buyBox.col-right .reassure { margin-top: 8px; }
+/* Description shown as a dropdown accordion, like the reference. */
+.dyn-acc { border-top: 1px solid var(--line-soft); margin: 14px 0 0; }
+.dyn-acc > summary { list-style: none; cursor: pointer; display: flex; align-items: center;
+  justify-content: space-between; gap: 16px; padding: 14px 2px; font-size: 13px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); }
+.dyn-acc > summary::-webkit-details-marker { display: none; }
+.dyn-acc > summary::after { content: "+"; font-size: 20px; font-weight: 400; color: var(--ink-soft); line-height: 1; }
+.dyn-acc[open] > summary::after { content: "\2212"; }
+.dyn-acc .desc { margin: 0 2px 16px; color: var(--ink-soft); font-size: 15px; line-height: 1.5; }
+/* Variation selectors 30% smaller. */
+#buyBox .opt-group { margin-bottom: 18px; }
+#buyBox .opt-label { font-size: 11px; margin-bottom: 8px; }
+#buyBox .pills { gap: 7px; }
+#buyBox .pill { min-width: 36px; padding: 7px 11px; font-size: 11px; }
+#buyBox .swatches { gap: 8px; }
+#buyBox .swatch { width: 28px; height: 28px; }
 .dyn-actionbar { margin: 20px 0 0; }
 .dyn-actionbar-inner {
   display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
@@ -1303,7 +1319,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 @media (min-width: 1041px) {
   .product {
     height: 100dvh; box-sizing: border-box; overflow: hidden;
-    grid-template-columns: 1.5fr 0.92fr;
+    grid-template-columns: 1.2fr 1.1fr;
     grid-template-rows: minmax(0, 1fr);
     gap: 26px; padding: 24px; align-items: stretch;
   }
@@ -1314,7 +1330,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   #buyBox.col-right::-webkit-scrollbar { width: 7px; }
   #buyBox.col-right::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 4px; }
   .gallery { position: static; min-height: 0; align-items: center; justify-content: center; }
-  .gallery-main { height: 100%; max-height: 100%; max-width: 100%; width: auto; aspect-ratio: 1 / 1; margin: auto; }
+  .gallery-main { height: 100%; max-height: 80%; max-width: 100%; width: auto; aspect-ratio: 1 / 1; margin: auto; }
 }
 /* Tablet: image on top, then name/description, then options. */
 @media (max-width: 1040px) and (min-width: 861px) {
@@ -1383,7 +1399,11 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     <section class="detail col-right" id="buyBox">
       <div class="eyebrow" id="pEyebrow"></div>
       <h1 class="headline" id="pName"></h1>
-      <div class="desc" id="pDesc"></div>
+
+      <details class="dyn-acc" id="pDescAcc">
+        <summary>Description</summary>
+        <div class="desc" id="pDesc"></div>
+      </details>
 
       <div class="price-row">
         <span class="price" id="pPrice"></span>
