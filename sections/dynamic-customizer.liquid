@@ -411,10 +411,13 @@ button { font-family: inherit; cursor: pointer; }
 }
 #uploadApply.btn-primary::before { background: linear-gradient(135deg, #ff6347, #f76c6c); transform: rotateY(0deg); }
 #uploadApply.btn-primary::after  { background: linear-gradient(135deg, #36b54a, #00c1d4); transform: rotateY(180deg); }
-/* Flips to the green/teal face after it's clicked, and stays. */
+/* Flips to the green/teal face after it's clicked, and stays. Nothing changes
+   on hover — no lift, no colour, no flip. */
 #uploadApply.btn-primary.is-flipped::before { transform: rotateY(180deg); }
 #uploadApply.btn-primary.is-flipped::after  { transform: rotateY(0deg); }
-#uploadApply.btn-primary:hover:not([disabled]) { box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22); }
+#uploadApply.btn-primary:hover, #uploadApply.btn-primary:hover:not([disabled]) {
+  transform: none !important; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
+}
 #uploadApply.btn-primary:active:not([disabled]) { transform: scale(0.97); }
 #uploadApply.btn-primary[disabled] { opacity: 0.55; }
 @media (prefers-reduced-motion: reduce) {
