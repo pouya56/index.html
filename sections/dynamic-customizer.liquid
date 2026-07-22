@@ -470,9 +470,13 @@ button { font-family: inherit; cursor: pointer; }
 .dyn-cart-foot .btn { width: 100%; margin-bottom: 8px; }
 
 .product {
-  max-width: 1120px; margin: 0 auto; padding: 40px 22px 128px;
-  display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 72px; align-items: start;
+  max-width: 1240px; margin: 0 auto; padding: 40px 22px 128px;
+  display: grid; grid-template-columns: 0.82fr 1.24fr 0.92fr; gap: 48px; align-items: start;
 }
+/* Three-column layout: name + description (left), image (centre), options +
+   buttons (right). Columns just reuse the existing .detail styling. */
+.col-left { padding-top: 8px; }
+.col-right { padding-top: 8px; }
 .dyn-topbar { max-width: 1120px; margin: 0 auto; padding: 26px 22px 0; display: flex; align-items: center; }
 .dyn-topbar.is-left { justify-content: flex-start; }
 .dyn-topbar.is-center { justify-content: center; }
@@ -1239,9 +1243,14 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   .faq-item > summary { font-size: 18px; padding: 20px 12px; }
 }
 
+/* Tablet: image on top, then name/description, then options. */
+@media (max-width: 1040px) and (min-width: 861px) {
+  .product { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .gallery { grid-column: 1 / -1; }
+}
 @media (max-width: 860px) {
   .product { grid-template-columns: 1fr; gap: 32px; padding-top: 32px; }
-  .gallery { position: static; }
+  .gallery { position: static; order: -1; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto; }
@@ -1266,16 +1275,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 
   <!-- Product page -->
   <main class="product">
-    <div class="gallery">
-      <div class="gallery-main">
-        <button class="gal-arrow gal-prev" id="galPrev" aria-label="Previous image">&#8249;</button>
-        <div class="gallery-stage" id="galleryStage"></div>
-        <button class="gal-arrow gal-next" id="galNext" aria-label="Next image">&#8250;</button>
-      </div>
-      <div class="gallery-thumbs" id="galleryThumbs"></div>
-    </div>
-
-    <section class="detail">
+    <aside class="detail col-left">
       <div class="eyebrow" id="pEyebrow"></div>
       <h1 class="headline" id="pName"></h1>
 
@@ -1285,7 +1285,18 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       </div>
 
       <div class="desc" id="pDesc"></div>
+    </aside>
 
+    <div class="gallery">
+      <div class="gallery-main">
+        <button class="gal-arrow gal-prev" id="galPrev" aria-label="Previous image">&#8249;</button>
+        <div class="gallery-stage" id="galleryStage"></div>
+        <button class="gal-arrow gal-next" id="galNext" aria-label="Next image">&#8250;</button>
+      </div>
+      <div class="gallery-thumbs" id="galleryThumbs"></div>
+    </div>
+
+    <section class="detail col-right">
       <div class="opt-group">
         <div class="opt-label">Model <span id="colorName">AirPods Pro 3</span></div>
         <div class="swatches" id="pColors"></div>
