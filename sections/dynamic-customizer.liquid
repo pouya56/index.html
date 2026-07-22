@@ -366,16 +366,18 @@ button { font-family: inherit; cursor: pointer; }
   padding-top: 16px; padding-bottom: 16px;
   color: #fff; font-weight: 500; text-shadow: none;
   background: #000; -webkit-backdrop-filter: none; backdrop-filter: none;
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.18);
-  transition: box-shadow .2s ease, background .16s ease, transform var(--dur-fast) var(--ease-out);
+  box-shadow: -13px 0 30px -8px rgba(255, 122, 47, 0.62), 13px 0 30px -8px rgba(79, 140, 255, 0.66),
+    0 8px 34px -6px rgba(160, 107, 255, 0.5), 0 14px 44px rgba(0, 0, 0, 0.28);
+  transition: box-shadow .3s ease, background .16s ease, transform var(--dur-fast) var(--ease-out);
 }
 @keyframes dynSiri { 0% { background-position: 0% 0; } 100% { background-position: 300% 0; } }
 #customizeBtn.btn-primary::before, #pageAddCart.btn-primary::before,
 #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after { display: none; }
+/* Brighter multicolour glow on hover. */
 #customizeBtn.btn-primary:hover, #pageAddCart.btn-primary:hover {
-  background: #1a1a1a;
-  transform: translateY(-1.5px);
-  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.24);
+  background: #1a1a1a; transform: translateY(-1.5px);
+  box-shadow: -17px 0 42px -8px rgba(255, 122, 47, 0.85), 17px 0 42px -8px rgba(79, 140, 255, 0.9),
+    0 10px 46px -6px rgba(160, 107, 255, 0.65), 0 18px 52px rgba(0, 0, 0, 0.32);
 }
 #customizeBtn.btn-primary:active, #pageAddCart.btn-primary:active { transform: scale(0.97); }
 /* "Add design" (popup) — liquid glass, same recipe as Customize / Add to
