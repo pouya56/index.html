@@ -522,13 +522,14 @@ button { font-family: inherit; cursor: pointer; }
 #buyBox .swatch { width: 28px; height: 28px; }
 .dyn-actionbar { margin: 20px 0 0; }
 .dyn-actionbar-inner {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 12px;
   background: none; border: none; box-shadow: none; border-radius: 0; padding: 0;
 }
-.dyn-actionbar .cta-stack { flex-direction: row; flex-wrap: wrap; align-items: center;
-  gap: 12px; margin-top: 0; flex: 1 1 auto; }
-.dyn-actionbar .cta-row { flex: 0 1 auto; }
-.dyn-actionbar .btn-block { width: auto; min-width: 190px; }
+.dyn-actionbar .cta-stack { flex-direction: column; align-items: stretch; gap: 12px; margin-top: 0; }
+.dyn-actionbar .cta-row { width: 100%; }
+/* Full-width primary button, like the Omega "Add to basket" bar. */
+.dyn-actionbar .btn-block { width: 100%; min-width: 0; }
+.dyn-actionbar .btn-lg { height: 58px; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; }
 .dyn-actionbar .customize-summary:empty { display: none; }
 .dyn-actionbar #giftMount:empty { display: none; }
 .dyn-actionbar .bulk-link { margin: 0; }
@@ -1319,9 +1320,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 @media (min-width: 1041px) {
   .product {
     height: 100dvh; box-sizing: border-box; overflow: hidden;
-    grid-template-columns: 1.2fr 1.1fr;
+    grid-template-columns: 1.4fr 1fr;
     grid-template-rows: minmax(0, 1fr);
-    gap: 26px; padding: 24px; align-items: stretch;
+    gap: 40px; padding: 24px 40px; align-items: stretch;
   }
   #buyBox.col-right {
     min-height: 0; overflow: visible; align-self: center;
