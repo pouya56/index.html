@@ -1324,11 +1324,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     gap: 26px; padding: 24px; align-items: stretch;
   }
   #buyBox.col-right {
-    min-height: 0; max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
-    padding: 8px 6px 8px 0; scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.18) transparent;
+    min-height: 0; overflow: visible; align-self: center;
+    padding: 8px 6px 8px 0;
   }
-  #buyBox.col-right::-webkit-scrollbar { width: 7px; }
-  #buyBox.col-right::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 4px; }
   .gallery { position: static; min-height: 0; align-items: center; justify-content: center; }
   .gallery-main { height: 100%; max-height: 80%; max-width: 100%; width: auto; aspect-ratio: 1 / 1; margin: auto; }
 }
