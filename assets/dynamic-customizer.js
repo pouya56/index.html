@@ -4384,6 +4384,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     ".dyn-nudge-add{border:0;cursor:pointer;font:inherit;font-size:13px;font-weight:700;color:#111;background:#fff;border-radius:10px;padding:8px 14px;white-space:nowrap}" +
     ".dyn-nudge-x{border:0;background:transparent;color:#bbb;cursor:pointer;font-size:20px;line-height:1;padding:2px 6px}" +
     ".dyn-nudge-x:hover{color:#fff}" +
+    /* Put Add to Cart above Edit design in the stacked buttons (force the flex
+       context too, so order works even if the section's base CSS isn't live). */
+    ".dyn-actionbar .cta-stack{display:flex;flex-direction:column}" +
+    ".dyn-actionbar .cta-stack #pageAddCart{order:-1}" +
     "@media (prefers-reduced-motion: reduce){.dyn-sticky,.dyn-nudge{transition:opacity .2s}.dyn-ready{animation:none}}";
 
   function injectCSS() {
