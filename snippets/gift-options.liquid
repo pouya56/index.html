@@ -53,6 +53,7 @@
     --ink: #1d1d1f; --ink-soft: #6e6e73; --ink-faint: #86868b;
     --line: #d2d2d7; --panel: #f5f5f7; --accent: #0071e3;
     --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    position: relative; /* anchors the floating note popover so the page never reflows */
     margin: 24px 0; font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased;
   }
   .gift-options *, .gift-options *::before, .gift-options *::after { box-sizing: border-box; }
@@ -79,18 +80,20 @@
   .gift-options .gift-toggle-input:focus-visible + .gift-toggle-track { outline: 2px solid #30c754; outline-offset: 2px; }
   .gift-options .gift-toggle-label { font-size: 15px; font-weight: 500; letter-spacing: 0.01em; }
 
-  /* Smooth slide-open instead of an instant show that jumps the page:
-     the collapsing wrapper animates grid-template-rows 0fr -> 1fr; the inner
-     clips with overflow:hidden, and all the visible box styling (padding,
-     border, the top gap) lives on .gift-note-field so it's clipped while closed. */
-  .gift-options .gift-panel { display: grid; grid-template-rows: 0fr; opacity: 0;
-    transition: grid-template-rows .42s cubic-bezier(.4,0,.2,1), opacity .3s ease; }
-  .gift-options.is-gift-open .gift-panel { grid-template-rows: 1fr; opacity: 1; }
-  .gift-options .gift-panel-inner { overflow: hidden; min-height: 0; }
-  .gift-options .gift-note-field { margin-top: 14px; padding: 18px 20px; background: var(--panel);
-    border: 1px solid var(--line); border-radius: 16px; }
+  /* The note is a FLOATING popover, not part of the layout: it's absolutely
+     positioned just under the toggle, so opening or closing it never pushes
+     the page — nothing around it moves. It just fades/settles into place. */
+  .gift-options .gift-panel { position: absolute; left: 0; top: calc(100% + 12px); width: 100%;
+    z-index: 60; opacity: 0; transform: translateY(-8px) scale(.985); transform-origin: top center;
+    pointer-events: none; visibility: hidden;
+    transition: opacity .26s ease, transform .32s cubic-bezier(.34,1.35,.5,1), visibility 0s linear .3s; }
+  .gift-options.is-gift-open .gift-panel { opacity: 1; transform: translateY(0) scale(1);
+    pointer-events: auto; visibility: visible; transition-delay: 0s; }
+  .gift-options .gift-note-field { padding: 18px 20px; background: #fff;
+    border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: 0 14px 38px rgba(0,0,0,0.16), 0 3px 10px rgba(0,0,0,0.06); }
   @media (prefers-reduced-motion: reduce) {
-    .gift-options .gift-panel { transition: none; }
+    .gift-options .gift-panel { transition: opacity .12s ease, visibility 0s; transform: none; }
   }
 
   .gift-options .gift-row { display: flex; align-items: center; gap: 11px; cursor: pointer; font-size: 15px; }
