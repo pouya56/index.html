@@ -395,37 +395,30 @@ button { font-family: inherit; cursor: pointer; }
   #customizeBtn.btn-primary::after, #pageAddCart.btn-primary::after { transition: none; }
 }
 #customizeBtn.btn-primary:active, #pageAddCart.btn-primary:active { transform: scale(0.97); }
-/* "Add design" (popup) — liquid glass, same recipe as Customize / Add to
-   Cart and the hero's Surprise-me button: matte frost, thin bright rim,
-   soft shadow, rainbow glow on hover. */
+/* "Add design" — flip button (Uiverse): a warm orange/red face at rest that
+   flips to a cool green/teal face on hover. Text stays readable on top. */
 #uploadApply.btn-primary {
-  position: relative; overflow: visible; z-index: 1; border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  color: var(--ink); font-weight: 500; text-shadow: none;
-  background: rgba(255, 255, 255, 0.16);
-  -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.12);
-  transition: background .16s ease, box-shadow .2s ease, transform var(--dur-fast) var(--ease-out);
+  position: relative; overflow: hidden; z-index: 0; border-radius: 14px;
+  border: none; color: #fff; font-weight: 600; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  background: transparent; perspective: 700px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
+  transition: box-shadow .2s ease, transform var(--dur-fast) var(--ease-out);
 }
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  #uploadApply.btn-primary { background: #fff; border-color: var(--line); }
+#uploadApply.btn-primary::before, #uploadApply.btn-primary::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  -webkit-backface-visibility: hidden; backface-visibility: hidden;
+  transition: transform .5s ease; animation: none;
 }
-#uploadApply.btn-primary::before {
-  content: ""; position: absolute; inset: -4px; border-radius: 22px; z-index: -1; pointer-events: none;
-  background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff);
-  background-size: 300% 100%;
-  animation: dynSiri 6s linear infinite;
-  filter: blur(7px); opacity: 0; transition: opacity .35s ease;
-}
-#uploadApply.btn-primary:hover:not([disabled])::before { opacity: 0.7; }
-@media (prefers-reduced-motion: reduce) { #uploadApply.btn-primary::before { animation: none; } }
-#uploadApply.btn-primary:hover:not([disabled]) {
-  background: rgba(255, 255, 255, 0.32);
-  transform: translateY(-1.5px);
-  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.18);
-}
+#uploadApply.btn-primary::before { background: linear-gradient(135deg, #ff6347, #f76c6c); transform: rotateY(0deg); }
+#uploadApply.btn-primary::after  { background: linear-gradient(135deg, #36b54a, #00c1d4); transform: rotateY(180deg); }
+#uploadApply.btn-primary:hover:not([disabled])::before { transform: rotateY(180deg); }
+#uploadApply.btn-primary:hover:not([disabled])::after  { transform: rotateY(0deg); }
+#uploadApply.btn-primary:hover:not([disabled]) { box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22); }
 #uploadApply.btn-primary:active:not([disabled]) { transform: scale(0.97); }
 #uploadApply.btn-primary[disabled] { opacity: 0.55; }
+@media (prefers-reduced-motion: reduce) {
+  #uploadApply.btn-primary::before, #uploadApply.btn-primary::after { transition: none; }
+}
 .btn-secondary {
   background: transparent; color: var(--accent);
   border: 1px solid var(--line);
