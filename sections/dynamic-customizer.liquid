@@ -671,6 +671,9 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 13px; color: var(--ink-soft); text-align: center; min-height: 18px;
   transition: opacity var(--dur-fast);
 }
+/* Hidden per request: the "Not customized yet" status and the bulk-order note. */
+#customizeSummary, .customize-summary { display: none !important; }
+.bulk-note { display: none !important; }
 .reassure { display: flex; gap: 26px; justify-content: center; margin-top: 34px; flex-wrap: wrap; }
 .reassure-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-faint); }
 .reassure-item svg { width: 16px; height: 16px; stroke: var(--ink-faint); }
