@@ -548,6 +548,9 @@ button { font-family: inherit; cursor: pointer; }
 .gal-nav .gal-arrow:hover { transform: scale(1.08); background: #fff; }
 .gal-nav .gal-arrow:active { transform: scale(0.96); }
 .gallery-thumbs { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+/* Keep the thumbnail strip fully hidden — the class rule above would otherwise
+   override the [hidden] attribute and leave it visible. */
+.gallery-thumbs[hidden] { display: none !important; }
 .gal-thumb {
   width: 58px; height: 58px; border-radius: 12px; border: 1px solid var(--line);
   background: var(--bg-panel); overflow: hidden; padding: 0; cursor: pointer;
