@@ -347,8 +347,12 @@
   /* When a category/search is active, keep the grid tall enough to scroll to the top. */
   .dyn-col.dc-cat-focused .dc-gridall { min-height: calc(100svh - 150px); align-content: start; }
   @media (max-width: 1100px) { .dyn-col .dc-gridall { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  @media (max-width: 800px)  { .dyn-col .dc-gridall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; } }
-  @media (max-width: 460px)  { .dyn-col .dc-gridall { gap: 12px; } .dyn-col .dc-gridall .dc-card { min-height: 272px; } }
+  @media (max-width: 800px)  { .dyn-col .dc-gridall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+    /* Square product cards on phones/tablets. */
+    .dyn-col .dc-gridall .dc-card { aspect-ratio: 1 / 1; min-height: 0; }
+    .dyn-col .dc-gridall .dc-media-wrap { min-height: 0; }
+    .dyn-col .dc-gridall .dc-media img { inset: 16px; width: calc(100% - 32px); height: calc(100% - 32px); } }
+  @media (max-width: 460px)  { .dyn-col .dc-gridall { gap: 12px; } }
 
   /* Editable promo banners — bento grid (Target/xTool style). Solid pastel tiles,
      text on top, product image sitting inside the tile. */
@@ -427,9 +431,18 @@
     .dyn-col .dc-tabs { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch;
       scrollbar-width: none; padding-bottom: 4px; }
     .dyn-col .dc-tabs::-webkit-scrollbar { display: none; }
-    .dyn-col .dc-tabs.is-images .dc-tab { flex: 0 0 auto; }
+    /* Category tabs 20% smaller on phones. */
+    .dyn-col .dc-tabs.is-images .dc-tab { flex: 0 0 auto; gap: 7px; }
+    .dyn-col .dc-tabs.is-images .dc-tab-img { width: 59px; height: 59px; border-radius: 13px; }
+    .dyn-col .dc-tabs.is-images .dc-tab-img img { border-radius: 13px; }
+    .dyn-col .dc-tabs.is-images .dc-tab-init { font-size: 21px; }
+    .dyn-col .dc-tabs.is-images .dc-tab-all svg { width: 24px; height: 24px; }
+    .dyn-col .dc-tabs.is-images .dc-tab-label { font-size: 10px; }
+    .dyn-col .dc-tabs.is-pills .dc-tab { font-size: 11px; padding: 7px 14px; }
+    /* Don't slide the logo into the sticky bar when scrolling on phones. */
+    .dyn-col .dc-bar-logo { display: none !important; }
   }
-  @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-gridall .dc-card { min-height: 272px; } .dyn-col .dc-gridall .dc-media-wrap { min-height: 240px; } .dyn-col .dc-gridall .dc-body { padding: 20px 20px 4px; } .dyn-col .dc-gridall .dc-title { font-size: 20px; } }
+  @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-gridall .dc-body { padding: 16px 16px 2px; } .dyn-col .dc-gridall .dc-title { font-size: 17px; } }
 </style>
 
 {%- comment -%} Match the store theme's heading font when it exposes one (Dawn & most modern themes). {%- endcomment -%}
