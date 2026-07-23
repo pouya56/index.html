@@ -607,9 +607,6 @@
         <div class="dc-search-below" id="dcSearchBelow">{{ dc_search_html }}</div>
       {%- endif -%}
 
-      {%- if section.settings.grid_heading != blank -%}
-        <h2 class="dc-grid-heading">{{ section.settings.grid_heading }}</h2>
-      {%- endif -%}
       {%- assign hide_tag = section.settings.hide_tag | default: 'hidden' -%}
       {%- capture dc_cards_html -%}
         {%- for product in prods limit: section.settings.max_products -%}
@@ -731,18 +728,32 @@
           </div>
         {%- endfor -%}
       {%- endcapture -%}
-      <div class="dc-shelf-wrap" id="dcShelfWrap">
-      <button type="button" class="dc-shelf-arrow dc-prev" id="dcGridPrev" aria-label="Scroll products left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <div class="dc-grid" id="dcGrid">{{ dc_cards_html }}</div>
-      <button type="button" class="dc-shelf-arrow dc-next" id="dcGridNext" aria-label="Scroll products right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
-      </div>
-      {%- if section.settings.show_scrollbar -%}
-        <div class="dc-scrollbar" id="dcScrollbar"><div class="dc-scrollbar-thumb" id="dcScrollThumb"></div></div>
-      {%- endif -%}
+      {%- comment -%} ------------------------------------------------------------------
+           Best-seller row + promo banners are each captured, then printed in the
+           order of the blocks below. Add a "Popular products row" block and drag it
+           above or below your banner blocks to move the row. If no such block has
+           been added yet, the row still shows first (unchanged behaviour).
+           --------------------------------------------------------------------- {%- endcomment -%}
+      {%- assign row_heading = section.settings.grid_heading -%}
+      {%- for b in section.blocks -%}
+        {%- if b.type == 'product_row' and b.settings.heading != blank -%}{%- assign row_heading = b.settings.heading -%}{%- endif -%}
+      {%- endfor -%}
+      {%- capture dc_shelf_html -%}
+        {%- if row_heading != blank -%}<h2 class="dc-grid-heading">{{ row_heading }}</h2>{%- endif -%}
+        <div class="dc-shelf-wrap" id="dcShelfWrap">
+        <button type="button" class="dc-shelf-arrow dc-prev" id="dcGridPrev" aria-label="Scroll products left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="dc-grid" id="dcGrid">{{ dc_cards_html }}</div>
+        <button type="button" class="dc-shelf-arrow dc-next" id="dcGridNext" aria-label="Scroll products right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+        {%- if section.settings.show_scrollbar -%}
+          <div class="dc-scrollbar" id="dcScrollbar"><div class="dc-scrollbar-thumb" id="dcScrollThumb"></div></div>
+        {%- endif -%}
+      {%- endcapture -%}
 
-      {%- comment -%} Editable promo banners — bento-grid tiles under the best-seller row. {%- endcomment -%}
+      {%- comment -%} Editable promo banners — bento-grid tiles, captured as one group. {%- endcomment -%}
       {%- assign banner_count = 0 -%}
       {%- for b in section.blocks -%}{%- if b.type == 'banner' -%}{%- assign banner_count = banner_count | plus: 1 -%}{%- endif -%}{%- endfor -%}
+      {%- capture dc_banners_html -%}
       {%- if banner_count > 0 -%}
         {%- if section.settings.banners_heading != blank -%}
           <h2 class="dc-grid-heading dc-banners-heading">{{ section.settings.banners_heading }}</h2>
@@ -779,6 +790,21 @@
         </div>
         </div>
       {%- endif -%}
+      {%- endcapture -%}
+
+      {%- comment -%} Print the row + banners in block order. {%- endcomment -%}
+      {%- assign has_row_block = false -%}
+      {%- for b in section.blocks -%}{%- if b.type == 'product_row' -%}{%- assign has_row_block = true -%}{%- endif -%}{%- endfor -%}
+      {%- unless has_row_block -%}{{ dc_shelf_html }}{%- endunless -%}
+      {%- assign banners_done = false -%}
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'product_row' -%}
+          {{ dc_shelf_html }}
+        {%- elsif block.type == 'banner' and banners_done == false -%}
+          {{ dc_banners_html }}
+          {%- assign banners_done = true -%}
+        {%- endif -%}
+      {%- endfor -%}
 
       {%- if section.settings.show_all_grid -%}
         {%- if section.settings.all_heading != blank -%}
@@ -1667,6 +1693,10 @@
     { "type": "url", "id": "noresults_url", "label": "Button link", "info": "Defaults to /pages/contact." }
   ],
   "blocks": [
+    { "type": "product_row", "name": "Popular products row", "limit": 1, "settings": [
+      { "type": "paragraph", "content": "The horizontal best-seller row. Drag this block up or down to move the row above or below your promo banners." },
+      { "type": "text", "id": "heading", "label": "Heading", "default": "Popular products" }
+    ]},
     { "type": "tab", "name": "Image category tab", "settings": [
       { "type": "text", "id": "label", "label": "Tab label", "default": "Category" },
       { "type": "text", "id": "category_value", "label": "Filters products where Type =",
