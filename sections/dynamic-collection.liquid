@@ -43,7 +43,7 @@
   /* Paint the whole page the same soft grey so there's no white strip below the grid.
      (This style only loads on pages that use this section.) */
   html, body { background: {{ section.settings.page_bg | default: '#f5f5f7' }}; }
-  .dyn-col .dc-wrap { max-width: 1280px; margin: 0 auto; padding: 44px 22px 90px; }
+  .dyn-col .dc-wrap { max-width: 1280px; margin: 0 auto; padding: 31px 22px 63px; }
 
   /* Landing mode: logo + search fixed in the vertical middle; results flow below.
      No shrink / move / float — everything stays put. */
@@ -60,7 +60,7 @@
   @media (max-width: 600px) { .dyn-col.dc-landing .dc-corner { font-size: 13px; } .dyn-col.dc-landing .dc-corner-bl, .dyn-col.dc-landing .dc-corner-br { bottom: 90px; } }
   .dyn-col.dc-landing .dc-head .dc-head-video { max-height: clamp(120px, 30vh, 280px); max-width: min(88vw, 460px); }
   .dyn-col.dc-landing .dc-head h1 { font-size: clamp(30px, 5vw, 46px); }
-  .dyn-col.dc-landing .dc-search { margin-top: 30px; margin-bottom: 30px; }
+  .dyn-col.dc-landing .dc-search { margin-top: 21px; margin-bottom: 21px; }
 
   .dyn-col .dc-head { text-align: center; max-width: 720px; margin: 0 auto; }
   .dyn-col .dc-head h1 { font-family: var(--font-head); font-weight: 500; font-size: clamp(36px, 6vw, 60px);
@@ -74,7 +74,7 @@
 
   /* Live search box (filters the grid on this page) */
   /* Liquid-glass search pill (matches the hero) */
-  .dyn-col .dc-search { position: relative; display: flex; align-items: center; gap: 8px; width: fit-content; max-width: 92vw; margin: 18px auto 0; padding: 8px 8px 8px 4px; border-radius: 26px; z-index: 1;
+  .dyn-col .dc-search { position: relative; display: flex; align-items: center; gap: 8px; width: fit-content; max-width: 92vw; margin: 13px auto 0; padding: 8px 8px 8px 4px; border-radius: 26px; z-index: 1;
     background: rgba(255,255,255,0.62); -webkit-backdrop-filter: blur(22px) saturate(1.8) brightness(1.05); backdrop-filter: blur(22px) saturate(1.8) brightness(1.05);
     border: 1px solid rgba(255,255,255,0.7);
     box-shadow: 0 14px 44px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -8px 18px rgba(255,255,255,0.22);
@@ -124,7 +124,7 @@
   .dyn-col .dc-search-below .dc-search.is-open { display: flex; margin: 8px auto; animation: dcDrop .32s cubic-bezier(.22,1,.36,1); }
   @keyframes dcDrop { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
   /* Link buttons under the search bar */
-  .dyn-col .dc-hero-btns { display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+  .dyn-col .dc-hero-btns { display: flex; justify-content: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
   .dyn-col .dc-gbtn { display: inline-flex; align-items: center; justify-content: center; min-width: 150px; height: 46px; padding: 0 24px;
     border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: 500 15px/1 var(--font);
     text-decoration: none; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: background .16s, box-shadow .16s, transform .1s; }
@@ -132,7 +132,7 @@
   .dyn-col .dc-gbtn:active { transform: scale(0.98); }
 
   /* Category tabs */
-  .dyn-col .dc-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 28px auto 32px; max-width: 1040px; }
+  .dyn-col .dc-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 20px auto 22px; max-width: 1040px; }
 
   /* Text-pill tabs (auto mode, no images added) */
   .dyn-col .dc-tabs.is-pills .dc-tab { border: none; background: transparent; font-family: var(--font); font-size: 14px; font-weight: 500;
@@ -142,10 +142,10 @@
   .dyn-col .dc-tabs.is-pills .dc-tab.is-active { background: var(--ink); color: #fff; }
 
   /* Sticky category bar: stays with you as you scroll down through the products. */
-  .dyn-col .dc-tabs-wrap { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 6px; margin: 24px auto; max-width: 1040px; padding: 10px 0; }
+  .dyn-col .dc-tabs-wrap { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 6px; margin: 17px auto; max-width: 1040px; padding: 7px 0; }
   .dyn-col .dc-tabs-wrap::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100vw; z-index: -1;
     background: {{ section.settings.page_bg | default: '#f5f5f7' }}; }
-  .dyn-col .dc-tabs.is-pills { position: sticky; top: 0; z-index: 30; padding: 10px 0; margin: 24px auto; }
+  .dyn-col .dc-tabs.is-pills { position: sticky; top: 0; z-index: 30; padding: 7px 0; margin: 17px auto; }
   .dyn-col .dc-tabs.is-pills::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100vw; z-index: -1;
     background: {{ section.settings.page_bg | default: '#f5f5f7' }}; }
 
@@ -174,7 +174,7 @@
   .dyn-col .dc-nr-dym button { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--accent); cursor: pointer; text-decoration: underline; }
 
   /* Image tabs (Apple-style: picture + label, no box - tiles blend into the page) */
-  .dyn-col .dc-tabs.is-images { flex: 1 1 auto; gap: 20px; align-items: flex-start; flex-wrap: nowrap; justify-content: flex-start;
+  .dyn-col .dc-tabs.is-images { flex: 1 1 auto; gap: 14px; align-items: flex-start; flex-wrap: nowrap; justify-content: flex-start;
     overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; margin: 0; max-width: none; padding: 4px 2px; }
   .dyn-col .dc-tabs.is-images.is-centered { justify-content: center; }
   .dyn-col .dc-tabs.is-images::-webkit-scrollbar { display: none; }
@@ -202,8 +202,8 @@
 
   /* Product shelf - horizontal scroller with left/right arrows */
   .dyn-col .dc-shelf-wrap { position: relative; }
-  .dyn-col .dc-grid { display: flex; gap: 22px; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none;
-    padding: 4px 2px 10px; scroll-snap-type: x proximity; }
+  .dyn-col .dc-grid { display: flex; gap: 15px; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none;
+    padding: 4px 2px 7px; scroll-snap-type: x proximity; }
   .dyn-col .dc-grid::-webkit-scrollbar { display: none; }
   /* Best-seller shelf cards are compact (~half size) — the big Apple cards are the grid below. */
   .dyn-col .dc-grid .dc-card { flex: 0 0 clamp(140px, 21vw, 215px); min-width: 0; scroll-snap-align: start; min-height: 250px; border-radius: 20px; }
@@ -332,30 +332,30 @@
   .dyn-col .dc-buy svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform .16s; }
   .dyn-col .dc-buy:hover svg { transform: translateX(3px); }
   /* "Popular on …" heading above the row */
-  .dyn-col .dc-grid-heading { text-align: center; font-family: var(--font-heading-family, var(--font-head)); font-weight: 500; font-size: clamp(26px, 4vw, 40px); line-height: 1.1; letter-spacing: -0.01em; color: var(--ink); margin: 40px auto 26px; }
+  .dyn-col .dc-grid-heading { text-align: center; font-family: var(--font-heading-family, var(--font-head)); font-weight: 500; font-size: clamp(26px, 4vw, 40px); line-height: 1.1; letter-spacing: -0.01em; color: var(--ink); margin: 28px auto 18px; }
   /* Scroll progress bar under the row */
-  .dyn-col .dc-scrollbar { position: relative; height: 4px; border-radius: 999px; background: rgba(0,0,0,0.08); margin: 30px auto 0; max-width: 1180px; }
+  .dyn-col .dc-scrollbar { position: relative; height: 4px; border-radius: 999px; background: rgba(0,0,0,0.08); margin: 21px auto 0; max-width: 1180px; }
   .dyn-col .dc-scrollbar-thumb { position: absolute; top: 0; left: 0; height: 4px; border-radius: 999px; background: rgba(0,0,0,0.32); width: 20%; cursor: grab; touch-action: none; transition: background .18s ease, height .16s ease, top .16s ease; }
   .dyn-col .dc-scrollbar:hover .dc-scrollbar-thumb { background: rgba(0,0,0,0.42); height: 6px; top: -1px; }
   .dyn-col .dc-scrollbar-thumb:active { cursor: grabbing; background: rgba(0,0,0,0.55); height: 6px; top: -1px; }
 
   /* Vertical "all products" grid below the best-seller row (wraps, no side-scroll) */
-  .dyn-col .dc-allgrid-heading { margin-top: 88px; margin-bottom: 20px; }
-  .dyn-col .dc-gridall { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 22px; margin: 88px auto 0; }
+  .dyn-col .dc-allgrid-heading { margin-top: 62px; margin-bottom: 14px; }
+  .dyn-col .dc-gridall { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 15px; margin: 62px auto 0; }
   .dyn-col .dc-allgrid-heading + .dc-gridall { margin-top: 10px; }
   .dyn-col .dc-gridall .dc-card { min-width: 0; }
   /* When a category/search is active, keep the grid tall enough to scroll to the top. */
   .dyn-col.dc-cat-focused .dc-gridall { min-height: calc(100svh - 150px); align-content: start; }
   @media (max-width: 1100px) { .dyn-col .dc-gridall { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  @media (max-width: 800px)  { .dyn-col .dc-gridall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
+  @media (max-width: 800px)  { .dyn-col .dc-gridall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; } }
   @media (max-width: 460px)  { .dyn-col .dc-gridall { gap: 12px; } .dyn-col .dc-gridall .dc-card { min-height: 340px; } }
 
   /* Editable promo banners — bento grid (Target/xTool style). Solid pastel tiles,
      text on top, product image sitting inside the tile. */
-  .dyn-col .dc-banners-heading { margin-top: 88px; margin-bottom: 16px; }
-  .dyn-col .dc-banners-wrap { position: relative; margin: 88px auto 10px; }
+  .dyn-col .dc-banners-heading { margin-top: 62px; margin-bottom: 11px; }
+  .dyn-col .dc-banners-wrap { position: relative; margin: 62px auto 7px; }
   .dyn-col .dc-banners-heading + .dc-banners-wrap { margin-top: 14px; }
-  .dyn-col .dc-banners { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 172px; gap: 16px; grid-auto-flow: row dense; }
+  .dyn-col .dc-banners { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 172px; gap: 11px; grid-auto-flow: row dense; }
   .dyn-col .dc-banner { position: relative; overflow: hidden; border-radius: 24px; display: flex; flex-direction: column; align-items: flex-start;
     padding: 24px 26px; text-decoration: none; background: #eef1f5; color: #17223b; isolation: isolate;
     grid-column: span 1; grid-row: span 2; transition: transform .18s ease, box-shadow .18s ease; }
