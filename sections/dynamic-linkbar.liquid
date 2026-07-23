@@ -15,6 +15,11 @@
 
 <style>
   #shopify-section-{{ section.id }} { background: {{ lb_bg }}; }
+  {%- if section.settings.pin_bottom -%}
+  /* Pin the bar to the bottom of the screen (like the Google footer) so it's
+     visible without scrolling. */
+  #shopify-section-{{ section.id }} { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; }
+  {%- endif -%}
   .dyn-linkbar {
     --lb-fg: {{ lb_fg }}; --lb-hover: {{ lb_hover }};
     --lb-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -68,6 +73,7 @@
   "class": "dyn-linkbar-sec",
   "settings": [
     { "type": "header", "content": "Bar" },
+    { "type": "checkbox", "id": "pin_bottom", "label": "Pin to the bottom of the screen", "default": false, "info": "Fixes the bar to the bottom of the viewport like a footer, so it stays visible without scrolling." },
     { "type": "color", "id": "bg_color", "label": "Background", "default": "#171717" },
     { "type": "color", "id": "text_color", "label": "Link colour", "default": "#d0d0d3" },
     { "type": "color", "id": "hover_color", "label": "Link hover colour", "default": "#ffffff" },
