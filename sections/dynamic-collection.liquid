@@ -351,7 +351,10 @@
     /* Square product cards on phones/tablets. */
     .dyn-col .dc-gridall .dc-card { aspect-ratio: 1 / 1; min-height: 0; }
     .dyn-col .dc-gridall .dc-media-wrap { min-height: 0; }
-    .dyn-col .dc-gridall .dc-media img { inset: 16px; width: calc(100% - 32px); height: calc(100% - 32px); } }
+    /* Give the product image most of the card: little padding + a tight text block. */
+    .dyn-col .dc-gridall .dc-media img { inset: 6px; width: calc(100% - 12px); height: calc(100% - 12px); }
+    .dyn-col .dc-gridall .dc-body { padding: 14px 14px 0; gap: 2px; }
+    .dyn-col .dc-gridall .dc-buy { margin-top: 4px; } }
   @media (max-width: 460px)  { .dyn-col .dc-gridall { gap: 12px; } }
 
   /* Editable promo banners — bento grid (Target/xTool style). Solid pastel tiles,
