@@ -600,6 +600,9 @@
      listens on the window so buttons and links stay clickable. */
   var el = document.getElementById("dynBgTorch-{{ section.id }}");
   if (!el) return;
+  /* Move it to <body> so no theme wrapper (a section with transform/filter)
+     can trap this fixed overlay in a stacking context and hide it. */
+  if (el.parentNode !== document.body) document.body.appendChild(el);
   var size = parseInt(el.getAttribute("data-size") || "100", 10);
   el.style.setProperty("--torch-r", Math.round(size * 1.7) + "px");
   var raf = 0, px = 0, py = 0;
