@@ -347,7 +347,15 @@
                 {%- for s in scr_vid.sources -%}<source src="{{ s.url }}" type="{{ s.mime_type }}">{%- endfor -%}
               </video>
             {%- elsif scr_img != blank -%}
-              <img class="fb-media" src="{{ scr_img | image_url: width: 1800 }}" width="{{ scr_img.width }}" height="{{ scr_img.height }}" alt="{{ block.settings.title | escape }}" loading="lazy">
+              {%- comment -%} When the tab reuses the section cover (no own image) and a phone cover is set, load the phone (portrait) version behind the text on phones too. {%- endcomment -%}
+              {%- if block.settings.image == blank and section.settings.default_image_mobile != blank -%}
+                <picture>
+                  <source media="(max-width: 860px)" srcset="{{ section.settings.default_image_mobile | image_url: width: 600 }} 600w, {{ section.settings.default_image_mobile | image_url: width: 1000 }} 1000w" sizes="100vw">
+                  <img class="fb-media" src="{{ scr_img | image_url: width: 1800 }}" width="{{ scr_img.width }}" height="{{ scr_img.height }}" alt="{{ block.settings.title | escape }}" loading="lazy">
+                </picture>
+              {%- else -%}
+                <img class="fb-media" src="{{ scr_img | image_url: width: 1800 }}" width="{{ scr_img.width }}" height="{{ scr_img.height }}" alt="{{ block.settings.title | escape }}" loading="lazy">
+              {%- endif -%}
             {%- endif -%}
             {%- assign scr_scrim_pct = block.settings.scr_scrim | default: 0 -%}
             <div class="fb-scroll{% if scr_hasmedia %} on-photo{% endif %}{% if scr_scrim_pct > 0 %} has-scrim{% endif %}" data-pos="{{ block.settings.scr_pos | default: 'right' }}" style="--scr-w:{{ block.settings.scr_width | default: 42 }}%;--scr-inset:{{ block.settings.scr_inset | default: 5 }}%;--scr-scrim:{{ scr_scrim_pct | divided_by: 100.0 }}">
