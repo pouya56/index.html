@@ -215,7 +215,7 @@
   .dyn-hero .dh-hero-btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; position: relative; z-index: 11; }
 
   /* "Finding your gift…" loader — full-screen overlay that covers the whole page (moved to <body> so nothing sits on top) */
-  .dh-finding { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px;
+  .dh-finding { position: fixed; inset: 0; z-index: 2147483000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(20px, 4vw, 34px); text-align: center; padding: 24px;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: {{ section.settings.finding_bg | default: '#f5f5f7' }}; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .5s ease, visibility 0s linear .5s; }
   .dh-finding.is-on { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .5s ease; }
@@ -226,6 +226,15 @@
   @supports not ((-webkit-background-clip: text) or (background-clip: text)) { .dh-finding-txt { color: {{ section.settings.finding_ink | default: '#1d1d1f' }}; -webkit-text-fill-color: currentColor; } }
   @keyframes dhShimmer { 0% { background-position: 120% 0; } 100% { background-position: -120% 0; } }
   @media (prefers-reduced-motion: reduce) { .dh-finding-txt { animation: none; color: {{ section.settings.finding_ink | default: '#1d1d1f' }}; -webkit-text-fill-color: currentColor; } }
+  /* The mascot rides into the centre above the text, spins while loading, then glides off to the side when done. */
+  .dh-finding-mascot { width: clamp(74px, 12vw, 124px); height: auto; display: block; will-change: transform;
+    opacity: 0; transform: translateY(20px) scale(.55);
+    transition: transform .5s cubic-bezier(.22,1,.36,1), opacity .45s ease; }
+  .dh-finding.is-on .dh-finding-mascot { opacity: 1; transform: translateY(0) scale(1); animation: dhMascotSpin 1s linear .5s infinite; }
+  .dh-finding.is-done .dh-finding-mascot { animation: none; opacity: 0; transform: translateX(62vw) rotate(160deg) scale(.6);
+    transition: transform .55s cubic-bezier(.5,0,.25,1), opacity .55s ease; }
+  @keyframes dhMascotSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .dh-finding-mascot { animation: none !important; opacity: 1; transform: none; } }
   .dyn-hero .dh-gbtn { display: inline-flex; align-items: center; justify-content: center; min-width: 150px; height: 52px; padding: 0 26px;
     border-radius: 18px; border: 1px solid rgba(255,255,255,0.7); cursor: pointer; text-decoration: none; white-space: nowrap;
     font: 500 15px/1 var(--font); color: var(--ink); position: relative; overflow: hidden;
@@ -543,7 +552,7 @@
   data-hide-until-search="{% if section.settings.hide_until_search %}true{% else %}false{% endif %}"
   data-finding="{% if section.settings.show_finding %}true{% else %}false{% endif %}"
   data-finding-text="{{ section.settings.finding_text | default: 'Finding your gift…' | escape }}"
-  data-finding-ms="{{ section.settings.finding_ms | default: 550 }}"
+  data-finding-ms="{{ section.settings.finding_ms | default: 1300 }}"
   data-results-url="{{ section.settings.results_page_url }}">
   {%- comment -%} Liquid-glass refraction filter used by the search bar sheen. {%- endcomment -%}
   <svg class="dh-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -1174,7 +1183,11 @@
           </button>
         </div>
         {%- if section.settings.show_finding -%}
-          <div class="dh-finding" aria-hidden="true"><span class="dh-finding-txt"></span></div>
+          {%- assign finding_mascot = section.settings.finding_mascot | default: section.settings.heading_logo | default: settings.logo -%}
+          <div class="dh-finding" aria-hidden="true">
+            {%- if finding_mascot != blank -%}<img class="dh-finding-mascot" src="{{ finding_mascot | image_url: width: 260 }}" alt="" width="120" height="120" aria-hidden="true">{%- endif -%}
+            <span class="dh-finding-txt"></span>
+          </div>
         {%- endif -%}
         {%- if section.settings.show_btn1 or section.settings.show_btn2 or section.settings.show_btn3 -%}
           <div class="dh-hero-btns">
@@ -1842,8 +1855,16 @@
   function runFinding(done, keepUp) {
     if (!findingEl || !findingTxtEl || findingReduce) { if (done) done(); return; }
     findingTxtEl.textContent = findingText;
+    findingEl.classList.remove("is-done");
     findingEl.classList.add("is-on");
-    setTimeout(function () { if (!keepUp) findingEl.classList.remove("is-on"); if (done) done(); }, Math.max(200, findingMs));
+    setTimeout(function () {
+      if (done) done();
+      if (!keepUp) {
+        // The mascot glides off to the side, then the overlay fades away.
+        findingEl.classList.add("is-done");
+        setTimeout(function () { findingEl.classList.remove("is-on"); findingEl.classList.remove("is-done"); }, 480);
+      }
+    }, Math.max(200, findingMs));
   }
   var ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
   var CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -2831,7 +2852,8 @@
 
     { "type": "checkbox", "id": "show_finding", "label": "Show a “Finding your gift…” loader on search", "default": true, "info": "When a shopper submits a search, the bar fades and a shimmering message shows for a moment before the results appear." },
     { "type": "text", "id": "finding_text", "label": "Loader message", "default": "Finding your gift…" },
-    { "type": "range", "id": "finding_ms", "min": 300, "max": 4000, "step": 50, "unit": "ms", "label": "Loader duration", "default": 550 },
+    { "type": "image_picker", "id": "finding_mascot", "label": "Loader mascot (spins while finding)", "info": "The character that flies into the centre, spins while searching, then glides to the side. Leave blank to use your logo. A transparent square PNG works best." },
+    { "type": "range", "id": "finding_ms", "min": 300, "max": 4000, "step": 50, "unit": "ms", "label": "Loader duration", "default": 1300, "info": "Give the mascot a moment to spin — try 1200–1800ms." },
     { "type": "color", "id": "finding_bg", "label": "Loader background", "default": "#f5f5f7", "info": "The full-screen colour the page fades to while finding." },
     { "type": "color", "id": "finding_ink", "label": "Loader text colour", "default": "#1d1d1f" },
     { "type": "header", "content": "Buttons under the search (Google-style)" },
