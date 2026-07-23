@@ -25,16 +25,16 @@
 <style>
   .dbo { --ink:#1d1d1f; --soft:#6e6e73; --faint:#86868b; --line:#e3e3e8; --line2:#d2d2d7; --accent:#0071e3; --accent-soft:#e8f2fd; --panel:#f5f5f7; --danger:#c0392b; --ok:#1a7f37;
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    font-family:var(--font); color:var(--ink); -webkit-font-smoothing:antialiased; max-width:1000px; margin:0 auto; padding:16px 22px 80px; }
+    font-family:var(--font); color:var(--ink); -webkit-font-smoothing:antialiased; max-width:1000px; margin:0 auto; padding:40px 22px 80px; }
   .dbo *, .dbo *::before, .dbo *::after { box-sizing:border-box; }
-  .dbo-topbar { display:flex; align-items:center; margin-bottom:14px; }
+  .dbo-topbar { display:flex; align-items:center; margin-bottom:28px; }
   .dbo-topbar.is-left { justify-content:flex-start; }
   .dbo-topbar.is-center { justify-content:center; }
   .dbo-logo { display:inline-flex; align-items:center; text-decoration:none; transition:opacity .16s; }
   .dbo-logo:hover { opacity:0.72; }
-  .dbo-logo img { display:block; width:auto; height:auto; max-width:62vw; max-height:64px; object-fit:contain; }
+  .dbo-logo img { display:block; height:auto; max-width:62vw; }
   .dbo-logo-text { font-size:22px; font-weight:600; letter-spacing:-0.02em; color:var(--ink); }
-  .dbo-head { text-align:center; margin-bottom:24px; }
+  .dbo-head { text-align:center; margin-bottom:30px; }
   .dbo-head h1 { font-size:clamp(28px,5vw,44px); font-weight:600; letter-spacing:-0.02em; margin:0 0 10px; }
   .dbo-head p { font-size:16px; color:var(--soft); line-height:1.55; margin:0 auto; max-width:620px; }
   .dbo-rows { display:flex; flex-direction:column; gap:16px; }
@@ -104,7 +104,7 @@
   .dbo-tile:hover { border-color:var(--accent); transform:translateY(-2px); }
   .dbo-tile-img { width:100%; aspect-ratio:1/1; border-radius:12px; object-fit:contain; background:var(--panel); }
   .dbo-tile-name { font-size:13px; font-weight:500; margin-top:8px; line-height:1.25; }
-  @media (max-width:640px) { .dbo-contact { grid-template-columns:1fr; } .dbo-logo img { max-height:46px; } }
+  @media (max-width:640px) { .dbo-contact { grid-template-columns:1fr; } }
 </style>
 
 <section class="dbo" id="dboRoot" data-minqty="{{ section.settings.min_qty | default: 1 }}" data-notify="{{ notify_email }}">
@@ -115,7 +115,7 @@
       <a href="{{ routes.root_url }}" class="dbo-logo" aria-label="{{ shop.name | escape }} — home">
         {%- if bo_logo != blank -%}
           {%- assign lh = lw | divided_by: bo_logo.aspect_ratio | round -%}
-          <img src="{{ bo_logo | image_url: width: 500 }}" alt="{{ shop.name | escape }}" width="{{ lw }}" height="{{ lh }}" style="max-width:{{ lw }}px;">
+          <img src="{{ bo_logo | image_url: width: 500 }}" alt="{{ shop.name | escape }}" width="{{ lw }}" height="{{ lh }}" style="width:{{ lw }}px;">
         {%- else -%}
           <span class="dbo-logo-text">{{ shop.name }}</span>
         {%- endif -%}
