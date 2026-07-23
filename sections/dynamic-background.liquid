@@ -72,11 +72,14 @@
   <span class="dyn-bg-blob dyn-bg-b2"></span>
   <span class="dyn-bg-blob dyn-bg-b3"></span>
   {%- endif -%}
-  {%- if brush == 'flashlight' -%}
-  {%- comment -%} Flashlight brush: a spotlight overlay that follows the pointer (works with any look). {%- endcomment -%}
-  <div class="dyn-bg-torch" id="dynBgTorch-{{ section.id }}" data-size="{{ section.settings.brush_size | default: 100 }}"></div>
-  {%- endif -%}
 </div>
+
+{%- if brush == 'flashlight' -%}
+{%- comment -%} Flashlight brush: a spotlight overlay that follows the pointer. It sits
+   OVER the page (fixed, click-through) so it's visible on top of your content — it can't
+   live inside the z-index:-1 background layer or it would be hidden behind everything. {%- endcomment -%}
+<div class="dyn-bg-torch" id="dynBgTorch-{{ section.id }}" data-size="{{ section.settings.brush_size | default: 100 }}" aria-hidden="true"></div>
+{%- endif -%}
 
 <style>
   #dynBg-{{ section.id }} {
@@ -101,12 +104,12 @@
     will-change: transform;
   }
 
-  /* Flashlight brush: a soft round spotlight follows the pointer; the rest of
-     the wallpaper dims. The centre position (--tx/--ty) is set from JS. */
-  #dynBg-{{ section.id }} .dyn-bg-torch {
-    position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  /* Flashlight brush: a soft round spotlight follows the pointer; everything
+     else dims. Fixed on top of the page (click-through). Centre = --tx/--ty (JS). */
+  #dynBgTorch-{{ section.id }} {
+    position: fixed; inset: 0; z-index: 2147483000; pointer-events: none;
     background: radial-gradient(circle var(--torch-r, 170px) at var(--tx, 50%) var(--ty, 50%),
-      rgba(0,0,0,0) 0%, rgba(0,0,0,0) 58%, rgba(0,0,0,0.80) 100%);
+      rgba(0,0,0,0) 0%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.62) 100%);
   }
 
   {%- if look == 'sun' -%}
