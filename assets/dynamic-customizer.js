@@ -3796,6 +3796,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   function openModal() {
     const rootEl = $("#modalRoot");
+    // Reset the "Add design" button back to its orange (un-flipped) state before
+    // the modal is shown — otherwise it stays on the green check from last time.
+    // Done while the modal is still hidden (display:none) so there's no flip-back flash.
+    const applyBtn = rootEl.querySelector("#uploadApply");
+    if (applyBtn) { applyBtn.classList.remove("is-flipped"); if (applyBtn.dataset) delete applyBtn.dataset.dynDone; }
     rootEl.classList.add("open");
     modalOpen = true;
     document.body.classList.add("no-scroll");
