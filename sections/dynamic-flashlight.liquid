@@ -13,7 +13,7 @@
 <div class="dyn-flash" id="dynFlash-{{ section.id }}"
   data-on="{% if section.settings.enabled %}1{% else %}0{% endif %}"
   data-size="{{ section.settings.size | default: 120 }}"
-  data-dim="{{ section.settings.dim | default: 62 }}" aria-hidden="true"></div>
+  data-dim="{{ section.settings.dim | default: 60 }}" aria-hidden="true"></div>
 
 <style>
   /* Full-screen, click-through overlay. Hidden until the script switches it on.
@@ -36,8 +36,8 @@
      this fixed overlay in a stacking context and hide it. */
   if (el.parentNode !== document.body) document.body.appendChild(el);
   var size = parseInt(el.getAttribute("data-size") || "120", 10);
-  var dim = parseInt(el.getAttribute("data-dim") || "62", 10);
-  dim = Math.min(90, Math.max(15, isNaN(dim) ? 62 : dim)) / 100;
+  var dim = parseInt(el.getAttribute("data-dim") || "60", 10);
+  dim = Math.min(90, Math.max(15, isNaN(dim) ? 60 : dim)) / 100;
   var r = Math.round(size * 1.7);
   var raf = 0, px = (window.innerWidth || 800) / 2, py = (window.innerHeight || 600) / 2;
   function apply() {
@@ -63,7 +63,7 @@
     { "type": "paragraph", "content": "A spotlight follows the mouse (or finger on phones) and dims the rest of the page. Add this section to any page — it's on by default. Preview tip: add ?torch=1 to any page's URL." },
     { "type": "checkbox", "id": "enabled", "label": "Turn on", "default": true },
     { "type": "range", "id": "size", "label": "Spotlight size", "min": 60, "max": 260, "step": 10, "unit": "px", "default": 120 },
-    { "type": "range", "id": "dim", "label": "How dark the rest gets", "min": 20, "max": 90, "step": 5, "unit": "%", "default": 62 }
+    { "type": "range", "id": "dim", "label": "How dark the rest gets", "min": 20, "max": 90, "step": 5, "unit": "%", "default": 60 }
   ],
   "presets": [ { "name": "Dynamic Flashlight" } ],
   "enabled_on": { "templates": ["*"] }
