@@ -236,14 +236,18 @@
 
   /* Apple-Store-style card: name/price on top, image fills a soft gradient box below */
   .dyn-col .dc-card { position: relative; background: linear-gradient(180deg,#ffffff,#eceff3); border: 1px solid rgba(0,0,0,0.07); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; min-height: 460px; box-shadow: 0 6px 22px rgba(0,0,0,0.07); transition: box-shadow .25s ease, transform .25s ease; }
-  .dyn-col .dc-card:hover { box-shadow: 0px 0px 30px 1px rgba(0, 255, 117, 0.30); transform: scale(0.98); }
-  /* Uiverse-style gradient border that fades in on hover (green -> blue). */
+  .dyn-col .dc-card:hover { box-shadow: 0px 0px 30px 1px rgba(120, 110, 255, 0.30); transform: scale(0.98); }
+  /* Siri-style multicolour gradient border that spins around the card edge on hover. */
+  @property --dc-siri-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
   .dyn-col .dc-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 4;
-    padding: 2px; background-image: linear-gradient(163deg, #00ff75 0%, #3700ff 100%);
+    --dc-siri-angle: 0deg;
+    padding: 2px; background: conic-gradient(from var(--dc-siri-angle), #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
     opacity: 0; transition: opacity .3s ease; }
-  .dyn-col .dc-card:hover::after { opacity: 1; }
+  .dyn-col .dc-card:hover::after { opacity: 1; animation: dcSiriSpin 4s linear infinite; }
+  @keyframes dcSiriSpin { to { --dc-siri-angle: 360deg; } }
+  @media (prefers-reduced-motion: reduce) { .dyn-col .dc-card:hover::after { animation: none; } }
 
   /* Full-bleed mode: product image fills the whole box, name/price overlay on top */
   .dyn-col.dc-fill .dc-card { position: relative; }
