@@ -39,9 +39,14 @@
   .dyn-linkbar span.dlb-item { opacity: 0.92; }
 
   @media (max-width: 749px) {
-    .dyn-linkbar .dlb-inner { flex-direction: column; gap: 12px; padding: 0 18px; }
-    .dyn-linkbar .dlb-group { flex: none; justify-content: center; gap: 20px 22px; }
-    .dyn-linkbar .dlb-center { order: -1; }
+    /* Keep the same one-row layout as desktop (left / centre / right), just
+       tighter — smaller text, and let the centre use the leftover width so a
+       long tagline stays on one line where it can. */
+    .dyn-linkbar .dlb-inner { gap: 8px; padding: 0 12px; justify-content: space-between; }
+    .dyn-linkbar .dlb-left, .dyn-linkbar .dlb-right { flex: 0 0 auto; }
+    .dyn-linkbar .dlb-center { flex: 1 1 auto; }
+    .dyn-linkbar .dlb-group { gap: 6px 10px; }
+    .dyn-linkbar .dlb-item { font-size: {{ section.settings.font_size_mobile | default: 11 }}px; }
   }
 </style>
 
@@ -79,6 +84,7 @@
     { "type": "color", "id": "hover_color", "label": "Link hover colour", "default": "#ffffff" },
     { "type": "checkbox", "id": "underline_hover", "label": "Underline on hover", "default": false },
     { "type": "range", "id": "font_size", "label": "Text size", "min": 11, "max": 20, "step": 1, "unit": "px", "default": 14 },
+    { "type": "range", "id": "font_size_mobile", "label": "Text size (phone)", "min": 8, "max": 15, "step": 1, "unit": "px", "default": 10, "info": "Smaller so the whole bar fits on one line on phones. Lower it if your links are long and wrap." },
     { "type": "range", "id": "pad_y", "label": "Bar height (top/bottom padding)", "min": 6, "max": 40, "step": 2, "unit": "px", "default": 14 },
     { "type": "range", "id": "max_width", "label": "Content width", "min": 800, "max": 1800, "step": 20, "unit": "px", "default": 1400 }
   ],
