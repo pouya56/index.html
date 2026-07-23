@@ -94,6 +94,8 @@
     .dyn-fb .fb-more-ic::before, .dyn-fb .fb-more-ic::after { content: ""; position: absolute; top: 50%; left: 50%;
       width: 18px; height: 2px; background: currentColor; border-radius: 2px; transform: translate(-50%, -50%); transition: transform .3s; }
     .dyn-fb .fb-more-ic::after { transform: translate(-50%, -50%) rotate(90deg); }
+    /* Name of the open tab, shown at the top on phones. */
+    .dyn-fb .fb-tabtitle { display: none; }
     .dyn-fb .fb-navbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
     .dyn-fb .fb-list { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; width: 100%; max-width: 424px; max-height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding: 8px 24px 18px; margin-left: -22px; scroll-behavior: smooth; }
@@ -196,6 +198,11 @@
       .dyn-fb .fb-pill { padding: 10px 18px 10px 10px; }
       .dyn-fb .fb-pill-title { white-space: normal; font-size: 15px; }
       .dyn-fb .fb-close { top: 14px; right: 14px; }
+      /* The open tab's name across the top (clear of the × button). */
+      .dyn-fb.is-open .fb-tabtitle { display: block; position: absolute; z-index: 6; top: 22px; left: 20px; right: 74px;
+        font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink);
+        text-shadow: 0 1px 10px rgba(0,0,0,.55); pointer-events: none;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       /* Phone closed state: photo fills; the name / founder / quote sit at the
          bottom-left, and a "+" button at the bottom-right reveals the tab menu. */
       .dyn-fb:not(.is-open) .fb-left::before { content: ""; position: absolute; inset: 0; z-index: 0;
@@ -391,6 +398,7 @@
       </div>
 
       <button type="button" class="fb-close" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+      <div class="fb-tabtitle" data-fb-tabtitle aria-hidden="true"></div>
 
       <div class="fb-left">
         <div class="fb-nav">
@@ -488,6 +496,7 @@
       if (moreBtn) moreBtn.setAttribute("aria-expanded", "false");
       root.classList.add("is-open");
       var it = items[i];
+      if (tabTitleEl) { var _pt = it.querySelector(".fb-pill-title"); tabTitleEl.textContent = _pt ? _pt.textContent.trim() : ""; }
       showBg(it.hasAttribute("data-colors") ? ("c" + selColor) : it.getAttribute("data-media"));
       /* Scroll the opened tab (and its panel) into view within the list so it's never cut off. */
       requestAnimationFrame(function () { if (it.scrollIntoView) { try { it.scrollIntoView({ block: "nearest" }); } catch (e) { it.scrollIntoView(); } } });
@@ -499,6 +508,7 @@
     });
     if (closeBtn) closeBtn.addEventListener("click", closeAll);
     var moreBtn = root.querySelector("[data-fb-more]");
+    var tabTitleEl = root.querySelector("[data-fb-tabtitle]");
     if (moreBtn) moreBtn.addEventListener("click", function () {
       var on = root.classList.toggle("fb-menu-open");
       moreBtn.setAttribute("aria-expanded", on ? "true" : "false");
