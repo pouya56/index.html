@@ -198,6 +198,12 @@
         left: 50%; right: auto; transform: translate(-50%, -50%); width: 88%; }
       .dyn-fb .fb-scroll, .dyn-fb .fb-scroll[data-pos="right"], .dyn-fb .fb-scroll[data-pos="left"], .dyn-fb .fb-scroll[data-pos="center"] {
         left: 0; right: 0; top: 0; bottom: 0; width: auto; transform: none; }
+      /* Move the prev/next arrows out of the reading area: a row pinned to the
+         bottom-centre (they used to sit in the middle-left, over the text). */
+      .dyn-fb.is-open .fb-nav { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
+        flex-direction: row; gap: 14px; z-index: 7; }
+      /* keep the scrolling text clear of those bottom arrows */
+      .dyn-fb .fb-scroll-inner { padding-bottom: 88px; }
     }
   </style>
 
