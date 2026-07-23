@@ -44,6 +44,9 @@
     line-height: 1.4; letter-spacing: 0.01em; white-space: nowrap; transition: color .16s ease; }
   .dyn-linkbar a.dlb-item:hover { color: var(--lb-hover); text-decoration: {% if section.settings.underline_hover %}underline{% else %}none{% endif %}; }
   .dyn-linkbar span.dlb-item { opacity: 0.92; }
+  /* Per-link visibility (set on each Link block). */
+  @media (max-width: 749px) { .dyn-linkbar .dlb-hide-mobile { display: none !important; } }
+  @media (min-width: 750px) { .dyn-linkbar .dlb-hide-desktop { display: none !important; } }
 
   @media (max-width: 749px) {
     /* Keep the same one-row layout as desktop (left / centre / right), just
@@ -66,10 +69,13 @@
           {%- assign g = block.settings.group | default: 'left' -%}
           {%- if g == pos -%}
             {%- assign txt = block.settings.text | default: 'Link' -%}
+            {%- assign vis = '' -%}
+            {%- if block.settings.show_mobile == false -%}{%- assign vis = vis | append: ' dlb-hide-mobile' -%}{%- endif -%}
+            {%- if block.settings.show_desktop == false -%}{%- assign vis = vis | append: ' dlb-hide-desktop' -%}{%- endif -%}
             {%- if block.settings.url != blank -%}
-              <a class="dlb-item" href="{{ block.settings.url }}" {{ block.shopify_attributes }}>{{ txt }}</a>
+              <a class="dlb-item{{ vis }}" href="{{ block.settings.url }}" {{ block.shopify_attributes }}>{{ txt }}</a>
             {%- else -%}
-              <span class="dlb-item" {{ block.shopify_attributes }}>{{ txt }}</span>
+              <span class="dlb-item{{ vis }}" {{ block.shopify_attributes }}>{{ txt }}</span>
             {%- endif -%}
           {%- endif -%}
         {%- endfor -%}
@@ -110,7 +116,9 @@
             { "value": "left", "label": "Left" },
             { "value": "center", "label": "Centre" },
             { "value": "right", "label": "Right" }
-          ] }
+          ] },
+        { "type": "checkbox", "id": "show_mobile", "label": "Show on phone", "default": true },
+        { "type": "checkbox", "id": "show_desktop", "label": "Show on desktop", "default": true }
       ]
     }
   ],
