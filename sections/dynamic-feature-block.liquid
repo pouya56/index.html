@@ -203,7 +203,10 @@
         pointer-events: none; transition: background .3s; }
       .dyn-fb:not(.is-open) .fb-cap { top: auto; bottom: 22px; left: 20px; right: auto; transform: none;
         text-align: left; max-width: calc(100% - 92px); transition: opacity .25s; }
-      .dyn-fb:not(.is-open) .fb-cap-text { font-size: 12.5px; line-height: 1.4; margin-top: 6px; }
+      .dyn-fb:not(.is-open) .fb-cap-text { font-size: 13px; line-height: 1.4; margin-top: 6px; }
+      /* Force any styled sub-lines (e.g. a bigger "Founder & Creative Director"
+         heading) down to the caption size so they fit on one line — colours kept. */
+      .dyn-fb:not(.is-open) .fb-cap-text * { font-size: inherit !important; line-height: 1.4 !important; }
       .dyn-fb:not(.is-open) .fb-more { display: grid; place-items: center; position: absolute; z-index: 6;
         right: 18px; bottom: 18px; width: 54px; height: 54px; border-radius: 50%; background: var(--glass);
         -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
