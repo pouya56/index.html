@@ -40,11 +40,10 @@
   }
 </style>
 
+{%- assign lb_positions = 'left,center,right' | split: ',' -%}
 <div class="dyn-linkbar">
   <div class="dlb-inner">
-    {%- for pos in 'left,center,right' | split: ',' -%}
-      {%- assign has_any = false -%}
-      {%- for block in section.blocks -%}{%- assign g = block.settings.group | default: 'left' -%}{%- if g == pos -%}{%- assign has_any = true -%}{%- endif -%}{%- endfor -%}
+    {%- for pos in lb_positions -%}
       <div class="dlb-group dlb-{{ pos }}">
         {%- for block in section.blocks -%}
           {%- assign g = block.settings.group | default: 'left' -%}
