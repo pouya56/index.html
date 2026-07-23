@@ -16,9 +16,10 @@
   data-dim="{{ section.settings.dim | default: 60 }}" aria-hidden="true"></div>
 
 {%- comment -%} The behaviour lives in the asset file (loads reliably and runs in the
-   theme editor, unlike an inline section script). Make sure assets/dynamic-flashlight.js
-   exists in your theme. {%- endcomment -%}
-{{ 'dynamic-flashlight.js' | asset_url | script_tag }}
+   theme editor, unlike an inline section script). Create assets/dynamic-flashlight.js
+   in your theme or the "MissingAsset" warning shows and nothing happens. Deferred so
+   it isn't parser-blocking. {%- endcomment -%}
+<script src="{{ 'dynamic-flashlight.js' | asset_url }}" defer></script>
 
 {% schema %}
 {
