@@ -1,0 +1,110 @@
+{% comment %}
+  ============================================================================
+  Dynamic Link Bar — a Google-footer-style bar of text + links.
+  ----------------------------------------------------------------------------
+  Add "Link" blocks; each has Text, an optional Link, and a Position
+  (Left / Centre / Right). Leave a block's Link empty to show plain text.
+  SETUP: Customize > add "Dynamic Link Bar" (e.g. under the hero) > add Link
+  blocks and choose where each one sits.
+  ============================================================================
+{% endcomment %}
+
+{%- assign lb_bg   = section.settings.bg_color   | default: '#171717' -%}
+{%- assign lb_fg   = section.settings.text_color | default: '#d0d0d3' -%}
+{%- assign lb_hover = section.settings.hover_color | default: '#ffffff' -%}
+
+<style>
+  #shopify-section-{{ section.id }} { background: {{ lb_bg }}; }
+  .dyn-linkbar {
+    --lb-fg: {{ lb_fg }}; --lb-hover: {{ lb_hover }};
+    --lb-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--lb-font); background: {{ lb_bg }};
+    padding: {{ section.settings.pad_y | default: 14 }}px 0; -webkit-font-smoothing: antialiased;
+  }
+  .dyn-linkbar *, .dyn-linkbar *::before, .dyn-linkbar *::after { box-sizing: border-box; }
+  .dyn-linkbar .dlb-inner { display: flex; align-items: center; gap: 16px;
+    max-width: {{ section.settings.max_width | default: 1400 }}px; margin: 0 auto; padding: 0 24px; }
+  .dyn-linkbar .dlb-group { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; min-width: 0; }
+  .dyn-linkbar .dlb-left   { flex: 1; justify-content: flex-start; }
+  .dyn-linkbar .dlb-center { flex: 1; justify-content: center; text-align: center; }
+  .dyn-linkbar .dlb-right  { flex: 1; justify-content: flex-end; }
+  .dyn-linkbar .dlb-item { color: var(--lb-fg); text-decoration: none; font-size: {{ section.settings.font_size | default: 14 }}px;
+    line-height: 1.4; letter-spacing: 0.01em; white-space: nowrap; transition: color .16s ease; }
+  .dyn-linkbar a.dlb-item:hover { color: var(--lb-hover); text-decoration: {% if section.settings.underline_hover %}underline{% else %}none{% endif %}; }
+  .dyn-linkbar span.dlb-item { opacity: 0.92; }
+
+  @media (max-width: 749px) {
+    .dyn-linkbar .dlb-inner { flex-direction: column; gap: 12px; padding: 0 18px; }
+    .dyn-linkbar .dlb-group { flex: none; justify-content: center; gap: 20px 22px; }
+    .dyn-linkbar .dlb-center { order: -1; }
+  }
+</style>
+
+<div class="dyn-linkbar">
+  <div class="dlb-inner">
+    {%- for pos in 'left,center,right' | split: ',' -%}
+      {%- assign has_any = false -%}
+      {%- for block in section.blocks -%}{%- assign g = block.settings.group | default: 'left' -%}{%- if g == pos -%}{%- assign has_any = true -%}{%- endif -%}{%- endfor -%}
+      <div class="dlb-group dlb-{{ pos }}">
+        {%- for block in section.blocks -%}
+          {%- assign g = block.settings.group | default: 'left' -%}
+          {%- if g == pos -%}
+            {%- assign txt = block.settings.text | default: 'Link' -%}
+            {%- if block.settings.url != blank -%}
+              <a class="dlb-item" href="{{ block.settings.url }}" {{ block.shopify_attributes }}>{{ txt }}</a>
+            {%- else -%}
+              <span class="dlb-item" {{ block.shopify_attributes }}>{{ txt }}</span>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    {%- endfor -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Dynamic Link Bar",
+  "tag": "section",
+  "class": "dyn-linkbar-sec",
+  "settings": [
+    { "type": "header", "content": "Bar" },
+    { "type": "color", "id": "bg_color", "label": "Background", "default": "#171717" },
+    { "type": "color", "id": "text_color", "label": "Link colour", "default": "#d0d0d3" },
+    { "type": "color", "id": "hover_color", "label": "Link hover colour", "default": "#ffffff" },
+    { "type": "checkbox", "id": "underline_hover", "label": "Underline on hover", "default": false },
+    { "type": "range", "id": "font_size", "label": "Text size", "min": 11, "max": 20, "step": 1, "unit": "px", "default": 14 },
+    { "type": "range", "id": "pad_y", "label": "Bar height (top/bottom padding)", "min": 6, "max": 40, "step": 2, "unit": "px", "default": 14 },
+    { "type": "range", "id": "max_width", "label": "Content width", "min": 800, "max": 1800, "step": 20, "unit": "px", "default": 1400 }
+  ],
+  "blocks": [
+    {
+      "type": "link",
+      "name": "Link",
+      "settings": [
+        { "type": "text", "id": "text", "label": "Text", "default": "Link" },
+        { "type": "url", "id": "url", "label": "Link (leave empty for plain text)" },
+        { "type": "select", "id": "group", "label": "Position", "default": "left",
+          "options": [
+            { "value": "left", "label": "Left" },
+            { "value": "center", "label": "Centre" },
+            { "value": "right", "label": "Right" }
+          ] }
+      ]
+    }
+  ],
+  "max_blocks": 20,
+  "presets": [
+    {
+      "name": "Dynamic Link Bar",
+      "blocks": [
+        { "type": "link", "settings": { "text": "About", "group": "left" } },
+        { "type": "link", "settings": { "text": "Bulk order", "group": "left" } },
+        { "type": "link", "settings": { "text": "Build something they'll keep", "group": "center" } },
+        { "type": "link", "settings": { "text": "Privacy", "group": "right" } },
+        { "type": "link", "settings": { "text": "Terms", "group": "right" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
