@@ -86,6 +86,7 @@
       border: 1px solid var(--glass-brd); color: var(--ink); cursor: pointer; display: grid; place-items: center; transition: background .15s, transform .12s; box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
     .dyn-fb .fb-navbtn:hover { background: var(--glass-hover); }
     .dyn-fb .fb-navbtn:active { transform: scale(.92); }
+    .dyn-fb .fb-navbtn:disabled { opacity: .3; cursor: default; pointer-events: none; }
     .dyn-fb .fb-navbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
     .dyn-fb .fb-list { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; width: 100%; max-width: 424px; max-height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding: 8px 24px 18px; margin-left: -22px; scroll-behavior: smooth; }
@@ -431,6 +432,9 @@
     function openTab(i) {
       if (i < 0 || i >= items.length) return;
       openIndex = i;
+      /* Stop at the ends: grey out ↑ on the first tab, ↓ on the last. */
+      if (up) up.disabled = (i <= 0);
+      if (down) down.disabled = (i >= items.length - 1);
       items.forEach(function (it, k) { it.classList.toggle("is-open", k === i); });
       root.classList.add("is-open");
       var it = items[i];
@@ -445,8 +449,8 @@
     });
     if (closeBtn) closeBtn.addEventListener("click", closeAll);
     var up = root.querySelector("[data-fb-up]"), down = root.querySelector("[data-fb-down]");
-    if (up) up.addEventListener("click", function () { openTab((openIndex - 1 + items.length) % items.length); });
-    if (down) down.addEventListener("click", function () { openTab((openIndex + 1) % items.length); });
+    if (up) up.addEventListener("click", function () { if (openIndex > 0) openTab(openIndex - 1); });
+    if (down) down.addEventListener("click", function () { if (openIndex < items.length - 1) openTab(openIndex + 1); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && openIndex >= 0) closeAll(); });
 
     /* Colour swatches: change the phone colour (background media) */
