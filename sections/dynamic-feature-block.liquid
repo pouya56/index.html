@@ -80,7 +80,7 @@
 
     /* Left column: nav arrows + pills */
     .dyn-fb .fb-left { position: relative; z-index: 3; display: flex; align-items: center; gap: 16px; height: var(--fb-cardh); padding: 24px clamp(20px,4vw,52px); box-sizing: border-box; pointer-events: none; }
-    .dyn-fb .fb-nav, .dyn-fb .fb-navbtn, .dyn-fb .fb-pill, .dyn-fb .fb-panel, .dyn-fb .fb-close, .dyn-fb .fb-list { pointer-events: auto; }
+    .dyn-fb .fb-nav, .dyn-fb .fb-navbtn, .dyn-fb .fb-pill, .dyn-fb .fb-panel, .dyn-fb .fb-close, .dyn-fb .fb-list, .dyn-fb .fb-more { pointer-events: auto; }
     .dyn-fb .fb-nav { display: flex; flex-direction: column; gap: 10px; opacity: 0; pointer-events: none; transition: opacity .25s; }
     .dyn-fb.is-open .fb-nav { opacity: 1; pointer-events: auto; }
     .dyn-fb .fb-navbtn { width: 44px; height: 44px; border-radius: 50%; background: var(--glass); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
@@ -88,6 +88,12 @@
     .dyn-fb .fb-navbtn:hover { background: var(--glass-hover); }
     .dyn-fb .fb-navbtn:active { transform: scale(.92); }
     .dyn-fb .fb-navbtn:disabled { opacity: .3; cursor: default; pointer-events: none; }
+    /* "+" button that reveals the tab menu on phones (hidden on desktop). */
+    .dyn-fb .fb-more { display: none; }
+    .dyn-fb .fb-more-ic { position: relative; width: 20px; height: 20px; display: block; }
+    .dyn-fb .fb-more-ic::before, .dyn-fb .fb-more-ic::after { content: ""; position: absolute; top: 50%; left: 50%;
+      width: 18px; height: 2px; background: currentColor; border-radius: 2px; transform: translate(-50%, -50%); transition: transform .3s; }
+    .dyn-fb .fb-more-ic::after { transform: translate(-50%, -50%) rotate(90deg); }
     .dyn-fb .fb-navbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
     .dyn-fb .fb-list { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; width: 100%; max-width: 424px; max-height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding: 8px 24px 18px; margin-left: -22px; scroll-behavior: smooth; }
@@ -190,15 +196,28 @@
       .dyn-fb .fb-pill { padding: 10px 18px 10px 10px; }
       .dyn-fb .fb-pill-title { white-space: normal; font-size: 15px; }
       .dyn-fb .fb-close { top: 14px; right: 14px; }
-      /* Closed on phone now shows the cover photo (like desktop): the caption is
-         pinned to the top, the tab pills sit at the bottom over a readability
-         scrim, so nothing overlaps and the photo is visible between them. */
-      .dyn-fb:not(.is-open) .fb-left { align-items: flex-end; padding-bottom: 22px; }
+      /* Phone closed state: photo fills; the name / founder / quote sit at the
+         bottom-left, and a "+" button at the bottom-right reveals the tab menu. */
       .dyn-fb:not(.is-open) .fb-left::before { content: ""; position: absolute; inset: 0; z-index: 0;
-        background: linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,.3) 34%, transparent 60%); pointer-events: none; }
-      .dyn-fb:not(.is-open) .fb-list { position: relative; z-index: 1; }
-      .dyn-fb:not(.is-open) .fb-cap { top: 30px; bottom: auto; left: 50%; transform: translateX(-50%);
-        text-align: center; max-width: 88%; }
+        background: linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.32) 34%, transparent 60%);
+        pointer-events: none; transition: background .3s; }
+      .dyn-fb:not(.is-open) .fb-cap { top: auto; bottom: 22px; left: 20px; right: auto; transform: none;
+        text-align: left; max-width: calc(100% - 92px); transition: opacity .25s; }
+      .dyn-fb:not(.is-open) .fb-more { display: grid; place-items: center; position: absolute; z-index: 6;
+        right: 18px; bottom: 18px; width: 54px; height: 54px; border-radius: 50%; background: var(--glass);
+        -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+        border: 1px solid var(--glass-brd); color: var(--ink); cursor: pointer;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 8px 24px rgba(0,0,0,.32); transition: transform .3s, background .18s; }
+      .dyn-fb:not(.is-open) .fb-more:active { transform: scale(.94); }
+      /* pills stay hidden until the "+" is tapped */
+      .dyn-fb:not(.is-open) .fb-list { display: none; }
+      .dyn-fb:not(.is-open).fb-menu-open .fb-list { display: flex; position: absolute; z-index: 5;
+        left: 0; right: 0; bottom: 86px; max-width: none; padding: 0 20px 4px; align-items: flex-start;
+        max-height: 62%; margin-left: 0; animation: fbIn .28s cubic-bezier(.22,1,.36,1); }
+      .dyn-fb:not(.is-open).fb-menu-open .fb-more { transform: rotate(135deg); }
+      .dyn-fb:not(.is-open).fb-menu-open .fb-cap { opacity: 0; pointer-events: none; }
+      .dyn-fb:not(.is-open).fb-menu-open .fb-left::before {
+        background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,.6) 45%, rgba(0,0,0,.2) 80%); }
       /* Open = the media/content fills the box; the tab menu is hidden (use × and ↑/↓ arrows) */
       .dyn-fb.is-open .fb-list { display: none; }
       .dyn-fb .fb-ba, .dyn-fb .fb-ba[data-pos="right"], .dyn-fb .fb-ba[data-pos="left"], .dyn-fb .fb-ba[data-pos="center"] {
@@ -426,6 +445,7 @@
             <div class="fb-empty">Add “Color”, “Feature”, “Infinite canvas”, “Image stack”, or “Scroll text” blocks and give each one media.</div>
           {%- endif -%}
         </div>
+        <button type="button" class="fb-more" data-fb-more aria-label="Show options" aria-expanded="false"><span class="fb-more-ic"></span></button>
       </div>
     </div>
   </div>
@@ -450,6 +470,7 @@
       openIndex = -1;
       items.forEach(function (it) { it.classList.remove("is-open"); });
       root.classList.remove("is-open");
+      root.classList.remove("fb-menu-open");
       showBg(defaultKey());
     }
     function openTab(i) {
@@ -459,6 +480,8 @@
       if (up) up.disabled = (i <= 0);
       if (down) down.disabled = (i >= items.length - 1);
       items.forEach(function (it, k) { it.classList.toggle("is-open", k === i); });
+      root.classList.remove("fb-menu-open");
+      if (moreBtn) moreBtn.setAttribute("aria-expanded", "false");
       root.classList.add("is-open");
       var it = items[i];
       showBg(it.hasAttribute("data-colors") ? ("c" + selColor) : it.getAttribute("data-media"));
@@ -471,6 +494,11 @@
       if (pill) pill.addEventListener("click", function () { openTab(i); });
     });
     if (closeBtn) closeBtn.addEventListener("click", closeAll);
+    var moreBtn = root.querySelector("[data-fb-more]");
+    if (moreBtn) moreBtn.addEventListener("click", function () {
+      var on = root.classList.toggle("fb-menu-open");
+      moreBtn.setAttribute("aria-expanded", on ? "true" : "false");
+    });
     var up = root.querySelector("[data-fb-up]"), down = root.querySelector("[data-fb-down]");
     if (up) up.addEventListener("click", function () { if (openIndex > 0) openTab(openIndex - 1); });
     if (down) down.addEventListener("click", function () { if (openIndex < items.length - 1) openTab(openIndex + 1); });
