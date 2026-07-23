@@ -13,6 +13,11 @@
 {%- assign lb_fg   = section.settings.text_color | default: '#d0d0d3' -%}
 {%- assign lb_hover = section.settings.hover_color | default: '#ffffff' -%}
 
+{%- comment -%} Skip rendering on the homepage/hero when "Show on the homepage" is off. {%- endcomment -%}
+{%- assign lb_show = true -%}
+{%- if section.settings.show_home == false and request.page_type == 'index' -%}{%- assign lb_show = false -%}{%- endif -%}
+{%- if lb_show -%}
+
 <style>
   #shopify-section-{{ section.id }} { background: {{ lb_bg }}; }
   {%- if section.settings.pin_bottom -%}
@@ -84,6 +89,8 @@
   </div>
 </div>
 
+{%- endif -%}
+
 {% schema %}
 {
   "name": "Dynamic Link Bar",
@@ -93,6 +100,7 @@
     { "type": "header", "content": "Visibility" },
     { "type": "checkbox", "id": "show_mobile", "label": "Show on phone", "default": true },
     { "type": "checkbox", "id": "show_desktop", "label": "Show on desktop", "default": true },
+    { "type": "checkbox", "id": "show_home", "label": "Show on the homepage (hero)", "default": true, "info": "Turn off to use this bar as a footer on your other pages but hide it on the homepage/hero." },
     { "type": "header", "content": "Bar" },
     { "type": "checkbox", "id": "pin_bottom", "label": "Pin to the bottom of the screen", "default": false, "info": "Fixes the bar to the bottom of the viewport like a footer, so it stays visible without scrolling." },
     { "type": "color", "id": "bg_color", "label": "Background", "default": "#171717" },
