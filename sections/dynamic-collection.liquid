@@ -213,7 +213,7 @@
   .dyn-col .dc-grid .dc-title { font-size: 15px; }
   .dyn-col .dc-grid .dc-price .dc-now { font-size: 13px; }
   .dyn-col .dc-grid .dc-price .dc-was { font-size: 12px; }
-  .dyn-col .dc-grid .dc-save { width: 32px; height: 32px; right: 8px; bottom: 8px; }
+  .dyn-col .dc-grid .dc-save { width: 32px; height: 32px; right: 8px; top: 8px; bottom: auto; }
   .dyn-col .dc-grid .dc-save svg { width: 16px; height: 16px; }
 
   .dyn-col .dc-shelf-arrow { position: absolute; top: 34%; transform: translateY(-50%); z-index: 5; width: 44px; height: 44px; border-radius: 50%;
@@ -235,7 +235,7 @@
   }
 
   /* Apple-Store-style card: name/price on top, image fills a soft gradient box below */
-  .dyn-col .dc-card { background: linear-gradient(180deg,#ffffff,#eceff3); border: 1px solid rgba(0,0,0,0.07); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; min-height: 460px; box-shadow: 0 6px 22px rgba(0,0,0,0.07); transition: box-shadow .25s ease, transform .25s ease; }
+  .dyn-col .dc-card { position: relative; background: linear-gradient(180deg,#ffffff,#eceff3); border: 1px solid rgba(0,0,0,0.07); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; min-height: 460px; box-shadow: 0 6px 22px rgba(0,0,0,0.07); transition: box-shadow .25s ease, transform .25s ease; }
   .dyn-col .dc-card:hover { box-shadow: 0 12px 34px rgba(0,0,0,0.11); transform: translateY(-3px); }
 
   /* Full-bleed mode: product image fills the whole box, name/price overlay on top */
@@ -271,7 +271,7 @@
 
   /* Instagram-style save (bookmark) button, bottom-right of the image. */
   .dyn-col .dc-media-wrap { position: relative; }
-  .dyn-col .dc-save { position: absolute; right: 10px; bottom: 10px; z-index: 3;
+  .dyn-col .dc-save { position: absolute; right: 10px; top: 10px; z-index: 5;
     width: 38px; height: 38px; border-radius: 50%; border: 0; cursor: pointer; padding: 0;
     display: inline-flex; align-items: center; justify-content: center; color: var(--ink);
     background: rgba(255,255,255,0.7); -webkit-backdrop-filter: blur(10px) saturate(1.4); backdrop-filter: blur(10px) saturate(1.4);
@@ -689,6 +689,8 @@
                 {{ 'product-1' | placeholder_svg_tag: 'dc-img-1 dc-ph' }}
               {%- endif -%}
             </a>
+            </div>
+            {%- comment -%} Save button lives on the card (not the image) so it can pin to the card's top-right corner in every layout. {%- endcomment -%}
             <button type="button" class="dc-save" aria-label="Save to wishlist" aria-pressed="false"
               data-wl-id="{{ product.handle }}"
               data-wl-title="{{ product.title | escape }}"
@@ -697,7 +699,6 @@
               data-wl-price="{{ product.price | money }}">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1Z"/></svg>
             </button>
-            </div>
 
             <div class="dc-body">
               {%- if section.settings.show_vendor and product.vendor != blank -%}
