@@ -795,7 +795,10 @@
       {%- comment -%} Print the row + banners in block order. {%- endcomment -%}
       {%- assign has_row_block = false -%}
       {%- for b in section.blocks -%}{%- if b.type == 'product_row' -%}{%- assign has_row_block = true -%}{%- endif -%}{%- endfor -%}
-      {%- unless has_row_block -%}{{ dc_shelf_html }}{%- endunless -%}
+      {%- comment -%} The row now shows ONLY when a "Popular products row" block is
+           added. When it isn't, the shelf is still emitted but kept hidden (off the
+           page) because the search / grid script relies on #dcGrid existing. {%- endcomment -%}
+      {%- unless has_row_block -%}<div class="dc-shelf-hidden" style="display:none" aria-hidden="true">{{ dc_shelf_html }}</div>{%- endunless -%}
       {%- assign banners_done = false -%}
       {%- for block in section.blocks -%}
         {%- if block.type == 'product_row' -%}
@@ -1694,7 +1697,7 @@
   ],
   "blocks": [
     { "type": "product_row", "name": "Popular products row", "limit": 1, "settings": [
-      { "type": "paragraph", "content": "The horizontal best-seller row. Drag this block up or down to move the row above or below your promo banners." },
+      { "type": "paragraph", "content": "Adds the horizontal best-seller row to the page (it only shows when this block is present). Drag this block up or down to place the row above or below your promo banners." },
       { "type": "text", "id": "heading", "label": "Heading", "default": "Popular products" }
     ]},
     { "type": "tab", "name": "Image category tab", "settings": [
