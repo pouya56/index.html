@@ -27,6 +27,7 @@
     --serif: "Cormorant Garamond", Georgia, "Times New Roman", Times, serif;
     font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased;
     background: {{ section.settings.bg_color | default: '#ffffff' }};
+    overflow-x: clip; /* never let policy content push the page sideways on phones */
   }
   .dyn-pol, .dyn-pol *, .dyn-pol *::before, .dyn-pol *::after { box-sizing: border-box; }
   .dyn-pol .dp-wrap { max-width: 1180px; margin: 0 auto; padding: clamp(14px, 2vw, 24px) 22px clamp(48px, 7vw, 80px); }
@@ -42,8 +43,10 @@
     font-weight: 500; font-size: clamp(32px, 5.5vw, 54px); line-height: 1.03; letter-spacing: -0.01em; margin: 0; }
   .dyn-pol .dp-head p { margin: 14px 0 0; font-size: 16px; line-height: 1.6; color: var(--ink-soft); max-width: 720px; }
 
-  .dyn-pol .dp-layout { display: grid; grid-template-columns: 260px 1fr; gap: clamp(28px, 5vw, 64px); align-items: start; }
-  @media (max-width: 860px) { .dyn-pol .dp-layout { grid-template-columns: 1fr; gap: 22px; } }
+  .dyn-pol .dp-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: clamp(28px, 5vw, 64px); align-items: start; }
+  @media (max-width: 860px) { .dyn-pol .dp-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; } }
+  /* Let both columns shrink below their content width so long links / wide tables can't stretch the page. */
+  .dyn-pol .dp-nav, .dyn-pol .dp-panels { min-width: 0; }
 
   /* Left tab rail (desktop) */
   .dyn-pol .dp-nav { position: sticky; top: 20px; }
@@ -71,7 +74,8 @@
   .dyn-pol .dp-updated { font-size: 13px; color: var(--ink-faint); margin-bottom: 24px; }
 
   /* Rich-text styling for the policy body */
-  .dyn-pol .dp-rte { font-size: 16px; line-height: 1.75; color: #35353b; max-width: 760px; }
+  .dyn-pol .dp-rte { font-size: 16px; line-height: 1.75; color: #35353b; max-width: 760px; overflow-wrap: anywhere; word-break: break-word; }
+  .dyn-pol .dp-rte img { max-width: 100%; height: auto; }
   .dyn-pol .dp-rte h1, .dyn-pol .dp-rte h2, .dyn-pol .dp-rte h3, .dyn-pol .dp-rte h4 { font-family: var(--font); color: var(--ink);
     font-weight: 600; line-height: 1.3; margin: 32px 0 12px; }
   .dyn-pol .dp-rte h1 { font-size: 24px; } .dyn-pol .dp-rte h2 { font-size: 21px; } .dyn-pol .dp-rte h3 { font-size: 18px; }
@@ -82,7 +86,8 @@
   .dyn-pol .dp-rte a:hover { text-decoration: underline; }
   .dyn-pol .dp-rte strong { color: var(--ink); }
   .dyn-pol .dp-rte hr { border: none; border-top: 1px solid var(--line); margin: 28px 0; }
-  .dyn-pol .dp-rte table { width: 100%; border-collapse: collapse; margin: 0 0 16px; font-size: 15px; }
+  /* Wide policy tables scroll sideways within their own box instead of stretching the page. */
+  .dyn-pol .dp-rte table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-collapse: collapse; margin: 0 0 16px; font-size: 15px; }
   .dyn-pol .dp-rte th, .dyn-pol .dp-rte td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
 
   .dyn-pol .dp-empty { padding: 48px 0; color: var(--ink-soft); font-size: 16px; }
