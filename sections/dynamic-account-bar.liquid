@@ -491,9 +491,10 @@
        too — thicken its frost while the veil is up to keep it bright. */
     html.dyn-ablock .dyn-abar .dh-apps-pop { background: rgba(255, 255, 255, 0.72); }
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-apps-pop, .dyn-abar .dh-app { animation: none !important; transition: none !important; } }
-    /* He's the SAME size everywhere — the 50% bigger desktop look also applies
-       on phones (every fixed-px feature scales with him; percent-based parts
-       like the lids follow automatically). */
+    /* Desktop: he's 50% bigger — every fixed-px feature scales with him
+       (percent-based parts like the lids follow automatically). Phones keep
+       the smaller base size. */
+    @media (min-width: 900px) {
     .dyn-abar .dh-apps-btn { width: 96px; height: 96px; }
     .dyn-abar .dh-orb-eyes { gap: 4px; margin-right: 14px; }
     .dyn-abar .dh-orb-eye { width: 33px; height: 43px; }
@@ -513,6 +514,7 @@
     .dyn-abar .dh-apps-btn.is-asleep::after, .dyn-abar .dh-apps-btn.is-happy::after { font-size: 22px; }
     .dyn-abar .dh-orb-eyes.is-nervous::after { width: 9px; height: 12px; right: -12px; top: -10px; }
     .dyn-abar .dh-orb-eyes.is-sad::before { width: 7.5px; height: 10px; right: 5px; top: 21px; }
+    }
     /* Vision-style launcher (tablet/desktop): clicking the orb reveals a
        vertical glass tab bar above or below him; each tab opens one
        floating smoked-glass window beside it showing that tab's content.
@@ -664,6 +666,8 @@
       .dyn-abar .dh-apps-pop.is-vision .dh-w-quote { width: 100%; height: auto; aspect-ratio: 1 / 1; }
       .dyn-abar .dh-apps-pop.is-vision #dynAbSaved, .dyn-abar .dh-apps-pop.is-vision #dynAbCart { width: 100%; }
       .dyn-abar .dh-apps-pop.is-vision .dh-apps-grid { grid-template-columns: repeat(2, 1fr); }
+      .dyn-abar .dh-ptabs { gap: 5px; margin-bottom: 10px; }
+      .dyn-abar .dh-ptab { padding: 7px 11px; font-size: 12px; }
     }
     /* Widgets tab layout — no card grid. The date banner and the clock ride
        the top row side by side ("date and hours on top"); the quote drops to
@@ -1727,13 +1731,20 @@
       var br2 = btn.getBoundingClientRect();
       vbar.classList.add("is-on");
       var bw = vbar.offsetWidth, bh = vbar.offsetHeight;
-      /* The bar stands beside him — on whichever side faces the screen
-         center — vertically centered on the orb. */
-      var orbLeftHalf = br2.left + br2.width / 2 < innerWidth / 2;
-      var bx = orbLeftHalf ? br2.right + 14 : br2.left - 14 - bw;
-      var by = br2.top + br2.height / 2 - bh / 2;
-      vbar.style.left = Math.round(Math.min(Math.max(12, bx), innerWidth - bw - 12)) + "px";
-      vbar.style.top = Math.round(Math.min(Math.max(12, by), innerHeight - bh - 12)) + "px";
+      if (innerWidth <= 700) {
+        /* Phone: pin the bar to the right edge, vertically centered on the
+           screen, so the window has the whole left side to itself. */
+        vbar.style.left = Math.round(innerWidth - bw - 10) + "px";
+        vbar.style.top = Math.round(Math.max(12, (innerHeight - bh) / 2)) + "px";
+      } else {
+        /* The bar stands beside him — on whichever side faces the screen
+           center — vertically centered on the orb. */
+        var orbLeftHalf = br2.left + br2.width / 2 < innerWidth / 2;
+        var bx = orbLeftHalf ? br2.right + 14 : br2.left - 14 - bw;
+        var by = br2.top + br2.height / 2 - bh / 2;
+        vbar.style.left = Math.round(Math.min(Math.max(12, bx), innerWidth - bw - 12)) + "px";
+        vbar.style.top = Math.round(Math.min(Math.max(12, by), innerHeight - bh - 12)) + "px";
+      }
       paintVision();
     });
     /* Position the active tab's window beside the bar, toward the screen
