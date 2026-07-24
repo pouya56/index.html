@@ -1223,8 +1223,14 @@
       }
       return f;
     }
+    var vChatBusy = false;
     function openChat() {
       var W = window;
+      /* Re-entrancy guard: the launcher hunt below fires synthetic clicks, and if
+         one ever lands back on our own tab it must not loop. */
+      if (vChatBusy) return;
+      vChatBusy = true;
+      setTimeout(function () { vChatBusy = false; }, 3500);
       /* Fold the launcher away so the chat isn't hidden behind it. */
       try { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); } catch (eC0) {}
       vbar.classList.remove("is-on");
@@ -1267,7 +1273,15 @@
         if (f && f.btn && fireOpen(f.btn)) { scheduleRehide(); return true; }
         if (f && f.host && f.host !== (f && f.btn) && fireOpen(f.host)) { scheduleRehide(); return true; }
         for (var s = 0; s < sels.length; s++) {
-          var el = document.querySelector(sels[s]);
+          /* Skip anything inside our own bar — the generic selectors (e.g.
+             button[aria-label*='chat']) would otherwise match the Chat tab
+             itself and click it in a loop instead of the store's widget. */
+          var cand = document.querySelectorAll(sels[s]);
+          var el = null;
+          for (var c = 0; c < cand.length; c++) {
+            if (cand[c].closest && cand[c].closest(".dyn-abar")) continue;
+            el = cand[c]; break;
+          }
           if (!el) continue;
           if (el.shadowRoot) {
             var sb = el.shadowRoot.querySelector(".chat-lifecycle-button, [class*='lifecycle-button'], [class*='launcher']") || chatPierce(el.shadowRoot, 0);
@@ -1289,11 +1303,11 @@
       /* The widget script may still be loading — retry briefly, then link out. */
       var tries = 0;
       var poll = setInterval(function () {
-        if (tryOpen() || ++tries >= 8) {
+        if (tryOpen() || ++tries >= 6) {
           clearInterval(poll);
-          if (tries >= 8 && vChatFallback) location.href = vChatFallback;
+          if (tries >= 6 && vChatFallback) location.href = vChatFallback;
         }
-      }, 350);
+      }, 300);
     }
     /* Hide the native chat bubble as soon as it appears (widget loads late). */
     if (vHideBubble) {
