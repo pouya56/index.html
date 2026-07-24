@@ -551,7 +551,7 @@
     .dyn-abar .dh-ptabs[hidden] { display: none; }
     /* The Apps view opens with just the centered pills — the pane below
        stays empty until a page is picked. */
-    .dyn-abar .dh-apps-pop.is-vision[data-vtab="apps"] .dh-apps-grid { display: none; }
+    /* Apps tab shows the tile grid on every device — tiles navigate directly. */
     .dyn-abar .dh-ptab { border: none; border-radius: 999px; padding: 9px 15px; cursor: pointer;
       font: 600 13.5px/1 -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
       background: rgba(255, 255, 255, 0.5); color: #3a3a3f; transition: background 0.15s, color 0.15s; }
@@ -792,11 +792,9 @@
       .dyn-abar .dh-apps-pop.is-vision .dh-w-quote { width: 100%; height: auto; aspect-ratio: 1 / 1; }
       .dyn-abar .dh-apps-pop.is-vision #dynAbSaved, .dyn-abar .dh-apps-pop.is-vision #dynAbCart { width: 100%; }
       .dyn-abar .dh-apps-pop.is-vision .dh-apps-grid { grid-template-columns: repeat(2, 1fr); }
-      /* Phone: no page previews — the Apps tab is a simple grid of page
-         tiles that navigate directly. */
+      /* Phone: no page previews. */
       .dyn-abar .dh-ptabs { display: none !important; }
       .dyn-abar .dh-vprev { display: none !important; }
-      .dyn-abar .dh-apps-pop.is-vision[data-vtab="apps"] .dh-apps-grid { display: grid; }
       /* Widgets sized so the whole tab fits the window with no scrolling:
          content-height window, tighter cards, stacked single column. */
       .dyn-abar .dh-menu .dh-apps-pop.is-vision { height: auto; max-height: calc(100dvh - 90px); }
@@ -2124,7 +2122,7 @@
       var isSaved = tab === "saved", isCart = tab === "cart";
       var page = app || rev;
       /* The page-pill strip rides on top only for the Apps tabs. */
-      ptabs.hidden = !(tab === "apps" || app);
+      ptabs.hidden = true; /* apps are a plain grid everywhere — no page pills */
       Array.prototype.forEach.call(ptabs.children, function (c) {
         c.classList.toggle("is-on", c.getAttribute("data-vtab") === tab);
       });
@@ -2231,22 +2229,7 @@
       paintVision();
       if (tid === "search") setTimeout(function () { try { vsIn.focus(); } catch (eS0) {} }, 80);
     });
-    /* In the Apps grid, selecting an app opens its page in this same glass
-       window (home and outside links navigate normally). On phones there are
-       no in-window previews — tiles are plain links straight to their page. */
-    pop.addEventListener("click", function (e) {
-      if (!pop.classList.contains("is-vision")) return;
-      if (innerWidth <= 860) return;
-      var a = e.target.closest ? e.target.closest(".dh-apps-grid .dh-app") : null;
-      if (!a) return;
-      var i = vAllApps.indexOf(a);
-      if (i < 0) return;
-      var ap = vApps[i];
-      if (!ap || ap.home || ap.ext) return;
-      e.preventDefault();
-      pop.setAttribute("data-vtab", "app-" + i);
-      paintVision();
-    });
+    /* App tiles are plain links on every device — no in-window previews. */
 
   })();
   </script>
