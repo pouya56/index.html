@@ -676,6 +676,35 @@
     .dyn-abar .dh-wg-sub { font-size: 15px; font-weight: 600; color: #66666b; margin-top: 6px; letter-spacing: 0.04em; }
     .dyn-abar .dh-wg-quote { display: flex; align-items: center; justify-content: center; text-align: center; padding: 40px 28px; min-height: 170px; }
     .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 26px; font-weight: 700; color: #16232c; line-height: 1.35; }
+    /* Year-progress card: label + % top-right, inset track, pink gradient fill. */
+    .dyn-abar .dh-wg-year { padding: 20px 26px 24px; }
+    .dyn-abar .dh-wg-yearhead { display: flex; justify-content: flex-end; align-items: baseline; gap: 10px;
+      color: #3a3a3f; font-weight: 600; font-size: 15px; }
+    .dyn-abar .dh-wg-yearhead b { color: #e2708c; font-size: 20px; font-weight: 700; }
+    .dyn-abar .dh-wg-yeartrack { margin-top: 12px; height: 28px; border-radius: 999px; padding: 5px; box-sizing: border-box;
+      background: rgba(120, 120, 128, 0.12);
+      box-shadow: inset 0 3px 8px rgba(29, 29, 31, 0.14), inset 0 -1px 1px rgba(255, 255, 255, 0.7); }
+    .dyn-abar .dh-wg-yearfill { height: 100%; border-radius: 999px; width: 0;
+      background: linear-gradient(90deg, #c95d92, #eda1a8);
+      box-shadow: 0 2px 6px rgba(201, 93, 146, 0.35); transition: width 0.6s ease; }
+    /* Calendar card: month number + CALENDAR, inset weekday strip, day grid,
+       today in an orange rounded square. */
+    .dyn-abar .dh-wg-cal { width: min(400px, 100%); margin: 0 auto; padding: 22px 24px 26px; }
+    .dyn-abar .dh-wg-calhead { display: flex; justify-content: space-between; align-items: center;
+      color: #1d1d1f; padding: 0 6px 12px; }
+    .dyn-abar .dh-wg-calmo { font-size: 18px; font-weight: 600; }
+    .dyn-abar .dh-wg-caltitle { font-size: 15px; font-weight: 700; letter-spacing: 0.1em; }
+    .dyn-abar .dh-wg-caldays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+      padding: 8px 6px; border-radius: 999px; text-align: center;
+      background: rgba(120, 120, 128, 0.12);
+      box-shadow: inset 0 2px 6px rgba(29, 29, 31, 0.12), inset 0 -1px 1px rgba(255, 255, 255, 0.7);
+      font-size: 11px; font-weight: 600; color: #b0685a; }
+    .dyn-abar .dh-wg-calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+      margin-top: 10px; text-align: center; font-size: 15px; font-weight: 600; color: #1d1d1f; }
+    .dyn-abar .dh-wg-calgrid span { display: flex; align-items: center; justify-content: center;
+      height: 34px; border-radius: 10px; }
+    .dyn-abar .dh-wg-calgrid span.is-today { background: #e8a33d; color: #fff;
+      box-shadow: 0 3px 8px rgba(232, 163, 61, 0.45); }
     /* Phones get the SAME vision layout — bar beside the orb, floating glass
        window beside the bar — just sized to the narrower screen. */
     @media (max-width: 860px) {
@@ -701,6 +730,14 @@
       .dyn-abar .dh-wg-sub { font-size: 12px; }
       .dyn-abar .dh-wg-quote { padding: 24px 16px; min-height: 120px; }
       .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 18px; }
+      .dyn-abar .dh-wg-year { padding: 14px 16px 18px; }
+      .dyn-abar .dh-wg-yearhead { font-size: 13px; }
+      .dyn-abar .dh-wg-yearhead b { font-size: 17px; }
+      .dyn-abar .dh-wg-yeartrack { height: 22px; padding: 4px; }
+      .dyn-abar .dh-wg-cal { padding: 16px 14px 18px; }
+      .dyn-abar .dh-wg-caldays { font-size: 9.5px; }
+      .dyn-abar .dh-wg-calgrid { font-size: 13px; }
+      .dyn-abar .dh-wg-calgrid span { height: 28px; border-radius: 8px; }
       /* Saved & Cart: two columns of smaller item tiles. */
       .dyn-abar .dh-vgrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .dyn-abar .dh-vitem { padding: 8px; gap: 6px; border-radius: 14px; }
@@ -771,6 +808,17 @@
             </div>
             <div class="dh-wg dh-wg-quote">
               <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
+            </div>
+            {%- comment -%} How much of the year is left, as a soft pink progress bar. {%- endcomment -%}
+            <div class="dh-wg dh-wg-year">
+              <div class="dh-wg-yearhead"><span>The rest of the year</span><b id="dynAbYearPct">--%</b></div>
+              <div class="dh-wg-yeartrack"><div class="dh-wg-yearfill" id="dynAbYearFill"></div></div>
+            </div>
+            {%- comment -%} This month's calendar with today highlighted. {%- endcomment -%}
+            <div class="dh-wg dh-wg-cal">
+              <div class="dh-wg-calhead"><span class="dh-wg-calmo" id="dynAbCalMo">&nbsp;</span><span class="dh-wg-caltitle">CALENDAR</span></div>
+              <div class="dh-wg-caldays"><span>Sun</span><span>Mon</span><span>Tues</span><span>Wed</span><span>Thur</span><span>Fri</span><span>Sat</span></div>
+              <div class="dh-wg-calgrid" id="dynAbCalGrid"></div>
             </div>
             <div class="dh-w-mini dh-w-saved" id="dynAbSaved">
               <div class="dh-w-savedbox">
@@ -997,6 +1045,30 @@
     }
     tick();
     setInterval(tick, 1000);
+    /* Year-progress widget: how much of the year is still ahead. */
+    (function () {
+      var yFill = document.getElementById("dynAbYearFill"), yPct = document.getElementById("dynAbYearPct");
+      if (!yFill || !yPct) return;
+      var now = new Date();
+      var start = new Date(now.getFullYear(), 0, 1);
+      var end = new Date(now.getFullYear() + 1, 0, 1);
+      var remain = Math.max(0, Math.min(100, Math.round((end - now) / (end - start) * 100)));
+      yPct.textContent = remain + "%";
+      yFill.style.width = remain + "%";
+    })();
+    /* Calendar widget: this month, today highlighted. */
+    (function () {
+      var calGrid = document.getElementById("dynAbCalGrid"), calMo = document.getElementById("dynAbCalMo");
+      if (!calGrid || !calMo) return;
+      var d0 = new Date(), y = d0.getFullYear(), m = d0.getMonth();
+      calMo.textContent = String(m + 1);
+      var first = new Date(y, m, 1).getDay();
+      var days = new Date(y, m + 1, 0).getDate();
+      var html = "", b, dd;
+      for (b = 0; b < first; b++) html += "<span></span>";
+      for (dd = 1; dd <= days; dd++) html += "<span" + (dd === d0.getDate() ? ' class="is-today"' : "") + ">" + dd + "</span>";
+      calGrid.innerHTML = html;
+    })();
     /* Focus card: a fresh motivation line on every open. Merchant lines from
        the settings (one per line) win; otherwise the built-in list. A shuffle
        bag guarantees no repeat until every line has had its turn. */
