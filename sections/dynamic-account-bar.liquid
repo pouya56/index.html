@@ -1200,8 +1200,10 @@
       if (!f || !f.btn) return;
       try {
         var r = f.btn.getBoundingClientRect();
-        /* Only hide the small collapsed bubble; leave a big open panel alone. */
-        if (r.width && r.width < 150 && r.height < 150) {
+        /* Only hide the collapsed launcher; leave a big open panel alone.
+           Inbox's default launcher is a text pill (~180x56), so allow width
+           up to 300 — an open chat panel is far taller than 120px. */
+        if (r.width && r.width < 300 && r.height < 120) {
           f.btn.style.setProperty("visibility", "hidden", "important");
           f.btn.style.setProperty("pointer-events", "none", "important");
         }
@@ -1317,6 +1319,15 @@
         hideNativeChat();
         if (++hideTries >= 20) clearInterval(hidePoll);
       }, 500);
+      /* Inbox can lazy-load well after those first 10s — keep watching the DOM
+         for it indefinitely (rAF-throttled, so it costs next to nothing). */
+      var hideRaf = 0;
+      try {
+        new MutationObserver(function () {
+          if (hideRaf) return;
+          hideRaf = requestAnimationFrame(function () { hideRaf = 0; hideNativeChat(); });
+        }).observe(document.documentElement, { childList: true, subtree: true });
+      } catch (eH2) {}
     }
     /* Every app gets its own tab; its window shows a live preview of the
        page (same-shop links embed; outside links get an Open button). */
