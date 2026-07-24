@@ -740,7 +740,8 @@
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)); pointer-events: none; }
     /* Search tab: the hero's liquid-glass search pill inside the window. */
     .dyn-abar .dh-vsearch { display: none; }
-    .dyn-abar .dh-apps-pop.is-vision[data-vtab="search"] .dh-apps-head { display: none; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="search"] .dh-apps-head,
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="search"] .dh-apps-grid { display: none; }
     .dyn-abar .dh-apps-pop.is-vision[data-vtab="search"] .dh-vsearch { display: flex; align-items: center; justify-content: center; padding: 22px 6px; }
     .dyn-abar .dh-vsearch-bar { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; max-width: 640px; padding: 9px; border-radius: 26px;
       background: rgba(255, 255, 255, 0.62); -webkit-backdrop-filter: blur(22px) saturate(1.8); backdrop-filter: blur(22px) saturate(1.8);
@@ -1571,7 +1572,7 @@
     /* Search tab: the hero's search pill living in the glass window — same
        typewriter placeholder, same arrow states, same ?q= destination (the
        hero page reads ?q on load and shows the results). */
-    var vSearchUrl = {{ section.settings.search_url | default: routes.root_url | json }};
+    var vSearchUrl = {{ section.settings.search_url | default: routes.all_products_collection_url | json }};
     var vSearchTyping = {{ section.settings.search_examples | default: '' | json }};
     var vsearch = document.createElement("div");
     vsearch.className = "dh-vsearch";
@@ -2278,7 +2279,7 @@
 
     { "type": "header", "content": "Search tab" },
     { "type": "checkbox", "id": "show_search_tab", "label": "Show Search tab", "default": true, "info": "The hero's search pill inside the glass window — same typing examples, same arrow, same results." },
-    { "type": "url", "id": "search_url", "label": "Search results page", "info": "Where the search goes with ?q=… — leave blank for the homepage (the hero reads the query and shows results)." },
+    { "type": "url", "id": "search_url", "label": "Search results page", "info": "Where the search goes with ?q=…. Set it to your Shop page (the one with the Dynamic Collection search) — the same page the hero's 'Show results on another page' setting points to. Leave blank for /collections/all." },
     { "type": "textarea", "id": "search_examples", "label": "Typing examples (one per line)", "default": "I'm shopping for my wife.\nI'm looking for a birthday gift.\nI need a gift for my mom.\nI'm shopping for my dad.\nI want a gift for my best friend.\nI need an anniversary gift.\nI want something personalized.\nI'm looking for a unique gift.\nI need a Christmas gift.\nI want a custom mug.", "info": "They type out in the search box one after another, like the hero." },
 
     { "type": "header", "content": "Calendar reminders" },
