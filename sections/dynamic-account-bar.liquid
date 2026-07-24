@@ -628,6 +628,18 @@
     .dyn-abar .dh-vprev-hold .dyn-acct .da-topbar,
     .dyn-abar .dh-vprev-hold .dyn-acct .da-nav { display: none !important; }
     .dyn-abar .dh-vprev-hold .dyn-acct .da-wrap { display: block; padding: 0; }
+    /* The About page (feature block) compacts for the window: its desktop
+       layout assumes a full viewport, so in ~800px the overlaid caption and
+       pill list collide. Shrink the card, pin the caption bottom-right at a
+       smaller size (pills keep the left), and drop the full-screen sizing. */
+    .dyn-abar .dh-vprev-hold .dyn-fb { --fb-cardh: 460px !important; min-height: 0 !important; padding: 6px 0 10px !important; }
+    .dyn-abar .dh-vprev-hold .dyn-fb .fb-wrap { width: 100% !important; }
+    .dyn-abar .dh-vprev-hold .dyn-fb .fb-head { margin-bottom: 14px !important; }
+    .dyn-abar .dh-vprev-hold .dyn-fb .fb-list { max-width: 320px !important; }
+    .dyn-abar .dh-vprev-hold .dyn-fb .fb-cap { top: auto !important; left: auto !important; right: 3% !important; bottom: 3% !important;
+      transform: none !important; text-align: right !important; max-width: 46% !important; padding: 12px 16px !important; }
+    .dyn-abar .dh-vprev-hold .dyn-fb .fb-cap-title { font-size: 22px !important; }
+    .dyn-abar .dh-vprev-hold .dyn-fb .fb-cap-text { font-size: 12.5px !important; margin-top: 6px !important; }
     /* The bar can hold many tabs — it scrolls quietly if the screen is short. */
     .dyn-abar .dh-vbar { max-height: calc(100vh - 24px); overflow-y: auto;
       scrollbar-width: none; -ms-overflow-style: none; }
