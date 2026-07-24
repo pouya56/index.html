@@ -738,6 +738,40 @@
     .dyn-abar .dh-apps-btn { position: relative; }
     .dyn-abar .dh-orb-badge { position: absolute; top: -5px; right: -5px; z-index: 5; font-size: 16px;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)); pointer-events: none; }
+    /* Search tab: the hero's liquid-glass search pill inside the window. */
+    .dyn-abar .dh-vsearch { display: none; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="search"] .dh-apps-head { display: none; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="search"] .dh-vsearch { display: flex; align-items: center; justify-content: center; padding: 22px 6px; }
+    .dyn-abar .dh-vsearch-bar { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; max-width: 640px; padding: 9px; border-radius: 26px;
+      background: rgba(255, 255, 255, 0.62); -webkit-backdrop-filter: blur(22px) saturate(1.8); backdrop-filter: blur(22px) saturate(1.8);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 14px 44px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.9); transition: box-shadow .18s; }
+    .dyn-abar .dh-vsearch-bar:focus-within { box-shadow: 0 14px 44px rgba(0, 0, 0, 0.14), 0 0 0 4px rgba(0, 113, 227, 0.14); }
+    .dyn-abar .dh-vs-plus, .dyn-abar .dh-vs-go { position: relative; z-index: 2; flex: none; width: 46px; height: 46px; border-radius: 15px; border: none;
+      display: grid; place-items: center; cursor: pointer; background: rgba(120, 120, 128, 0.14); transition: background .16s, transform .1s; }
+    .dyn-abar .dh-vs-plus:hover, .dyn-abar .dh-vs-go:hover { background: rgba(120, 120, 128, 0.22); }
+    .dyn-abar .dh-vs-plus:active, .dyn-abar .dh-vs-go:active { transform: scale(0.93); }
+    .dyn-abar .dh-vs-plus svg { width: 22px; height: 22px; fill: none; stroke: #6e6e73; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .dyn-abar .dh-vs-input { flex: 1 1 auto; min-width: 0; width: 100%; border: none; background: transparent; font-size: 17px; color: #1d1d1f; padding: 0 6px; }
+    .dyn-abar .dh-vs-input::placeholder { color: #86868b; }
+    .dyn-abar .dh-vs-input:focus { outline: none; box-shadow: none; }
+    .dyn-abar .dh-vs-go { overflow: visible; }
+    .dyn-abar .dh-vs-go .dh-go-ic { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0;
+      transform: scale(.5) rotate(-35deg); transition: opacity .26s ease, transform .34s cubic-bezier(.22, 1, .36, 1); }
+    .dyn-abar .dh-vs-go .dh-go-ic svg { width: 20px; height: 20px; fill: none; stroke: #1d1d1f; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    .dyn-abar .dh-vs-go .dh-go-back { opacity: 1; transform: none; }
+    .dyn-abar .dh-vs-go.has-text .dh-go-back { opacity: 0; transform: scale(.5) rotate(35deg); }
+    .dyn-abar .dh-vs-go.has-text .dh-go-up { opacity: 1; transform: none; }
+    .dyn-abar .dh-vs-go.is-ok .dh-go-back, .dyn-abar .dh-vs-go.is-ok .dh-go-up { opacity: 0; }
+    .dyn-abar .dh-vs-go.is-ok .dh-go-check { opacity: 1; transform: none; }
+    .dyn-abar .dh-vs-go.is-ok { background: #1a7f37; }
+    .dyn-abar .dh-vs-go.is-ok .dh-go-ic svg { stroke: #fff; }
+    @keyframes abSiri { to { background-position: 300% 0; } }
+    .dyn-abar .dh-vs-go::before { content: ""; position: absolute; inset: -4px; border-radius: 19px; z-index: -1; pointer-events: none;
+      background: linear-gradient(90deg, #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff); background-size: 300% 100%;
+      animation: abSiri 6s linear infinite; filter: blur(8px); opacity: 0; transition: opacity .35s ease; }
+    .dyn-abar .dh-vs-go:hover::before, .dyn-abar .dh-vs-go.has-text::before { opacity: 0.95; }
+    @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-vs-go::before { animation: none; } }
     /* Arrange so the whole tab fits the window without scrolling: clock on
        top, then the quote and calendar sharing one row. */
     .dyn-abar .dh-wg-time { order: 1; }
@@ -780,6 +814,11 @@
       .dyn-abar .dh-wg-caldays { font-size: 9px; padding: 6px 4px; }
       .dyn-abar .dh-wg-calgrid { font-size: 11.5px; margin-top: 8px; }
       .dyn-abar .dh-wg-calgrid span { height: 22px; border-radius: 6px; }
+      /* Search pill sized for the narrow window (16px input avoids iOS zoom). */
+      .dyn-abar .dh-apps-pop.is-vision[data-vtab="search"] .dh-vsearch { padding: 10px 2px; }
+      .dyn-abar .dh-vsearch-bar { gap: 8px; padding: 7px; }
+      .dyn-abar .dh-vs-plus, .dyn-abar .dh-vs-go { width: 40px; height: 40px; border-radius: 13px; }
+      .dyn-abar .dh-vs-input { font-size: 16px; }
       /* Saved & Cart: two columns of smaller item tiles. */
       .dyn-abar .dh-vgrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .dyn-abar .dh-vitem { padding: 8px; gap: 6px; border-radius: 14px; }
@@ -1432,6 +1471,7 @@
     vbar.className = "dh-vbar";
     vbar.innerHTML =
       '<button type="button" class="dh-vtab is-on" data-vtab="widgets" aria-label="Widgets"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button>' +
+      '{% if section.settings.show_search_tab == false %}{% else %}<button type="button" class="dh-vtab" data-vtab="search" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>{% endif %}' +
       '<button type="button" class="dh-vtab" data-vtab="saved" aria-label="Saved"><svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1Z"/></svg></button>' +
       '<button type="button" class="dh-vtab" data-vtab="cart" aria-label="Cart"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2 3h3l2.5 13h11l2-8H6"/></svg></button>' +
       '<button type="button" class="dh-vtab" data-vtab="apps" aria-label="Apps"><svg viewBox="0 0 24 24"><circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/><circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/></svg></button>' +
@@ -1528,6 +1568,72 @@
     vgo.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>';
     pop.appendChild(vgo);
     pop.appendChild(vgrid);
+    /* Search tab: the hero's search pill living in the glass window — same
+       typewriter placeholder, same arrow states, same ?q= destination (the
+       hero page reads ?q on load and shows the results). */
+    var vSearchUrl = {{ section.settings.search_url | default: routes.root_url | json }};
+    var vSearchTyping = {{ section.settings.search_examples | default: '' | json }};
+    var vsearch = document.createElement("div");
+    vsearch.className = "dh-vsearch";
+    vsearch.innerHTML = '<div class="dh-vsearch-bar">' +
+      '<button type="button" class="dh-vs-plus" aria-label="Search" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>' +
+      '<input type="search" class="dh-vs-input" autocomplete="off" aria-label="Search products" placeholder="Search&hellip;">' +
+      '<button type="button" class="dh-vs-go" aria-label="Search">' +
+        '<span class="dh-go-ic dh-go-back"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>' +
+        '<span class="dh-go-ic dh-go-up"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span>' +
+        '<span class="dh-go-ic dh-go-check"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>' +
+      '</button></div>';
+    pop.appendChild(vsearch);
+    var vsIn = vsearch.querySelector(".dh-vs-input");
+    var vsGo = vsearch.querySelector(".dh-vs-go");
+    vsearch.querySelector(".dh-vsearch-bar").addEventListener("mousedown", function (e) {
+      if (e.target === vsIn || (e.target.closest && e.target.closest("button, input"))) return;
+      e.preventDefault(); vsIn.focus();
+    });
+    vsearch.querySelector(".dh-vs-plus").addEventListener("click", function () { vsIn.focus(); });
+    vsIn.addEventListener("input", function () { vsGo.classList.toggle("has-text", !!vsIn.value.trim()); });
+    function vsRun() {
+      var q = (vsIn.value || "").trim();
+      if (!q) { vsIn.focus(); return; }
+      vsGo.classList.add("is-ok");
+      setTimeout(function () {
+        location.href = vSearchUrl + (vSearchUrl.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q);
+      }, 430);
+    }
+    vsIn.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); vsRun(); } });
+    vsGo.addEventListener("click", vsRun);
+    /* Typewriter placeholder, exactly like the hero: pauses on focus/typing. */
+    (function () {
+      var phrases = (vSearchTyping || "").split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+      if (!phrases.length) phrases = ["I'm looking for a unique gift.", "I need a gift for my mom.",
+        "I want something personalized.", "I'm shopping for my best friend."];
+      if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      var pi = 0, ci = 0, deleting = false, paused = false, timer = null;
+      function tick() {
+        if (paused) return;
+        var word = phrases[pi];
+        if (!deleting) {
+          ci++;
+          vsIn.setAttribute("placeholder", word.slice(0, ci));
+          if (ci >= word.length) { deleting = true; timer = setTimeout(tick, 1600); return; }
+          timer = setTimeout(tick, 55);
+        } else {
+          ci--;
+          vsIn.setAttribute("placeholder", word.slice(0, ci));
+          if (ci <= 0) { deleting = false; pi = (pi + 1) % phrases.length; timer = setTimeout(tick, 350); return; }
+          timer = setTimeout(tick, 28);
+        }
+      }
+      vsIn.addEventListener("focus", function () {
+        paused = true; if (timer) { clearTimeout(timer); timer = null; }
+        vsIn.setAttribute("placeholder", "Search…");
+      });
+      vsIn.addEventListener("blur", function () {
+        if (vsIn.value) return;
+        paused = false; pi = 0; ci = 0; deleting = false; tick();
+      });
+      tick();
+    })();
     function vEsc(x) {
       return String(x == null ? "" : x).replace(/[&<>"']/g, function (c) {
         return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -2122,6 +2228,7 @@
       }
       pop.setAttribute("data-vtab", tid);
       paintVision();
+      if (tid === "search") setTimeout(function () { try { vsIn.focus(); } catch (eS0) {} }, 80);
     });
     /* In the Apps grid, selecting an app opens its page in this same glass
        window (home and outside links navigate normally). On phones there are
@@ -2168,6 +2275,11 @@
     { "type": "header", "content": "Apps window dashboard" },
     { "type": "checkbox", "id": "show_widgets", "label": "Show greeting, clock & widgets", "default": true, "info": "The dashboard at the top of the 9-dots window: greeting + date, live analog clock, a rotating focus line, and the visitor's saved items." },
     { "type": "textarea", "id": "focus_quotes", "label": "Focus sentences (one per line)", "info": "A random one shows each time the window opens, never repeating until all have had a turn. Leave empty for the built-in set of 18." },
+
+    { "type": "header", "content": "Search tab" },
+    { "type": "checkbox", "id": "show_search_tab", "label": "Show Search tab", "default": true, "info": "The hero's search pill inside the glass window — same typing examples, same arrow, same results." },
+    { "type": "url", "id": "search_url", "label": "Search results page", "info": "Where the search goes with ?q=… — leave blank for the homepage (the hero reads the query and shows results)." },
+    { "type": "textarea", "id": "search_examples", "label": "Typing examples (one per line)", "default": "I'm shopping for my wife.\nI'm looking for a birthday gift.\nI need a gift for my mom.\nI'm shopping for my dad.\nI want a gift for my best friend.\nI need an anniversary gift.\nI want something personalized.\nI'm looking for a unique gift.\nI need a Christmas gift.\nI want a custom mug.", "info": "They type out in the search box one after another, like the hero." },
 
     { "type": "header", "content": "Calendar reminders" },
     { "type": "paragraph", "content": "Shoppers tap a calendar day to save events like “Jack's birthday”. Days get a dot, and when an event is close the mascot shows a gift nudge (with a badge on him). With a Klaviyo key below, signed-in customers also get the event saved to their Klaviyo profile as gift_event_name and gift_event_date — build ONE flow in Klaviyo: trigger “Date property · gift_event_date”, timing e.g. 21 days before, repeat yearly, and it emails the reminder automatically." },
