@@ -1176,7 +1176,8 @@
       }
       return null;
     }
-    var chatHosts = ["inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']"];
+    var chatHosts = ["inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']",
+      "#ShopifyChat", "[id^='ShopifyChat']", "iframe[title*='chat' i]", "[class^='shopify-chat']"];
     function findChatLauncher() {
       for (var i = 0; i < chatHosts.length; i++) {
         var h = document.querySelector(chatHosts[i]);
