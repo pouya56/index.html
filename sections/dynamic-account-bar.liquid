@@ -370,12 +370,13 @@
     /* Uploaded images fill the whole tile (the .dh-app-ic box stays in the
        flow as an invisible spacer so image tiles match their siblings'
        height); the label sits on a soft dark fade for contrast. */
-    .dyn-abar .dh-app.has-img { position: relative; overflow: hidden; isolation: isolate; }
+    .dyn-abar .dh-app.has-img { position: relative; overflow: hidden; isolation: isolate;
+      /* Just the picture: no smoked tile behind it, a small lift shadow instead. */
+      background: transparent; border: none;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16); }
+    .dyn-abar .dh-app.has-img:hover { background: transparent; box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22); }
     .dyn-abar .dh-app.has-img .dh-app-ic img { position: absolute; inset: 0; width: 100%; height: 100%;
       object-fit: cover; z-index: -2; }
-    .dyn-abar .dh-app.has-img::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0;
-      height: 48%; z-index: -1; pointer-events: none;
-      background: linear-gradient(0deg, rgba(0, 0, 0, 0.48), rgba(0, 0, 0, 0)); }
     .dyn-abar .dh-app.has-img .dh-app-label { text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); }
     .dyn-abar .dh-app-init { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px;
       border-radius: 14px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.12);
@@ -541,7 +542,7 @@
     .dyn-abar .dh-vtab.is-on svg { filter: none; }
     /* The window: one dark smoked pane showing the active tab. */
     .dyn-abar .dh-menu .dh-apps-pop.is-vision { position: fixed; right: auto; bottom: auto;
-      width: 840px; max-width: calc(100vw - 240px); height: auto; max-height: min(80vh, 760px); overflow-y: auto;
+      width: 590px; max-width: calc(100vw - 240px); height: auto; max-height: min(84vh, 600px); overflow-y: auto;
       background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 30px;
       -webkit-backdrop-filter: blur(32px) saturate(1.9) brightness(1.06); backdrop-filter: blur(32px) saturate(1.9) brightness(1.06);
       box-shadow: 0 30px 70px -22px rgba(29, 29, 31, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.8), inset 0 -10px 22px rgba(255, 255, 255, 0.12);
@@ -565,7 +566,7 @@
     .dyn-abar .dh-ptab.is-on { background: rgba(42, 42, 47, 0.85); color: #fff; }
     /* Saved & Cart tabs: every item is its own glass tile in a grid. */
     .dyn-abar .dh-vgrid[hidden] { display: none; }
-    .dyn-abar .dh-vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+    .dyn-abar .dh-vgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
     .dyn-abar .dh-vitem { position: relative; display: flex; flex-direction: column; gap: 8px; text-decoration: none;
       background: rgba(255, 255, 255, 0.55); border-radius: 18px; padding: 12px;
       box-shadow: 0 10px 24px -12px rgba(29, 29, 31, 0.3); transition: transform 0.15s ease, box-shadow 0.15s ease; }
@@ -598,7 +599,7 @@
       stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-apps-pop.is-vision .dh-apps-head { display: flex; flex-wrap: wrap; gap: 16px;
       align-items: center; justify-content: center; margin: 0; }
-    .dyn-abar .dh-apps-pop.is-vision .dh-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .dyn-abar .dh-apps-pop.is-vision .dh-apps-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
     /* Tab filtering — only the active tab's content shows. */
     .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-apps-grid,
     .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] #dynAbSaved,
@@ -1480,7 +1481,8 @@
       '<button type="button" class="dh-vtab" data-vtab="saved" aria-label="Saved"><svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1Z"/></svg></button>' +
       '<button type="button" class="dh-vtab" data-vtab="cart" aria-label="Cart"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2 3h3l2.5 13h11l2-8H6"/></svg></button>' +
       '<button type="button" class="dh-vtab" data-vtab="apps" aria-label="Apps"><svg viewBox="0 0 24 24"><circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/><circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/></svg></button>' +
-      '<button type="button" class="dh-vtab" data-vtab="account" aria-label="Account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></button>';
+      '<button type="button" class="dh-vtab" data-vtab="account" aria-label="Account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></button>' +
+      '<button type="button" class="dh-vtab" data-vtab="home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></button>';
     host.appendChild(vbar);
     /* Every app gets its own tab; its window shows a live preview of the
        page (same-shop links embed; outside links get an Open button). */
@@ -2226,6 +2228,8 @@
       /* The person icon is a door: profile on Shopify's site when signed
          in, secure login when signed out. */
       if (tid === "account") { location.href = vCust ? vProf : vLogin; return; }
+      /* Home is a plain door — no window, just go. */
+      if (tid === "home") { location.href = {{ routes.root_url | json }}; return; }
       if (tid.indexOf("app-") === 0) {
         var tap = vApps[parseInt(tid.slice(4), 10)];
         /* Home is a plain door — no window, just go. */
