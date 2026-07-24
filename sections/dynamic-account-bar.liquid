@@ -1226,55 +1226,86 @@
       }
       return f;
     }
-    /* -------- Dock the chat window beside the bar (not the corner). --------
-       While open, the <shopify-chat> host becomes a fixed box in the same spot
-       the bar's own window uses; its transform makes the widget's fixed-position
-       panel anchor inside that box. Undocks when the chat closes. Needs an open
-       shadow root (to see the close); otherwise the corner behaviour stays. */
-    var dockPoll = 0;
-    function chatMaxRect(node, depth) {
-      if (!node || depth > 4) return 0;
-      var best = 0, els = node.querySelectorAll ? node.querySelectorAll("*") : [];
+    /* -------- Dock the chat window beside the bar (like Saved/Cart). --------
+       Inbox positions its window with its own JS, so instead of moving the host
+       we restyle the PANEL element inside the widget's shadow DOM: pin it onto
+       the same rectangle the bar's glass window uses, keep re-asserting it, and
+       release it when the chat closes. Needs an open shadow root. */
+    var dockPoll = 0, dockPanel = null;
+    function findChatPanel(node, depth) {
+      if (!node || depth > 4) return null;
+      var best = null, bestA = 0;
+      var els = node.querySelectorAll ? node.querySelectorAll("*") : [];
       for (var i = 0; i < els.length; i++) {
-        var r; try { r = els[i].getBoundingClientRect(); } catch (eM0) { continue; }
-        if (r.height > best) best = r.height;
-        if (els[i].shadowRoot) { var b2 = chatMaxRect(els[i].shadowRoot, depth + 1); if (b2 > best) best = b2; }
+        var el = els[i], r, cs;
+        try { r = el.getBoundingClientRect(); cs = getComputedStyle(el); } catch (eP0) { continue; }
+        if ((cs.position === "fixed" || cs.position === "absolute") && r.width > 260 && r.height > 300) {
+          var a = r.width * r.height;
+          if (a > bestA) { bestA = a; best = el; }
+        }
+        if (el.shadowRoot) {
+          var b = findChatPanel(el.shadowRoot, depth + 1);
+          if (b) { var rb = b.getBoundingClientRect(), ab = rb.width * rb.height; if (ab > bestA) { bestA = ab; best = b; } }
+        }
       }
       return best;
     }
-    function undockChat(host) {
+    function dockRect() {
+      /* Same footprint as the bar's own glass window. */
+      var vb = vbar.getBoundingClientRect();
+      var w = Math.min(840, innerWidth - 240);
+      var h = Math.min(Math.round(innerHeight * 0.8), 760);
+      var left = Math.max(16, Math.round(vb.left - 16 - w));
+      var top = Math.round(Math.min(Math.max(16, vb.top + vb.height / 2 - h / 2), innerHeight - h - 16));
+      return { left: left, top: top, w: w, h: h };
+    }
+    function styleDock(panel) {
+      var d = dockRect(), st = panel.style;
+      st.setProperty("position", "fixed", "important");
+      st.setProperty("left", d.left + "px", "important");
+      st.setProperty("top", d.top + "px", "important");
+      st.setProperty("right", "auto", "important");
+      st.setProperty("bottom", "auto", "important");
+      st.setProperty("width", d.w + "px", "important");
+      st.setProperty("height", d.h + "px", "important");
+      st.setProperty("max-width", "none", "important");
+      st.setProperty("max-height", "none", "important");
+      st.setProperty("margin", "0", "important");
+      st.setProperty("transform", "none", "important");
+      st.setProperty("border-radius", "30px", "important");
+      st.setProperty("box-shadow", "0 30px 70px -22px rgba(29,29,31,0.4)", "important");
+      st.setProperty("z-index", "2147483000", "important");
+    }
+    function undockChat() {
       if (dockPoll) { clearInterval(dockPoll); dockPoll = 0; }
-      if (!host) return;
-      ["position", "left", "top", "right", "bottom", "width", "height", "transform", "z-index"].forEach(function (p) {
-        try { host.style.removeProperty(p); } catch (eU0) {}
-      });
+      var panel = dockPanel; dockPanel = null;
+      if (panel) {
+        ["position", "left", "top", "right", "bottom", "width", "height", "max-width", "max-height",
+         "margin", "transform", "border-radius", "box-shadow", "z-index"].forEach(function (p) {
+          try { panel.style.removeProperty(p); } catch (eU0) {}
+        });
+      }
       hideNativeChat();
     }
-    function dockChat() {
+    function dockChat(attempt) {
       var f = findChatLauncher();
       if (!f || !f.host || !f.host.shadowRoot) return;
       if (innerWidth < 861) return; /* phones keep the native full-screen chat */
-      var host = f.host, vb = vbar.getBoundingClientRect();
-      var w = Math.min(430, innerWidth - 120);
-      var h = Math.min(Math.round(innerHeight * 0.78), 700);
-      var left = Math.max(16, Math.round(vb.left - 16 - w));
-      var top = Math.round(Math.min(Math.max(16, vb.top + vb.height / 2 - h / 2), innerHeight - h - 16));
-      var st = host.style;
-      st.setProperty("position", "fixed", "important");
-      st.setProperty("left", left + "px", "important");
-      st.setProperty("top", top + "px", "important");
-      st.setProperty("right", "auto", "important");
-      st.setProperty("bottom", "auto", "important");
-      st.setProperty("width", w + "px", "important");
-      st.setProperty("height", h + "px", "important");
-      st.setProperty("transform", "translateZ(0)", "important");
-      st.setProperty("z-index", "2147483000", "important");
+      var panel = findChatPanel(f.host.shadowRoot, 0);
+      /* The window may still be animating in — retry briefly. */
+      if (!panel) { if ((attempt || 0) < 8) setTimeout(function () { dockChat((attempt || 0) + 1); }, 250); return; }
+      dockPanel = panel;
+      styleDock(panel);
       if (dockPoll) clearInterval(dockPoll);
       var grace = Date.now() + 2500;
       dockPoll = setInterval(function () {
-        var open = chatMaxRect(host.shadowRoot, 0) > 200;
-        if (!open && Date.now() > grace) undockChat(host);
-      }, 500);
+        var open = true, r, cs;
+        try { r = panel.getBoundingClientRect(); if (!r.height) open = false; } catch (eD1) { open = false; }
+        try { cs = getComputedStyle(panel); if (cs.display === "none" || cs.visibility === "hidden") open = false; } catch (eD2) {}
+        if (panel.isConnected === false) open = false;
+        if (!open && Date.now() > grace) { undockChat(); return; }
+        if (open) styleDock(panel); /* re-pin if the widget tries to move it */
+      }, 400);
     }
     var vChatBusy = false;
     function openChat() {
