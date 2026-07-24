@@ -491,29 +491,28 @@
        too — thicken its frost while the veil is up to keep it bright. */
     html.dyn-ablock .dyn-abar .dh-apps-pop { background: rgba(255, 255, 255, 0.72); }
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-apps-pop, .dyn-abar .dh-app { animation: none !important; transition: none !important; } }
-    /* Desktop: he's 50% bigger — every fixed-px feature scales with him
-       (percent-based parts like the lids follow automatically). */
-    @media (min-width: 900px) {
-      .dyn-abar .dh-apps-btn { width: 96px; height: 96px; }
-      .dyn-abar .dh-orb-eyes { gap: 4px; margin-right: 14px; }
-      .dyn-abar .dh-orb-eye { width: 33px; height: 43px; }
-      .dyn-abar .dh-orb-eye::after { width: 20px; height: 26px; }
-      .dyn-abar .dh-orb-eyes.is-surprised .dh-orb-eye::after { width: 12px; height: 15px; }
-      .dyn-abar .dh-orb-eyes.is-pleased .dh-orb-eye::after { width: 18px; height: 10px;
-        border-width: 3.5px 3.5px 0 3.5px; transform: translateY(6px); }
-      .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:first-child::after { width: 21px; height: 27px; }
-      .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:last-child::after { width: 18px; height: 4.5px; }
-      .dyn-abar .dh-orb-eyes.is-cool::before, .dyn-abar .dh-orb-eyes.is-cool::after {
-        width: 30px; height: 21px; border-width: 4.5px; left: auto; }
-      .dyn-abar .dh-orb-eyes.is-cool::before { left: -5px; }
-      .dyn-abar .dh-orb-eyes.is-cool::after { right: -5px; }
-      .dyn-abar .dh-apps-btn.is-cool::after { font-size: 21px; right: 6px; top: 32px; }
-      .dyn-abar .dh-orb-eyes.is-happy .dh-orb-eye::after { font-size: 22px; }
-      .dyn-abar .dh-orb-eyes.is-excited .dh-orb-eye::after { font-size: 13px; }
-      .dyn-abar .dh-apps-btn.is-asleep::after, .dyn-abar .dh-apps-btn.is-happy::after { font-size: 22px; }
-      .dyn-abar .dh-orb-eyes.is-nervous::after { width: 9px; height: 12px; right: -12px; top: -10px; }
-      .dyn-abar .dh-orb-eyes.is-sad::before { width: 7.5px; height: 10px; right: 5px; top: 21px; }
-    }
+    /* He's the SAME size everywhere — the 50% bigger desktop look also applies
+       on phones (every fixed-px feature scales with him; percent-based parts
+       like the lids follow automatically). */
+    .dyn-abar .dh-apps-btn { width: 96px; height: 96px; }
+    .dyn-abar .dh-orb-eyes { gap: 4px; margin-right: 14px; }
+    .dyn-abar .dh-orb-eye { width: 33px; height: 43px; }
+    .dyn-abar .dh-orb-eye::after { width: 20px; height: 26px; }
+    .dyn-abar .dh-orb-eyes.is-surprised .dh-orb-eye::after { width: 12px; height: 15px; }
+    .dyn-abar .dh-orb-eyes.is-pleased .dh-orb-eye::after { width: 18px; height: 10px;
+      border-width: 3.5px 3.5px 0 3.5px; transform: translateY(6px); }
+    .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:first-child::after { width: 21px; height: 27px; }
+    .dyn-abar .dh-orb-eyes.is-dazed .dh-orb-eye:last-child::after { width: 18px; height: 4.5px; }
+    .dyn-abar .dh-orb-eyes.is-cool::before, .dyn-abar .dh-orb-eyes.is-cool::after {
+      width: 30px; height: 21px; border-width: 4.5px; left: auto; }
+    .dyn-abar .dh-orb-eyes.is-cool::before { left: -5px; }
+    .dyn-abar .dh-orb-eyes.is-cool::after { right: -5px; }
+    .dyn-abar .dh-apps-btn.is-cool::after { font-size: 21px; right: 6px; top: 32px; }
+    .dyn-abar .dh-orb-eyes.is-happy .dh-orb-eye::after { font-size: 22px; }
+    .dyn-abar .dh-orb-eyes.is-excited .dh-orb-eye::after { font-size: 13px; }
+    .dyn-abar .dh-apps-btn.is-asleep::after, .dyn-abar .dh-apps-btn.is-happy::after { font-size: 22px; }
+    .dyn-abar .dh-orb-eyes.is-nervous::after { width: 9px; height: 12px; right: -12px; top: -10px; }
+    .dyn-abar .dh-orb-eyes.is-sad::before { width: 7.5px; height: 10px; right: 5px; top: 21px; }
     /* Vision-style launcher (tablet/desktop): clicking the orb reveals a
        vertical glass tab bar above or below him; each tab opens one
        floating smoked-glass window beside it showing that tab's content.
