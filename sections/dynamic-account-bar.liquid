@@ -660,7 +660,11 @@
     /* Phones get the SAME vision layout — bar beside the orb, floating glass
        window beside the bar — just sized to the narrower screen. */
     @media (max-width: 860px) {
-      .dyn-abar .dh-menu .dh-apps-pop.is-vision { max-width: calc(100vw - 104px); height: min(74vh, 640px); padding: 14px; }
+      .dyn-abar .dh-menu .dh-apps-pop.is-vision { max-width: calc(100vw - 104px); height: min(70vh, 600px); padding: 14px; }
+      /* Page previews: shrink the embedded page so it lays out at roughly the
+         full phone width and scales down to fit the window — a working
+         miniature of the real page instead of a squeezed, wrapping one. */
+      .dyn-abar .dh-vprev-hold { zoom: 0.7; padding: 12px 14px; }
       .dyn-abar .dh-apps-pop.is-vision .dh-apps-head { gap: 12px; }
       .dyn-abar .dh-apps-pop.is-vision .dh-w-clock,
       .dyn-abar .dh-apps-pop.is-vision .dh-w-quote { width: 100%; height: auto; aspect-ratio: 1 / 1; }
