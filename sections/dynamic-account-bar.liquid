@@ -676,26 +676,18 @@
     .dyn-abar .dh-wg-sub { font-size: 15px; font-weight: 600; color: #66666b; margin-top: 6px; letter-spacing: 0.04em; }
     .dyn-abar .dh-wg-quote { display: flex; align-items: center; justify-content: center; text-align: center; padding: 40px 28px; min-height: 170px; }
     .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 26px; font-weight: 700; color: #16232c; line-height: 1.35; }
-    /* Year-progress card: label + % top-right, inset track, pink gradient fill.
-       The fill is absolutely positioned inside the track so its size can never
-       collapse regardless of how the height resolves. */
-    .dyn-abar .dh-wg-year { padding: 18px 26px 22px; }
-    .dyn-abar .dh-wg-yearhead { display: flex; justify-content: flex-end; align-items: baseline; gap: 10px;
-      color: #3a3a3f; font-weight: 600; font-size: 15px; }
-    .dyn-abar .dh-wg-yearhead b { color: #e2708c; font-size: 20px; font-weight: 700; }
-    .dyn-abar .dh-wg-yeartrack { position: relative; margin-top: 12px; height: 28px; border-radius: 999px;
-      background: rgba(120, 120, 128, 0.12);
-      box-shadow: inset 0 3px 8px rgba(29, 29, 31, 0.14), inset 0 -1px 1px rgba(255, 255, 255, 0.7); }
-    .dyn-abar .dh-wg-yearfill { position: absolute; left: 5px; top: 5px; bottom: 5px; width: 0;
-      max-width: calc(100% - 10px); border-radius: 999px;
-      background: linear-gradient(90deg, #c95d92, #eda1a8);
-      box-shadow: 0 2px 6px rgba(201, 93, 146, 0.35); transition: width 0.6s ease; }
-    /* Calendar card: month number + CALENDAR, inset weekday strip, day grid,
-       today in an orange rounded square. */
+    /* Calendar card: month name with prev/next arrows + CALENDAR, inset
+       weekday strip, day grid, today in an orange rounded square. */
     .dyn-abar .dh-wg-cal { width: min(400px, 100%); margin: 0 auto; padding: 22px 24px 26px; }
     .dyn-abar .dh-wg-calhead { display: flex; justify-content: space-between; align-items: center;
       color: #1d1d1f; padding: 0 6px 12px; }
-    .dyn-abar .dh-wg-calmo { font-size: 18px; font-weight: 600; }
+    .dyn-abar .dh-wg-calnavwrap { display: flex; align-items: center; gap: 6px; }
+    .dyn-abar .dh-wg-calnav { border: 0; cursor: pointer; width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 17px; line-height: 1;
+      background: rgba(255, 255, 255, 0.55); color: #1d1d1f;
+      box-shadow: 0 2px 6px rgba(29, 29, 31, 0.12); transition: background 0.15s; }
+    .dyn-abar .dh-wg-calnav:hover { background: #fff; }
+    .dyn-abar .dh-wg-calmo { font-size: 15px; font-weight: 700; min-width: 74px; text-align: center; }
     .dyn-abar .dh-wg-caltitle { font-size: 15px; font-weight: 700; letter-spacing: 0.1em; }
     .dyn-abar .dh-wg-caldays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
       padding: 8px 6px; border-radius: 999px; text-align: center;
@@ -746,10 +738,9 @@
     .dyn-abar .dh-apps-btn { position: relative; }
     .dyn-abar .dh-orb-badge { position: absolute; top: -5px; right: -5px; z-index: 5; font-size: 16px;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)); pointer-events: none; }
-    /* Arrange so the whole tab fits the window without scrolling: clock, then
-       the year bar, then the quote and calendar sharing one row. */
+    /* Arrange so the whole tab fits the window without scrolling: clock on
+       top, then the quote and calendar sharing one row. */
     .dyn-abar .dh-wg-time { order: 1; }
-    .dyn-abar .dh-wg-year { order: 2; }
     .dyn-abar .dh-wg-quote { order: 3; width: auto; flex: 1 1 220px; min-height: 0; padding: 24px 22px; }
     .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 21px; }
     .dyn-abar .dh-wg-cal { order: 4; width: 360px; flex: 0 0 auto; margin: 0; }
@@ -781,14 +772,10 @@
       .dyn-abar .dh-wg-sub { font-size: 11px; margin-top: 3px; }
       .dyn-abar .dh-wg-quote { order: 3; width: 100%; flex: none; padding: 16px 14px; min-height: 64px; }
       .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 15px; }
-      .dyn-abar .dh-wg-year { padding: 12px 14px 16px; }
-      .dyn-abar .dh-wg-yearhead { font-size: 12px; }
-      .dyn-abar .dh-wg-yearhead b { font-size: 15px; }
-      .dyn-abar .dh-wg-yeartrack { height: 20px; margin-top: 8px; }
-      .dyn-abar .dh-wg-yearfill { left: 4px; top: 4px; bottom: 4px; max-width: calc(100% - 8px); }
       .dyn-abar .dh-wg-cal { width: 100%; flex: none; padding: 12px 12px 14px; }
       .dyn-abar .dh-wg-calhead { padding: 0 4px 8px; }
-      .dyn-abar .dh-wg-calmo { font-size: 14px; }
+      .dyn-abar .dh-wg-calnav { width: 23px; height: 23px; font-size: 15px; }
+      .dyn-abar .dh-wg-calmo { font-size: 13px; min-width: 62px; }
       .dyn-abar .dh-wg-caltitle { font-size: 12px; }
       .dyn-abar .dh-wg-caldays { font-size: 9px; padding: 6px 4px; }
       .dyn-abar .dh-wg-calgrid { font-size: 11.5px; margin-top: 8px; }
@@ -847,14 +834,16 @@
             <div class="dh-wg dh-wg-quote">
               <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
             </div>
-            {%- comment -%} How much of the year is left, as a soft pink progress bar. {%- endcomment -%}
-            <div class="dh-wg dh-wg-year">
-              <div class="dh-wg-yearhead"><span>The rest of the year</span><b id="dynAbYearPct">--%</b></div>
-              <div class="dh-wg-yeartrack"><div class="dh-wg-yearfill" id="dynAbYearFill"></div></div>
-            </div>
-            {%- comment -%} This month's calendar with today highlighted. {%- endcomment -%}
+            {%- comment -%} Browsable calendar with today highlighted. {%- endcomment -%}
             <div class="dh-wg dh-wg-cal">
-              <div class="dh-wg-calhead"><span class="dh-wg-calmo" id="dynAbCalMo">&nbsp;</span><span class="dh-wg-caltitle">CALENDAR</span></div>
+              <div class="dh-wg-calhead">
+                <span class="dh-wg-calnavwrap">
+                  <button type="button" class="dh-wg-calnav" id="dynAbCalPrev" aria-label="Previous month">&#8249;</button>
+                  <span class="dh-wg-calmo" id="dynAbCalMo">&nbsp;</span>
+                  <button type="button" class="dh-wg-calnav" id="dynAbCalNext" aria-label="Next month">&#8250;</button>
+                </span>
+                <span class="dh-wg-caltitle">CALENDAR</span>
+              </div>
               <div class="dh-wg-caldays"><span>Sun</span><span>Mon</span><span>Tues</span><span>Wed</span><span>Thur</span><span>Fri</span><span>Sat</span></div>
               <div class="dh-wg-calgrid" id="dynAbCalGrid"></div>
             </div>
@@ -1083,18 +1072,7 @@
     }
     tick();
     setInterval(tick, 1000);
-    /* Year-progress widget: how much of the year is still ahead. */
-    (function () {
-      var yFill = document.getElementById("dynAbYearFill"), yPct = document.getElementById("dynAbYearPct");
-      if (!yFill || !yPct) return;
-      var now = new Date();
-      var start = new Date(now.getFullYear(), 0, 1);
-      var end = new Date(now.getFullYear() + 1, 0, 1);
-      var remain = Math.max(0, Math.min(100, Math.round((end - now) / (end - start) * 100)));
-      yPct.textContent = remain + "%";
-      yFill.style.width = remain + "%";
-    })();
-    /* Calendar widget: this month, today highlighted — plus personal events.
+    /* Calendar widget: browsable months, today highlighted — plus personal events.
        Tap a day to save e.g. "Jack's birthday": the day gets a dot, the mascot
        nudges when the date is close, and (with a Klaviyo public key + a
        signed-in customer) the soonest event is saved onto their Klaviyo
@@ -1124,21 +1102,31 @@
         return Math.round((dt - today0) / 86400000);
       }
       function esc(s) { var dv = document.createElement("div"); dv.textContent = s; return dv.innerHTML; }
-      var d0 = new Date(), y = d0.getFullYear(), m = d0.getMonth(), today = d0.getDate();
-      calMo.textContent = String(m + 1);
+      var d0 = new Date(), y0 = d0.getFullYear(), m0 = d0.getMonth(), today = d0.getDate();
+      var viewY = y0, viewM = m0;
       function renderCal() {
+        calMo.textContent = MONTHS[viewM] + (viewY !== y0 ? " " + viewY : "");
         var marked = {};
-        calLoad().forEach(function (ev) { if (ev.m === m) marked[ev.d] = 1; });
-        var first = new Date(y, m, 1).getDay();
-        var days = new Date(y, m + 1, 0).getDate();
+        calLoad().forEach(function (ev) { if (ev.m === viewM) marked[ev.d] = 1; });
+        var first = new Date(viewY, viewM, 1).getDay();
+        var days = new Date(viewY, viewM + 1, 0).getDate();
+        var isNow = viewY === y0 && viewM === m0;
         var html = "", b, dd;
         for (b = 0; b < first; b++) html += "<span></span>";
         for (dd = 1; dd <= days; dd++) {
-          html += '<span data-d="' + dd + '" class="' + (dd === today ? "is-today " : "") + (marked[dd] ? "has-ev" : "") + '">' + dd + "</span>";
+          html += '<span data-d="' + dd + '" class="' + (isNow && dd === today ? "is-today " : "") + (marked[dd] ? "has-ev" : "") + '">' + dd + "</span>";
         }
         calGrid.innerHTML = html;
       }
       renderCal();
+      document.getElementById("dynAbCalPrev").addEventListener("click", function () {
+        viewM--; if (viewM < 0) { viewM = 11; viewY--; }
+        popEl.hidden = true; renderCal();
+      });
+      document.getElementById("dynAbCalNext").addEventListener("click", function () {
+        viewM++; if (viewM > 11) { viewM = 0; viewY++; }
+        popEl.hidden = true; renderCal();
+      });
       /* Day editor: view, add and remove that day's events. */
       var popEl = document.createElement("div");
       popEl.className = "dh-wg-calpop"; popEl.hidden = true;
@@ -1149,7 +1137,7 @@
       var popDay = 0;
       function paintList() {
         var list = document.getElementById("dynAbCalPopList");
-        var evs = calLoad().filter(function (ev) { return ev.m === m && ev.d === popDay; });
+        var evs = calLoad().filter(function (ev) { return ev.m === viewM && ev.d === popDay; });
         list.innerHTML = evs.map(function (ev) {
           return '<div class="dh-wg-calev"><span>&#127873; ' + esc(ev.t) + '</span><button type="button" data-del="' + ev.i + '">Remove</button></div>';
         }).join("");
@@ -1159,7 +1147,7 @@
         if (!sp) return;
         popDay = parseInt(sp.getAttribute("data-d"), 10);
         popEl.hidden = false;
-        document.getElementById("dynAbCalPopDate").textContent = MONTHS[m] + " " + popDay;
+        document.getElementById("dynAbCalPopDate").textContent = MONTHS[viewM] + " " + popDay;
         paintList();
         try { document.getElementById("dynAbCalPopIn").focus(); } catch (eF1) {}
       });
@@ -1169,7 +1157,7 @@
         var inp = document.getElementById("dynAbCalPopIn");
         var t = (inp.value || "").trim(); if (!t || !popDay) return;
         var evs = calLoad();
-        evs.push({ i: "e" + Date.now() + Math.floor(Math.random() * 999), t: t, m: m, d: popDay });
+        evs.push({ i: "e" + Date.now() + Math.floor(Math.random() * 999), t: t, m: viewM, d: popDay });
         calSave(evs); inp.value = "";
         renderCal(); paintList(); buildNudges(); pushReminder();
       });
