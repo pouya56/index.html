@@ -708,6 +708,44 @@
       height: 34px; border-radius: 10px; }
     .dyn-abar .dh-wg-calgrid span.is-today { background: #e8a33d; color: #fff;
       box-shadow: 0 3px 8px rgba(232, 163, 61, 0.45); }
+    /* Personal events: tappable days, a pink dot on days with an event. */
+    .dyn-abar .dh-wg-calgrid span[data-d] { cursor: pointer; position: relative; }
+    .dyn-abar .dh-wg-calgrid span[data-d]:hover { background: rgba(255, 255, 255, 0.6); }
+    .dyn-abar .dh-wg-calgrid span.is-today:hover { background: #e8a33d; }
+    .dyn-abar .dh-wg-calgrid span.has-ev::after { content: ""; position: absolute; left: 50%; bottom: 3px;
+      transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background: #e2708c; }
+    .dyn-abar .dh-wg-calgrid span.is-today.has-ev::after { background: #fff; }
+    /* Day editor: date + close, that day's events, add form. */
+    .dyn-abar .dh-wg-calpop { margin-top: 10px; border-radius: 16px; padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 8px 20px -10px rgba(29, 29, 31, 0.25); }
+    .dyn-abar .dh-wg-calpop[hidden] { display: none; }
+    .dyn-abar .dh-wg-calpop-date { display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; font-weight: 700; color: #1d1d1f; margin-bottom: 8px; }
+    .dyn-abar .dh-wg-calpop-x { border: 0; background: none; cursor: pointer; font-size: 13px; color: #66666b; padding: 2px 4px; }
+    .dyn-abar .dh-wg-calpop-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+    .dyn-abar .dh-wg-calpop-list:empty { display: none; }
+    .dyn-abar .dh-wg-calev { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 13px; font-weight: 600; color: #1d1d1f; background: rgba(255, 255, 255, 0.65);
+      border-radius: 10px; padding: 7px 10px; }
+    .dyn-abar .dh-wg-calev button { border: 0; background: none; color: #c0392b; cursor: pointer; font-size: 12.5px; font-weight: 600; }
+    .dyn-abar .dh-wg-calpop-form { display: flex; gap: 8px; }
+    .dyn-abar .dh-wg-calpop-form input { flex: 1 1 auto; min-width: 0; border: 1px solid rgba(29, 29, 31, 0.15);
+      border-radius: 10px; padding: 9px 12px; font-size: 13px; background: rgba(255, 255, 255, 0.85); }
+    .dyn-abar .dh-wg-calpop-form input:focus { outline: none; border-color: rgba(29, 29, 31, 0.35); }
+    .dyn-abar .dh-wg-calpop-form button { border: 0; border-radius: 10px; padding: 9px 14px; cursor: pointer;
+      font-weight: 600; font-size: 13px; background: #1d1d1f; color: #fff; }
+    /* Gift nudge card (shows first in the tab while an event is close). */
+    .dyn-abar .dh-wg-nudge { order: 0; display: flex; align-items: center; gap: 12px; padding: 14px 18px; }
+    .dyn-abar .dh-wg-nudge-ic { font-size: 22px; }
+    .dyn-abar .dh-wg-nudge-tx { flex: 1 1 auto; font-size: 14px; font-weight: 600; color: #1d1d1f; }
+    .dyn-abar .dh-wg-nudge-tx a { color: #0071e3; text-decoration: none; font-weight: 700; white-space: nowrap; }
+    .dyn-abar .dh-wg-nudge-tx a:hover { text-decoration: underline; }
+    .dyn-abar .dh-wg-nudge-x { border: 0; background: none; cursor: pointer; color: #66666b; font-size: 14px; }
+    /* Gift badge on the orb while a nudge is due. */
+    .dyn-abar .dh-apps-btn { position: relative; }
+    .dyn-abar .dh-orb-badge { position: absolute; top: -5px; right: -5px; z-index: 5; font-size: 16px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)); pointer-events: none; }
     /* Arrange so the whole tab fits the window without scrolling: clock, then
        the year bar, then the quote and calendar sharing one row. */
     .dyn-abar .dh-wg-time { order: 1; }
@@ -1056,18 +1094,147 @@
       yPct.textContent = remain + "%";
       yFill.style.width = remain + "%";
     })();
-    /* Calendar widget: this month, today highlighted. */
+    /* Calendar widget: this month, today highlighted — plus personal events.
+       Tap a day to save e.g. "Jack's birthday": the day gets a dot, the mascot
+       nudges when the date is close, and (with a Klaviyo public key + a
+       signed-in customer) the soonest event is saved onto their Klaviyo
+       profile so a date-property flow can email a reminder. */
     (function () {
       var calGrid = document.getElementById("dynAbCalGrid"), calMo = document.getElementById("dynAbCalMo");
       if (!calGrid || !calMo) return;
-      var d0 = new Date(), y = d0.getFullYear(), m = d0.getMonth();
+      var head2 = document.getElementById("dynAbWidgets");
+      var vKlKey = {{ section.settings.klaviyo_public_key | default: '' | json }};
+      var vCustEmail = {{ customer.email | default: '' | json }};
+      var vLead = {{ section.settings.remind_days | default: 21 }};
+      var vNudgeUrl = {{ section.settings.nudge_url | default: '/collections/all' | json }};
+      function calLoad() { try { return JSON.parse(localStorage.getItem("dyn_cal_events") || "[]") || []; } catch (eL0) { return []; } }
+      function calSave(l) { try { localStorage.setItem("dyn_cal_events", JSON.stringify(l)); } catch (eL1) {} }
+      function disLoad() { try { return JSON.parse(localStorage.getItem("dyn_cal_dismissed") || "{}") || {}; } catch (eL2) { return {}; } }
+      function disSave(o) { try { localStorage.setItem("dyn_cal_dismissed", JSON.stringify(o)); } catch (eL3) {} }
+      function nextOcc(ev) {
+        var now = new Date();
+        var today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        var when = new Date(now.getFullYear(), ev.m, ev.d);
+        if (when < today0) when = new Date(now.getFullYear() + 1, ev.m, ev.d);
+        return when;
+      }
+      function daysUntil(dt) {
+        var now = new Date();
+        var today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        return Math.round((dt - today0) / 86400000);
+      }
+      function esc(s) { var dv = document.createElement("div"); dv.textContent = s; return dv.innerHTML; }
+      var d0 = new Date(), y = d0.getFullYear(), m = d0.getMonth(), today = d0.getDate();
       calMo.textContent = String(m + 1);
-      var first = new Date(y, m, 1).getDay();
-      var days = new Date(y, m + 1, 0).getDate();
-      var html = "", b, dd;
-      for (b = 0; b < first; b++) html += "<span></span>";
-      for (dd = 1; dd <= days; dd++) html += "<span" + (dd === d0.getDate() ? ' class="is-today"' : "") + ">" + dd + "</span>";
-      calGrid.innerHTML = html;
+      function renderCal() {
+        var marked = {};
+        calLoad().forEach(function (ev) { if (ev.m === m) marked[ev.d] = 1; });
+        var first = new Date(y, m, 1).getDay();
+        var days = new Date(y, m + 1, 0).getDate();
+        var html = "", b, dd;
+        for (b = 0; b < first; b++) html += "<span></span>";
+        for (dd = 1; dd <= days; dd++) {
+          html += '<span data-d="' + dd + '" class="' + (dd === today ? "is-today " : "") + (marked[dd] ? "has-ev" : "") + '">' + dd + "</span>";
+        }
+        calGrid.innerHTML = html;
+      }
+      renderCal();
+      /* Day editor: view, add and remove that day's events. */
+      var popEl = document.createElement("div");
+      popEl.className = "dh-wg-calpop"; popEl.hidden = true;
+      popEl.innerHTML = '<div class="dh-wg-calpop-date"><span id="dynAbCalPopDate"></span><button type="button" class="dh-wg-calpop-x" id="dynAbCalPopX" aria-label="Close">&#10005;</button></div>' +
+        '<div class="dh-wg-calpop-list" id="dynAbCalPopList"></div>' +
+        '<form class="dh-wg-calpop-form" id="dynAbCalPopForm"><input type="text" id="dynAbCalPopIn" placeholder="e.g. Jack&#39;s birthday" maxlength="60"><button type="submit">Add</button></form>';
+      calGrid.parentNode.appendChild(popEl);
+      var popDay = 0;
+      function paintList() {
+        var list = document.getElementById("dynAbCalPopList");
+        var evs = calLoad().filter(function (ev) { return ev.m === m && ev.d === popDay; });
+        list.innerHTML = evs.map(function (ev) {
+          return '<div class="dh-wg-calev"><span>&#127873; ' + esc(ev.t) + '</span><button type="button" data-del="' + ev.i + '">Remove</button></div>';
+        }).join("");
+      }
+      calGrid.addEventListener("click", function (e) {
+        var sp = e.target.closest ? e.target.closest("span[data-d]") : null;
+        if (!sp) return;
+        popDay = parseInt(sp.getAttribute("data-d"), 10);
+        popEl.hidden = false;
+        document.getElementById("dynAbCalPopDate").textContent = MONTHS[m] + " " + popDay;
+        paintList();
+        try { document.getElementById("dynAbCalPopIn").focus(); } catch (eF1) {}
+      });
+      document.getElementById("dynAbCalPopX").addEventListener("click", function () { popEl.hidden = true; });
+      document.getElementById("dynAbCalPopForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var inp = document.getElementById("dynAbCalPopIn");
+        var t = (inp.value || "").trim(); if (!t || !popDay) return;
+        var evs = calLoad();
+        evs.push({ i: "e" + Date.now() + Math.floor(Math.random() * 999), t: t, m: m, d: popDay });
+        calSave(evs); inp.value = "";
+        renderCal(); paintList(); buildNudges(); pushReminder();
+      });
+      document.getElementById("dynAbCalPopList").addEventListener("click", function (e) {
+        var db = e.target.closest ? e.target.closest("[data-del]") : null; if (!db) return;
+        calSave(calLoad().filter(function (ev) { return ev.i !== db.getAttribute("data-del"); }));
+        renderCal(); paintList(); buildNudges(); pushReminder();
+      });
+      /* Mascot nudges: gift reminders inside the lead window, dismissible
+         per event per year; a small badge rides the orb while any are due. */
+      function due() {
+        var dis = disLoad();
+        return calLoad().map(function (ev) {
+          var when = nextOcc(ev); return { ev: ev, when: when, days: daysUntil(when) };
+        }).filter(function (x) {
+          return x.days >= 0 && x.days <= vLead && !dis[x.ev.i + "@" + x.when.getFullYear()];
+        }).sort(function (a1, b1) { return a1.days - b1.days; });
+      }
+      function buildNudges() {
+        Array.prototype.slice.call(head2.querySelectorAll(".dh-wg-nudge")).forEach(function (n) { n.parentNode.removeChild(n); });
+        var list = due().slice(0, 2);
+        list.forEach(function (x) {
+          var when = x.days === 0 ? "is today!" : x.days === 1 ? "is tomorrow" : "is in " + x.days + " days";
+          var card = document.createElement("div");
+          card.className = "dh-wg dh-wg-nudge";
+          card.innerHTML = '<span class="dh-wg-nudge-ic">&#127873;</span><span class="dh-wg-nudge-tx">' + esc(x.ev.t) + " " + when +
+            ' &mdash; <a href="' + vNudgeUrl + '">design something personal</a></span>' +
+            '<button type="button" class="dh-wg-nudge-x" aria-label="Dismiss" data-dis="' + x.ev.i + "@" + x.when.getFullYear() + '">&#10005;</button>';
+          head2.insertBefore(card, head2.firstChild);
+        });
+        var orb = document.querySelector(".dyn-abar .dh-apps-btn");
+        var badge = orb ? orb.querySelector(".dh-orb-badge") : null;
+        if (orb && list.length && !badge) {
+          badge = document.createElement("span"); badge.className = "dh-orb-badge"; badge.textContent = "🎁";
+          orb.appendChild(badge);
+        } else if (badge && !list.length) badge.parentNode.removeChild(badge);
+      }
+      head2.addEventListener("click", function (e) {
+        var xb = e.target.closest ? e.target.closest("[data-dis]") : null; if (!xb) return;
+        var dis = disLoad(); dis[xb.getAttribute("data-dis")] = 1; disSave(dis);
+        buildNudges();
+      });
+      buildNudges();
+      /* Klaviyo: keep the signed-in customer's soonest upcoming event on their
+         profile (gift_event_name / gift_event_date) for a date-property flow. */
+      function pushReminder() {
+        if (!vKlKey || !vCustEmail) return;
+        var evs = calLoad(); if (!evs.length) return;
+        var best = null;
+        evs.forEach(function (ev) {
+          var when = nextOcc(ev), du = daysUntil(when);
+          if (!best || du < best.days) best = { ev: ev, when: when, days: du };
+        });
+        if (!best) return;
+        var iso = best.when.getFullYear() + "-" + two(best.when.getMonth() + 1) + "-" + two(best.when.getDate());
+        try {
+          fetch("https://a.klaviyo.com/client/profiles/?company_id=" + encodeURIComponent(vKlKey), {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "revision": "2024-10-15" },
+            body: JSON.stringify({ data: { type: "profile", attributes: { email: vCustEmail,
+              properties: { gift_event_name: best.ev.t, gift_event_date: iso } } } })
+          }).catch(function (eK0) {});
+        } catch (eK1) {}
+      }
+      pushReminder();
     })();
     /* Focus card: a fresh motivation line on every open. Merchant lines from
        the settings (one per line) win; otherwise the built-in list. A shuffle
@@ -2013,6 +2180,12 @@
     { "type": "header", "content": "Apps window dashboard" },
     { "type": "checkbox", "id": "show_widgets", "label": "Show greeting, clock & widgets", "default": true, "info": "The dashboard at the top of the 9-dots window: greeting + date, live analog clock, a rotating focus line, and the visitor's saved items." },
     { "type": "textarea", "id": "focus_quotes", "label": "Focus sentences (one per line)", "info": "A random one shows each time the window opens, never repeating until all have had a turn. Leave empty for the built-in set of 18." },
+
+    { "type": "header", "content": "Calendar reminders" },
+    { "type": "paragraph", "content": "Shoppers tap a calendar day to save events like “Jack's birthday”. Days get a dot, and when an event is close the mascot shows a gift nudge (with a badge on him). With a Klaviyo key below, signed-in customers also get the event saved to their Klaviyo profile as gift_event_name and gift_event_date — build ONE flow in Klaviyo: trigger “Date property · gift_event_date”, timing e.g. 21 days before, repeat yearly, and it emails the reminder automatically." },
+    { "type": "text", "id": "klaviyo_public_key", "label": "Klaviyo public API key", "info": "Klaviyo → Settings → Account → API keys → the short Public key (site ID). Safe for the storefront. Leave blank to skip email reminders — the on-site nudges still work." },
+    { "type": "range", "id": "remind_days", "label": "Nudge window", "min": 7, "max": 60, "step": 1, "unit": "d", "default": 21, "info": "How many days before an event the mascot starts nudging on-site." },
+    { "type": "url", "id": "nudge_url", "label": "Nudge link", "info": "Where “design something personal” sends them. Leave blank for /collections/all." },
     { "type": "paragraph", "content": "Add “App link” blocks below to fill the grid. With none added, a sensible default set (Shop, Search, Contact, Account, Cart, policies…) shows automatically." },
 
     { "type": "header", "content": "Bar style" },
