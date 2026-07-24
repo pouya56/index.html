@@ -655,6 +655,16 @@
     .dyn-abar .dh-apps-pop.is-vision .dh-w-quote { width: 210px; height: 210px; aspect-ratio: auto; }
     .dyn-abar .dh-apps-pop.is-vision #dynAbSaved, .dyn-abar .dh-apps-pop.is-vision #dynAbCart { width: 300px; }
     .dyn-abar .dh-apps-pop.is-vision .dh-w-savedbox { height: 320px; }
+    /* Phones get the SAME vision layout — bar beside the orb, floating glass
+       window beside the bar — just sized to the narrower screen. */
+    @media (max-width: 860px) {
+      .dyn-abar .dh-menu .dh-apps-pop.is-vision { max-width: calc(100vw - 104px); height: min(74vh, 640px); padding: 14px; }
+      .dyn-abar .dh-apps-pop.is-vision .dh-apps-head { gap: 12px; }
+      .dyn-abar .dh-apps-pop.is-vision .dh-w-clock,
+      .dyn-abar .dh-apps-pop.is-vision .dh-w-quote { width: 100%; height: auto; aspect-ratio: 1 / 1; }
+      .dyn-abar .dh-apps-pop.is-vision #dynAbSaved, .dyn-abar .dh-apps-pop.is-vision #dynAbCart { width: 100%; }
+      .dyn-abar .dh-apps-pop.is-vision .dh-apps-grid { grid-template-columns: repeat(2, 1fr); }
+    }
     /* Widgets tab layout — no card grid. The date banner and the clock ride
        the top row side by side ("date and hours on top"); the quote drops to
        its own full-width panel beneath them, big and centred in the middle. */
@@ -1690,13 +1700,11 @@
       pop.hidden = true;
       btn.setAttribute("aria-expanded", "false");
     });
-    /* Phone: freeze the page while the window is open. Watching the hidden
-       attribute catches every close path (outside tap, Escape, drag). */
+    /* The windows float over the live page on every device — no dark filter,
+       no scroll freeze. The tab bar lives and dies with the window on every
+       close path (outside tap, Escape, drag). */
     function syncLock() {
-      /* Phone only — the desktop windows float over the live page with no
-         dark filter and no scroll freeze. The tab bar lives and dies with
-         the window on every close path. */
-      document.documentElement.classList.toggle("dyn-ablock", !pop.hidden && innerWidth <= 520);
+      document.documentElement.classList.remove("dyn-ablock");
       if (pop.hidden) vbar.classList.remove("is-on");
     }
     new MutationObserver(syncLock).observe(pop, { attributes: true, attributeFilter: ["hidden"] });
@@ -1709,31 +1717,8 @@
        generic open/close toggle, which was wired earlier). */
     btn.addEventListener("click", function () {
       if (pop.hidden) return;
-      var r = btn.getBoundingClientRect();
-      if (innerWidth <= 520) {
-        pop.classList.remove("is-vision");
-        vbar.classList.remove("is-on");
-        ptabs.hidden = true;
-        /* Full-page window: desktop layout scaled so its width spans the
-           screen exactly, stretched to cover the full height; anything
-           taller scrolls inside. */
-        pop.style.position = "fixed";
-        pop.style.width = "590px";
-        pop.style.right = "auto"; pop.style.bottom = "auto";
-        pop.style.transformOrigin = "top left";
-        pop.style.maxHeight = "none";
-        var ow = pop.offsetWidth || 590;
-        var s = innerWidth / ow;
-        pop.style.transform = "scale(" + s + ")";
-        pop.style.animation = "none";
-        pop.style.left = "0px";
-        pop.style.top = "0px";
-        pop.style.height = (innerHeight / s) + "px";
-        pop.style.maxHeight = (innerHeight / s) + "px";
-        return;
-      }
-      /* Tablet/desktop: reveal the tab bar above or below the orb and the
-         active tab's window beside it. */
+      /* Every device gets the same layout: the tab bar beside the orb and
+         the active tab's floating window beside it (phones included). */
       pop.classList.add("is-vision");
       if (!pop.getAttribute("data-vtab")) pop.setAttribute("data-vtab", "widgets");
       pop.style.left = ""; pop.style.right = ""; pop.style.top = ""; pop.style.bottom = "";
