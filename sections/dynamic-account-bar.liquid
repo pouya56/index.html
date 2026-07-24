@@ -1231,7 +1231,7 @@
        we restyle the PANEL element inside the widget's shadow DOM: pin it onto
        the same rectangle the bar's glass window uses, keep re-asserting it, and
        release it when the chat closes. Needs an open shadow root. */
-    var dockPoll = 0, dockPanel = null;
+    var dockPoll = 0, dockPanel = null, dockAnchor = null;
     function findChatPanel(node, depth) {
       if (!node || depth > 4) return null;
       var best = null, bestA = 0;
@@ -1251,12 +1251,17 @@
       return best;
     }
     function dockRect() {
-      /* Same footprint as the bar's own glass window. */
-      var vb = vbar.getBoundingClientRect();
+      /* Same footprint as the bar's own glass window. The bar folds away when
+         the chat opens, so we anchor on the rect captured BEFORE folding; if
+         none, hang the window off the right edge (where the bar lives). */
       var w = Math.min(840, innerWidth - 240);
       var h = Math.min(Math.round(innerHeight * 0.8), 760);
-      var left = Math.max(16, Math.round(vb.left - 16 - w));
-      var top = Math.round(Math.min(Math.max(16, vb.top + vb.height / 2 - h / 2), innerHeight - h - 16));
+      var ax = innerWidth - 72, ay = innerHeight / 2;
+      if (dockAnchor && (dockAnchor.width || dockAnchor.height)) {
+        ax = dockAnchor.left; ay = dockAnchor.top + dockAnchor.height / 2;
+      }
+      var left = Math.max(16, Math.round(ax - 16 - w));
+      var top = Math.round(Math.min(Math.max(16, ay - h / 2), innerHeight - h - 16));
       return { left: left, top: top, w: w, h: h };
     }
     function styleDock(panel) {
@@ -1315,6 +1320,12 @@
       if (vChatBusy) return;
       vChatBusy = true;
       setTimeout(function () { vChatBusy = false; }, 3500);
+      /* Remember where the bar is BEFORE folding it — the docked chat window
+         anchors on this spot. */
+      try {
+        var vbNow = vbar.getBoundingClientRect();
+        if (vbNow.width || vbNow.height) dockAnchor = vbNow;
+      } catch (eA0) {}
       /* Fold the launcher away so the chat isn't hidden behind it. */
       try { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); } catch (eC0) {}
       vbar.classList.remove("is-on");
