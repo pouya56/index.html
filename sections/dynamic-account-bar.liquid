@@ -535,7 +535,7 @@
       stroke-linecap: round; stroke-linejoin: round; }
     /* The window: one dark smoked pane showing the active tab. */
     .dyn-abar .dh-menu .dh-apps-pop.is-vision { position: fixed; right: auto; bottom: auto;
-      width: 840px; max-width: calc(100vw - 240px); height: min(80vh, 760px); overflow-y: auto;
+      width: 840px; max-width: calc(100vw - 240px); height: auto; max-height: min(80vh, 760px); overflow-y: auto;
       background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.65); border-radius: 30px;
       -webkit-backdrop-filter: blur(28px) saturate(1.6); backdrop-filter: blur(28px) saturate(1.6);
       box-shadow: 0 30px 70px -22px rgba(29, 29, 31, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.85);
@@ -676,15 +676,18 @@
     .dyn-abar .dh-wg-sub { font-size: 15px; font-weight: 600; color: #66666b; margin-top: 6px; letter-spacing: 0.04em; }
     .dyn-abar .dh-wg-quote { display: flex; align-items: center; justify-content: center; text-align: center; padding: 40px 28px; min-height: 170px; }
     .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 26px; font-weight: 700; color: #16232c; line-height: 1.35; }
-    /* Year-progress card: label + % top-right, inset track, pink gradient fill. */
-    .dyn-abar .dh-wg-year { padding: 20px 26px 24px; }
+    /* Year-progress card: label + % top-right, inset track, pink gradient fill.
+       The fill is absolutely positioned inside the track so its size can never
+       collapse regardless of how the height resolves. */
+    .dyn-abar .dh-wg-year { padding: 18px 26px 22px; }
     .dyn-abar .dh-wg-yearhead { display: flex; justify-content: flex-end; align-items: baseline; gap: 10px;
       color: #3a3a3f; font-weight: 600; font-size: 15px; }
     .dyn-abar .dh-wg-yearhead b { color: #e2708c; font-size: 20px; font-weight: 700; }
-    .dyn-abar .dh-wg-yeartrack { margin-top: 12px; height: 28px; border-radius: 999px; padding: 5px; box-sizing: border-box;
+    .dyn-abar .dh-wg-yeartrack { position: relative; margin-top: 12px; height: 28px; border-radius: 999px;
       background: rgba(120, 120, 128, 0.12);
       box-shadow: inset 0 3px 8px rgba(29, 29, 31, 0.14), inset 0 -1px 1px rgba(255, 255, 255, 0.7); }
-    .dyn-abar .dh-wg-yearfill { height: 100%; border-radius: 999px; width: 0;
+    .dyn-abar .dh-wg-yearfill { position: absolute; left: 5px; top: 5px; bottom: 5px; width: 0;
+      max-width: calc(100% - 10px); border-radius: 999px;
       background: linear-gradient(90deg, #c95d92, #eda1a8);
       box-shadow: 0 2px 6px rgba(201, 93, 146, 0.35); transition: width 0.6s ease; }
     /* Calendar card: month number + CALENDAR, inset weekday strip, day grid,
@@ -705,6 +708,13 @@
       height: 34px; border-radius: 10px; }
     .dyn-abar .dh-wg-calgrid span.is-today { background: #e8a33d; color: #fff;
       box-shadow: 0 3px 8px rgba(232, 163, 61, 0.45); }
+    /* Arrange so the whole tab fits the window without scrolling: clock, then
+       the year bar, then the quote and calendar sharing one row. */
+    .dyn-abar .dh-wg-time { order: 1; }
+    .dyn-abar .dh-wg-year { order: 2; }
+    .dyn-abar .dh-wg-quote { order: 3; width: auto; flex: 1 1 220px; min-height: 0; padding: 24px 22px; }
+    .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 21px; }
+    .dyn-abar .dh-wg-cal { order: 4; width: 360px; flex: 0 0 auto; margin: 0; }
     /* Phones get the SAME vision layout — bar beside the orb, floating glass
        window beside the bar — just sized to the narrower screen. */
     @media (max-width: 860px) {
@@ -723,21 +733,28 @@
       .dyn-abar .dh-ptabs { display: none !important; }
       .dyn-abar .dh-vprev { display: none !important; }
       .dyn-abar .dh-apps-pop.is-vision[data-vtab="apps"] .dh-apps-grid { display: grid; }
-      /* Widgets cards sized for the narrow window. */
-      .dyn-abar .dh-wg-time { padding: 16px; gap: 12px; }
-      .dyn-abar .dh-wg-lcd { font-size: 32px; padding: 12px 16px; border-radius: 14px; }
-      .dyn-abar .dh-wg-day { font-size: 18px; }
-      .dyn-abar .dh-wg-sub { font-size: 12px; }
-      .dyn-abar .dh-wg-quote { padding: 24px 16px; min-height: 120px; }
-      .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 18px; }
-      .dyn-abar .dh-wg-year { padding: 14px 16px 18px; }
-      .dyn-abar .dh-wg-yearhead { font-size: 13px; }
-      .dyn-abar .dh-wg-yearhead b { font-size: 17px; }
-      .dyn-abar .dh-wg-yeartrack { height: 22px; padding: 4px; }
-      .dyn-abar .dh-wg-cal { padding: 16px 14px 18px; }
-      .dyn-abar .dh-wg-caldays { font-size: 9.5px; }
-      .dyn-abar .dh-wg-calgrid { font-size: 13px; }
-      .dyn-abar .dh-wg-calgrid span { height: 28px; border-radius: 8px; }
+      /* Widgets sized so the whole tab fits the window with no scrolling:
+         content-height window, tighter cards, stacked single column. */
+      .dyn-abar .dh-menu .dh-apps-pop.is-vision { height: auto; max-height: calc(100dvh - 90px); }
+      .dyn-abar .dh-apps-pop.is-vision .dh-apps-head { gap: 10px; }
+      .dyn-abar .dh-wg-time { padding: 12px 14px; gap: 10px; }
+      .dyn-abar .dh-wg-lcd { font-size: 26px; padding: 10px 14px; border-radius: 12px; }
+      .dyn-abar .dh-wg-day { font-size: 16px; }
+      .dyn-abar .dh-wg-sub { font-size: 11px; margin-top: 3px; }
+      .dyn-abar .dh-wg-quote { order: 3; width: 100%; flex: none; padding: 16px 14px; min-height: 64px; }
+      .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 15px; }
+      .dyn-abar .dh-wg-year { padding: 12px 14px 16px; }
+      .dyn-abar .dh-wg-yearhead { font-size: 12px; }
+      .dyn-abar .dh-wg-yearhead b { font-size: 15px; }
+      .dyn-abar .dh-wg-yeartrack { height: 20px; margin-top: 8px; }
+      .dyn-abar .dh-wg-yearfill { left: 4px; top: 4px; bottom: 4px; max-width: calc(100% - 8px); }
+      .dyn-abar .dh-wg-cal { width: 100%; flex: none; padding: 12px 12px 14px; }
+      .dyn-abar .dh-wg-calhead { padding: 0 4px 8px; }
+      .dyn-abar .dh-wg-calmo { font-size: 14px; }
+      .dyn-abar .dh-wg-caltitle { font-size: 12px; }
+      .dyn-abar .dh-wg-caldays { font-size: 9px; padding: 6px 4px; }
+      .dyn-abar .dh-wg-calgrid { font-size: 11.5px; margin-top: 8px; }
+      .dyn-abar .dh-wg-calgrid span { height: 22px; border-radius: 6px; }
       /* Saved & Cart: two columns of smaller item tiles. */
       .dyn-abar .dh-vgrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .dyn-abar .dh-vitem { padding: 8px; gap: 6px; border-radius: 14px; }
@@ -746,23 +763,6 @@
       .dyn-abar .dh-vitem-p { font-size: 11px; }
       .dyn-abar .dh-vdel { width: 24px; height: 24px; top: 6px; right: 6px; }
     }
-    /* Widgets tab layout — no card grid. The date banner and the clock ride
-       the top row side by side ("date and hours on top"); the quote drops to
-       its own full-width panel beneath them, big and centred in the middle. */
-    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-apps-head {
-      display: flex; flex-wrap: wrap; align-items: stretch; justify-content: center; gap: 18px; }
-    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-w-greethead {
-      flex: 1 1 0; min-width: 190px; width: auto; order: 1; justify-content: center; }
-    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-w-clock {
-      flex: 0 0 auto; order: 2; width: 150px; height: 150px; }
-    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-w-quote {
-      flex: 1 1 100%; order: 3; width: 100%; height: auto; aspect-ratio: auto;
-      background: none; border: none; box-shadow: none; border-radius: 0;
-      min-height: 170px; padding: 18px 24px; justify-content: center; gap: 0; }
-    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-w-quote .dh-w-plant { display: none; }
-    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-w-mlines {
-      font-size: 40px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em;
-      max-width: 20ch; color: #1d1d1f; }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
   </style>
 
