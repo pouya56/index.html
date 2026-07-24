@@ -670,8 +670,11 @@
       .dyn-abar .dh-apps-pop.is-vision .dh-w-quote { width: 100%; height: auto; aspect-ratio: 1 / 1; }
       .dyn-abar .dh-apps-pop.is-vision #dynAbSaved, .dyn-abar .dh-apps-pop.is-vision #dynAbCart { width: 100%; }
       .dyn-abar .dh-apps-pop.is-vision .dh-apps-grid { grid-template-columns: repeat(2, 1fr); }
-      .dyn-abar .dh-ptabs { gap: 5px; margin-bottom: 10px; }
-      .dyn-abar .dh-ptab { padding: 7px 11px; font-size: 12px; }
+      /* Phone: no page previews — the Apps tab is a simple grid of page
+         tiles that navigate directly. */
+      .dyn-abar .dh-ptabs { display: none !important; }
+      .dyn-abar .dh-vprev { display: none !important; }
+      .dyn-abar .dh-apps-pop.is-vision[data-vtab="apps"] .dh-apps-grid { display: grid; }
     }
     /* Widgets tab layout — no card grid. The date banner and the clock ride
        the top row side by side ("date and hours on top"); the quote drops to
@@ -1870,9 +1873,11 @@
       paintVision();
     });
     /* In the Apps grid, selecting an app opens its page in this same glass
-       window (home and outside links navigate normally). */
+       window (home and outside links navigate normally). On phones there are
+       no in-window previews — tiles are plain links straight to their page. */
     pop.addEventListener("click", function (e) {
       if (!pop.classList.contains("is-vision")) return;
+      if (innerWidth <= 860) return;
       var a = e.target.closest ? e.target.closest(".dh-apps-grid .dh-app") : null;
       if (!a) return;
       var i = vAllApps.indexOf(a);
