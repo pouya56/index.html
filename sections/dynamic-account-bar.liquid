@@ -521,9 +521,11 @@
        No dark filter behind — the page stays live. */
     .dyn-abar .dh-vbar { position: fixed; z-index: 2147483646; display: none; flex-direction: column;
       align-items: center; gap: 6px; padding: 10px 8px; border-radius: 999px;
-      background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.65);
-      -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
-      box-shadow: 0 18px 44px -16px rgba(29, 29, 31, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+      /* Clear liquid glass: barely-there fill, strong blur/saturation, crisp
+         hairline highlights doing the "glass edge" work. */
+      background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.5);
+      -webkit-backdrop-filter: blur(28px) saturate(1.9) brightness(1.06); backdrop-filter: blur(28px) saturate(1.9) brightness(1.06);
+      box-shadow: 0 18px 44px -16px rgba(29, 29, 31, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.75), inset 0 -8px 18px rgba(255, 255, 255, 0.14);
       animation: abPop 0.16s ease; }
     .dyn-abar .dh-vbar.is-on { display: flex; }
     .dyn-abar .dh-vtab { width: 46px; height: 46px; border-radius: 50%; border: none; padding: 0;
@@ -532,13 +534,17 @@
     .dyn-abar .dh-vtab:hover { background: rgba(255, 255, 255, 0.55); color: #1d1d1f; }
     .dyn-abar .dh-vtab.is-on { background: rgba(42, 42, 47, 0.85); color: #fff; }
     .dyn-abar .dh-vtab svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9;
-      stroke-linecap: round; stroke-linejoin: round; }
+      stroke-linecap: round; stroke-linejoin: round;
+      /* Soft light halo keeps the dark icons readable now the glass is clear,
+         over dark and light pages alike. */
+      filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.75)); }
+    .dyn-abar .dh-vtab.is-on svg { filter: none; }
     /* The window: one dark smoked pane showing the active tab. */
     .dyn-abar .dh-menu .dh-apps-pop.is-vision { position: fixed; right: auto; bottom: auto;
       width: 840px; max-width: calc(100vw - 240px); height: auto; max-height: min(80vh, 760px); overflow-y: auto;
-      background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.65); border-radius: 30px;
-      -webkit-backdrop-filter: blur(28px) saturate(1.6); backdrop-filter: blur(28px) saturate(1.6);
-      box-shadow: 0 30px 70px -22px rgba(29, 29, 31, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 30px;
+      -webkit-backdrop-filter: blur(32px) saturate(1.9) brightness(1.06); backdrop-filter: blur(32px) saturate(1.9) brightness(1.06);
+      box-shadow: 0 30px 70px -22px rgba(29, 29, 31, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.8), inset 0 -10px 22px rgba(255, 255, 255, 0.12);
       padding: 22px; animation: abWin 0.18s ease; }
     @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
       .dyn-abar .dh-vbar, .dyn-abar .dh-menu .dh-apps-pop.is-vision { background: rgba(255, 255, 255, 0.93); }
