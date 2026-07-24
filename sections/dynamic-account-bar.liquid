@@ -675,6 +675,13 @@
       .dyn-abar .dh-ptabs { display: none !important; }
       .dyn-abar .dh-vprev { display: none !important; }
       .dyn-abar .dh-apps-pop.is-vision[data-vtab="apps"] .dh-apps-grid { display: grid; }
+      /* Saved & Cart: two columns of smaller item tiles. */
+      .dyn-abar .dh-vgrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .dyn-abar .dh-vitem { padding: 8px; gap: 6px; border-radius: 14px; }
+      .dyn-abar .dh-vitem img, .dyn-abar .dh-vitem-ph { border-radius: 10px; }
+      .dyn-abar .dh-vitem-t { font-size: 12px; }
+      .dyn-abar .dh-vitem-p { font-size: 11px; }
+      .dyn-abar .dh-vdel { width: 24px; height: 24px; top: 6px; right: 6px; }
     }
     /* Widgets tab layout — no card grid. The date banner and the clock ride
        the top row side by side ("date and hours on top"); the quote drops to
