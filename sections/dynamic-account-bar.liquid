@@ -1176,7 +1176,7 @@
       }
       return null;
     }
-    var chatHosts = ["inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']",
+    var chatHosts = ["shopify-chat", "inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']",
       "#ShopifyChat", "[id^='ShopifyChat']", "iframe[title*='chat' i]", "[class^='shopify-chat']"];
     function findChatLauncher() {
       for (var i = 0; i < chatHosts.length; i++) {
@@ -1238,6 +1238,7 @@
       try { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); } catch (eC0) {}
       vbar.classList.remove("is-on");
       var apis = [
+        function () { return W.ShopifyChat && W.ShopifyChat.open && (W.ShopifyChat.open(), true); },
         function () { return W.$crisp && (W.$crisp.push(["do", "chat:open"]), true); },
         function () { return W.tidioChatApi && (W.tidioChatApi.open(), true); },
         function () { return W.Tawk_API && W.Tawk_API.maximize && (W.Tawk_API.maximize(), true); },
@@ -1251,7 +1252,7 @@
       ];
       for (var a = 0; a < apis.length; a++) { try { if (apis[a]()) return; } catch (eC1) {} }
       /* Shopify Inbox first, then generic chat launchers. */
-      var sels = ["inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']",
+      var sels = ["shopify-chat", "inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']",
         ".shopify-chat-button", "button[aria-label*='chat' i]", "[class*='chat-button']",
         "[class*='chat-launcher']", "[class*='ChatButton']", ".gorgias-chat-button",
         "#chat-widget-container button"];
