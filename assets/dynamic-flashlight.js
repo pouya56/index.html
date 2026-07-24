@@ -46,6 +46,18 @@
 
   function initAll() {
     var list = document.querySelectorAll(".dyn-flash");
+    /* Self-test: with ?torch=1 in the URL, build the overlay ourselves even if
+       the Dynamic Flashlight section isn't on the page. This separates "the
+       script isn't loading" from "the section isn't rendering". */
+    if (!list.length && /[?&]torch=1\b/.test(location.search) && document.body) {
+      var el = document.createElement("div");
+      el.className = "dyn-flash";
+      el.setAttribute("data-on", "1");
+      el.setAttribute("data-size", "120");
+      el.setAttribute("data-dim", "60");
+      document.body.appendChild(el);
+      list = [el];
+    }
     for (var i = 0; i < list.length; i++) initEl(list[i]);
   }
 
