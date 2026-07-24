@@ -1226,92 +1226,6 @@
       }
       return f;
     }
-    /* -------- Dock the chat window beside the bar (like Saved/Cart). --------
-       Inbox positions its window with its own JS, so instead of moving the host
-       we restyle the PANEL element inside the widget's shadow DOM: pin it onto
-       the same rectangle the bar's glass window uses, keep re-asserting it, and
-       release it when the chat closes. Needs an open shadow root. */
-    var dockPoll = 0, dockPanel = null, dockAnchor = null;
-    function findChatPanel(node, depth) {
-      if (!node || depth > 4) return null;
-      var best = null, bestA = 0;
-      var els = node.querySelectorAll ? node.querySelectorAll("*") : [];
-      for (var i = 0; i < els.length; i++) {
-        var el = els[i], r, cs;
-        try { r = el.getBoundingClientRect(); cs = getComputedStyle(el); } catch (eP0) { continue; }
-        if ((cs.position === "fixed" || cs.position === "absolute") && r.width > 260 && r.height > 300) {
-          var a = r.width * r.height;
-          if (a > bestA) { bestA = a; best = el; }
-        }
-        if (el.shadowRoot) {
-          var b = findChatPanel(el.shadowRoot, depth + 1);
-          if (b) { var rb = b.getBoundingClientRect(), ab = rb.width * rb.height; if (ab > bestA) { bestA = ab; best = b; } }
-        }
-      }
-      return best;
-    }
-    function dockRect() {
-      /* Same footprint as the bar's own glass window. The bar folds away when
-         the chat opens, so we anchor on the rect captured BEFORE folding; if
-         none, hang the window off the right edge (where the bar lives). */
-      var w = Math.min(840, innerWidth - 240);
-      var h = Math.min(Math.round(innerHeight * 0.8), 760);
-      var ax = innerWidth - 72, ay = innerHeight / 2;
-      if (dockAnchor && (dockAnchor.width || dockAnchor.height)) {
-        ax = dockAnchor.left; ay = dockAnchor.top + dockAnchor.height / 2;
-      }
-      var left = Math.max(16, Math.round(ax - 16 - w));
-      var top = Math.round(Math.min(Math.max(16, ay - h / 2), innerHeight - h - 16));
-      return { left: left, top: top, w: w, h: h };
-    }
-    function styleDock(panel) {
-      var d = dockRect(), st = panel.style;
-      st.setProperty("position", "fixed", "important");
-      st.setProperty("left", d.left + "px", "important");
-      st.setProperty("top", d.top + "px", "important");
-      st.setProperty("right", "auto", "important");
-      st.setProperty("bottom", "auto", "important");
-      st.setProperty("width", d.w + "px", "important");
-      st.setProperty("height", d.h + "px", "important");
-      st.setProperty("max-width", "none", "important");
-      st.setProperty("max-height", "none", "important");
-      st.setProperty("margin", "0", "important");
-      st.setProperty("transform", "none", "important");
-      st.setProperty("border-radius", "30px", "important");
-      st.setProperty("box-shadow", "0 30px 70px -22px rgba(29,29,31,0.4)", "important");
-      st.setProperty("z-index", "2147483000", "important");
-    }
-    function undockChat() {
-      if (dockPoll) { clearInterval(dockPoll); dockPoll = 0; }
-      var panel = dockPanel; dockPanel = null;
-      if (panel) {
-        ["position", "left", "top", "right", "bottom", "width", "height", "max-width", "max-height",
-         "margin", "transform", "border-radius", "box-shadow", "z-index"].forEach(function (p) {
-          try { panel.style.removeProperty(p); } catch (eU0) {}
-        });
-      }
-      hideNativeChat();
-    }
-    function dockChat(attempt) {
-      var f = findChatLauncher();
-      if (!f || !f.host || !f.host.shadowRoot) return;
-      if (innerWidth < 861) return; /* phones keep the native full-screen chat */
-      var panel = findChatPanel(f.host.shadowRoot, 0);
-      /* The window may still be animating in — retry briefly. */
-      if (!panel) { if ((attempt || 0) < 8) setTimeout(function () { dockChat((attempt || 0) + 1); }, 250); return; }
-      dockPanel = panel;
-      styleDock(panel);
-      if (dockPoll) clearInterval(dockPoll);
-      var grace = Date.now() + 2500;
-      dockPoll = setInterval(function () {
-        var open = true, r, cs;
-        try { r = panel.getBoundingClientRect(); if (!r.height) open = false; } catch (eD1) { open = false; }
-        try { cs = getComputedStyle(panel); if (cs.display === "none" || cs.visibility === "hidden") open = false; } catch (eD2) {}
-        if (panel.isConnected === false) open = false;
-        if (!open && Date.now() > grace) { undockChat(); return; }
-        if (open) styleDock(panel); /* re-pin if the widget tries to move it */
-      }, 400);
-    }
     var vChatBusy = false;
     function openChat() {
       var W = window;
@@ -1320,12 +1234,6 @@
       if (vChatBusy) return;
       vChatBusy = true;
       setTimeout(function () { vChatBusy = false; }, 3500);
-      /* Remember where the bar is BEFORE folding it — the docked chat window
-         anchors on this spot. */
-      try {
-        var vbNow = vbar.getBoundingClientRect();
-        if (vbNow.width || vbNow.height) dockAnchor = vbNow;
-      } catch (eA0) {}
       /* Fold the launcher away so the chat isn't hidden behind it. */
       try { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); } catch (eC0) {}
       vbar.classList.remove("is-on");
@@ -1342,7 +1250,7 @@
         function () { return W.Chatra && (W.Chatra("openChat", true), true); },
         function () { return W.gorgiasChat && W.gorgiasChat.open && (W.gorgiasChat.open(), true); }
       ];
-      for (var a = 0; a < apis.length; a++) { try { if (apis[a]()) { setTimeout(dockChat, 250); return; } } catch (eC1) {} }
+      for (var a = 0; a < apis.length; a++) { try { if (apis[a]()) return; } catch (eC1) {} }
       /* Shopify Inbox first, then generic chat launchers. */
       var sels = ["shopify-chat", "inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']",
         ".shopify-chat-button", "button[aria-label*='chat' i]", "[class*='chat-button']",
@@ -1395,11 +1303,11 @@
         setTimeout(hideNativeChat, 400);
         setTimeout(hideNativeChat, 1200);
       }
-      if (tryOpen()) { setTimeout(dockChat, 250); return; }
+      if (tryOpen()) return;
       /* The widget script may still be loading — retry briefly, then link out. */
       var tries = 0;
       var poll = setInterval(function () {
-        if (tryOpen()) { clearInterval(poll); setTimeout(dockChat, 250); return; }
+        if (tryOpen()) { clearInterval(poll); return; }
         if (++tries >= 6) {
           clearInterval(poll);
           if (vChatFallback) location.href = vChatFallback;
