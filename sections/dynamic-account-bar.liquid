@@ -1156,182 +1156,8 @@
       '<button type="button" class="dh-vtab" data-vtab="saved" aria-label="Saved"><svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1Z"/></svg></button>' +
       '<button type="button" class="dh-vtab" data-vtab="cart" aria-label="Cart"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1.5"/><circle cx="18" cy="21" r="1.5"/><path d="M2 3h3l2.5 13h11l2-8H6"/></svg></button>' +
       '<button type="button" class="dh-vtab" data-vtab="apps" aria-label="Apps"><svg viewBox="0 0 24 24"><circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/><circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/></svg></button>' +
-      '{% if section.settings.show_chat == false %}{% else %}<button type="button" class="dh-vtab" data-vtab="chat" aria-label="Chat with us"><svg viewBox="0 0 24 24"><path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4.6 3.4A0.6 0.6 0 0 1 4 19V6a1 1 0 0 1 1-1Z"/></svg></button>{% endif %}' +
       '<button type="button" class="dh-vtab" data-vtab="account" aria-label="Account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></button>';
     host.appendChild(vbar);
-    /* Opens whatever chat widget the store runs — tries the popular chat
-       apps' own APIs, then clicks a launcher button by common selectors
-       (Shopify Inbox included), and finally falls back to a link. */
-    var vChatFallback = {{ section.settings.chat_fallback_url | default: '/pages/contact' | json }};
-    var vHideBubble = {% if section.settings.hide_native_bubble == false %}false{% else %}true{% endif %};
-    /* Pierce nested shadow roots to reach a launcher button. Shopify Inbox
-       hides its toggle inside <inbox-online-store-chat>'s shadow DOM. */
-    function chatPierce(node, depth) {
-      if (!node || depth > 4) return null;
-      var b = node.querySelector && node.querySelector("button, [role='button'], a[href]");
-      if (b) return b;
-      var kids = node.querySelectorAll ? node.querySelectorAll("*") : [];
-      for (var i = 0; i < kids.length; i++) {
-        if (kids[i].shadowRoot) { var r = chatPierce(kids[i].shadowRoot, depth + 1); if (r) return r; }
-      }
-      return null;
-    }
-    var chatHosts = ["shopify-chat", "inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']",
-      "#ShopifyChat", "[id^='ShopifyChat']", "iframe[title*='chat' i]", "[class^='shopify-chat']"];
-    function findChatLauncher() {
-      for (var i = 0; i < chatHosts.length; i++) {
-        var h = document.querySelector(chatHosts[i]);
-        if (h && h.shadowRoot) {
-          /* Prefer Shopify Inbox's known launcher; else the first button. */
-          var b = h.shadowRoot.querySelector(".chat-lifecycle-button, [class*='lifecycle-button'], [class*='launcher']")
-            || chatPierce(h.shadowRoot, 0);
-          if (b) return { host: h, btn: b };
-        }
-        if (h) return { host: h, btn: h };
-      }
-      return null;
-    }
-    /* Hide the store's own corner bubble — the Chat tab is the only door.
-       Hiding is NON-destructive (visibility + pointer-events, never
-       display:none) so the widget can still open, and we only ever touch the
-       small collapsed bubble — never the open panel or its close button. */
-    function hideNativeChat() {
-      if (!vHideBubble) return;
-      var f = findChatLauncher();
-      if (!f || !f.btn) return;
-      try {
-        var r = f.btn.getBoundingClientRect();
-        /* Only hide the collapsed launcher; leave a big open panel alone.
-           Inbox's default launcher is a text pill (~180x56), so allow width
-           up to 300 — an open chat panel is far taller than 120px. */
-        if (r.width && r.width < 300 && r.height < 120) {
-          f.btn.style.setProperty("visibility", "hidden", "important");
-          f.btn.style.setProperty("pointer-events", "none", "important");
-        }
-      } catch (eH0) {}
-      if (f.host && f.host.shadowRoot && !f.host.__dynObs) {
-        try {
-          f.host.__dynObs = true;
-          new MutationObserver(function () { hideNativeChat(); })
-            .observe(f.host.shadowRoot, { childList: true, subtree: true });
-        } catch (eH1) {}
-      }
-    }
-    /* Reveal the launcher just long enough to open it (some widgets refuse to
-       open a hidden button), then let the observer re-hide it. */
-    function revealChatLauncher() {
-      var f = findChatLauncher();
-      if (f && f.btn && f.btn.style) {
-        try { f.btn.style.removeProperty("visibility"); f.btn.style.removeProperty("pointer-events"); } catch (eR0) {}
-      }
-      return f;
-    }
-    var vChatBusy = false;
-    function openChat() {
-      var W = window;
-      /* Re-entrancy guard: the launcher hunt below fires synthetic clicks, and if
-         one ever lands back on our own tab it must not loop. */
-      if (vChatBusy) return;
-      vChatBusy = true;
-      setTimeout(function () { vChatBusy = false; }, 3500);
-      /* Fold the launcher away so the chat isn't hidden behind it. */
-      try { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); } catch (eC0) {}
-      vbar.classList.remove("is-on");
-      var apis = [
-        function () { return W.ShopifyChat && W.ShopifyChat.open && (W.ShopifyChat.open(), true); },
-        function () { return W.$crisp && (W.$crisp.push(["do", "chat:open"]), true); },
-        function () { return W.tidioChatApi && (W.tidioChatApi.open(), true); },
-        function () { return W.Tawk_API && W.Tawk_API.maximize && (W.Tawk_API.maximize(), true); },
-        function () { return W.zE && (W.zE("messenger", "open"), true); },
-        function () { return W.fcWidget && W.fcWidget.open && (W.fcWidget.open(), true); },
-        function () { return W.LiveChatWidget && (W.LiveChatWidget.call("maximize"), true); },
-        function () { return W.drift && W.drift.api && (W.drift.api.openChat(), true); },
-        function () { return W.Intercom && (W.Intercom("show"), true); },
-        function () { return W.Chatra && (W.Chatra("openChat", true), true); },
-        function () { return W.gorgiasChat && W.gorgiasChat.open && (W.gorgiasChat.open(), true); }
-      ];
-      for (var a = 0; a < apis.length; a++) { try { if (apis[a]()) return; } catch (eC1) {} }
-      /* Shopify Inbox first, then generic chat launchers. */
-      var sels = ["shopify-chat", "inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']",
-        ".shopify-chat-button", "button[aria-label*='chat' i]", "[class*='chat-button']",
-        "[class*='chat-launcher']", "[class*='ChatButton']", ".gorgias-chat-button",
-        "#chat-widget-container button"];
-      /* A plain .click() isn't always enough — some widgets (Shopify Inbox
-         included) open on a full pointer/mouse sequence. Fire the lot. */
-      function fireOpen(el) {
-        if (!el) return false;
-        var opts = { bubbles: true, cancelable: true, composed: true, view: W };
-        try {
-          ["pointerdown", "mousedown", "pointerup", "mouseup", "click"].forEach(function (ty) {
-            var C = ty.indexOf("pointer") === 0 && W.PointerEvent ? W.PointerEvent : W.MouseEvent;
-            try { el.dispatchEvent(new C(ty, opts)); } catch (eF0) {}
-          });
-          if (el.click) el.click();
-          return true;
-        } catch (eF1) { return false; }
-      }
-      function tryOpen() {
-        /* Un-hide the store's launcher first so it opens reliably; the
-           observer re-hides the collapsed bubble a moment later. */
-        var f = revealChatLauncher();
-        if (f && f.btn && fireOpen(f.btn)) { scheduleRehide(); return true; }
-        if (f && f.host && f.host !== (f && f.btn) && fireOpen(f.host)) { scheduleRehide(); return true; }
-        for (var s = 0; s < sels.length; s++) {
-          /* Skip anything inside our own bar — the generic selectors (e.g.
-             button[aria-label*='chat']) would otherwise match the Chat tab
-             itself and click it in a loop instead of the store's widget. */
-          var cand = document.querySelectorAll(sels[s]);
-          var el = null;
-          for (var c = 0; c < cand.length; c++) {
-            if (cand[c].closest && cand[c].closest(".dyn-abar")) continue;
-            el = cand[c]; break;
-          }
-          if (!el) continue;
-          if (el.shadowRoot) {
-            var sb = el.shadowRoot.querySelector(".chat-lifecycle-button, [class*='lifecycle-button'], [class*='launcher']") || chatPierce(el.shadowRoot, 0);
-            if (sb && fireOpen(sb)) { scheduleRehide(); return true; }
-          }
-          if (el.tagName && el.tagName.toLowerCase().indexOf("-") !== -1) { if (fireOpen(el)) { scheduleRehide(); return true; } continue; }
-          if (fireOpen(el)) { scheduleRehide(); return true; }
-          var ib = el.querySelector && el.querySelector("button, [role='button']");
-          if (ib && fireOpen(ib)) { scheduleRehide(); return true; }
-        }
-        return false;
-      }
-      function scheduleRehide() {
-        if (!vHideBubble) return;
-        setTimeout(hideNativeChat, 400);
-        setTimeout(hideNativeChat, 1200);
-      }
-      if (tryOpen()) return;
-      /* The widget script may still be loading — retry briefly, then link out. */
-      var tries = 0;
-      var poll = setInterval(function () {
-        if (tryOpen()) { clearInterval(poll); return; }
-        if (++tries >= 6) {
-          clearInterval(poll);
-          if (vChatFallback) location.href = vChatFallback;
-        }
-      }, 300);
-    }
-    /* Hide the native chat bubble as soon as it appears (widget loads late). */
-    if (vHideBubble) {
-      hideNativeChat();
-      var hideTries = 0;
-      var hidePoll = setInterval(function () {
-        hideNativeChat();
-        if (++hideTries >= 20) clearInterval(hidePoll);
-      }, 500);
-      /* Inbox can lazy-load well after those first 10s — keep watching the DOM
-         for it indefinitely (rAF-throttled, so it costs next to nothing). */
-      var hideRaf = 0;
-      try {
-        new MutationObserver(function () {
-          if (hideRaf) return;
-          hideRaf = requestAnimationFrame(function () { hideRaf = 0; hideNativeChat(); });
-        }).observe(document.documentElement, { childList: true, subtree: true });
-      } catch (eH2) {}
-    }
     /* Every app gets its own tab; its window shows a live preview of the
        page (same-shop links embed; outside links get an Open button). */
     var vApps = [];
@@ -2021,8 +1847,6 @@
       var t = e.target.closest ? e.target.closest(".dh-vtab") : null;
       if (!t || pop.hidden) return;
       var tid = t.getAttribute("data-vtab");
-      /* Chat opens the store's live-chat widget (no window of our own). */
-      if (tid === "chat") { openChat(); return; }
       /* The person icon is a door: profile on Shopify's site when signed
          in, secure login when signed out. */
       if (tid === "account") { location.href = vCust ? vProf : vLogin; return; }
@@ -2074,9 +1898,6 @@
     { "type": "header", "content": "Apps menu (9 dots)" },
     { "type": "checkbox", "id": "show_apps", "label": "Show 9-dots apps menu", "default": true },
     { "type": "text", "id": "apps_title", "label": "Apps menu title", "default": "Apps", "info": "Shown only when the dashboard widgets below are off — the greeting takes its place otherwise." },
-    { "type": "checkbox", "id": "show_chat", "label": "Show Chat tab", "default": true, "info": "Adds a chat tab beside the launcher that opens your store's chat widget (Shopify Inbox, Tidio, Crisp, Gorgias, Intercom, and more are detected automatically)." },
-    { "type": "checkbox", "id": "hide_native_bubble", "label": "Hide the store's own chat bubble", "default": true, "info": "Removes the separate corner chat button (e.g. Shopify Inbox's 'Live chat') so the tab above is the only way in. The chat window itself still opens normally." },
-    { "type": "url", "id": "chat_fallback_url", "label": "Chat fallback link", "info": "Where the Chat tab goes if no chat widget is found on the page. Defaults to your contact page." },
     { "type": "header", "content": "Apps window dashboard" },
     { "type": "checkbox", "id": "show_widgets", "label": "Show greeting, clock & widgets", "default": true, "info": "The dashboard at the top of the 9-dots window: greeting + date, live analog clock, a rotating focus line, and the visitor's saved items." },
     { "type": "textarea", "id": "focus_quotes", "label": "Focus sentences (one per line)", "info": "A random one shows each time the window opens, never repeating until all have had a turn. Leave empty for the built-in set of 18." },
