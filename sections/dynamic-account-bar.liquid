@@ -1226,6 +1226,56 @@
       }
       return f;
     }
+    /* -------- Dock the chat window beside the bar (not the corner). --------
+       While open, the <shopify-chat> host becomes a fixed box in the same spot
+       the bar's own window uses; its transform makes the widget's fixed-position
+       panel anchor inside that box. Undocks when the chat closes. Needs an open
+       shadow root (to see the close); otherwise the corner behaviour stays. */
+    var dockPoll = 0;
+    function chatMaxRect(node, depth) {
+      if (!node || depth > 4) return 0;
+      var best = 0, els = node.querySelectorAll ? node.querySelectorAll("*") : [];
+      for (var i = 0; i < els.length; i++) {
+        var r; try { r = els[i].getBoundingClientRect(); } catch (eM0) { continue; }
+        if (r.height > best) best = r.height;
+        if (els[i].shadowRoot) { var b2 = chatMaxRect(els[i].shadowRoot, depth + 1); if (b2 > best) best = b2; }
+      }
+      return best;
+    }
+    function undockChat(host) {
+      if (dockPoll) { clearInterval(dockPoll); dockPoll = 0; }
+      if (!host) return;
+      ["position", "left", "top", "right", "bottom", "width", "height", "transform", "z-index"].forEach(function (p) {
+        try { host.style.removeProperty(p); } catch (eU0) {}
+      });
+      hideNativeChat();
+    }
+    function dockChat() {
+      var f = findChatLauncher();
+      if (!f || !f.host || !f.host.shadowRoot) return;
+      if (innerWidth < 861) return; /* phones keep the native full-screen chat */
+      var host = f.host, vb = vbar.getBoundingClientRect();
+      var w = Math.min(430, innerWidth - 120);
+      var h = Math.min(Math.round(innerHeight * 0.78), 700);
+      var left = Math.max(16, Math.round(vb.left - 16 - w));
+      var top = Math.round(Math.min(Math.max(16, vb.top + vb.height / 2 - h / 2), innerHeight - h - 16));
+      var st = host.style;
+      st.setProperty("position", "fixed", "important");
+      st.setProperty("left", left + "px", "important");
+      st.setProperty("top", top + "px", "important");
+      st.setProperty("right", "auto", "important");
+      st.setProperty("bottom", "auto", "important");
+      st.setProperty("width", w + "px", "important");
+      st.setProperty("height", h + "px", "important");
+      st.setProperty("transform", "translateZ(0)", "important");
+      st.setProperty("z-index", "2147483000", "important");
+      if (dockPoll) clearInterval(dockPoll);
+      var grace = Date.now() + 2500;
+      dockPoll = setInterval(function () {
+        var open = chatMaxRect(host.shadowRoot, 0) > 200;
+        if (!open && Date.now() > grace) undockChat(host);
+      }, 500);
+    }
     var vChatBusy = false;
     function openChat() {
       var W = window;
@@ -1250,7 +1300,7 @@
         function () { return W.Chatra && (W.Chatra("openChat", true), true); },
         function () { return W.gorgiasChat && W.gorgiasChat.open && (W.gorgiasChat.open(), true); }
       ];
-      for (var a = 0; a < apis.length; a++) { try { if (apis[a]()) return; } catch (eC1) {} }
+      for (var a = 0; a < apis.length; a++) { try { if (apis[a]()) { setTimeout(dockChat, 250); return; } } catch (eC1) {} }
       /* Shopify Inbox first, then generic chat launchers. */
       var sels = ["shopify-chat", "inbox-online-store-chat", "#shopify-chat", "[id^='shopify-chat']",
         ".shopify-chat-button", "button[aria-label*='chat' i]", "[class*='chat-button']",
@@ -1303,13 +1353,14 @@
         setTimeout(hideNativeChat, 400);
         setTimeout(hideNativeChat, 1200);
       }
-      if (tryOpen()) return;
+      if (tryOpen()) { setTimeout(dockChat, 250); return; }
       /* The widget script may still be loading — retry briefly, then link out. */
       var tries = 0;
       var poll = setInterval(function () {
-        if (tryOpen() || ++tries >= 6) {
+        if (tryOpen()) { clearInterval(poll); setTimeout(dockChat, 250); return; }
+        if (++tries >= 6) {
           clearInterval(poll);
-          if (tries >= 6 && vChatFallback) location.href = vChatFallback;
+          if (vChatFallback) location.href = vChatFallback;
         }
       }, 300);
     }
