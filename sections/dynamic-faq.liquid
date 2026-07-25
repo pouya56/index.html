@@ -87,6 +87,28 @@
   .dyn-faq-answer p { margin: 0 0 10px; } .dyn-faq-answer p:last-child { margin-bottom: 0; }
   .dyn-faq-answer a { color: var(--accent); }
   .dyn-faq-empty { grid-column: 1 / -1; padding: 40px 18px; color: var(--soft); font-size: 16px; }
+  /* Phone: tighter fit — smaller top bar, heading and spacing. */
+  @media (max-width: 760px) {
+    .dyn-faq { padding: 0 10px; margin: 14px auto 48px; }
+    .dyn-faq-card { border-radius: 24px; padding: 22px 16px 30px; }
+    .dyn-faq-top { margin-bottom: 20px; gap: 10px; }
+    .dyn-faq-logo img { width: min(112px, 34vw) !important; }
+    .dyn-faq-cta { height: 42px; padding: 0 18px; font-size: 13px; }
+    .dyn-faq-head { margin-bottom: 16px; gap: 10px; }
+    .dyn-faq-head h2 { font-size: 27px; }
+    .dyn-faq-head p { font-size: 13.5px; line-height: 1.6; margin-top: 2px; }
+    .dyn-faq-search { height: 48px; padding: 0 16px; margin-bottom: 4px; gap: 9px; }
+    .dyn-faq-search svg { width: 17px; height: 17px; }
+    .dyn-faq-sinput { font-size: 16px; }
+    .dyn-faq-cat { margin: 20px 0 6px; font-size: 19px; }
+    .dyn-faq-cat:not(:first-child) { padding-top: 22px; margin-top: 22px; }
+    .dyn-faq .dyn-faq-cat.is-firstvis { margin-top: 20px; }
+    .dyn-faq-grid { gap: 10px; }
+    .dyn-faq-item > summary { padding: 14px 16px; font-size: 14.5px; }
+    .dyn-faq-answer { padding: 0 16px 16px; font-size: 13.5px; }
+    .dyn-faq-nores { padding: 18px 4px 4px; font-size: 14px; }
+    .dyn-faq-empty { padding: 24px 8px; }
+  }
 </style>
 
 <section class="dyn-faq" id="dynFaq-{{ section.id }}" aria-label="{{ section.settings.heading | escape }}">
