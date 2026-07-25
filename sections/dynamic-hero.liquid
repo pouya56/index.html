@@ -477,6 +477,20 @@
   /* The injected product page brings opaque surfaces — soften them so the glass reads */
   #dhSlide .dh-slide-inject .gallery-main { background: rgba(245,245,247,0.3); }
   #dhSlide .dh-slide-inject .gal-thumb { background: rgba(245,245,247,0.35); }
+  /* Half window (Surprise me): the product page's desktop one-screen layout is
+     sized to the REAL viewport (100dvh tall, image scaled to screen height), so
+     inside a half-size pane it overflows and pushes the buy column out of view.
+     Stack it like the phone layout instead — image first, then name and buy box,
+     scrolling vertically inside the window. */
+  #dhSlide.dh-slide-half .dh-slide-inject .product {
+    height: auto; min-height: 0; overflow: visible;
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: auto;
+    gap: 26px; padding: 8px clamp(16px, 3vw, 40px) 48px; align-items: start;
+  }
+  #dhSlide.dh-slide-half .dh-slide-inject .gallery { position: static; order: -1; }
+  #dhSlide.dh-slide-half .dh-slide-inject .gallery-main {
+    height: auto; max-height: none; width: min(100%, 520px); margin: 0 auto; }
+  #dhSlide.dh-slide-half .dh-slide-inject #buyBox.col-right { align-self: auto; padding: 0; }
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { #dhSlide .dh-slide-panel { background: #fff; } }
   #dhSlide.is-open .dh-slide-panel { opacity: 1; }
   /* Half-size mode (used by the "Surprise me" random product) — a centred glass window ~50% of the page */
