@@ -808,12 +808,20 @@
       animation: abSiri 6s linear infinite; filter: blur(8px); opacity: 0; transition: opacity .35s ease; }
     .dyn-abar .dh-vs-go:hover::before, .dyn-abar .dh-vs-go.has-text::before { opacity: 0.95; }
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-vs-go::before { animation: none; } }
-    /* Arrange so the whole tab fits the window without scrolling: clock on
-       top, then the quote and calendar sharing one row. */
-    .dyn-abar .dh-wg-time { order: 1; }
-    .dyn-abar .dh-wg-quote { order: 3; width: auto; flex: 1 1 220px; min-height: 0; padding: 24px 22px; }
+    /* Widgets tab: a wider two-column dashboard so nothing ever scrolls —
+       clock, nudges and quote stacked on the left, the full calendar with
+       its agenda on the right. */
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] { width: 740px; }
+    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-apps-head { align-items: stretch; flex-wrap: nowrap; }
+    .dyn-abar .dh-wg-col { display: flex; flex-direction: column; gap: 14px; flex: 1 1 0; min-width: 0; }
+    .dyn-abar .dh-wg-time { order: 1; padding: 20px 22px; gap: 14px; }
+    .dyn-abar .dh-wg-lcd { font-size: 34px; padding: 13px 18px; }
+    .dyn-abar .dh-wg-day { font-size: 20px; }
+    .dyn-abar .dh-wg-sub { font-size: 12px; }
+    .dyn-abar .dh-wg-quote { order: 3; width: auto; flex: 1 1 auto; min-height: 0; padding: 24px 22px; }
     .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 21px; }
-    .dyn-abar .dh-wg-cal { order: 4; width: 360px; flex: 0 0 auto; margin: 0; }
+    .dyn-abar .dh-wg-cal { width: 340px; flex: 0 0 auto; margin: 0; }
+    .dyn-abar .dh-wg-calgrid span { height: 31px; }
     /* Phones get the SAME vision layout — bar beside the orb, floating glass
        window beside the bar — just sized to the narrower screen. */
     @media (max-width: 860px) {
@@ -833,6 +841,7 @@
       /* Widgets sized so the whole tab fits the window with no scrolling:
          content-height window, tighter cards, stacked single column. */
       .dyn-abar .dh-menu .dh-apps-pop.is-vision { height: auto; max-height: calc(100dvh - 90px); }
+      .dyn-abar .dh-wg-col { display: contents; }
       .dyn-abar .dh-apps-pop.is-vision .dh-apps-head { gap: 10px; }
       .dyn-abar .dh-wg-time { padding: 12px 14px; gap: 10px; }
       .dyn-abar .dh-wg-lcd { font-size: 26px; padding: 10px 14px; border-radius: 12px; }
@@ -899,17 +908,20 @@
           </button>
           {%- if section.settings.show_widgets -%}
           <div class="dh-apps-head" id="dynAbWidgets">
-            {%- comment -%} Two stacked liquid-glass cards: a digital clock with the
-               weekday/date beside it, and the quote below. {%- endcomment -%}
-            <div class="dh-wg dh-wg-time">
-              <div class="dh-wg-lcd"><span id="dynAbTime">--:--</span></div>
-              <div class="dh-wg-date">
-                <div class="dh-wg-day" id="dynAbDay"></div>
-                <div class="dh-wg-sub" id="dynAbDate"></div>
+            {%- comment -%} Left column on desktop: clock, nudges and quote stack
+               beside the calendar so the tab never scrolls. On phones the
+               wrapper dissolves (display: contents) into the single column. {%- endcomment -%}
+            <div class="dh-wg-col">
+              <div class="dh-wg dh-wg-time">
+                <div class="dh-wg-lcd"><span id="dynAbTime">--:--</span></div>
+                <div class="dh-wg-date">
+                  <div class="dh-wg-day" id="dynAbDay"></div>
+                  <div class="dh-wg-sub" id="dynAbDate"></div>
+                </div>
               </div>
-            </div>
-            <div class="dh-wg dh-wg-quote">
-              <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
+              <div class="dh-wg dh-wg-quote">
+                <div class="dh-w-mlines" id="dynAbFocus">&nbsp;</div>
+              </div>
             </div>
             {%- comment -%} Browsable calendar with today highlighted. {%- endcomment -%}
             <div class="dh-wg dh-wg-cal">
@@ -1355,7 +1367,8 @@
           card.innerHTML = '<span class="dh-wg-nudge-ic">&#127873;</span><span class="dh-wg-nudge-tx">' + esc(x.ev.t) + " " + when +
             ' &mdash; <a href="' + vNudgeUrl + '">design something personal</a></span>' +
             '<button type="button" class="dh-wg-nudge-x" aria-label="Dismiss" data-dis="' + x.ev.i + "@" + x.when.getFullYear() + '">&#10005;</button>';
-          head2.insertBefore(card, head2.firstChild);
+          var host2 = head2.querySelector(".dh-wg-col") || head2;
+          host2.insertBefore(card, host2.firstChild);
         });
         var orb = document.querySelector(".dyn-abar .dh-apps-btn");
         var badge = orb ? orb.querySelector(".dh-orb-badge") : null;
