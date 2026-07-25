@@ -41,6 +41,30 @@
   .dyn-faq-head h2 .dyn-faq-hi { font-weight: 700; color: var(--accent); }
   .dyn-faq-head p { margin: 6px 0 0; font-size: 15.5px; line-height: 1.75; color: var(--soft); }
   @media (max-width: 860px) { .dyn-faq-head { grid-template-columns: 1fr; } }
+  /* Search bar: filters the questions live as you type. */
+  .dyn-faq-search { display: flex; align-items: center; gap: 12px; background: var(--panel);
+    border-radius: 999px; padding: 0 22px; height: 58px; margin-bottom: clamp(22px, 3vw, 36px);
+    border: 2px solid transparent; transition: border-color 0.18s, background 0.18s, box-shadow 0.18s; }
+  .dyn-faq-search:focus-within { border-color: var(--accent); background: #fff;
+    box-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.2); }
+  .dyn-faq-search svg { flex: none; width: 19px; height: 19px; stroke: var(--soft); fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-faq-sinput { flex: 1 1 auto; min-width: 0; border: 0; background: none; font: inherit;
+    font-size: 16px; font-weight: 500; color: var(--ink); }
+  .dyn-faq-sinput:focus { outline: none; }
+  .dyn-faq-sinput::placeholder { color: var(--soft); }
+  .dyn-faq-sinput::-webkit-search-cancel-button { display: none; }
+  .dyn-faq-sclear { flex: none; border: 0; cursor: pointer; width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; background: #e3e3e8; color: var(--ink);
+    font-size: 12px; line-height: 1; transition: background 0.15s; }
+  .dyn-faq-sclear:hover { background: #d6d6dc; }
+  .dyn-faq-sclear[hidden] { display: none; }
+  .dyn-faq-nores { display: none; padding: 26px 4px 6px; font-size: 15.5px; color: var(--soft); }
+  .dyn-faq-nores.is-on { display: block; }
+  .dyn-faq-nores a { color: var(--accent); text-decoration: none; }
+  .dyn-faq-nores a:hover { text-decoration: underline; }
+  .dyn-faq-item.is-hide, .dyn-faq-cat.is-hide { display: none; }
+  .dyn-faq .dyn-faq-cat.is-firstvis { border-top: none; padding-top: 0; margin-top: 40px; }
   /* Category titles: big, centered */
   .dyn-faq-cat { grid-column: 1 / -1; text-align: center; margin: 40px 0 12px;
     font-size: clamp(22px, 2.8vw, 30px); font-weight: 700; letter-spacing: -0.02em; }
@@ -65,7 +89,7 @@
   .dyn-faq-empty { grid-column: 1 / -1; padding: 40px 18px; color: var(--soft); font-size: 16px; }
 </style>
 
-<section class="dyn-faq" aria-label="{{ section.settings.heading | escape }}">
+<section class="dyn-faq" id="dynFaq-{{ section.id }}" aria-label="{{ section.settings.heading | escape }}">
   <div class="dyn-faq-card">
 
     {%- assign nav_n = 0 -%}
@@ -112,6 +136,15 @@
       </div>
     {% endif %}
 
+    {%- if section.settings.show_search -%}
+      <div class="dyn-faq-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4.2-4.2"></path></svg>
+        <input type="search" class="dyn-faq-sinput" placeholder="{{ section.settings.search_placeholder | default: 'Search questions…' | escape }}" aria-label="Search questions" autocomplete="off">
+        <button type="button" class="dyn-faq-sclear" aria-label="Clear search" hidden>&#10005;</button>
+      </div>
+      <p class="dyn-faq-nores">No answers found for &ldquo;<b></b>&rdquo;. <a href="{{ section.settings.cta_link | default: '/pages/contact' }}">Contact us</a> &mdash; we&rsquo;re happy to help.</p>
+    {%- endif -%}
+
     <div class="dyn-faq-grid">
       {% assign faq_first = true %}
       {% for block in section.blocks %}
@@ -131,6 +164,62 @@
 
   </div>
 </section>
+
+<script>
+(function () {
+  var root = document.getElementById("dynFaq-{{ section.id }}");
+  if (!root || root.__faqInit) return;
+  root.__faqInit = true;
+  var inp = root.querySelector(".dyn-faq-sinput");
+  if (!inp) return;
+  var clearBtn = root.querySelector(".dyn-faq-sclear");
+  var noRes = root.querySelector(".dyn-faq-nores");
+  var items = Array.prototype.slice.call(root.querySelectorAll(".dyn-faq-item")).map(function (el) {
+    return { el: el, txt: (el.textContent || "").toLowerCase() };
+  });
+  var cats = Array.prototype.slice.call(root.querySelectorAll(".dyn-faq-cat"));
+  var openSnap = null; /* which items were open before the search began */
+  function filter() {
+    var q = inp.value.trim().toLowerCase();
+    clearBtn.hidden = !q;
+    if (q && openSnap === null) openSnap = items.map(function (x) { return x.el.open; });
+    var n = 0;
+    items.forEach(function (x) {
+      var hit = !q || x.txt.indexOf(q) !== -1;
+      x.el.classList.toggle("is-hide", !hit);
+      if (q && hit) { x.el.open = true; n++; }
+      else if (hit) n++;
+    });
+    if (!q && openSnap) {
+      items.forEach(function (x, i) { x.el.open = openSnap[i]; });
+      openSnap = null;
+    }
+    /* Hide category titles whose questions are all hidden. */
+    cats.forEach(function (c) {
+      var vis = false, sib = c.nextElementSibling;
+      while (sib && !sib.classList.contains("dyn-faq-cat")) {
+        if (sib.classList.contains("dyn-faq-item") && !sib.classList.contains("is-hide")) { vis = true; break; }
+        sib = sib.nextElementSibling;
+      }
+      c.classList.toggle("is-hide", !vis);
+    });
+    /* The first category still showing loses its divider line. */
+    var first = true;
+    cats.forEach(function (c) {
+      if (c.classList.contains("is-hide")) { c.classList.remove("is-firstvis"); return; }
+      c.classList.toggle("is-firstvis", first); first = false;
+    });
+    if (noRes) {
+      noRes.classList.toggle("is-on", !!q && n === 0);
+      var b = noRes.querySelector("b");
+      if (b) b.textContent = inp.value.trim();
+    }
+  }
+  inp.addEventListener("input", filter);
+  inp.addEventListener("keydown", function (e) { if (e.key === "Escape") { inp.value = ""; filter(); } });
+  clearBtn.addEventListener("click", function () { inp.value = ""; filter(); inp.focus(); });
+})();
+</script>
 
 {% schema %}
 {
@@ -165,6 +254,23 @@
       "id": "cta_link",
       "label": "Button link",
       "info": "Defaults to /pages/contact."
+    },
+    {
+      "type": "header",
+      "content": "Search"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_search",
+      "label": "Show search bar",
+      "default": true,
+      "info": "Customers can type to filter the questions live."
+    },
+    {
+      "type": "text",
+      "id": "search_placeholder",
+      "label": "Search placeholder text",
+      "default": "Search questions…"
     },
     {
       "type": "header",
