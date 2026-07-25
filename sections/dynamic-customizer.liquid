@@ -557,15 +557,8 @@ button { font-family: inherit; cursor: pointer; }
   background: none; border: none; box-shadow: none; border-radius: 0;
   aspect-ratio: 1 / 1; display: grid; place-items: center; overflow: visible;
 }
-/* Prev / next in a floating glass pill centred at the bottom. */
-.gal-nav {
-  position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 50;
-  display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: 999px;
-  background: rgba(255,255,255,0.22);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid rgba(255,255,255,0.5);
-  box-shadow: 0 14px 30px -12px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.7);
-}
+/* Prev / next float mid-height on the left and right edges of the image. */
+.gal-nav { position: static; }
 .gallery-stage { width: 96%; height: 96%; display: grid; place-items: center; position: relative; }
 /* The class rule above overrides the [hidden] attribute — force it off so the
    card deck is what shows (the stage is only revealed as a fallback). */
@@ -573,16 +566,19 @@ button { font-family: inherit; cursor: pointer; }
 .gallery-stage img { width: 100%; height: 100%; object-fit: contain; transition: opacity var(--dur) var(--ease-out); }
 .gallery svg { width: 100%; height: 100%; object-fit: contain; }
 .gal-nav .gal-arrow {
-  position: static; transform: none; z-index: 2;
-  width: 42px; height: 42px; border-radius: 50%; border: none;
-  background: rgba(255,255,255,0.65);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.14); color: var(--ink); font-size: 22px; line-height: 1;
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 50;
+  width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.45);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 0 10px 24px -10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.7);
+  color: var(--ink); font-size: 22px; line-height: 1;
   display: grid; place-items: center; cursor: pointer;
   transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast);
 }
-.gal-nav .gal-arrow:hover { transform: scale(1.08); background: #fff; }
-.gal-nav .gal-arrow:active { transform: scale(0.96); }
+.gal-nav .gal-prev { left: 6px; }
+.gal-nav .gal-next { right: 6px; }
+.gal-nav .gal-arrow:hover { transform: translateY(-50%) scale(1.08); background: #fff; }
+.gal-nav .gal-arrow:active { transform: translateY(-50%) scale(0.96); }
 .gallery-thumbs { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 /* Keep the thumbnail strip fully hidden — the class rule above would otherwise
    override the [hidden] attribute and leave it visible. */
