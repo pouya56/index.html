@@ -685,7 +685,7 @@
     .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 26px; font-weight: 700; color: #16232c; line-height: 1.35; }
     /* Calendar card: month name with prev/next arrows + CALENDAR, inset
        weekday strip, day grid, today in an orange rounded square. */
-    .dyn-abar .dh-wg-cal { width: min(400px, 100%); margin: 0 auto; padding: 22px 24px 26px; }
+    .dyn-abar .dh-wg-cal { width: min(400px, 100%); margin: 0 auto; padding: 22px 24px 26px; position: relative; }
     .dyn-abar .dh-wg-calhead { display: flex; justify-content: space-between; align-items: center;
       color: #1d1d1f; padding: 0 6px 12px; }
     .dyn-abar .dh-wg-calnavwrap { display: flex; align-items: center; gap: 6px; }
@@ -714,10 +714,16 @@
     .dyn-abar .dh-wg-calgrid span.has-ev::after { content: ""; position: absolute; left: 50%; bottom: 3px;
       transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background: #e2708c; }
     .dyn-abar .dh-wg-calgrid span.is-today.has-ev::after { background: #fff; }
-    /* Day editor: date + close, that day's events, add form. */
-    .dyn-abar .dh-wg-calpop { margin-top: 10px; border-radius: 16px; padding: 12px 14px;
-      background: rgba(255, 255, 255, 0.5);
-      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 8px 20px -10px rgba(29, 29, 31, 0.25); }
+    /* Day editor: floats on the tapped date (the arrow points at the day) —
+       below it in the top half of the month, above it in the bottom half. */
+    .dyn-abar .dh-wg-calpop { position: absolute; z-index: 6; width: 252px; border-radius: 16px; padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.94);
+      -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 14px 34px -10px rgba(29, 29, 31, 0.4); }
+    .dyn-abar .dh-wg-calpop::before { content: ""; position: absolute; top: -5px; left: var(--pop-ar, 50%);
+      width: 11px; height: 11px; margin-left: -5.5px; transform: rotate(45deg); border-radius: 2px;
+      background: rgba(255, 255, 255, 0.94); }
+    .dyn-abar .dh-wg-calpop.is-up::before { top: auto; bottom: -5px; }
     .dyn-abar .dh-wg-calpop[hidden] { display: none; }
     .dyn-abar .dh-wg-calpop-date { display: flex; justify-content: space-between; align-items: center;
       font-size: 13px; font-weight: 700; color: #1d1d1f; margin-bottom: 8px; }
@@ -820,6 +826,7 @@
       .dyn-abar .dh-wg-caldays { font-size: 9px; padding: 6px 4px; }
       .dyn-abar .dh-wg-calgrid { font-size: 11.5px; margin-top: 8px; }
       .dyn-abar .dh-wg-calgrid span { height: 22px; border-radius: 6px; }
+      .dyn-abar .dh-wg-calpop { width: min(252px, calc(100% - 4px)); }
       /* Search pill sized for the narrow window (16px input avoids iOS zoom). */
       .dyn-abar .dh-apps-pop.is-vision[data-vtab="search"] .dh-vsearch { padding: 10px 2px; }
       .dyn-abar .dh-vsearch-bar { gap: 8px; padding: 7px; }
@@ -1179,7 +1186,21 @@
         '<div class="dh-wg-calpop-list" id="dynAbCalPopList"></div>' +
         '<form class="dh-wg-calpop-form" id="dynAbCalPopForm"><input type="text" id="dynAbCalPopIn" placeholder="e.g. Jack&#39;s birthday" maxlength="60"><button type="submit">Add</button></form>';
       calGrid.parentNode.appendChild(popEl);
+      var calCard = calGrid.parentNode;
       var popDay = 0;
+      /* Float the editor on the picked day's cell, arrow pointing at it. */
+      function placePop() {
+        var sp = calGrid.querySelector('span[data-d="' + popDay + '"]');
+        if (!sp) { popEl.hidden = true; return; }
+        var cr = calCard.getBoundingClientRect(), sr = sp.getBoundingClientRect(), gr = calGrid.getBoundingClientRect();
+        var lx = sr.left - cr.left + sr.width / 2 - popEl.offsetWidth / 2;
+        lx = Math.max(6, Math.min(lx, cr.width - popEl.offsetWidth - 6));
+        popEl.style.left = lx + "px";
+        popEl.style.setProperty("--pop-ar", (sr.left - cr.left + sr.width / 2 - lx) + "px");
+        var up = (sr.top - gr.top) > gr.height / 2;
+        popEl.classList.toggle("is-up", up);
+        popEl.style.top = (up ? sr.top - cr.top - popEl.offsetHeight - 9 : sr.bottom - cr.top + 9) + "px";
+      }
       function paintList() {
         var list = document.getElementById("dynAbCalPopList");
         var evs = calLoad().filter(function (ev) { return ev.m === viewM && ev.d === popDay; });
@@ -1194,9 +1215,16 @@
         popEl.hidden = false;
         document.getElementById("dynAbCalPopDate").textContent = MONTHS[viewM] + " " + popDay;
         paintList();
+        placePop();
         try { document.getElementById("dynAbCalPopIn").focus(); } catch (eF1) {}
       });
       document.getElementById("dynAbCalPopX").addEventListener("click", function () { popEl.hidden = true; });
+      /* Tapping anywhere outside the editor closes it (day taps just move it). */
+      document.addEventListener("click", function (e) {
+        if (popEl.hidden || popEl.contains(e.target)) return;
+        if (e.target.closest && e.target.closest("#dynAbCalGrid, .dh-wg-calnav")) return;
+        popEl.hidden = true;
+      }, true);
       document.getElementById("dynAbCalPopForm").addEventListener("submit", function (e) {
         e.preventDefault();
         var inp = document.getElementById("dynAbCalPopIn");
@@ -1204,12 +1232,12 @@
         var evs = calLoad();
         evs.push({ i: "e" + Date.now() + Math.floor(Math.random() * 999), t: t, m: viewM, d: popDay });
         calSave(evs); inp.value = "";
-        renderCal(); paintList(); buildNudges(); pushReminder();
+        renderCal(); paintList(); placePop(); buildNudges(); pushReminder();
       });
       document.getElementById("dynAbCalPopList").addEventListener("click", function (e) {
         var db = e.target.closest ? e.target.closest("[data-del]") : null; if (!db) return;
         calSave(calLoad().filter(function (ev) { return ev.i !== db.getAttribute("data-del"); }));
-        renderCal(); paintList(); buildNudges(); pushReminder();
+        renderCal(); paintList(); placePop(); buildNudges(); pushReminder();
       });
       /* Mascot nudges: gift reminders inside the lead window, dismissible
          per event per year; a small badge rides the orb while any are due. */
