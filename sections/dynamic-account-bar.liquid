@@ -808,20 +808,27 @@
       animation: abSiri 6s linear infinite; filter: blur(8px); opacity: 0; transition: opacity .35s ease; }
     .dyn-abar .dh-vs-go:hover::before, .dyn-abar .dh-vs-go.has-text::before { opacity: 0.95; }
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-vs-go::before { animation: none; } }
-    /* Widgets tab: a wider two-column dashboard so nothing ever scrolls —
-       clock, nudges and quote stacked on the left, the full calendar with
-       its agenda on the right. */
-    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] { width: 740px; }
-    .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-apps-head { align-items: stretch; flex-wrap: nowrap; }
-    .dyn-abar .dh-wg-col { display: flex; flex-direction: column; gap: 14px; flex: 1 1 0; min-width: 0; }
-    .dyn-abar .dh-wg-time { order: 1; padding: 20px 22px; gap: 14px; }
-    .dyn-abar .dh-wg-lcd { font-size: 34px; padding: 13px 18px; }
-    .dyn-abar .dh-wg-day { font-size: 20px; }
-    .dyn-abar .dh-wg-sub { font-size: 12px; }
-    .dyn-abar .dh-wg-quote { order: 3; width: auto; flex: 1 1 auto; min-height: 0; padding: 24px 22px; }
-    .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 21px; }
-    .dyn-abar .dh-wg-cal { width: 340px; flex: 0 0 auto; margin: 0; }
-    .dyn-abar .dh-wg-calgrid span { height: 31px; }
+    /* Card order everywhere: nudges, clock, quote, calendar. */
+    .dyn-abar .dh-wg-time { order: 1; }
+    .dyn-abar .dh-wg-quote { order: 3; }
+    .dyn-abar .dh-wg-cal { order: 4; margin: 0; }
+    /* Widgets tab on DESKTOP ONLY: a wider two-column dashboard so nothing
+       ever scrolls — clock, nudges and quote stacked on the left, the full
+       calendar with its agenda on the right. Phones keep the single
+       stacked column below. */
+    @media (min-width: 861px) {
+      .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] { width: 740px; }
+      .dyn-abar .dh-apps-pop.is-vision[data-vtab="widgets"] .dh-apps-head { align-items: stretch; flex-wrap: nowrap; }
+      .dyn-abar .dh-wg-col { display: flex; flex-direction: column; gap: 14px; flex: 1 1 0; min-width: 0; }
+      .dyn-abar .dh-wg-time { padding: 20px 22px; gap: 14px; }
+      .dyn-abar .dh-wg-lcd { font-size: 34px; padding: 13px 18px; }
+      .dyn-abar .dh-wg-day { font-size: 20px; }
+      .dyn-abar .dh-wg-sub { font-size: 12px; }
+      .dyn-abar .dh-wg-quote { width: auto; flex: 1 1 auto; min-height: 0; padding: 24px 22px; }
+      .dyn-abar .dh-wg-quote .dh-w-mlines { font-size: 21px; }
+      .dyn-abar .dh-wg-cal { width: 340px; flex: 0 0 auto; }
+      .dyn-abar .dh-wg-calgrid span { height: 31px; }
+    }
     /* Phones get the SAME vision layout — bar beside the orb, floating glass
        window beside the bar — just sized to the narrower screen. */
     @media (max-width: 860px) {
