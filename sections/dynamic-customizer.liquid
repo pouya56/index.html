@@ -29,9 +29,11 @@
 {%- comment -%} The five customization fonts (typing bar + design popup) are
    Google Fonts — loaded here so previews, the live product overlay and the
    canvas proof all render them. {%- endcomment -%}
+{% # theme-check-disable RemoteAsset %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@500;600&family=Great+Vibes&family=Montserrat:wght@500;600&family=Playfair+Display:wght@500;600&display=swap">
+{% # theme-check-enable RemoteAsset %}
 
 {%- comment -%}
   On a product page, ALWAYS use that page's own product so one "Default product"
