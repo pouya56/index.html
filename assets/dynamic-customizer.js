@@ -1121,99 +1121,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     "#7d3c6a", "#3a6ea5", "#e8a13a", "#ff375f", "#5c5a3a", "#c0392b",
     "#25324a", "#b7c4b0", "#e8cdc9", "#000000",
   ];
-  const EMOJI = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","🙂","😉","😍","🥰","😘","😜","😛","🤩","🥳","😎","😏","😢","😭","😠","😡","😱","😴","🤤","🤗","🤔","🙄","😬","😮","🤯","🥺","😷","🤒","🤢","🤮","🤠","😈","👻","💀","🤖","👽","👾","🎃","🐶","🐱","🦄","🐻","🐼","🐸","🐵","🐷","🐰","🦊","❤","🧡","💛","💚","💙","💜","🖤","💕","💖","⭐","✨","🔥","⚡","👍","👎","👊","✌","🤟","👌","🙌","🙏","💪"];
-  // Merchant-editable emoji picker (per print-method block settings).
-  function emojiEnabled() { return (window.DYN_SETTINGS || {}).showEmoji !== false; }
-  function emojiSet() {
-    const raw = String((window.DYN_SETTINGS || {}).emojiList || "").trim();
-    if (!raw) return EMOJI;
-    let list;
-    if (/[\s,]/.test(raw)) list = raw.split(/[\s,]+/).filter(Boolean);
-    else if (window.Intl && Intl.Segmenter) list = Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(raw), (s) => s.segment).filter((c) => c.trim());
-    else list = Array.from(raw).filter((c) => c.trim());
-    return list.length ? list : EMOJI;
-  }
-
   var _kbdFont = "";
+  // Five font choices shown under the text field. Customers type with their
+  // device's own keyboard (emoji included) — we only offer the font.
   function kbdHtml() {
-    return '<div class="ios-kb" id="kbdPop"><div class="ios-keys" id="iosKeys"></div></div>';
+    return '<div class="kb-fonts" id="kbFonts">' + UPLOAD_FONTS.map(function (f, i) {
+      return '<button type="button" class="kb-font' + (i === 0 ? " sel" : "") + '" data-fi="' + i + '">' +
+        '<span class="kb-font-aa" style="font-family:' + f.stack.replace(/"/g, "&quot;") + '">Aa</span>' +
+        '<span class="kb-font-nm">' + f.name + "</span></button>";
+    }).join("") + "</div>";
   }
-  const FONT_SVG = "<svg viewBox=\"0 0 24 24\" class=\"ios-globe-ic\" aria-hidden=\"true\"><path d=\"M5 20 12 4l7 16\"/><path d=\"M8.2 14h7.6\"/></svg>";
   function wireKbd(input, sync, onFont) {
-    const kb = document.getElementById("iosKeys");
-    if (!kb || !input) return;
-    let layer = "abc"; // abc | num | sym | emo
-    let caps = true;
-    let fontIndex = 0;
-    const R = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
-    const NUM = ["1234567890", "-/:;()$&@”", ".,?!'"];
-    const SYM = ["[]{}#%^*+=", "_\\|~<>€£¥•", ".,?!'"];
-    function key(ch, cls, label) {
-      return '<button type="button" class="ios-key ' + (cls || "") + '" data-k="' + ch + '">' + (label != null ? label : ch) + '</button>';
-    }
-    function act(a, cls, label) {
-      return '<button type="button" class="ios-key ' + (cls || "") + '" data-act="' + a + '">' + label + '</button>';
-    }
-    function bottom() {
-      return '<div class="ios-row ios-row-b">' +
-        act(layer === "abc" ? "num" : "abc", "ios-fn ios-mode", layer === "abc" ? "123" : "ABC") +
-        act("font", "ios-fn ios-globe", FONT_SVG) +
-        act("emo", "ios-fn ios-emokey", "☺") +
-        key(" ", "ios-space", "space") +
-        act("ret", "ios-fn ios-return", "return") +
-      '</div>';
-    }
-    function cycleFont() {
-      fontIndex = (fontIndex + 1) % UPLOAD_FONTS.length;
-      const f = UPLOAD_FONTS[fontIndex];
-      setKbdFont(f.stack);
-      if (onFont) onFont(f);
-      toast(f.name + " font");
-    }
-    const EMO_PER_PAGE = 32; // 8 columns x 4 rows, Apple-style pages
-    function wirePager() {
-      const pager = document.getElementById("emoPager");
-      if (!pager) return;
-      const prev = kb.querySelector(".emo-prev"), next = kb.querySelector(".emo-next");
-      const ind = kb.querySelector(".emo-page-ind");
-      const n = pager.querySelectorAll(".emo-page").length || 1; // reliable regardless of layout
-      function pageNow() { return pager.clientWidth ? Math.round(pager.scrollLeft / pager.clientWidth) : 0; }
-      function update() {
-        const i = Math.min(pageNow(), n - 1);
-        if (prev) prev.disabled = i <= 0;
-        if (next) next.disabled = i >= n - 1;
-        if (ind) ind.textContent = (i + 1) + " / " + n;
-      }
-      function go(d) {
-        const i = Math.max(0, Math.min(n - 1, pageNow() + d));
-        pager.scrollTo({ left: i * pager.clientWidth, behavior: "smooth" });
-        setTimeout(update, 60);
-      }
-      if (prev) prev.onclick = function () { go(-1); };
-      if (next) next.onclick = function () { go(1); };
-      pager.addEventListener("scroll", update, { passive: true });
-      update();
-    }
-    function render() {
-      const EMO = emojiSet();
-      const pageCount = Math.ceil(EMO.length / EMO_PER_PAGE) || 1;
-      let pages = "";
-      for (let pg = 0; pg < pageCount; pg++) {
-        const cells = EMO.slice(pg * EMO_PER_PAGE, (pg + 1) * EMO_PER_PAGE)
-          .map(function (e) { return key(e, "ios-emokey", e); }).join("");
-        pages += '<div class="emo-page">' + cells + '</div>';
-      }
-      kb.innerHTML =
-        '<div class="emo-pager" id="emoPager">' + pages + '</div>' +
-        '<div class="emo-foot">' +
-          '<button type="button" class="emo-nav emo-prev" aria-label="Previous page">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>' +
-          '<span class="emo-page-ind" aria-hidden="true">1 / ' + pageCount + '</span>' +
-          '<button type="button" class="emo-nav emo-next" aria-label="Next page">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>' +
-        '</div>';
-      wirePager();
-    }
+    if (!input) return;
     function grow() {
       if (input.tagName === "TEXTAREA") { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 132) + "px"; }
     }
@@ -1237,56 +1156,31 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       }
       return lines.slice(0, MAX_LINES).join("\n");
     }
-    function insert(ch) {
-      const next = reflow(input.value + ch);
-      if (next === input.value) { toast(MAX_LINES === 1 ? "One line per box — add another with +" : "Up to " + MAX_LINES + " lines"); return; }
-      input.value = next;
-      sync(); grow();
-      try { input.focus(); const n = input.value.length; input.setSelectionRange(n, n); } catch (e) {}
-    }
-    function del() {
-      const arr = Array.from(input.value);
-      const last = arr.pop();
-      if (last === "\uFE0F" || last === "\uFE0E") arr.pop();
-      input.value = reflow(arr.join(""));
-      sync(); grow();
-    }
-    kb.onclick = function (e) {
-      const b = e.target.closest("button"); if (!b) return;
-      if (b.dataset.k != null) insert(b.dataset.k); // emoji tap; arrows handled in wirePager
-    };
-    kb.addEventListener("mousedown", function (e) { if (e.target.closest(".ios-emokey")) e.preventDefault(); });
-    render();
     input.addEventListener("input", function () {
       let v = input.value.replace(/\p{L}/gu, function (ch) { return /\p{Script=Latin}/u.test(ch) ? ch : ""; });
-      v = reflow(v); // 20 letters / 12 emoji per line, up to 3 lines
+      v = reflow(v); // one line per box; emoji count wider than letters
       if (v !== input.value) input.value = v;
       sync(); grow();
     });
     grow();
-
-    const kbEl = document.getElementById("kbdPop");
-    const arrow = document.getElementById("kbdArrow");
-    const scroller = kbEl && kbEl.closest(".modal-root");
-    function bringIntoView() {
-      if (scroller) scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
-      else if (kbEl) kbEl.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-    function setKb(open) {
-      if (kbEl) kbEl.classList.toggle("show", open);
-      if (arrow) { arrow.classList.toggle("open", open); arrow.setAttribute("aria-expanded", String(open)); }
-      if (open) { setTimeout(bringIntoView, 60); setTimeout(bringIntoView, 340); }
-    }
-    if (arrow) arrow.onclick = function () { setKb(!(kbEl && kbEl.classList.contains("show"))); };
+    const row = document.getElementById("kbFonts");
+    if (row) row.onclick = function (e) {
+      const b = e.target.closest("[data-fi]"); if (!b) return;
+      const f = UPLOAD_FONTS[parseInt(b.getAttribute("data-fi"), 10)] || UPLOAD_FONTS[0];
+      setKbdFont(f.stack);
+      if (onFont) onFont(f);
+      toast(f.name + " font");
+      try { input.focus(); } catch (e2) {}
+    };
   }
   function setKbdFont(stack) {
     _kbdFont = stack || "";
     const fld = document.getElementById("upText") || document.getElementById("engraveInput");
     if (fld) fld.style.fontFamily = "'DynEmoji', " + _kbdFont;
-    const kb = document.getElementById("iosKeys");
-    if (!kb) return;
-    kb.querySelectorAll(".ios-key[data-k]").forEach(function (k) {
-      if (!k.classList.contains("ios-emokey") && !k.classList.contains("ios-space")) k.style.fontFamily = _kbdFont;
+    const row = document.getElementById("kbFonts");
+    if (row) row.querySelectorAll(".kb-font").forEach(function (c) {
+      const f = UPLOAD_FONTS[parseInt(c.getAttribute("data-fi"), 10)];
+      c.classList.toggle("sel", !!f && f.stack === _kbdFont);
     });
   }
 
@@ -1332,6 +1226,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let layerSeq = 0;
   const UPLOAD_FONTS = [
     { name: "Sans", stack: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" },
+    { name: "Serif", stack: "Georgia, 'Times New Roman', serif" },
+    { name: "Rounded", stack: "'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif" },
+    { name: "Mono", stack: "'SF Mono', ui-monospace, Menlo, Consolas, monospace" },
+    { name: "Script", stack: "'Snell Roundhand', 'Brush Script MT', 'Segoe Script', cursive" },
   ];
 
   const GAL_EXTRAS = {
@@ -2617,15 +2515,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             (!showCompose ? '' :
               '<div class="ios-compose">' +
                 '<div class="ios-field"><textarea id="upText" class="engrave-input" maxlength="60" rows="1" placeholder="' + escapeHtml(ePlaceholder) + '" autocomplete="off"></textarea></div>' +
-                (emojiEnabled() ?
-                '<button type="button" class="kbd-arrow" id="kbdArrow" aria-label="Show keyboard" aria-expanded="false" title="Keyboard">' +
-                  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
-                '</button>' : '') +
                 '<button type="button" class="ios-plus" id="addTextBtn" aria-label="Add a text box" title="Add text">' +
                   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' +
                 '</button>' +
               '</div>' +
-              (emojiEnabled() ? '<div class="engrave-tools">' + kbdHtml() + '</div>' : '')) +
+              '<div class="engrave-tools">' + kbdHtml() + '</div>') +
           '</div>' +
         '</div>' +
         '<div class="modal-foot"><div class="price-breakdown"><div class="price-breakdown-toggle" style="cursor:default">' +
@@ -3084,13 +2978,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           <div class="engrave-input-wrap">
             <textarea id="engraveInput" class="engrave-input" maxlength="30" rows="1"
               placeholder="YOUR ENGRAVING" autocomplete="off" aria-label="Your engraving"></textarea>
-            ${emojiEnabled() ? `<button type="button" class="kbd-arrow" id="kbdArrow" aria-label="Show keyboard" aria-expanded="false" title="Keyboard">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-            </button>` : ""}
+
           </div>
-          ${emojiEnabled() ? `<div class="engrave-tools">
+          <div class="engrave-tools">
             ${kbdHtml()}
-          </div>` : ""}
+          </div>
         </div>
         <div class="modal-foot">
           <div class="price-breakdown">
@@ -3278,10 +3170,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         <label>Size <span id="fontSizeVal" style="float:right;color:var(--ink-faint)">46</span></label>
         <input type="range" id="fontSize" min="16" max="120" value="46" style="width:100%">
       </div>
-      ${emojiEnabled() ? `<div class="field">
-        <label>Emoji</label>
-        <div class="emoji-grid">${emojiSet().map((e) => `<button class="emoji-btn" data-emoji="${e}">${e}</button>`).join("")}</div>
-      </div>` : ""}`;
+`;
   }
 
   function paneUpload(kind) {
@@ -3416,12 +3305,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       $("#fontSizeVal").textContent = e.target.value;
       editor.styleSelected({ fontSize: parseInt(e.target.value, 10) });
     };
-    $("#modalRoot")
-      .querySelectorAll(".emoji-btn")
-      .forEach((b) => {
-        b.onclick = () => editor.addText(b.dataset.emoji, { fontSize: 80 });
-      });
-
     ["logo", "photo"].forEach(wireUpload);
 
     $("#aiGenBtn").onclick = runAI;
