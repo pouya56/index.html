@@ -1109,12 +1109,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   };
 
   const FONTS = [
-    { name: "SF Pro", stack: "'SF Pro Display', -apple-system, sans-serif" },
-    { name: "Serif", stack: "Georgia, 'Times New Roman', serif" },
-    { name: "Rounded", stack: "'SF Pro Rounded', 'Trebuchet MS', sans-serif" },
-    { name: "Mono", stack: "'SF Mono', ui-monospace, monospace" },
-    { name: "Condensed", stack: "'Arial Narrow', sans-serif" },
-    { name: "Script", stack: "'Snell Roundhand', 'Segoe Script', cursive" },
+    { name: "Montserrat", stack: "'Montserrat', -apple-system, 'Helvetica Neue', Arial, sans-serif" },
+    { name: "Playfair", stack: "'Playfair Display', Georgia, 'Times New Roman', serif" },
+    { name: "Great Vibes", stack: "'Great Vibes', 'Snell Roundhand', 'Brush Script MT', cursive" },
+    { name: "Bebas", stack: "'Bebas Neue', 'Arial Narrow', Impact, sans-serif" },
+    { name: "Caveat", stack: "'Caveat', 'Segoe Print', 'Comic Sans MS', cursive" },
   ];
   const TEXT_COLORS = [
     "#1d1d1f", "#ffffff", "#0071e3", "#d70015", "#1a7f37", "#b8860b",
@@ -1225,11 +1224,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let activeLayerId = null;
   let layerSeq = 0;
   const UPLOAD_FONTS = [
-    { name: "Sans", stack: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" },
-    { name: "Serif", stack: "Georgia, 'Times New Roman', serif" },
-    { name: "Rounded", stack: "'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif" },
-    { name: "Mono", stack: "'SF Mono', ui-monospace, Menlo, Consolas, monospace" },
-    { name: "Script", stack: "'Snell Roundhand', 'Brush Script MT', 'Segoe Script', cursive" },
+    { name: "Montserrat", stack: "'Montserrat', -apple-system, 'Helvetica Neue', Arial, sans-serif" },
+    { name: "Playfair", stack: "'Playfair Display', Georgia, 'Times New Roman', serif" },
+    { name: "Great Vibes", stack: "'Great Vibes', 'Snell Roundhand', 'Brush Script MT', cursive" },
+    { name: "Bebas", stack: "'Bebas Neue', 'Arial Narrow', Impact, sans-serif" },
+    { name: "Caveat", stack: "'Caveat', 'Segoe Print', 'Comic Sans MS', cursive" },
   ];
 
   const GAL_EXTRAS = {
