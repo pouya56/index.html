@@ -145,7 +145,8 @@
 {%- assign spa_coll = section.settings.collection -%}
 <section class="dyn-spa" id="dynSpa-{{ section.id }}">
   {%- if section.settings.bg_image != blank -%}
-    <img class="spa-bgimg" src="{{ section.settings.bg_image | image_url: width: 2200 }}" alt="" loading="lazy">
+    {%- assign spa_bgh = 2200 | divided_by: section.settings.bg_image.aspect_ratio | round -%}
+    <img class="spa-bgimg" src="{{ section.settings.bg_image | image_url: width: 2200 }}" alt="" loading="lazy" width="2200" height="{{ spa_bgh }}">
     <span class="spa-wash"></span>
   {%- else -%}
     <span class="spa-win w1"></span><span class="spa-win w2"></span><span class="spa-win w3"></span>
@@ -195,11 +196,11 @@
     </div>
     <div class="spa-empty">Nothing here yet — pick a collection in the section settings.</div>
     <div class="spa-shelf" id="spaShelf-{{ section.id }}">
-      <button type="button" class="spa-slot is-edge" data-off="-2"><img alt=""><span class="spa-nm"></span><span class="spa-pr"></span></button>
-      <button type="button" class="spa-slot is-side" data-off="-1"><img alt=""><span class="spa-nm"></span><span class="spa-pr"></span></button>
-      <div class="spa-slot is-hero"><img alt=""><div class="spa-nm"></div><div class="spa-pr"></div></div>
-      <button type="button" class="spa-slot is-side" data-off="1"><img alt=""><span class="spa-nm"></span><span class="spa-pr"></span></button>
-      <button type="button" class="spa-slot is-edge" data-off="2"><img alt=""><span class="spa-nm"></span><span class="spa-pr"></span></button>
+      <button type="button" class="spa-slot is-edge" data-off="-2"><img alt="" width="140" height="140"><span class="spa-nm"></span><span class="spa-pr"></span></button>
+      <button type="button" class="spa-slot is-side" data-off="-1"><img alt="" width="160" height="160"><span class="spa-nm"></span><span class="spa-pr"></span></button>
+      <div class="spa-slot is-hero"><img alt="" width="250" height="250"><div class="spa-nm"></div><div class="spa-pr"></div></div>
+      <button type="button" class="spa-slot is-side" data-off="1"><img alt="" width="160" height="160"><span class="spa-nm"></span><span class="spa-pr"></span></button>
+      <button type="button" class="spa-slot is-edge" data-off="2"><img alt="" width="140" height="140"><span class="spa-nm"></span><span class="spa-pr"></span></button>
     </div>
     <button type="button" class="spa-arrow spa-prev" data-off="-1" aria-label="Previous product">&#8249;</button>
     <button type="button" class="spa-arrow spa-next" data-off="1" aria-label="Next product">&#8250;</button>
