@@ -1121,14 +1121,32 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     "#25324a", "#b7c4b0", "#e8cdc9", "#000000",
   ];
   var _kbdFont = "";
-  // Five font choices shown under the text field. Customers type with their
-  // device's own keyboard (emoji included) — we only offer the font.
+  const EMOJI = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","🙂","😉","😍","🥰","😘","😜","😛","🤩","🥳","😎","😏","😢","😭","😠","😡","😱","😴","🤤","🤗","🤔","🙄","😬","😮","🤯","🥺","😷","🤠","😈","👻","💀","🤖","👽","🎃","🐶","🐱","🦄","🐻","🐼","🐸","🐵","🐷","🐰","🦊","❤","🧡","💛","💚","💙","💜","🖤","💕","💖","⭐","✨","🔥","⚡","👍","👎","👊","✌","🤟","👌","🙌","🙏","💪","🎁","🎉","🎂","🌹","🌸","☀","🌙"];
+  // Typing bar tools: a font DROP-DOWN (the five faces, opening upward) and an
+  // emoji button with a small tap-to-insert panel. Typing itself uses the
+  // customer's own keyboard.
   function kbdHtml() {
-    return '<div class="kb-fonts" id="kbFonts">' + UPLOAD_FONTS.map(function (f, i) {
-      return '<button type="button" class="kb-font' + (i === 0 ? " sel" : "") + '" data-fi="' + i + '">' +
-        '<span class="kb-font-aa" style="font-family:' + f.stack.replace(/"/g, "&quot;") + '">Aa</span>' +
-        '<span class="kb-font-nm">' + f.name + "</span></button>";
-    }).join("") + "</div>";
+    const first = UPLOAD_FONTS[0];
+    return '<div class="kb-bar" id="kbBar">' +
+      '<div class="kb-dd" id="kbFontDD">' +
+        '<button type="button" class="kb-dd-btn" id="kbFontBtn" aria-haspopup="listbox" aria-expanded="false">' +
+          '<span class="kb-dd-aa" id="kbFontAa" style="font-family:' + first.stack.replace(/"/g, "&quot;") + '">Aa</span>' +
+          '<span class="kb-dd-name" id="kbFontName">' + first.name + "</span>" +
+          '<svg class="kb-dd-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>' +
+        "</button>" +
+        '<div class="kb-dd-list" id="kbFontList" role="listbox" hidden>' +
+          UPLOAD_FONTS.map(function (f, i) {
+            return '<button type="button" class="kb-dd-opt' + (i === 0 ? " sel" : "") + '" role="option" data-fi="' + i + '">' +
+              '<span class="kb-dd-opt-aa" style="font-family:' + f.stack.replace(/"/g, "&quot;") + '">' + f.name + "</span>" +
+              '<span class="kb-dd-opt-sub">' + (f.sub || "") + "</span></button>";
+          }).join("") +
+        "</div>" +
+      "</div>" +
+      '<button type="button" class="kb-emo-btn" id="kbEmoBtn" aria-expanded="false" aria-label="Add an emoji">😀</button>' +
+    "</div>" +
+    '<div class="kb-emo-pop" id="kbEmoPop" hidden>' +
+      EMOJI.map(function (e) { return '<button type="button" class="kb-emo" data-k="' + e + '">' + e + "</button>"; }).join("") +
+    "</div>";
   }
   function wireKbd(input, sync, onFont) {
     if (!input) return;
@@ -1162,22 +1180,66 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       sync(); grow();
     });
     grow();
-    const row = document.getElementById("kbFonts");
-    if (row) row.onclick = function (e) {
+    function insert(ch) {
+      const next = reflow(input.value + ch);
+      if (next === input.value) { toast("One line per box — add another with +"); return; }
+      input.value = next;
+      sync(); grow();
+      try { input.focus(); const n = input.value.length; input.setSelectionRange(n, n); } catch (e) {}
+    }
+    const dd = document.getElementById("kbFontDD");
+    const ddBtn = document.getElementById("kbFontBtn");
+    const ddList = document.getElementById("kbFontList");
+    const emoBtn = document.getElementById("kbEmoBtn");
+    const emoPop = document.getElementById("kbEmoPop");
+    function setDD(open) {
+      if (!ddList) return;
+      ddList.hidden = !open;
+      if (dd) dd.classList.toggle("open", open);
+      if (ddBtn) ddBtn.setAttribute("aria-expanded", String(open));
+    }
+    function setEmo(open) {
+      if (!emoPop) return;
+      emoPop.hidden = !open;
+      if (emoBtn) emoBtn.setAttribute("aria-expanded", String(open));
+    }
+    if (ddBtn) ddBtn.onclick = function () { setEmo(false); setDD(ddList && ddList.hidden); };
+    if (ddList) ddList.onclick = function (e) {
       const b = e.target.closest("[data-fi]"); if (!b) return;
       const f = UPLOAD_FONTS[parseInt(b.getAttribute("data-fi"), 10)] || UPLOAD_FONTS[0];
       setKbdFont(f.stack);
       if (onFont) onFont(f);
-      toast(f.name + " font");
+      setDD(false);
       try { input.focus(); } catch (e2) {}
     };
+    if (emoBtn) emoBtn.onclick = function () { setDD(false); setEmo(emoPop && emoPop.hidden); };
+    if (emoPop) {
+      emoPop.onclick = function (e) {
+        const b = e.target.closest("[data-k]"); if (!b) return;
+        insert(b.getAttribute("data-k"));
+      };
+      emoPop.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    }
+    /* One outside-click closer at a time (the bar is rebuilt per popup). */
+    if (window.__kbDocClose) document.removeEventListener("click", window.__kbDocClose, true);
+    window.__kbDocClose = function (e) {
+      if (!document.body.contains(e.target)) return;
+      if (e.target.closest && (e.target.closest("#kbBar") || e.target.closest("#kbEmoPop"))) return;
+      setDD(false); setEmo(false);
+    };
+    document.addEventListener("click", window.__kbDocClose, true);
   }
   function setKbdFont(stack) {
     _kbdFont = stack || "";
     const fld = document.getElementById("upText") || document.getElementById("engraveInput");
     if (fld) fld.style.fontFamily = "'DynEmoji', " + _kbdFont;
-    const row = document.getElementById("kbFonts");
-    if (row) row.querySelectorAll(".kb-font").forEach(function (c) {
+    let cur = null;
+    for (let i = 0; i < UPLOAD_FONTS.length; i++) if (UPLOAD_FONTS[i].stack === _kbdFont) cur = UPLOAD_FONTS[i];
+    const aa = document.getElementById("kbFontAa"), nm = document.getElementById("kbFontName");
+    if (cur && aa) aa.style.fontFamily = cur.stack;
+    if (cur && nm) nm.textContent = cur.name;
+    const list = document.getElementById("kbFontList");
+    if (list) list.querySelectorAll(".kb-dd-opt").forEach(function (c) {
       const f = UPLOAD_FONTS[parseInt(c.getAttribute("data-fi"), 10)];
       c.classList.toggle("sel", !!f && f.stack === _kbdFont);
     });
@@ -1224,11 +1286,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let activeLayerId = null;
   let layerSeq = 0;
   const UPLOAD_FONTS = [
-    { name: "Montserrat", stack: "'Montserrat', -apple-system, 'Helvetica Neue', Arial, sans-serif" },
-    { name: "Playfair", stack: "'Playfair Display', Georgia, 'Times New Roman', serif" },
-    { name: "Great Vibes", stack: "'Great Vibes', 'Snell Roundhand', 'Brush Script MT', cursive" },
-    { name: "Bebas", stack: "'Bebas Neue', 'Arial Narrow', Impact, sans-serif" },
-    { name: "Caveat", stack: "'Caveat', 'Segoe Print', 'Comic Sans MS', cursive" },
+    { name: "Montserrat", sub: "Modern sans", stack: "'Montserrat', -apple-system, 'Helvetica Neue', Arial, sans-serif" },
+    { name: "Playfair", sub: "Elegant serif", stack: "'Playfair Display', Georgia, 'Times New Roman', serif" },
+    { name: "Great Vibes", sub: "Script", stack: "'Great Vibes', 'Snell Roundhand', 'Brush Script MT', cursive" },
+    { name: "Bebas", sub: "Bold display", stack: "'Bebas Neue', 'Arial Narrow', Impact, sans-serif" },
+    { name: "Caveat", sub: "Handwritten", stack: "'Caveat', 'Segoe Print', 'Comic Sans MS', cursive" },
   ];
 
   const GAL_EXTRAS = {

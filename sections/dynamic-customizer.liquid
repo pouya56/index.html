@@ -1172,18 +1172,44 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 .ios-field { flex: 1; }
 .ios-field .engrave-input { width: 100%; text-align: left; padding: 12px 18px; letter-spacing: .04em; text-transform: none; }
 
-/* Font chips under the text field: five choices, each previewed in itself. */
-.kb-fonts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+/* Typing-bar tools: font dropdown (opens upward) + emoji button and panel. */
+.kb-bar { display: flex; gap: 10px; justify-content: center; align-items: stretch;
   width: 4.05in; max-width: 100%; margin: 0 auto; }
-.kb-font { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 60px;
-  padding: 9px 12px 7px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--bg);
-  cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, transform .1s ease; }
-.kb-font:hover { border-color: var(--ink-faint); }
-.kb-font:active { transform: scale(.97); }
-.kb-font.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.kb-font-aa { font-size: 20px; line-height: 1.15; color: var(--ink); }
-.kb-font-nm { font-size: 11px; font-weight: 500; color: var(--ink-faint);
+.kb-dd { position: relative; flex: 0 1 auto; }
+.kb-dd-btn { display: flex; align-items: center; gap: 10px; min-width: 200px; height: 46px;
+  padding: 0 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--bg);
+  cursor: pointer; transition: border-color .15s ease; font-family: inherit; }
+.kb-dd-btn:hover { border-color: var(--ink-faint); }
+.kb-dd-aa { font-size: 19px; line-height: 1; color: var(--ink); }
+.kb-dd-name { flex: 1 1 auto; text-align: left; font-size: 14px; font-weight: 600; color: var(--ink); }
+.kb-dd-chev { width: 15px; height: 15px; fill: none; stroke: var(--ink-faint); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; transition: transform .2s ease; }
+.kb-dd.open .kb-dd-chev { transform: rotate(180deg); }
+.kb-dd-list { position: absolute; bottom: calc(100% + 6px); left: 0; right: 0; z-index: 40;
+  display: flex; flex-direction: column; gap: 2px; padding: 6px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.32); }
+.kb-dd-list[hidden] { display: none; }
+.kb-dd-opt { display: flex; align-items: baseline; gap: 10px; padding: 9px 12px; border: 0;
+  background: none; border-radius: 10px; cursor: pointer; text-align: left; font-family: inherit; }
+.kb-dd-opt:hover { background: var(--bg-panel); }
+.kb-dd-opt.sel { background: var(--accent-soft); }
+.kb-dd-opt-aa { flex: 1 1 auto; font-size: 17px; color: var(--ink); white-space: nowrap; }
+.kb-dd-opt-sub { font-size: 11px; color: var(--ink-faint); font-weight: 500; white-space: nowrap;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; }
+.kb-emo-btn { flex: none; width: 46px; height: 46px; border: 1.5px solid var(--line); border-radius: 14px;
+  background: var(--bg); font-size: 20px; line-height: 1; cursor: pointer; padding: 0;
+  display: grid; place-items: center; transition: border-color .15s ease;
+  font-family: "DynEmoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
+.kb-emo-btn:hover, .kb-emo-btn[aria-expanded="true"] { border-color: var(--ink-faint); }
+.kb-emo-pop { width: 4.05in; max-width: 100%; margin: 8px auto 0; padding: 8px;
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 14px;
+  max-height: 152px; overflow-y: auto; }
+.kb-emo-pop[hidden] { display: none; }
+.kb-emo { border: 0; background: none; font-size: 22px; padding: 5px 0; border-radius: 8px; cursor: pointer;
+  font-family: "DynEmoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
+.kb-emo:hover { background: var(--bg-panel); }
 
 @media (max-width: 720px) {
   .engrave-head { padding: 22px 24px 2px; }
