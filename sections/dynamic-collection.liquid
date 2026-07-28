@@ -444,7 +444,14 @@
     .dyn-col .dc-bar-logo { display: flex !important; justify-content: center; max-width: none; opacity: 1;
       margin: 0 0 10px; overflow: visible; }
     .dyn-col .dc-bar-logo img { height: auto; width: min(var(--dyn-lw, 140px), 100%); max-width: 180px; }
-    .dyn-col .dc-inline-search { flex: none; max-width: none; margin: 0; }
+    /* Clicking the Search tab morphs it into an input IN PLACE: the inline
+       pill restyles as a plain rail row right where the tab sits, and the
+       tab itself hides while the input is open. */
+    .dyn-col .dc-inline-search { flex: none; max-width: none; margin: 0 0 2px; height: 46px;
+      border-radius: 14px; padding: 0 12px; background: rgba(0, 0, 0, 0.05); border: none;
+      box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; animation: none; }
+    .dyn-col .dc-inline-search:focus-within { box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.18); }
+    .dyn-col .dc-inline-search.is-open ~ .dc-tabs .dc-search-trigger { display: none; }
     .dyn-col .dc-tabs.is-images { flex-direction: column; align-items: stretch; gap: 2px; overflow: visible; padding: 0; }
     /* Dock magnification: rows scale from their left edge as the cursor nears
        (driven by the script below), like the macOS Dock set vertical. */
@@ -1750,9 +1757,9 @@
   function railMode() {
     var need = scroller.scrollHeight > window.innerHeight * 0.88 + 4;
     scroller.classList.toggle("dc-rail-scroll", need);
-    return need ? 0.12 : 0.3;
+    return need ? 0.1 : 0.16;
   }
-  var MAX = 0.3;
+  var MAX = 0.16;
   window.addEventListener("resize", function () { MAX = railMode(); });
   MAX = railMode();
   setTimeout(function () { MAX = railMode(); }, 500);
