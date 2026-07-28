@@ -456,13 +456,19 @@
     .dyn-col .dc-tabs.is-pills { flex-direction: column; align-items: stretch; gap: 2px; padding: 6px 4px;
       background: none; border: none; }
     .dyn-col .dc-tabs.is-pills .dc-tab { text-align: left; width: 100%; }
-    /* The all-products grid becomes a left-to-right shelf. */
+    /* The all-products grid becomes a left-to-right shelf, TWO rows deep —
+       cards fill down then across, with compact heights so both rows fit. */
     .dyn-col .dc-gridall { display: grid; grid-template-columns: none; grid-auto-flow: column;
-      grid-auto-columns: clamp(235px, 22vw, 305px); gap: 16px; overflow-x: auto;
+      grid-template-rows: repeat(2, auto); grid-auto-columns: clamp(225px, 19vw, 280px);
+      gap: 16px; overflow-x: auto;
       overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-behavior: smooth;
       padding: 6px 4px 16px; scrollbar-width: none; -ms-overflow-style: none; }
     .dyn-col .dc-gridall::-webkit-scrollbar { display: none; }
-    .dyn-col .dc-gridall .dc-card { scroll-snap-align: start; }
+    .dyn-col .dc-gridall .dc-card { scroll-snap-align: start; min-height: 330px; }
+    .dyn-col .dc-gridall .dc-media-wrap { min-height: 190px; }
+    .dyn-col .dc-gridall .dc-media img { inset: 12px; width: calc(100% - 24px); height: calc(100% - 24px); }
+    .dyn-col .dc-gridall .dc-body { padding: 15px 16px 4px; }
+    .dyn-col .dc-gridall .dc-title { font-size: 16px; }
     .dyn-col.dc-cat-focused .dc-gridall { min-height: 0; }
     .dyn-col .dc-all-arrow { display: grid; place-items: center; position: absolute; top: 50%;
       transform: translateY(-50%); z-index: 5; width: 44px; height: 44px; border-radius: 50%;
