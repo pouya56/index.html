@@ -429,11 +429,23 @@
       position: fixed; left: 24px; top: 50%; transform: translateY(-50%);
       width: 230px; z-index: 30; margin: 0; max-width: none;
       max-height: 88vh; overflow: visible; }
-    /* Only when the list truly outgrows the screen does the rail scroll inside
-       itself (the script adds the class) — otherwise overflow stays visible so
-       the dock magnification is never clipped at the edges. */
+    /* Long category lists, handled in tiers by the script: first the rows
+       densify to fit the screen; only if that's still not enough does the
+       rail scroll inside itself, with soft fade edges instead of hard cuts
+       (magnification turns off there — a scrolling box must clip). */
+    .dyn-col .dc-tabs-wrap.dc-rail-dense .dc-tabs.is-images .dc-tab,
+    .dyn-col .dc-tabs.is-pills.dc-rail-dense .dc-tab { padding: 4px 9px; gap: 10px; }
+    .dyn-col .dc-tabs-wrap.dc-rail-dense .dc-tabs.is-images .dc-tab-img { width: 32px; height: 32px; border-radius: 9px; }
+    .dyn-col .dc-tabs-wrap.dc-rail-dense .dc-tabs.is-images .dc-tab-img img { border-radius: 9px; }
+    .dyn-col .dc-tabs-wrap.dc-rail-dense .dc-tabs.is-images .dc-tab-init { font-size: 14px; }
+    .dyn-col .dc-tabs-wrap.dc-rail-dense .dc-tabs.is-images .dc-tab-all svg { width: 17px; height: 17px; }
+    .dyn-col .dc-tabs-wrap.dc-rail-dense .dc-tabs.is-images .dc-tab-label { font-size: 13px; }
+    .dyn-col .dc-tabs-wrap.dc-rail-dense .dc-bar-logo { margin-bottom: 6px; }
+    .dyn-col .dc-tabs-wrap.dc-rail-dense .dc-bar-logo img { width: min(120px, 100%); }
     .dyn-col .dc-wrap > .dc-tabs-wrap.dc-rail-scroll, .dyn-col .dc-wrap > .dc-tabs.is-pills.dc-rail-scroll {
-      overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+      overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;
+      -webkit-mask-image: linear-gradient(transparent, #000 28px, #000 calc(100% - 28px), transparent);
+      mask-image: linear-gradient(transparent, #000 28px, #000 calc(100% - 28px), transparent); }
     .dyn-col .dc-wrap > .dc-tabs-wrap.dc-rail-scroll::-webkit-scrollbar,
     .dyn-col .dc-wrap > .dc-tabs.is-pills.dc-rail-scroll::-webkit-scrollbar { display: none; }
     .dyn-col .dc-tabs-wrap { flex-direction: column; align-items: stretch; gap: 12px; padding: 6px 4px;
@@ -1758,9 +1770,13 @@
   /* Internal scrolling only when the list outgrows the screen; magnification
      is gentler then, since a scrolling rail has to clip at its edges. */
   function railMode() {
-    var need = scroller.scrollHeight > window.innerHeight * 0.88 + 4;
-    scroller.classList.toggle("dc-rail-scroll", need);
-    return need ? 0.1 : 0.16;
+    var lim = window.innerHeight * 0.88 + 4;
+    scroller.classList.remove("dc-rail-dense", "dc-rail-scroll");
+    if (scroller.scrollHeight > lim) {
+      scroller.classList.add("dc-rail-dense");
+      if (scroller.scrollHeight > lim) scroller.classList.add("dc-rail-scroll");
+    }
+    return scroller.classList.contains("dc-rail-scroll") ? 0 : 0.16;
   }
   var MAX = 0.16;
   window.addEventListener("resize", function () { MAX = railMode(); });
