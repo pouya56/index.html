@@ -414,7 +414,7 @@
   .dyn-col .dc-all-arrow { display: none; }
   /* DESKTOP: the shop reads sideways — categories in a sticky rail on the
      left, the product grid scrolling left-to-right (wheel, arrows, drag). */
-  @media (min-width: 861px) {
+  @media (min-width: 801px) {
     .dyn-col .dc-wrap { display: grid; grid-template-columns: 230px minmax(0, 1fr); column-gap: 38px; align-items: start; }
     .dyn-col .dc-wrap > * { grid-column: 2; min-width: 0; }
     .dyn-col .dc-wrap > .dc-head { grid-column: 1 / -1; }
@@ -1683,7 +1683,7 @@
   if (!g || g.__dcShelf) return;
   g.__dcShelf = true;
   var prev = document.getElementById("dcAllPrev"), next = document.getElementById("dcAllNext");
-  var mq = window.matchMedia("(min-width: 861px)");
+  var mq = window.matchMedia("(min-width: 801px)");
   function upd() {
     var can = mq.matches && g.scrollWidth > g.clientWidth + 4;
     if (prev) prev.hidden = !can || g.scrollLeft < 8;
