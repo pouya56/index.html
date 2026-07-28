@@ -428,9 +428,14 @@
     .dyn-col .dc-wrap > .dc-tabs-wrap, .dyn-col .dc-wrap > .dc-tabs.is-pills {
       position: fixed; left: 24px; top: 50%; transform: translateY(-50%);
       width: 230px; z-index: 30; margin: 0; max-width: none;
-      max-height: 88vh; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
-    .dyn-col .dc-wrap > .dc-tabs-wrap::-webkit-scrollbar,
-    .dyn-col .dc-wrap > .dc-tabs.is-pills::-webkit-scrollbar { display: none; }
+      max-height: 88vh; overflow: visible; }
+    /* Only when the list truly outgrows the screen does the rail scroll inside
+       itself (the script adds the class) — otherwise overflow stays visible so
+       the dock magnification is never clipped at the edges. */
+    .dyn-col .dc-wrap > .dc-tabs-wrap.dc-rail-scroll, .dyn-col .dc-wrap > .dc-tabs.is-pills.dc-rail-scroll {
+      overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+    .dyn-col .dc-wrap > .dc-tabs-wrap.dc-rail-scroll::-webkit-scrollbar,
+    .dyn-col .dc-wrap > .dc-tabs.is-pills.dc-rail-scroll::-webkit-scrollbar { display: none; }
     .dyn-col .dc-tabs-wrap { flex-direction: column; align-items: stretch; gap: 12px; padding: 6px 4px;
       background: none; border: none; box-shadow: none; }
     .dyn-col .dc-tabs-wrap::before, .dyn-col .dc-tabs.is-pills::before { display: none; }
@@ -1738,8 +1743,19 @@
   tabsEl.__dock = true;
   var mq = window.matchMedia("(min-width: 801px)");
   var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
-  var MAX = 0.3, RADIUS = 105;
+  var RADIUS = 105;
   var scroller = tabsEl.closest(".dc-tabs-wrap") || tabsEl;
+  /* Internal scrolling only when the list outgrows the screen; magnification
+     is gentler then, since a scrolling rail has to clip at its edges. */
+  function railMode() {
+    var need = scroller.scrollHeight > window.innerHeight * 0.88 + 4;
+    scroller.classList.toggle("dc-rail-scroll", need);
+    return need ? 0.12 : 0.3;
+  }
+  var MAX = 0.3;
+  window.addEventListener("resize", function () { MAX = railMode(); });
+  MAX = railMode();
+  setTimeout(function () { MAX = railMode(); }, 500);
   function tabs() { return Array.prototype.slice.call(tabsEl.querySelectorAll(".dc-tab")); }
   function reset() { tabs().forEach(function (t) { t.style.transform = ""; t.style.zIndex = ""; }); }
   tabsEl.addEventListener("mousemove", function (e) {
