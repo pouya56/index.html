@@ -417,17 +417,25 @@
   @media (min-width: 801px) {
     .dyn-col .dc-wrap { display: grid; grid-template-columns: 230px minmax(0, 1fr); column-gap: 38px; align-items: start; }
     .dyn-col .dc-wrap > * { grid-column: 2; min-width: 0; }
-    .dyn-col .dc-wrap > .dc-head { grid-column: 1 / -1; }
-    /* The category rail: vertical, sticky, quiet glass card. */
+    /* The page-top logo moves into the rail (the rail's own logo shows instead). */
+    .dyn-col .dc-wrap > .dc-head { display: none; }
+    /* The category rail: logo on top, then the categories — no card, it sits
+       straight on the page background, vertically centred on the left, and
+       scrolls inside itself if the list grows taller than the screen. */
     .dyn-col .dc-wrap > .dc-tabs-wrap, .dyn-col .dc-wrap > .dc-tabs.is-pills {
-      grid-column: 1; grid-row: 2 / span 40; position: sticky; top: 22px; z-index: 30;
-      margin: 17px 0 0; max-width: none; }
-    .dyn-col .dc-tabs-wrap { flex-direction: column; align-items: stretch; gap: 10px; padding: 16px 12px;
-      border-radius: 22px; background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255, 255, 255, 0.7);
-      box-shadow: 0 18px 44px -24px rgba(29, 29, 31, 0.25); }
+      grid-column: 1; grid-row: 1 / span 40; position: sticky; top: 50vh;
+      transform: translateY(-50%); z-index: 30; margin: 0; max-width: none;
+      max-height: 88vh; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+    .dyn-col .dc-wrap > .dc-tabs-wrap::-webkit-scrollbar,
+    .dyn-col .dc-wrap > .dc-tabs.is-pills::-webkit-scrollbar { display: none; }
+    .dyn-col .dc-tabs-wrap { flex-direction: column; align-items: stretch; gap: 12px; padding: 6px 4px;
+      background: none; border: none; box-shadow: none; }
     .dyn-col .dc-tabs-wrap::before, .dyn-col .dc-tabs.is-pills::before { display: none; }
     .dyn-col .dc-tabs-arrow { display: none !important; }
-    .dyn-col .dc-bar-logo { display: none !important; }
+    /* Same logo style as the old page top, now heading the rail. */
+    .dyn-col .dc-bar-logo { display: flex !important; justify-content: center; max-width: none; opacity: 1;
+      margin: 0 0 10px; overflow: visible; }
+    .dyn-col .dc-bar-logo img { height: auto; width: min(var(--dyn-lw, 140px), 100%); max-width: 180px; }
     .dyn-col .dc-inline-search { flex: none; max-width: none; margin: 0; }
     .dyn-col .dc-tabs.is-images { flex-direction: column; align-items: stretch; gap: 2px; overflow: visible; padding: 0; }
     .dyn-col .dc-tabs.is-images .dc-tab { flex-direction: row; align-items: center; gap: 12px; width: 100%;
@@ -439,8 +447,8 @@
     .dyn-col .dc-tabs.is-images .dc-tab-all svg { width: 22px; height: 22px; }
     .dyn-col .dc-tabs.is-images .dc-tab-label { font-size: 14px; white-space: normal; text-align: left; }
     .dyn-col .dc-tabs.is-images .dc-tab::after { margin: 0 2px 0 auto; }
-    .dyn-col .dc-tabs.is-pills { flex-direction: column; align-items: stretch; gap: 2px; padding: 16px 12px;
-      border-radius: 22px; background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255, 255, 255, 0.7); }
+    .dyn-col .dc-tabs.is-pills { flex-direction: column; align-items: stretch; gap: 2px; padding: 6px 4px;
+      background: none; border: none; }
     .dyn-col .dc-tabs.is-pills .dc-tab { text-align: left; width: 100%; }
     /* The all-products grid becomes a left-to-right shelf. */
     .dyn-col .dc-gridall { display: grid; grid-template-columns: none; grid-auto-flow: column;
