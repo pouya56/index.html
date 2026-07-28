@@ -415,16 +415,19 @@
   /* DESKTOP: the shop reads sideways — categories in a sticky rail on the
      left, the product grid scrolling left-to-right (wheel, arrows, drag). */
   @media (min-width: 801px) {
-    .dyn-col .dc-wrap { display: grid; grid-template-columns: 230px minmax(0, 1fr); column-gap: 38px; align-items: start; }
+    .dyn-col .dc-wrap { display: grid; grid-template-columns: 250px minmax(0, 1fr); column-gap: 30px;
+      align-items: start; max-width: none; }
     .dyn-col .dc-wrap > * { grid-column: 2; min-width: 0; }
     /* The page-top logo moves into the rail (the rail's own logo shows instead). */
     .dyn-col .dc-wrap > .dc-head { display: none; }
     /* The category rail: logo on top, then the categories — no card, it sits
-       straight on the page background, vertically centred on the left, and
-       scrolls inside itself if the list grows taller than the screen. */
+       straight on the page background, PINNED to the centre-left of the
+       screen (independent of page height), and scrolls inside itself if the
+       list grows taller than the screen. The 250px grid column above stays
+       as its reserved gutter. */
     .dyn-col .dc-wrap > .dc-tabs-wrap, .dyn-col .dc-wrap > .dc-tabs.is-pills {
-      grid-column: 1; grid-row: 1 / span 40; position: sticky; top: 50vh;
-      transform: translateY(-50%); z-index: 30; margin: 0; max-width: none;
+      position: fixed; left: 24px; top: 50%; transform: translateY(-50%);
+      width: 230px; z-index: 30; margin: 0; max-width: none;
       max-height: 88vh; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
     .dyn-col .dc-wrap > .dc-tabs-wrap::-webkit-scrollbar,
     .dyn-col .dc-wrap > .dc-tabs.is-pills::-webkit-scrollbar { display: none; }
