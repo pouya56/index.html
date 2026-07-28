@@ -357,6 +357,60 @@
   .dyn-col .dc-gridall .dc-card { min-width: 0; }
   /* When a category/search is active, keep the grid tall enough to scroll to the top. */
   .dyn-col.dc-cat-focused .dc-gridall { min-height: calc(100svh - 150px); align-content: start; }
+  /* Arrows for the horizontal shop shelf (desktop only — see media block). */
+  .dyn-col .dc-allwrap { position: relative; }
+  .dyn-col .dc-all-arrow { display: none; }
+  /* DESKTOP: the shop reads sideways — categories in a sticky rail on the
+     left, the product grid scrolling left-to-right (wheel, arrows, drag). */
+  @media (min-width: 1101px) {
+    .dyn-col .dc-wrap { display: grid; grid-template-columns: 230px minmax(0, 1fr); column-gap: 38px; align-items: start; }
+    .dyn-col .dc-wrap > * { grid-column: 2; min-width: 0; }
+    .dyn-col .dc-wrap > .dc-head { grid-column: 1 / -1; }
+    /* The category rail: vertical, sticky, quiet glass card. */
+    .dyn-col .dc-wrap > .dc-tabs-wrap, .dyn-col .dc-wrap > .dc-tabs.is-pills {
+      grid-column: 1; grid-row: 2 / span 40; position: sticky; top: 22px; z-index: 30;
+      margin: 17px 0 0; max-width: none; }
+    .dyn-col .dc-tabs-wrap { flex-direction: column; align-items: stretch; gap: 10px; padding: 16px 12px;
+      border-radius: 22px; background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 18px 44px -24px rgba(29, 29, 31, 0.25); }
+    .dyn-col .dc-tabs-wrap::before, .dyn-col .dc-tabs.is-pills::before { display: none; }
+    .dyn-col .dc-tabs-arrow { display: none !important; }
+    .dyn-col .dc-bar-logo { display: none !important; }
+    .dyn-col .dc-inline-search { flex: none; max-width: none; margin: 0; }
+    .dyn-col .dc-tabs.is-images { flex-direction: column; align-items: stretch; gap: 2px; overflow: visible; padding: 0; }
+    .dyn-col .dc-tabs.is-images .dc-tab { flex-direction: row; align-items: center; gap: 12px; width: 100%;
+      padding: 7px 9px; border-radius: 14px; transition: background 0.15s; }
+    .dyn-col .dc-tabs.is-images .dc-tab:hover { transform: none; background: rgba(0, 0, 0, 0.045); }
+    .dyn-col .dc-tabs.is-images .dc-tab-img { width: 42px; height: 42px; border-radius: 12px; }
+    .dyn-col .dc-tabs.is-images .dc-tab-img img { border-radius: 12px; }
+    .dyn-col .dc-tabs.is-images .dc-tab-init { font-size: 18px; }
+    .dyn-col .dc-tabs.is-images .dc-tab-all svg { width: 22px; height: 22px; }
+    .dyn-col .dc-tabs.is-images .dc-tab-label { font-size: 14px; white-space: normal; text-align: left; }
+    .dyn-col .dc-tabs.is-images .dc-tab::after { margin: 0 2px 0 auto; }
+    .dyn-col .dc-tabs.is-pills { flex-direction: column; align-items: stretch; gap: 2px; padding: 16px 12px;
+      border-radius: 22px; background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255, 255, 255, 0.7); }
+    .dyn-col .dc-tabs.is-pills .dc-tab { text-align: left; width: 100%; }
+    /* The all-products grid becomes a left-to-right shelf. */
+    .dyn-col .dc-gridall { display: grid; grid-template-columns: none; grid-auto-flow: column;
+      grid-auto-columns: clamp(235px, 22vw, 305px); gap: 16px; overflow-x: auto;
+      overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-behavior: smooth;
+      padding: 6px 4px 16px; scrollbar-width: none; -ms-overflow-style: none; }
+    .dyn-col .dc-gridall::-webkit-scrollbar { display: none; }
+    .dyn-col .dc-gridall .dc-card { scroll-snap-align: start; }
+    .dyn-col.dc-cat-focused .dc-gridall { min-height: 0; }
+    .dyn-col .dc-all-arrow { display: grid; place-items: center; position: absolute; top: 50%;
+      transform: translateY(-50%); z-index: 5; width: 44px; height: 44px; border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.6);
+      -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+      box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.3); color: var(--ink); cursor: pointer;
+      transition: background 0.15s, transform 0.15s; }
+    .dyn-col .dc-all-arrow:hover { background: #fff; transform: translateY(-50%) scale(1.07); }
+    .dyn-col .dc-all-arrow.dc-prev { left: -14px; }
+    .dyn-col .dc-all-arrow.dc-next { right: -14px; }
+    .dyn-col .dc-all-arrow[hidden] { display: none; }
+    .dyn-col .dc-all-arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round; }
+  }
   @media (max-width: 1100px) { .dyn-col .dc-gridall { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 800px)  { .dyn-col .dc-gridall { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
     /* Phone product card: large image on top, name/price/buy underneath. */
@@ -840,7 +894,11 @@
         {%- if section.settings.all_heading != blank -%}
           <h2 class="dc-grid-heading dc-allgrid-heading">{{ section.settings.all_heading }}</h2>
         {%- endif -%}
-        <div class="dc-gridall" id="dcGridAll">{{ dc_cards_html }}</div>
+        <div class="dc-allwrap">
+          <button type="button" class="dc-all-arrow dc-prev" id="dcAllPrev" aria-label="Scroll products left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div class="dc-gridall" id="dcGridAll">{{ dc_cards_html }}</div>
+          <button type="button" class="dc-all-arrow dc-next" id="dcAllNext" aria-label="Scroll products right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
       {%- endif -%}
       <div class="dc-noresults" id="dcNoResults">
         <svg class="dc-nr-face" viewBox="0 0 48 48" aria-hidden="true"><circle cx="18" cy="20" r="2" fill="currentColor"/><circle cx="30" cy="20" r="2" fill="currentColor"/><path class="dc-nr-mouth" d="M15 30 Q24 23 33 30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
@@ -1613,6 +1671,42 @@
   window.addEventListener("dyn-wishlist-change", paint);
   window.addEventListener("storage", function (e) { if (e.key === KEY) paint(); });
   paint();
+})();
+</script>
+
+<script>
+/* Desktop shop shelf: the all-products grid scrolls left-to-right — glass
+   arrows at the edges, and the mouse wheel is translated sideways over it. */
+(function () {
+  var g = document.getElementById("dcGridAll");
+  if (!g || g.__dcShelf) return;
+  g.__dcShelf = true;
+  var prev = document.getElementById("dcAllPrev"), next = document.getElementById("dcAllNext");
+  var mq = window.matchMedia("(min-width: 1101px)");
+  function upd() {
+    var can = mq.matches && g.scrollWidth > g.clientWidth + 4;
+    if (prev) prev.hidden = !can || g.scrollLeft < 8;
+    if (next) next.hidden = !can || g.scrollLeft > g.scrollWidth - g.clientWidth - 8;
+  }
+  function by(d) { g.scrollBy({ left: d * Math.round(g.clientWidth * 0.8), behavior: "smooth" }); }
+  if (prev) prev.addEventListener("click", function () { by(-1); });
+  if (next) next.addEventListener("click", function () { by(1); });
+  g.addEventListener("scroll", upd, { passive: true });
+  window.addEventListener("resize", upd);
+  if (mq.addEventListener) mq.addEventListener("change", upd);
+  g.addEventListener("wheel", function (e) {
+    if (!mq.matches) return;
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return; /* trackpad sideways already works */
+    if (g.scrollWidth <= g.clientWidth + 4) return;
+    g.scrollLeft += e.deltaY;
+    e.preventDefault();
+  }, { passive: false });
+  /* Filtering adds/removes cards — keep the arrows honest. */
+  if (typeof MutationObserver !== "undefined") {
+    new MutationObserver(upd).observe(g, { childList: true, subtree: true, attributes: true, attributeFilter: ["style", "class", "hidden"] });
+  }
+  upd();
+  setTimeout(upd, 400);
 })();
 </script>
 
