@@ -236,16 +236,18 @@
 
   /* Apple-Store-style card: name/price on top, image fills a soft gradient box below */
   .dyn-col .dc-card { position: relative; background: linear-gradient(180deg,#ffffff,#eceff3); border: 1px solid rgba(0,0,0,0.07); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; min-height: 460px; box-shadow: 0 6px 22px rgba(0,0,0,0.07); transition: box-shadow .25s ease, transform .25s ease; }
-  .dyn-col .dc-card:hover { box-shadow: 0px 0px 30px 1px rgba(120, 110, 255, 0.30); transform: scale(0.98); }
+  /* 3D hover: the card tilts toward the cursor (driven by the script) and
+     lifts on a deep neutral shadow — no coloured glow. */
+  .dyn-col .dc-card:hover { box-shadow: 0 26px 48px -20px rgba(29, 29, 31, 0.35); }
   /* Siri-style multicolour gradient border that spins around the card edge on hover. */
   @property --dc-siri-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
-  .dyn-col .dc-card::after { content: ""; position: absolute; inset: -2px; border-radius: inherit; pointer-events: none; z-index: 4;
+  .dyn-col .dc-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 4;
     --dc-siri-angle: 0deg;
-    padding: 7px; background: conic-gradient(from var(--dc-siri-angle), #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff);
+    padding: 2px; background: conic-gradient(from var(--dc-siri-angle), #4f8cff, #a06bff, #ff5ea8, #ff9d5e, #5edfff, #4f8cff);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
-    filter: blur(7px); opacity: 0; transition: opacity .3s ease; }
-  .dyn-col .dc-card:hover::after { opacity: 0.85; animation: dcSiriSpin 4s linear infinite; }
+    opacity: 0; transition: opacity .3s ease; }
+  .dyn-col .dc-card:hover::after { opacity: 1; animation: dcSiriSpin 4s linear infinite; }
   @keyframes dcSiriSpin { to { --dc-siri-angle: 360deg; } }
   @media (prefers-reduced-motion: reduce) { .dyn-col .dc-card:hover::after { animation: none; } }
 
@@ -1803,6 +1805,26 @@
   });
   tabsEl.addEventListener("mouseleave", reset);
   window.addEventListener("scroll", reset, { passive: true });
+})();
+
+/* 3D card tilt: each card leans toward the cursor (max ~7deg) with a slight
+   lift, and settles back on leave. Fine pointers only. */
+(function () {
+  var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
+  var TILT = 7;
+  document.querySelectorAll(".dyn-col .dc-card").forEach(function (card) {
+    if (card.__tilt) return;
+    card.__tilt = true;
+    card.addEventListener("mousemove", function (e) {
+      if (!fine.matches) return;
+      var r = card.getBoundingClientRect();
+      var px = (e.clientX - r.left) / r.width - 0.5;
+      var py = (e.clientY - r.top) / r.height - 0.5;
+      card.style.transform = "perspective(900px) rotateX(" + (-py * TILT).toFixed(2) +
+        "deg) rotateY(" + (px * TILT).toFixed(2) + "deg) scale(1.02)";
+    });
+    card.addEventListener("mouseleave", function () { card.style.transform = ""; });
+  });
 })();
 </script>
 
