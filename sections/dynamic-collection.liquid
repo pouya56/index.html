@@ -486,7 +486,9 @@
       grid-template-rows: repeat(2, auto); grid-auto-columns: clamp(225px, 19vw, 280px);
       gap: 16px; overflow-x: auto;
       overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-behavior: smooth;
-      padding: 6px 4px 16px; scrollbar-width: none; -ms-overflow-style: none; }
+      /* enough headroom on every side that the hover glow never gets shaved
+         (scroll-padding keeps the snap from pulling cards into that headroom) */
+      padding: 14px 14px 18px; scroll-padding: 0 14px; scrollbar-width: none; -ms-overflow-style: none; }
     .dyn-col .dc-gridall::-webkit-scrollbar { display: none; }
     .dyn-col .dc-gridall .dc-card { scroll-snap-align: start; min-height: 330px; }
     .dyn-col .dc-gridall .dc-media-wrap { min-height: 190px; }
