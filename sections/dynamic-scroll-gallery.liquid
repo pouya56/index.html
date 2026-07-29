@@ -31,9 +31,9 @@
   .dyn-sg .sg-bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .dyn-sg .sg-bg-dim { position: absolute; inset: 0; background: #000;
     opacity: {{ section.settings.bg_dim | default: 20 | divided_by: 100.0 }}; }
-  .dyn-sg .sg-track { position: relative; z-index: 1; display: flex; align-items: stretch; gap: 1.5vw; padding: 0 3.5vw;
+  .dyn-sg .sg-track { position: relative; z-index: 1; display: flex; align-items: stretch; gap: 1vw; padding: 0 2vw;
     will-change: transform; }
-  .dyn-sg .sg-panel { flex: 0 0 93vw; min-height: 92vh; border-radius: 0; overflow: hidden;
+  .dyn-sg .sg-panel { flex: 0 0 60vw; min-height: 92vh; border-radius: 0; overflow: hidden;
     position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center;
     padding: clamp(28px, 5vw, 72px); box-sizing: border-box;
     background: {{ section.settings.panel_bg | default: '#141418' }};
@@ -43,8 +43,16 @@
      text sits on top of it — small caps line above, headline below. */
   .dyn-sg .sg-panel.has-img { display: block; padding: 0; }
   .dyn-sg .sg-body { position: relative; z-index: 1; min-width: 0; }
-  .dyn-sg .sg-panel.has-img .sg-body { position: absolute; z-index: 2; left: 5%; right: 5%;
-    top: clamp(22px, 7vh, 64px); display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .dyn-sg .sg-panel.has-img .sg-body { position: absolute; z-index: 2; left: clamp(16px, 2.2vw, 44px);
+    right: 4%; top: clamp(18px, 5vh, 52px); display: flex; flex-direction: column;
+    align-items: flex-start; text-align: left; }
+  .dyn-sg .sg-panel.has-img .sg-body--center { align-items: center; text-align: center; left: 5%; right: 5%; }
+  /* On photos both headline lines read in the ink colour — no gradient. */
+  .dyn-sg .sg-panel.has-img .sg-line2 { background: none; color: {{ section.settings.ink | default: '#f2ead9' }}; }
+  /* A single small caption sits bottom-left, like ON-DEVICE. */
+  .dyn-sg .sg-cap { position: absolute; z-index: 2; left: clamp(16px, 2.2vw, 44px); bottom: clamp(16px, 4vh, 40px);
+    font-size: clamp(11px, 1vw, 15px); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.95); text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4); }
   .dyn-sg .sg-panel.has-img .sg-sub { order: -1; margin: 0 0 16px; max-width: none; width: 100%;
     display: flex; justify-content: space-between; gap: 18px;
     font-size: clamp(11px, 1vw, 14px); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
@@ -62,11 +70,14 @@
     -webkit-background-clip: text; background-clip: text; color: transparent; }
   .dyn-sg .sg-sub { margin-top: 22px; max-width: 46ch; font-size: clamp(15px, 1.4vw, 18px); line-height: 1.65;
     color: rgba(255, 255, 255, 0.62); }
-  /* Two slide sizes, like the reference: wide statements and narrow interludes. */
-  .dyn-sg .sg-panel--narrow { flex-basis: 48vw; }
-  .dyn-sg .sg-panel--narrow .sg-line1, .dyn-sg .sg-panel--narrow .sg-line2 {
-    font-size: clamp(24px, 2.8vw, 44px); }
-  .dyn-sg .sg-panel--narrow .sg-sub { font-size: clamp(13px, 1.1vw, 15px); }
+  /* Three slide sizes, like the reference: full-screen statements (Drop-
+     Tested), wide cards (Runs on the edge) and narrow interludes (stickers). */
+  .dyn-sg .sg-panel--full { flex-basis: 93vw; }
+  .dyn-sg .sg-panel--narrow { flex-basis: 28vw; }
+  .dyn-sg .sg-panel .sg-line1, .dyn-sg .sg-panel .sg-line2 { font-size: clamp(30px, 4.2vw, 70px); }
+  .dyn-sg .sg-panel--full .sg-line1, .dyn-sg .sg-panel--full .sg-line2 { font-size: clamp(40px, 7.5vw, 132px); }
+  .dyn-sg .sg-panel--narrow .sg-line1, .dyn-sg .sg-panel--narrow .sg-line2 { font-size: clamp(20px, 2vw, 34px); }
+  .dyn-sg .sg-panel--narrow .sg-sub { font-size: clamp(12px, 0.9vw, 14px); }
   .dyn-sg .sg-img { position: absolute; inset: 0; z-index: 1; }
   .dyn-sg .sg-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .dyn-sg .sg-panel.has-img .sg-glow { display: none; }
@@ -85,8 +96,11 @@
   @media (prefers-reduced-motion: reduce) { .dyn-sg .sg-scrollhint svg { animation: none; } }
   .dyn-sg .sg-setup { color: #fff; font-size: 17px; line-height: 1.6; text-align: center; width: 100%; padding: 30px; }
   @media (max-width: 700px) {
-    .dyn-sg .sg-panel { flex-basis: 92vw; min-height: 78vh; border-radius: 0; }
-    .dyn-sg .sg-panel--narrow { flex-basis: 70vw; }
+    .dyn-sg .sg-panel { flex-basis: 84vw; min-height: 78vh; border-radius: 0; }
+    .dyn-sg .sg-panel--full { flex-basis: 92vw; }
+    .dyn-sg .sg-panel--narrow { flex-basis: 62vw; }
+    .dyn-sg .sg-panel .sg-line1, .dyn-sg .sg-panel .sg-line2 { font-size: clamp(26px, 7vw, 40px); }
+    .dyn-sg .sg-panel--narrow .sg-line1, .dyn-sg .sg-panel--narrow .sg-line2 { font-size: clamp(18px, 4.6vw, 26px); }
     .dyn-sg .sg-panel.has-img .sg-body { top: 20px; }
   }
 </style>
@@ -103,20 +117,24 @@
       <div class="sg-track" id="dynSgTrack-{{ section.id }}">
         {%- for b in section.blocks -%}
           {%- if b.type == 'slide' -%}
-            <div class="sg-panel{% if b.settings.image != blank %} has-img{% endif %}{% if b.settings.size == 'narrow' %} sg-panel--narrow{% endif %}" {{ b.shopify_attributes }}>
+            <div class="sg-panel{% if b.settings.image != blank %} has-img{% endif %}{% if b.settings.size == 'narrow' %} sg-panel--narrow{% elsif b.settings.size == 'full' %} sg-panel--full{% endif %}" {{ b.shopify_attributes }}>
               <span class="sg-glow" aria-hidden="true"></span>
-              <div class="sg-body">
+              <div class="sg-body{% if b.settings.centered %} sg-body--center{% endif %}">
                 {%- if b.settings.line1 != blank -%}<div class="sg-line1">{{ b.settings.line1 }}</div>{%- endif -%}
                 {%- if b.settings.line2 != blank -%}<div class="sg-line2">{{ b.settings.line2 }}</div>{%- endif -%}
-                {%- if b.settings.text != blank -%}
-                  {%- if b.settings.image != blank -%}
-                    {%- assign sg_metas = b.settings.text | split: '|' -%}
+                {%- if b.settings.text != blank and b.settings.image != blank -%}
+                  {%- assign sg_metas = b.settings.text | split: '|' -%}
+                  {%- if sg_metas.size > 1 -%}
                     <div class="sg-sub">{%- for m in sg_metas -%}<span>{{ m | strip }}</span>{%- endfor -%}</div>
-                  {%- else -%}
-                    <div class="sg-sub">{{ b.settings.text }}</div>
                   {%- endif -%}
+                {%- elsif b.settings.text != blank -%}
+                  <div class="sg-sub">{{ b.settings.text }}</div>
                 {%- endif -%}
               </div>
+              {%- if b.settings.text != blank and b.settings.image != blank -%}
+                {%- assign sg_metas2 = b.settings.text | split: '|' -%}
+                {%- if sg_metas2.size == 1 -%}<div class="sg-cap">{{ b.settings.text }}</div>{%- endif -%}
+              {%- endif -%}
               {%- if b.settings.image != blank -%}
                 <div class="sg-img"><img src="{{ b.settings.image | image_url: width: 1200 }}" alt="{{ b.settings.line1 | escape }}" width="600" height="520" loading="lazy"></div>
               {%- endif -%}
@@ -207,7 +225,8 @@
       "limit": 8,
       "settings": [
         { "type": "select", "id": "size", "label": "Slide size", "default": "wide", "options": [
-          { "value": "wide", "label": "Wide" }, { "value": "narrow", "label": "Narrow" } ] },
+          { "value": "full", "label": "Full screen" }, { "value": "wide", "label": "Wide" }, { "value": "narrow", "label": "Narrow" } ] },
+        { "type": "checkbox", "id": "centered", "label": "Centre the headline", "default": false, "info": "Off = top-left like 'Runs on the edge'; on = centred like 'Drop-Tested'." },
         { "type": "text", "id": "line1", "label": "Line 1", "default": "Runs on the edge" },
         { "type": "text", "id": "line2", "label": "Line 2 (accent)", "default": "Refuses the ordinary" },
         { "type": "textarea", "id": "text", "label": "Small text (optional)", "info": "On image slides, split with | into left | centre | right captions along the top." },
