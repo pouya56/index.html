@@ -154,6 +154,21 @@
     html:has(.dyn-hero.dh-landing:not(.dh-searching)) body { overflow: hidden; height: 100%; overscroll-behavior: none; }
   }
 
+  /* Entrance after a scroll story above (gallery/video): the logo lands
+     big into its place, then the search bar rises in, then the buttons.
+     Only plays when the hero starts off-screen; JS removes the classes
+     right after the show so dragging and search behave as before. */
+  .dyn-hero.dh-intro .dh-head, .dyn-hero.dh-intro .dh-search, .dyn-hero.dh-intro .dh-hero-btns { opacity: 0; }
+  .dyn-hero.dh-intro.dh-in .dh-head { animation: dhIntroLogo 0.95s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .dyn-hero.dh-intro.dh-in .dh-search { animation: dhIntroRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both; }
+  .dyn-hero.dh-intro.dh-in .dh-hero-btns { animation: dhIntroRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.75s both; }
+  @keyframes dhIntroLogo { from { opacity: 0; transform: scale(2.2); } to { opacity: 1; transform: scale(1); } }
+  @keyframes dhIntroRise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .dyn-hero.dh-intro .dh-head, .dyn-hero.dh-intro .dh-search, .dyn-hero.dh-intro .dh-hero-btns { opacity: 1; }
+    .dyn-hero.dh-intro.dh-in .dh-head, .dyn-hero.dh-intro.dh-in .dh-search, .dyn-hero.dh-intro.dh-in .dh-hero-btns { animation: none; }
+  }
+
   /* Stacking order over the floating photos (z 1): the search bar is the
      boss (12), the buttons come second (11), the logo third (10). */
   .dyn-hero .dh-head { text-align: center; max-width: 720px; margin: 0 auto; position: relative; z-index: 10; }
@@ -2800,6 +2815,28 @@
 })();
 </script>
 {%- endif -%}
+
+<script>
+(function () {
+  /* Entrance show — only when a scroll story (gallery/video) sits above,
+     i.e. the hero starts off-screen. Logo lands big → its place, then the
+     search bar, then the buttons. Classes come off right after, so drag,
+     search and everything else see the hero exactly as before. */
+  var hero = document.getElementById("dynHero");
+  if (!hero || hero.__dhIntro) return;
+  hero.__dhIntro = true;
+  if (typeof IntersectionObserver === "undefined") return;
+  if (hero.getBoundingClientRect().top < window.innerHeight * 0.6) return;
+  hero.classList.add("dh-intro");
+  var io = new IntersectionObserver(function (es) {
+    if (!es[0] || !es[0].isIntersecting) return;
+    io.disconnect();
+    hero.classList.add("dh-in");
+    setTimeout(function () { hero.classList.remove("dh-intro", "dh-in"); }, 1900);
+  }, { threshold: 0.45 });
+  io.observe(hero);
+})();
+</script>
 
 {% schema %}
 {
