@@ -48,8 +48,10 @@
   .dyn-sg .sg-sub { margin-top: 22px; max-width: 46ch; font-size: clamp(15px, 1.4vw, 18px); line-height: 1.65;
     color: rgba(255, 255, 255, 0.62); }
   .dyn-sg .sg-img { position: relative; z-index: 1; width: 100%; height: min(56vh, 520px);
-    border-radius: 22px; overflow: hidden; box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.65); }
-  .dyn-sg .sg-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    border-radius: 22px; overflow: hidden; box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.65);
+    background: rgba(255, 255, 255, 0.04); }
+  /* The whole image stays visible inside the frame — never cropped. */
+  .dyn-sg .sg-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
   /* progress dots */
   .dyn-sg .sg-dots { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
     display: flex; gap: 8px; z-index: 3; }
