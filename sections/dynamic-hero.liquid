@@ -182,7 +182,7 @@
      it in reverse. JS drives the styles; dh-intro is only on while the
      show is mid-flight, and comes off (styles cleared) when it's done —
      dragging and search then see the hero exactly as before. */
-  .dh-introrun { height: calc(100svh + 130vh); }
+  .dh-introrun { height: calc(100svh + 80vh); }
   .dh-introrun .dyn-hero.dh-landing { position: sticky; top: 0; }
   .dyn-hero.dh-intro .dh-head, .dyn-hero.dh-intro .dh-search, .dyn-hero.dh-intro .dh-hero-btns {
     opacity: 0; will-change: opacity, transform; }
@@ -2869,14 +2869,16 @@
   var mReduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (mReduce || hero.getBoundingClientRect().top < window.innerHeight * 0.6) return;
   var wrap = hero.closest(".shopify-section");
-  var RUN = 1.3;
+  var RUN = 0.8;
   if (wrap) wrap.classList.add("dh-introrun");
+  /* Overlapping stages: the search bar and buttons rise WHILE the logo is
+     still gliding to its place — everybody arrives around the same beat. */
   var parts = [
-    { el: hero.querySelector(".dh-head"), a: 0.08, b: 0.5,
+    { el: hero.querySelector(".dh-head"), a: 0.08, b: 0.6,
       fx: function (t) { return "scale(" + (2.2 - 1.2 * t).toFixed(3) + ")"; } },
-    { el: hero.querySelector(".dh-search"), a: 0.55, b: 0.75,
+    { el: hero.querySelector(".dh-search"), a: 0.3, b: 0.65,
       fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } },
-    { el: hero.querySelector(".dh-hero-btns"), a: 0.72, b: 0.92,
+    { el: hero.querySelector(".dh-hero-btns"), a: 0.42, b: 0.75,
       fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } }
   ].filter(function (x) { return x.el; });
   if (!parts.length) return;
