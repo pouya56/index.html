@@ -29,11 +29,14 @@
   .dyn-sg .sg-track { display: flex; align-items: stretch; gap: 4vw; padding: 0 9vw;
     will-change: transform; }
   .dyn-sg .sg-panel { flex: 0 0 82vw; min-height: 72vh; border-radius: 30px; overflow: hidden;
-    position: relative; display: flex; flex-direction: column; justify-content: center;
-    padding: clamp(28px, 5vw, 72px);
+    position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center;
+    padding: clamp(28px, 5vw, 72px); box-sizing: border-box;
     background: {{ section.settings.panel_bg | default: '#141418' }};
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.8); }
+  /* Text and image share the slide as two matched columns. */
+  .dyn-sg .sg-panel.has-img { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: clamp(22px, 4vw, 64px); }
+  .dyn-sg .sg-body { position: relative; z-index: 1; min-width: 0; }
   .dyn-sg .sg-glow { position: absolute; right: -18%; top: -28%; width: 70%; height: 90%;
     border-radius: 50%; pointer-events: none; filter: blur(70px); opacity: 0.5;
     background: radial-gradient(circle, {{ section.settings.accent | default: '#6a5bff' }}, transparent 65%); }
@@ -44,12 +47,9 @@
     -webkit-background-clip: text; background-clip: text; color: transparent; }
   .dyn-sg .sg-sub { margin-top: 22px; max-width: 46ch; font-size: clamp(15px, 1.4vw, 18px); line-height: 1.65;
     color: rgba(255, 255, 255, 0.62); }
-  .dyn-sg .sg-img { position: absolute; right: clamp(16px, 5vw, 70px); bottom: 0; top: 12%;
-    width: min(38%, 460px); display: flex; align-items: center; pointer-events: none; }
-  .dyn-sg .sg-img img { width: 100%; height: auto; max-height: 100%; object-fit: contain;
-    filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.5)); }
-  .dyn-sg .sg-panel.has-img .sg-line1, .dyn-sg .sg-panel.has-img .sg-line2,
-  .dyn-sg .sg-panel.has-img .sg-sub { max-width: 55%; }
+  .dyn-sg .sg-img { position: relative; z-index: 1; width: 100%; height: min(56vh, 520px);
+    border-radius: 22px; overflow: hidden; box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.65); }
+  .dyn-sg .sg-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
   /* progress dots */
   .dyn-sg .sg-dots { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
     display: flex; gap: 8px; z-index: 3; }
@@ -59,10 +59,8 @@
   .dyn-sg .sg-setup { color: #fff; font-size: 17px; line-height: 1.6; text-align: center; width: 100%; padding: 30px; }
   @media (max-width: 700px) {
     .dyn-sg .sg-panel { flex-basis: 86vw; min-height: 64vh; border-radius: 22px; }
-    .dyn-sg .sg-img { position: static; width: 70%; margin: 26px auto 0; }
-    .dyn-sg .sg-panel.has-img { justify-content: flex-start; padding-top: 14vh; }
-    .dyn-sg .sg-panel.has-img .sg-line1, .dyn-sg .sg-panel.has-img .sg-line2,
-    .dyn-sg .sg-panel.has-img .sg-sub { max-width: none; }
+    .dyn-sg .sg-panel.has-img { grid-template-columns: minmax(0, 1fr); gap: 20px; align-content: center; }
+    .dyn-sg .sg-img { height: 30vh; border-radius: 16px; }
   }
 </style>
 
@@ -74,11 +72,13 @@
           {%- if b.type == 'slide' -%}
             <div class="sg-panel{% if b.settings.image != blank %} has-img{% endif %}" {{ b.shopify_attributes }}>
               <span class="sg-glow" aria-hidden="true"></span>
-              {%- if b.settings.line1 != blank -%}<div class="sg-line1">{{ b.settings.line1 }}</div>{%- endif -%}
-              {%- if b.settings.line2 != blank -%}<div class="sg-line2">{{ b.settings.line2 }}</div>{%- endif -%}
-              {%- if b.settings.text != blank -%}<div class="sg-sub">{{ b.settings.text }}</div>{%- endif -%}
+              <div class="sg-body">
+                {%- if b.settings.line1 != blank -%}<div class="sg-line1">{{ b.settings.line1 }}</div>{%- endif -%}
+                {%- if b.settings.line2 != blank -%}<div class="sg-line2">{{ b.settings.line2 }}</div>{%- endif -%}
+                {%- if b.settings.text != blank -%}<div class="sg-sub">{{ b.settings.text }}</div>{%- endif -%}
+              </div>
               {%- if b.settings.image != blank -%}
-                <span class="sg-img"><img src="{{ b.settings.image | image_url: width: 900 }}" alt="{{ b.settings.line1 | escape }}" width="450" height="450" loading="lazy"></span>
+                <div class="sg-img"><img src="{{ b.settings.image | image_url: width: 1200 }}" alt="{{ b.settings.line1 | escape }}" width="600" height="520" loading="lazy"></div>
               {%- endif -%}
             </div>
           {%- endif -%}
@@ -159,7 +159,7 @@
         { "type": "text", "id": "line1", "label": "Line 1", "default": "Runs on the edge" },
         { "type": "text", "id": "line2", "label": "Line 2 (accent)", "default": "Refuses the ordinary" },
         { "type": "textarea", "id": "text", "label": "Small text (optional)" },
-        { "type": "image_picker", "id": "image", "label": "Image (optional)", "info": "Sits on the right of the slide. Transparent PNGs look best." }
+        { "type": "image_picker", "id": "image", "label": "Image (optional)", "info": "Fills the right half of the slide in a rounded frame (cropped to fit)." }
       ]
     }
   ],
