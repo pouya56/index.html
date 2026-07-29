@@ -1,0 +1,142 @@
+{% comment %}
+  ============================================================================
+  Dynamic Scroll Video — an Apple-style scroll-driven intro.
+  ----------------------------------------------------------------------------
+  The video pins full-screen while the visitor scrolls; their scrolling IS the
+  playback (scroll down → the film advances, scroll up → it rewinds). When
+  the story ends the page releases and whatever sits below — your hero with
+  the search bar — scrolls into view.
+
+  INSTALL:
+  1. Edit code > Sections > Add a new section > name it "dynamic-scrollvideo"
+     and REPLACE its contents with this whole file. Save.
+  2. Customize > Home page > Add section > "Dynamic Scroll Video".
+  3. Drag it to the TOP, above the hero. Pick a video in its settings. Save.
+
+  TIP: keep the clip short (5–15s) and export it with dense keyframes
+  (e.g. ffmpeg -g 6) — scroll-scrubbing seeks constantly, and sparse
+  keyframes make seeking choppy.
+  ============================================================================
+{% endcomment %}
+
+<style>
+  .dyn-sv { position: relative;
+    /* The wrapper's height is the scroll runway: taller = slower playback. */
+    height: {{ section.settings.runway | default: 300 }}vh;
+    background: {{ section.settings.bg | default: '#000000' }}; }
+  .dyn-sv .sv-stage { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; }
+  .dyn-sv video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* Optional overlay line that fades out as the story begins. */
+  .dyn-sv .sv-caption { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); z-index: 3;
+    color: #fff; font: 600 clamp(22px, 4vw, 44px)/1.2 -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "Inter", "Segoe UI", Roboto, sans-serif; letter-spacing: -0.02em; text-align: center; width: 90%;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45); opacity: calc(1 - var(--sv-p, 0) * 4); pointer-events: none; }
+  /* Scroll hint: a quiet chevron that retires once scrolling starts. */
+  .dyn-sv .sv-hint { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 3;
+    width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; pointer-events: none;
+    background: rgba(255, 255, 255, 0.18); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    opacity: calc(1 - var(--sv-p, 0) * 8); }
+  .dyn-sv .sv-hint svg { width: 17px; height: 17px; fill: none; stroke: #fff; stroke-width: 2.4;
+    stroke-linecap: round; stroke-linejoin: round; animation: svBob 1.7s ease-in-out infinite; }
+  @keyframes svBob { 0%, 100% { transform: translateY(-2px); } 50% { transform: translateY(3px); } }
+  @media (prefers-reduced-motion: reduce) { .dyn-sv .sv-hint svg { animation: none; } }
+  /* The last stretch dims toward the page, handing over to the hero below. */
+  .dyn-sv .sv-fade { position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: {{ section.settings.handoff_bg | default: '#f5f5f7' }};
+    opacity: calc((var(--sv-p, 0) - 0.85) / 0.15); }
+  .dyn-sv .sv-setup { position: absolute; inset: 0; display: grid; place-items: center; color: #fff;
+    font: 500 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    text-align: center; padding: 30px; }
+</style>
+
+<section class="dyn-sv" id="dynSv-{{ section.id }}" style="--sv-p: 0">
+  <div class="sv-stage">
+    {%- if section.settings.video != blank -%}
+      <video id="dynSvVideo-{{ section.id }}" muted playsinline preload="auto"
+        {% if section.settings.video.preview_image %}poster="{{ section.settings.video.preview_image | image_url: width: 1800 }}"{% endif %}>
+        {%- for source in section.settings.video.sources -%}
+          {%- if source.format == 'mp4' -%}<source src="{{ source.url }}" type="{{ source.mime_type }}">{%- endif -%}
+        {%- endfor -%}
+      </video>
+    {%- else -%}
+      <div class="sv-setup">Pick a video in this section's settings —<br>scrolling will play it like a film, then hand over to the hero below.</div>
+    {%- endif -%}
+    {%- if section.settings.caption != blank -%}
+      <div class="sv-caption">{{ section.settings.caption }}</div>
+    {%- endif -%}
+    <span class="sv-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+    <span class="sv-fade" aria-hidden="true"></span>
+  </div>
+</section>
+
+<script>
+(function () {
+  var root = document.getElementById("dynSv-{{ section.id }}");
+  if (!root || root.__svInit) return;
+  root.__svInit = true;
+  var video = document.getElementById("dynSvVideo-{{ section.id }}");
+  var duration = 0, target = 0, shown = -1, raf = 0, active = false;
+  if (video) {
+    video.addEventListener("loadedmetadata", function () { duration = video.duration || 0; });
+    if (video.readyState >= 1) duration = video.duration || 0;
+    /* iOS won't seek an un-started video — a silent play/pause primes it. */
+    var prime = function () {
+      var pr = video.play();
+      if (pr && pr.then) pr.then(function () { video.pause(); }).catch(function () {});
+      window.removeEventListener("touchstart", prime);
+      window.removeEventListener("scroll", prime);
+    };
+    window.addEventListener("touchstart", prime, { once: true, passive: true });
+    window.addEventListener("scroll", prime, { once: true, passive: true });
+  }
+  function progress() {
+    var r = root.getBoundingClientRect();
+    var runway = r.height - window.innerHeight;
+    if (runway <= 0) return 0;
+    return Math.max(0, Math.min(1, -r.top / runway));
+  }
+  function frame() {
+    raf = 0;
+    var p = progress();
+    root.style.setProperty("--sv-p", p.toFixed(4));
+    if (video && duration) {
+      target = p * duration;
+      /* Ease toward the target so scrubbing feels filmed, not stepped. */
+      var cur = video.currentTime || 0;
+      var next = cur + (target - cur) * 0.35;
+      if (Math.abs(next - cur) > 0.01) {
+        try { video.currentTime = next; } catch (e0) {}
+        if (Math.abs(target - next) > 0.02) queue();
+      }
+    }
+  }
+  function queue() { if (!raf) raf = requestAnimationFrame(frame); }
+  function onScroll() { if (active) queue(); }
+  if (typeof IntersectionObserver !== "undefined") {
+    new IntersectionObserver(function (es) {
+      active = es[0] && es[0].isIntersecting;
+      if (active) queue();
+    }).observe(root);
+  } else { active = true; }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
+  queue();
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Scroll Video",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "Place this ABOVE the hero. The video pins full-screen and plays as the visitor scrolls — forward on the way down, backward on the way up — then hands over to the section below. Short clips (5–15s) feel best." },
+    { "type": "video", "id": "video", "label": "Video" },
+    { "type": "text", "id": "caption", "label": "Opening line (optional)", "info": "Fades out as the story starts." },
+    { "type": "range", "id": "runway", "label": "Scroll length", "min": 150, "max": 500, "step": 25, "unit": "vh", "default": 300, "info": "How much scrolling the video spans — longer means slower playback." },
+    { "type": "color", "id": "bg", "label": "Letterbox colour", "default": "#000000" },
+    { "type": "color", "id": "handoff_bg", "label": "Hand-off colour", "default": "#f5f5f7", "info": "The video dims into this at the end — match your hero's background." }
+  ],
+  "presets": [ { "name": "Dynamic Scroll Video" } ],
+  "enabled_on": { "templates": ["*"] }
+}
+{% endschema %}
