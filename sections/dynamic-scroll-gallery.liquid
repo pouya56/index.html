@@ -33,7 +33,7 @@
     opacity: {{ section.settings.bg_dim | default: 20 | divided_by: 100.0 }}; }
   .dyn-sg .sg-track { position: relative; z-index: 1; display: flex; align-items: center; gap: 1vw; padding: 0;
     will-change: transform; }
-  .dyn-sg .sg-panel { flex: 0 0 60vw; min-height: 80vh; border-radius: 0; overflow: hidden;
+  .dyn-sg .sg-panel { flex: 0 0 70vw; min-height: 80vh; border-radius: 0; overflow: hidden;
     position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center;
     padding: clamp(28px, 5vw, 72px); box-sizing: border-box;
     background: {{ section.settings.panel_bg | default: '#141418' }};
@@ -72,12 +72,12 @@
     -webkit-background-clip: text; background-clip: text; color: transparent; }
   .dyn-sg .sg-sub { margin-top: 22px; max-width: 46ch; font-size: clamp(15px, 1.4vw, 18px); line-height: 1.65;
     color: rgba(255, 255, 255, 0.62); }
-  /* Three slide sizes, like the reference: full-screen statements (Drop-
-     Tested), wide cards (Runs on the edge) and narrow interludes (stickers). */
-  .dyn-sg .sg-panel--full { flex-basis: 93vw; }
+  /* Two slide sizes: wide (70vw) is 2.5× narrow (28vw) — one of each plus
+     the 1vw gap fills exactly one screen. "full" is kept as an alias of
+     wide so slides saved with the old third size still render. */
+  .dyn-sg .sg-panel--full { flex-basis: 70vw; }
   .dyn-sg .sg-panel--narrow { flex-basis: 28vw; }
-  .dyn-sg .sg-panel .sg-line1, .dyn-sg .sg-panel .sg-line2 { font-size: clamp(30px, 4.2vw, 70px); }
-  .dyn-sg .sg-panel--full .sg-line1, .dyn-sg .sg-panel--full .sg-line2 { font-size: clamp(40px, 7.5vw, 132px); }
+  .dyn-sg .sg-panel .sg-line1, .dyn-sg .sg-panel .sg-line2 { font-size: clamp(32px, 5vw, 88px); }
   .dyn-sg .sg-panel--narrow .sg-line1, .dyn-sg .sg-panel--narrow .sg-line2 { font-size: clamp(20px, 2vw, 34px); }
   .dyn-sg .sg-panel--narrow .sg-sub { font-size: clamp(12px, 0.9vw, 14px); }
   .dyn-sg .sg-img { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
@@ -87,7 +87,7 @@
   .dyn-sg .sg-fg { position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; }
   /* The image is wider than its card so it can drift against the card's
      motion (parallax) without ever showing an edge. */
-  .dyn-sg .sg-img img, .dyn-sg .sg-fg img { position: absolute; left: -7%; top: 0; width: 114%;
+  .dyn-sg .sg-img img, .dyn-sg .sg-fg img { position: absolute; left: -12%; top: 0; width: 124%;
     height: 100%; object-fit: cover; display: block; will-change: transform; }
   .dyn-sg .sg-panel.has-img .sg-glow { display: none; }
   /* progress dots */
@@ -189,7 +189,7 @@
      of it peeking out from the background. The HEADLINE moves at its own
      speed between those two layers, and that gap is what reads as depth. */
   var plax = [];
-  Array.prototype.forEach.call(track.querySelectorAll(".sg-img img, .sg-fg img"), function (el) { plax.push({ el: el, f: 5.5 }); });
+  Array.prototype.forEach.call(track.querySelectorAll(".sg-img img, .sg-fg img"), function (el) { plax.push({ el: el, f: 9 }); });
   var tbods = Array.prototype.slice.call(track.querySelectorAll(".sg-panel.has-img .sg-body"));
   function frame() {
     raf = 0;
@@ -259,7 +259,8 @@
       "limit": 8,
       "settings": [
         { "type": "select", "id": "size", "label": "Slide size", "default": "wide", "options": [
-          { "value": "full", "label": "Full screen" }, { "value": "wide", "label": "Wide" }, { "value": "narrow", "label": "Narrow" } ] },
+          { "value": "wide", "label": "Wide (2.5×)" }, { "value": "narrow", "label": "Narrow" } ],
+          "info": "One wide + one narrow fill exactly one screen." },
         { "type": "select", "id": "text_pos", "label": "Headline position", "default": "top-left", "options": [
           { "value": "top-left", "label": "Top left (Runs on the edge)" },
           { "value": "center", "label": "Top centre (Drop-Tested)" },
