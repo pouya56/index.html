@@ -161,20 +161,14 @@
     html:has(.dyn-hero.dh-landing:not(.dh-searching)) body { overflow: hidden; height: 100%; overscroll-behavior: none; }
   }
 
-  /* Entrance after a scroll story above (gallery/video): the logo lands
-     big into its place, then the search bar rises in, then the buttons.
-     Only plays when the hero starts off-screen; JS removes the classes
-     right after the show so dragging and search behave as before. */
-  .dyn-hero.dh-intro .dh-head, .dyn-hero.dh-intro .dh-search, .dyn-hero.dh-intro .dh-hero-btns { opacity: 0; }
-  .dyn-hero.dh-intro.dh-in .dh-head { animation: dhIntroLogo 0.95s cubic-bezier(0.22, 1, 0.36, 1) both; }
-  .dyn-hero.dh-intro.dh-in .dh-search { animation: dhIntroRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both; }
-  .dyn-hero.dh-intro.dh-in .dh-hero-btns { animation: dhIntroRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.75s both; }
-  @keyframes dhIntroLogo { from { opacity: 0; transform: scale(2.2); } to { opacity: 1; transform: scale(1); } }
-  @keyframes dhIntroRise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) {
-    .dyn-hero.dh-intro .dh-head, .dyn-hero.dh-intro .dh-search, .dyn-hero.dh-intro .dh-hero-btns { opacity: 1; }
-    .dyn-hero.dh-intro.dh-in .dh-head, .dyn-hero.dh-intro.dh-in .dh-search, .dyn-hero.dh-intro.dh-in .dh-hero-btns { animation: none; }
-  }
+  /* Scroll-scrubbed entrance after a story above (gallery/video): the
+     logo lands big into its place, then the search bar, then the buttons
+     — tied to how far the hero has scrolled in, so scrolling back plays
+     it in reverse. JS drives the styles; dh-intro is only on while the
+     show is mid-flight, and comes off (styles cleared) when the hero is
+     fully in — dragging and search then see it exactly as before. */
+  .dyn-hero.dh-intro .dh-head, .dyn-hero.dh-intro .dh-search, .dyn-hero.dh-intro .dh-hero-btns {
+    opacity: 0; will-change: opacity, transform; }
 
   /* Stacking order over the floating photos (z 1): the search bar is the
      boss (12), the buttons come second (11), the logo third (10). */
@@ -2849,16 +2843,41 @@
     window.addEventListener("resize", paintCorners, { passive: true });
     paintCorners();
   }
-  if (typeof IntersectionObserver === "undefined") return;
-  if (hero.getBoundingClientRect().top < window.innerHeight * 0.6) return;
-  hero.classList.add("dh-intro");
-  var io = new IntersectionObserver(function (es) {
-    if (!es[0] || !es[0].isIntersecting) return;
-    io.disconnect();
-    hero.classList.add("dh-in");
-    setTimeout(function () { hero.classList.remove("dh-intro", "dh-in"); }, 1900);
-  }, { threshold: 0.45 });
-  io.observe(hero);
+  /* Scroll-scrubbed entrance — armed only when the hero starts off-screen
+     (a story section above). Progress p = how far the hero has scrolled
+     in; each part fades/moves over its own slice of p, so scrolling back
+     reverses the show. At p ≥ 1 all inline styles are cleared and the
+     class comes off, leaving the hero pristine for drag & search. */
+  var mReduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (mReduce || hero.getBoundingClientRect().top < window.innerHeight * 0.6) return;
+  var parts = [
+    { el: hero.querySelector(".dh-head"), a: 0.05, b: 0.55,
+      fx: function (t) { return "scale(" + (2.2 - 1.2 * t).toFixed(3) + ")"; } },
+    { el: hero.querySelector(".dh-search"), a: 0.45, b: 0.8,
+      fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } },
+    { el: hero.querySelector(".dh-hero-btns"), a: 0.6, b: 0.95,
+      fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } }
+  ].filter(function (x) { return x.el; });
+  if (!parts.length) return;
+  var iRaf = 0;
+  function iEase(t) { return 1 - Math.pow(1 - t, 3); }
+  function iFrame() {
+    iRaf = 0;
+    var p = 1 - hero.getBoundingClientRect().top / window.innerHeight;
+    var flying = p < 1;
+    hero.classList.toggle("dh-intro", flying);
+    for (var i = 0; i < parts.length; i++) {
+      if (!flying) { parts[i].el.style.opacity = ""; parts[i].el.style.transform = ""; continue; }
+      var t = Math.max(0, Math.min(1, (p - parts[i].a) / (parts[i].b - parts[i].a)));
+      t = iEase(t);
+      parts[i].el.style.opacity = t.toFixed(3);
+      parts[i].el.style.transform = parts[i].fx(t);
+    }
+  }
+  function iQueue() { if (!iRaf) iRaf = requestAnimationFrame(iFrame); }
+  window.addEventListener("scroll", iQueue, { passive: true });
+  window.addEventListener("resize", iQueue, { passive: true });
+  iFrame();
 })();
 </script>
 
