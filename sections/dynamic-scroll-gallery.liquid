@@ -79,8 +79,11 @@
   .dyn-sg .sg-panel--full .sg-line1, .dyn-sg .sg-panel--full .sg-line2 { font-size: clamp(40px, 7.5vw, 132px); }
   .dyn-sg .sg-panel--narrow .sg-line1, .dyn-sg .sg-panel--narrow .sg-line2 { font-size: clamp(20px, 2vw, 34px); }
   .dyn-sg .sg-panel--narrow .sg-sub { font-size: clamp(12px, 0.9vw, 14px); }
-  .dyn-sg .sg-img { position: absolute; inset: 0; z-index: 1; }
-  .dyn-sg .sg-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .dyn-sg .sg-img { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+  /* The image is wider than its card so it can drift against the card's
+     motion (parallax) without ever showing an edge. */
+  .dyn-sg .sg-img img { position: absolute; left: -7%; top: 0; width: 114%; height: 100%;
+    object-fit: cover; display: block; will-change: transform; }
   .dyn-sg .sg-panel.has-img .sg-glow { display: none; }
   /* progress dots */
   .dyn-sg .sg-dots { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
@@ -174,6 +177,7 @@
     if (runway <= 0) return 0;
     return Math.max(0, Math.min(1, -r.top / runway));
   }
+  var pimgs = Array.prototype.slice.call(track.querySelectorAll(".sg-img img"));
   function frame() {
     raf = 0;
     var p = progress();
@@ -184,6 +188,15 @@
     cur += (target - cur) * 0.16;
     if (Math.abs(target - cur) < 0.5) cur = target;
     track.style.transform = "translateX(" + (-cur).toFixed(2) + "px)";
+    /* Parallax: each card's image drifts a little against the card's motion,
+       keyed to its distance from the screen centre — the depth effect. */
+    var vc = window.innerWidth / 2;
+    for (var j = 0; j < pimgs.length; j++) {
+      var pr = pimgs[j].parentNode.getBoundingClientRect();
+      if (pr.right < -200 || pr.left > window.innerWidth + 200) continue;
+      var off = ((pr.left + pr.width / 2) - vc) / window.innerWidth;
+      pimgs[j].style.transform = "translateX(" + (off * 5.5).toFixed(2) + "%)";
+    }
     if (dots) {
       var n = dots.children.length;
       var i = Math.min(n - 1, Math.round(p * (n - 1)));
