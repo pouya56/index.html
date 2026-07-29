@@ -21,15 +21,20 @@
     background: {{ section.settings.bg | default: '#161006' }}; color: {{ in_ink }};
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif; }
   .dyn-in .in-bg { position: absolute; inset: 0; z-index: 0; }
-  .dyn-in .in-bg img { width: 100%; height: 100%; object-fit: cover; display: block;
-    /* slightly oversized so the mouse-drift never shows an edge */
-    transform: scale(1.06) translate(var(--px, 0px), var(--py, 0px)); will-change: transform; }
-  /* Floating props (pen, clips, knife…) — transparent cutouts that drift
-     with the mouse, each at its own depth. Decor only: no pointer events. */
-  .dyn-in .in-prop { position: absolute; z-index: 1; pointer-events: none; height: auto; will-change: transform;
+  .dyn-in .in-bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* Floating props (pen, clips, knife…) — transparent cutouts that wake up
+     ONLY under the cursor: they follow it magnetically with a small wobble
+     while hovered, then ease back to rest. */
+  .dyn-in .in-prop { position: absolute; z-index: 1; height: auto; will-change: transform;
     transform: translate(-50%, -50%) translate(var(--px, 0px), var(--py, 0px)) rotate(calc(var(--pr, 0deg) + var(--pw, 0deg)));
     filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.35)); }
   .dyn-in .in-prop.is-front { z-index: 3; }
+  /* Logo cover mark: starts giant like the headline, and JS shrinks it into
+     a small fixed mark top-centre that rides over the intro and gallery. */
+  .in-logo { position: absolute; z-index: 2; left: clamp(18px, 3.4vw, 64px); top: clamp(64px, 8vh, 110px);
+    width: min(52vw, 760px); height: auto; pointer-events: none;
+    filter: drop-shadow(0 4px 30px rgba(0, 0, 0, 0.25)); }
+  .in-logo.is-inverted { filter: invert(1) drop-shadow(0 4px 30px rgba(0, 0, 0, 0.45)); }
   .dyn-in .in-dim { position: absolute; inset: 0; background: #000;
     opacity: {{ section.settings.bg_dim | default: 15 | divided_by: 100.0 }}; }
   /* Tagline: small caps, top centre, riding above the headline. */
@@ -120,7 +125,13 @@
     <div class="in-setup">Pick a background photo and a headline in this section's settings —<br>it becomes the full-screen cover at the top of the page.</div>
   {%- else -%}
     {%- if section.settings.tagline != blank -%}<div class="in-tagline">{{ section.settings.tagline }}</div>{%- endif -%}
-    {%- if section.settings.title != blank -%}<h1 class="in-title">{{ section.settings.title }}</h1>{%- endif -%}
+    {%- if section.settings.logo != blank -%}
+      {%- assign in_lw = 800 -%}{%- assign in_lh = section.settings.logo.height | times: 800 | divided_by: section.settings.logo.width -%}
+      <img class="in-logo{% if section.settings.logo_invert %} is-inverted{% endif %}" id="dynInLogo-{{ section.id }}"
+        src="{{ section.settings.logo | image_url: width: 1600 }}" alt="{{ shop.name | escape }}" width="{{ in_lw }}" height="{{ in_lh }}" fetchpriority="high">
+    {%- elsif section.settings.title != blank -%}
+      <h1 class="in-title">{{ section.settings.title }}</h1>
+    {%- endif -%}
     {%- if section.settings.body != blank -%}<div class="in-body">{{ section.settings.body }}</div>{%- endif -%}
     {%- if section.settings.card_heading != blank or section.settings.card_note != blank -%}
       <aside class="in-card">
@@ -162,34 +173,79 @@
   var root = document.getElementById("dynIn-{{ section.id }}");
   if (!root || root.__inInit) return;
   root.__inInit = true;
-  /* Mouse-drift: every prop (and the photo, faintly) eases toward an
-     offset scaled by its depth — near things move more, like a real desk. */
-  var props = Array.prototype.slice.call(root.querySelectorAll(".in-prop"));
-  var bgImg = root.querySelector(".in-bg img");
-  if (bgImg) { bgImg.setAttribute("data-depth", "1.5"); props.push(bgImg); }
+  /* Props wake up only under the cursor: while hovered they follow it
+     magnetically (strength = their depth setting) with a small wobble,
+     and ease back to rest the moment it leaves. */
   var fine = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
-  if (fine && props.length) {
-    var tx = 0, ty = 0, cx = 0, cy = 0, pRaf = 0;
-    var pKick = function () { if (!pRaf) pRaf = requestAnimationFrame(pStep); };
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var props = Array.prototype.slice.call(root.querySelectorAll(".in-prop"));
+  if (fine && !calm && props.length) {
+    var items = props.map(function (el) {
+      return { el: el, f: Math.min(0.85, (parseFloat(el.getAttribute("data-depth")) || 5) * 0.08), tx: 0, ty: 0, cx: 0, cy: 0 };
+    });
+    var pRaf = 0;
     var pStep = function () {
       pRaf = 0;
-      cx += (tx - cx) * 0.08;
-      cy += (ty - cy) * 0.08;
-      for (var i = 0; i < props.length; i++) {
-        var d = parseFloat(props[i].getAttribute("data-depth")) || 5;
-        props[i].style.setProperty("--px", (cx * d * 7).toFixed(1) + "px");
-        props[i].style.setProperty("--py", (cy * d * 7).toFixed(1) + "px");
-        if (props[i] !== bgImg) props[i].style.setProperty("--pw", (cx * d * 0.7).toFixed(2) + "deg");
+      var busy = false;
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        it.cx += (it.tx - it.cx) * 0.12;
+        it.cy += (it.ty - it.cy) * 0.12;
+        it.el.style.setProperty("--px", it.cx.toFixed(1) + "px");
+        it.el.style.setProperty("--py", it.cy.toFixed(1) + "px");
+        it.el.style.setProperty("--pw", (it.cx * 0.12).toFixed(2) + "deg");
+        if (Math.abs(it.tx - it.cx) > 0.2 || Math.abs(it.ty - it.cy) > 0.2) busy = true;
       }
-      if (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001) pKick();
+      if (busy) pKick();
     };
-    root.addEventListener("pointermove", function (e) {
-      var r = root.getBoundingClientRect();
-      tx = (e.clientX - r.left) / r.width - 0.5;
-      ty = (e.clientY - r.top) / r.height - 0.5;
-      pKick();
+    var pKick = function () { if (!pRaf) pRaf = requestAnimationFrame(pStep); };
+    items.forEach(function (it) {
+      it.el.addEventListener("pointermove", function (e) {
+        var r = it.el.getBoundingClientRect();
+        /* measure from the prop's REST centre (subtract its current shift)
+           so following the cursor never feeds back into itself */
+        var bx = r.left + r.width / 2 - it.cx;
+        var by = r.top + r.height / 2 - it.cy;
+        it.tx = (e.clientX - bx) * it.f;
+        it.ty = (e.clientY - by) * it.f;
+        pKick();
+      });
+      it.el.addEventListener("pointerleave", function () { it.tx = 0; it.ty = 0; pKick(); });
     });
-    root.addEventListener("pointerleave", function () { tx = 0; ty = 0; pKick(); });
+  }
+  /* Cover logo: giant on the cover, then shrinks with scroll into a small
+     fixed mark top-centre that stays over the intro and the gallery, and
+     bows out as the hero (whose own logo lands) scrolls in. */
+  var logo = document.getElementById("dynInLogo-{{ section.id }}");
+  if (logo) {
+    var SMALL = 150, TOPPAD = 16, heroEl = null, lRaf = 0;
+    logo.style.position = "fixed";
+    logo.style.zIndex = "80";
+    var lFrame = function () {
+      lRaf = 0;
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var sL = Math.min(Math.max(18, 0.034 * vw), 64);
+      var sT = Math.min(Math.max(64, 0.08 * vh), 110);
+      var sW = Math.min(0.52 * vw, 760);
+      var p = Math.max(0, Math.min(1, window.scrollY / (vh * 0.6)));
+      p = 1 - Math.pow(1 - p, 3);
+      var w = sW + (SMALL - sW) * p;
+      logo.style.width = w.toFixed(1) + "px";
+      logo.style.left = (sL + ((vw - SMALL) / 2 - sL) * p).toFixed(1) + "px";
+      logo.style.top = (sT + (TOPPAD - sT) * p).toFixed(1) + "px";
+      heroEl = heroEl || document.getElementById("dynHero");
+      var o = 1;
+      if (heroEl) {
+        var ht = heroEl.getBoundingClientRect().top;
+        o = Math.max(0, Math.min(1, (ht - vh * 0.45) / (vh * 0.25)));
+      }
+      logo.style.opacity = o.toFixed(3);
+      logo.style.visibility = o <= 0 ? "hidden" : "visible";
+    };
+    var lQueue = function () { if (!lRaf) lRaf = requestAnimationFrame(lFrame); };
+    window.addEventListener("scroll", lQueue, { passive: true });
+    window.addEventListener("resize", lQueue, { passive: true });
+    lFrame();
   }
   var chip = document.getElementById("dynInVchip-{{ section.id }}");
   var light = document.getElementById("dynInLight-{{ section.id }}");
@@ -216,7 +272,9 @@
     { "type": "color", "id": "bg", "label": "Fallback background", "default": "#161006" },
     { "type": "color", "id": "ink", "label": "Text colour", "default": "#f2ead9" },
     { "type": "text", "id": "tagline", "label": "Tagline (top centre)", "default": "Made for you. Built with love." },
-    { "type": "text", "id": "title", "label": "Giant headline", "default": "Dynaeimic" },
+    { "type": "image_picker", "id": "logo", "label": "Logo (instead of the headline)", "info": "Starts giant on the cover, then shrinks with scroll into a small mark top-centre that stays over the intro and gallery. Transparent PNG works best." },
+    { "type": "checkbox", "id": "logo_invert", "label": "Show logo in white", "default": false, "info": "Flips a dark logo to white so it reads on dark photos and the gallery." },
+    { "type": "text", "id": "title", "label": "Giant headline (used if no logo)", "default": "Dynaeimic" },
     { "type": "textarea", "id": "body", "label": "Right-hand paragraph", "default": "Designed to celebrate, surprise and delight in all the right ways. Dynaeimic makes the simplest gift feel considered." },
     { "type": "textarea", "id": "card_heading", "label": "Card heading (bottom left)", "default": "Designed\nby Dynaeimic,\nmade in our\nNYC studio.", "info": "Line breaks are kept." },
     { "type": "text", "id": "card_note", "label": "Card note (under the dashed rule)", "default": "The world's most personal gifts, made one at a time." },
@@ -234,7 +292,7 @@
         { "type": "range", "id": "y", "label": "Position down", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 50 },
         { "type": "range", "id": "width", "label": "Size", "min": 40, "max": 480, "step": 10, "unit": "px", "default": 160 },
         { "type": "range", "id": "rot", "label": "Rotation", "min": -180, "max": 180, "step": 5, "unit": "deg", "default": 0 },
-        { "type": "range", "id": "depth", "label": "Drift amount", "min": 1, "max": 10, "step": 1, "default": 5, "info": "How much it moves with the mouse — near objects drift more than far ones." },
+        { "type": "range", "id": "depth", "label": "Drift amount", "min": 1, "max": 10, "step": 1, "default": 5, "info": "How strongly it follows the mouse while hovered — it only moves when the cursor is on top of it." },
         { "type": "checkbox", "id": "front", "label": "In front of the text", "default": false }
       ]
     }
