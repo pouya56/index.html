@@ -104,7 +104,10 @@
   @keyframes sgSpin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .dyn-sg .sg-scrollhint svg { animation: none; } }
   .dyn-sg .sg-setup { color: #fff; font-size: 17px; line-height: 1.6; text-align: center; width: 100%; padding: 30px; }
-  /* Corner links pinned over the story — same placement as the hero's. */
+  /* Corner links pinned over the story — same placement as the hero's.
+     When the landing hero shares the page, ITS corner links are fixed to
+     the screen and ride over this section too, so ours bow out. */
+  body:has(#dynHero.dh-landing) .dyn-sg .sg-corner { display: none; }
   .dyn-sg .sg-corner { position: absolute; z-index: 4; display: flex; align-items: center; gap: 20px; }
   .dyn-sg .sg-corner a { color: {{ section.settings.ink | default: '#f2ead9' }}; opacity: 0.75; text-decoration: none;
     font-size: 14px; line-height: 1; padding: 5px 2px; transition: opacity 0.15s; }

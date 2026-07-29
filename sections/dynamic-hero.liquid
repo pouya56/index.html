@@ -65,6 +65,13 @@
   .dyn-hero.dh-landing .dh-corner-link svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
   .dyn-hero.dh-landing img.dh-corner-ic { width: 18px; height: 18px; object-fit: contain; }
   @media (max-width: 700px) { .dyn-hero.dh-landing .dh-corner-group { gap: 14px; } .dyn-hero.dh-landing .dh-corner-link { font-size: 13px; } }
+  /* The corner links are FIXED to the screen, so the same set rides over
+     the scroll story above (gallery/video) and the hero alike. They fall
+     back into the page once a search starts. While a corner sits over the
+     dark story, JS flags it is-over-dark and its links flip to light ink. */
+  .dyn-hero.dh-landing:not(.dh-searching) .dh-corner-group { position: fixed; z-index: 60; }
+  .dyn-hero.dh-landing .dh-corner-group.is-over-dark .dh-corner-link { color: rgba(255, 255, 255, 0.82); }
+  .dyn-hero.dh-landing .dh-corner-group.is-over-dark .dh-corner-link:hover { color: #fff; }
 
   /* Account button + apps grid (top-right) with dropdown menus */
   .dyn-hero .dh-menu { position: relative; display: inline-flex; }
@@ -2825,6 +2832,23 @@
   var hero = document.getElementById("dynHero");
   if (!hero || hero.__dhIntro) return;
   hero.__dhIntro = true;
+  /* Fixed corner links: while a corner overlays the dark story sections
+     above, flip its links to light ink — judged per corner, since the top
+     pair crosses onto the hero before the bottom pair does. */
+  var groups = Array.prototype.slice.call(hero.querySelectorAll(".dh-corner-group"));
+  function paintCorners() {
+    var r = hero.getBoundingClientRect();
+    for (var i = 0; i < groups.length; i++) {
+      var isTop = groups[i].className.indexOf("dh-corner-tl") > -1 || groups[i].className.indexOf("dh-corner-tr") > -1;
+      var dark = isTop ? r.top > 30 : r.top > window.innerHeight - 70;
+      groups[i].classList.toggle("is-over-dark", dark);
+    }
+  }
+  if (groups.length) {
+    window.addEventListener("scroll", paintCorners, { passive: true });
+    window.addEventListener("resize", paintCorners, { passive: true });
+    paintCorners();
+  }
   if (typeof IntersectionObserver === "undefined") return;
   if (hero.getBoundingClientRect().top < window.innerHeight * 0.6) return;
   hero.classList.add("dh-intro");
