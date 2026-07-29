@@ -162,11 +162,14 @@
   }
 
   /* Scroll-scrubbed entrance after a story above (gallery/video): the
-     logo lands big into its place, then the search bar, then the buttons
-     — tied to how far the hero has scrolled in, so scrolling back plays
+     hero borrows extra scroll runway from its Shopify wrapper and PINS
+     while the show plays in stages — the logo lands big and settles,
+     then the search bar appears, then the buttons. Scrolling up plays
      it in reverse. JS drives the styles; dh-intro is only on while the
-     show is mid-flight, and comes off (styles cleared) when the hero is
-     fully in — dragging and search then see it exactly as before. */
+     show is mid-flight, and comes off (styles cleared) when it's done —
+     dragging and search then see the hero exactly as before. */
+  .dh-introrun { height: calc(100svh + 130vh); }
+  .dh-introrun .dyn-hero.dh-landing { position: sticky; top: 0; }
   .dyn-hero.dh-intro .dh-head, .dyn-hero.dh-intro .dh-search, .dyn-hero.dh-intro .dh-hero-btns {
     opacity: 0; will-change: opacity, transform; }
 
@@ -2844,26 +2847,42 @@
     paintCorners();
   }
   /* Scroll-scrubbed entrance — armed only when the hero starts off-screen
-     (a story section above). Progress p = how far the hero has scrolled
-     in; each part fades/moves over its own slice of p, so scrolling back
-     reverses the show. At p ≥ 1 all inline styles are cleared and the
+     (a story section above). The hero pins for RUN extra viewports and
+     the show plays in stages across entry + pin: logo lands big and
+     settles first, then the search bar, then the buttons. Scrolling up
+     reverses it. Past the end all inline styles are cleared and the
      class comes off, leaving the hero pristine for drag & search. */
   var mReduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (mReduce || hero.getBoundingClientRect().top < window.innerHeight * 0.6) return;
+  var wrap = hero.closest(".shopify-section");
+  var RUN = 1.3;
+  if (wrap) wrap.classList.add("dh-introrun");
   var parts = [
-    { el: hero.querySelector(".dh-head"), a: 0.05, b: 0.55,
+    { el: hero.querySelector(".dh-head"), a: 0.08, b: 0.5,
       fx: function (t) { return "scale(" + (2.2 - 1.2 * t).toFixed(3) + ")"; } },
-    { el: hero.querySelector(".dh-search"), a: 0.45, b: 0.8,
+    { el: hero.querySelector(".dh-search"), a: 0.55, b: 0.75,
       fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } },
-    { el: hero.querySelector(".dh-hero-btns"), a: 0.6, b: 0.95,
+    { el: hero.querySelector(".dh-hero-btns"), a: 0.72, b: 0.92,
       fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } }
   ].filter(function (x) { return x.el; });
   if (!parts.length) return;
-  var iRaf = 0;
+  var iRaf = 0, iDone = false;
+  function iTeardown() {
+    if (iDone) return;
+    iDone = true;
+    if (wrap) wrap.classList.remove("dh-introrun");
+    hero.classList.remove("dh-intro");
+    for (var i = 0; i < parts.length; i++) { parts[i].el.style.opacity = ""; parts[i].el.style.transform = ""; }
+    window.removeEventListener("scroll", iQueue);
+    window.removeEventListener("resize", iQueue);
+  }
   function iEase(t) { return 1 - Math.pow(1 - t, 3); }
   function iFrame() {
     iRaf = 0;
-    var p = 1 - hero.getBoundingClientRect().top / window.innerHeight;
+    if (iDone) return;
+    var vh = window.innerHeight;
+    var top = (wrap || hero).getBoundingClientRect().top;
+    var p = (vh - top) / (vh * (1 + (wrap ? RUN : 0)));
     var flying = p < 1;
     hero.classList.toggle("dh-intro", flying);
     for (var i = 0; i < parts.length; i++) {
@@ -2875,6 +2894,12 @@
     }
   }
   function iQueue() { if (!iRaf) iRaf = requestAnimationFrame(iFrame); }
+  /* A search reshapes the hero (results flow below) — hand the page back. */
+  if (typeof MutationObserver !== "undefined") {
+    new MutationObserver(function () {
+      if (hero.classList.contains("dh-searching")) iTeardown();
+    }).observe(hero, { attributes: true, attributeFilter: ["class"] });
+  }
   window.addEventListener("scroll", iQueue, { passive: true });
   window.addEventListener("resize", iQueue, { passive: true });
   iFrame();
