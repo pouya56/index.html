@@ -1,0 +1,179 @@
+{% comment %}
+  ============================================================================
+  Dynamic Scroll Gallery — a pinned, scroll-driven horizontal story.
+  ----------------------------------------------------------------------------
+  The section pins full-screen; scrolling down glides big statement slides
+  right-to-left (scroll up glides them back). After the last slide the page
+  releases and the next section scrolls into view.
+
+  INSTALL:
+  1. Edit code > Sections > Add a new section > name it
+     "dynamic-scroll-gallery" and REPLACE its contents with this file. Save.
+  2. Customize > (your page) > Add section > "Dynamic Scroll Gallery".
+  3. Each slide is a block — set its two lines, text and optional image,
+     drag to reorder. Place the section wherever the story should interrupt.
+  ============================================================================
+{% endcomment %}
+
+{%- assign sg_n = 0 -%}
+{%- for b in section.blocks -%}{%- if b.type == 'slide' -%}{%- assign sg_n = sg_n | plus: 1 -%}{%- endif -%}{%- endfor -%}
+
+<style>
+  .dyn-sg { position: relative;
+    /* one screen of runway per extra slide */
+    height: calc(100vh + {{ sg_n | at_least: 1 | minus: 1 }} * 90vh);
+    background: {{ section.settings.bg | default: '#0b0b0d' }};
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif; }
+  .dyn-sg .sg-stage { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden;
+    display: flex; align-items: center; }
+  .dyn-sg .sg-track { display: flex; align-items: stretch; gap: 4vw; padding: 0 9vw;
+    will-change: transform; }
+  .dyn-sg .sg-panel { flex: 0 0 82vw; min-height: 72vh; border-radius: 30px; overflow: hidden;
+    position: relative; display: flex; flex-direction: column; justify-content: center;
+    padding: clamp(28px, 5vw, 72px);
+    background: {{ section.settings.panel_bg | default: '#141418' }};
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.8); }
+  .dyn-sg .sg-glow { position: absolute; right: -18%; top: -28%; width: 70%; height: 90%;
+    border-radius: 50%; pointer-events: none; filter: blur(70px); opacity: 0.5;
+    background: radial-gradient(circle, {{ section.settings.accent | default: '#6a5bff' }}, transparent 65%); }
+  .dyn-sg .sg-line1 { color: {{ section.settings.ink | default: '#ffffff' }};
+    font-size: clamp(34px, 6vw, 82px); font-weight: 650; letter-spacing: -0.03em; line-height: 1.04; }
+  .dyn-sg .sg-line2 { font-size: clamp(34px, 6vw, 82px); font-weight: 650; letter-spacing: -0.03em; line-height: 1.04;
+    background: linear-gradient(100deg, {{ section.settings.accent | default: '#6a5bff' }}, #b8b8c4);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .dyn-sg .sg-sub { margin-top: 22px; max-width: 46ch; font-size: clamp(15px, 1.4vw, 18px); line-height: 1.65;
+    color: rgba(255, 255, 255, 0.62); }
+  .dyn-sg .sg-img { position: absolute; right: clamp(16px, 5vw, 70px); bottom: 0; top: 12%;
+    width: min(38%, 460px); display: flex; align-items: center; pointer-events: none; }
+  .dyn-sg .sg-img img { width: 100%; height: auto; max-height: 100%; object-fit: contain;
+    filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.5)); }
+  .dyn-sg .sg-panel.has-img .sg-line1, .dyn-sg .sg-panel.has-img .sg-line2,
+  .dyn-sg .sg-panel.has-img .sg-sub { max-width: 55%; }
+  /* progress dots */
+  .dyn-sg .sg-dots { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 3; }
+  .dyn-sg .sg-dot { width: 7px; height: 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.28);
+    transition: background 0.2s, width 0.25s; }
+  .dyn-sg .sg-dot.is-on { background: #fff; width: 22px; }
+  .dyn-sg .sg-setup { color: #fff; font-size: 17px; line-height: 1.6; text-align: center; width: 100%; padding: 30px; }
+  @media (max-width: 700px) {
+    .dyn-sg .sg-panel { flex-basis: 86vw; min-height: 64vh; border-radius: 22px; }
+    .dyn-sg .sg-img { position: static; width: 70%; margin: 26px auto 0; }
+    .dyn-sg .sg-panel.has-img { justify-content: flex-start; padding-top: 14vh; }
+    .dyn-sg .sg-panel.has-img .sg-line1, .dyn-sg .sg-panel.has-img .sg-line2,
+    .dyn-sg .sg-panel.has-img .sg-sub { max-width: none; }
+  }
+</style>
+
+<section class="dyn-sg" id="dynSg-{{ section.id }}">
+  <div class="sg-stage">
+    {%- if sg_n > 0 -%}
+      <div class="sg-track" id="dynSgTrack-{{ section.id }}">
+        {%- for b in section.blocks -%}
+          {%- if b.type == 'slide' -%}
+            <div class="sg-panel{% if b.settings.image != blank %} has-img{% endif %}" {{ b.shopify_attributes }}>
+              <span class="sg-glow" aria-hidden="true"></span>
+              {%- if b.settings.line1 != blank -%}<div class="sg-line1">{{ b.settings.line1 }}</div>{%- endif -%}
+              {%- if b.settings.line2 != blank -%}<div class="sg-line2">{{ b.settings.line2 }}</div>{%- endif -%}
+              {%- if b.settings.text != blank -%}<div class="sg-sub">{{ b.settings.text }}</div>{%- endif -%}
+              {%- if b.settings.image != blank -%}
+                <span class="sg-img"><img src="{{ b.settings.image | image_url: width: 900 }}" alt="{{ b.settings.line1 | escape }}" width="450" height="450" loading="lazy"></span>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+      <div class="sg-dots" id="dynSgDots-{{ section.id }}" aria-hidden="true">
+        {%- for b in section.blocks -%}{%- if b.type == 'slide' -%}<span class="sg-dot{% if forloop.first %} is-on{% endif %}"></span>{%- endif -%}{%- endfor -%}
+      </div>
+    {%- else -%}
+      <div class="sg-setup">Add "Slide" blocks to this section —<br>they'll glide right-to-left as visitors scroll, then hand over to the next section.</div>
+    {%- endif -%}
+  </div>
+</section>
+
+<script>
+(function () {
+  var root = document.getElementById("dynSg-{{ section.id }}");
+  if (!root || root.__sgInit) return;
+  root.__sgInit = true;
+  var track = document.getElementById("dynSgTrack-{{ section.id }}");
+  var dots = document.getElementById("dynSgDots-{{ section.id }}");
+  if (!track) return;
+  var raf = 0, active = false, cur = 0;
+  function progress() {
+    var r = root.getBoundingClientRect();
+    var runway = r.height - window.innerHeight;
+    if (runway <= 0) return 0;
+    return Math.max(0, Math.min(1, -r.top / runway));
+  }
+  function frame() {
+    raf = 0;
+    var p = progress();
+    var max = track.scrollWidth - window.innerWidth;
+    if (max <= 0) return;
+    var target = p * max;
+    /* Ease toward the target so the glide feels weighted, not stepped. */
+    cur += (target - cur) * 0.16;
+    if (Math.abs(target - cur) < 0.5) cur = target;
+    track.style.transform = "translateX(" + (-cur).toFixed(2) + "px)";
+    if (dots) {
+      var n = dots.children.length;
+      var i = Math.min(n - 1, Math.round(p * (n - 1)));
+      for (var k = 0; k < n; k++) dots.children[k].classList.toggle("is-on", k === i);
+    }
+    if (Math.abs(target - cur) >= 0.5) queue();
+  }
+  function queue() { if (!raf) raf = requestAnimationFrame(frame); }
+  function onScroll() { if (active) queue(); }
+  if (typeof IntersectionObserver !== "undefined") {
+    new IntersectionObserver(function (es) {
+      active = es[0] && es[0].isIntersecting;
+      if (active) queue();
+    }).observe(root);
+  } else { active = true; }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
+  queue();
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Scroll Gallery",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "A pinned horizontal story: scrolling down glides the slides right-to-left, then the page continues to the next section. Each slide is a block below." },
+    { "type": "color", "id": "bg", "label": "Backdrop colour", "default": "#0b0b0d" },
+    { "type": "color", "id": "panel_bg", "label": "Slide colour", "default": "#141418" },
+    { "type": "color", "id": "ink", "label": "First line colour", "default": "#ffffff" },
+    { "type": "color", "id": "accent", "label": "Accent (second line + glow)", "default": "#6a5bff" }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide",
+      "limit": 8,
+      "settings": [
+        { "type": "text", "id": "line1", "label": "Line 1", "default": "Runs on the edge" },
+        { "type": "text", "id": "line2", "label": "Line 2 (accent)", "default": "Refuses the ordinary" },
+        { "type": "textarea", "id": "text", "label": "Small text (optional)" },
+        { "type": "image_picker", "id": "image", "label": "Image (optional)", "info": "Sits on the right of the slide. Transparent PNGs look best." }
+      ]
+    }
+  ],
+  "max_blocks": 8,
+  "presets": [
+    {
+      "name": "Dynamic Scroll Gallery",
+      "blocks": [
+        { "type": "slide", "settings": { "line1": "Made one at a time", "line2": "Never off a shelf", "text": "Every piece is produced for one person — yours." } },
+        { "type": "slide", "settings": { "line1": "Your words. Your photos.", "line2": "Our craft.", "text": "Engraved, printed and stitched in our NYC studio." } },
+        { "type": "slide", "settings": { "line1": "Proof first.", "line2": "Then we make it.", "text": "You approve exactly what you'll get before production begins." } }
+      ]
+    }
+  ],
+  "enabled_on": { "templates": ["*"] }
+}
+{% endschema %}
