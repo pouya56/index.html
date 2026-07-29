@@ -21,7 +21,15 @@
     background: {{ section.settings.bg | default: '#161006' }}; color: {{ in_ink }};
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif; }
   .dyn-in .in-bg { position: absolute; inset: 0; z-index: 0; }
-  .dyn-in .in-bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .dyn-in .in-bg img { width: 100%; height: 100%; object-fit: cover; display: block;
+    /* slightly oversized so the mouse-drift never shows an edge */
+    transform: scale(1.06) translate(var(--px, 0px), var(--py, 0px)); will-change: transform; }
+  /* Floating props (pen, clips, knife…) — transparent cutouts that drift
+     with the mouse, each at its own depth. Decor only: no pointer events. */
+  .dyn-in .in-prop { position: absolute; z-index: 1; pointer-events: none; height: auto; will-change: transform;
+    transform: translate(-50%, -50%) translate(var(--px, 0px), var(--py, 0px)) rotate(calc(var(--pr, 0deg) + var(--pw, 0deg)));
+    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.35)); }
+  .dyn-in .in-prop.is-front { z-index: 3; }
   .dyn-in .in-dim { position: absolute; inset: 0; background: #000;
     opacity: {{ section.settings.bg_dim | default: 15 | divided_by: 100.0 }}; }
   /* Tagline: small caps, top centre, riding above the headline. */
@@ -101,6 +109,13 @@
       <span class="in-dim"></span>
     </div>
   {%- endif -%}
+  {%- for b in section.blocks -%}
+    {%- if b.type == 'prop' and b.settings.image != blank -%}
+      <img class="in-prop{% if b.settings.front %} is-front{% endif %}" data-depth="{{ b.settings.depth | default: 5 }}"
+        src="{{ b.settings.image | image_url: width: 600 }}" alt="" width="300" height="300" loading="lazy"
+        style="left: {{ b.settings.x | default: 50 }}%; top: {{ b.settings.y | default: 50 }}%; width: {{ b.settings.width | default: 160 }}px; --pr: {{ b.settings.rot | default: 0 }}deg;" {{ b.shopify_attributes }}>
+    {%- endif -%}
+  {%- endfor -%}
   {%- if section.settings.bg_image == blank and section.settings.title == blank -%}
     <div class="in-setup">Pick a background photo and a headline in this section's settings —<br>it becomes the full-screen cover at the top of the page.</div>
   {%- else -%}
@@ -147,6 +162,35 @@
   var root = document.getElementById("dynIn-{{ section.id }}");
   if (!root || root.__inInit) return;
   root.__inInit = true;
+  /* Mouse-drift: every prop (and the photo, faintly) eases toward an
+     offset scaled by its depth — near things move more, like a real desk. */
+  var props = Array.prototype.slice.call(root.querySelectorAll(".in-prop"));
+  var bgImg = root.querySelector(".in-bg img");
+  if (bgImg) { bgImg.setAttribute("data-depth", "1.5"); props.push(bgImg); }
+  var fine = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+  if (fine && props.length) {
+    var tx = 0, ty = 0, cx = 0, cy = 0, pRaf = 0;
+    var pKick = function () { if (!pRaf) pRaf = requestAnimationFrame(pStep); };
+    var pStep = function () {
+      pRaf = 0;
+      cx += (tx - cx) * 0.08;
+      cy += (ty - cy) * 0.08;
+      for (var i = 0; i < props.length; i++) {
+        var d = parseFloat(props[i].getAttribute("data-depth")) || 5;
+        props[i].style.setProperty("--px", (cx * d * 7).toFixed(1) + "px");
+        props[i].style.setProperty("--py", (cy * d * 7).toFixed(1) + "px");
+        if (props[i] !== bgImg) props[i].style.setProperty("--pw", (cx * d * 0.7).toFixed(2) + "deg");
+      }
+      if (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001) pKick();
+    };
+    root.addEventListener("pointermove", function (e) {
+      var r = root.getBoundingClientRect();
+      tx = (e.clientX - r.left) / r.width - 0.5;
+      ty = (e.clientY - r.top) / r.height - 0.5;
+      pKick();
+    });
+    root.addEventListener("pointerleave", function () { tx = 0; ty = 0; pKick(); });
+  }
   var chip = document.getElementById("dynInVchip-{{ section.id }}");
   var light = document.getElementById("dynInLight-{{ section.id }}");
   if (!chip || !light) return;
@@ -180,6 +224,22 @@
     { "type": "video", "id": "video", "label": "Video chip (bottom right)", "info": "Loops quietly in a small chip; tapping it opens the video big with sound." },
     { "type": "text", "id": "scroll_label", "label": "Scroll cue text", "default": "Scroll to continue" }
   ],
+  "blocks": [
+    {
+      "type": "prop",
+      "name": "Floating prop",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Cutout image (transparent PNG)", "info": "A pen, clip, knife… cut out on a transparent background (Shopify's image editor → Remove background). It floats over the photo and drifts with the mouse." },
+        { "type": "range", "id": "x", "label": "Position across", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 50 },
+        { "type": "range", "id": "y", "label": "Position down", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 50 },
+        { "type": "range", "id": "width", "label": "Size", "min": 40, "max": 480, "step": 10, "unit": "px", "default": 160 },
+        { "type": "range", "id": "rot", "label": "Rotation", "min": -180, "max": 180, "step": 5, "unit": "deg", "default": 0 },
+        { "type": "range", "id": "depth", "label": "Drift amount", "min": 1, "max": 10, "step": 1, "default": 5, "info": "How much it moves with the mouse — near objects drift more than far ones." },
+        { "type": "checkbox", "id": "front", "label": "In front of the text", "default": false }
+      ]
+    }
+  ],
+  "max_blocks": 12,
   "presets": [ { "name": "Dynamic Intro" } ],
   "enabled_on": { "templates": ["*"] }
 }
