@@ -1,0 +1,186 @@
+{% comment %}
+  ============================================================================
+  Dynamic Intro — a full-screen magazine cover for the top of the page.
+  ----------------------------------------------------------------------------
+  One big photo, a giant headline over it, a tagline up top, a paragraph on
+  the right, a glass info card bottom-left, a vertical model tab on the right
+  edge, an optional video chip bottom-right and a "scroll to continue" cue.
+
+  INSTALL:
+  1. Edit code > Sections > Add a new section > name it "dynamic-intro"
+     and REPLACE its contents with this whole file. Save.
+  2. Customize > Home page > Add section > "Dynamic Intro".
+  3. Drag it to the VERY TOP, above the story sections. Fill in its settings.
+  ============================================================================
+{% endcomment %}
+
+{%- assign in_ink = section.settings.ink | default: '#f2ead9' -%}
+
+<style>
+  .dyn-in { position: relative; height: 100vh; height: 100svh; overflow: hidden;
+    background: {{ section.settings.bg | default: '#161006' }}; color: {{ in_ink }};
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif; }
+  .dyn-in .in-bg { position: absolute; inset: 0; z-index: 0; }
+  .dyn-in .in-bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .dyn-in .in-dim { position: absolute; inset: 0; background: #000;
+    opacity: {{ section.settings.bg_dim | default: 15 | divided_by: 100.0 }}; }
+  /* Tagline: small caps, top centre, riding above the headline. */
+  .dyn-in .in-tagline { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%);
+    top: clamp(46px, 6vh, 60px); white-space: nowrap; font-size: clamp(11px, 1.15vw, 16px); font-weight: 800;
+    letter-spacing: 0.14em; text-transform: uppercase; text-shadow: 0 1px 14px rgba(0, 0, 0, 0.35); }
+  /* The cover headline — enormous, heavy, cream. */
+  .dyn-in .in-title { position: absolute; z-index: 2; left: clamp(18px, 3.4vw, 64px);
+    top: clamp(64px, 8vh, 110px); margin: 0; font-size: clamp(88px, 16.5vw, 250px); line-height: 0.82;
+    font-weight: 800; letter-spacing: -0.015em; text-transform: uppercase;
+    text-shadow: 0 4px 40px rgba(0, 0, 0, 0.25); }
+  /* Right-hand paragraph, vertically around the middle. */
+  .dyn-in .in-body { position: absolute; z-index: 2; right: clamp(18px, 4.6vw, 88px); top: 42%;
+    width: min(34ch, 44vw); font-size: clamp(17px, 1.85vw, 30px); font-weight: 600; line-height: 1.35;
+    letter-spacing: -0.005em; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35); }
+  /* Glass info card bottom-left: caps heading, dashed rule, note below. */
+  .dyn-in .in-card { position: absolute; z-index: 2; left: clamp(18px, 3.4vw, 64px);
+    bottom: clamp(56px, 10vh, 96px); width: min(350px, 78vw); padding: clamp(18px, 2vw, 28px);
+    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 6px;
+    -webkit-backdrop-filter: blur(12px) saturate(1.2); backdrop-filter: blur(12px) saturate(1.2); }
+  .dyn-in .in-card-h { margin: 0; font-size: clamp(16px, 1.5vw, 23px); font-weight: 800; line-height: 1.4;
+    letter-spacing: 0.02em; text-transform: uppercase; white-space: pre-line; }
+  .dyn-in .in-card-rule { border: 0; border-top: 1px dashed rgba(255, 255, 255, 0.45); margin: clamp(14px, 1.6vw, 22px) 0; }
+  .dyn-in .in-card-s { margin: 0; font-size: clamp(13px, 1.05vw, 16.5px); font-weight: 600; line-height: 1.5;
+    text-align: right; }
+  /* Vertical model tab hugging the right edge. */
+  .dyn-in .in-side { position: absolute; z-index: 2; right: 0; top: clamp(24px, 4vh, 40px);
+    background: {{ in_ink }}; color: #131313; padding: 16px 8px 18px; border-radius: 3px 0 0 3px;
+    writing-mode: vertical-rl; font-size: 12.5px; font-weight: 800; letter-spacing: 0.14em;
+    text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+  .dyn-in .in-side::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #131313; }
+  /* Scroll cue bottom-centre. */
+  .dyn-in .in-scroll { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%);
+    bottom: clamp(16px, 3.4vh, 30px); display: flex; align-items: center; gap: 10px; white-space: nowrap;
+    font-size: 11.5px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.9); }
+  .dyn-in .in-scroll-ring { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.7);
+    display: grid; place-items: center; }
+  .dyn-in .in-scroll-ring svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.2;
+    stroke-linecap: round; stroke-linejoin: round; animation: dynInBob 1.8s ease-in-out infinite; }
+  @keyframes dynInBob { 0%, 100% { transform: translateY(-1.5px); } 50% { transform: translateY(2.5px); } }
+  /* Optional video chip bottom-right — a quiet loop that opens big on tap. */
+  .dyn-in .in-vchip { position: absolute; z-index: 3; right: clamp(16px, 2.6vw, 44px);
+    bottom: clamp(16px, 3.2vh, 30px); width: clamp(150px, 13vw, 210px); aspect-ratio: 16 / 9;
+    border-radius: 12px; overflow: hidden; border: 2px solid rgba(255, 176, 87, 0.85); cursor: pointer;
+    padding: 0; background: #000; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); }
+  .dyn-in .in-vchip video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .dyn-in .in-vchip .in-vplay { position: absolute; inset: 0; display: grid; place-items: center;
+    color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
+    background: rgba(0, 0, 0, 0.18); text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6); }
+  .dyn-in .in-lightbox { position: fixed; inset: 0; z-index: 999; display: none; place-items: center;
+    background: rgba(0, 0, 0, 0.86); padding: clamp(14px, 4vw, 60px); }
+  .dyn-in .in-lightbox.is-open { display: grid; }
+  .dyn-in .in-lightbox video { max-width: 100%; max-height: 100%; border-radius: 10px; }
+  .dyn-in .in-close { position: absolute; top: 18px; right: 22px; width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.12); color: #fff;
+    font-size: 20px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+  .dyn-in .in-setup { position: relative; z-index: 2; display: grid; place-items: center; height: 100%;
+    text-align: center; padding: 30px; font-size: 17px; line-height: 1.6; }
+  @media (max-width: 760px) {
+    .dyn-in .in-tagline { top: 74px; font-size: 10.5px; width: 92vw; white-space: normal; text-align: center; }
+    .dyn-in .in-title { font-size: clamp(38px, 13vw, 84px); top: 112px; right: 12px; overflow-wrap: anywhere; }
+    .dyn-in .in-body { top: auto; bottom: 42vh; left: 18px; right: 18px; width: auto; font-size: 17px; }
+    .dyn-in .in-card { bottom: 74px; width: min(300px, 86vw); }
+    .dyn-in .in-side { display: none; }
+    .dyn-in .in-vchip { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .dyn-in .in-scroll-ring svg { animation: none; } }
+</style>
+
+<section class="dyn-in" id="dynIn-{{ section.id }}">
+  {%- if section.settings.bg_image != blank -%}
+    <div class="in-bg" aria-hidden="true">
+      <img src="{{ section.settings.bg_image | image_url: width: 2600 }}" alt="" width="1300" height="800"
+        srcset="{{ section.settings.bg_image | image_url: width: 1100 }} 1100w, {{ section.settings.bg_image | image_url: width: 1800 }} 1800w, {{ section.settings.bg_image | image_url: width: 2600 }} 2600w"
+        sizes="100vw" fetchpriority="high">
+      <span class="in-dim"></span>
+    </div>
+  {%- endif -%}
+  {%- if section.settings.bg_image == blank and section.settings.title == blank -%}
+    <div class="in-setup">Pick a background photo and a headline in this section's settings —<br>it becomes the full-screen cover at the top of the page.</div>
+  {%- else -%}
+    {%- if section.settings.tagline != blank -%}<div class="in-tagline">{{ section.settings.tagline }}</div>{%- endif -%}
+    {%- if section.settings.title != blank -%}<h1 class="in-title">{{ section.settings.title }}</h1>{%- endif -%}
+    {%- if section.settings.body != blank -%}<div class="in-body">{{ section.settings.body }}</div>{%- endif -%}
+    {%- if section.settings.card_heading != blank or section.settings.card_note != blank -%}
+      <aside class="in-card">
+        {%- if section.settings.card_heading != blank -%}<p class="in-card-h">{{ section.settings.card_heading }}</p>{%- endif -%}
+        {%- if section.settings.card_heading != blank and section.settings.card_note != blank -%}<hr class="in-card-rule">{%- endif -%}
+        {%- if section.settings.card_note != blank -%}<p class="in-card-s">{{ section.settings.card_note }}</p>{%- endif -%}
+      </aside>
+    {%- endif -%}
+    {%- if section.settings.side_label != blank -%}<div class="in-side">{{ section.settings.side_label }}</div>{%- endif -%}
+    {%- if section.settings.video != blank -%}
+      <button type="button" class="in-vchip" id="dynInVchip-{{ section.id }}" aria-label="Play video">
+        <video muted loop autoplay playsinline preload="metadata" {% if section.settings.video.preview_image %}poster="{{ section.settings.video.preview_image | image_url: width: 600 }}"{% endif %}>
+          {%- for source in section.settings.video.sources -%}
+            {%- if source.format == 'mp4' -%}<source src="{{ source.url }}" type="{{ source.mime_type }}">{%- endif -%}
+          {%- endfor -%}
+        </video>
+        <span class="in-vplay">Play</span>
+      </button>
+      <div class="in-lightbox" id="dynInLight-{{ section.id }}" role="dialog" aria-modal="true">
+        <video controls playsinline preload="none">
+          {%- for source in section.settings.video.sources -%}
+            {%- if source.format == 'mp4' -%}<source src="{{ source.url }}" type="{{ source.mime_type }}">{%- endif -%}
+          {%- endfor -%}
+        </video>
+        <button type="button" class="in-close" aria-label="Close video">&times;</button>
+      </div>
+    {%- endif -%}
+    {%- if section.settings.scroll_label != blank -%}
+      <div class="in-scroll" aria-hidden="true">
+        <span class="in-scroll-ring"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+        {{ section.settings.scroll_label }}
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+</section>
+
+<script>
+(function () {
+  var root = document.getElementById("dynIn-{{ section.id }}");
+  if (!root || root.__inInit) return;
+  root.__inInit = true;
+  var chip = document.getElementById("dynInVchip-{{ section.id }}");
+  var light = document.getElementById("dynInLight-{{ section.id }}");
+  if (!chip || !light) return;
+  var big = light.querySelector("video");
+  var close = light.querySelector(".in-close");
+  function open() { light.classList.add("is-open"); if (big) { try { big.currentTime = 0; big.play(); } catch (e0) {} } }
+  function shut() { light.classList.remove("is-open"); if (big) big.pause(); }
+  chip.addEventListener("click", open);
+  close.addEventListener("click", shut);
+  light.addEventListener("click", function (e) { if (e.target === light) shut(); });
+  window.addEventListener("keydown", function (e) { if (e.key === "Escape") shut(); });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Intro",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "A full-screen magazine cover for the very top of the page: photo background, giant headline, tagline, right-hand paragraph, glass info card, vertical model tab and an optional video chip." },
+    { "type": "image_picker", "id": "bg_image", "label": "Background photo", "info": "Fills the whole screen. Landscape, ~2600px wide, with visual calm where the texts sit." },
+    { "type": "range", "id": "bg_dim", "label": "Darken photo", "min": 0, "max": 60, "step": 5, "unit": "%", "default": 15, "info": "Keeps the cream text readable on bright photos." },
+    { "type": "color", "id": "bg", "label": "Fallback background", "default": "#161006" },
+    { "type": "color", "id": "ink", "label": "Text colour", "default": "#f2ead9" },
+    { "type": "text", "id": "tagline", "label": "Tagline (top centre)", "default": "Made for you. Built with love." },
+    { "type": "text", "id": "title", "label": "Giant headline", "default": "Dynaeimic" },
+    { "type": "textarea", "id": "body", "label": "Right-hand paragraph", "default": "Designed to celebrate, surprise and delight in all the right ways. Dynaeimic makes the simplest gift feel considered." },
+    { "type": "textarea", "id": "card_heading", "label": "Card heading (bottom left)", "default": "Designed\nby Dynaeimic,\nmade in our\nNYC studio.", "info": "Line breaks are kept." },
+    { "type": "text", "id": "card_note", "label": "Card note (under the dashed rule)", "default": "The world's most personal gifts, made one at a time." },
+    { "type": "text", "id": "side_label", "label": "Vertical tab (right edge)", "default": "Dynaeimic — est. 2026" },
+    { "type": "video", "id": "video", "label": "Video chip (bottom right)", "info": "Loops quietly in a small chip; tapping it opens the video big with sound." },
+    { "type": "text", "id": "scroll_label", "label": "Scroll cue text", "default": "Scroll to continue" }
+  ],
+  "presets": [ { "name": "Dynamic Intro" } ],
+  "enabled_on": { "templates": ["*"] }
+}
+{% endschema %}
