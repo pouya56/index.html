@@ -71,11 +71,6 @@
     -webkit-background-clip: text; background-clip: text; color: transparent; }
   .dyn-sg .sg-sub { margin-top: 22px; max-width: 46ch; font-size: clamp(15px, 1.4vw, 18px); line-height: 1.65;
     color: rgba(255, 255, 255, 0.62); }
-  /* Collage stagger: neighbouring cards differ slightly in height and sit a
-     touch higher or lower, like the reference. */
-  .dyn-sg .sg-panel:nth-child(3n+1) { min-height: 82vh; transform: translateY(-1vh); }
-  .dyn-sg .sg-panel:nth-child(3n+2) { min-height: 84vh; transform: translateY(1vh); }
-  .dyn-sg .sg-panel:nth-child(3n) { min-height: 78vh; }
   /* Three slide sizes, like the reference: full-screen statements (Drop-
      Tested), wide cards (Runs on the edge) and narrow interludes (stickers). */
   .dyn-sg .sg-panel--full { flex-basis: 93vw; }
