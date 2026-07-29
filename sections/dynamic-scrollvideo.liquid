@@ -76,6 +76,16 @@
   root.__svInit = true;
   var video = document.getElementById("dynSvVideo-{{ section.id }}");
   var duration = 0, target = 0, shown = -1, raf = 0, active = false;
+  /* Clicky mouse wheels jump a big step per notch — scrub with a heavier
+     ease for those so playback stays fluid; trackpads keep the quick one. */
+  var ease = 0.35, lastWheel = 0;
+  window.addEventListener("wheel", function (e) {
+    var now = (window.performance || Date).now();
+    var d = Math.abs(e.deltaY);
+    if (e.deltaMode > 0 || (d >= 60 && now - lastWheel > 40)) ease = 0.12;
+    else if (d > 0 && d < 40) ease = 0.35;
+    lastWheel = now;
+  }, { passive: true });
   if (video) {
     video.addEventListener("loadedmetadata", function () { duration = video.duration || 0; });
     if (video.readyState >= 1) duration = video.duration || 0;
@@ -103,7 +113,7 @@
       target = p * duration;
       /* Ease toward the target so scrubbing feels filmed, not stepped. */
       var cur = video.currentTime || 0;
-      var next = cur + (target - cur) * 0.35;
+      var next = cur + (target - cur) * ease;
       if (Math.abs(next - cur) > 0.01) {
         try { video.currentTime = next; } catch (e0) {}
         if (Math.abs(target - next) > 0.02) queue();

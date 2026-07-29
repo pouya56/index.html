@@ -181,6 +181,17 @@
   var dots = document.getElementById("dynSgDots-{{ section.id }}");
   if (!track) return;
   var raf = 0, active = false, cur = 0;
+  /* Trackpads stream tiny deltas, so a quick ease feels responsive. A clicky
+     mouse wheel fires one big jump per notch — for those we glide with a much
+     heavier ease, melting the steps into one continuous motion. */
+  var ease = 0.16, lastWheel = 0;
+  window.addEventListener("wheel", function (e) {
+    var now = (window.performance || Date).now();
+    var d = Math.abs(e.deltaY);
+    if (e.deltaMode > 0 || (d >= 60 && now - lastWheel > 40)) ease = 0.07;
+    else if (d > 0 && d < 40) ease = 0.16;
+    lastWheel = now;
+  }, { passive: true });
   function progress() {
     var r = root.getBoundingClientRect();
     var runway = r.height - window.innerHeight;
@@ -200,7 +211,7 @@
     if (max <= 0) return;
     var target = p * max;
     /* Ease toward the target so the glide feels weighted, not stepped. */
-    cur += (target - cur) * 0.16;
+    cur += (target - cur) * ease;
     if (Math.abs(target - cur) < 0.5) cur = target;
     track.style.transform = "translateX(" + (-cur).toFixed(2) + "px)";
     /* Parallax: each card's image drifts a little against the card's motion,
