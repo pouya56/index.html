@@ -33,7 +33,7 @@
     opacity: {{ section.settings.bg_dim | default: 20 | divided_by: 100.0 }}; }
   .dyn-sg .sg-track { position: relative; z-index: 1; display: flex; align-items: center; gap: 1vw; padding: 0;
     will-change: transform; }
-  .dyn-sg .sg-panel { flex: 0 0 60vw; min-height: 88vh; border-radius: 0; overflow: hidden;
+  .dyn-sg .sg-panel { flex: 0 0 60vw; min-height: 80vh; border-radius: 0; overflow: hidden;
     position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center;
     padding: clamp(28px, 5vw, 72px); box-sizing: border-box;
     background: {{ section.settings.panel_bg | default: '#141418' }};
@@ -73,9 +73,9 @@
     color: rgba(255, 255, 255, 0.62); }
   /* Collage stagger: neighbouring cards differ slightly in height and sit a
      touch higher or lower, like the reference. */
-  .dyn-sg .sg-panel:nth-child(3n+1) { min-height: 90vh; transform: translateY(-1vh); }
-  .dyn-sg .sg-panel:nth-child(3n+2) { min-height: 94vh; transform: translateY(1vh); }
-  .dyn-sg .sg-panel:nth-child(3n) { min-height: 86vh; }
+  .dyn-sg .sg-panel:nth-child(3n+1) { min-height: 82vh; transform: translateY(-1vh); }
+  .dyn-sg .sg-panel:nth-child(3n+2) { min-height: 84vh; transform: translateY(1vh); }
+  .dyn-sg .sg-panel:nth-child(3n) { min-height: 78vh; }
   /* Three slide sizes, like the reference: full-screen statements (Drop-
      Tested), wide cards (Runs on the edge) and narrow interludes (stickers). */
   .dyn-sg .sg-panel--full { flex-basis: 93vw; }
@@ -102,7 +102,7 @@
   @media (prefers-reduced-motion: reduce) { .dyn-sg .sg-scrollhint svg { animation: none; } }
   .dyn-sg .sg-setup { color: #fff; font-size: 17px; line-height: 1.6; text-align: center; width: 100%; padding: 30px; }
   @media (max-width: 700px) {
-    .dyn-sg .sg-panel { flex-basis: 84vw; min-height: 78vh; border-radius: 0; }
+    .dyn-sg .sg-panel { flex-basis: 84vw; min-height: 72vh; border-radius: 0; }
     .dyn-sg .sg-panel--full { flex-basis: 92vw; }
     .dyn-sg .sg-panel--narrow { flex-basis: 62vw; }
     .dyn-sg .sg-panel .sg-line1, .dyn-sg .sg-panel .sg-line2 { font-size: clamp(26px, 7vw, 40px); }
