@@ -45,9 +45,10 @@
   .dyn-sg .sg-body { position: relative; z-index: 1; min-width: 0; }
   .dyn-sg .sg-panel.has-img .sg-body { position: absolute; z-index: 2; left: clamp(16px, 2.2vw, 44px);
     right: 4%; top: clamp(18px, 5vh, 52px); display: flex; flex-direction: column;
-    align-items: flex-start; text-align: left; }
+    align-items: flex-start; text-align: left;
+    transform: translateX(var(--sgtx, 0px)); will-change: transform; }
   .dyn-sg .sg-panel.has-img .sg-body--center { align-items: center; text-align: center; left: 5%; right: 5%; }
-  .dyn-sg .sg-panel.has-img .sg-body--middle { top: 50%; transform: translateY(-50%); }
+  .dyn-sg .sg-panel.has-img .sg-body--middle { top: 50%; transform: translateY(-50%) translateX(var(--sgtx, 0px)); }
   /* On photos both headline lines read in the ink colour — no gradient. */
   .dyn-sg .sg-panel.has-img .sg-line2 { background: none; color: {{ section.settings.ink | default: '#f2ead9' }}; }
   /* A single small caption sits bottom-left, like ON-DEVICE. */
@@ -88,8 +89,6 @@
      motion (parallax) without ever showing an edge. */
   .dyn-sg .sg-img img, .dyn-sg .sg-fg img { position: absolute; left: -7%; top: 0; width: 114%;
     height: 100%; object-fit: cover; display: block; will-change: transform; }
-  /* The cutout drifts faster than the photo, so it needs wider margins. */
-  .dyn-sg .sg-fg img { left: -11%; width: 122%; }
   .dyn-sg .sg-panel.has-img .sg-glow { display: none; }
   /* progress dots */
   .dyn-sg .sg-dots { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
@@ -186,12 +185,12 @@
     if (runway <= 0) return 0;
     return Math.max(0, Math.min(1, -r.top / runway));
   }
-  /* Each layer gets its own drift speed: the cutout outruns the photo, and
-     that speed gap between layers is what reads as depth. Both hit zero when
-     the card is dead-centre, so photo and cutout align where you look. */
+  /* Photo and cutout drift in lockstep — one crisp subject, no ghost copy
+     of it peeking out from the background. The HEADLINE moves at its own
+     speed between those two layers, and that gap is what reads as depth. */
   var plax = [];
-  Array.prototype.forEach.call(track.querySelectorAll(".sg-img img"), function (el) { plax.push({ el: el, f: 5.5 }); });
-  Array.prototype.forEach.call(track.querySelectorAll(".sg-fg img"), function (el) { plax.push({ el: el, f: 8 }); });
+  Array.prototype.forEach.call(track.querySelectorAll(".sg-img img, .sg-fg img"), function (el) { plax.push({ el: el, f: 5.5 }); });
+  var tbods = Array.prototype.slice.call(track.querySelectorAll(".sg-panel.has-img .sg-body"));
   function frame() {
     raf = 0;
     var p = progress();
@@ -210,6 +209,13 @@
       if (pr.right < -200 || pr.left > window.innerWidth + 200) continue;
       var off = ((pr.left + pr.width / 2) - vc) / window.innerWidth;
       plax[j].el.style.transform = "translateX(" + (off * plax[j].f).toFixed(2) + "%)";
+    }
+    /* The headline drifts gently AGAINST the images, settling when centred. */
+    for (var q = 0; q < tbods.length; q++) {
+      var tr = tbods[q].parentNode.getBoundingClientRect();
+      if (tr.right < -200 || tr.left > window.innerWidth + 200) continue;
+      var toff = ((tr.left + tr.width / 2) - vc) / window.innerWidth;
+      tbods[q].style.setProperty("--sgtx", (toff * -44).toFixed(1) + "px");
     }
     if (dots) {
       var n = dots.children.length;
