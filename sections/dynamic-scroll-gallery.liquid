@@ -145,10 +145,12 @@
                 {%- if sg_metas2.size == 1 -%}<div class="sg-cap">{{ b.settings.text }}</div>{%- endif -%}
               {%- endif -%}
               {%- if b.settings.image != blank -%}
-                <div class="sg-img"><img src="{{ b.settings.image | image_url: width: 1200 }}" alt="{{ b.settings.line1 | escape }}" width="600" height="520" loading="lazy"></div>
+                {%- assign sg_imw = 2400 -%}{%- if b.settings.size == 'narrow' -%}{%- assign sg_imw = 1400 -%}{%- endif -%}
+                <div class="sg-img"><img src="{{ b.settings.image | image_url: width: sg_imw }}" alt="{{ b.settings.line1 | escape }}" width="600" height="520" loading="lazy"></div>
               {%- endif -%}
               {%- if b.settings.image_fg != blank -%}
-                <div class="sg-fg" aria-hidden="true"><img src="{{ b.settings.image_fg | image_url: width: 1200 }}" alt="" width="600" height="520" loading="lazy"></div>
+                {%- assign sg_imw2 = 2400 -%}{%- if b.settings.size == 'narrow' -%}{%- assign sg_imw2 = 1400 -%}{%- endif -%}
+                <div class="sg-fg" aria-hidden="true"><img src="{{ b.settings.image_fg | image_url: width: sg_imw2 }}" alt="" width="600" height="520" loading="lazy"></div>
               {%- endif -%}
             </div>
           {%- endif -%}
