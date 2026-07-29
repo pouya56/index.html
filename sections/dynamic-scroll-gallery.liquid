@@ -45,9 +45,11 @@
   .dyn-sg .sg-body { position: relative; z-index: 1; min-width: 0; }
   .dyn-sg .sg-panel.has-img .sg-body { position: absolute; z-index: 2; left: 5%; right: 5%;
     top: clamp(22px, 7vh, 64px); display: flex; flex-direction: column; align-items: center; text-align: center; }
-  .dyn-sg .sg-panel.has-img .sg-sub { order: -1; margin: 0 0 16px; max-width: none;
+  .dyn-sg .sg-panel.has-img .sg-sub { order: -1; margin: 0 0 16px; max-width: none; width: 100%;
+    display: flex; justify-content: space-between; gap: 18px;
     font-size: clamp(11px, 1vw, 14px); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
     color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35); }
+  .dyn-sg .sg-panel.has-img .sg-sub span:only-child { margin: 0 auto; }
   .dyn-sg .sg-panel.has-img .sg-line1 { text-shadow: 0 2px 26px rgba(0, 0, 0, 0.35); }
   .dyn-sg .sg-panel.has-img .sg-line2 { filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.4)); }
   .dyn-sg .sg-glow { position: absolute; right: -18%; top: -28%; width: 70%; height: 90%;
@@ -74,6 +76,13 @@
   .dyn-sg .sg-dot { width: 7px; height: 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.28);
     transition: background 0.2s, width 0.25s; }
   .dyn-sg .sg-dot.is-on { background: #fff; width: 22px; }
+  .dyn-sg .sg-scrollhint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px; z-index: 3; white-space: nowrap;
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.85); }
+  .dyn-sg .sg-scrollhint svg { width: 17px; height: 17px; animation: sgSpin 9s linear infinite; }
+  @keyframes sgSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .dyn-sg .sg-scrollhint svg { animation: none; } }
   .dyn-sg .sg-setup { color: #fff; font-size: 17px; line-height: 1.6; text-align: center; width: 100%; padding: 30px; }
   @media (max-width: 700px) {
     .dyn-sg .sg-panel { flex-basis: 92vw; min-height: 78vh; border-radius: 0; }
@@ -99,7 +108,14 @@
               <div class="sg-body">
                 {%- if b.settings.line1 != blank -%}<div class="sg-line1">{{ b.settings.line1 }}</div>{%- endif -%}
                 {%- if b.settings.line2 != blank -%}<div class="sg-line2">{{ b.settings.line2 }}</div>{%- endif -%}
-                {%- if b.settings.text != blank -%}<div class="sg-sub">{{ b.settings.text }}</div>{%- endif -%}
+                {%- if b.settings.text != blank -%}
+                  {%- if b.settings.image != blank -%}
+                    {%- assign sg_metas = b.settings.text | split: '|' -%}
+                    <div class="sg-sub">{%- for m in sg_metas -%}<span>{{ m | strip }}</span>{%- endfor -%}</div>
+                  {%- else -%}
+                    <div class="sg-sub">{{ b.settings.text }}</div>
+                  {%- endif -%}
+                {%- endif -%}
               </div>
               {%- if b.settings.image != blank -%}
                 <div class="sg-img"><img src="{{ b.settings.image | image_url: width: 1200 }}" alt="{{ b.settings.line1 | escape }}" width="600" height="520" loading="lazy"></div>
@@ -108,9 +124,16 @@
           {%- endif -%}
         {%- endfor -%}
       </div>
-      <div class="sg-dots" id="dynSgDots-{{ section.id }}" aria-hidden="true">
-        {%- for b in section.blocks -%}{%- if b.type == 'slide' -%}<span class="sg-dot{% if forloop.first %} is-on{% endif %}"></span>{%- endif -%}{%- endfor -%}
-      </div>
+      {%- if section.settings.scroll_label != blank -%}
+        <div class="sg-scrollhint" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 3"/><path d="M9.5 9.5l5 5M14.5 9.5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          {{ section.settings.scroll_label }}
+        </div>
+      {%- else -%}
+        <div class="sg-dots" id="dynSgDots-{{ section.id }}" aria-hidden="true">
+          {%- for b in section.blocks -%}{%- if b.type == 'slide' -%}<span class="sg-dot{% if forloop.first %} is-on{% endif %}"></span>{%- endif -%}{%- endfor -%}
+        </div>
+      {%- endif -%}
     {%- else -%}
       <div class="sg-setup">Add "Slide" blocks to this section —<br>they'll glide right-to-left as visitors scroll, then hand over to the next section.</div>
     {%- endif -%}
@@ -173,7 +196,8 @@
     { "type": "image_picker", "id": "bg_image", "label": "Backdrop image (behind the cards)", "info": "Fills the screen behind the sliding cards — e.g. a corkboard or studio texture." },
     { "type": "range", "id": "bg_dim", "label": "Darken backdrop image", "min": 0, "max": 80, "step": 5, "unit": "%", "default": 20, "info": "Keeps the cards readable over a busy photo." },
     { "type": "color", "id": "panel_bg", "label": "Slide colour", "default": "#141418" },
-    { "type": "color", "id": "ink", "label": "First line colour", "default": "#ffffff" },
+    { "type": "color", "id": "ink", "label": "First line colour", "default": "#f2ead9" },
+    { "type": "text", "id": "scroll_label", "label": "Bottom marker text", "default": "Scroll to continue", "info": "Shown bottom-centre with a spinning stamp. Empty it to show progress dots instead." },
     { "type": "color", "id": "accent", "label": "Accent (second line + glow)", "default": "#6a5bff" }
   ],
   "blocks": [
@@ -186,7 +210,7 @@
           { "value": "wide", "label": "Wide" }, { "value": "narrow", "label": "Narrow" } ] },
         { "type": "text", "id": "line1", "label": "Line 1", "default": "Runs on the edge" },
         { "type": "text", "id": "line2", "label": "Line 2 (accent)", "default": "Refuses the ordinary" },
-        { "type": "textarea", "id": "text", "label": "Small text (optional)" },
+        { "type": "textarea", "id": "text", "label": "Small text (optional)", "info": "On image slides, split with | into left | centre | right captions along the top." },
         { "type": "image_picker", "id": "image", "label": "Image (optional)", "info": "Fills the WHOLE slide edge-to-edge; the text overlays on top. Use a wide image (~16:9) with quiet space up top for the headline." }
       ]
     }
