@@ -31,9 +31,9 @@
   .dyn-sg .sg-bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .dyn-sg .sg-bg-dim { position: absolute; inset: 0; background: #000;
     opacity: {{ section.settings.bg_dim | default: 20 | divided_by: 100.0 }}; }
-  .dyn-sg .sg-track { position: relative; z-index: 1; display: flex; align-items: stretch; gap: 4vw; padding: 0 9vw;
+  .dyn-sg .sg-track { position: relative; z-index: 1; display: flex; align-items: stretch; gap: 1.5vw; padding: 0 3.5vw;
     will-change: transform; }
-  .dyn-sg .sg-panel { flex: 0 0 82vw; min-height: 72vh; border-radius: 30px; overflow: hidden;
+  .dyn-sg .sg-panel { flex: 0 0 93vw; min-height: 92vh; border-radius: 0; overflow: hidden;
     position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center;
     padding: clamp(28px, 5vw, 72px); box-sizing: border-box;
     background: {{ section.settings.panel_bg | default: '#141418' }};
@@ -61,7 +61,7 @@
   .dyn-sg .sg-sub { margin-top: 22px; max-width: 46ch; font-size: clamp(15px, 1.4vw, 18px); line-height: 1.65;
     color: rgba(255, 255, 255, 0.62); }
   /* Two slide sizes, like the reference: wide statements and narrow interludes. */
-  .dyn-sg .sg-panel--narrow { flex-basis: 40vw; }
+  .dyn-sg .sg-panel--narrow { flex-basis: 48vw; }
   .dyn-sg .sg-panel--narrow .sg-line1, .dyn-sg .sg-panel--narrow .sg-line2 {
     font-size: clamp(24px, 2.8vw, 44px); }
   .dyn-sg .sg-panel--narrow .sg-sub { font-size: clamp(13px, 1.1vw, 15px); }
@@ -76,8 +76,8 @@
   .dyn-sg .sg-dot.is-on { background: #fff; width: 22px; }
   .dyn-sg .sg-setup { color: #fff; font-size: 17px; line-height: 1.6; text-align: center; width: 100%; padding: 30px; }
   @media (max-width: 700px) {
-    .dyn-sg .sg-panel { flex-basis: 86vw; min-height: 64vh; border-radius: 22px; }
-    .dyn-sg .sg-panel--narrow { flex-basis: 68vw; }
+    .dyn-sg .sg-panel { flex-basis: 92vw; min-height: 78vh; border-radius: 0; }
+    .dyn-sg .sg-panel--narrow { flex-basis: 70vw; }
     .dyn-sg .sg-panel.has-img .sg-body { top: 20px; }
   }
 </style>
