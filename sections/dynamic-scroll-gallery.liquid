@@ -26,7 +26,12 @@
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif; }
   .dyn-sg .sg-stage { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden;
     display: flex; align-items: center; }
-  .dyn-sg .sg-track { display: flex; align-items: stretch; gap: 4vw; padding: 0 9vw;
+  /* Optional photo backdrop behind the cards (e.g. a corkboard, your studio). */
+  .dyn-sg .sg-bg { position: absolute; inset: 0; z-index: 0; }
+  .dyn-sg .sg-bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .dyn-sg .sg-bg-dim { position: absolute; inset: 0; background: #000;
+    opacity: {{ section.settings.bg_dim | default: 20 | divided_by: 100.0 }}; }
+  .dyn-sg .sg-track { position: relative; z-index: 1; display: flex; align-items: stretch; gap: 4vw; padding: 0 9vw;
     will-change: transform; }
   .dyn-sg .sg-panel { flex: 0 0 82vw; min-height: 72vh; border-radius: 30px; overflow: hidden;
     position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center;
@@ -79,6 +84,12 @@
 
 <section class="dyn-sg" id="dynSg-{{ section.id }}">
   <div class="sg-stage">
+    {%- if section.settings.bg_image != blank -%}
+      <div class="sg-bg" aria-hidden="true">
+        <img src="{{ section.settings.bg_image | image_url: width: 2400 }}" alt="" width="1200" height="800" loading="lazy">
+        <span class="sg-bg-dim"></span>
+      </div>
+    {%- endif -%}
     {%- if sg_n > 0 -%}
       <div class="sg-track" id="dynSgTrack-{{ section.id }}">
         {%- for b in section.blocks -%}
@@ -159,6 +170,8 @@
   "settings": [
     { "type": "paragraph", "content": "A pinned horizontal story: scrolling down glides the slides right-to-left, then the page continues to the next section. Each slide is a block below." },
     { "type": "color", "id": "bg", "label": "Backdrop colour", "default": "#0b0b0d" },
+    { "type": "image_picker", "id": "bg_image", "label": "Backdrop image (behind the cards)", "info": "Fills the screen behind the sliding cards — e.g. a corkboard or studio texture." },
+    { "type": "range", "id": "bg_dim", "label": "Darken backdrop image", "min": 0, "max": 80, "step": 5, "unit": "%", "default": 20, "info": "Keeps the cards readable over a busy photo." },
     { "type": "color", "id": "panel_bg", "label": "Slide colour", "default": "#141418" },
     { "type": "color", "id": "ink", "label": "First line colour", "default": "#ffffff" },
     { "type": "color", "id": "accent", "label": "Accent (second line + glow)", "default": "#6a5bff" }
