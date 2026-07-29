@@ -104,10 +104,6 @@
   @keyframes sgSpin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .dyn-sg .sg-scrollhint svg { animation: none; } }
   .dyn-sg .sg-setup { color: #fff; font-size: 17px; line-height: 1.6; text-align: center; width: 100%; padding: 30px; }
-  /* The last stretch dims into the next section's background, so the
-     hand-off is one continuous surface instead of a colour seam. */
-  .dyn-sg .sg-fade { position: absolute; inset: 0; z-index: 5; pointer-events: none;
-    background: {{ section.settings.handoff_bg | default: '#f5f5f7' }}; opacity: 0; }
   /* Corner links pinned over the story — same placement as the hero's.
      When the landing hero shares the page, ITS corner links are fixed to
      the screen and ride over this section too, so ours bow out. */
@@ -197,7 +193,6 @@
       {%- endcapture -%}
       {%- if sg_cl != blank -%}<div class="sg-corner sg-corner--{{ cpos }}">{{ sg_cl }}</div>{%- endif -%}
     {%- endfor -%}
-    <span class="sg-fade" id="dynSgFade-{{ section.id }}" aria-hidden="true"></span>
   </div>
 </section>
 
@@ -208,7 +203,6 @@
   root.__sgInit = true;
   var track = document.getElementById("dynSgTrack-{{ section.id }}");
   var dots = document.getElementById("dynSgDots-{{ section.id }}");
-  var fade = document.getElementById("dynSgFade-{{ section.id }}");
   if (!track) return;
   var raf = 0, active = false, cur = 0;
   /* Trackpads stream tiny deltas, so a quick ease feels responsive. A clicky
@@ -260,8 +254,6 @@
       var toff = ((tr.left + tr.width / 2) - vc) / window.innerWidth;
       tbods[q].style.setProperty("--sgtx", (toff * -44).toFixed(1) + "px");
     }
-    /* Near the end, melt into the next section's background colour. */
-    if (fade) fade.style.opacity = Math.max(0, Math.min(1, (p - 0.86) / 0.14)).toFixed(3);
     if (dots) {
       var n = dots.children.length;
       var i = Math.min(n - 1, Math.round(p * (n - 1)));
@@ -295,7 +287,6 @@
     { "type": "color", "id": "panel_bg", "label": "Slide colour", "default": "#141418" },
     { "type": "color", "id": "ink", "label": "First line colour", "default": "#f2ead9" },
     { "type": "text", "id": "scroll_label", "label": "Bottom marker text", "default": "Scroll to continue", "info": "Shown bottom-centre with a spinning stamp. Empty it to show progress dots instead." },
-    { "type": "color", "id": "handoff_bg", "label": "Hand-off colour", "default": "#f5f5f7", "info": "The story dims into this at the very end — match the NEXT section's background for a seamless hand-off." },
     { "type": "color", "id": "accent", "label": "Accent (second line + glow)", "default": "#6a5bff" }
   ],
   "blocks": [
