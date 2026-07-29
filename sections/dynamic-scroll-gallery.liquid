@@ -80,10 +80,14 @@
   .dyn-sg .sg-panel--narrow .sg-line1, .dyn-sg .sg-panel--narrow .sg-line2 { font-size: clamp(20px, 2vw, 34px); }
   .dyn-sg .sg-panel--narrow .sg-sub { font-size: clamp(12px, 0.9vw, 14px); }
   .dyn-sg .sg-img { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+  /* Foreground cutout: a transparent PNG of just the subject, layered ABOVE
+     the headline — so the text seems to pass behind the mug. It shares the
+     photo's exact geometry and parallax, keeping the two perfectly aligned. */
+  .dyn-sg .sg-fg { position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; }
   /* The image is wider than its card so it can drift against the card's
      motion (parallax) without ever showing an edge. */
-  .dyn-sg .sg-img img { position: absolute; left: -7%; top: 0; width: 114%; height: 100%;
-    object-fit: cover; display: block; will-change: transform; }
+  .dyn-sg .sg-img img, .dyn-sg .sg-fg img { position: absolute; left: -7%; top: 0; width: 114%;
+    height: 100%; object-fit: cover; display: block; will-change: transform; }
   .dyn-sg .sg-panel.has-img .sg-glow { display: none; }
   /* progress dots */
   .dyn-sg .sg-dots { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
@@ -142,6 +146,9 @@
               {%- if b.settings.image != blank -%}
                 <div class="sg-img"><img src="{{ b.settings.image | image_url: width: 1200 }}" alt="{{ b.settings.line1 | escape }}" width="600" height="520" loading="lazy"></div>
               {%- endif -%}
+              {%- if b.settings.image_fg != blank -%}
+                <div class="sg-fg" aria-hidden="true"><img src="{{ b.settings.image_fg | image_url: width: 1200 }}" alt="" width="600" height="520" loading="lazy"></div>
+              {%- endif -%}
             </div>
           {%- endif -%}
         {%- endfor -%}
@@ -177,7 +184,7 @@
     if (runway <= 0) return 0;
     return Math.max(0, Math.min(1, -r.top / runway));
   }
-  var pimgs = Array.prototype.slice.call(track.querySelectorAll(".sg-img img"));
+  var pimgs = Array.prototype.slice.call(track.querySelectorAll(".sg-img img, .sg-fg img"));
   function frame() {
     raf = 0;
     var p = progress();
@@ -247,7 +254,8 @@
         { "type": "text", "id": "line1", "label": "Line 1", "default": "Runs on the edge" },
         { "type": "text", "id": "line2", "label": "Line 2 (accent)", "default": "Refuses the ordinary" },
         { "type": "textarea", "id": "text", "label": "Small text (optional)", "info": "On image slides, split with | into left | centre | right captions along the top." },
-        { "type": "image_picker", "id": "image", "label": "Image (optional)", "info": "Fills the WHOLE slide edge-to-edge; the text overlays on top. Use a wide image (~16:9) with quiet space up top for the headline." }
+        { "type": "image_picker", "id": "image", "label": "Image (optional)", "info": "Fills the WHOLE slide edge-to-edge; the text overlays on top. Use a wide image (~16:9) with quiet space up top for the headline." },
+        { "type": "image_picker", "id": "image_fg", "label": "Foreground cutout (optional)", "info": "A transparent PNG of JUST the subject (e.g. the mug), cut from the image above at the SAME size and crop. It sits on top of the headline, so the text seems to pass behind the subject. Tip: duplicate the photo in Shopify's image editor and use Remove background." }
       ]
     }
   ],
