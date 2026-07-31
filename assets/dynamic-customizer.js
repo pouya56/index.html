@@ -4469,6 +4469,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     ".dyn-step.is-active .dyn-step-num{background:#0a0a0a;color:#fff}" +
     ".dyn-step.is-done{color:#0a7d33}" +
     ".dyn-step.is-done .dyn-step-num{background:#0a7d33;color:#fff}" +
+    /* Steps are the way BACK: tap Customize/Design to reopen the designer,
+       tap Gift to reopen the gift details. */
+    ".dyn-step.is-link{cursor:pointer}" +
+    ".dyn-step.is-link:hover .dyn-step-txt{text-decoration:underline;text-underline-offset:3px}" +
     ".dyn-ready{display:flex;gap:14px;align-items:center;margin:4px 0 14px;padding:12px;border:1px solid #cfedd7;background:linear-gradient(180deg,#f4fbf6,#edf9f0);border-radius:16px;animation:dyn-ready-in .4s cubic-bezier(.22,1,.36,1)}" +
     "@keyframes dyn-ready-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}" +
     ".dyn-ready-thumb{width:60px;height:60px;border-radius:12px;object-fit:cover;flex:none;border:1px solid rgba(0,0,0,.06);background:#fff}" +
@@ -4541,6 +4545,24 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         stepEl.appendChild(li);
       });
       actionBar.parentNode.insertBefore(stepEl, actionBar);
+      /* Clickable steps replace the "Edit design" button: Customize and
+         Design reopen the designer, Gift reopens the gift details. The
+         final Add to cart step is a destination, not a link. */
+      Array.prototype.forEach.call(stepEl.querySelectorAll(".dyn-step"), function (li, idx) {
+        if (idx === stepLabels.length - 1) return;
+        li.classList.add("is-link");
+        li.setAttribute("role", "button");
+        li.tabIndex = 0;
+        var go = function () {
+          if (idx <= 1) { if (customizeBtn) customizeBtn.click(); return; }
+          if (giftStepOn && idx === 2 && designReady()) {
+            var g = document.getElementById("giftOpenBtn");
+            if (g) g.click();
+          }
+        };
+        li.addEventListener("click", go);
+        li.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+      });
     }
     function setStep(active) {
       if (!stepEl) return;
@@ -4657,6 +4679,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     function refreshAll() {
       setStep(currentStep());
       var ready = designReady() && customizeFlow;
+      /* Once the design is saved, the "Edit design" button retires — the
+         Customize / Design steps above are the way back into the designer.
+         Guarded assignment: the observer below refires on every change. */
+      if (customizeFlow && customizeBtn && customizeBtn.hidden !== ready) customizeBtn.hidden = ready;
       if (card) card.hidden = !ready;
       if (ready) armNudge(); else { disarmNudge(); hideNudge(); }
     }
