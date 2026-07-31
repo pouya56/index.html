@@ -2450,6 +2450,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const wrapLabel = g.wrapLabel || "Add gift wrapping";
     const noteLabel = g.noteLabel || "Add a gift note (optional)";
     const cards = (g.cards || []).filter(function (c) { return c && c.vid; });
+    const wraps = (g.wraps || []).filter(function (c) { return c && c.vid; });
     const css =
       '<style>' +
       '.dc-gift{--gi:#1d1d1f;--gs:#6e6e73;--gf:#86868b;--gl:#d2d2d7;--gp:#f5f5f7;--ga:#0071e3;' +
@@ -2586,6 +2587,26 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const wrapRowLabel = wrapId
       ? escapeHtml(wrapLabel) + (wrapMoney ? ' — <strong>' + escapeHtml(wrapMoney) + '</strong>' : '')
       : escapeHtml(toggleLabel);
+    // One picker builder serves both the greeting cards and the gift wraps —
+    // same grid, same zoom chips, same "none" tile.
+    function pickHtml(pickId, heading, noneLabel, items) {
+      return '<div class="dc-giftm dc-giftm--cards" id="' + pickId + '" role="dialog" aria-modal="true" aria-label="' + heading + '">' +
+        '<div class="dc-giftm-card dc-giftm-cardsheet">' +
+        '<button type="button" class="dc-giftm-x" data-pick-close aria-label="Close">×</button>' +
+        '<h3 class="dc-giftm-title">' + heading + '</h3>' +
+        '<div class="dc-giftm-cardgrid">' +
+        '<button type="button" class="dc-giftm-cardopt is-none" data-vid=""><span class="dc-giftm-cardnone">✕</span><span class="dc-giftm-cardt">' + noneLabel + '</span></button>' +
+        items.map(function (c) {
+          var t = escapeHtml(c.title).replace(/"/g, "&quot;");
+          return '<button type="button" class="dc-giftm-cardopt" data-vid="' + c.vid + '" data-title="' + t + '" data-img="' + (c.img || "") + '">' +
+            (c.img ? '<img src="' + c.img + '" alt="' + t + '" loading="lazy" width="160" height="160">' : '<span class="dc-giftm-cardnone">🖼</span>') +
+            (c.img ? '<span class="dc-giftm-cardzoom" role="button" tabindex="0" aria-label="View larger"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg></span>' : '') +
+            '<span class="dc-giftm-cardt">' + escapeHtml(c.title) + '</span>' +
+            (c.money ? '<em class="dc-giftm-cardm">' + escapeHtml(c.money) + '</em>' : '') +
+            '</button>';
+        }).join("") +
+        '</div></div></div>';
+    }
     return css +
       '<div class="dc-gift" id="giftBlock">' +
         '<button type="button" class="dc-gift-open" id="giftOpenBtn" style="display:none">' +
@@ -2614,46 +2635,37 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                   : '') +
               '</div>' +
             '</div>' +
-            '<div class="dc-giftm-sec"><div class="dc-giftm-h">' + (wrapId ? 'Gift wrapping' : 'Gift') + '</div>' +
-              '<div class="dc-gift-toggle">' +
-                '<label class="dc-gift-switch" aria-label="' + escapeHtml(wrapId ? wrapLabel : toggleLabel) + '">' +
-                  '<input type="checkbox" id="giftIsGift" class="dc-gift-checkbox">' +
-                  '<span class="dc-gift-slider"></span></label>' +
-                '<span class="dc-gift-label" id="giftLabel" role="button" tabindex="0">' + wrapRowLabel + '</span>' +
-              '</div></div>' +
+            (wraps.length
+              ? '<div class="dc-giftm-sec"><div class="dc-giftm-h">Gift wrapping</div>' +
+                '<button type="button" class="dc-giftm-cardprev" id="giftWrapPrev"><span class="dc-giftm-cardph">No wrapping</span><span class="dc-giftm-cardchg">Choose</span></button>' +
+                '<input type="checkbox" id="giftIsGift" class="dc-gift-checkbox">' +
+                '</div>'
+              : '<div class="dc-giftm-sec"><div class="dc-giftm-h">' + (wrapId ? 'Gift wrapping' : 'Gift') + '</div>' +
+                '<div class="dc-gift-toggle">' +
+                  '<label class="dc-gift-switch" aria-label="' + escapeHtml(wrapId ? wrapLabel : toggleLabel) + '">' +
+                    '<input type="checkbox" id="giftIsGift" class="dc-gift-checkbox">' +
+                    '<span class="dc-gift-slider"></span></label>' +
+                  '<span class="dc-gift-label" id="giftLabel" role="button" tabindex="0">' + wrapRowLabel + '</span>' +
+                '</div></div>') +
             '<div class="dc-giftm-foot">' +
               '<button type="button" class="dc-giftm-clear" id="giftRemove">Remove gift</button>' +
               '<button type="button" class="dc-gift-save" id="giftSave">Save gift details</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
-        (cards.length
-          ? '<div class="dc-giftm dc-giftm--cards" id="giftCardPick" role="dialog" aria-modal="true" aria-label="Choose a card">' +
-            '<div class="dc-giftm-card dc-giftm-cardsheet">' +
-            '<button type="button" class="dc-giftm-x" id="giftCardClose" aria-label="Close">×</button>' +
-            '<h3 class="dc-giftm-title">Choose a card</h3>' +
-            '<div class="dc-giftm-cardgrid">' +
-            '<button type="button" class="dc-giftm-cardopt is-none" data-vid=""><span class="dc-giftm-cardnone">✕</span><span class="dc-giftm-cardt">No card</span></button>' +
-            cards.map(function (c) {
-              var t = escapeHtml(c.title).replace(/"/g, "&quot;");
-              return '<button type="button" class="dc-giftm-cardopt" data-vid="' + c.vid + '" data-title="' + t + '" data-img="' + (c.img || "") + '">' +
-                (c.img ? '<img src="' + c.img + '" alt="' + t + '" loading="lazy" width="160" height="160">' : '<span class="dc-giftm-cardnone">🖼</span>') +
-                (c.img ? '<span class="dc-giftm-cardzoom" role="button" tabindex="0" aria-label="View larger"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg></span>' : '') +
-                '<span class="dc-giftm-cardt">' + escapeHtml(c.title) + '</span>' +
-                (c.money ? '<em class="dc-giftm-cardm">' + escapeHtml(c.money) + '</em>' : '') +
-                '</button>';
-            }).join("") +
-            '</div></div>' +
-            '<div class="dc-giftm-zoom" id="giftCardZoom" role="dialog" aria-modal="true" aria-label="Card preview">' +
+        (cards.length ? pickHtml("giftCardPick", "Choose a card", "No card", cards) : '') +
+        (wraps.length ? pickHtml("giftWrapPick", "Choose gift wrapping", "No wrapping", wraps) : '') +
+        (cards.length || wraps.length
+          ? '<div class="dc-giftm-zoom" id="giftCardZoom" role="dialog" aria-modal="true" aria-label="Preview">' +
               '<div class="dc-giftm-zoombox">' +
                 '<img id="giftCardZoomImg" src="" alt="" width="560" height="560">' +
                 '<div class="dc-giftm-zoomt" id="giftCardZoomT"></div>' +
                 '<div class="dc-giftm-zoomrow">' +
-                  '<button type="button" class="dc-gift-save" id="giftCardZoomPick">Choose this card</button>' +
+                  '<button type="button" class="dc-gift-save" id="giftCardZoomPick">Choose this</button>' +
                   '<button type="button" class="dc-giftm-clear" id="giftCardZoomX">Close</button>' +
                 '</div>' +
               '</div>' +
-            '</div></div>'
+            '</div>'
           : '') +
       '</div>';
   }
@@ -2830,44 +2842,45 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const giftLabel = mount.querySelector("#giftLabel");
     const fields = ["giftFrom", "giftNote", "giftToName", "giftToEmail", "giftSendDate"]
       .map((id) => mount.querySelector("#" + id)).filter(Boolean);
-    const anyFilled = () => giftIsGift.checked || !!window.__dynGiftCard || fields.some((f) => f.value.trim());
+    const anyFilled = () => giftIsGift.checked || !!window.__dynGiftCard || !!window.__dynGiftWrap || fields.some((f) => f.value.trim());
     const setOpen = (v) => { if (modal) modal.classList.toggle("is-open", v); };
-    /* Select card: preview + Change on the right of the greeting; picking
-       happens in a grid section that unfolds below. The choice lives on
-       window.__dynGiftCard so the submit code can read it. */
-    const cardPrev = mount.querySelector("#giftCardPrev");
-    const cardPick = mount.querySelector("#giftCardPick");
+    /* Two look-alike pickers — greeting card and gift wrapping — each a
+       preview + Change button opening a grid pop-up, sharing one zoom
+       viewer. Choices live on window.__dynGiftCard / __dynGiftWrap. */
     window.__dynGiftCard = null;
-    const paintCard = () => {
-      if (!cardPrev) return;
-      const c = window.__dynGiftCard;
-      cardPrev.innerHTML = c
-        ? (c.img ? '<img src="' + c.img + '" alt="">' : '<span class="dc-giftm-cardph">' + escapeHtml(c.title) + "</span>") +
-          '<span class="dc-giftm-cardchg">Change</span>'
-        : '<span class="dc-giftm-cardph">No card</span><span class="dc-giftm-cardchg">Choose</span>';
-      if (cardPick) Array.prototype.forEach.call(cardPick.querySelectorAll(".dc-giftm-cardopt"), (b) => {
-        b.classList.toggle("is-sel", c ? b.getAttribute("data-vid") === String(c.vid) : !b.getAttribute("data-vid"));
-      });
-    };
-    if (cardPrev && cardPick) {
-      const cardClose = mount.querySelector("#giftCardClose");
-      const cardsOpen = (v) => cardPick.classList.toggle("is-open", v);
-      const zoomEl = mount.querySelector("#giftCardZoom");
-      const zoomImg = mount.querySelector("#giftCardZoomImg");
-      const zoomT = mount.querySelector("#giftCardZoomT");
-      const zoomOpen = (v) => { if (zoomEl) zoomEl.classList.toggle("is-open", v); };
-      let zoomCard = null;
-      const select = (card) => {
-        window.__dynGiftCard = card;
-        zoomOpen(false); cardsOpen(false);
-        paintCard();
-        /* bubble so the step strip and footer label hear about it */
-        cardPick.dispatchEvent(new Event("change", { bubbles: true }));
+    window.__dynGiftWrap = null;
+    const zoomEl = mount.querySelector("#giftCardZoom");
+    const zoomImg = mount.querySelector("#giftCardZoomImg");
+    const zoomT = mount.querySelector("#giftCardZoomT");
+    const zoomOpen = (v) => { if (zoomEl) zoomEl.classList.toggle("is-open", v); };
+    let zoomItem = null, zoomSelect = null;
+    function wirePicker(prevSel, pickSel, noneLabel, getSel, setSel) {
+      const prev = mount.querySelector(prevSel);
+      const pick = mount.querySelector(pickSel);
+      if (!prev || !pick) return null;
+      const open = (v) => pick.classList.toggle("is-open", v);
+      const paint = () => {
+        const c = getSel();
+        prev.innerHTML = c
+          ? (c.img ? '<img src="' + c.img + '" alt="">' : '<span class="dc-giftm-cardph">' + escapeHtml(c.title) + "</span>") +
+            '<span class="dc-giftm-cardchg">Change</span>'
+          : '<span class="dc-giftm-cardph">' + noneLabel + '</span><span class="dc-giftm-cardchg">Choose</span>';
+        Array.prototype.forEach.call(pick.querySelectorAll(".dc-giftm-cardopt"), (b) => {
+          b.classList.toggle("is-sel", c ? b.getAttribute("data-vid") === String(c.vid) : !b.getAttribute("data-vid"));
+        });
       };
-      cardPrev.onclick = () => cardsOpen(true);
-      if (cardClose) cardClose.onclick = () => cardsOpen(false);
-      cardPick.addEventListener("click", (e) => { if (e.target === cardPick) cardsOpen(false); });
-      Array.prototype.forEach.call(cardPick.querySelectorAll(".dc-giftm-cardopt"), (b) => {
+      const select = (card) => {
+        setSel(card);
+        zoomOpen(false); open(false);
+        paint();
+        /* bubble so the step strip and footer label hear about it */
+        pick.dispatchEvent(new Event("change", { bubbles: true }));
+      };
+      prev.onclick = () => open(true);
+      const closeB = pick.querySelector("[data-pick-close]");
+      if (closeB) closeB.onclick = () => open(false);
+      pick.addEventListener("click", (e) => { if (e.target === pick) open(false); });
+      Array.prototype.forEach.call(pick.querySelectorAll(".dc-giftm-cardopt"), (b) => {
         const vid = b.getAttribute("data-vid");
         const card = vid
           ? { vid: parseInt(vid, 10) || vid, title: b.getAttribute("data-title") || "", img: b.getAttribute("data-img") || "" }
@@ -2878,7 +2891,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         if (z && card) {
           const openZoom = (e) => {
             e.stopPropagation(); e.preventDefault();
-            zoomCard = card;
+            zoomItem = card; zoomSelect = select;
             if (zoomImg) { zoomImg.src = card.img; zoomImg.alt = card.title; }
             if (zoomT) {
               const m = b.querySelector(".dc-giftm-cardm");
@@ -2890,13 +2903,19 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           z.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") openZoom(e); });
         }
       });
-      const zoomPick = mount.querySelector("#giftCardZoomPick");
-      const zoomX = mount.querySelector("#giftCardZoomX");
-      if (zoomPick) zoomPick.onclick = () => { if (zoomCard) select(zoomCard); };
-      if (zoomX) zoomX.onclick = () => zoomOpen(false);
-      if (zoomEl) zoomEl.addEventListener("click", (e) => { if (e.target === zoomEl) zoomOpen(false); });
-      paintCard();
+      paint();
+      return { paint: paint, open: open, pick: pick };
     }
+    const cardP = wirePicker("#giftCardPrev", "#giftCardPick", "No card",
+      () => window.__dynGiftCard, (v) => { window.__dynGiftCard = v; });
+    const wrapP = wirePicker("#giftWrapPrev", "#giftWrapPick", "No wrapping",
+      () => window.__dynGiftWrap, (v) => { window.__dynGiftWrap = v; });
+    const paintCard = () => { if (cardP) cardP.paint(); if (wrapP) wrapP.paint(); };
+    const zoomPick = mount.querySelector("#giftCardZoomPick");
+    const zoomX = mount.querySelector("#giftCardZoomX");
+    if (zoomPick) zoomPick.onclick = () => { if (zoomItem && zoomSelect) zoomSelect(zoomItem); };
+    if (zoomX) zoomX.onclick = () => zoomOpen(false);
+    if (zoomEl) zoomEl.addEventListener("click", (e) => { if (e.target === zoomEl) zoomOpen(false); });
     /* Skippable: the footer's left action reads "Skip for now" until anything
        is filled — then it becomes "Remove gift" (same close, plus a wipe). */
     const updateFoot = () => { if (giftRemove) giftRemove.textContent = anyFilled() ? "Remove gift" : "Skip for now"; };
@@ -2933,7 +2952,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         if (show) {
           const toEl = mount.querySelector("#giftToName");
           const bits = [];
-          if (giftIsGift.checked) bits.push("wrapped");
+          if (giftIsGift.checked || window.__dynGiftWrap) bits.push("wrapped");
           if (window.__dynGiftCard) bits.push("with card");
           if (toEl && toEl.value.trim()) bits.push("for " + toEl.value.trim());
           mini.innerHTML = "🎁 Gift added" + (bits.length ? " — " + escapeHtml(bits.join(", ")) : "") + " · <u>edit</u>";
@@ -2959,6 +2978,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       fields.forEach((f) => { f.value = ""; });
       giftIsGift.checked = false;
       window.__dynGiftCard = null;
+      window.__dynGiftWrap = null;
       paintCard();
       giftIsGift.dispatchEvent(new Event("change", { bubbles: true }));
       decided = true;                          // an explicit skip / removal
@@ -2968,10 +2988,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) setOpen(false); });
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
-      /* topmost layer first: image viewer → card chooser → gift window */
-      const zoomLayer = mount.querySelector("#giftCardZoom");
-      if (zoomLayer && zoomLayer.classList.contains("is-open")) { zoomLayer.classList.remove("is-open"); return; }
-      if (cardPick && cardPick.classList.contains("is-open")) { cardPick.classList.remove("is-open"); return; }
+      /* topmost layer first: image viewer → open chooser → gift window */
+      if (zoomEl && zoomEl.classList.contains("is-open")) { zoomOpen(false); return; }
+      const openPick = mount.querySelector(".dc-giftm--cards.is-open");
+      if (openPick) { openPick.classList.remove("is-open"); return; }
       if (modal && modal.classList.contains("is-open")) setOpen(false);
     });
     /* After a successful add to cart the gift belongs to that item — clear
@@ -2980,6 +3000,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       fields.forEach((f) => { f.value = ""; });
       giftIsGift.checked = false;
       window.__dynGiftCard = null;
+      window.__dynGiftWrap = null;
       paintCard();
       decided = false;
       if (gateEnabled) readySeen = false;   // the customizer resets the design next
@@ -3191,7 +3212,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const gFrom = gval("#giftFrom"), gMsg = gval("#giftNote"), gTo = gval("#giftToName"),
         gEmail = gval("#giftToEmail"), gDate = gval("#giftSendDate");
       const gCard = (gift.enabled && window.__dynGiftCard) || null;
-      if (gift.enabled && (giftOn || gCard || gFrom || gMsg || gTo || gEmail || gDate)) {
+      const gWrap = (gift.enabled && window.__dynGiftWrap) || null;
+      if (gift.enabled && (giftOn || gCard || gWrap || gFrom || gMsg || gTo || gEmail || gDate)) {
         props["Gift"] = "Yes";
         if (gFrom) props["Gift from"] = gFrom;
         if (gMsg) props["Gift note"] = gMsg;
@@ -3207,7 +3229,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         if (!cgrp) { cgrp = "g" + Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36); props["_grp"] = cgrp; }
         extraItems.push({ id: gCard.vid, quantity: 1, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "item", "_grp": cgrp, "Greeting card": gCard.title } });
       }
-      if (giftOn) {
+      // Collection-picked wrapping: the chosen wrap product joins the order
+      // as its own grouped line at its real price — same as the card.
+      if (gWrap && gWrap.vid) {
+        props["Gift wrapping"] = gWrap.title;
+        const wq = Math.max(1, (store.get().quantity) || 1);
+        let wgrp = props["_grp"];
+        if (!wgrp) { wgrp = "g" + Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36); props["_grp"] = wgrp; }
+        extraItems.push({ id: gWrap.vid, quantity: wq, properties: { "_For": (window.DYN_SHOPIFY || {}).productTitle || "item", "_grp": wgrp, "Gift wrapping": gWrap.title } });
+      }
+      // Legacy toggle wrapping (only when no wrap collection is in play).
+      if (giftOn && !gWrap) {
         const usedGiftVariant = !!(sidesVariant && _giftVariantActive);
         let wrapApplied = usedGiftVariant;
         if (!usedGiftVariant) {
@@ -4767,7 +4799,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     function giftFilled() {
       var g = document.getElementById("giftIsGift");
       if (g && g.checked) return true;
-      if (window.__dynGiftCard) return true;
+      if (window.__dynGiftCard || window.__dynGiftWrap) return true;
       return ["giftFrom", "giftNote", "giftToName", "giftToEmail", "giftSendDate"].some(function (id) {
         var el = document.getElementById(id);
         return !!(el && el.value.trim());

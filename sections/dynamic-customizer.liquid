@@ -149,6 +149,20 @@
             {%- endif -%}
           {%- endfor -%}
         {%- endif -%}
+      ],
+      "wraps": [
+        {%- if blk_gift != blank and blk_gift.settings.gift_wrap_collection != blank -%}
+          {%- assign gw_first = true -%}
+          {%- for gwp in blk_gift.settings.gift_wrap_collection.products limit: 12 -%}
+            {%- if gwp.available -%}
+              {%- unless gw_first -%},{%- endunless -%}{%- assign gw_first = false -%}
+              { "vid": {{ gwp.selected_or_first_available_variant.id | json }},
+                "title": {{ gwp.title | json }},
+                "img": {% if gwp.featured_image %}{{ gwp.featured_image | image_url: width: 720 | json }}{% else %}""{% endif %},
+                "money": {% if gwp.price > 0 %}{{ gwp.price | money | json }}{% else %}""{% endif %} }
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
       ]
     },
     {%- comment -%} Tolerant parse: spaces ignored, a '.' typo counts as a comma. {%- endcomment -%}
@@ -3244,6 +3258,12 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
           "id": "gift_card_collection",
           "label": "Greeting card collection",
           "info": "Shows a 'Select card' choice in the gift pop-up with this collection's products. The chosen card joins the order as its own grouped line at its real price — price cards at $0 to include them free."
+        },
+        {
+          "type": "collection",
+          "id": "gift_wrap_collection",
+          "label": "Gift wrap collection",
+          "info": "Replaces the wrapping toggle with a picker like the greeting card: shoppers choose a wrap style from this collection, charged at the product's price. When set, the Gift Wrap product / advanced settings below are ignored."
         },
         {
           "type": "header",
