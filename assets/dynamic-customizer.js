@@ -2530,7 +2530,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-giftm-greet{display:flex;gap:16px;align-items:flex-start}' +
       '.dc-giftm-greet-l{flex:1 1 auto;min-width:0}' +
       '.dc-giftm-greet-r{flex:0 0 126px;display:flex;flex-direction:column;gap:6px}' +
-      '.dc-giftm-cardprev{position:relative;display:block;width:126px;aspect-ratio:3/4;padding:0;cursor:pointer;' +
+      '.dc-giftm-cardprev{position:relative;display:block;width:126px;aspect-ratio:1/1;padding:0;cursor:pointer;' +
         'border:1px solid var(--gl);border-radius:12px;overflow:hidden;background:var(--gp)}' +
       '.dc-giftm-cardprev img{width:100%;height:100%;object-fit:cover;display:block}' +
       '.dc-giftm-cardph{position:absolute;inset:0;display:grid;place-items:center;font-family:inherit;font-size:13px;color:var(--gf)}' +
@@ -2545,9 +2545,22 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         'font-family:inherit;text-align:center;background:#fff;border:2px solid var(--gl);border-radius:12px;transition:border-color .15s}' +
       '.dc-giftm-cardopt:hover{border-color:#b8b8bf}' +
       '.dc-giftm-cardopt.is-sel{border-color:var(--ga)}' +
-      '.dc-giftm-cardopt img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;display:block}' +
-      '.dc-giftm-cardnone{display:grid;place-items:center;width:100%;aspect-ratio:3/4;border-radius:8px;' +
+      '.dc-giftm-cardopt img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:8px;display:block}' +
+      '.dc-giftm-cardnone{display:grid;place-items:center;width:100%;aspect-ratio:1/1;border-radius:8px;' +
         'background:var(--gp);color:var(--gf);font-size:19px}' +
+      /* Magnifier chip on each card + a full-size viewer above the chooser */
+      '.dc-giftm-cardzoom{position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;' +
+        'background:rgba(255,255,255,.92);box-shadow:0 1px 6px rgba(0,0,0,.2);display:grid;place-items:center;cursor:zoom-in}' +
+      '.dc-giftm-cardzoom svg{width:13px;height:13px;fill:none;stroke:#1d1d1f;stroke-width:2;stroke-linecap:round}' +
+      '.dc-giftm-zoom{position:fixed;inset:0;z-index:1400;display:none;place-items:center;' +
+        'background:rgba(15,15,17,.78);padding:20px}' +
+      '.dc-giftm-zoom.is-open{display:grid}' +
+      '.dc-giftm-zoombox{display:flex;flex-direction:column;align-items:center;gap:14px;max-width:min(92vw,560px)}' +
+      '.dc-giftm-zoombox img{max-width:100%;max-height:66vh;border-radius:14px;display:block;background:#fff}' +
+      '.dc-giftm-zoomt{color:#fff;font-size:15px;font-weight:600;text-align:center}' +
+      '.dc-giftm-zoomrow{display:flex;align-items:center;gap:18px}' +
+      '.dc-giftm-zoomrow .dc-giftm-clear{color:rgba(255,255,255,.8)}' +
+      '.dc-giftm-zoomrow .dc-giftm-clear:hover{color:#fff}' +
       '.dc-giftm-cardt{font-size:12px;font-weight:600;color:var(--gi);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}' +
       '.dc-giftm-cardm{font-style:normal;font-size:11.5px;color:var(--gs)}' +
       /* Phone: full-width sheet like the design window, tighter padding,
@@ -2621,12 +2634,23 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             cards.map(function (c) {
               var t = escapeHtml(c.title).replace(/"/g, "&quot;");
               return '<button type="button" class="dc-giftm-cardopt" data-vid="' + c.vid + '" data-title="' + t + '" data-img="' + (c.img || "") + '">' +
-                (c.img ? '<img src="' + c.img + '" alt="' + t + '" loading="lazy" width="120" height="160">' : '<span class="dc-giftm-cardnone">🖼</span>') +
+                (c.img ? '<img src="' + c.img + '" alt="' + t + '" loading="lazy" width="160" height="160">' : '<span class="dc-giftm-cardnone">🖼</span>') +
+                (c.img ? '<span class="dc-giftm-cardzoom" role="button" tabindex="0" aria-label="View larger"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg></span>' : '') +
                 '<span class="dc-giftm-cardt">' + escapeHtml(c.title) + '</span>' +
                 (c.money ? '<em class="dc-giftm-cardm">' + escapeHtml(c.money) + '</em>' : '') +
                 '</button>';
             }).join("") +
-            '</div></div></div>'
+            '</div></div>' +
+            '<div class="dc-giftm-zoom" id="giftCardZoom" role="dialog" aria-modal="true" aria-label="Card preview">' +
+              '<div class="dc-giftm-zoombox">' +
+                '<img id="giftCardZoomImg" src="" alt="" width="560" height="560">' +
+                '<div class="dc-giftm-zoomt" id="giftCardZoomT"></div>' +
+                '<div class="dc-giftm-zoomrow">' +
+                  '<button type="button" class="dc-gift-save" id="giftCardZoomPick">Choose this card</button>' +
+                  '<button type="button" class="dc-giftm-clear" id="giftCardZoomX">Close</button>' +
+                '</div>' +
+              '</div>' +
+            '</div></div>'
           : '') +
       '</div>';
   }
@@ -2825,21 +2849,49 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (cardPrev && cardPick) {
       const cardClose = mount.querySelector("#giftCardClose");
       const cardsOpen = (v) => cardPick.classList.toggle("is-open", v);
+      const zoomEl = mount.querySelector("#giftCardZoom");
+      const zoomImg = mount.querySelector("#giftCardZoomImg");
+      const zoomT = mount.querySelector("#giftCardZoomT");
+      const zoomOpen = (v) => { if (zoomEl) zoomEl.classList.toggle("is-open", v); };
+      let zoomCard = null;
+      const select = (card) => {
+        window.__dynGiftCard = card;
+        zoomOpen(false); cardsOpen(false);
+        paintCard();
+        /* bubble so the step strip and footer label hear about it */
+        cardPick.dispatchEvent(new Event("change", { bubbles: true }));
+      };
       cardPrev.onclick = () => cardsOpen(true);
       if (cardClose) cardClose.onclick = () => cardsOpen(false);
       cardPick.addEventListener("click", (e) => { if (e.target === cardPick) cardsOpen(false); });
       Array.prototype.forEach.call(cardPick.querySelectorAll(".dc-giftm-cardopt"), (b) => {
-        b.onclick = () => {
-          const vid = b.getAttribute("data-vid");
-          window.__dynGiftCard = vid
-            ? { vid: parseInt(vid, 10) || vid, title: b.getAttribute("data-title") || "", img: b.getAttribute("data-img") || "" }
-            : null;
-          cardsOpen(false);
-          paintCard();
-          /* bubble so the step strip and footer label hear about it */
-          cardPick.dispatchEvent(new Event("change", { bubbles: true }));
-        };
+        const vid = b.getAttribute("data-vid");
+        const card = vid
+          ? { vid: parseInt(vid, 10) || vid, title: b.getAttribute("data-title") || "", img: b.getAttribute("data-img") || "" }
+          : null;
+        b.onclick = () => select(card);
+        /* the magnifier chip opens the big view instead of selecting */
+        const z = b.querySelector(".dc-giftm-cardzoom");
+        if (z && card) {
+          const openZoom = (e) => {
+            e.stopPropagation(); e.preventDefault();
+            zoomCard = card;
+            if (zoomImg) { zoomImg.src = card.img; zoomImg.alt = card.title; }
+            if (zoomT) {
+              const m = b.querySelector(".dc-giftm-cardm");
+              zoomT.textContent = card.title + (m ? " — " + m.textContent : "");
+            }
+            zoomOpen(true);
+          };
+          z.addEventListener("click", openZoom);
+          z.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") openZoom(e); });
+        }
       });
+      const zoomPick = mount.querySelector("#giftCardZoomPick");
+      const zoomX = mount.querySelector("#giftCardZoomX");
+      if (zoomPick) zoomPick.onclick = () => { if (zoomCard) select(zoomCard); };
+      if (zoomX) zoomX.onclick = () => zoomOpen(false);
+      if (zoomEl) zoomEl.addEventListener("click", (e) => { if (e.target === zoomEl) zoomOpen(false); });
       paintCard();
     }
     /* Skippable: the footer's left action reads "Skip for now" until anything
@@ -2913,7 +2965,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) setOpen(false); });
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
-      /* the card chooser sits on top — Esc peels one layer at a time */
+      /* topmost layer first: image viewer → card chooser → gift window */
+      const zoomLayer = mount.querySelector("#giftCardZoom");
+      if (zoomLayer && zoomLayer.classList.contains("is-open")) { zoomLayer.classList.remove("is-open"); return; }
       if (cardPick && cardPick.classList.contains("is-open")) { cardPick.classList.remove("is-open"); return; }
       if (modal && modal.classList.contains("is-open")) setOpen(false);
     });

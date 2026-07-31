@@ -144,7 +144,7 @@
               {%- unless gc_first -%},{%- endunless -%}{%- assign gc_first = false -%}
               { "vid": {{ gcp.selected_or_first_available_variant.id | json }},
                 "title": {{ gcp.title | json }},
-                "img": {% if gcp.featured_image %}{{ gcp.featured_image | image_url: width: 360 | json }}{% else %}""{% endif %},
+                "img": {% if gcp.featured_image %}{{ gcp.featured_image | image_url: width: 720 | json }}{% else %}""{% endif %},
                 "money": {% if gcp.price > 0 %}{{ gcp.price | money | json }}{% else %}""{% endif %} }
             {%- endif -%}
           {%- endfor -%}
