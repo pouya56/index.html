@@ -2506,29 +2506,29 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-mini u{text-underline-offset:3px}' +
       '.dc-gift-mini[hidden]{display:none}' +
       '.dc-giftm{position:fixed;inset:0;z-index:1200;display:none;place-items:center;' +
-        'background:rgba(20,20,22,.45);padding:16px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}' +
+        'background:rgba(20,20,22,.35);padding:16px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}' +
       '.dc-giftm.is-open{display:grid}' +
+      /* Liquid glass sheets: translucent, heavily blurred, hairline-edged */
       '.dc-giftm-card{position:relative;width:min(560px,100%);max-height:min(88vh,760px);overflow:auto;' +
-        'background:#fff;border-radius:20px;padding:26px 26px 22px;box-shadow:0 30px 80px rgba(0,0,0,.3)}' +
+        'background:rgba(255,255,255,.68);-webkit-backdrop-filter:blur(26px) saturate(1.7);backdrop-filter:blur(26px) saturate(1.7);' +
+        'border:1px solid rgba(255,255,255,.6);border-radius:20px;padding:26px 26px 22px;box-shadow:0 30px 80px rgba(0,0,0,.3)}' +
+      '@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.dc-giftm-card{background:#fff}}' +
       '.dc-giftm-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:0;' +
-        'cursor:pointer;background:var(--gp);color:var(--gs);font-size:19px;line-height:1;display:grid;place-items:center}' +
-      '.dc-giftm-x:hover{background:#e8e8ed}' +
+        'cursor:pointer;background:rgba(120,120,128,.14);color:var(--gs);font-size:19px;line-height:1;display:grid;place-items:center}' +
+      '.dc-giftm-x:hover{background:rgba(120,120,128,.24)}' +
       '.dc-giftm-title{margin:0;font-size:21px;font-weight:700;letter-spacing:-.01em}' +
       '.dc-giftm-sub{margin:6px 0 0;font-size:13.5px;color:var(--gs);line-height:1.5}' +
-      '.dc-giftm-sec{margin-top:20px;padding-top:18px;border-top:1px solid #ececf0}' +
+      '.dc-giftm-sec{margin-top:20px;padding-top:18px;border-top:1px solid rgba(29,29,31,.1)}' +
       '.dc-giftm-h{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gf);margin:0 0 12px}' +
       '.dc-giftm-l{display:block;font-size:13px;font-weight:600;margin:12px 0 6px}' +
       '.dc-giftm-l:first-of-type{margin-top:0}' +
-      '.dc-giftm-in{width:100%;font-family:inherit;font-size:14.5px;color:var(--gi);background:#fff;' +
-        'border:1px solid var(--gl);border-radius:10px;padding:10px 12px;transition:border-color .16s,box-shadow .16s}' +
+      '.dc-giftm-in{width:100%;font-family:inherit;font-size:14.5px;color:var(--gi);background:rgba(255,255,255,.75);' +
+        'border:1px solid rgba(29,29,31,.14);border-radius:10px;padding:10px 12px;transition:border-color .16s,box-shadow .16s,background .16s}' +
+      '.dc-giftm-in:focus{background:#fff}' +
       '.dc-giftm-in::placeholder{color:var(--gf)}' +
       '.dc-giftm-in:focus{outline:none;border-color:var(--ga);box-shadow:0 0 0 3px rgba(0,113,227,.15)}' +
       'textarea.dc-giftm-in{resize:vertical;min-height:88px;line-height:1.5}' +
       '.dc-giftm-count{text-align:right;font-size:12px;color:var(--gf);margin-top:4px;font-variant-numeric:tabular-nums}' +
-      '.dc-giftm-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}' +
-      '.dc-giftm-grid>div:last-child{grid-column:1/-1}' +
-      '@media (min-width:560px){.dc-giftm-grid{grid-template-columns:1fr 1fr 1fr}.dc-giftm-grid>div:last-child{grid-column:auto}}' +
-      '.dc-giftm-hint{margin:10px 0 0;font-size:12.5px;color:var(--gf);line-height:1.5}' +
       /* Greeting: fields left, card preview right — like a stationery desk */
       '.dc-giftm-greet{display:flex;gap:16px;align-items:flex-start}' +
       '.dc-giftm-greet-l{flex:1 1 auto;min-width:0}' +
@@ -2545,7 +2545,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-giftm-cardsheet .dc-giftm-cardgrid{margin-top:18px}' +
       '.dc-giftm-cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}' +
       '.dc-giftm-cardopt{position:relative;display:flex;flex-direction:column;gap:6px;padding:6px;cursor:pointer;' +
-        'font-family:inherit;text-align:center;background:#fff;border:2px solid var(--gl);border-radius:12px;transition:border-color .15s}' +
+        'font-family:inherit;text-align:center;background:rgba(255,255,255,.6);border:2px solid rgba(29,29,31,.12);border-radius:12px;transition:border-color .15s}' +
       '.dc-giftm-cardopt:hover{border-color:#b8b8bf}' +
       '.dc-giftm-cardopt.is-sel{border-color:var(--ga)}' +
       '.dc-giftm-cardopt img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;display:block}' +
@@ -2577,13 +2577,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             '<button type="button" class="dc-giftm-x" id="giftClose" aria-label="Close">×</button>' +
             '<h3 class="dc-giftm-title">Make it a gift</h3>' +
             '<p class="dc-giftm-sub">All optional — anything you fill in travels with the order.</p>' +
-            '<div class="dc-giftm-sec"><div class="dc-giftm-h">' + (wrapId ? 'Gift wrapping' : 'Gift') + '</div>' +
-              '<div class="dc-gift-toggle">' +
-                '<label class="dc-gift-switch" aria-label="' + escapeHtml(wrapId ? wrapLabel : toggleLabel) + '">' +
-                  '<input type="checkbox" id="giftIsGift" class="dc-gift-checkbox">' +
-                  '<span class="dc-gift-slider"></span></label>' +
-                '<span class="dc-gift-label" id="giftLabel" role="button" tabindex="0">' + wrapRowLabel + '</span>' +
-              '</div></div>' +
             '<div class="dc-giftm-sec"><div class="dc-giftm-h">Greeting</div>' +
               '<div class="dc-giftm-greet">' +
                 '<div class="dc-giftm-greet-l">' +
@@ -2600,17 +2593,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                   : '') +
               '</div>' +
             '</div>' +
-            '<div class="dc-giftm-sec"><div class="dc-giftm-h">Recipient &amp; timing (optional)</div>' +
-              '<div class="dc-giftm-grid">' +
-                '<div><label class="dc-giftm-l" for="giftToName">Name</label>' +
-                  '<input type="text" id="giftToName" class="dc-giftm-in" maxlength="60" placeholder="First name"></div>' +
-                '<div><label class="dc-giftm-l" for="giftToEmail">Email</label>' +
-                  '<input type="email" id="giftToEmail" class="dc-giftm-in" maxlength="80" placeholder="name@email.com"></div>' +
-                '<div><label class="dc-giftm-l" for="giftSendDate">Arrive by</label>' +
-                  '<input type="date" id="giftSendDate" class="dc-giftm-in"></div>' +
-              '</div>' +
-              '<p class="dc-giftm-hint">For a birthday or an event? Pick a date and we’ll aim for it.</p>' +
-            '</div>' +
+            '<div class="dc-giftm-sec"><div class="dc-giftm-h">' + (wrapId ? 'Gift wrapping' : 'Gift') + '</div>' +
+              '<div class="dc-gift-toggle">' +
+                '<label class="dc-gift-switch" aria-label="' + escapeHtml(wrapId ? wrapLabel : toggleLabel) + '">' +
+                  '<input type="checkbox" id="giftIsGift" class="dc-gift-checkbox">' +
+                  '<span class="dc-gift-slider"></span></label>' +
+                '<span class="dc-gift-label" id="giftLabel" role="button" tabindex="0">' + wrapRowLabel + '</span>' +
+              '</div></div>' +
             '<div class="dc-giftm-foot">' +
               '<button type="button" class="dc-giftm-clear" id="giftRemove">Remove gift</button>' +
               '<button type="button" class="dc-gift-save" id="giftSave">Save gift details</button>' +
