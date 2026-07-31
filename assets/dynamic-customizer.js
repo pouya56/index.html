@@ -3279,12 +3279,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
            price breakdown, so the property stays a clean "Yes". */
         props["Gift wrapping"] = wrapApplied ? "Yes" : "Requested (not charged)";
       }
-      // Kit run: every line added during a kit shares one id, so the order
-      // shows which items belong together.
-      if (window.__dynKit && window.__dynKit.id) {
-        props["Kit"] = "Yes";
-        props["_kit"] = window.__dynKit.id;
-      }
       root.Dynamic.lastOrder = { properties: props };
       if (hasDesign) $("#customizeSummary") && ($("#customizeSummary").textContent = "Design added");
       const ok = await submitToShopify(props, extraItems, files, sidesVariant ? sidesVariant.id : null);
@@ -4963,74 +4957,4 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", tryInit);
   else tryInit();
-})();
-
-/* ==========================================================================
-   Kit runner — walks the shopper through customizing each product of a kit
-   started on the Kit page (dynamic-kit section). The queue lives in
-   localStorage; every Add to cart advances to the next item (Skip works
-   too), and the last one lands on the cart with all kit lines tagged.
-   ========================================================================== */
-(function () {
-  var KEY = "dyn_kit";
-  function load() { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { return null; } }
-  function save(k) { try { localStorage.setItem(KEY, JSON.stringify(k)); } catch (e) {} }
-  function clear() { try { localStorage.removeItem(KEY); } catch (e) {} }
-  var kit = load();
-  if (!kit || !kit.items || !kit.items.length) return;
-  var m = location.pathname.match(/\/products\/([^\/?#]+)/);
-  var handle = m ? decodeURIComponent(m[1]) : "";
-  if (!handle || kit.items.indexOf(handle) < 0) return;
-  if ((kit.done || []).indexOf(handle) >= 0) return;   /* already added — plain visit */
-  var idx = kit.items.indexOf(handle), n = kit.items.length;
-  window.__dynKit = kit;
-
-  var css = document.createElement("style");
-  css.textContent =
-    ".dyn-kitbar{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:960;display:flex;align-items:center;gap:12px;" +
-      "padding:10px 10px 10px 18px;border-radius:999px;background:rgba(20,20,22,.92);color:#fff;" +
-      "font:600 14px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;" +
-      "box-shadow:0 14px 40px rgba(0,0,0,.35);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);white-space:nowrap}" +
-    ".dyn-kitbar b{font-weight:800}" +
-    ".dyn-kitbar button{-webkit-appearance:none;appearance:none;border:0;cursor:pointer;font:inherit;border-radius:999px;padding:9px 14px}" +
-    ".dyn-kitbar .kb-skip{background:rgba(255,255,255,.16);color:#fff}" +
-    ".dyn-kitbar .kb-skip:hover{background:rgba(255,255,255,.28)}" +
-    ".dyn-kitbar .kb-x{background:none;color:rgba(255,255,255,.6);padding:9px 8px}" +
-    ".dyn-kitbar .kb-x:hover{color:#fff}" +
-    "@media (max-width:600px){.dyn-kitbar{font-size:13px;gap:8px;padding-left:14px}}";
-  document.head.appendChild(css);
-  var bar = document.createElement("div");
-  bar.className = "dyn-kitbar";
-  bar.setAttribute("role", "status");
-  bar.innerHTML =
-    '<span aria-hidden="true">🧰</span><span>Kit — item <b>' + (idx + 1) + "</b> of <b>" + n + "</b></span>" +
-    '<button type="button" class="kb-skip">Skip this item</button>' +
-    '<button type="button" class="kb-x" aria-label="Cancel kit">✕</button>';
-  document.body.appendChild(bar);
-
-  function nextUrl(k) {
-    for (var i = 0; i < k.items.length; i++) {
-      if ((k.done || []).indexOf(k.items[i]) < 0) return "/products/" + k.items[i] + "?dynkit=1";
-    }
-    return null;
-  }
-  var advancing = false;
-  function advance() {
-    if (advancing) return;
-    advancing = true;
-    var k = load() || kit;
-    k.done = k.done || [];
-    if (k.done.indexOf(handle) < 0) k.done.push(handle);
-    save(k);
-    var nu = nextUrl(k);
-    if (nu) location.href = nu;
-    else { clear(); location.href = (window.DYN_SHOPIFY && window.DYN_SHOPIFY.cartUrl) || "/cart"; }
-  }
-  bar.querySelector(".kb-skip").addEventListener("click", advance);
-  bar.querySelector(".kb-x").addEventListener("click", function () {
-    clear(); window.__dynKit = null; bar.remove();
-  });
-  /* An add-to-cart on this page moves the kit along (short beat so the
-     "Added" toast is seen before the next page loads). */
-  window.addEventListener("dyn:added-to-cart", function () { setTimeout(advance, 700); });
 })();

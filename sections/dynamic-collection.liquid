@@ -864,9 +864,6 @@
           {%- assign banners_done = true -%}
         {%- endif -%}
       {%- endfor -%}
-      {%- comment -%} Stand-alone "Dynamic Promo Banners" sections teleport
-          themselves into this slot, so they sit above the product grid. {%- endcomment -%}
-      <div id="dcPromoSlot"></div>
 
       {%- if section.settings.show_all_grid -%}
         {%- if section.settings.all_heading != blank -%}
@@ -1259,10 +1256,6 @@
     grid.scrollLeft = 0;
     reveal(visible);
     updateGridArrows();
-    // Tell stand-alone promo-banner sections which tab is live now.
-    window.__dynShopCat = currentCat;
-    window.__dynShopNone = none;
-    try { window.dispatchEvent(new CustomEvent("dyn:cat", { detail: { cat: currentCat, none: none } })); } catch (e0) {}
   }
 
   if (tabs) tabs.addEventListener("click", function (e) {
