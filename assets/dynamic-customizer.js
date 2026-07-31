@@ -1709,8 +1709,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     await resolveWrapVariant(ref);
     if (!_wrapPriceMoney) return;
     g.wrapMoney = _wrapPriceMoney;
-    const lbl = document.querySelector("#giftMount .dc-gift-label");
-    if (lbl) lbl.innerHTML = escapeHtml(g.wrapLabel || "Add gift wrapping") + ' — <strong>' + escapeHtml(_wrapPriceMoney) + '</strong>';
+    /* Label stays price-free — the fee shows on the price and in the cart
+       breakdown; here we only refresh the resolved amount for those. */
     applyVariantPrice();
   }
 
@@ -2587,9 +2587,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // A real button opens a Moment-style modal asking for the gift details:
     // wrapping (when a wrap product is set), greeting and recipient/schedule.
     // The #giftIsGift checkbox keeps its id — all pricing reads its .checked.
-    const wrapRowLabel = (wrapId || wraps.length)
-      ? escapeHtml(wrapLabel) + (wrapMoney ? ' — <strong>' + escapeHtml(wrapMoney) + '</strong>' : '')
-      : escapeHtml(toggleLabel);
+    const wrapRowLabel = (wrapId || wraps.length) ? escapeHtml(wrapLabel) : escapeHtml(toggleLabel);
     // One picker builder serves both the greeting cards and the gift wraps —
     // same grid, same zoom chips, same "none" tile.
     function pickHtml(pickId, heading, noneLabel, items) {
