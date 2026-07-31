@@ -3277,11 +3277,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             toast("Gift wrapping couldn't be added — it won't be charged.");
           }
         }
-        /* Spell the wrapping out on the item — with the fee ONLY when it is
-           actually being charged (variant or wrap line). */
-        props["Gift wrapping"] = wrapApplied
-          ? "Yes" + (gift.wrapMoney ? " (" + gift.wrapMoney + ")" : "")
-          : "Requested (not charged)";
+        /* Spell the wrapping out on the item — the fee itself shows in the
+           price breakdown, so the property stays a clean "Yes". */
+        props["Gift wrapping"] = wrapApplied ? "Yes" : "Requested (not charged)";
       }
       root.Dynamic.lastOrder = { properties: props };
       if (hasDesign) $("#customizeSummary") && ($("#customizeSummary").textContent = "Design added");
