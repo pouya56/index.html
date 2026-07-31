@@ -2483,29 +2483,93 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-save{-webkit-appearance:none;appearance:none;border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:#0a0a0a;border-radius:10px;padding:8px 16px;transition:transform .12s,box-shadow .2s,background .2s}' +
       '.dc-gift-save:hover{background:#000;box-shadow:0 6px 16px rgba(0,0,0,.18)}' +
       '.dc-gift-save:active{transform:translateY(1px)}' +
+      /* "Make it a gift" — a real button opening a Moment-style details modal */
+      '.dc-gift-open{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;' +
+        'font-family:inherit;font-size:15px;font-weight:500;color:var(--gi);background:#fff;' +
+        'border:1px solid var(--gl);border-radius:14px;padding:13px 16px;transition:border-color .16s,box-shadow .2s}' +
+      '.dc-gift-open:hover{border-color:#b8b8bf;box-shadow:0 6px 18px rgba(0,0,0,.07)}' +
+      '.dc-gift-open-ic{font-size:19px;flex:none}' +
+      '.dc-gift-open-txt{flex:1 1 auto;min-width:0}' +
+      '.dc-gift-open-txt em{font-style:normal;color:var(--gf);font-weight:400}' +
+      '.dc-gift-open-txt u{text-underline-offset:2px}' +
+      '.dc-gift-open-arr{flex:none;color:var(--gf);font-size:19px;line-height:1}' +
+      '.dc-giftm{position:fixed;inset:0;z-index:1200;display:none;place-items:center;' +
+        'background:rgba(20,20,22,.45);padding:16px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}' +
+      '.dc-giftm.is-open{display:grid}' +
+      '.dc-giftm-card{position:relative;width:min(560px,100%);max-height:min(88vh,760px);overflow:auto;' +
+        'background:#fff;border-radius:20px;padding:26px 26px 22px;box-shadow:0 30px 80px rgba(0,0,0,.3)}' +
+      '.dc-giftm-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:0;' +
+        'cursor:pointer;background:var(--gp);color:var(--gs);font-size:19px;line-height:1;display:grid;place-items:center}' +
+      '.dc-giftm-x:hover{background:#e8e8ed}' +
+      '.dc-giftm-title{margin:0;font-size:21px;font-weight:700;letter-spacing:-.01em}' +
+      '.dc-giftm-sub{margin:6px 0 0;font-size:13.5px;color:var(--gs);line-height:1.5}' +
+      '.dc-giftm-sec{margin-top:20px;padding-top:18px;border-top:1px solid #ececf0}' +
+      '.dc-giftm-h{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gf);margin:0 0 12px}' +
+      '.dc-giftm-l{display:block;font-size:13px;font-weight:600;margin:12px 0 6px}' +
+      '.dc-giftm-l:first-of-type{margin-top:0}' +
+      '.dc-giftm-in{width:100%;font-family:inherit;font-size:14.5px;color:var(--gi);background:#fff;' +
+        'border:1px solid var(--gl);border-radius:10px;padding:10px 12px;transition:border-color .16s,box-shadow .16s}' +
+      '.dc-giftm-in::placeholder{color:var(--gf)}' +
+      '.dc-giftm-in:focus{outline:none;border-color:var(--ga);box-shadow:0 0 0 3px rgba(0,113,227,.15)}' +
+      'textarea.dc-giftm-in{resize:vertical;min-height:88px;line-height:1.5}' +
+      '.dc-giftm-count{text-align:right;font-size:12px;color:var(--gf);margin-top:4px;font-variant-numeric:tabular-nums}' +
+      '.dc-giftm-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}' +
+      '.dc-giftm-grid>div:last-child{grid-column:1/-1}' +
+      '@media (min-width:560px){.dc-giftm-grid{grid-template-columns:1fr 1fr 1fr}.dc-giftm-grid>div:last-child{grid-column:auto}}' +
+      '.dc-giftm-hint{margin:10px 0 0;font-size:12.5px;color:var(--gf);line-height:1.5}' +
+      '.dc-giftm-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px}' +
+      '.dc-giftm-clear{-webkit-appearance:none;appearance:none;border:0;background:none;cursor:pointer;' +
+        'font-family:inherit;font-size:13.5px;font-weight:600;color:var(--gs);text-decoration:underline;text-underline-offset:3px;padding:8px 0}' +
+      '.dc-giftm-clear:hover{color:var(--gi)}' +
       '</style>';
-    // The toggle IS the gift-wrapping switch when a wrap product is set
-    // (turning it on adds the $8 wrapping); otherwise it's a plain gift toggle.
-    const label = wrapId
+    // A real button opens a Moment-style modal asking for the gift details:
+    // wrapping (when a wrap product is set), greeting and recipient/schedule.
+    // The #giftIsGift checkbox keeps its id — all pricing reads its .checked.
+    const wrapRowLabel = wrapId
       ? escapeHtml(wrapLabel) + (wrapMoney ? ' — <strong>' + escapeHtml(wrapMoney) + '</strong>' : '')
       : escapeHtml(toggleLabel);
     return css +
       '<div class="dc-gift" id="giftBlock">' +
-        '<div class="dc-gift-toggle">' +
-          '<label class="dc-gift-switch" aria-label="' + escapeHtml(wrapId ? wrapLabel : toggleLabel) + '">' +
-            '<input type="checkbox" id="giftIsGift" class="dc-gift-checkbox">' +
-            '<span class="dc-gift-slider"></span></label>' +
-          '<span class="dc-gift-label" id="giftLabel" role="button" tabindex="0">' + label + '</span>' +
-        '</div>' +
-        '<div class="dc-gift-panel" id="giftPanel">' +
-          '<div class="dc-gift-card">' +
-            '<div class="dc-gift-from"><label class="dc-gift-note-h" for="giftFrom">From</label>' +
-            '<input type="text" id="giftFrom" class="dc-gift-note-input dc-gift-from-input" maxlength="60" placeholder="Your name or company" disabled></div>' +
-            '<div class="dc-gift-note"><label class="dc-gift-note-h" for="giftNote">' + escapeHtml(noteLabel) + '</label>' +
-            '<textarea id="giftNote" class="dc-gift-note-input" maxlength="250" rows="3" placeholder="Write your message…" disabled></textarea>' +
-            '<div class="dc-gift-foot"><span class="dc-gift-count"><span id="giftCount">0</span>/250</span>' +
-              '<button type="button" class="dc-gift-save" id="giftSave">Save</button></div>' +
-          '</div></div>' +
+        '<button type="button" class="dc-gift-open" id="giftOpenBtn">' +
+          '<span class="dc-gift-open-ic" aria-hidden="true">🎁</span>' +
+          '<span class="dc-gift-open-txt" id="giftOpenTxt">Make it a gift <em>(optional)</em></span>' +
+          '<span class="dc-gift-open-arr" aria-hidden="true">›</span>' +
+        '</button>' +
+        '<div class="dc-giftm" id="giftModal" role="dialog" aria-modal="true" aria-label="Make it a gift">' +
+          '<div class="dc-giftm-card">' +
+            '<button type="button" class="dc-giftm-x" id="giftClose" aria-label="Close">×</button>' +
+            '<h3 class="dc-giftm-title">Make it a gift</h3>' +
+            '<p class="dc-giftm-sub">All optional — anything you fill in travels with the order.</p>' +
+            '<div class="dc-giftm-sec"><div class="dc-giftm-h">' + (wrapId ? 'Gift wrapping' : 'Gift') + '</div>' +
+              '<div class="dc-gift-toggle">' +
+                '<label class="dc-gift-switch" aria-label="' + escapeHtml(wrapId ? wrapLabel : toggleLabel) + '">' +
+                  '<input type="checkbox" id="giftIsGift" class="dc-gift-checkbox">' +
+                  '<span class="dc-gift-slider"></span></label>' +
+                '<span class="dc-gift-label" id="giftLabel" role="button" tabindex="0">' + wrapRowLabel + '</span>' +
+              '</div></div>' +
+            '<div class="dc-giftm-sec"><div class="dc-giftm-h">Greeting</div>' +
+              '<label class="dc-giftm-l" for="giftFrom">From</label>' +
+              '<input type="text" id="giftFrom" class="dc-giftm-in" maxlength="60" placeholder="Your name or company name">' +
+              '<label class="dc-giftm-l" for="giftNote">Message</label>' +
+              '<textarea id="giftNote" class="dc-giftm-in" maxlength="250" rows="4" placeholder="Write a message for your recipient…"></textarea>' +
+              '<div class="dc-giftm-count"><span id="giftCount">0</span>/250</div>' +
+            '</div>' +
+            '<div class="dc-giftm-sec"><div class="dc-giftm-h">Recipient &amp; timing (optional)</div>' +
+              '<div class="dc-giftm-grid">' +
+                '<div><label class="dc-giftm-l" for="giftToName">Name</label>' +
+                  '<input type="text" id="giftToName" class="dc-giftm-in" maxlength="60" placeholder="First name"></div>' +
+                '<div><label class="dc-giftm-l" for="giftToEmail">Email</label>' +
+                  '<input type="email" id="giftToEmail" class="dc-giftm-in" maxlength="80" placeholder="name@email.com"></div>' +
+                '<div><label class="dc-giftm-l" for="giftSendDate">Arrive by</label>' +
+                  '<input type="date" id="giftSendDate" class="dc-giftm-in"></div>' +
+              '</div>' +
+              '<p class="dc-giftm-hint">For a birthday or an event? Pick a date and we’ll aim for it.</p>' +
+            '</div>' +
+            '<div class="dc-giftm-foot">' +
+              '<button type="button" class="dc-giftm-clear" id="giftRemove">Remove gift</button>' +
+              '<button type="button" class="dc-gift-save" id="giftSave">Save gift details</button>' +
+            '</div>' +
+          '</div>' +
         '</div>' +
       '</div>';
   }
@@ -2671,33 +2735,46 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (!html) return;
     const giftIsGift = mount.querySelector("#giftIsGift");
     if (!giftIsGift) return;
+    const modal = mount.querySelector("#giftModal");
+    const openBtn = mount.querySelector("#giftOpenBtn");
+    const openTxt = mount.querySelector("#giftOpenTxt");
+    const closeBtn = mount.querySelector("#giftClose");
     const giftNote = mount.querySelector("#giftNote");
     const giftCount = mount.querySelector("#giftCount");
-    const giftBlock = mount.querySelector("#giftBlock");
     const giftSave = mount.querySelector("#giftSave");
+    const giftRemove = mount.querySelector("#giftRemove");
     const giftLabel = mount.querySelector("#giftLabel");
-    const giftFrom = mount.querySelector("#giftFrom");
-    const setOpen = (v) => { if (giftBlock) giftBlock.classList.toggle("is-gift-open", v); };  // float popup (no page jump)
-    const focusNote = () => { if (giftNote) { try { giftNote.focus({ preventScroll: true }); } catch (e) { giftNote.focus(); } } };
-    const syncGift = (openIt) => {
-      const on = giftIsGift.checked;
-      if (giftNote) giftNote.disabled = !on;
-      if (giftFrom) giftFrom.disabled = !on;
-      if (!on) setOpen(false);           // gift off → note closed (and won't submit)
-      else if (openIt) { setOpen(true); focusNote(); }  // just turned on → open to write
-      applyVariantPrice();   // reflect the wrapping fee in the page price
+    const fields = ["giftFrom", "giftNote", "giftToName", "giftToEmail", "giftSendDate"]
+      .map((id) => mount.querySelector("#" + id)).filter(Boolean);
+    const anyFilled = () => giftIsGift.checked || fields.some((f) => f.value.trim());
+    const setOpen = (v) => { if (modal) modal.classList.toggle("is-open", v); };
+    /* The button doubles as the summary: quiet invitation before, receipt after. */
+    const summarize = () => {
+      if (!openTxt) return;
+      if (!anyFilled()) { openTxt.innerHTML = 'Make it a gift <em>(optional)</em>'; return; }
+      const toEl = mount.querySelector("#giftToName");
+      const bits = [];
+      if (giftIsGift.checked) bits.push("wrapped");
+      if (toEl && toEl.value.trim()) bits.push("for " + toEl.value.trim());
+      openTxt.innerHTML = "Gift added" + (bits.length ? " — " + bits.join(", ") : "") + " · <u>edit</u>";
     };
-    giftIsGift.onchange = () => syncGift(true); syncGift(false);
-    // Save just closes the popup — the note stays in the field and still submits,
-    // and the customer can reopen it to edit by clicking the label again.
-    if (giftSave) giftSave.onclick = () => setOpen(false);
+    if (openBtn) openBtn.onclick = () => { setOpen(true); const f = mount.querySelector("#giftFrom"); if (f) { try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } } };
+    if (closeBtn) closeBtn.onclick = () => { setOpen(false); summarize(); };
+    if (giftSave) giftSave.onclick = () => { setOpen(false); summarize(); };
+    if (giftRemove) giftRemove.onclick = () => {
+      fields.forEach((f) => { f.value = ""; });
+      giftIsGift.checked = false;
+      giftIsGift.dispatchEvent(new Event("change", { bubbles: true }));
+      setOpen(false); summarize();
+      if (giftCount) giftCount.textContent = "0";
+    };
+    if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) { setOpen(false); summarize(); } });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modal && modal.classList.contains("is-open")) { setOpen(false); summarize(); } });
+    giftIsGift.onchange = () => { applyVariantPrice(); };   // reflect the wrapping fee in the page price
     if (giftLabel) {
-      const openFromLabel = () => {
-        if (!giftIsGift.checked) { giftIsGift.checked = true; syncGift(true); }  // click label = turn on + open
-        else { setOpen(true); focusNote(); }                                     // already on = reopen to edit
-      };
-      giftLabel.onclick = openFromLabel;
-      giftLabel.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFromLabel(); } };
+      const flip = () => { giftIsGift.checked = !giftIsGift.checked; giftIsGift.dispatchEvent(new Event("change", { bubbles: true })); };
+      giftLabel.onclick = flip;
+      giftLabel.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); } };
     }
     if (giftNote && giftCount) { const c = () => (giftCount.textContent = String(giftNote.value.length)); giftNote.oninput = c; c(); }
     refreshGiftFee();   // replace the typed fee with the real Gift Wrap product price
@@ -2890,12 +2967,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       // charge now rides on the resolved variant above (one line item). Only if
       // the merchant hasn't mapped a "Gift wrapping" option do we fall back to the
       // legacy separate wrapping line (wrapVariantId).
-      if (giftOn) {
+      // Gift details submit whenever anything was filled in — the wrapping
+      // charge alone stays tied to the toggle (giftOn) below.
+      const gval = (sel) => { const el = $(sel); return el && el.value.trim() ? el.value.trim() : ""; };
+      const gFrom = gval("#giftFrom"), gMsg = gval("#giftNote"), gTo = gval("#giftToName"),
+        gEmail = gval("#giftToEmail"), gDate = gval("#giftSendDate");
+      if (gift.enabled && (giftOn || gFrom || gMsg || gTo || gEmail || gDate)) {
         props["Gift"] = "Yes";
-        const fromEl = $("#giftFrom");
-        if (fromEl && fromEl.value.trim()) props["Gift from"] = fromEl.value.trim();
-        const noteEl = $("#giftNote");
-        if (noteEl && noteEl.value.trim()) props["Gift note"] = noteEl.value.trim();
+        if (gFrom) props["Gift from"] = gFrom;
+        if (gMsg) props["Gift note"] = gMsg;
+        if (gTo) props["Gift recipient"] = gTo;
+        if (gEmail) props["Gift recipient email"] = gEmail;
+        if (gDate) props["Gift arrive by"] = gDate;
+      }
+      if (giftOn) {
         const usedGiftVariant = !!(sidesVariant && _giftVariantActive);
         if (!usedGiftVariant) {
           const wrapId = await resolveWrapVariant(giftWrapRef());
@@ -4403,9 +4488,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
        quiet invitation while Add to cart stays one click away. */
     function giftFilled() {
       var g = document.getElementById("giftIsGift");
-      if (!g || !g.checked) return false;
-      var n = document.getElementById("giftNote"), f = document.getElementById("giftFrom");
-      return !!((n && n.value.trim()) || (f && f.value.trim()));
+      if (g && g.checked) return true;
+      return ["giftFrom", "giftNote", "giftToName", "giftToEmail", "giftSendDate"].some(function (id) {
+        var el = document.getElementById(id);
+        return !!(el && el.value.trim());
+      });
     }
     function currentStep() {
       if (modalRoot && modalRoot.classList.contains("open")) return 2;
@@ -4517,7 +4604,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     /* Typing in the gift fields (or flipping the toggle) moves the strip. */
     document.addEventListener("input", function (e) {
       var id = e.target && e.target.id;
-      if (id === "giftNote" || id === "giftFrom") setStep(currentStep());
+      if (id && id.indexOf("gift") === 0) setStep(currentStep());
     });
     document.addEventListener("change", function (e) {
       if (e.target && e.target.id === "giftIsGift") setStep(currentStep());
