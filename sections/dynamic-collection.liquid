@@ -379,6 +379,7 @@
      overlaid on the left. Several banners on one tab become a slider with
      glass arrows and dots. */
   .dyn-col .dc-tabheros { position: relative; margin: 26px auto 8px; }
+  .dyn-col .dc-tabheros--bottom { margin-top: 54px; }
   .dyn-col .dc-tabhero { display: none; position: relative; overflow: hidden; border-radius: 28px;
     align-items: center; min-height: clamp(250px, 27vw, 420px);
     padding: clamp(22px, 4vw, 54px) clamp(22px, 5vw, 72px); }
@@ -697,10 +698,12 @@
         <div class="dc-search-below" id="dcSearchBelow">{{ dc_search_html }}</div>
       {%- endif -%}
 
-      {%- comment -%} Per-tab hero banners: one big MOO-style panel per
-          category, shown right under the tabs while its tab is active. {%- endcomment -%}
-      {%- capture dc_tabheros_html -%}
-        {%- for block in section.blocks -%}
+      {%- comment -%} Per-tab hero banners, sorted into a TOP set (right under
+          the tabs) and a BOTTOM set (below the products) by each block's
+          Position setting. Same slider chrome for both. {%- endcomment -%}
+      {%- assign heros_top = '' -%}
+      {%- assign heros_bottom = '' -%}
+      {%- for block in section.blocks -%}
           {%- unless block.type == 'tab_banner' -%}{%- continue -%}{%- endunless -%}
           {%- assign hfor = '' -%}
           {%- assign hfor_raw = block.settings.show_for | default: '' | strip -%}
@@ -714,6 +717,7 @@
               {%- endif -%}
             {%- endfor -%}
           {%- endif -%}
+          {%- capture dc_hero_one -%}
           <div class="dc-tabhero" data-for="{{ hfor }}" style="background: {{ block.settings.bg_color | default: '#eef1f6' }}; color: {{ block.settings.text_color | default: '#0b1c33' }};" {{ block.shopify_attributes }}>
             {%- if block.settings.image != blank -%}
               <img class="dc-tabhero-bg" src="{{ block.settings.image | image_url: width: 2400 }}" alt="" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" loading="lazy">
@@ -729,11 +733,17 @@
               {%- endif -%}
             </div>
           </div>
-        {%- endfor -%}
-      {%- endcapture -%}
-      {%- if dc_tabheros_html contains 'dc-tabhero' -%}
+          {%- endcapture -%}
+          {%- assign hpos = block.settings.pos | default: 'top' -%}
+          {%- if hpos == 'bottom' -%}
+            {%- assign heros_bottom = heros_bottom | append: dc_hero_one -%}
+          {%- else -%}
+            {%- assign heros_top = heros_top | append: dc_hero_one -%}
+          {%- endif -%}
+      {%- endfor -%}
+      {%- if heros_top != '' -%}
         <div id="dcTabHeros" class="dc-tabheros">
-          {{ dc_tabheros_html }}
+          {{ heros_top }}
           <button type="button" class="dc-tabhero-arrow dc-prev" id="dcHeroPrev" aria-label="Previous banner" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
           <button type="button" class="dc-tabhero-arrow dc-next" id="dcHeroNext" aria-label="Next banner" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
           <div class="dc-tabhero-dots" id="dcHeroDots" aria-hidden="true" hidden></div>
@@ -885,16 +895,11 @@
       {%- endcapture -%}
 
       {%- comment -%} Editable promo banners — bento-grid tiles, captured as one group. {%- endcomment -%}
-      {%- assign banner_count = 0 -%}
-      {%- for b in section.blocks -%}{%- if b.type == 'banner' -%}{%- assign banner_count = banner_count | plus: 1 -%}{%- endif -%}{%- endfor -%}
-      {%- capture dc_banners_html -%}
-      {%- if banner_count > 0 -%}
-        {%- if section.settings.banners_heading != blank -%}
-          <h2 class="dc-grid-heading dc-banners-heading">{{ section.settings.banners_heading }}</h2>
-        {%- endif -%}
-        <div class="dc-banners-wrap" id="dcBannersWrap">
-        <div class="dc-banners" id="dcBanners">
-          {%- for block in section.blocks -%}
+      {%- comment -%} Tiles sort into a TOP set (in block order, as before) and
+          a BOTTOM set (below the products) via each block's Position. {%- endcomment -%}
+      {%- assign banners_top = '' -%}
+      {%- assign banners_bottom = '' -%}
+      {%- for block in section.blocks -%}
             {%- unless block.type == 'banner' -%}{%- continue -%}{%- endunless -%}
             {%- assign bsize = block.settings.size | default: 'sm' -%}
             {%- comment -%} Always fill the tile (full-bleed). {%- endcomment -%}
@@ -930,13 +935,27 @@
                 {%- endif -%}
               {%- endfor -%}
             {%- endif -%}
+            {%- capture dc_banner_one -%}
             {%- if block.settings.link != blank -%}
               <a class="{{ bcls }}" href="{{ block.settings.link }}" data-for="{{ bfor }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</a>
             {%- else -%}
               <div class="{{ bcls }}" data-for="{{ bfor }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</div>
             {%- endif -%}
-          {%- endfor -%}
-        </div>
+            {%- endcapture -%}
+            {%- assign bpos = block.settings.pos | default: 'top' -%}
+            {%- if bpos == 'bottom' -%}
+              {%- assign banners_bottom = banners_bottom | append: dc_banner_one -%}
+            {%- else -%}
+              {%- assign banners_top = banners_top | append: dc_banner_one -%}
+            {%- endif -%}
+      {%- endfor -%}
+      {%- capture dc_banners_html -%}
+      {%- if banners_top != '' -%}
+        {%- if section.settings.banners_heading != blank -%}
+          <h2 class="dc-grid-heading dc-banners-heading">{{ section.settings.banners_heading }}</h2>
+        {%- endif -%}
+        <div class="dc-banners-wrap" id="dcBannersWrap">
+        <div class="dc-banners" id="dcBanners">{{ banners_top }}</div>
         </div>
       {%- endif -%}
       {%- endcapture -%}
@@ -966,6 +985,20 @@
           <button type="button" class="dc-all-arrow dc-prev" id="dcAllPrev" aria-label="Scroll products left" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
           <div class="dc-gridall" id="dcGridAll">{{ dc_cards_html }}</div>
           <button type="button" class="dc-all-arrow dc-next" id="dcAllNext" aria-label="Scroll products right" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      {%- endif -%}
+      {%- comment -%} Bottom-position hero slider and promo tiles. {%- endcomment -%}
+      {%- if heros_bottom != '' -%}
+        <div id="dcTabHerosB" class="dc-tabheros dc-tabheros--bottom">
+          {{ heros_bottom }}
+          <button type="button" class="dc-tabhero-arrow dc-prev" id="dcHeroPrevB" aria-label="Previous banner" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button type="button" class="dc-tabhero-arrow dc-next" id="dcHeroNextB" aria-label="Next banner" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <div class="dc-tabhero-dots" id="dcHeroDotsB" aria-hidden="true" hidden></div>
+        </div>
+      {%- endif -%}
+      {%- if banners_bottom != '' -%}
+        <div class="dc-banners-wrap" id="dcBannersWrapB">
+        <div class="dc-banners">{{ banners_bottom }}</div>
         </div>
       {%- endif -%}
       <div class="dc-noresults" id="dcNoResults">
@@ -1018,48 +1051,54 @@
   var bestHeading = root.querySelector(".dc-grid-heading:not(.dc-allgrid-heading):not(.dc-banners-heading)");
   var allHeading = root.querySelector(".dc-allgrid-heading");
   var bannersWrap = document.getElementById("dcBannersWrap");
+  var bannersWrapB = document.getElementById("dcBannersWrapB");
   var bannersHeading = root.querySelector(".dc-banners-heading");
-  var heroWrap = document.getElementById("dcTabHeros");
-  /* Per-tab hero slider: the banners matching the active tab form a little
-     carousel — arrows + dots when there's more than one. */
-  var heroSet = [], heroIdx = 0, heroLastCat = null;
-  var heroPrevB = document.getElementById("dcHeroPrev");
-  var heroNextB = document.getElementById("dcHeroNext");
-  var heroDots = document.getElementById("dcHeroDots");
-  function heroShow() {
-    if (!heroWrap) return;
-    Array.prototype.forEach.call(heroWrap.querySelectorAll(".dc-tabhero"), function (h) {
-      h.classList.toggle("is-on", heroSet.length > 0 && h === heroSet[heroIdx]);
-    });
-    var many = heroSet.length > 1;
-    if (heroPrevB) heroPrevB.hidden = !many;
-    if (heroNextB) heroNextB.hidden = !many;
-    if (heroDots) {
-      heroDots.hidden = !many;
-      if (many) heroDots.innerHTML = heroSet.map(function (_, i) {
-        return '<span class="dc-tabhero-dot' + (i === heroIdx ? " is-on" : "") + '"></span>';
-      }).join("");
+  /* Per-tab hero sliders (top + bottom wraps): the banners matching the
+     active tab form a little carousel — arrows + dots when there's more
+     than one. Built as a factory since both positions behave the same. */
+  function makeHeroSlider(wrapId, prevId, nextId, dotsId) {
+    var wrap = document.getElementById(wrapId);
+    if (!wrap) return null;
+    var set = [], idx = 0, lastCat = null;
+    var prevB = document.getElementById(prevId);
+    var nextB = document.getElementById(nextId);
+    var dots = document.getElementById(dotsId);
+    function show() {
+      Array.prototype.forEach.call(wrap.querySelectorAll(".dc-tabhero"), function (h) {
+        h.classList.toggle("is-on", set.length > 0 && h === set[idx]);
+      });
+      var many = set.length > 1;
+      if (prevB) prevB.hidden = !many;
+      if (nextB) nextB.hidden = !many;
+      if (dots) {
+        dots.hidden = !many;
+        if (many) dots.innerHTML = set.map(function (_, i) {
+          return '<span class="dc-tabhero-dot' + (i === idx ? " is-on" : "") + '"></span>';
+        }).join("");
+      }
+      wrap.style.display = set.length ? "" : "none";
     }
-    heroWrap.style.display = heroSet.length ? "" : "none";
-  }
-  function heroSync(cat, noneFlag) {
-    if (!heroWrap) return;
-    heroSet = noneFlag ? [] : Array.prototype.filter.call(heroWrap.querySelectorAll(".dc-tabhero"), function (h) {
-      var f = (h.getAttribute("data-for") || "").trim();
-      return !f || (" " + f + " ").indexOf(" " + cat + " ") >= 0;
+    function sync(cat, noneFlag) {
+      set = noneFlag ? [] : Array.prototype.filter.call(wrap.querySelectorAll(".dc-tabhero"), function (h) {
+        var f = (h.getAttribute("data-for") || "").trim();
+        return !f || (" " + f + " ").indexOf(" " + cat + " ") >= 0;
+      });
+      if (cat !== lastCat) { idx = 0; lastCat = cat; }
+      if (idx >= set.length) idx = 0;
+      show();
+    }
+    if (prevB) prevB.addEventListener("click", function () {
+      if (set.length < 2) return;
+      idx = (idx - 1 + set.length) % set.length; show();
     });
-    if (cat !== heroLastCat) { heroIdx = 0; heroLastCat = cat; }
-    if (heroIdx >= heroSet.length) heroIdx = 0;
-    heroShow();
+    if (nextB) nextB.addEventListener("click", function () {
+      if (set.length < 2) return;
+      idx = (idx + 1) % set.length; show();
+    });
+    return { sync: sync };
   }
-  if (heroPrevB) heroPrevB.addEventListener("click", function () {
-    if (heroSet.length < 2) return;
-    heroIdx = (heroIdx - 1 + heroSet.length) % heroSet.length; heroShow();
-  });
-  if (heroNextB) heroNextB.addEventListener("click", function () {
-    if (heroSet.length < 2) return;
-    heroIdx = (heroIdx + 1) % heroSet.length; heroShow();
-  });
+  var heroTop = makeHeroSlider("dcTabHeros", "dcHeroPrev", "dcHeroNext", "dcHeroDots");
+  var heroBottom = makeHeroSlider("dcTabHerosB", "dcHeroPrevB", "dcHeroNextB", "dcHeroDotsB");
   var scrollbarEl = document.getElementById("dcScrollbar");
   // Top row can be limited to best sellers — but only if some exist (else show all).
   var wantBestTop = root.getAttribute("data-top-best") === "true";
@@ -1363,19 +1402,24 @@
     _lastNone = none;
     // Per-tab banners: each tile declares where it lives (data-for) — empty
     // means everywhere, "__all" the All tab, otherwise category handles.
-    var anyBanner = false;
-    if (bannersWrap) {
-      Array.prototype.forEach.call(bannersWrap.querySelectorAll(".dc-banner"), function (bn) {
+    // Both the top and the bottom tile groups follow the same rule.
+    var anyBannerTop = false;
+    [bannersWrap, bannersWrapB].forEach(function (wrap) {
+      if (!wrap) return;
+      var anyB = false;
+      Array.prototype.forEach.call(wrap.querySelectorAll(".dc-banner"), function (bn) {
         var f = (bn.getAttribute("data-for") || "").trim();
         var show = !f || (" " + f + " ").indexOf(" " + currentCat + " ") >= 0;
         bn.style.display = show ? "" : "none";
-        if (show) anyBanner = true;
+        if (show) anyB = true;
       });
-      bannersWrap.style.display = (none || !anyBanner) ? "none" : "";
-    }
-    if (bannersHeading) bannersHeading.style.display = (none || !anyBanner) ? "none" : "";
-    // Per-tab hero slider follows the active tab (resets to its first slide).
-    heroSync(currentCat, none);
+      wrap.style.display = (none || !anyB) ? "none" : "";
+      if (wrap === bannersWrap) anyBannerTop = anyB;
+    });
+    if (bannersHeading) bannersHeading.style.display = (none || !anyBannerTop) ? "none" : "";
+    // Per-tab hero sliders follow the active tab (reset to its first slide).
+    if (heroTop) heroTop.sync(currentCat, none);
+    if (heroBottom) heroBottom.sync(currentCat, none);
     if (allHeading) allHeading.style.display = none ? "none" : "";
     if (badgeChip) {
       if (badgeFilter) { badgeChip.hidden = false; if (badgeChipTxt) badgeChipTxt.textContent = badgeLabels[badgeFilter] || badgeFilter; }
@@ -1939,6 +1983,8 @@
     { "type": "tab_banner", "name": "Category hero banner", "settings": [
       { "type": "paragraph", "content": "A full-width image banner under the tabs with the text and button laid over it. Add several with the same category tab and they become a slider (arrows + dots)." },
       { "type": "text", "id": "show_for", "label": "Show on category tab", "info": "The tab's category value (e.g. Apparel). Several: separate with commas. Type All for the All tab. Leave empty to show on every tab." },
+      { "type": "select", "id": "pos", "label": "Position", "default": "top", "options": [
+        { "value": "top", "label": "Above the products" }, { "value": "bottom", "label": "Below the products" } ] },
       { "type": "image_picker", "id": "image", "label": "Image", "info": "Fills the WHOLE banner, fit to the page. Use a wide photo (~3:1) with quiet space on the left for the text." },
       { "type": "text", "id": "kicker", "label": "Small top line", "info": "e.g. DYNAEIMIC SELECTED Materials" },
       { "type": "color", "id": "kicker_color", "label": "Small top line colour", "default": "#0aa574" },
@@ -1970,6 +2016,8 @@
       { "type": "text", "id": "button_label", "label": "Link text" },
       { "type": "url", "id": "link", "label": "Link" },
       { "type": "text", "id": "show_for", "label": "Show on category tab", "info": "Leave EMPTY to show on every tab. Type a tab's category value (e.g. Apparel) to show it only there — several separated by commas. Type All for the All tab only." },
+      { "type": "select", "id": "pos", "label": "Position", "default": "top", "options": [
+        { "value": "top", "label": "Above the products" }, { "value": "bottom", "label": "Below the products" } ] },
       { "type": "color", "id": "bg_color", "label": "Background colour", "default": "#e9f0fb" },
       { "type": "color", "id": "text_color", "label": "Text colour", "default": "#17223b" }
     ]}
