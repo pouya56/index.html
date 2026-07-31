@@ -2567,6 +2567,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-giftm-zoomrow .dc-giftm-clear:hover{color:#fff}' +
       '.dc-giftm-cardt{font-size:12px;font-weight:600;color:var(--gi);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}' +
       '.dc-giftm-cardm{font-style:normal;font-size:11.5px;color:var(--gs)}' +
+      '.dc-giftm-wrapsel{margin-top:14px}' +
+      '.dc-giftm-wrapsel .dc-giftm-l{margin:0 0 6px}' +
+      '.dc-giftm-wrapsel[hidden]{display:none}' +
       /* Phone: full-width sheet like the design window, tighter padding,
          greeting stacks and the card preview rides beside its label. */
       '@media (max-width:720px){.dc-giftm{padding:10px}' +
@@ -2584,7 +2587,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // A real button opens a Moment-style modal asking for the gift details:
     // wrapping (when a wrap product is set), greeting and recipient/schedule.
     // The #giftIsGift checkbox keeps its id — all pricing reads its .checked.
-    const wrapRowLabel = wrapId
+    const wrapRowLabel = (wrapId || wraps.length)
       ? escapeHtml(wrapLabel) + (wrapMoney ? ' — <strong>' + escapeHtml(wrapMoney) + '</strong>' : '')
       : escapeHtml(toggleLabel);
     // One picker builder serves both the greeting cards and the gift wraps —
@@ -2635,18 +2638,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                   : '') +
               '</div>' +
             '</div>' +
-            (wraps.length
-              ? '<div class="dc-giftm-sec"><div class="dc-giftm-h">Gift wrapping</div>' +
-                '<button type="button" class="dc-giftm-cardprev" id="giftWrapPrev"><span class="dc-giftm-cardph">No wrapping</span><span class="dc-giftm-cardchg">Choose</span></button>' +
-                '<input type="checkbox" id="giftIsGift" class="dc-gift-checkbox">' +
-                '</div>'
-              : '<div class="dc-giftm-sec"><div class="dc-giftm-h">' + (wrapId ? 'Gift wrapping' : 'Gift') + '</div>' +
-                '<div class="dc-gift-toggle">' +
-                  '<label class="dc-gift-switch" aria-label="' + escapeHtml(wrapId ? wrapLabel : toggleLabel) + '">' +
-                    '<input type="checkbox" id="giftIsGift" class="dc-gift-checkbox">' +
-                    '<span class="dc-gift-slider"></span></label>' +
-                  '<span class="dc-gift-label" id="giftLabel" role="button" tabindex="0">' + wrapRowLabel + '</span>' +
-                '</div></div>') +
+            '<div class="dc-giftm-sec"><div class="dc-giftm-h">' + (wrapId || wraps.length ? 'Gift wrapping' : 'Gift') + '</div>' +
+              '<div class="dc-gift-toggle">' +
+                '<label class="dc-gift-switch" aria-label="' + escapeHtml(wrapId || wraps.length ? wrapLabel : toggleLabel) + '">' +
+                  '<input type="checkbox" id="giftIsGift" class="dc-gift-checkbox">' +
+                  '<span class="dc-gift-slider"></span></label>' +
+                '<span class="dc-gift-label" id="giftLabel" role="button" tabindex="0">' + wrapRowLabel + '</span>' +
+              '</div>' +
+              (wraps.length
+                ? '<div class="dc-giftm-wrapsel" id="giftWrapSel" hidden>' +
+                  '<span class="dc-giftm-l">Pattern</span>' +
+                  '<button type="button" class="dc-giftm-cardprev" id="giftWrapPrev"><span class="dc-giftm-cardph">Choose a pattern</span><span class="dc-giftm-cardchg">Choose</span></button>' +
+                  '</div>'
+                : '') +
+            '</div>' +
             '<div class="dc-giftm-foot">' +
               '<button type="button" class="dc-giftm-clear" id="giftRemove">Remove gift</button>' +
               '<button type="button" class="dc-gift-save" id="giftSave">Save gift details</button>' +
@@ -3009,7 +3014,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       sync();
     });
     sync();
-    giftIsGift.onchange = () => { applyVariantPrice(); };   // reflect the wrapping fee in the page price
+    /* The toggle is the gate: ON reveals the pattern row (and opens the
+       chooser if nothing's picked yet); OFF hides it and clears the pick. */
+    const wrapSel = mount.querySelector("#giftWrapSel");
+    const syncWrapSel = (openIt) => {
+      if (!wrapSel) return;
+      wrapSel.hidden = !giftIsGift.checked;
+      if (giftIsGift.checked && openIt && !window.__dynGiftWrap && wrapP) wrapP.open(true);
+      if (!giftIsGift.checked && window.__dynGiftWrap) { window.__dynGiftWrap = null; paintCard(); }
+    };
+    giftIsGift.onchange = () => { applyVariantPrice(); syncWrapSel(true); };   // fee in the page price + pattern row
+    syncWrapSel(false);
     if (giftLabel) {
       const flip = () => { giftIsGift.checked = !giftIsGift.checked; giftIsGift.dispatchEvent(new Event("change", { bubbles: true })); };
       giftLabel.onclick = flip;
@@ -3212,7 +3227,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const gFrom = gval("#giftFrom"), gMsg = gval("#giftNote"), gTo = gval("#giftToName"),
         gEmail = gval("#giftToEmail"), gDate = gval("#giftSendDate");
       const gCard = (gift.enabled && window.__dynGiftCard) || null;
-      const gWrap = (gift.enabled && window.__dynGiftWrap) || null;
+      /* A picked pattern only rides when the wrapping toggle is ON — the
+         toggle is the gate; toggled on with no pattern falls back to the
+         legacy default-variant path below. */
+      const gWrap = (gift.enabled && giftOn && window.__dynGiftWrap) || null;
       if (gift.enabled && (giftOn || gCard || gWrap || gFrom || gMsg || gTo || gEmail || gDate)) {
         props["Gift"] = "Yes";
         if (gFrom) props["Gift from"] = gFrom;
