@@ -135,7 +135,21 @@
       "wrapMoney": {{ gw_money | default: '' | json }},
       "toggleLabel": {{ blk_gift.settings.gift_toggle_label | default: 'This is a gift' | json }},
       "wrapLabel": {{ blk_gift.settings.gift_wrap_label | default: 'Add gift wrapping' | json }},
-      "noteLabel": {{ blk_gift.settings.gift_note_label | default: 'Add a gift note (optional)' | json }}
+      "noteLabel": {{ blk_gift.settings.gift_note_label | default: 'Add a gift note (optional)' | json }},
+      "cards": [
+        {%- if blk_gift != blank and blk_gift.settings.gift_card_collection != blank -%}
+          {%- assign gc_first = true -%}
+          {%- for gcp in blk_gift.settings.gift_card_collection.products limit: 12 -%}
+            {%- if gcp.available -%}
+              {%- unless gc_first -%},{%- endunless -%}{%- assign gc_first = false -%}
+              { "vid": {{ gcp.selected_or_first_available_variant.id | json }},
+                "title": {{ gcp.title | json }},
+                "img": {% if gcp.featured_image %}{{ gcp.featured_image | image_url: width: 360 | json }}{% else %}""{% endif %},
+                "money": {% if gcp.price > 0 %}{{ gcp.price | money | json }}{% else %}""{% endif %} }
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+      ]
     },
     {%- comment -%} Tolerant parse: spaces ignored, a '.' typo counts as a comma. {%- endcomment -%}
     {%- assign fpos = blk_print.settings.print_pos | default: '22, 30, 56, 40' | replace: ' ', '' | replace: '.', ',' | split: ',' -%}
@@ -3224,6 +3238,12 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
           "id": "gift_wrap_product",
           "label": "Gift Wrap product (pick it here)",
           "info": "Pick your Gift Wrap product. Its price is charged and shown on the toggle automatically."
+        },
+        {
+          "type": "collection",
+          "id": "gift_card_collection",
+          "label": "Greeting card collection",
+          "info": "Shows a 'Select card' choice in the gift pop-up with this collection's products. The chosen card joins the order as its own grouped line at its real price — price cards at $0 to include them free."
         },
         {
           "type": "header",
