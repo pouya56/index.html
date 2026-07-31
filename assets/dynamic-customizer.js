@@ -2483,18 +2483,27 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-save{-webkit-appearance:none;appearance:none;border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:#0a0a0a;border-radius:10px;padding:8px 16px;transition:transform .12s,box-shadow .2s,background .2s}' +
       '.dc-gift-save:hover{background:#000;box-shadow:0 6px 16px rgba(0,0,0,.18)}' +
       '.dc-gift-save:active{transform:translateY(1px)}' +
-      /* "Make it a gift" — a pill button matching Customize / Add to cart,
-         opening a Moment-style details modal. Entirely skippable. */
+      /* "Make it a gift" — takes the PRIMARY button slot after the design is
+         saved (Add to cart stays hidden until they add a gift or skip). */
       '.dc-gift-open{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;' +
         'cursor:pointer;font-family:inherit;font-size:15px;font-weight:600;letter-spacing:.04em;' +
-        'text-transform:uppercase;color:var(--gi);background:var(--gp);border:none;border-radius:999px;' +
-        'transition:background .16s,transform .12s}' +
-      '.dc-gift-open:hover{background:#e8e8ed}' +
+        'text-transform:uppercase;color:#fff;background:#0a0a0a;border:none;border-radius:999px;' +
+        'box-shadow:0 8px 24px rgba(0,0,0,.10);transition:background .16s,transform .12s}' +
+      '.dc-gift-open:hover{background:#000}' +
       '.dc-gift-open:active{transform:scale(.97)}' +
+      /* Non-customize products: no gate, quiet ghost styling instead */
+      '.dc-gift-open.is-solo{background:var(--gp);color:var(--gi);box-shadow:none}' +
+      '.dc-gift-open.is-solo:hover{background:#e8e8ed}' +
+      '.dc-gift-open.is-solo .dc-gift-open-txt em{color:var(--gf)}' +
       '.dc-gift-open-ic{font-size:19px;flex:none}' +
       '.dc-gift-open-txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-      '.dc-gift-open-txt em{font-style:normal;color:var(--gf);font-weight:500}' +
-      '.dc-gift-open-txt u{text-underline-offset:2px}' +
+      '.dc-gift-open-txt em{font-style:normal;color:rgba(255,255,255,.65);font-weight:500}' +
+      /* After the decision, a quiet one-line summary for edits */
+      '.dc-gift-mini{display:block;margin:2px auto 0;background:none;border:0;cursor:pointer;' +
+        'font-family:inherit;font-size:13.5px;font-weight:600;color:var(--gs);padding:6px 0}' +
+      '.dc-gift-mini:hover{color:var(--gi)}' +
+      '.dc-gift-mini u{text-underline-offset:3px}' +
+      '.dc-gift-mini[hidden]{display:none}' +
       '.dc-giftm{position:fixed;inset:0;z-index:1200;display:none;place-items:center;' +
         'background:rgba(20,20,22,.45);padding:16px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}' +
       '.dc-giftm.is-open{display:grid}' +
@@ -2532,10 +2541,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       : escapeHtml(toggleLabel);
     return css +
       '<div class="dc-gift" id="giftBlock">' +
-        '<button type="button" class="dc-gift-open" id="giftOpenBtn">' +
+        '<button type="button" class="dc-gift-open" id="giftOpenBtn" style="display:none">' +
           '<span class="dc-gift-open-ic" aria-hidden="true">🎁</span>' +
           '<span class="dc-gift-open-txt" id="giftOpenTxt">Make it a gift <em>(optional)</em></span>' +
         '</button>' +
+        '<button type="button" class="dc-gift-mini" id="giftMini" hidden>🎁 Gift added · <u>edit</u></button>' +
         '<div class="dc-giftm" id="giftModal" role="dialog" aria-modal="true" aria-label="Make it a gift">' +
           '<div class="dc-giftm-card">' +
             '<button type="button" class="dc-giftm-x" id="giftClose" aria-label="Close">×</button>' +
@@ -2752,29 +2762,82 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     /* Skippable: the footer's left action reads "Skip for now" until anything
        is filled — then it becomes "Remove gift" (same close, plus a wipe). */
     const updateFoot = () => { if (giftRemove) giftRemove.textContent = anyFilled() ? "Remove gift" : "Skip for now"; };
-    /* The button doubles as the summary: quiet invitation before, receipt after. */
-    const summarize = () => {
-      if (!openTxt) return;
-      if (!anyFilled()) { openTxt.innerHTML = 'Make it a gift <em>(optional)</em>'; return; }
-      const toEl = mount.querySelector("#giftToName");
-      const bits = [];
-      if (giftIsGift.checked) bits.push("wrapped");
-      if (toEl && toEl.value.trim()) bits.push("for " + toEl.value.trim());
-      openTxt.innerHTML = "Gift added" + (bits.length ? " — " + bits.join(", ") : "") + " · <u>edit</u>";
+    /* ------- The gift GATE. The pill sits exactly where Customize / Add to
+       cart live: once the design is saved, Add to cart stays hidden and the
+       gift pill takes its place; saving a gift OR skipping reveals Add to
+       cart, with a small "Gift added — edit" line left behind for changes. */
+    const addBtn = document.getElementById("pageAddCart");
+    const mini = mount.querySelector("#giftMini");
+    /* Plain products (no customize flow) skip the gate: their gift button
+       just sits in the buy box, always available, ghost-styled. */
+    const gateEnabled = (typeof customizeEnabled === "function") ? !!customizeEnabled() : true;
+    let decided = false, readySeen = !!(gateEnabled && addBtn && !addBtn.hidden), selfFlip = false;
+    if (gateEnabled && addBtn && addBtn.parentNode && openBtn) addBtn.parentNode.insertBefore(openBtn, addBtn);
+    const sync = () => {
+      if (!gateEnabled) {
+        window.__dynGiftGate = false;
+        window.__dynGiftDecided = decided;
+        if (openBtn) { openBtn.style.display = ""; openBtn.classList.add("is-solo"); }
+        if (mini) mini.hidden = true;
+        return;
+      }
+      const gateOn = readySeen && !decided;
+      window.__dynGiftGate = gateOn;
+      window.__dynGiftDecided = decided;
+      if (openBtn) openBtn.style.display = gateOn ? "" : "none";
+      if (addBtn) {
+        const wantHidden = gateOn || !readySeen;
+        if (addBtn.hidden !== wantHidden) { selfFlip = true; addBtn.hidden = wantHidden; }
+      }
+      if (mini) {
+        const show = decided && anyFilled();
+        mini.hidden = !show;
+        if (show) {
+          const toEl = mount.querySelector("#giftToName");
+          const bits = [];
+          if (giftIsGift.checked) bits.push("wrapped");
+          if (toEl && toEl.value.trim()) bits.push("for " + toEl.value.trim());
+          mini.innerHTML = "🎁 Gift added" + (bits.length ? " — " + escapeHtml(bits.join(", ")) : "") + " · <u>edit</u>";
+        }
+      }
     };
+    if (gateEnabled && addBtn && typeof MutationObserver !== "undefined") {
+      new MutationObserver(() => {
+        if (selfFlip) { selfFlip = false; return; }
+        /* Only the customizer flips this besides us: visible = design saved,
+           hidden = design reset — a reset also re-arms the gate. */
+        readySeen = !addBtn.hidden;
+        if (!readySeen) decided = false;
+        sync();
+      }).observe(addBtn, { attributes: true, attributeFilter: ["hidden"] });
+    }
     if (openBtn) openBtn.onclick = () => { setOpen(true); updateFoot(); const f = mount.querySelector("#giftFrom"); if (f) { try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } } };
-    if (closeBtn) closeBtn.onclick = () => { setOpen(false); summarize(); };
+    if (mini) mini.onclick = () => { setOpen(true); updateFoot(); };
+    if (closeBtn) closeBtn.onclick = () => { setOpen(false); };
     if (modal) { modal.addEventListener("input", updateFoot); modal.addEventListener("change", updateFoot); }
-    if (giftSave) giftSave.onclick = () => { setOpen(false); summarize(); };
+    if (giftSave) giftSave.onclick = () => { decided = true; setOpen(false); sync(); };
     if (giftRemove) giftRemove.onclick = () => {
       fields.forEach((f) => { f.value = ""; });
       giftIsGift.checked = false;
       giftIsGift.dispatchEvent(new Event("change", { bubbles: true }));
-      setOpen(false); summarize(); updateFoot();
+      decided = true;                          // an explicit skip / removal
+      setOpen(false); updateFoot(); sync();
       if (giftCount) giftCount.textContent = "0";
     };
-    if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) { setOpen(false); summarize(); } });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modal && modal.classList.contains("is-open")) { setOpen(false); summarize(); } });
+    if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) setOpen(false); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modal && modal.classList.contains("is-open")) setOpen(false); });
+    /* After a successful add to cart the gift belongs to that item — clear
+       everything so the next design starts with a fresh gate. */
+    window.addEventListener("dyn:added-to-cart", () => {
+      fields.forEach((f) => { f.value = ""; });
+      giftIsGift.checked = false;
+      decided = false;
+      if (gateEnabled) readySeen = false;   // the customizer resets the design next
+      if (giftCount) giftCount.textContent = "0";
+      applyVariantPrice();
+      sync();
+    });
+    sync();
     giftIsGift.onchange = () => { applyVariantPrice(); };   // reflect the wrapping fee in the page price
     if (giftLabel) {
       const flip = () => { giftIsGift.checked = !giftIsGift.checked; giftIsGift.dispatchEvent(new Event("change", { bubbles: true })); };
@@ -4457,7 +4520,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     var modalRoot = document.getElementById("modalRoot");
     var customizeFlow = ((window.DYN_SETTINGS || {}).customizeEnabled !== false) && !!customizeBtn;
 
-    function designReady() { return !!(addBtn && !addBtn.hidden); }
+    /* The gift gate hides Add to cart while the design IS ready — the flag
+       set by the gate keeps the step strip honest during that window. */
+    function designReady() { return !!(addBtn && (!addBtn.hidden || window.__dynGiftGate)); }
     function primaryIsAdd() { return designReady(); }
 
     var stepEl = null;
@@ -4503,7 +4568,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (modalRoot && modalRoot.classList.contains("open")) return 2;
       if (!designReady()) return 1;
       if (!giftStepOn) return 3;
-      return giftFilled() ? 4 : 3;
+      /* Skipping counts as handling the gift step. */
+      return (giftFilled() || window.__dynGiftDecided) ? 4 : 3;
     }
 
     // "Your design is ready" card removed per request — the step strip is the cue.
