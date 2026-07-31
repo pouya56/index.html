@@ -315,7 +315,10 @@
 </section>
 
 <div class="dc-zoom" id="dcImgZoom" role="dialog" aria-modal="true" aria-label="Design preview">
+  {% comment %} The src is set by JS when a thumbnail is tapped (preview URL / CDN image) — asset_url doesn't apply. {% endcomment %}
+  {% # theme-check-disable RemoteAsset %}
   <img src="" alt="" width="720" height="720">
+  {% # theme-check-enable RemoteAsset %}
   <button type="button" class="dc-zoom-x" id="dcImgZoomX" aria-label="Close">×</button>
 </div>
 
