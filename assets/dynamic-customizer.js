@@ -3196,6 +3196,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         if (gEmail) props["Gift recipient email"] = gEmail;
         if (gDate) props["Gift arrive by"] = gDate;
         if (gCard) props["Greeting card"] = gCard.title;
+        /* Spell the wrapping out on the item itself, so the cart's property
+           list shows it (the fee still rides the wrap line / variant). */
+        if (giftOn) props["Gift wrapping"] = "Yes" + (gift.wrapMoney ? " (" + gift.wrapMoney + ")" : "");
       }
       // The chosen greeting card joins the order as its own line at its real
       // price, grouped with the item so the cart folds them together.
