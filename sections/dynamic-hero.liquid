@@ -66,6 +66,14 @@
   @keyframes dhMotionPulse { 0%,100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.06); } }
   .dyn-hero.dh-landing .dh-wrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center;
     padding-top: 4vh; padding-bottom: calc(18vh + 1in); }
+  /* Floating props (borrowed from Dynamic Intro): transparent cutouts laid
+     over the hero background, behind the logo/search — they wake up ONLY
+     under the cursor, following it magnetically with a small wobble. */
+  .dyn-hero .dh-prop { position: absolute; z-index: 1; height: auto; will-change: transform;
+    transform: translate(-50%, -50%) translate(var(--px, 0px), var(--py, 0px)) rotate(calc(var(--pr, 0deg) + var(--pw, 0deg)));
+    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.25)); }
+  .dyn-hero .dh-prop.is-front { z-index: 9; }
+
   /* Google-style corner links (home landing) — horizontal row per corner */
   .dyn-hero.dh-landing .dh-corner-group { position: absolute; z-index: 4; display: flex; flex-direction: row; align-items: center; gap: 20px; min-height: 42px; }
   .dyn-hero.dh-landing .dh-corner-tl { top: 20px; left: 26px; justify-content: flex-start; }
@@ -595,6 +603,14 @@
   data-finding-text="{{ section.settings.finding_text | default: 'Finding your gift…' | escape }}"
   data-finding-ms="{{ section.settings.finding_ms | default: 550 }}"
   data-results-url="{{ section.settings.results_page_url }}">
+  {%- comment -%} Floating props: decor cutouts that drift under the cursor. {%- endcomment -%}
+  {%- for block in section.blocks -%}
+    {%- if block.type == 'prop' and block.settings.image != blank -%}
+      <img class="dh-prop{% if block.settings.front %} is-front{% endif %}" data-depth="{{ block.settings.depth | default: 5 }}"
+        src="{{ block.settings.image | image_url: width: 600 }}" alt="" width="300" height="300" loading="lazy"
+        style="left: {{ block.settings.x | default: 50 }}%; top: {{ block.settings.y | default: 50 }}%; width: {{ block.settings.width | default: 160 }}px; --pr: {{ block.settings.rot | default: 0 }}deg;" {{ block.shopify_attributes }}>
+    {%- endif -%}
+  {%- endfor -%}
   {%- comment -%} Liquid-glass refraction filter used by the search bar sheen. {%- endcomment -%}
   <svg class="dh-defs" width="0" height="0" aria-hidden="true" focusable="false">
     <defs>
@@ -2925,6 +2941,52 @@
 })();
 </script>
 
+<script>
+(function () {
+  /* Floating props: still by default, and only the one under the cursor
+     wakes up — it follows the pointer magnetically (strength = its depth
+     setting) with a small wobble, easing back to rest when the cursor leaves. */
+  var hero = document.getElementById("dynHero");
+  if (!hero) return;
+  var fine = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var props = Array.prototype.slice.call(hero.querySelectorAll(".dh-prop"));
+  if (!fine || calm || !props.length) return;
+  var items = props.map(function (el) {
+    return { el: el, f: Math.min(0.85, (parseFloat(el.getAttribute("data-depth")) || 5) * 0.08), tx: 0, ty: 0, cx: 0, cy: 0 };
+  });
+  var pRaf = 0;
+  var pStep = function () {
+    pRaf = 0;
+    var busy = false;
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      it.cx += (it.tx - it.cx) * 0.12;
+      it.cy += (it.ty - it.cy) * 0.12;
+      it.el.style.setProperty("--px", it.cx.toFixed(1) + "px");
+      it.el.style.setProperty("--py", it.cy.toFixed(1) + "px");
+      it.el.style.setProperty("--pw", (it.cx * 0.12).toFixed(2) + "deg");
+      if (Math.abs(it.tx - it.cx) > 0.2 || Math.abs(it.ty - it.cy) > 0.2) busy = true;
+    }
+    if (busy) pKick();
+  };
+  var pKick = function () { if (!pRaf) pRaf = requestAnimationFrame(pStep); };
+  items.forEach(function (it) {
+    it.el.addEventListener("pointermove", function (e) {
+      var r = it.el.getBoundingClientRect();
+      /* measure from the prop's REST centre (subtract its current shift)
+         so following the cursor never feeds back into itself */
+      var bx = r.left + r.width / 2 - it.cx;
+      var by = r.top + r.height / 2 - it.cy;
+      it.tx = (e.clientX - bx) * it.f;
+      it.ty = (e.clientY - by) * it.f;
+      pKick();
+    });
+    it.el.addEventListener("pointerleave", function () { it.tx = 0; it.ty = 0; pKick(); });
+  });
+})();
+</script>
+
 {% schema %}
 {
   "name": "Dynamic Hero",
@@ -3054,6 +3116,15 @@
       { "type": "paragraph", "content": "A sidebar icon on the hero's left. Clicking it pops the chosen page up full-screen, showing its real content. Close with × or Esc." },
       { "type": "text", "id": "label", "label": "Button label (shows on hover)", "default": "About" },
       { "type": "url", "id": "url", "label": "Page to open" }
+    ]},
+    { "type": "prop", "name": "Floating prop", "settings": [
+      { "type": "image_picker", "id": "image", "label": "Cutout image (transparent PNG)", "info": "A pen, clip, mug… cut out on a transparent background (Shopify's image editor → Remove background). It sits still on the hero and follows the mouse only while hovered." },
+      { "type": "range", "id": "x", "label": "Position across", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 50 },
+      { "type": "range", "id": "y", "label": "Position down", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 50 },
+      { "type": "range", "id": "width", "label": "Size", "min": 40, "max": 480, "step": 10, "unit": "px", "default": 160 },
+      { "type": "range", "id": "rot", "label": "Rotation", "min": -180, "max": 180, "step": 5, "unit": "deg", "default": 0 },
+      { "type": "range", "id": "depth", "label": "Drift amount", "min": 1, "max": 10, "step": 1, "default": 5, "info": "How strongly it follows the mouse while hovered — it only moves when the cursor is on top of it." },
+      { "type": "checkbox", "id": "front", "label": "Bring forward", "default": false, "info": "Layers it above other decor — still below the logo, search bar and buttons." }
     ]},
     { "type": "corner_link", "name": "Corner link", "settings": [
       { "type": "select", "id": "corner", "label": "Which corner", "default": "tl",
