@@ -83,6 +83,24 @@
     padding: 6px 16px; border-radius: 999px; font-family: var(--font); font-weight: 500; font-size: 13px; }
   .dyn-cart .dc-note-save:hover { opacity: .9; }
   .dyn-cart .dc-note-ok { color: #2b9348; font-weight: 500; }
+  .dyn-cart .dc-note-from { width: 100%; padding: 9px 11px; font-family: var(--font); font-size: 14px; color: var(--ink);
+    background: #fff; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 7px; }
+  .dyn-cart .dc-note-from:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+  .dyn-cart .dc-note[hidden] { display: none; }
+  .dyn-cart .dc-gift-add { appearance: none; background: none; border: 0; padding: 0; margin-top: 10px; cursor: pointer;
+    font-family: var(--font); font-size: 13.5px; font-weight: 600; color: var(--accent); display: inline-block; }
+  .dyn-cart .dc-gift-add:hover { text-decoration: underline; }
+  .dyn-cart .dc-gift-add[hidden] { display: none; }
+  /* Click the thumbnail to see the design big */
+  .dyn-cart img.dc-line-img { cursor: zoom-in; }
+  .dc-zoom { position: fixed; inset: 0; z-index: 1300; display: none; place-items: center;
+    background: rgba(15, 15, 17, 0.8); padding: 22px; cursor: zoom-out; }
+  .dc-zoom.is-open { display: grid; }
+  .dc-zoom img { max-width: min(92vw, 720px); max-height: 86vh; border-radius: 14px; background: #fff; }
+  .dc-zoom-x { position: absolute; top: 16px; right: 20px; width: 40px; height: 40px; border-radius: 50%; border: 0;
+    background: rgba(255, 255, 255, 0.16); color: #fff; font-size: 20px; line-height: 1; cursor: pointer;
+    display: grid; place-items: center; }
+  .dc-zoom-x:hover { background: rgba(255, 255, 255, 0.28); }
 
   .dyn-cart .dc-qtywrap { display: flex; align-items: center; justify-content: center; gap: 6px; }
   .dyn-cart .dc-qty { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; height: 38px; }
@@ -205,16 +223,8 @@
               {%- for p in item.properties -%}
                 {%- assign pname = p.first -%}{%- assign pval = p.last -%}
                 {%- assign firstchar = pname | slice: 0 -%}
-                {%- unless pname == blank or firstchar == '_' -%}
-                  {%- if pname == 'Gift note' -%}
-                    <div class="dc-note" data-note-key="{{ item.key }}">
-                      <label class="dc-note-h">Gift note</label>
-                      <textarea class="dc-note-input" maxlength="250" rows="2" placeholder="Write your message…">{{ pval }}</textarea>
-                      <div class="dc-note-foot"><span class="dc-note-count">{{ pval | size }}</span>/250
-                        <button type="button" class="dc-note-save" data-save-note hidden>Save</button>
-                        <span class="dc-note-ok" hidden>Saved</span></div>
-                    </div>
-                  {%- elsif pval != blank -%}
+                {%- unless pname == blank or firstchar == '_' or pname == 'Gift note' or pname == 'Gift from' -%}
+                  {%- if pval != blank -%}
                     {%- assign lpv = pval | downcase -%}
                     {%- unless lpv contains 'http' or lpv contains '/uploads' -%}
                       <div class="dc-line-opt"><b>{{ pname }}:</b> {{ pval }}</div>
@@ -222,6 +232,20 @@
                   {%- endif -%}
                 {%- endunless -%}
               {%- endfor -%}
+              {%- comment -%} Gift message: edit in place — or add one right here. {%- endcomment -%}
+              {%- assign g_from = item.properties['Gift from'] -%}
+              {%- assign g_note = item.properties['Gift note'] -%}
+              {%- assign g_has = false -%}
+              {%- if g_from != blank or g_note != blank -%}{%- assign g_has = true -%}{%- endif -%}
+              {%- unless g_has -%}<button type="button" class="dc-gift-add" data-gift-add>🎁 Add a gift message</button>{%- endunless -%}
+              <div class="dc-note" data-note-key="{{ item.key }}"{% unless g_has %} hidden{% endunless %}>
+                <label class="dc-note-h">Gift message</label>
+                <input type="text" class="dc-note-from" maxlength="60" placeholder="From — your name or company" value="{{ g_from | escape }}">
+                <textarea class="dc-note-input" maxlength="250" rows="2" placeholder="Write your message…">{{ g_note }}</textarea>
+                <div class="dc-note-foot"><span class="dc-note-count">{{ g_note | size }}</span>/250
+                  <button type="button" class="dc-note-save" data-save-note hidden>Save</button>
+                  <span class="dc-note-ok" hidden>Saved</span></div>
+              </div>
               {%- assign back_fee = item.properties["_back_fee"] -%}
               {%- if back_fee != blank or fee_keys != '' -%}
                 {%- assign back_cents = back_fee | remove: '$' | remove: ',' | times: 100.0 | round | times: item.quantity -%}
@@ -233,11 +257,13 @@
                   {{ fee_rows }}
                 </div>
               {%- endif -%}
-              {%- if dstate != blank and item.url != blank -%}
+              {%- comment -%} Both design formats can re-open in the customizer:
+                  the newer _design_id and the older inline _design_state. {%- endcomment -%}
+              {%- if item.url != blank -%}{%- if dstate != blank or did != blank -%}
                 <div class="dc-line-actions">
                   <a class="dc-line-edit" href="{{ item.url }}{% if item.url contains '?' %}&{% else %}?{% endif %}edit={{ item.key | url_encode }}">Edit design</a>
                 </div>
-              {%- endif -%}
+              {%- endif -%}{%- endif -%}
             {%- endcapture -%}
             {%- assign details_trim = details | strip -%}
 
@@ -245,9 +271,9 @@
               data-unit="{{ item.final_price }}" data-fee-unit="{{ fee_unit }}" data-qty="{{ item.quantity }}">
               <div class="dc-line-product">
                 {%- if preview != blank -%}
-                  <img class="dc-line-img" src="{{ preview }}" alt="" width="62" height="62" loading="lazy">
+                  <img class="dc-line-img" src="{{ preview }}" data-large="{{ preview }}" alt="" width="62" height="62" loading="lazy">
                 {%- elsif item.image -%}
-                  <img class="dc-line-img" src="{{ item.image | image_url: width: 160 }}" alt="{{ item.title | escape }}" width="62" height="62" loading="lazy">
+                  <img class="dc-line-img" src="{{ item.image | image_url: width: 160 }}" data-large="{{ item.image | image_url: width: 1400 }}" alt="{{ item.title | escape }}" width="62" height="62" loading="lazy">
                 {%- else -%}
                   <span class="dc-line-img"></span>
                 {%- endif -%}
@@ -303,6 +329,11 @@
     {% endif %}
   </div>
 </section>
+
+<div class="dc-zoom" id="dcImgZoom" role="dialog" aria-modal="true" aria-label="Design preview">
+  <img src="" alt="" width="720" height="720">
+  <button type="button" class="dc-zoom-x" id="dcImgZoomX" aria-label="Close">×</button>
+</div>
 
 <script>
 (function () {
@@ -450,16 +481,45 @@
   // update the line item's "Gift note" property in place via /cart/change.js.
   if (list) {
     list.addEventListener("input", function (e) {
-      var ta = e.target.closest(".dc-note-input"); if (!ta) return;
+      var ta = e.target.closest(".dc-note-input, .dc-note-from"); if (!ta) return;
       var box = ta.closest(".dc-note");
-      var c = box.querySelector(".dc-note-count"); if (c) c.textContent = String(ta.value.length);
+      var msg = box.querySelector(".dc-note-input");
+      var c = box.querySelector(".dc-note-count"); if (c && msg) c.textContent = String(msg.value.length);
       var save = box.querySelector(".dc-note-save"); if (save) save.hidden = false;
       var ok = box.querySelector(".dc-note-ok"); if (ok) ok.hidden = true;
     });
+    // "Add a gift message" reveals the editor for lines without one yet.
+    list.addEventListener("click", function (e) {
+      var ga = e.target.closest("[data-gift-add]"); if (!ga) return;
+      var nb = ga.parentNode.querySelector(".dc-note");
+      if (nb) {
+        nb.hidden = false; ga.hidden = true;
+        var f = nb.querySelector(".dc-note-from");
+        if (f) { try { f.focus({ preventScroll: true }); } catch (x) { f.focus(); } }
+        var sv = nb.querySelector(".dc-note-save"); if (sv) sv.hidden = false;
+      }
+    });
+    // Click the thumbnail → the design big in a lightbox.
+    var zoomEl = document.getElementById("dcImgZoom");
+    list.addEventListener("click", function (e) {
+      var img = e.target.closest("img.dc-line-img"); if (!img || !zoomEl) return;
+      var big = img.getAttribute("data-large") || img.src; if (!big) return;
+      zoomEl.querySelector("img").src = big;
+      zoomEl.classList.add("is-open");
+    });
+    if (zoomEl) {
+      var zx = document.getElementById("dcImgZoomX");
+      var shutZoom = function () { zoomEl.classList.remove("is-open"); };
+      if (zx) zx.addEventListener("click", shutZoom);
+      zoomEl.addEventListener("click", function (e) { if (e.target === zoomEl) shutZoom(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") shutZoom(); });
+    }
     list.addEventListener("click", function (e) {
       var btn = e.target.closest("[data-save-note]"); if (!btn) return;
       var box = btn.closest(".dc-note"); var key = box.getAttribute("data-note-key");
       var val = box.querySelector(".dc-note-input").value;
+      var fromEl = box.querySelector(".dc-note-from");
+      var fromVal = fromEl ? fromEl.value : "";
       btn.disabled = true; btn.textContent = "Saving…";
       // Re-send the line's full properties with the updated note (change.js
       // replaces properties; we merge so nothing else is lost).
@@ -470,6 +530,8 @@
           if (!it) throw 0;
           var props = {}; for (var k in (it.properties || {})) props[k] = it.properties[k];
           props["Gift note"] = val;
+          props["Gift from"] = fromVal;
+          if ((val && val.trim()) || (fromVal && fromVal.trim())) props["Gift"] = "Yes";
           return fetch("/cart/change.js", {
             method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
             body: JSON.stringify({ id: key, quantity: it.quantity, properties: props })
