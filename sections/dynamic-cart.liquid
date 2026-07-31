@@ -162,18 +162,27 @@
             {%- comment -%} Skip a standalone back-fee line - it's folded into its item below. A design item carries _design_state (older) or _design_id (newer); a fee line carries neither. {%- endcomment -%}
             {%- if grp != blank and dstate == blank and did == blank -%}{%- continue -%}{%- endif -%}
 
-            {%- comment -%} Find this item's folded fee (older single-line carts have none). {%- endcomment -%}
-            {%- assign fee_price = 0 -%}{%- assign fee_unit = 0 -%}{%- assign fee_title = '' -%}{%- assign fee_key = '' -%}
-            {%- if grp != blank -%}
-              {%- for f in cart.items -%}
-                {%- if f.properties["_grp"] == grp and f.properties["_design_state"] == blank and f.properties["_design_id"] == blank -%}
-                  {%- assign fee_price = f.final_line_price -%}{%- assign fee_unit = f.final_price -%}
-                  {%- comment -%} product_title is a JS-API field; in Liquid it's product.title. {%- endcomment -%}
-                  {%- assign fee_title = f.product.title | default: f.title | default: 'Gift wrapping' -%}
-                  {%- assign fee_key = f.key -%}
-                {%- endif -%}
-              {%- endfor -%}
-            {%- endif -%}
+            {%- comment -%} Collect ALL of this item's folded companion lines (gift wrap,
+                greeting card, back fee) — a group can carry several at once. {%- endcomment -%}
+            {%- assign fee_price = 0 -%}{%- assign fee_unit = 0 -%}{%- assign fee_keys = '' -%}
+            {%- capture fee_rows -%}
+              {%- if grp != blank -%}
+                {%- for f in cart.items -%}
+                  {%- if f.properties["_grp"] == grp and f.properties["_design_state"] == blank and f.properties["_design_id"] == blank -%}
+                    {%- assign fee_price = fee_price | plus: f.final_line_price -%}
+                    {%- assign fee_unit = fee_unit | plus: f.final_price -%}
+                    {%- if fee_keys == '' -%}{%- assign fee_keys = f.key -%}{%- else -%}{%- assign fee_keys = fee_keys | append: '||' | append: f.key -%}{%- endif -%}
+                    {%- comment -%} product_title is a JS-API field; in Liquid it's product.title. {%- endcomment -%}
+                    {%- assign f_title = f.product.title | default: f.title | default: 'Gift wrapping' -%}
+                    {%- assign f_prop = '' -%}
+                    {%- if f.properties['Gift wrapping'] != blank -%}{%- assign f_prop = 'Gift wrapping' -%}
+                    {%- elsif f.properties['Greeting card'] != blank -%}{%- assign f_prop = 'Greeting card' -%}{%- endif -%}
+                    <div>{{ f_title }} · {{ f.final_line_price | money }} <button type="button" class="dc-fee-remove" data-remove-fee="{{ f.key }}" data-fee-prop="{{ f_prop }}">Remove</button></div>
+                  {%- endif -%}
+                {%- endfor -%}
+              {%- endif -%}
+            {%- endcapture -%}
+            {%- assign fee_rows = fee_rows | strip -%}
             {%- assign line_total = item.final_line_price | plus: fee_price -%}
 
             {%- comment -%} Prefer the customer's positioned design preview as the thumbnail. {%- endcomment -%}
@@ -214,14 +223,14 @@
                 {%- endunless -%}
               {%- endfor -%}
               {%- assign back_fee = item.properties["_back_fee"] -%}
-              {%- if back_fee != blank or fee_key != blank -%}
+              {%- if back_fee != blank or fee_keys != '' -%}
                 {%- assign back_cents = back_fee | remove: '$' | remove: ',' | times: 100.0 | round | times: item.quantity -%}
                 {%- assign base_cents = item.final_line_price | minus: back_cents -%}
                 {%- if base_cents < 0 -%}{%- assign base_cents = item.final_line_price -%}{%- assign back_cents = 0 -%}{%- endif -%}
                 <div class="dc-line-fee">
                   <div>{{ item.product.title }} · {{ base_cents | money }}</div>
                   {%- if back_cents > 0 -%}<div>Back print · {{ back_cents | money }}</div>{%- endif -%}
-                  {%- if fee_key != blank -%}<div>{{ fee_title }} · {{ fee_price | money }} <button type="button" class="dc-fee-remove" data-remove-fee="{{ fee_key }}">Remove</button></div>{%- endif -%}
+                  {{ fee_rows }}
                 </div>
               {%- endif -%}
               {%- if dstate != blank and item.url != blank -%}
@@ -232,7 +241,7 @@
             {%- endcapture -%}
             {%- assign details_trim = details | strip -%}
 
-            <div class="dc-line" data-key="{{ item.key }}"{% if fee_key != blank %} data-fee-key="{{ fee_key }}"{% endif %}
+            <div class="dc-line" data-key="{{ item.key }}"{% if fee_keys != '' %} data-fee-key="{{ fee_keys }}"{% endif %}
               data-unit="{{ item.final_price }}" data-fee-unit="{{ fee_unit }}" data-qty="{{ item.quantity }}">
               <div class="dc-line-product">
                 {%- if preview != blank -%}
@@ -339,7 +348,10 @@
 
   function setLine(ln, qty) {
     var key = ln.getAttribute("data-key"), feeKey = ln.getAttribute("data-fee-key");
-    var updates = {}; updates[key] = qty; if (feeKey) updates[feeKey] = qty;
+    var updates = {}; updates[key] = qty;
+    // A line can carry several companions (gift wrap + greeting card + fee) —
+    // every one of them follows the item, including to zero on removal.
+    if (feeKey) feeKey.split("||").forEach(function (fk) { updates[fk] = qty; });
     if (qty <= 0) {
       ln.remove(); recalc();
       if (!list.querySelector(".dc-line")) {
@@ -364,10 +376,12 @@
 
   if (list) list.addEventListener("click", function (e) {
     if (e.target.closest(".dc-details > summary")) return; // let the dropdown toggle
-    // Remove the gift-wrap fee line AND un-gift the item (drop Gift / Gift note).
+    // Remove ONE companion line (gift wrap / greeting card) and strip just
+    // its matching property off the item — the rest of the gift stays.
     var feeBtn = e.target.closest("[data-remove-fee]");
     if (feeBtn) {
       var feeKey = feeBtn.getAttribute("data-remove-fee");
+      var feeProp = feeBtn.getAttribute("data-fee-prop");
       if (!feeKey) return;
       var mainLn = feeBtn.closest(".dc-line");
       var mainKey = mainLn ? mainLn.getAttribute("data-key") : "";
@@ -375,14 +389,14 @@
       fetch("/cart/change.js", { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify({ id: feeKey, quantity: 0 }) })
         .then(function () {
-          if (!mainKey) return null;
+          if (!mainKey || !feeProp) return null;
           return fetch("/cart.js", { headers: { "Accept": "application/json" } })
             .then(function (r) { return r.json(); })
             .then(function (cart) {
               var it = (cart.items || []).filter(function (i) { return i.key === mainKey; })[0];
               if (!it) return null;
-              // change.js replaces properties wholesale — resend everything except the gift bits.
-              var props = {}; for (var k in (it.properties || {})) { if (k !== "Gift" && k !== "Gift note") props[k] = it.properties[k]; }
+              // change.js replaces properties wholesale — resend all but the removed bit.
+              var props = {}; for (var k in (it.properties || {})) { if (k !== feeProp) props[k] = it.properties[k]; }
               return fetch("/cart/change.js", {
                 method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
                 body: JSON.stringify({ id: mainKey, quantity: it.quantity, properties: props })
@@ -399,6 +413,30 @@
     if (e.target.closest("[data-inc]")) { setLine(ln, cur + 1); return; }
     if (e.target.closest("[data-dec]")) { setLine(ln, Math.max(0, cur - 1)); return; }
   });
+
+  // Orphan sweep: companion lines (gift wrap, greeting card, back fee — they
+  // all carry _For + _grp) whose parent item is gone are removed on arrival,
+  // so a removal made anywhere else can't leave a stray charge behind.
+  fetch("/cart.js", { headers: { "Accept": "application/json" } })
+    .then(function (r) { return r.json(); })
+    .then(function (cart) {
+      var items = (cart && cart.items) || [];
+      var mains = {};
+      items.forEach(function (it) {
+        var p = it.properties || {};
+        if (p._grp && !p._For) mains[p._grp] = true;
+      });
+      var updates = {}, orphans = 0;
+      items.forEach(function (it) {
+        var p = it.properties || {};
+        if (p._grp && p._For && !mains[p._grp]) { updates[it.key] = 0; orphans++; }
+      });
+      if (!orphans) return;
+      fetch("/cart/update.js", { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ updates: updates }) })
+        .then(function () { syncHeader(); window.location.reload(); });
+    })
+    .catch(function () {});
 
   var clearBtn = document.getElementById("dcClear");
   if (clearBtn) clearBtn.addEventListener("click", function () {
