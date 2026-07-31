@@ -2476,6 +2476,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-note-input::placeholder{color:var(--gf)}' +
       '.dc-gift-note-input:focus{outline:none;border-color:var(--ga);box-shadow:0 0 0 3px rgba(0,113,227,.15)}' +
       '.dc-gift-note-input:disabled{opacity:.55}' +
+      '.dc-gift-from{margin-bottom:10px}' +
+      '.dc-gift-from-input{min-height:0;height:38px;resize:none}' +
       '.dc-gift-count{font-size:12px;color:var(--gf);font-variant-numeric:tabular-nums}' +
       '.dc-gift-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px}' +
       '.dc-gift-save{-webkit-appearance:none;appearance:none;border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:#0a0a0a;border-radius:10px;padding:8px 16px;transition:transform .12s,box-shadow .2s,background .2s}' +
@@ -2497,6 +2499,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         '</div>' +
         '<div class="dc-gift-panel" id="giftPanel">' +
           '<div class="dc-gift-card">' +
+            '<div class="dc-gift-from"><label class="dc-gift-note-h" for="giftFrom">From</label>' +
+            '<input type="text" id="giftFrom" class="dc-gift-note-input dc-gift-from-input" maxlength="60" placeholder="Your name or company" disabled></div>' +
             '<div class="dc-gift-note"><label class="dc-gift-note-h" for="giftNote">' + escapeHtml(noteLabel) + '</label>' +
             '<textarea id="giftNote" class="dc-gift-note-input" maxlength="250" rows="3" placeholder="Write your message…" disabled></textarea>' +
             '<div class="dc-gift-foot"><span class="dc-gift-count"><span id="giftCount">0</span>/250</span>' +
@@ -2672,11 +2676,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const giftBlock = mount.querySelector("#giftBlock");
     const giftSave = mount.querySelector("#giftSave");
     const giftLabel = mount.querySelector("#giftLabel");
+    const giftFrom = mount.querySelector("#giftFrom");
     const setOpen = (v) => { if (giftBlock) giftBlock.classList.toggle("is-gift-open", v); };  // float popup (no page jump)
     const focusNote = () => { if (giftNote) { try { giftNote.focus({ preventScroll: true }); } catch (e) { giftNote.focus(); } } };
     const syncGift = (openIt) => {
       const on = giftIsGift.checked;
       if (giftNote) giftNote.disabled = !on;
+      if (giftFrom) giftFrom.disabled = !on;
       if (!on) setOpen(false);           // gift off → note closed (and won't submit)
       else if (openIt) { setOpen(true); focusNote(); }  // just turned on → open to write
       applyVariantPrice();   // reflect the wrapping fee in the page price
@@ -2886,6 +2892,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       // legacy separate wrapping line (wrapVariantId).
       if (giftOn) {
         props["Gift"] = "Yes";
+        const fromEl = $("#giftFrom");
+        if (fromEl && fromEl.value.trim()) props["Gift from"] = fromEl.value.trim();
         const noteEl = $("#giftNote");
         if (noteEl && noteEl.value.trim()) props["Gift note"] = noteEl.value.trim();
         const usedGiftVariant = !!(sidesVariant && _giftVariantActive);
@@ -4291,7 +4299,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
    deploys with the customizer. Self-contained: reads the page's own buttons
    (#customizeBtn / #pageAddCart) and events, forwarding clicks to them, so it
    can never diverge from the real cart logic. Adds: a sticky add-to-cart bar,
-   a 3-step indicator, a "design ready" thumbnail card, and an idle/exit nudge.
+   a step indicator (Customize > Design > Gift (optional) > Add to cart, the
+   Gift step only when gifting is enabled), a "design ready" thumbnail card,
+   and an idle/exit nudge.
    ========================================================================== */
 (function () {
   if (window.__dynConvHelpers) return; window.__dynConvHelpers = true;
@@ -4361,10 +4371,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     function primaryIsAdd() { return designReady(); }
 
     var stepEl = null;
+    /* The Gift step only appears when the merchant has gifting enabled. */
+    var giftStepOn = !!(((window.DYN_SETTINGS || {}).gift || {}).enabled);
+    var stepLabels = giftStepOn
+      ? ["Customize", "Design", "Gift (optional)", "Add to cart"]
+      : ["Customize", "Design", "Add to cart"];
     if (customizeFlow) {
       stepEl = document.createElement("ol");
       stepEl.className = "dyn-steps"; stepEl.id = "dynSteps";
-      ["Customize", "Design", "Add to cart"].forEach(function (t, i) {
+      stepLabels.forEach(function (t, i) {
         if (i) { var ln = document.createElement("li"); ln.className = "dyn-step-line"; ln.setAttribute("aria-hidden", "true"); stepEl.appendChild(ln); }
         var li = document.createElement("li"); li.className = "dyn-step";
         li.innerHTML = '<span class="dyn-step-num">' + (i + 1) + '</span><span class="dyn-step-txt">' + t + '</span>';
@@ -4383,10 +4398,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         if (num) num.textContent = done ? "✓" : String(n);
       });
     }
+    /* Gift counts as "done" once the toggle is on and something is written —
+       it's optional, so an untouched toggle keeps the Gift step active as a
+       quiet invitation while Add to cart stays one click away. */
+    function giftFilled() {
+      var g = document.getElementById("giftIsGift");
+      if (!g || !g.checked) return false;
+      var n = document.getElementById("giftNote"), f = document.getElementById("giftFrom");
+      return !!((n && n.value.trim()) || (f && f.value.trim()));
+    }
     function currentStep() {
       if (modalRoot && modalRoot.classList.contains("open")) return 2;
-      if (designReady()) return 3;
-      return 1;
+      if (!designReady()) return 1;
+      if (!giftStepOn) return 3;
+      return giftFilled() ? 4 : 3;
     }
 
     // "Your design is ready" card removed per request — the step strip is the cue.
@@ -4486,8 +4511,16 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     window.addEventListener("dyn-design-thumb", function (e) { setThumb(e && e.detail && e.detail.thumb); });
     window.addEventListener("dyn:added-to-cart", function () {
       dismissed = false; hideNudge(); disarmNudge();
-      setStep(4);
+      setStep(stepLabels.length + 1);
       setTimeout(refreshAll, 1500);
+    });
+    /* Typing in the gift fields (or flipping the toggle) moves the strip. */
+    document.addEventListener("input", function (e) {
+      var id = e.target && e.target.id;
+      if (id === "giftNote" || id === "giftFrom") setStep(currentStep());
+    });
+    document.addEventListener("change", function (e) {
+      if (e.target && e.target.id === "giftIsGift") setStep(currentStep());
     });
 
     if (window.DYN_DESIGN_THUMB) setThumb(window.DYN_DESIGN_THUMB);
