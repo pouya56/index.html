@@ -2506,25 +2506,22 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-mini u{text-underline-offset:3px}' +
       '.dc-gift-mini[hidden]{display:none}' +
       '.dc-giftm{position:fixed;inset:0;z-index:1200;display:none;place-items:center;' +
-        'background:rgba(20,20,22,.35);padding:16px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}' +
+        'background:rgba(20,20,22,.45);padding:16px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}' +
       '.dc-giftm.is-open{display:grid}' +
-      /* Liquid glass sheets: translucent, heavily blurred, hairline-edged */
-      '.dc-giftm-card{position:relative;width:min(560px,100%);max-height:min(88vh,760px);overflow:auto;' +
-        'background:rgba(255,255,255,.68);-webkit-backdrop-filter:blur(26px) saturate(1.7);backdrop-filter:blur(26px) saturate(1.7);' +
-        'border:1px solid rgba(255,255,255,.6);border-radius:20px;padding:26px 26px 22px;box-shadow:0 30px 80px rgba(0,0,0,.3)}' +
-      '@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.dc-giftm-card{background:#fff}}' +
+      /* Same footprint as the design window (7.7in sheet, 96vw capped). */
+      '.dc-giftm-card{position:relative;width:min(7.7in,96vw);max-height:min(88vh,780px);overflow:auto;' +
+        'background:#fff;border-radius:22px;padding:26px 28px 22px;box-shadow:0 30px 80px rgba(0,0,0,.3)}' +
       '.dc-giftm-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:0;' +
-        'cursor:pointer;background:rgba(120,120,128,.14);color:var(--gs);font-size:19px;line-height:1;display:grid;place-items:center}' +
-      '.dc-giftm-x:hover{background:rgba(120,120,128,.24)}' +
+        'cursor:pointer;background:var(--gp);color:var(--gs);font-size:19px;line-height:1;display:grid;place-items:center}' +
+      '.dc-giftm-x:hover{background:#e8e8ed}' +
       '.dc-giftm-title{margin:0;font-size:21px;font-weight:700;letter-spacing:-.01em}' +
       '.dc-giftm-sub{margin:6px 0 0;font-size:13.5px;color:var(--gs);line-height:1.5}' +
-      '.dc-giftm-sec{margin-top:20px;padding-top:18px;border-top:1px solid rgba(29,29,31,.1)}' +
+      '.dc-giftm-sec{margin-top:20px;padding-top:18px;border-top:1px solid #ececf0}' +
       '.dc-giftm-h{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gf);margin:0 0 12px}' +
       '.dc-giftm-l{display:block;font-size:13px;font-weight:600;margin:12px 0 6px}' +
       '.dc-giftm-l:first-of-type{margin-top:0}' +
-      '.dc-giftm-in{width:100%;font-family:inherit;font-size:14.5px;color:var(--gi);background:rgba(255,255,255,.75);' +
-        'border:1px solid rgba(29,29,31,.14);border-radius:10px;padding:10px 12px;transition:border-color .16s,box-shadow .16s,background .16s}' +
-      '.dc-giftm-in:focus{background:#fff}' +
+      '.dc-giftm-in{width:100%;font-family:inherit;font-size:14.5px;color:var(--gi);background:#fff;' +
+        'border:1px solid var(--gl);border-radius:10px;padding:10px 12px;transition:border-color .16s,box-shadow .16s}' +
       '.dc-giftm-in::placeholder{color:var(--gf)}' +
       '.dc-giftm-in:focus{outline:none;border-color:var(--ga);box-shadow:0 0 0 3px rgba(0,113,227,.15)}' +
       'textarea.dc-giftm-in{resize:vertical;min-height:88px;line-height:1.5}' +
@@ -2545,7 +2542,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-giftm-cardsheet .dc-giftm-cardgrid{margin-top:18px}' +
       '.dc-giftm-cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}' +
       '.dc-giftm-cardopt{position:relative;display:flex;flex-direction:column;gap:6px;padding:6px;cursor:pointer;' +
-        'font-family:inherit;text-align:center;background:rgba(255,255,255,.6);border:2px solid rgba(29,29,31,.12);border-radius:12px;transition:border-color .15s}' +
+        'font-family:inherit;text-align:center;background:#fff;border:2px solid var(--gl);border-radius:12px;transition:border-color .15s}' +
       '.dc-giftm-cardopt:hover{border-color:#b8b8bf}' +
       '.dc-giftm-cardopt.is-sel{border-color:var(--ga)}' +
       '.dc-giftm-cardopt img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;display:block}' +
@@ -2553,7 +2550,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         'background:var(--gp);color:var(--gf);font-size:19px}' +
       '.dc-giftm-cardt{font-size:12px;font-weight:600;color:var(--gi);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}' +
       '.dc-giftm-cardm{font-style:normal;font-size:11.5px;color:var(--gs)}' +
-      '@media (max-width:460px){.dc-giftm-greet{flex-direction:column}.dc-giftm-greet-r{flex-basis:auto;flex-direction:row;align-items:center}.dc-giftm-cardprev{width:104px}}' +
+      /* Phone: full-width sheet like the design window, tighter padding,
+         greeting stacks and the card preview rides beside its label. */
+      '@media (max-width:720px){.dc-giftm{padding:10px}' +
+        '.dc-giftm-card{width:100%;max-width:none;max-height:92vh;padding:20px 18px 16px}' +
+        '.dc-giftm-title{font-size:19px;padding-right:36px}}' +
+      '@media (max-width:460px){.dc-giftm-greet{flex-direction:column;align-items:stretch}' +
+        '.dc-giftm-greet-r{flex-basis:auto;flex-direction:row;align-items:center;gap:12px}' +
+        '.dc-giftm-cardprev{width:104px}' +
+        '.dc-giftm-foot{flex-wrap:wrap}.dc-gift-save{flex:1 1 auto}}' +
       '.dc-giftm-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px}' +
       '.dc-giftm-clear{-webkit-appearance:none;appearance:none;border:0;background:none;cursor:pointer;' +
         'font-family:inherit;font-size:13.5px;font-weight:600;color:var(--gs);text-decoration:underline;text-underline-offset:3px;padding:8px 0}' +
