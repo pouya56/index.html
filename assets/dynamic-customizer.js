@@ -2483,16 +2483,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-save{-webkit-appearance:none;appearance:none;border:0;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:#0a0a0a;border-radius:10px;padding:8px 16px;transition:transform .12s,box-shadow .2s,background .2s}' +
       '.dc-gift-save:hover{background:#000;box-shadow:0 6px 16px rgba(0,0,0,.18)}' +
       '.dc-gift-save:active{transform:translateY(1px)}' +
-      /* "Make it a gift" — a real button opening a Moment-style details modal */
-      '.dc-gift-open{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;' +
-        'font-family:inherit;font-size:15px;font-weight:500;color:var(--gi);background:#fff;' +
-        'border:1px solid var(--gl);border-radius:14px;padding:13px 16px;transition:border-color .16s,box-shadow .2s}' +
-      '.dc-gift-open:hover{border-color:#b8b8bf;box-shadow:0 6px 18px rgba(0,0,0,.07)}' +
+      /* "Make it a gift" — a pill button matching Customize / Add to cart,
+         opening a Moment-style details modal. Entirely skippable. */
+      '.dc-gift-open{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;' +
+        'cursor:pointer;font-family:inherit;font-size:15px;font-weight:600;letter-spacing:.04em;' +
+        'text-transform:uppercase;color:var(--gi);background:var(--gp);border:none;border-radius:999px;' +
+        'transition:background .16s,transform .12s}' +
+      '.dc-gift-open:hover{background:#e8e8ed}' +
+      '.dc-gift-open:active{transform:scale(.97)}' +
       '.dc-gift-open-ic{font-size:19px;flex:none}' +
-      '.dc-gift-open-txt{flex:1 1 auto;min-width:0}' +
-      '.dc-gift-open-txt em{font-style:normal;color:var(--gf);font-weight:400}' +
+      '.dc-gift-open-txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+      '.dc-gift-open-txt em{font-style:normal;color:var(--gf);font-weight:500}' +
       '.dc-gift-open-txt u{text-underline-offset:2px}' +
-      '.dc-gift-open-arr{flex:none;color:var(--gf);font-size:19px;line-height:1}' +
       '.dc-giftm{position:fixed;inset:0;z-index:1200;display:none;place-items:center;' +
         'background:rgba(20,20,22,.45);padding:16px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}' +
       '.dc-giftm.is-open{display:grid}' +
@@ -2533,7 +2535,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         '<button type="button" class="dc-gift-open" id="giftOpenBtn">' +
           '<span class="dc-gift-open-ic" aria-hidden="true">🎁</span>' +
           '<span class="dc-gift-open-txt" id="giftOpenTxt">Make it a gift <em>(optional)</em></span>' +
-          '<span class="dc-gift-open-arr" aria-hidden="true">›</span>' +
         '</button>' +
         '<div class="dc-giftm" id="giftModal" role="dialog" aria-modal="true" aria-label="Make it a gift">' +
           '<div class="dc-giftm-card">' +
@@ -2748,6 +2749,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       .map((id) => mount.querySelector("#" + id)).filter(Boolean);
     const anyFilled = () => giftIsGift.checked || fields.some((f) => f.value.trim());
     const setOpen = (v) => { if (modal) modal.classList.toggle("is-open", v); };
+    /* Skippable: the footer's left action reads "Skip for now" until anything
+       is filled — then it becomes "Remove gift" (same close, plus a wipe). */
+    const updateFoot = () => { if (giftRemove) giftRemove.textContent = anyFilled() ? "Remove gift" : "Skip for now"; };
     /* The button doubles as the summary: quiet invitation before, receipt after. */
     const summarize = () => {
       if (!openTxt) return;
@@ -2758,14 +2762,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (toEl && toEl.value.trim()) bits.push("for " + toEl.value.trim());
       openTxt.innerHTML = "Gift added" + (bits.length ? " — " + bits.join(", ") : "") + " · <u>edit</u>";
     };
-    if (openBtn) openBtn.onclick = () => { setOpen(true); const f = mount.querySelector("#giftFrom"); if (f) { try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } } };
+    if (openBtn) openBtn.onclick = () => { setOpen(true); updateFoot(); const f = mount.querySelector("#giftFrom"); if (f) { try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } } };
     if (closeBtn) closeBtn.onclick = () => { setOpen(false); summarize(); };
+    if (modal) { modal.addEventListener("input", updateFoot); modal.addEventListener("change", updateFoot); }
     if (giftSave) giftSave.onclick = () => { setOpen(false); summarize(); };
     if (giftRemove) giftRemove.onclick = () => {
       fields.forEach((f) => { f.value = ""; });
       giftIsGift.checked = false;
       giftIsGift.dispatchEvent(new Event("change", { bubbles: true }));
-      setOpen(false); summarize();
+      setOpen(false); summarize(); updateFoot();
       if (giftCount) giftCount.textContent = "0";
     };
     if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) { setOpen(false); summarize(); } });
