@@ -3075,7 +3075,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const sum = $("#customizeSummary"); if (sum) sum.textContent = "Design saved — not in the bag yet";
     closeModal();
     applyVariantPrice(); // a back design may change the page price
-    toast("Design saved — Add to Cart when you're ready");
   }
 
   // Toggle the page between "Customize" and "Edit design + Add to Cart".
@@ -3301,7 +3300,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           }
         } catch (e) {}
         if (window.DynamicCart && window.DynamicCart.refresh) { try { window.DynamicCart.refresh(); } catch (e) {} }
-        toast(wasEditing ? "Design updated" : "Added to Bag");
         // Success signal for optional page effects (e.g. confetti burst)
         try { window.dispatchEvent(new CustomEvent("dyn:added-to-cart")); } catch (e) {}
         // Clear the canvas so the next time it opens the customer starts fresh
@@ -3394,7 +3392,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (typeof renderUpEls === "function") renderUpEls();
     const sum = document.querySelector("#customizeSummary"); if (sum) sum.textContent = "Editing your saved design";
     setDesignReady(true); // the restored design can be re-added from the page
-    toast("Editing your saved design");
   }
 
   function buildEngraveModal() {
@@ -3473,7 +3470,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       btn.disabled = false;
       if (ok) {
         closeModal();
-        toast(text ? "Added to Bag with engraving" : "Added to Bag");
       }
     };
   }
@@ -3754,7 +3750,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         card.onclick = async () => {
           const t = D.templates.find((x) => x.id === card.dataset.tmpl);
           await editor.addSVG(t.svg, t.name);
-          toast(`${t.name} added`);
         };
       });
 
@@ -3855,7 +3850,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         const url = await readAsDataURL(file);
         await editor.addImageFromURL(url, { kind: "upload", name: file.name });
       }
-      toast(`${file.name} added`);
     } catch (err) {
       console.error(err);
       toast("Couldn't read that file");
@@ -3932,7 +3926,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         <p class="hint" style="margin-top:8px">Motif: ${art.motif}. Tap the artwork to place it, or generate again.</p>`;
       $("#aiUse").onclick = async () => {
         await editor.addSVG(art.svg, art.name);
-        toast("AI artwork added");
       };
     } catch (e) {
       $("#aiResults").innerHTML = '<p class="hint">Generation failed. Try again.</p>';
