@@ -162,6 +162,19 @@
                 "money": {% if gwp.price > 0 %}{{ gwp.price | money | json }}{% else %}""{% endif %} }
             {%- endif -%}
           {%- endfor -%}
+        {%- elsif blk_gift != blank and blk_gift.settings.gift_wrap_product != blank and blk_gift.settings.gift_wrap_product.variants.size > 1 -%}
+          {%- comment -%} One Gift Wrap product with several pattern VARIANTS —
+              each variant becomes a tile in the picker. {%- endcomment -%}
+          {%- assign gvw_first = true -%}
+          {%- for gv in blk_gift.settings.gift_wrap_product.variants limit: 12 -%}
+            {%- if gv.available -%}
+              {%- unless gvw_first -%},{%- endunless -%}{%- assign gvw_first = false -%}
+              { "vid": {{ gv.id | json }},
+                "title": {{ gv.title | json }},
+                "img": {% if gv.featured_image %}{{ gv.featured_image | image_url: width: 720 | json }}{% elsif blk_gift.settings.gift_wrap_product.featured_image %}{{ blk_gift.settings.gift_wrap_product.featured_image | image_url: width: 720 | json }}{% else %}""{% endif %},
+                "money": {% if gv.price > 0 %}{{ gv.price | money | json }}{% else %}""{% endif %} }
+            {%- endif -%}
+          {%- endfor -%}
         {%- endif -%}
       ]
     },
@@ -3251,7 +3264,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
           "type": "product",
           "id": "gift_wrap_product",
           "label": "Gift Wrap product (pick it here)",
-          "info": "Pick your Gift Wrap product. Its price is charged and shown on the toggle automatically."
+          "info": "Pick your Gift Wrap product. ONE variant: a simple toggle with its price. SEVERAL variants (patterns): shoppers pick their pattern from a picker like the greeting card's — give each variant its own image."
         },
         {
           "type": "collection",
