@@ -822,10 +822,25 @@
                 <img class="dc-banner-img" src="{{ block.settings.image | image_url: width: 1200 }}" alt="{{ block.settings.heading | escape }}" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" loading="lazy">
               {%- endif -%}
             {%- endcapture -%}
+            {%- comment -%} Per-tab scoping: empty = every tab; "All" = the All
+                tab; otherwise a comma list of category values (handleized so
+                they compare with the tabs' data-cat). {%- endcomment -%}
+            {%- assign bfor = '' -%}
+            {%- assign bfor_raw = block.settings.show_for | default: '' | strip -%}
+            {%- if bfor_raw != '' -%}
+              {%- assign bfor_parts = bfor_raw | split: ',' -%}
+              {%- for bp in bfor_parts -%}
+                {%- assign bph = bp | strip | handle -%}
+                {%- if bph == 'all' -%}{%- assign bph = '__all' -%}{%- endif -%}
+                {%- if bph != '' -%}
+                  {%- if bfor == '' -%}{%- assign bfor = bph -%}{%- else -%}{%- assign bfor = bfor | append: ' ' | append: bph -%}{%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
             {%- if block.settings.link != blank -%}
-              <a class="{{ bcls }}" href="{{ block.settings.link }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</a>
+              <a class="{{ bcls }}" href="{{ block.settings.link }}" data-for="{{ bfor }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</a>
             {%- else -%}
-              <div class="{{ bcls }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</div>
+              <div class="{{ bcls }}" data-for="{{ bfor }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</div>
             {%- endif -%}
           {%- endfor -%}
         </div>
@@ -1212,8 +1227,19 @@
     // message right under it (instead of buried below the banners).
     var none = (visible.length + visibleAll.length) === 0;
     _lastNone = none;
-    if (bannersWrap) bannersWrap.style.display = none ? "none" : "";
-    if (bannersHeading) bannersHeading.style.display = none ? "none" : "";
+    // Per-tab banners: each tile declares where it lives (data-for) — empty
+    // means everywhere, "__all" the All tab, otherwise category handles.
+    var anyBanner = false;
+    if (bannersWrap) {
+      Array.prototype.forEach.call(bannersWrap.querySelectorAll(".dc-banner"), function (bn) {
+        var f = (bn.getAttribute("data-for") || "").trim();
+        var show = !f || (" " + f + " ").indexOf(" " + currentCat + " ") >= 0;
+        bn.style.display = show ? "" : "none";
+        if (show) anyBanner = true;
+      });
+      bannersWrap.style.display = (none || !anyBanner) ? "none" : "";
+    }
+    if (bannersHeading) bannersHeading.style.display = (none || !anyBanner) ? "none" : "";
     if (allHeading) allHeading.style.display = none ? "none" : "";
     if (badgeChip) {
       if (badgeFilter) { badgeChip.hidden = false; if (badgeChipTxt) badgeChipTxt.textContent = badgeLabels[badgeFilter] || badgeFilter; }
@@ -1792,6 +1818,7 @@
       { "type": "text", "id": "subtext", "label": "Small text line", "info": "A short line under the heading." },
       { "type": "text", "id": "button_label", "label": "Link text" },
       { "type": "url", "id": "link", "label": "Link" },
+      { "type": "text", "id": "show_for", "label": "Show on category tab", "info": "Leave EMPTY to show on every tab. Type a tab's category value (e.g. Apparel) to show it only there — several separated by commas. Type All for the All tab only." },
       { "type": "color", "id": "bg_color", "label": "Background colour", "default": "#e9f0fb" },
       { "type": "color", "id": "text_color", "label": "Text colour", "default": "#17223b" }
     ]}
