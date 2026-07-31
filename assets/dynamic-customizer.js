@@ -2539,6 +2539,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-giftm-cardph{position:absolute;inset:0;display:grid;place-items:center;font-family:inherit;font-size:13px;color:var(--gf)}' +
       '.dc-giftm-cardchg{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);padding:6px 14px;' +
         'background:#fff;border:1px solid var(--gi);border-radius:999px;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--gi)}' +
+      /* Card chooser: its own pop-up, layered over the gift window */
+      '.dc-giftm--cards{z-index:1300}' +
+      '.dc-giftm-cardsheet{width:min(520px,100%)}' +
+      '.dc-giftm-cardsheet .dc-giftm-cardgrid{margin-top:18px}' +
       '.dc-giftm-cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}' +
       '.dc-giftm-cardopt{position:relative;display:flex;flex-direction:column;gap:6px;padding:6px;cursor:pointer;' +
         'font-family:inherit;text-align:center;background:#fff;border:2px solid var(--gl);border-radius:12px;transition:border-color .15s}' +
@@ -2596,20 +2600,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                   : '') +
               '</div>' +
             '</div>' +
-            (cards.length
-              ? '<div class="dc-giftm-sec" id="giftCardPick" hidden><div class="dc-giftm-h">Choose a card</div>' +
-                '<div class="dc-giftm-cardgrid">' +
-                '<button type="button" class="dc-giftm-cardopt is-none" data-vid=""><span class="dc-giftm-cardnone">✕</span><span class="dc-giftm-cardt">No card</span></button>' +
-                cards.map(function (c) {
-                  var t = escapeHtml(c.title).replace(/"/g, "&quot;");
-                  return '<button type="button" class="dc-giftm-cardopt" data-vid="' + c.vid + '" data-title="' + t + '" data-img="' + (c.img || "") + '">' +
-                    (c.img ? '<img src="' + c.img + '" alt="' + t + '" loading="lazy" width="120" height="160">' : '<span class="dc-giftm-cardnone">🖼</span>') +
-                    '<span class="dc-giftm-cardt">' + escapeHtml(c.title) + '</span>' +
-                    (c.money ? '<em class="dc-giftm-cardm">' + escapeHtml(c.money) + '</em>' : '') +
-                    '</button>';
-                }).join("") +
-                '</div></div>'
-              : '') +
             '<div class="dc-giftm-sec"><div class="dc-giftm-h">Recipient &amp; timing (optional)</div>' +
               '<div class="dc-giftm-grid">' +
                 '<div><label class="dc-giftm-l" for="giftToName">Name</label>' +
@@ -2627,6 +2617,23 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             '</div>' +
           '</div>' +
         '</div>' +
+        (cards.length
+          ? '<div class="dc-giftm dc-giftm--cards" id="giftCardPick" role="dialog" aria-modal="true" aria-label="Choose a card">' +
+            '<div class="dc-giftm-card dc-giftm-cardsheet">' +
+            '<button type="button" class="dc-giftm-x" id="giftCardClose" aria-label="Close">×</button>' +
+            '<h3 class="dc-giftm-title">Choose a card</h3>' +
+            '<div class="dc-giftm-cardgrid">' +
+            '<button type="button" class="dc-giftm-cardopt is-none" data-vid=""><span class="dc-giftm-cardnone">✕</span><span class="dc-giftm-cardt">No card</span></button>' +
+            cards.map(function (c) {
+              var t = escapeHtml(c.title).replace(/"/g, "&quot;");
+              return '<button type="button" class="dc-giftm-cardopt" data-vid="' + c.vid + '" data-title="' + t + '" data-img="' + (c.img || "") + '">' +
+                (c.img ? '<img src="' + c.img + '" alt="' + t + '" loading="lazy" width="120" height="160">' : '<span class="dc-giftm-cardnone">🖼</span>') +
+                '<span class="dc-giftm-cardt">' + escapeHtml(c.title) + '</span>' +
+                (c.money ? '<em class="dc-giftm-cardm">' + escapeHtml(c.money) + '</em>' : '') +
+                '</button>';
+            }).join("") +
+            '</div></div></div>'
+          : '') +
       '</div>';
   }
 
@@ -2822,17 +2829,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       });
     };
     if (cardPrev && cardPick) {
-      cardPrev.onclick = () => {
-        cardPick.hidden = !cardPick.hidden;
-        if (!cardPick.hidden) { try { cardPick.scrollIntoView({ block: "nearest", behavior: "smooth" }); } catch (e) {} }
-      };
+      const cardClose = mount.querySelector("#giftCardClose");
+      const cardsOpen = (v) => cardPick.classList.toggle("is-open", v);
+      cardPrev.onclick = () => cardsOpen(true);
+      if (cardClose) cardClose.onclick = () => cardsOpen(false);
+      cardPick.addEventListener("click", (e) => { if (e.target === cardPick) cardsOpen(false); });
       Array.prototype.forEach.call(cardPick.querySelectorAll(".dc-giftm-cardopt"), (b) => {
         b.onclick = () => {
           const vid = b.getAttribute("data-vid");
           window.__dynGiftCard = vid
             ? { vid: parseInt(vid, 10) || vid, title: b.getAttribute("data-title") || "", img: b.getAttribute("data-img") || "" }
             : null;
-          cardPick.hidden = true;
+          cardsOpen(false);
           paintCard();
           /* bubble so the step strip and footer label hear about it */
           cardPick.dispatchEvent(new Event("change", { bubbles: true }));
@@ -2909,7 +2917,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (giftCount) giftCount.textContent = "0";
     };
     if (modal) modal.addEventListener("click", (e) => { if (e.target === modal) setOpen(false); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modal && modal.classList.contains("is-open")) setOpen(false); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      /* the card chooser sits on top — Esc peels one layer at a time */
+      if (cardPick && cardPick.classList.contains("is-open")) { cardPick.classList.remove("is-open"); return; }
+      if (modal && modal.classList.contains("is-open")) setOpen(false);
+    });
     /* After a successful add to cart the gift belongs to that item — clear
        everything so the next design starts with a fresh gate. */
     window.addEventListener("dyn:added-to-cart", () => {
