@@ -4465,8 +4465,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
     var items = cart.items;
     var isFee = function (it) { return !!(it.properties && it.properties._grp && !it.properties._design_state && !it.properties._design_id); };
-    var feeByGrp = {}, mainGrps = {};
-    items.forEach(function (it) { if (isFee(it) && it.properties._grp) feeByGrp[it.properties._grp] = it; });
+    /* A group can carry SEVERAL extra lines (gift wrap + greeting card + back
+       fee) — collect them all; keeping only one made the totals lie. */
+    var feesByGrp = {}, mainGrps = {};
+    items.forEach(function (it) {
+      if (isFee(it) && it.properties._grp) (feesByGrp[it.properties._grp] = feesByGrp[it.properties._grp] || []).push(it);
+    });
     items.forEach(function (it) { if (!isFee(it) && it.properties && it.properties._grp) mainGrps[it.properties._grp] = true; });
     itemsEl.innerHTML = items.map(function (it) {
       if (isFee(it) && it.properties._grp && mainGrps[it.properties._grp]) return "";
@@ -4475,26 +4479,32 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       (it.options_with_values || []).forEach(function (o) { if (o.value && o.value !== "Default Title") opts.push(esc(o.name) + ": " + esc(o.value)); });
       if (it.properties) Object.keys(it.properties).forEach(function (k) { if (k.charAt(0) !== "_" && it.properties[k]) opts.push(esc(k) + ": " + esc(it.properties[k])); });
       var grp = it.properties && it.properties._grp;
-      var fee = (grp && !isFee(it)) ? feeByGrp[grp] : null;
+      var fees = (grp && !isFee(it)) ? (feesByGrp[grp] || []) : [];
       var backFee = it.properties && it.properties._back_fee;
       var feeNote = "";
       var priceCell = fmt(it.final_line_price, cur);
-      if (backFee || fee) {
-        // The numbers must add up on screen: base + back print + gift wrap = item total.
+      if (backFee || fees.length) {
+        // The numbers must add up on screen: base + back print + EVERY extra
+        // line (gift wrap, greeting card, ...) = item total.
         var cnum = function (s) { var n = parseFloat(String(s).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
         var backC = backFee ? cnum(backFee) * (it.quantity || 1) : 0;
-        var feeC = fee ? (fee.final_line_price || 0) : 0;
+        var feeC = 0;
+        fees.forEach(function (f) { feeC += f.final_line_price || 0; });
         var baseC = Math.max(0, (it.final_line_price || 0) - backC);
         var itemTotal = (it.final_line_price || 0) + feeC;
         feeNote = '<div class="ci-fee">' +
           "<div>" + esc(it.product_title) + " · " + fmt(baseC, cur) + "</div>" +
           (backC ? "<div>Back print · " + fmt(backC, cur) + "</div>" : "") +
-          (fee ? "<div>" + esc(fee.product_title) + " · " + fmt(feeC, cur) +
-                 ' <button type="button" class="ci-fee-remove" data-remove-fee>Remove</button></div>' : "") +
+          fees.map(function (f) {
+            var fProp = f.properties && f.properties["Gift wrapping"] ? "Gift wrapping"
+              : (f.properties && f.properties["Greeting card"] ? "Greeting card" : "");
+            return "<div>" + esc(f.product_title) + " · " + fmt(f.final_line_price || 0, cur) +
+              ' <button type="button" class="ci-fee-remove" data-remove-fee="' + esc(f.key) + '" data-fee-prop="' + esc(fProp) + '">Remove</button></div>';
+          }).join("") +
         "</div>";
         priceCell = fmt(itemTotal, cur);
       }
-      return '<div class="dyn-cart-item" data-key="' + esc(it.key) + '"' + (fee ? ' data-fee-key="' + esc(fee.key) + '"' : "") + ">" +
+      return '<div class="dyn-cart-item" data-key="' + esc(it.key) + '"' + (fees.length ? ' data-fee-key="' + esc(fees.map(function (f) { return f.key; }).join("||")) + '"' : "") + ">" +
         (it.image ? '<img src="' + esc(it.image) + '" alt="">' : "<div></div>") +
         '<div><div class="ci-title">' + esc(it.product_title) + "</div>" +
         (opts.length ? '<div class="ci-opt">' + opts.join(" · ") + "</div>" : "") + feeNote +
@@ -4513,28 +4523,33 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       var key = row.getAttribute("data-key"), feeKey = row.getAttribute("data-fee-key");
       var span = row.querySelector(".dyn-cart-qty span"), qty = parseInt(span ? span.textContent : "1", 10) || 0;
       var dec = row.querySelector("[data-dec]"), inc = row.querySelector("[data-inc]"), rm = row.querySelector("[data-remove]");
-      var upd = function (q) { var o = {}; o[key] = q; if (feeKey) o[feeKey] = q; return o; };
+      var upd = function (q) { var o = {}; o[key] = q; if (feeKey) feeKey.split("||").forEach(function (fk) { o[fk] = q; }); return o; };
       if (dec) dec.onclick = function () { applyUpdates(upd(Math.max(0, qty - 1))); };
       if (inc) inc.onclick = function () { applyUpdates(upd(qty + 1)); };
       if (rm) rm.onclick = function () { applyUpdates(upd(0)); };
-      // Remove the gift-wrap fee line and un-gift the item (drop Gift / Gift note).
-      var rmFee = row.querySelector("[data-remove-fee]");
-      if (rmFee && feeKey) rmFee.onclick = function () {
-        rmFee.disabled = true; rmFee.textContent = "Removing…";
-        if (itemsEl) itemsEl.style.opacity = "0.5";
-        fetch("/cart/change.js", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ id: feeKey, quantity: 0 }) })
-          .then(function () { return fetch("/cart.js", { headers: { Accept: "application/json" } }); })
-          .then(function (r) { return r.json(); })
-          .then(function (cart2) {
-            var it = (cart2.items || []).filter(function (i) { return i.key === key; })[0];
-            if (!it) return null;
-            // change.js replaces properties wholesale — resend everything except the gift bits.
-            var props = {}; for (var k in (it.properties || {})) { if (k !== "Gift" && k !== "Gift note") props[k] = it.properties[k]; }
-            return fetch("/cart/change.js", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ id: it.key, quantity: it.quantity, properties: props }) });
-          })
-          .then(function () { if (itemsEl) itemsEl.style.opacity = ""; refresh(); })
-          .catch(function () { if (itemsEl) itemsEl.style.opacity = ""; refresh(); });
-      };
+      // Each extra line (gift wrap / greeting card) has its own Remove, which
+      // drops that line and strips just the matching property off the item.
+      Array.prototype.forEach.call(row.querySelectorAll("[data-remove-fee]"), function (rmFee) {
+        rmFee.onclick = function () {
+          var fKey = rmFee.getAttribute("data-remove-fee");
+          var fProp = rmFee.getAttribute("data-fee-prop");
+          if (!fKey) return;
+          rmFee.disabled = true; rmFee.textContent = "Removing…";
+          if (itemsEl) itemsEl.style.opacity = "0.5";
+          fetch("/cart/change.js", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ id: fKey, quantity: 0 }) })
+            .then(function () { return fetch("/cart.js", { headers: { Accept: "application/json" } }); })
+            .then(function (r) { return r.json(); })
+            .then(function (cart2) {
+              var it = (cart2.items || []).filter(function (i) { return i.key === key; })[0];
+              if (!it || !fProp) return null;
+              // change.js replaces properties wholesale — resend all but the removed bit.
+              var props = {}; for (var k in (it.properties || {})) { if (k !== fProp) props[k] = it.properties[k]; }
+              return fetch("/cart/change.js", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ id: it.key, quantity: it.quantity, properties: props }) });
+            })
+            .then(function () { if (itemsEl) itemsEl.style.opacity = ""; refresh(); })
+            .catch(function () { if (itemsEl) itemsEl.style.opacity = ""; refresh(); });
+        };
+      });
     });
   }
 
