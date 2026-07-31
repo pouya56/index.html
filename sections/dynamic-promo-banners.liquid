@@ -1,0 +1,163 @@
+{% comment %}
+  ============================================================================
+  Dynamic Promo Banners — a per-tab banner group for the shop page.
+  ----------------------------------------------------------------------------
+  Add ONE of these sections per category tab: set "Category tab" to the tab's
+  category value and fill it with Promo banner blocks. On the shop page the
+  section teleports itself into the collection's banner slot (above the
+  product grid) and appears only while its tab is active.
+
+  INSTALL:
+  1. Edit code > Sections > Add a new section > name it
+     "dynamic-promo-banners" and REPLACE its contents with this file. Save.
+  2. Customize > (your shop page) > Add section > "Dynamic Promo Banners",
+     placed anywhere below the Dynamic Collection section.
+  3. Set its "Category tab", add banner blocks. Repeat per tab.
+  ============================================================================
+{% endcomment %}
+
+{%- comment -%} Per-tab scoping: empty = every tab; "All" = the All tab;
+    otherwise a comma list of category values (handleized to match tabs). {%- endcomment -%}
+{%- assign pb_for = '' -%}
+{%- assign pb_raw = section.settings.show_for | default: '' | strip -%}
+{%- if pb_raw != '' -%}
+  {%- assign pb_parts = pb_raw | split: ',' -%}
+  {%- for bp in pb_parts -%}
+    {%- assign bph = bp | strip | handle -%}
+    {%- if bph == 'all' -%}{%- assign bph = '__all' -%}{%- endif -%}
+    {%- if bph != '' -%}
+      {%- if pb_for == '' -%}{%- assign pb_for = bph -%}{%- else -%}{%- assign pb_for = pb_for | append: ' ' | append: bph -%}{%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+<style>
+  .dyn-pb { --ink: #1d1d1f; max-width: 1280px; margin: 0 auto; padding: 0 22px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink); }
+  /* Inside the collection's slot the wrap already pads the page — go flush. */
+  #dcPromoSlot .dyn-pb { max-width: none; padding: 0; }
+  .dyn-pb .pb-heading { text-align: center; font-family: var(--font-heading-family, Georgia, serif); font-weight: 500;
+    font-size: clamp(26px, 4vw, 40px); line-height: 1.1; letter-spacing: -0.01em; margin: 62px auto 14px; }
+  .dyn-pb .pb-banners { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 172px; gap: 11px;
+    grid-auto-flow: row dense; margin: 62px auto 7px; }
+  .dyn-pb .pb-heading + .pb-banners { margin-top: 0; }
+  .dyn-pb .pb-banner { position: relative; overflow: hidden; border-radius: 24px; display: flex; flex-direction: column;
+    align-items: flex-start; justify-content: flex-start; padding: 22px 26px; text-decoration: none; color: inherit;
+    transition: transform 0.18s ease, box-shadow 0.18s ease; }
+  .dyn-pb a.pb-banner { cursor: pointer; }
+  .dyn-pb a.pb-banner:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.12); }
+  .dyn-pb .pb-banner--half, .dyn-pb .pb-banner--sm { grid-column: span 1; grid-row: span 1; padding: 18px 22px; }
+  .dyn-pb .pb-banner--tall { grid-column: span 1; grid-row: span 2; }
+  .dyn-pb .pb-banner--wide { grid-column: span 2; grid-row: span 1; }
+  .dyn-pb .pb-banner--lg { grid-column: span 2; grid-row: span 2; }
+  .dyn-pb .pb-banner-img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+  .dyn-pb .pb-banner--shade .pb-banner-txt { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.28), 0 1px 12px rgba(0, 0, 0, 0.18); }
+  .dyn-pb .pb-banner-txt { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start;
+    gap: 4px; max-width: 96%; }
+  .dyn-pb .pb-banner-kicker { font-size: 13.5px; font-weight: 600; letter-spacing: 0.01em; opacity: 0.9; }
+  .dyn-pb .pb-banner-title { font-family: var(--font-heading-family, inherit); font-weight: 700;
+    font-size: clamp(19px, 2vw, 27px); line-height: 1.1; letter-spacing: -0.01em; }
+  .dyn-pb .pb-banner-title2 { margin-top: -2px; }
+  .dyn-pb .pb-banner--half .pb-banner-title, .dyn-pb .pb-banner--sm .pb-banner-title { font-size: clamp(16px, 1.5vw, 20px); }
+  .dyn-pb .pb-banner-sub { font-size: 14px; font-weight: 500; line-height: 1.35; opacity: 0.92; max-width: 32ch; margin-top: 2px; }
+  .dyn-pb .pb-banner--half .pb-banner-sub, .dyn-pb .pb-banner--sm .pb-banner-sub { font-size: 12.5px; }
+  .dyn-pb .pb-banner-cta { margin-top: 6px; font-size: 14.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .dyn-pb a.pb-banner:hover .pb-banner-cta { text-decoration-thickness: 2px; }
+  @media (max-width: 520px) {
+    .dyn-pb .pb-banners { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 132px; gap: 12px; }
+    .dyn-pb .pb-banner { padding: 16px 18px; border-radius: 20px; }
+  }
+</style>
+
+<div class="dyn-pb" id="dynPb-{{ section.id }}" data-for="{{ pb_for }}">
+  {%- if section.settings.heading != blank -%}
+    <h2 class="pb-heading">{{ section.settings.heading }}</h2>
+  {%- endif -%}
+  <div class="pb-banners">
+    {%- for block in section.blocks -%}
+      {%- unless block.type == 'banner' -%}{%- continue -%}{%- endunless -%}
+      {%- assign bsize = block.settings.size | default: 'sm' -%}
+      {%- assign bink = block.settings.text_color | default: '#17223b' -%}
+      {%- assign bbg = block.settings.bg_color | default: '#eef1f5' -%}
+      {%- assign bcls = 'pb-banner pb-banner--' | append: bsize -%}
+      {%- if block.settings.scrim and block.settings.image != blank -%}{%- assign bcls = bcls | append: ' pb-banner--shade' -%}{%- endif -%}
+      {%- capture banner_inner -%}
+        <div class="pb-banner-txt">
+          {%- if block.settings.kicker != blank -%}<span class="pb-banner-kicker">{{ block.settings.kicker }}</span>{%- endif -%}
+          {%- if block.settings.heading != blank -%}<span class="pb-banner-title">{{ block.settings.heading }}</span>{%- endif -%}
+          {%- if block.settings.heading2 != blank -%}<span class="pb-banner-title pb-banner-title2"{% if block.settings.accent_color != blank %} style="color:{{ block.settings.accent_color }}"{% endif %}>{{ block.settings.heading2 }}</span>{%- endif -%}
+          {%- if block.settings.subtext != blank -%}<span class="pb-banner-sub">{{ block.settings.subtext }}</span>{%- endif -%}
+          {%- if block.settings.button_label != blank -%}<span class="pb-banner-cta">{{ block.settings.button_label }}</span>{%- endif -%}
+        </div>
+        {%- if block.settings.image != blank -%}
+          <img class="pb-banner-img" src="{{ block.settings.image | image_url: width: 1200 }}" alt="{{ block.settings.heading | escape }}" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" loading="lazy">
+        {%- endif -%}
+      {%- endcapture -%}
+      {%- if block.settings.link != blank -%}
+        <a class="{{ bcls }}" href="{{ block.settings.link }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</a>
+      {%- else -%}
+        <div class="{{ bcls }}" style="background:{{ bbg }};color:{{ bink }};" {{ block.shopify_attributes }}>{{ banner_inner }}</div>
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+</div>
+
+<script>
+(function () {
+  var root = document.getElementById("dynPb-{{ section.id }}");
+  if (!root || root.__pb) return;
+  root.__pb = true;
+  /* Ride along with the shop page's tabs: teleport into the collection's
+     banner slot (above the product grid) and follow the active category. */
+  var slot = document.getElementById("dcPromoSlot");
+  if (slot && root.parentNode !== slot) slot.appendChild(root);
+  function upd(cat, none) {
+    var f = (root.getAttribute("data-for") || "").trim();
+    var show = !none && (!f || (" " + f + " ").indexOf(" " + (cat || "__all") + " ") >= 0);
+    root.hidden = !show;
+  }
+  upd(window.__dynShopCat || "__all", !!window.__dynShopNone);
+  window.addEventListener("dyn:cat", function (e) {
+    upd(e.detail && e.detail.cat, !!(e.detail && e.detail.none));
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Promo Banners",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "One banner group per category tab: set which tab below, fill with Promo banner blocks, and add another of these sections for the next tab. On the shop page the group slots itself above the product grid and appears only while its tab is active." },
+    { "type": "text", "id": "show_for", "label": "Category tab", "info": "The tab's category value (e.g. Apparel). Several: separate with commas. Type All for the All tab. Leave empty to show on every tab." },
+    { "type": "text", "id": "heading", "label": "Heading (optional)" }
+  ],
+  "blocks": [
+    { "type": "banner", "name": "Promo banner", "settings": [
+      { "type": "select", "id": "size", "label": "Tile size", "default": "tall",
+        "info": "Put two ‘Small’ tiles next to each other and they stack on top of each other in one column.",
+        "options": [
+          { "value": "sm", "label": "Small (two stack in a column)" },
+          { "value": "tall", "label": "Full height" },
+          { "value": "wide", "label": "Wide (double width)" },
+          { "value": "lg", "label": "Large (double width, full height)" }
+        ] },
+      { "type": "image_picker", "id": "image", "label": "Image", "info": "Fills the whole tile." },
+      { "type": "checkbox", "id": "scrim", "label": "Shadow behind the text", "default": true, "info": "Keeps the text readable over the photo." },
+      { "type": "text", "id": "kicker", "label": "Small top line", "info": "e.g. In as fast as an hour" },
+      { "type": "text", "id": "heading", "label": "Heading (line 1)", "default": "Best-in-Class" },
+      { "type": "text", "id": "heading2", "label": "Heading (line 2, accent colour)", "info": "Shown under line 1 in the accent colour." },
+      { "type": "color", "id": "accent_color", "label": "Accent colour (line 2)", "default": "#0071e3" },
+      { "type": "text", "id": "subtext", "label": "Small text line" },
+      { "type": "text", "id": "button_label", "label": "Link text" },
+      { "type": "url", "id": "link", "label": "Link" },
+      { "type": "color", "id": "bg_color", "label": "Background colour", "default": "#e9f0fb" },
+      { "type": "color", "id": "text_color", "label": "Text colour", "default": "#17223b" }
+    ]}
+  ],
+  "max_blocks": 12,
+  "presets": [ { "name": "Dynamic Promo Banners" } ],
+  "enabled_on": { "templates": ["*"] }
+}
+{% endschema %}
