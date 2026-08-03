@@ -18,11 +18,11 @@
   .lb-meta b { font-size: 13px; }
 
   /* ---- the lineup ---- */
-  .lb-row { display: flex; justify-content: space-evenly; align-items: flex-end; gap: 6px;
-    margin-top: clamp(30px, 8vh, 90px); min-height: {{ section.settings.fig_h | default: 44 }}vh; flex-wrap: wrap; row-gap: 40px; }
+  .lb-row { display: flex; flex-wrap: nowrap; justify-content: space-evenly; align-items: flex-end; gap: 6px;
+    margin-top: clamp(30px, 8vh, 90px); min-height: {{ section.settings.fig_h | default: 44 }}vh; }
   .lb-fig { appearance: none; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; position: relative;
-    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
-  .lb-fig img { display: block; height: {{ section.settings.fig_h | default: 44 }}vh; width: auto; max-width: 24vw; object-fit: contain; }
+    flex: 1 1 0; min-width: 0; transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+  .lb-fig img { display: block; width: 100%; height: {{ section.settings.fig_h | default: 44 }}vh; object-fit: contain; object-position: center bottom; }
   @media (hover: hover) { .lb-fig:hover { transform: translateY(-8px) scale(1.04); } }
   .lb-fig:focus-visible { outline: 2px solid currentColor; outline-offset: 6px; }
 
@@ -77,8 +77,11 @@
 
   @media (max-width: 720px) {
     .dyn-lb { padding: 18px 16px 60px; }
-    .lb-fig img { height: 30vh; max-width: 40vw; }
-    .lb-row { min-height: 0; }
+    .lb-row { min-height: 0; overflow-x: auto; justify-content: flex-start; gap: 14px;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
+    .lb-row::-webkit-scrollbar { display: none; }
+    .lb-fig { flex: 0 0 auto; }
+    .lb-fig img { width: auto; height: 30vh; max-width: 44vw; }
     .lb-ghost { display: none; }
     .lb-big { height: 62vh; max-width: 92vw; }
     .lb-look h3 { max-width: 80vw; }
@@ -101,7 +104,7 @@
     {%- if lb_col != blank -%}
       {%- for p in lb_col.products limit: lb_limit -%}
         <button class="lb-fig" type="button" data-idx="{{ forloop.index0 }}" aria-label="View {{ p.title | escape }}">
-          <img src="{{ p.featured_image | image_url: width: 900 }}" alt="{{ p.title | escape }}" loading="lazy" width="450" height="600" style="height: auto;">
+          <img src="{{ p.featured_image | image_url: width: 900 }}" alt="{{ p.title | escape }}" loading="lazy" width="450" height="600">
         </button>
       {%- endfor -%}
     {%- else -%}
