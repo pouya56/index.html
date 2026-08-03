@@ -75,28 +75,29 @@
   .dyn-hero .dh-prop.is-front { z-index: 9; }
 
   /* Google-style corner links (home landing) — horizontal row per corner */
-  .dyn-hero.dh-landing .dh-corner-group { position: absolute; z-index: 4; display: flex; flex-direction: row; align-items: center; gap: 20px; min-height: 42px; }
-  .dyn-hero.dh-landing .dh-corner-tl { top: 20px; left: 26px; justify-content: flex-start; }
-  .dyn-hero.dh-landing .dh-corner-tr { top: 20px; right: 26px; justify-content: flex-end; }
-  .dyn-hero.dh-landing .dh-corner-bl { bottom: 20px; left: 26px; justify-content: flex-start; }
-  .dyn-hero.dh-landing .dh-corner-br { bottom: 20px; right: 26px; justify-content: flex-end; }
+  .dyn-hero.dh-landing .dh-corner-group { position: absolute; z-index: 4; display: flex; flex-direction: row; align-items: center; gap: 4px; min-height: 42px; }
+  .dyn-hero.dh-landing .dh-corner-tl { top: 16px; left: 16px; justify-content: flex-start; }
+  .dyn-hero.dh-landing .dh-corner-tr { top: 16px; right: 16px; justify-content: flex-end; }
+  .dyn-hero.dh-landing .dh-corner-bl { bottom: 16px; left: 16px; justify-content: flex-start; }
+  .dyn-hero.dh-landing .dh-corner-br { bottom: 16px; right: 16px; justify-content: flex-end; }
   .dyn-hero.dh-landing .dh-copyright { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 4;
     font-size: 12px; color: var(--ink-faint); letter-spacing: 0.01em; white-space: nowrap; pointer-events: none; }
-  .dyn-hero.dh-landing .dh-corner-link { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; line-height: 1;
-    color: var(--ink-soft); text-decoration: none; padding: 4px 2px; transition: color .16s; white-space: nowrap; }
-  .dyn-hero.dh-landing .dh-corner-link:hover { color: var(--ink); }
-  .dyn-hero.dh-landing .dh-corner-link.is-icononly { padding: 5px; }
+  /* Bécane-style corner chips: small white tags, inverting on hover. */
+  .dyn-hero.dh-landing .dh-corner-link { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; line-height: 1;
+    font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: #fff; color: #0a0a0a;
+    text-decoration: none; padding: 9px 11px; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+    transition: background 0.16s, color 0.16s; white-space: nowrap; }
+  .dyn-hero.dh-landing .dh-corner-link:hover { background: #0a0a0a; color: #fff; }
+  .dyn-hero.dh-landing .dh-corner-link.is-icononly { padding: 8px; }
   .dyn-hero.dh-landing .dh-corner-ic { display: inline-flex; }
-  .dyn-hero.dh-landing .dh-corner-link svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
-  .dyn-hero.dh-landing img.dh-corner-ic { width: 18px; height: 18px; object-fit: contain; }
-  @media (max-width: 700px) { .dyn-hero.dh-landing .dh-corner-group { gap: 14px; } .dyn-hero.dh-landing .dh-corner-link { font-size: 13px; } }
+  .dyn-hero.dh-landing .dh-corner-link svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
+  .dyn-hero.dh-landing img.dh-corner-ic { width: 14px; height: 14px; object-fit: contain; }
+  @media (max-width: 700px) { .dyn-hero.dh-landing .dh-corner-group { gap: 4px; } }
   /* The corner links are FIXED to the screen, so the same set rides over
      the scroll story above (gallery/video) and the hero alike. They fall
-     back into the page once a search starts. While a corner sits over the
-     dark story, JS flags it is-over-dark and its links flip to light ink. */
+     back into the page once a search starts. The white chips stay legible
+     over light and dark alike, so no ink flip is needed. */
   .dyn-hero.dh-landing:not(.dh-searching) .dh-corner-group { position: fixed; z-index: 60; }
-  .dyn-hero.dh-landing .dh-corner-group.is-over-dark .dh-corner-link { color: rgba(255, 255, 255, 0.82); }
-  .dyn-hero.dh-landing .dh-corner-group.is-over-dark .dh-corner-link:hover { color: #fff; }
 
   /* Account button + apps grid (top-right) with dropdown menus */
   .dyn-hero .dh-menu { position: relative; display: inline-flex; }
@@ -2983,6 +2984,50 @@
       pKick();
     });
     it.el.addEventListener("pointerleave", function () { it.tx = 0; it.ty = 0; pKick(); });
+  });
+})();
+</script>
+
+<script>
+(function () {
+  /* Hovering a corner chip scrambles its label through random characters,
+     locking the real letters back in left to right — decode-style. */
+  var hero = document.getElementById("dynHero");
+  if (!hero) return;
+  var fine = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!fine || calm) return;
+  var CH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&@";
+  Array.prototype.forEach.call(hero.querySelectorAll(".dh-corner-link"), function (chip) {
+    var txt = chip.querySelector(".dh-corner-txt");
+    if (!txt) return;
+    var orig = txt.textContent;
+    var sRaf = 0;
+    chip.addEventListener("mouseenter", function () {
+      txt.style.display = "inline-block";
+      txt.style.minWidth = txt.getBoundingClientRect().width + "px";
+      var f = 0;
+      cancelAnimationFrame(sRaf);
+      var HOLD = 14, RATE = 3;
+      var step = function () {
+        f++;
+        var lock = Math.max(0, Math.floor((f - HOLD) / RATE));
+        var out = "";
+        for (var i = 0; i < orig.length; i++) {
+          var c = orig.charAt(i);
+          if (c === " ") { out += c; continue; }
+          out += i < lock ? c : CH.charAt(Math.floor(Math.random() * CH.length));
+        }
+        txt.textContent = out;
+        if (lock < orig.length) sRaf = requestAnimationFrame(step);
+        else txt.textContent = orig;
+      };
+      sRaf = requestAnimationFrame(step);
+    });
+    chip.addEventListener("mouseleave", function () {
+      cancelAnimationFrame(sRaf);
+      txt.textContent = orig;
+    });
   });
 })();
 </script>
