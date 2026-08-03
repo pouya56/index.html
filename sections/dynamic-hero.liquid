@@ -92,7 +92,26 @@
   .dyn-hero.dh-landing .dh-corner-ic { display: inline-flex; }
   .dyn-hero.dh-landing .dh-corner-link svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
   .dyn-hero.dh-landing img.dh-corner-ic { width: 14px; height: 14px; object-fit: contain; }
-  @media (max-width: 700px) { .dyn-hero.dh-landing .dh-corner-group { gap: 4px; } }
+  /* On phones the corner chips fold into a hamburger menu. */
+  .dh-menu-btn { display: none; position: fixed; top: 16px; right: 16px; z-index: 70; appearance: none; border: 0;
+    background: #fff; color: #0a0a0a; padding: 9px; cursor: pointer; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05); }
+  .dh-menu-btn svg { width: 18px; height: 18px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+  .dh-mmenu { position: fixed; inset: 0; z-index: 140; background: #f5f5f5; color: #0a0a0a;
+    transform: translateY(-102%); transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    padding: 76px 22px 30px; box-sizing: border-box; overflow-y: auto;
+    font-family: "Archivo", "Inter", "Helvetica Neue", Arial, sans-serif; }
+  .dh-mmenu.is-open { transform: translateY(0); }
+  .dh-mmenu-close { position: absolute; top: 16px; right: 16px; appearance: none; border: 0; background: #fff;
+    color: #0a0a0a; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    line-height: 1; padding: 9px 11px; cursor: pointer; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05); }
+  .dh-mmenu-nav { display: flex; flex-direction: column; gap: 6px; }
+  .dh-mmenu-link { color: inherit; text-decoration: none; font-size: 27px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.01em; line-height: 1.25; }
+  @media (max-width: 700px) {
+    .dyn-hero.dh-landing .dh-corner-group { display: none; }
+    .dyn-hero.dh-landing:not(.dh-searching) .dh-menu-btn { display: block; }
+  }
+  @media (prefers-reduced-motion: reduce) { .dh-mmenu { transition: none; } }
   /* The corner links are FIXED to the screen, so the same set rides over
      the scroll story above (gallery/video) and the hero alike. They fall
      back into the page once a search starts. The white chips stay legible
@@ -1152,6 +1171,22 @@
       {%- capture corner_group -%}{{ corner_links }}{{ corner_extra }}{%- endcapture -%}
       {%- if corner_group != blank -%}<div class="dh-corner-group dh-corner-{{ pos }}">{{ corner_group }}</div>{%- endif -%}
   {%- endfor -%}
+  {%- capture menu_rows -%}
+    {%- for block in section.blocks -%}
+      {%- if block.type == 'corner_link' and block.settings.label != blank -%}
+        <a class="dh-mmenu-link" href="{{ block.settings.url | default: '#' }}">{{ block.settings.label | escape }}</a>
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+  {%- if menu_rows != blank -%}
+    <button class="dh-menu-btn" type="button" id="dhMenuBtn" aria-label="Menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
+    </button>
+    <div class="dh-mmenu" id="dhMenu" role="dialog" aria-modal="true" aria-label="Menu">
+      <button class="dh-mmenu-close" type="button" id="dhMenuClose">Close &times;</button>
+      <nav class="dh-mmenu-nav">{{ menu_rows }}</nav>
+    </div>
+  {%- endif -%}
   {%- if section.settings.copyright_text != blank -%}
     <div class="dh-copyright">{{ section.settings.copyright_text }}</div>
   {%- endif -%}
@@ -3028,6 +3063,29 @@
       cancelAnimationFrame(sRaf);
       txt.textContent = orig;
     });
+  });
+})();
+</script>
+
+<script>
+(function () {
+  /* Phone hamburger: the corner links fold into a drop-down menu. */
+  var btn = document.getElementById("dhMenuBtn");
+  var menu = document.getElementById("dhMenu");
+  var close = document.getElementById("dhMenuClose");
+  if (!btn || !menu || !close) return;
+  function setOpen(v) {
+    menu.classList.toggle("is-open", v);
+    btn.setAttribute("aria-expanded", v ? "true" : "false");
+    document.documentElement.style.overflow = v ? "hidden" : "";
+  }
+  btn.addEventListener("click", function () { setOpen(!menu.classList.contains("is-open")); });
+  close.addEventListener("click", function () { setOpen(false); });
+  menu.addEventListener("click", function (e) {
+    if (e.target && e.target.closest && e.target.closest(".dh-mmenu-link")) setOpen(false);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && menu.classList.contains("is-open")) setOpen(false);
   });
 })();
 </script>
