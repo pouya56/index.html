@@ -27,6 +27,9 @@
     font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
     line-height: 1; padding: 9px 11px; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05); }
   .mf-chip:hover { background: #0a0a0a; color: #fff; }
+  /* Per-chip device visibility, chosen in the block settings. */
+  @media (min-width: 721px) { .mf-chip.mf-hide-d { display: none; } }
+  @media (max-width: 720px) { .mf-chip.mf-hide-m { display: none; } }
 
   /* Phones: corner-anchoring reads as scattered on a narrow screen, so the
      chips leave the corners and stack as tidy rows at the panel's bottom. */
@@ -44,14 +47,14 @@
   {%- capture mf_left -%}
     {%- for block in section.blocks -%}
       {%- if block.settings.side == 'left' and block.settings.label != blank -%}
-        <a class="mf-chip" href="{{ block.settings.url | default: '#' }}" {{ block.shopify_attributes }}>{{ block.settings.label | escape }}</a>
+        <a class="mf-chip{% if block.settings.show_desktop == false %} mf-hide-d{% endif %}{% if block.settings.show_mobile == false %} mf-hide-m{% endif %}" href="{{ block.settings.url | default: '#' }}" {{ block.shopify_attributes }}>{{ block.settings.label | escape }}</a>
       {%- endif -%}
     {%- endfor -%}
   {%- endcapture -%}
   {%- capture mf_right -%}
     {%- for block in section.blocks -%}
       {%- if block.settings.side == 'right' and block.settings.label != blank -%}
-        <a class="mf-chip" href="{{ block.settings.url | default: '#' }}" {{ block.shopify_attributes }}>{{ block.settings.label | escape }}</a>
+        <a class="mf-chip{% if block.settings.show_desktop == false %} mf-hide-d{% endif %}{% if block.settings.show_mobile == false %} mf-hide-m{% endif %}" href="{{ block.settings.url | default: '#' }}" {{ block.shopify_attributes }}>{{ block.settings.label | escape }}</a>
       {%- endif -%}
     {%- endfor -%}
   {%- endcapture -%}
@@ -160,6 +163,8 @@
   ],
   "blocks": [
     { "type": "chip", "name": "Corner chip", "settings": [
+      { "type": "checkbox", "id": "show_desktop", "label": "Show on desktop", "default": true },
+      { "type": "checkbox", "id": "show_mobile", "label": "Show on phone", "default": true },
       { "type": "select", "id": "side", "label": "Corner", "default": "left",
         "options": [
           { "value": "left", "label": "Bottom-left" },

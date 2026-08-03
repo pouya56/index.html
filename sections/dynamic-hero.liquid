@@ -1007,7 +1007,7 @@
       {%- assign cnt = 0 -%}
       {%- capture corner_links -%}
         {%- for block in section.blocks -%}
-          {%- if block.type == 'corner_link' and block.settings.corner == pos and cnt < 4 -%}
+          {%- if block.type == 'corner_link' and block.settings.corner == pos and cnt < 4 and block.settings.show_desktop != false -%}
             {%- assign cnt = cnt | plus: 1 -%}
             <a class="dh-corner-link{% if block.settings.icon_only %} is-icononly{% endif %}" href="{{ block.settings.url | default: '#' }}"{% if block.settings.open_popup and block.settings.url != blank %} data-dh-slide="{{ block.settings.url }}"{% endif %}{% if block.settings.icon_only %} aria-label="{{ block.settings.label | escape }}"{% endif %} {{ block.shopify_attributes }}>
               {%- if block.settings.icon_image != blank -%}
@@ -1170,7 +1170,7 @@
   {%- endfor -%}
   {%- capture menu_rows -%}
     {%- for block in section.blocks -%}
-      {%- if block.type == 'corner_link' and block.settings.label != blank -%}
+      {%- if block.type == 'corner_link' and block.settings.label != blank and block.settings.show_mobile != false -%}
         <a class="dh-mmenu-link" href="{{ block.settings.url | default: '#' }}">{{ block.settings.label | escape }}</a>
       {%- endif -%}
     {%- endfor -%}
@@ -3227,6 +3227,8 @@
       { "type": "checkbox", "id": "front", "label": "Bring forward", "default": false, "info": "Layers it above other decor — still below the logo, search bar and buttons." }
     ]},
     { "type": "corner_link", "name": "Corner link", "settings": [
+      { "type": "checkbox", "id": "show_desktop", "label": "Show on desktop (corner chip)", "default": true },
+      { "type": "checkbox", "id": "show_mobile", "label": "Show on phone (hamburger menu)", "default": true },
       { "type": "select", "id": "corner", "label": "Which corner", "default": "tl",
         "options": [
           { "value": "tl", "label": "Top-left" },
