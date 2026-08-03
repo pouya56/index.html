@@ -1645,6 +1645,37 @@
        without CSS :has — the class is scoped to the phone media query). */
     if (document.querySelector(".dyn-hero.dh-landing")) vbar.classList.add("dh-vbar--hero");
     host.appendChild(vbar);
+    /* Phone dock tuning: the Apps grid tab stays off the dock, and Saved /
+       Cart only earn their spot once something is in them. Desktop keeps
+       every tab. */
+    (function () {
+      var dSaved = vbar.querySelector('[data-vtab="saved"]');
+      var dCart = vbar.querySelector('[data-vtab="cart"]');
+      var dApps = vbar.querySelector('[data-vtab="apps"]');
+      var lastCount = -1;
+      function tune() {
+        if (window.innerWidth > 700) {
+          if (dApps) dApps.style.display = "";
+          if (dSaved) dSaved.style.display = "";
+          if (dCart) dCart.style.display = "";
+          return;
+        }
+        if (dApps) dApps.style.display = "none";
+        var nSaved = 0;
+        try { nSaved = (JSON.parse(localStorage.getItem("dyn_wishlist") || "[]") || []).length; } catch (eT0) {}
+        if (dSaved) dSaved.style.display = nSaved ? "" : "none";
+        fetch("/cart.js", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (c) {
+          var n = c && c.item_count ? c.item_count : 0;
+          lastCount = n;
+          if (dCart) dCart.style.display = n > 0 ? "" : "none";
+        }).catch(function () { if (dCart && lastCount < 1) dCart.style.display = "none"; });
+      }
+      tune();
+      window.addEventListener("resize", tune, { passive: true });
+      window.addEventListener("dyn-wishlist-change", tune);
+      window.addEventListener("storage", function (e) { if (e && e.key === "dyn_wishlist") tune(); });
+      window.addEventListener("dyn:added-to-cart", tune);
+    })();
     /* Every app gets its own tab; its window shows a live preview of the
        page (same-shop links embed; outside links get an Open button). */
     var vApps = [];
