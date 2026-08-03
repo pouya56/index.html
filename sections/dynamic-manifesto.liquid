@@ -28,11 +28,13 @@
     line-height: 1; padding: 9px 11px; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05); }
   .mf-chip:hover { background: #0a0a0a; color: #fff; }
 
+  /* Phones: corner-anchoring reads as scattered on a narrow screen, so the
+     chips leave the corners and stack as tidy rows at the panel's bottom. */
   @media (max-width: 720px) {
-    .dyn-mf { padding-bottom: 140px; }
-    .mf-text { line-height: 1.18; }
-    .mf-chips--left { left: 14px; right: 14px; }
-    .mf-chips--right { right: 14px; bottom: 70px; }
+    .dyn-mf { flex-direction: column; align-items: stretch; padding: 44px 16px 18px; }
+    .mf-text { line-height: 1.18; margin: auto 0; align-self: center; }
+    .mf-chips { position: static; }
+    .mf-chips--right { justify-content: flex-start; margin-top: 4px; }
   }
 </style>
 
