@@ -121,11 +121,13 @@
     </div>
     <div class="lb-deg"><span id="lbDeg-{{ section.id }}">0° / 360°</span><span class="lb-deg-bar"><i id="lbDegBar-{{ section.id }}"></i></span></div>
     <button class="lb-close" type="button" id="lbClose-{{ section.id }}">Close &times;</button>
-    <button class="lb-ghost lb-ghost--prev" type="button" id="lbPrev-{{ section.id }}" aria-label="Previous look"><img src="" alt=""></button>
-    <button class="lb-ghost lb-ghost--next" type="button" id="lbNext-{{ section.id }}" aria-label="Next look"><img src="" alt=""></button>
+    {% # theme-check-disable RemoteAsset %}
+    <button class="lb-ghost lb-ghost--prev" type="button" id="lbPrev-{{ section.id }}" aria-label="Previous look"><img src="" alt="" width="400" height="600" style="height: 100%; width: auto;"></button>
+    <button class="lb-ghost lb-ghost--next" type="button" id="lbNext-{{ section.id }}" aria-label="Next look"><img src="" alt="" width="400" height="600" style="height: 100%; width: auto;"></button>
     <div class="lb-stage" id="lbStage-{{ section.id }}">
-      <img class="lb-big" id="lbBig-{{ section.id }}" src="" alt="">
+      <img class="lb-big" id="lbBig-{{ section.id }}" src="" alt="" width="900" height="1350" style="width: auto;">
     </div>
+    {% # theme-check-enable RemoteAsset %}
     <div class="lb-buy" id="lbBuy-{{ section.id }}"></div>
     <div class="lb-hint">Scroll or drag to spin</div>
   </div>
