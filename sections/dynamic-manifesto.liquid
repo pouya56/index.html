@@ -1,11 +1,19 @@
-{%- assign mf_h = section.settings.panel_h | default: 78 -%}
+{%- assign mf_h = section.settings.panel_h | default: 66 -%}
 
 <style>
-  .dyn-mf { position: relative; background: {{ section.settings.bg_color | default: '#f5f5f5' }};
-    color: {{ section.settings.ink_color | default: '#0a0a0a' }}; min-height: {{ mf_h }}svh;
+  /* Curtain overlap: the section BEFORE this one gets pinned in place (JS
+     sets it sticky), and this panel — in normal flow after it — slides up
+     over it as the visitor scrolls. Native scroll, fully reversible. */
+  .dyn-mf { position: relative; z-index: 10; height: {{ mf_h }}svh;
+    background: {{ section.settings.bg_color | default: '#f5f5f5' }};
+    color: {{ section.settings.ink_color | default: '#0a0a0a' }};
     display: flex; align-items: center; justify-content: center; box-sizing: border-box;
-    padding: clamp(70px, 12vh, 130px) 6vw clamp(90px, 14vh, 150px); overflow: hidden;
+    padding: clamp(40px, 7vh, 90px) 6vw clamp(70px, 10vh, 110px); overflow: hidden;
+    box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.18);
     font-family: "Archivo", "Inter", "Helvetica Neue", Arial, sans-serif; }
+
+  /* Dims the pinned section behind as the panel rises over it. */
+  .mf-scrim { position: fixed; inset: 0; z-index: 5; background: #0a0a0a; opacity: 0; pointer-events: none; }
 
   .mf-text { max-width: 860px; text-align: center; font-weight: 800; text-transform: uppercase;
     font-size: clamp(21px, {{ section.settings.text_size | default: 32 | divided_by: 10.0 }}vw, {{ section.settings.text_size | default: 32 | times: 1.4 }}px);
@@ -21,10 +29,10 @@
   .mf-chip:hover { background: #0a0a0a; color: #fff; }
 
   @media (max-width: 720px) {
-    .dyn-mf { padding-bottom: 150px; }
+    .dyn-mf { padding-bottom: 140px; }
     .mf-text { line-height: 1.18; }
     .mf-chips--left { left: 14px; right: 14px; }
-    .mf-chips--right { right: 14px; bottom: 74px; }
+    .mf-chips--right { right: 14px; bottom: 70px; }
   }
 </style>
 
@@ -48,30 +56,52 @@
   {%- if mf_left != blank -%}<div class="mf-chips mf-chips--left">{{ mf_left }}</div>{%- endif -%}
   {%- if mf_right != blank -%}<div class="mf-chips mf-chips--right">{{ mf_right }}</div>{%- endif -%}
 </section>
+<div class="mf-scrim" id="mfScrim-{{ section.id }}" aria-hidden="true"></div>
 
 <script>
 (function () {
-  /* The statement rises into place as the panel scrolls up — and sinks
-     back if you scroll away, like the rest of the theme's motion. */
   var root = document.getElementById("dynMf-{{ section.id }}");
+  var scrim = document.getElementById("mfScrim-{{ section.id }}");
   var text = document.getElementById("mfText-{{ section.id }}");
-  if (!root || !text) return;
-  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!root) return;
+  var wrap = root.closest(".shopify-section") || root;
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* Pin the section that comes right before this one: sticky with a top
+     offset that parks its bottom edge at the bottom of the screen, so the
+     page appears to stand still while the panel scrolls up over it. */
+  var prev = wrap.previousElementSibling;
+  function pin() {
+    if (!prev) return;
+    prev.style.position = "sticky";
+    prev.style.top = Math.min(0, window.innerHeight - prev.offsetHeight) + "px";
+  }
+
   var raf = 0;
   function ease(t) { return 1 - Math.pow(1 - t, 3); }
   function frame() {
     raf = 0;
     var vh = window.innerHeight;
     var r = root.getBoundingClientRect();
-    var p = (vh - r.top) / (vh * 0.85);
-    p = Math.max(0, Math.min(1, p));
-    var t = ease(p);
-    text.style.transform = "translateY(" + ((1 - t) * 14).toFixed(2) + "vh)";
-    text.style.opacity = (0.25 + t * 0.75).toFixed(3);
+    var p = Math.max(0, Math.min(1, (vh - r.top) / Math.max(1, r.height)));
+    if (scrim) {
+      scrim.style.opacity = (p * 0.45).toFixed(3);
+      scrim.style.display = p > 0 ? "" : "none";
+    }
+    if (text && !calm) {
+      var t = ease(p);
+      text.style.transform = "translateY(" + ((1 - t) * 9).toFixed(2) + "vh)";
+      text.style.opacity = (0.3 + t * 0.7).toFixed(3);
+    }
   }
   function queue() { if (!raf) raf = requestAnimationFrame(frame); }
+  function onResize() { pin(); queue(); }
+
   window.addEventListener("scroll", queue, { passive: true });
-  window.addEventListener("resize", queue, { passive: true });
+  window.addEventListener("resize", onResize, { passive: true });
+  window.addEventListener("load", onResize, { passive: true });
+  document.addEventListener("shopify:section:load", onResize);
+  pin();
   frame();
 })();
 </script>
@@ -79,12 +109,12 @@
 {% schema %}
 {
   "name": "Dynamic Manifesto",
-  "tag": "section",
+  "tag": "div",
   "settings": [
-    { "type": "paragraph", "content": "A Bécane-style closing statement: a bold uppercase manifesto that rises up as the visitor reaches the end of the page, with small white link chips in the bottom corners." },
+    { "type": "paragraph", "content": "A Bécane-style closing statement. Place it after another section: that section stays pinned in place while this panel scrolls up OVER it, covering the lower part of the screen — reversible with the scroll, and the content behind dims as it's covered." },
     { "type": "textarea", "id": "text", "label": "Statement", "default": "Born to be personal, made to be yours. Every piece starts blank and leaves one of a kind. A call to make it your own, with no compromise and no concession." },
     { "type": "range", "id": "text_size", "label": "Text size", "min": 20, "max": 48, "step": 2, "default": 32 },
-    { "type": "range", "id": "panel_h", "label": "Panel height", "min": 50, "max": 100, "step": 2, "unit": "vh", "default": 78 },
+    { "type": "range", "id": "panel_h", "label": "Panel height", "min": 40, "max": 90, "step": 2, "unit": "vh", "default": 66, "info": "66 ≈ two-thirds of the screen." },
     { "type": "color", "id": "bg_color", "label": "Background", "default": "#f5f5f5" },
     { "type": "color", "id": "ink_color", "label": "Text", "default": "#0a0a0a" }
   ],
