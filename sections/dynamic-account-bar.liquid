@@ -2451,6 +2451,19 @@
       if (!t) return;
       var dock = innerWidth <= 700;
       if (pop.hidden && !dock) return;
+      var tid = t.getAttribute("data-vtab");
+      /* Door tabs navigate straight away — never open a window for them
+         (opening first flashed a mispositioned window on the phone dock). */
+      /* The person icon is a door: profile on Shopify's site when signed
+         in, secure login when signed out. */
+      if (tid === "account") { location.href = vCust ? vProf : vLogin; return; }
+      /* Home is a plain door — no window, just go. */
+      if (tid === "home") { location.href = {{ routes.root_url | json }}; return; }
+      if (tid.indexOf("app-") === 0) {
+        var tap = vApps[parseInt(tid.slice(4), 10)];
+        /* Home is a plain door — no window, just go. */
+        if (tap && tap.home) { location.href = tap.href; return; }
+      }
       if (pop.hidden && dock) {
         /* The phone dock works without the orb: the first tap on a tab
            opens its window directly. */
@@ -2461,17 +2474,6 @@
         pop.style.left = ""; pop.style.right = ""; pop.style.top = ""; pop.style.bottom = "";
         pop.style.width = ""; pop.style.maxHeight = ""; pop.style.height = "";
         pop.style.transform = ""; pop.style.animation = "";
-      }
-      var tid = t.getAttribute("data-vtab");
-      /* The person icon is a door: profile on Shopify's site when signed
-         in, secure login when signed out. */
-      if (tid === "account") { location.href = vCust ? vProf : vLogin; return; }
-      /* Home is a plain door — no window, just go. */
-      if (tid === "home") { location.href = {{ routes.root_url | json }}; return; }
-      if (tid.indexOf("app-") === 0) {
-        var tap = vApps[parseInt(tid.slice(4), 10)];
-        /* Home is a plain door — no window, just go. */
-        if (tap && tap.home) { location.href = tap.href; return; }
       }
       pop.setAttribute("data-vtab", tid);
       paintVision();
