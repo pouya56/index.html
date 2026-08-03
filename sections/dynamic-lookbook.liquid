@@ -1,0 +1,341 @@
+{%- liquid
+  assign lb_col = section.settings.collection
+  assign lb_limit = section.settings.limit | default: 12
+-%}
+
+<style>
+  .dyn-lb { position: relative; background: {{ section.settings.bg_color | default: '#f5f5f5' }}; color: {{ section.settings.ink_color | default: '#0a0a0a' }};
+    min-height: 100svh; padding: 26px 26px 70px; box-sizing: border-box; overflow: hidden;
+    font-family: "Archivo", "Inter", "Helvetica Neue", Arial, sans-serif; }
+  .dyn-lb, .dyn-lb * { -webkit-tap-highlight-color: transparent; }
+
+  /* ---- header, Bécane-style white chips ---- */
+  .lb-head { margin: 46px 0 6px; }
+  .lb-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85; }
+  .lb-title { margin: 6px 0 0; font-size: clamp(38px, 5.4vw, 74px); line-height: 0.95; font-weight: 800;
+    letter-spacing: 0.01em; text-transform: uppercase; }
+  .lb-meta { display: flex; gap: 64px; margin-top: 26px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .lb-meta b { font-size: 13px; }
+
+  /* ---- the lineup ---- */
+  .lb-row { display: flex; justify-content: space-evenly; align-items: flex-end; gap: 6px;
+    margin-top: clamp(30px, 8vh, 90px); min-height: {{ section.settings.fig_h | default: 44 }}vh; flex-wrap: wrap; row-gap: 40px; }
+  .lb-fig { appearance: none; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; position: relative;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+  .lb-fig img { display: block; height: {{ section.settings.fig_h | default: 44 }}vh; width: auto; max-width: 24vw; object-fit: contain; }
+  @media (hover: hover) { .lb-fig:hover { transform: translateY(-8px) scale(1.04); } }
+  .lb-fig:focus-visible { outline: 2px solid currentColor; outline-offset: 6px; }
+
+  .lb-count { position: absolute; left: 26px; bottom: 22px; background: #fff; color: #0a0a0a; padding: 12px 16px;
+    display: flex; gap: 44px; align-items: baseline; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05); }
+  .lb-count .soft { opacity: 0.35; }
+
+  /* ---- zoomed look view ---- */
+  .lb-view { position: fixed; inset: 0; z-index: 210; background: {{ section.settings.bg_color | default: '#f5f5f5' }};
+    color: {{ section.settings.ink_color | default: '#0a0a0a' }}; display: none; }
+  .lb-view.is-open { display: block; }
+  .lb-stage { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    cursor: grab; touch-action: none; }
+  .lb-stage.is-drag { cursor: grabbing; }
+  .lb-big { height: min(80vh, 900px); width: auto; max-width: 82vw; object-fit: contain; user-select: none; -webkit-user-drag: none;
+    pointer-events: none; }
+  .lb-view.is-open .lb-big { animation: lbPop 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+  @keyframes lbPop { from { transform: scale(0.62); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
+
+  .lb-ghost { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; height: 58vh; width: auto; opacity: 0.16;
+    cursor: pointer; border: 0; background: none; padding: 0; transition: opacity 0.25s; }
+  .lb-ghost img { height: 100%; width: auto; display: block; pointer-events: none; }
+  .lb-ghost:hover { opacity: 0.4; }
+  .lb-ghost--prev { left: 2vw; }
+  .lb-ghost--next { right: 2vw; }
+
+  .lb-look { position: absolute; left: 26px; top: 26px; z-index: 3; pointer-events: none; }
+  .lb-look .lb-kicker { pointer-events: none; }
+  .lb-look h3 { margin: 4px 0 0; font-size: clamp(30px, 4.2vw, 58px); line-height: 0.95; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.01em; max-width: 40vw; }
+  .lb-deg { position: absolute; left: 26px; top: 26px; margin-top: clamp(120px, 16vh, 180px); z-index: 3;
+    background: #fff; padding: 10px 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; min-width: 110px;
+    display: flex; align-items: center; gap: 12px; }
+  .lb-deg-bar { flex: 1; height: 3px; background: rgba(10, 10, 10, 0.14); position: relative; min-width: 60px; }
+  .lb-deg-bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 20%; background: #0a0a0a; transition: left 0.12s linear; }
+
+  .lb-close { position: absolute; right: 26px; top: 26px; z-index: 4; appearance: none; border: 0; background: #fff;
+    color: #0a0a0a; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 12px 16px; cursor: pointer; }
+  .lb-close:hover { background: #0a0a0a; color: #fff; }
+
+  .lb-buy { position: absolute; left: 26px; bottom: 22px; z-index: 3; display: flex; gap: 8px; flex-wrap: wrap; }
+  .lb-buy a { display: flex; align-items: center; gap: 40px; background: #fff; color: #0a0a0a; text-decoration: none;
+    padding: 14px 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .lb-buy a .soft { opacity: 0.35; }
+  .lb-buy a:hover { background: #0a0a0a; color: #fff; }
+  .lb-buy a:hover .soft { opacity: 0.6; }
+
+  .lb-hint { position: absolute; right: 26px; bottom: 22px; z-index: 3; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.4; }
+
+  @media (max-width: 720px) {
+    .dyn-lb { padding: 18px 16px 60px; }
+    .lb-fig img { height: 30vh; max-width: 40vw; }
+    .lb-row { min-height: 0; }
+    .lb-ghost { display: none; }
+    .lb-big { height: 62vh; max-width: 92vw; }
+    .lb-look h3 { max-width: 80vw; }
+    .lb-count, .lb-buy { left: 16px; bottom: 16px; }
+    .lb-hint { display: none; }
+  }
+</style>
+
+<section class="dyn-lb" id="dynLb-{{ section.id }}">
+  <header class="lb-head">
+    <div class="lb-kicker">{{ section.settings.kicker | default: 'Collection 01 / 01' }}</div>
+    <h2 class="lb-title">{{ section.settings.heading | default: 'Collection' }}</h2>
+    <div class="lb-meta">
+      <span>Products</span>
+      <b>{% if lb_col != blank %}{{ lb_col.products.size | at_most: lb_limit }}{% else %}0{% endif %}</b>
+    </div>
+  </header>
+
+  <div class="lb-row" id="lbRow-{{ section.id }}">
+    {%- if lb_col != blank -%}
+      {%- for p in lb_col.products limit: lb_limit -%}
+        <button class="lb-fig" type="button" data-idx="{{ forloop.index0 }}" aria-label="View {{ p.title | escape }}">
+          <img src="{{ p.featured_image | image_url: width: 900 }}" alt="{{ p.title | escape }}" loading="lazy" width="450" height="600" style="height: auto;">
+        </button>
+      {%- endfor -%}
+    {%- else -%}
+      <p style="opacity: 0.5; font-size: 13px;">Pick a collection in the section settings to fill the lookbook.</p>
+    {%- endif -%}
+  </div>
+
+  <div class="lb-count">
+    <span>{% if lb_col != blank %}{{ lb_col.products.size | at_most: lb_limit }}{% else %}0{% endif %} products</span>
+    <span class="soft">Discover</span>
+  </div>
+
+  <div class="lb-view" id="lbView-{{ section.id }}" role="dialog" aria-modal="true" aria-label="Product look view">
+    <div class="lb-look">
+      <div class="lb-kicker" id="lbLookNo-{{ section.id }}"></div>
+      <h3 id="lbLookTitle-{{ section.id }}"></h3>
+    </div>
+    <div class="lb-deg"><span id="lbDeg-{{ section.id }}">0° / 360°</span><span class="lb-deg-bar"><i id="lbDegBar-{{ section.id }}"></i></span></div>
+    <button class="lb-close" type="button" id="lbClose-{{ section.id }}">Close &times;</button>
+    <button class="lb-ghost lb-ghost--prev" type="button" id="lbPrev-{{ section.id }}" aria-label="Previous look"><img src="" alt=""></button>
+    <button class="lb-ghost lb-ghost--next" type="button" id="lbNext-{{ section.id }}" aria-label="Next look"><img src="" alt=""></button>
+    <div class="lb-stage" id="lbStage-{{ section.id }}">
+      <img class="lb-big" id="lbBig-{{ section.id }}" src="" alt="">
+    </div>
+    <div class="lb-buy" id="lbBuy-{{ section.id }}"></div>
+    <div class="lb-hint">Scroll or drag to spin</div>
+  </div>
+</section>
+
+<script type="application/json" id="lbData-{{ section.id }}">
+{
+  "items": [
+    {%- if lb_col != blank -%}
+      {%- for p in lb_col.products limit: lb_limit -%}
+      {
+        "t": {{ p.title | json }},
+        "u": {{ p.url | json }},
+        "m": {{ p.price | money | strip_html | json }},
+        "f": [
+          {%- assign fc = 0 -%}
+          {%- for media in p.media -%}
+            {%- if media.media_type == 'image' and fc < 24 -%}
+              {%- if fc > 0 -%},{%- endif -%}{{ media | image_url: width: 900 | json }}
+              {%- assign fc = fc | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+        ],
+        "F": [
+          {%- assign fc = 0 -%}
+          {%- for media in p.media -%}
+            {%- if media.media_type == 'image' and fc < 24 -%}
+              {%- if fc > 0 -%},{%- endif -%}{{ media | image_url: width: 1800 | json }}
+              {%- assign fc = fc | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+        ]
+      }{%- unless forloop.last -%},{%- endunless -%}
+      {%- endfor -%}
+    {%- endif -%}
+  ]
+}
+</script>
+
+<script>
+(function () {
+  var sid = "{{ section.id }}";
+  var root = document.getElementById("dynLb-" + sid);
+  var dataEl = document.getElementById("lbData-" + sid);
+  if (!root || !dataEl) return;
+  var items;
+  try { items = (JSON.parse(dataEl.textContent) || {}).items || []; } catch (err) { items = []; }
+  if (!items.length) return;
+
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var SPIN_MS = {{ section.settings.spin_ms | default: 450 }};
+
+  var row = document.getElementById("lbRow-" + sid);
+  var figs = Array.prototype.slice.call(row.querySelectorAll(".lb-fig"));
+
+  /* ---- lineup: every figure slowly turns, filmstrip-style, once the
+     section is on screen. Frames are just the product's photos. ---- */
+  var seen = false, timer = 0;
+  var state = figs.map(function (fig, i) {
+    var fr = (items[i] && items[i].f) || [];
+    /* start each figure on a different frame so the row doesn't turn in lock-step */
+    return { img: fig.querySelector("img"), frames: fr, at: fr.length ? i % fr.length : 0, loaded: false };
+  });
+  function preloadRow() {
+    state.forEach(function (st) {
+      if (st.loaded) return;
+      st.loaded = true;
+      st.frames.forEach(function (u) { var im = new Image(); im.src = u; });
+    });
+  }
+  function tickRow() {
+    for (var i = 0; i < state.length; i++) {
+      var st = state[i];
+      if (st.frames.length < 2) continue;
+      st.at = (st.at + 1) % st.frames.length;
+      st.img.src = st.frames[st.at];
+    }
+  }
+  function startRow() {
+    if (calm || timer || state.every(function (s) { return s.frames.length < 2; })) return;
+    preloadRow();
+    timer = setInterval(tickRow, SPIN_MS);
+  }
+  function stopRow() { if (timer) { clearInterval(timer); timer = 0; } }
+  if (typeof IntersectionObserver !== "undefined") {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { seen = true; startRow(); } else { stopRow(); } });
+    }, { threshold: 0.1 }).observe(root);
+  } else { startRow(); }
+
+  /* ---- zoomed look view ---- */
+  var view = document.getElementById("lbView-" + sid);
+  var stage = document.getElementById("lbStage-" + sid);
+  var big = document.getElementById("lbBig-" + sid);
+  var lookNo = document.getElementById("lbLookNo-" + sid);
+  var lookTitle = document.getElementById("lbLookTitle-" + sid);
+  var degEl = document.getElementById("lbDeg-" + sid);
+  var degBar = document.getElementById("lbDegBar-" + sid);
+  var buyEl = document.getElementById("lbBuy-" + sid);
+  var prevBtn = document.getElementById("lbPrev-" + sid);
+  var nextBtn = document.getElementById("lbNext-" + sid);
+  var closeBtn = document.getElementById("lbClose-" + sid);
+  var cur = 0, frame = 0, open = false;
+
+  function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+  function frames() { var it = items[cur]; return (it && (it.F.length ? it.F : it.f)) || []; }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+
+  function paintFrame() {
+    var fr = frames();
+    if (!fr.length) return;
+    frame = ((frame % fr.length) + fr.length) % fr.length;
+    big.src = fr[frame];
+    var deg = Math.round((frame / fr.length) * 360);
+    degEl.textContent = deg + "° / 360°";
+    degBar.style.left = Math.min(80, (frame / fr.length) * 100).toFixed(1) + "%";
+  }
+  function paintLook() {
+    var it = items[cur];
+    lookNo.textContent = "Look " + pad(cur + 1) + " / " + pad(items.length);
+    lookTitle.textContent = it.t;
+    buyEl.innerHTML = '<a href="' + esc(it.u) + '"><span>' + esc(it.t) + "</span>" +
+      (it.m ? '<span class="soft">' + esc(it.m) + "</span>" : "") + "<span>View</span></a>";
+    var pv = items[(cur - 1 + items.length) % items.length];
+    var nx = items[(cur + 1) % items.length];
+    prevBtn.querySelector("img").src = (pv.f[0] || "");
+    nextBtn.querySelector("img").src = (nx.f[0] || "");
+    prevBtn.style.display = items.length > 1 ? "" : "none";
+    nextBtn.style.display = items.length > 1 ? "" : "none";
+    frame = 0;
+    paintFrame();
+    /* warm the big frames so spinning is instant */
+    frames().forEach(function (u) { var im = new Image(); im.src = u; });
+  }
+  function openView(i) {
+    cur = i;
+    open = true;
+    paintLook();
+    view.classList.add("is-open");
+    document.documentElement.style.overflow = "hidden";
+    stopRow();
+    closeBtn.focus({ preventScroll: true });
+  }
+  function closeView() {
+    open = false;
+    view.classList.remove("is-open");
+    document.documentElement.style.overflow = "";
+    if (seen) startRow();
+  }
+
+  figs.forEach(function (fig) {
+    fig.addEventListener("click", function () { openView(parseInt(fig.getAttribute("data-idx"), 10) || 0); });
+  });
+  closeBtn.addEventListener("click", closeView);
+  prevBtn.addEventListener("click", function () { cur = (cur - 1 + items.length) % items.length; paintLook(); });
+  nextBtn.addEventListener("click", function () { cur = (cur + 1) % items.length; paintLook(); });
+
+  /* scroll spins the product */
+  var acc = 0;
+  view.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    acc += (e.deltaMode ? e.deltaY * 40 : e.deltaY);
+    var STEP = 90;
+    while (acc >= STEP) { frame++; acc -= STEP; paintFrame(); }
+    while (acc <= -STEP) { frame--; acc += STEP; paintFrame(); }
+  }, { passive: false });
+
+  /* dragging spins it too (and is the touch path) */
+  var dragX = null, dragAcc = 0;
+  stage.addEventListener("pointerdown", function (e) {
+    dragX = e.clientX; dragAcc = 0;
+    stage.classList.add("is-drag");
+    if (stage.setPointerCapture) { try { stage.setPointerCapture(e.pointerId); } catch (err) {} }
+  });
+  stage.addEventListener("pointermove", function (e) {
+    if (dragX == null) return;
+    dragAcc += e.clientX - dragX;
+    dragX = e.clientX;
+    var STEP = 26;
+    while (dragAcc >= STEP) { frame--; dragAcc -= STEP; paintFrame(); }
+    while (dragAcc <= -STEP) { frame++; dragAcc += STEP; paintFrame(); }
+  });
+  ["pointerup", "pointercancel"].forEach(function (ev) {
+    stage.addEventListener(ev, function () { dragX = null; stage.classList.remove("is-drag"); });
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (!open) return;
+    if (e.key === "Escape") closeView();
+    else if (e.key === "ArrowRight") { frame++; paintFrame(); }
+    else if (e.key === "ArrowLeft") { frame--; paintFrame(); }
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Lookbook",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "A Bécane-style lookbook: the collection's products stand side by side, slowly turning (each product's photos are its rotation frames — upload angle shots in order for the best spin). Clicking one zooms it in; scroll or drag to spin it, with its neighbours ghosted at the sides." },
+    { "type": "collection", "id": "collection", "label": "Collection" },
+    { "type": "range", "id": "limit", "label": "Max products", "min": 4, "max": 16, "step": 1, "default": 12 },
+    { "type": "text", "id": "kicker", "label": "Small line above the heading", "default": "Collection 01 / 01" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Collection" },
+    { "type": "range", "id": "fig_h", "label": "Figure height", "min": 30, "max": 64, "step": 2, "unit": "vh", "default": 44 },
+    { "type": "range", "id": "spin_ms", "label": "Spin speed (time per frame)", "min": 200, "max": 1200, "step": 50, "unit": "ms", "default": 450, "info": "Lower = faster turning in the lineup. Products with a single photo stand still." },
+    { "type": "color", "id": "bg_color", "label": "Background", "default": "#f5f5f5" },
+    { "type": "color", "id": "ink_color", "label": "Text", "default": "#0a0a0a" }
+  ],
+  "presets": [ { "name": "Dynamic Lookbook" } ]
+}
+{% endschema %}
