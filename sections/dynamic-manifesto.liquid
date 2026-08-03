@@ -117,9 +117,12 @@
         chip.style.minWidth = chip.getBoundingClientRect().width + "px";
         var f = 0;
         cancelAnimationFrame(sRaf);
+        /* churn the WHOLE label for a beat first, then lock letters in
+           one by one — so even the first word visibly scrambles */
+        var HOLD = 14, RATE = 3;
         var step = function () {
           f++;
-          var lock = Math.floor(f / 2);
+          var lock = Math.max(0, Math.floor((f - HOLD) / RATE));
           var out = "";
           for (var i = 0; i < orig.length; i++) {
             var c = orig.charAt(i);
