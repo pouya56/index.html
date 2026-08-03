@@ -882,6 +882,20 @@
       .dyn-abar .dh-vdel { width: 24px; height: 24px; top: 6px; right: 6px; }
     }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
+    @media (max-width: 700px) {
+      /* Phone: the orb steps aside and the tab bar becomes a persistent
+         Instagram-style dock across the bottom — always there, no orb tap
+         needed. Hidden on the landing-hero page, which stays clean. */
+      .dyn-abar .dh-apps-btn { display: none !important; }
+      .dyn-abar .dh-vbar { display: flex; flex-direction: row; align-items: center;
+        left: 50% !important; top: auto !important; right: auto;
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        transform: translateX(-50%); animation: none;
+        max-width: calc(100vw - 20px); max-height: none;
+        overflow-x: auto; overflow-y: hidden; padding: 8px; }
+      body:has(.dyn-hero.dh-landing) .dyn-abar .dh-vbar,
+      .dyn-abar .dh-vbar.dh-vbar--hero { display: none !important; }
+    }
   </style>
 
   <div class="ab-inner">
@@ -1627,6 +1641,9 @@
       '<button type="button" class="dh-vtab" data-vtab="apps" aria-label="Apps"><svg viewBox="0 0 24 24"><circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/><circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/></svg></button>' +
       '<button type="button" class="dh-vtab" data-vtab="account" aria-label="Account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></button>' +
       '<button type="button" class="dh-vtab" data-vtab="home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></button>';
+    /* Landing-hero pages keep the phone dock away (fallback for browsers
+       without CSS :has — the class is scoped to the phone media query). */
+    if (document.querySelector(".dyn-hero.dh-landing")) vbar.classList.add("dh-vbar--hero");
     host.appendChild(vbar);
     /* Every app gets its own tab; its window shows a live preview of the
        page (same-shop links embed; outside links get an Open button). */
@@ -2356,18 +2373,39 @@
         }
       }
       var vb = vbar.getBoundingClientRect();
-      var pw = pop.offsetWidth || 560;
-      var onLeft = vb.left + vb.width / 2 < innerWidth / 2;
-      pop.style.left = onLeft
-        ? Math.round(vb.right + 16) + "px"
-        : Math.round(Math.max(16, vb.left - 16 - pw)) + "px";
-      var ph2 = pop.offsetHeight;
-      pop.style.top = Math.round(Math.min(Math.max(16, vb.top + vb.height / 2 - ph2 / 2), innerHeight - ph2 - 16)) + "px";
+      if (innerWidth <= 700) {
+        /* Phone dock: the window floats centred ABOVE the bottom bar. */
+        var pwP = pop.offsetWidth || Math.min(innerWidth - 24, 560);
+        pop.style.left = Math.round(Math.max(12, (innerWidth - pwP) / 2)) + "px";
+        var phP = pop.offsetHeight;
+        pop.style.top = Math.round(Math.max(12, vb.top - 12 - phP)) + "px";
+      } else {
+        var pw = pop.offsetWidth || 560;
+        var onLeft = vb.left + vb.width / 2 < innerWidth / 2;
+        pop.style.left = onLeft
+          ? Math.round(vb.right + 16) + "px"
+          : Math.round(Math.max(16, vb.left - 16 - pw)) + "px";
+        var ph2 = pop.offsetHeight;
+        pop.style.top = Math.round(Math.min(Math.max(16, vb.top + vb.height / 2 - ph2 / 2), innerHeight - ph2 - 16)) + "px";
+      }
     }
     vbar.addEventListener("click", function (e) {
       e.stopPropagation();
       var t = e.target.closest ? e.target.closest(".dh-vtab") : null;
-      if (!t || pop.hidden) return;
+      if (!t) return;
+      var dock = innerWidth <= 700;
+      if (pop.hidden && !dock) return;
+      if (pop.hidden && dock) {
+        /* The phone dock works without the orb: the first tap on a tab
+           opens its window directly. */
+        pop.hidden = false;
+        btn.setAttribute("aria-expanded", "true");
+        pop.classList.add("is-vision");
+        if (!pop.getAttribute("data-vtab")) pop.setAttribute("data-vtab", "widgets");
+        pop.style.left = ""; pop.style.right = ""; pop.style.top = ""; pop.style.bottom = "";
+        pop.style.width = ""; pop.style.maxHeight = ""; pop.style.height = "";
+        pop.style.transform = ""; pop.style.animation = "";
+      }
       var tid = t.getAttribute("data-vtab");
       /* The person icon is a door: profile on Shopify's site when signed
          in, secure login when signed out. */
