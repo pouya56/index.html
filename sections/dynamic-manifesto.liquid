@@ -71,8 +71,13 @@
      offset that parks its bottom edge at the bottom of the screen, so the
      page appears to stand still while the panel scrolls up over it. */
   var prev = wrap.previousElementSibling;
+  /* Phones skip the pinning: dynamic toolbars and theme wrappers make
+     ancestor-sticky unreliable there, so the panel simply scrolls in —
+     always visible — while desktop keeps the full curtain overlap. */
+  var mobileQ = window.matchMedia ? window.matchMedia("(max-width: 720px)") : null;
   function pin() {
     if (!prev) return;
+    if (mobileQ && mobileQ.matches) { prev.style.position = ""; prev.style.top = ""; return; }
     prev.style.position = "sticky";
     prev.style.top = Math.min(0, window.innerHeight - prev.offsetHeight) + "px";
   }
