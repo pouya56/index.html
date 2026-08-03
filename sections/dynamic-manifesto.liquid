@@ -103,6 +103,41 @@
   document.addEventListener("shopify:section:load", onResize);
   pin();
   frame();
+
+  /* Hovering a corner chip scrambles its label through random characters,
+     locking the real letters back in left to right — decode-style. */
+  var fine = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+  if (fine && !calm) {
+    var CH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&@";
+    Array.prototype.forEach.call(root.querySelectorAll(".mf-chip"), function (chip) {
+      var orig = chip.textContent;
+      var sRaf = 0;
+      chip.addEventListener("mouseenter", function () {
+        /* freeze the chip's width so the shuffle doesn't make it wobble */
+        chip.style.minWidth = chip.getBoundingClientRect().width + "px";
+        var f = 0;
+        cancelAnimationFrame(sRaf);
+        var step = function () {
+          f++;
+          var lock = Math.floor(f / 2);
+          var out = "";
+          for (var i = 0; i < orig.length; i++) {
+            var c = orig.charAt(i);
+            if (c === " ") { out += c; continue; }
+            out += i < lock ? c : CH.charAt(Math.floor(Math.random() * CH.length));
+          }
+          chip.textContent = out;
+          if (lock < orig.length) sRaf = requestAnimationFrame(step);
+          else chip.textContent = orig;
+        };
+        sRaf = requestAnimationFrame(step);
+      });
+      chip.addEventListener("mouseleave", function () {
+        cancelAnimationFrame(sRaf);
+        chip.textContent = orig;
+      });
+    });
+  }
 })();
 </script>
 
