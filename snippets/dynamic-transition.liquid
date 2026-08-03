@@ -1,8 +1,9 @@
 {%- comment -%}
-  Bécane-style page transitions: on every same-site navigation the NEW page
-  slides up smoothly from the bottom while the old one holds still beneath it.
-  Uses the browser's native cross-document View Transitions (Chrome, Edge,
-  Safari); other browsers simply navigate normally.
+  Bécane-style page transitions. Forward navigations slide the new page up
+  from the bottom; going BACK (the browser's back/forward buttons, or any
+  link that leads home) slides it down from the top instead. Uses native
+  cross-document View Transitions (Chrome, Edge, Safari); other browsers
+  simply navigate normally.
 
   Install: render this once in the <head> of layout/theme.liquid:
     {% render 'dynamic-transition' %}
@@ -12,6 +13,10 @@
 
   @keyframes dynVtUp {
     from { transform: translateY(100vh); }
+    to { transform: translateY(0); }
+  }
+  @keyframes dynVtDown {
+    from { transform: translateY(-100vh); }
     to { transform: translateY(0); }
   }
 
@@ -26,8 +31,31 @@
     z-index: 2;
     box-shadow: 0 -18px 60px rgba(0, 0, 0, 0.25);
   }
+  /* going back (or home): the new page drops in from the top instead */
+  :root:active-view-transition-type(back)::view-transition-new(root) {
+    animation-name: dynVtDown;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
+  }
 
   @media (prefers-reduced-motion: reduce) {
     ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
   }
 </style>
+<script>
+  /* Tag the incoming transition as "back" when this load came from the
+     browser's back button (history index went down) or lands on the
+     homepage — the CSS above then plays the top-to-bottom slide. */
+  window.addEventListener("pagereveal", function (e) {
+    if (!e.viewTransition || !e.viewTransition.types) return;
+    var back = false;
+    try {
+      var act = window.navigation && window.navigation.activation;
+      if (act && act.navigationType === "traverse" && act.from && act.entry &&
+          act.entry.index < act.from.index) back = true;
+    } catch (err) { /* Navigation API unavailable — fall through */ }
+    var home = "{{ routes.root_url }}";
+    var here = window.location.pathname.replace(/\/+$/, "") || "/";
+    if (here === (home.replace(/\/+$/, "") || "/")) back = true;
+    if (back) e.viewTransition.types.add("back");
+  });
+</script>
