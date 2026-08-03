@@ -199,12 +199,9 @@
     margin-top: 30px; margin-bottom: 30px;
     margin-left: calc(50% - var(--sbw) / 2); margin-right: 0; }
   @media (min-width: 900px) { .dyn-hero.dh-landing .dh-search { --sbw: min(48vw, 1200px); } }
-  /* Phones: the landing hero is the whole show — no page scrolling until a
-     search reveals results (the dh-searching class lifts the lock). */
-  @media (max-width: 899px) {
-    html:has(.dyn-hero.dh-landing:not(.dh-searching)) { overflow: hidden; height: 100%; overscroll-behavior: none; }
-    html:has(.dyn-hero.dh-landing:not(.dh-searching)) body { overflow: hidden; height: 100%; overscroll-behavior: none; }
-  }
+  /* Phones used to lock page scrolling while the landing hero was the whole
+     show; sections now live below the hero (manifesto etc.), so the page
+     scrolls freely on every screen size. */
 
   /* Scroll-scrubbed entrance after a story above (gallery/video): the
      hero borrows extra scroll runway from its Shopify wrapper and PINS
