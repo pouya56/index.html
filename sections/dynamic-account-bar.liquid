@@ -529,9 +529,14 @@
       box-shadow: 0 18px 44px -16px rgba(29, 29, 31, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.75), inset 0 -8px 18px rgba(255, 255, 255, 0.14);
       animation: abPop 0.16s ease; }
     .dyn-abar .dh-vbar.is-on { display: flex; }
-    .dyn-abar .dh-vtab { width: 46px; height: 46px; border-radius: 50%; border: none; padding: 0;
+    .dyn-abar .dh-vtab { position: relative; width: 46px; height: 46px; border-radius: 50%; border: none; padding: 0;
       display: flex; align-items: center; justify-content: center; cursor: pointer;
       background: transparent; color: #3a3a3f; transition: background 0.15s, color 0.15s; }
+    /* Red count bubble on Saved / Cart — how many live inside. */
+    .dyn-abar .dh-vbadge { position: absolute; top: -1px; right: -3px; z-index: 2; min-width: 17px; height: 17px;
+      border-radius: 999px; background: #e5443c; color: #fff; padding: 0 4px; box-sizing: border-box;
+      font: 700 10.5px/17px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
+      text-align: center; pointer-events: none; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); }
     .dyn-abar .dh-vtab:hover { background: rgba(255, 255, 255, 0.55); color: #1d1d1f; }
     .dyn-abar .dh-vtab.is-on { background: rgba(42, 42, 47, 0.85); color: #fff; }
     .dyn-abar .dh-vtab svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9;
@@ -1663,22 +1668,32 @@
       var dCart = vbar.querySelector('[data-vtab="cart"]');
       var dApps = vbar.querySelector('[data-vtab="apps"]');
       var lastCount = -1;
+      /* Red bubble with the live count inside the tab's corner. */
+      function badge(tab, n) {
+        if (!tab) return;
+        var bd = tab.querySelector(".dh-vbadge");
+        if (!n) { if (bd) bd.remove(); return; }
+        if (!bd) { bd = document.createElement("span"); bd.className = "dh-vbadge"; bd.setAttribute("aria-hidden", "true"); tab.appendChild(bd); }
+        bd.textContent = n > 99 ? "99+" : n;
+      }
       function tune() {
-        if (window.innerWidth > 700) {
-          if (dApps) dApps.style.display = "";
-          if (dSaved) dSaved.style.display = "";
-          if (dCart) dCart.style.display = "";
-          return;
-        }
-        if (dApps) dApps.style.display = "none";
+        var phone = window.innerWidth <= 700;
+        if (dApps) dApps.style.display = phone ? "none" : "";
         var nSaved = 0;
         try { nSaved = (JSON.parse(localStorage.getItem("dyn_wishlist") || "[]") || []).length; } catch (eT0) {}
-        if (dSaved) dSaved.style.display = nSaved ? "" : "none";
+        badge(dSaved, nSaved);
+        if (dSaved) dSaved.style.display = phone && !nSaved ? "none" : "";
         fetch("/cart.js", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (c) {
-          var n = c && c.item_count ? c.item_count : 0;
+          /* Count what the visitor thinks of as items — companion lines
+             (gift wrap / greeting card riding along) don't inflate it. */
+          var n = 0;
+          ((c && c.items) || []).forEach(function (it) {
+            if (!(it.properties && it.properties._For)) n += it.quantity || 0;
+          });
           lastCount = n;
-          if (dCart) dCart.style.display = n > 0 ? "" : "none";
-        }).catch(function () { if (dCart && lastCount < 1) dCart.style.display = "none"; });
+          badge(dCart, n);
+          if (dCart) dCart.style.display = phone && n < 1 ? "none" : "";
+        }).catch(function () { if (dCart && phone && lastCount < 1) dCart.style.display = "none"; });
       }
       tune();
       window.addEventListener("resize", tune, { passive: true });
