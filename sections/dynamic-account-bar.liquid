@@ -813,6 +813,10 @@
       animation: abSiri 6s linear infinite; filter: blur(8px); opacity: 0; transition: opacity .35s ease; }
     .dyn-abar .dh-vs-go:hover::before, .dyn-abar .dh-vs-go.has-text::before { opacity: 0.95; }
     @media (prefers-reduced-motion: reduce) { .dyn-abar .dh-vs-go::before { animation: none; } }
+    /* The arrow is a circle (glow included) so the lit state reads as a
+       round button, not a colored square. High specificity so the phone
+       sizing rules can't square it off again. */
+    .dyn-abar .dh-vsearch-bar .dh-vs-go, .dyn-abar .dh-vsearch-bar .dh-vs-go::before { border-radius: 50%; }
     /* Card order everywhere: nudges, clock, quote, calendar. */
     .dyn-abar .dh-wg-time { order: 1; }
     .dyn-abar .dh-wg-quote { order: 3; }
