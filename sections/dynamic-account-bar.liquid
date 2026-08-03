@@ -595,6 +595,11 @@
       box-shadow: 0 8px 20px -8px rgba(29, 29, 31, 0.35); transition: background 0.15s, transform 0.15s; }
     .dyn-abar .dh-vgo:hover { background: #fff; transform: translateY(-1px); }
     .dyn-abar .dh-vgo[hidden] { display: none; }
+    @media (max-width: 700px) {
+      /* Phone: the corner arrow gets its own row above the tiles instead of
+         floating over the first tile's remove button. */
+      .dyn-abar .dh-vgo { position: static; float: none; margin: 0 0 10px auto; }
+    }
     .dyn-abar .dh-vgo svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2;
       stroke-linecap: round; stroke-linejoin: round; }
     .dyn-abar .dh-apps-pop.is-vision .dh-apps-head { display: flex; flex-wrap: wrap; gap: 16px;

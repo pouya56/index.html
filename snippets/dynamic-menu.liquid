@@ -16,10 +16,20 @@
 {%- assign gm_nav = linklists[gm_handle] -%}
 {%- if gm_nav != blank and gm_nav.links.size > 0 -%}
 <style>
-  .dyn-gmenu-btn { display: none; position: fixed; top: 16px; right: 16px; z-index: 70; appearance: none; border: 0;
-    background: #fff; color: #0a0a0a; padding: 9px; cursor: pointer; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05); }
+  /* Liquid glass, matching the account bar's back button: frosted fill,
+     etched ring and a soft under-shadow, so it sits over any page content
+     without blocking the view. */
+  .dyn-gmenu-btn { display: none; position: fixed; top: 16px; right: 16px; z-index: 70; appearance: none;
+    width: 46px; height: 46px; border-radius: 50%; padding: 0; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, 0.32);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.65); color: #1d1d1f; cursor: pointer;
+    box-shadow: 0 12px 26px -8px rgba(29, 29, 31, 0.28);
+    transition: box-shadow 0.15s, background 0.15s, transform 0.08s; }
+  .dyn-gmenu-btn:hover { background: rgba(255, 255, 255, 0.5); box-shadow: 0 18px 34px -10px rgba(29, 29, 31, 0.32); }
+  .dyn-gmenu-btn:active { transform: scale(0.95); }
   .dyn-gmenu-btn svg { width: 18px; height: 18px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-  @media (max-width: 700px) { .dyn-gmenu-btn { display: block; } }
+  @media (max-width: 700px) { .dyn-gmenu-btn { display: flex; } }
   /* the landing hero brings its own (left-side) hamburger */
   body:has(.dyn-hero.dh-landing) .dyn-gmenu-btn { display: none; }
 
