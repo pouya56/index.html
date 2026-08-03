@@ -1,0 +1,115 @@
+{%- assign mf_h = section.settings.panel_h | default: 78 -%}
+
+<style>
+  .dyn-mf { position: relative; background: {{ section.settings.bg_color | default: '#f5f5f5' }};
+    color: {{ section.settings.ink_color | default: '#0a0a0a' }}; min-height: {{ mf_h }}svh;
+    display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+    padding: clamp(70px, 12vh, 130px) 6vw clamp(90px, 14vh, 150px); overflow: hidden;
+    font-family: "Archivo", "Inter", "Helvetica Neue", Arial, sans-serif; }
+
+  .mf-text { max-width: 860px; text-align: center; font-weight: 800; text-transform: uppercase;
+    font-size: clamp(21px, {{ section.settings.text_size | default: 32 | divided_by: 10.0 }}vw, {{ section.settings.text_size | default: 32 | times: 1.4 }}px);
+    line-height: 1.12; letter-spacing: 0.02em; margin: 0; will-change: transform, opacity; }
+  .mf-text a { color: inherit; }
+
+  .mf-chips { position: absolute; bottom: 20px; z-index: 2; display: flex; gap: 8px; flex-wrap: wrap; }
+  .mf-chips--left { left: 22px; }
+  .mf-chips--right { right: 22px; justify-content: flex-end; }
+  .mf-chip { display: inline-block; background: #fff; color: #0a0a0a; text-decoration: none;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 12px 16px; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05); }
+  .mf-chip:hover { background: #0a0a0a; color: #fff; }
+
+  @media (max-width: 720px) {
+    .dyn-mf { padding-bottom: 150px; }
+    .mf-text { line-height: 1.18; }
+    .mf-chips--left { left: 14px; right: 14px; }
+    .mf-chips--right { right: 14px; bottom: 74px; }
+  }
+</style>
+
+<section class="dyn-mf" id="dynMf-{{ section.id }}">
+  <p class="mf-text" id="mfText-{{ section.id }}">{{ section.settings.text | newline_to_br }}</p>
+
+  {%- capture mf_left -%}
+    {%- for block in section.blocks -%}
+      {%- if block.settings.side == 'left' and block.settings.label != blank -%}
+        <a class="mf-chip" href="{{ block.settings.url | default: '#' }}" {{ block.shopify_attributes }}>{{ block.settings.label | escape }}</a>
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+  {%- capture mf_right -%}
+    {%- for block in section.blocks -%}
+      {%- if block.settings.side == 'right' and block.settings.label != blank -%}
+        <a class="mf-chip" href="{{ block.settings.url | default: '#' }}" {{ block.shopify_attributes }}>{{ block.settings.label | escape }}</a>
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+  {%- if mf_left != blank -%}<div class="mf-chips mf-chips--left">{{ mf_left }}</div>{%- endif -%}
+  {%- if mf_right != blank -%}<div class="mf-chips mf-chips--right">{{ mf_right }}</div>{%- endif -%}
+</section>
+
+<script>
+(function () {
+  /* The statement rises into place as the panel scrolls up — and sinks
+     back if you scroll away, like the rest of the theme's motion. */
+  var root = document.getElementById("dynMf-{{ section.id }}");
+  var text = document.getElementById("mfText-{{ section.id }}");
+  if (!root || !text) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var raf = 0;
+  function ease(t) { return 1 - Math.pow(1 - t, 3); }
+  function frame() {
+    raf = 0;
+    var vh = window.innerHeight;
+    var r = root.getBoundingClientRect();
+    var p = (vh - r.top) / (vh * 0.85);
+    p = Math.max(0, Math.min(1, p));
+    var t = ease(p);
+    text.style.transform = "translateY(" + ((1 - t) * 14).toFixed(2) + "vh)";
+    text.style.opacity = (0.25 + t * 0.75).toFixed(3);
+  }
+  function queue() { if (!raf) raf = requestAnimationFrame(frame); }
+  window.addEventListener("scroll", queue, { passive: true });
+  window.addEventListener("resize", queue, { passive: true });
+  frame();
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Manifesto",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "A Bécane-style closing statement: a bold uppercase manifesto that rises up as the visitor reaches the end of the page, with small white link chips in the bottom corners." },
+    { "type": "textarea", "id": "text", "label": "Statement", "default": "Born to be personal, made to be yours. Every piece starts blank and leaves one of a kind. A call to make it your own, with no compromise and no concession." },
+    { "type": "range", "id": "text_size", "label": "Text size", "min": 20, "max": 48, "step": 2, "default": 32 },
+    { "type": "range", "id": "panel_h", "label": "Panel height", "min": 50, "max": 100, "step": 2, "unit": "vh", "default": 78 },
+    { "type": "color", "id": "bg_color", "label": "Background", "default": "#f5f5f5" },
+    { "type": "color", "id": "ink_color", "label": "Text", "default": "#0a0a0a" }
+  ],
+  "blocks": [
+    { "type": "chip", "name": "Corner chip", "settings": [
+      { "type": "select", "id": "side", "label": "Corner", "default": "left",
+        "options": [
+          { "value": "left", "label": "Bottom-left" },
+          { "value": "right", "label": "Bottom-right" }
+        ] },
+      { "type": "text", "id": "label", "label": "Text", "default": "Link" },
+      { "type": "url", "id": "url", "label": "Link", "info": "Tip: use mailto:hello@yourstore.com for an email chip." }
+    ]}
+  ],
+  "presets": [
+    {
+      "name": "Dynamic Manifesto",
+      "blocks": [
+        { "type": "chip", "settings": { "side": "left", "label": "Terms of service" } },
+        { "type": "chip", "settings": { "side": "left", "label": "Shipping policy" } },
+        { "type": "chip", "settings": { "side": "left", "label": "Size guide" } },
+        { "type": "chip", "settings": { "side": "right", "label": "hello@dynaeimic.com", "url": "mailto:hello@dynaeimic.com" } },
+        { "type": "chip", "settings": { "side": "right", "label": "Instagram" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
