@@ -281,21 +281,28 @@
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search-go::before { animation: none; } }
   /* Liquid-glass buttons under the search bar (Google-style) */
   .dyn-hero .dh-hero-btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; position: relative; z-index: 11; }
-  /* Small gallery under the search bar — a sideways strip of parallax cards. */
-  .dyn-hero .dh-mini { position: relative; z-index: 11; margin: 28px auto 0; width: min(92vw, 1040px); }
-  .dyn-hero .dh-mini-track { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
-    -webkit-overflow-scrolling: touch; padding: 4px 2px 12px; cursor: grab; }
+  /* Small gallery under the search bar — free-standing cutouts on the page,
+     Bécane style: no frame, no background, all feet on one baseline. */
+  .dyn-hero .dh-mini { position: relative; z-index: 11; margin: 30px auto 0; width: min(92vw, 1100px); }
+  .dyn-hero .dh-mini-track { display: flex; gap: clamp(18px, 3.2vw, 44px); align-items: flex-end;
+    overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch; padding: 4px 2px 10px; cursor: grab; }
   .dyn-hero .dh-mini-track::-webkit-scrollbar { display: none; }
   .dyn-hero .dh-mini-track.is-drag { cursor: grabbing; }
-  .dyn-hero .dh-mini-card { position: relative; flex: none; width: clamp(150px, 16vw, 210px); aspect-ratio: 16 / 11;
-    border-radius: 16px; overflow: hidden; background: #fff; box-shadow: 0 12px 26px -14px rgba(0, 0, 0, 0.3);
-    text-decoration: none; display: block; }
-  .dyn-hero .dh-mini-card img { position: absolute; left: -9%; top: 0; width: 118%; height: 100%; object-fit: cover;
-    will-change: transform; }
-  .dyn-hero .dh-mini-label { position: absolute; left: 10px; bottom: 8px; z-index: 2; background: #fff; color: #0a0a0a;
-    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 9px; border-radius: 999px; }
+  /* auto side margins centre the row while it fits, and give way to
+     scrolling the moment it overflows */
+  .dyn-hero .dh-mini-card:first-child { margin-left: auto; }
+  .dyn-hero .dh-mini-card:last-child { margin-right: auto; }
+  .dyn-hero .dh-mini-card { position: relative; flex: none; height: clamp(110px, 17vh, 180px);
+    background: none; text-decoration: none; display: flex; align-items: flex-end;
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+  .dyn-hero .dh-mini-card img { display: block; height: 100%; width: auto; object-fit: contain; }
+  @media (hover: hover) { .dyn-hero .dh-mini-card:hover { transform: translateY(-5px); } }
+  .dyn-hero .dh-mini-label { position: absolute; left: 50%; transform: translateX(-50%); bottom: -4px; z-index: 2;
+    background: #fff; color: #0a0a0a; white-space: nowrap;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 8px; }
   .dyn-hero.dh-searching .dh-mini { display: none; }
-  @media (max-width: 700px) { .dyn-hero .dh-mini { width: 94vw; } .dyn-hero .dh-mini-card { width: 44vw; } }
+  @media (max-width: 700px) { .dyn-hero .dh-mini { width: 94vw; } .dyn-hero .dh-mini-card { height: 14vh; } }
 
   /* "Finding your gift…" loader — full-screen overlay that covers the whole page (moved to <body> so nothing sits on top) */
   .dh-finding { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px;
@@ -3126,31 +3133,17 @@
 <script>
 (function () {
   /* Small gallery under the search bar: wheel glides it sideways with the
-     scroll-gallery's eased pursuit, mouse-drag scrubs it, and each card's
-     image drifts against its frame (the same in-card parallax). */
+     scroll-gallery's eased pursuit and mouse-drag scrubs it. The cutouts
+     themselves stand still — Bécane style, no frames. */
   var track = document.getElementById("dhMiniTrack");
   if (!track) return;
-  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var cards = Array.prototype.slice.call(track.querySelectorAll(".dh-mini-card"));
   var raf = 0, target = null, cur = 0;
 
-  function paint() {
-    var tr = track.getBoundingClientRect();
-    var mid = tr.left + tr.width / 2;
-    for (var i = 0; i < cards.length; i++) {
-      var r = cards[i].getBoundingClientRect();
-      if (r.right < tr.left - 60 || r.left > tr.right + 60) continue;
-      var off = ((r.left + r.width / 2) - mid) / Math.max(1, tr.width);
-      var im = cards[i].firstElementChild;
-      if (im && im.tagName === "IMG") im.style.transform = "translateX(" + (off * -9).toFixed(2) + "%)";
-    }
-  }
   function step() {
     raf = 0;
-    if (target == null) { paint(); return; }
+    if (target == null) return;
     cur += (target - cur) * 0.14;
     track.scrollLeft = cur;
-    paint();
     if (Math.abs(target - cur) > 0.6) raf = requestAnimationFrame(step);
     else target = null;
   }
@@ -3180,18 +3173,12 @@
     if (Math.abs(d) > 3) moved = true;
     track.scrollLeft -= d;
     dx = e.clientX;
-    paint();
   });
   ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) {
     track.addEventListener(ev, function () { dx = null; track.classList.remove("is-drag"); });
   });
   /* a drag shouldn't fire the card's link on release */
   track.addEventListener("click", function (e) { if (moved) { e.preventDefault(); moved = false; } }, true);
-
-  track.addEventListener("scroll", function () { if (target == null) paint(); }, { passive: true });
-  window.addEventListener("resize", paint, { passive: true });
-  if (calm) { cards.forEach(function (c) { var im = c.firstElementChild; if (im) im.style.transform = ""; }); }
-  else paint();
 })();
 </script>
 
@@ -3517,8 +3504,8 @@
       { "type": "url", "id": "url", "label": "Page to open" }
     ]},
     { "type": "mini_card", "name": "Small gallery card", "settings": [
-      { "type": "paragraph", "content": "Cards appear as a small sideways gallery under the search bar (scroll-gallery style: wheel or drag glides it, images drift inside their frames). Add several for the strip to scroll." },
-      { "type": "image_picker", "id": "image", "label": "Image" },
+      { "type": "paragraph", "content": "A small Bécane-style gallery under the search bar: free-standing cutouts with no frame or background, all on one baseline. Use transparent PNGs (Shopify's image editor → Remove background). Wheel or drag glides the row when it overflows." },
+      { "type": "image_picker", "id": "image", "label": "Image (transparent PNG)" },
       { "type": "text", "id": "label", "label": "Small label (optional)" },
       { "type": "url", "id": "url", "label": "Link (optional)" }
     ]},
