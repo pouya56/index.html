@@ -110,7 +110,8 @@
   .dyn-hero .dh-wrow--xs .dh-word { font-size: clamp(44px, 4.6vw, 84px); }
   /* hover states: the hot word rises above its neighbours (still under the
      UI, which lives at z10+); nearby words hush */
-  .dyn-hero .dh-word.is-hot { opacity: 0.18; position: relative; z-index: 2; }
+  /* hover shows the word at full strength for as long as the cursor stays */
+  .dyn-hero .dh-word.is-hot { opacity: 1; position: relative; z-index: 2; }
   .dyn-hero .dh-word.is-dim { opacity: calc(var(--wbase, 0.05) * 0.45); }
   @media (prefers-reduced-motion: reduce) {
     .dyn-hero .dh-wtrack { animation: none; transform: translateX(-25%); }
