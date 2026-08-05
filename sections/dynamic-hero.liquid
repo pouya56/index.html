@@ -93,7 +93,7 @@
   @keyframes dhWordsL { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   @keyframes dhWordsR { from { transform: translateX(-50%); } to { transform: translateX(0); } }
   .dyn-hero .dh-wset { display: inline-flex; align-items: baseline; }
-  .dyn-hero .dh-word { display: inline-block; pointer-events: auto; cursor: default;
+  .dyn-hero .dh-word { display: inline-block; pointer-events: auto; cursor: pointer; text-decoration: none;
     font-weight: 900; line-height: 1; letter-spacing: -0.02em; color: #0a0a0a;
     opacity: var(--wbase, 0.05); margin-right: clamp(44px, 6vw, 130px);
     transform: translate(var(--wx, 0px), var(--wy, 0px)) scale(var(--ws, 1));
@@ -123,7 +123,7 @@
      one reveals it at full strength for as long as the cursor stays,
      without touching any other strip. ---- */
   .dyn-hero .dh-labs { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-  .dyn-hero .dh-lab { position: absolute; pointer-events: auto; cursor: default; will-change: transform;
+  .dyn-hero .dh-lab { position: absolute; pointer-events: auto; cursor: pointer; text-decoration: none; will-change: transform;
     transform: translate(-50%, -50%);
     animation-duration: var(--ldur, 30s); animation-timing-function: linear; animation-iteration-count: infinite;
     animation-delay: calc(var(--li, 0) * -3.7s); }
@@ -156,8 +156,11 @@
   @media (prefers-reduced-motion: reduce) {
     .dyn-hero .dh-lab { animation: none; }
   }
+  /* touch screens can't hover: rest the strips faintly visible there so
+     the tap targets are seen, never invisible traps */
+  @media (hover: none) { .dyn-hero .dh-labs { --wbase: 0.14; } }
   @media (max-width: 700px) {
-    .dyn-hero .dh-lab:nth-child(n+9) { display: none; }
+    .dyn-hero .dh-lab:nth-child(n+13) { display: none; }
     .dyn-hero .dh-lab-f { font-size: calc(var(--lf, 18px) * 0.7); }
   }
 
@@ -744,20 +747,24 @@
     {%- if section.settings.words_style == 'labels' -%}
     {%- comment -%} Poster-style label strips: deterministic scatter tables
        keep the layout organic but stable between renders. {%- endcomment -%}
-    {%- assign lab_x = '10,78,40,88,18,60,30,70,50,6,83,36,58,22' | split: ',' -%}
-    {%- assign lab_y = '12,20,38,55,72,8,86,30,60,45,76,16,50,90' | split: ',' -%}
-    {%- assign lab_r = '-38,24,-62,12,48,-18,66,-45,30,-8,55,-28,40,-52' | split: ',' -%}
-    {%- assign lab_t = 'far,crisp,mid,crisp,far,mid,crisp,far,crisp,mid,far,crisp,mid,crisp' | split: ',' -%}
-    {%- assign lab_f = '16,22,13,26,30,15,20,28,18,14,34,17,15,21' | split: ',' -%}
-    {%- assign lab_d = '26,34,30,38,24,32,28,36,25,31,27,35,29,33' | split: ',' -%}
-    {%- assign lab_in = 't,r,b,l,t,b,r,l,b,t,l,r,t,b' | split: ',' -%}
-    <div class="dh-labs" id="dhLabs" aria-hidden="true" style="--wbase: {{ section.settings.words_opacity | default: 18 | divided_by: 100.0 }};">
-      {%- for i in (0..13) -%}
+    {%- assign lab_x = '10,78,40,88,18,60,30,70,50,6,83,36,58,22,14,66,92,46,26,74,4,54' | split: ',' -%}
+    {%- assign lab_y = '12,20,38,55,72,8,86,30,60,45,76,16,50,90,28,68,42,82,58,5,65,25' | split: ',' -%}
+    {%- assign lab_r = '-38,24,-62,12,48,-18,66,-45,30,-8,55,-28,40,-52,20,-58,35,-15,62,-33,8,-48' | split: ',' -%}
+    {%- assign lab_t = 'far,crisp,mid,crisp,far,mid,crisp,far,crisp,mid,far,crisp,mid,crisp,mid,crisp,far,crisp,mid,crisp,far,mid' | split: ',' -%}
+    {%- assign lab_f = '16,22,13,26,30,15,20,28,18,14,34,17,15,21,19,24,31,16,14,23,29,15' | split: ',' -%}
+    {%- assign lab_d = '26,34,30,38,24,32,28,36,25,31,27,35,29,33,37,28,40,26,34,30,39,27' | split: ',' -%}
+    {%- assign lab_in = 't,r,b,l,t,b,r,l,b,t,l,r,t,b,l,t,r,b,t,l,b,r' | split: ',' -%}
+    {%- comment -%} Strips rest invisible — the mouse discovers them, and a
+       click searches the store for that word. {%- endcomment -%}
+    <div class="dh-labs" id="dhLabs" style="--wbase: 0;">
+      {%- for i in (0..21) -%}
         {%- assign wi = i | modulo: dh_words.size -%}
-        <span class="dh-lab dh-lab--{{ lab_t[i] }} dh-lab--in-{{ lab_in[i] }}" data-depth="{{ lab_t[i] }}"
-          style="left: {{ lab_x[i] }}%; top: {{ lab_y[i] }}%; --li: {{ i }}; --lr: {{ lab_r[i] }}deg; --lf: {{ lab_f[i] }}px; --ldur: {{ lab_d[i] }}s; --ldel: -{{ i | times: 3 }}s;">
-          <span class="dh-lab-r"><span class="dh-lab-f">{{ dh_words[wi] | strip | escape }}</span></span>
-        </span>
+        {%- assign lab_word = dh_words[wi] | strip -%}
+        <a class="dh-lab dh-lab--{{ lab_t[i] }} dh-lab--in-{{ lab_in[i] }}" data-depth="{{ lab_t[i] }}"
+          href="{{ routes.search_url }}?q={{ lab_word | url_encode }}" aria-label="Search {{ lab_word | escape }}"
+          style="left: {{ lab_x[i] }}%; top: {{ lab_y[i] }}%; --li: {{ i }}; --lr: {{ lab_r[i] }}deg; --lf: {{ lab_f[i] }}px; --ldur: {{ lab_d[i] }}s;">
+          <span class="dh-lab-r"><span class="dh-lab-f">{{ lab_word | escape }}</span></span>
+        </a>
       {%- endfor -%}
     </div>
     {%- else -%}
@@ -774,7 +781,8 @@
                 {%- assign start = ri | times: 4 -%}
                 {%- for i in (0..9) -%}
                   {%- assign wi = start | plus: i | modulo: dh_words.size -%}
-                  <span class="dh-word">{{ dh_words[wi] | strip | escape }}</span>
+                  {%- assign drift_word = dh_words[wi] | strip -%}
+                  <a class="dh-word" href="{{ routes.search_url }}?q={{ drift_word | url_encode }}">{{ drift_word | escape }}</a>
                 {%- endfor -%}
               </span>
             {%- endfor -%}
@@ -3679,7 +3687,7 @@
       "options": [
         { "value": "drift", "label": "Drifting giant words" },
         { "value": "labels", "label": "Floating label strips (poster)" }
-      ], "info": "Label strips: black tape labels fall in from different directions, rest faded, and reveal at full strength while hovered. Word strength sets how faded they rest — 15-25% works well." },
+      ], "info": "Label strips: 22 invisible tape labels rain endlessly from every direction — the mouse reveals one while hovering it, and clicking searches the store for that word. (On touch screens they rest faintly visible so taps aren't blind.) Word strength applies to the drifting style only." },
     { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
     { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
