@@ -71,8 +71,11 @@
      under the cursor, following it magnetically with a small wobble. */
   .dyn-hero .dh-prop { position: absolute; z-index: 1; height: auto; will-change: transform;
     transform: translate(-50%, -50%) translate(var(--px, 0px), var(--py, 0px)) rotate(calc(var(--pr, 0deg) + var(--pw, 0deg)));
-    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.25)); }
+    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.25)); touch-action: none; }
   .dyn-hero .dh-prop.is-front { z-index: 9; }
+  /* Phones: whatever size was picked, a prop never outgrows a third of the
+     screen, so the set always fits the page. */
+  @media (max-width: 700px) { .dyn-hero .dh-prop { max-width: 34vw; } }
 
   /* Google-style corner links (home landing) — horizontal row per corner */
   .dyn-hero.dh-landing .dh-corner-group { position: absolute; z-index: 4; display: flex; flex-direction: row; align-items: center; gap: 4px; min-height: 42px; }
@@ -2981,10 +2984,9 @@
      setting) with a small wobble, easing back to rest when the cursor leaves. */
   var hero = document.getElementById("dynHero");
   if (!hero) return;
-  var fine = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
   var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var props = Array.prototype.slice.call(hero.querySelectorAll(".dh-prop"));
-  if (!fine || calm || !props.length) return;
+  if (calm || !props.length) return;
   var items = props.map(function (el) {
     return { el: el, f: Math.min(0.85, (parseFloat(el.getAttribute("data-depth")) || 5) * 0.08), tx: 0, ty: 0, cx: 0, cy: 0 };
   });
@@ -3016,6 +3018,13 @@
       pKick();
     });
     it.el.addEventListener("pointerleave", function () { it.tx = 0; it.ty = 0; pKick(); });
+    /* Touch: the finger implicitly captures the prop, so it follows the
+       drag; lifting eases it back home (mouse keeps hover behaviour). */
+    ["pointerup", "pointercancel"].forEach(function (ev) {
+      it.el.addEventListener(ev, function (e) {
+        if (e.pointerType !== "mouse") { it.tx = 0; it.ty = 0; pKick(); }
+      });
+    });
   });
 })();
 </script>

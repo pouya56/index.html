@@ -27,8 +27,11 @@
      while hovered, then ease back to rest. */
   .dyn-in .in-prop { position: absolute; z-index: 1; height: auto; will-change: transform;
     transform: translate(-50%, -50%) translate(var(--px, 0px), var(--py, 0px)) rotate(calc(var(--pr, 0deg) + var(--pw, 0deg)));
-    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.35)); }
+    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.35)); touch-action: none; }
   .dyn-in .in-prop.is-front { z-index: 3; }
+  /* Phones: whatever size was picked, a prop never outgrows a third of the
+     screen, so the set always fits the page. */
+  @media (max-width: 700px) { .dyn-in .in-prop { max-width: 34vw; } }
   /* Logo cover mark: starts giant like the headline, and JS shrinks it into
      a small fixed mark top-centre that rides over the intro and gallery. */
   .in-logo { position: absolute; z-index: 2; left: clamp(18px, 3.4vw, 64px); top: clamp(64px, 8vh, 110px);
@@ -176,10 +179,9 @@
   /* Props wake up only under the cursor: while hovered they follow it
      magnetically (strength = their depth setting) with a small wobble,
      and ease back to rest the moment it leaves. */
-  var fine = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
   var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var props = Array.prototype.slice.call(root.querySelectorAll(".in-prop"));
-  if (fine && !calm && props.length) {
+  if (!calm && props.length) {
     var items = props.map(function (el) {
       return { el: el, f: Math.min(0.85, (parseFloat(el.getAttribute("data-depth")) || 5) * 0.08), tx: 0, ty: 0, cx: 0, cy: 0 };
     });
@@ -211,6 +213,13 @@
         pKick();
       });
       it.el.addEventListener("pointerleave", function () { it.tx = 0; it.ty = 0; pKick(); });
+      /* Touch: the finger implicitly captures the prop, so it follows the
+         drag; lifting eases it back home (mouse keeps hover behaviour). */
+      ["pointerup", "pointercancel"].forEach(function (ev) {
+        it.el.addEventListener(ev, function (e) {
+          if (e.pointerType !== "mouse") { it.tx = 0; it.ty = 0; pKick(); }
+        });
+      });
     });
   }
   /* Cover logo: giant on the cover, then shrinks with scroll into a small
