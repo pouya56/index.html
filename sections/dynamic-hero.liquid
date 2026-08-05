@@ -302,6 +302,11 @@
     background: #fff; color: #0a0a0a; white-space: nowrap;
     font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 8px; }
   .dyn-hero.dh-searching .dh-mini { display: none; }
+  /* Dither-filter mode: the photo hides and its per-card canvas draws the
+     terminal look in its place (the photo returns if sampling fails). */
+  .dyn-hero .dh-mini--filter .dh-mini-card img { visibility: hidden; }
+  .dyn-hero .dh-mini--filter .dh-mini-card.dh-nofilter img { visibility: visible; }
+  .dyn-hero .dh-mini-cv { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   @media (max-width: 700px) { .dyn-hero .dh-mini { width: 94vw; } .dyn-hero .dh-mini-card { height: 14vh; } }
 
   /* "Finding your gift…" loader — full-screen overlay that covers the whole page (moved to <body> so nothing sits on top) */
@@ -1333,7 +1338,7 @@
       {%- if mini_count > 0 -%}
       {%- comment -%} Small gallery under the search bar — a sideways strip of
          cards with the scroll-gallery's in-card parallax. {%- endcomment -%}
-      <div class="dh-mini" id="dhMini">
+      <div class="dh-mini{% if section.settings.mini_filter %} dh-mini--filter{% endif %}" id="dhMini"{% if section.settings.mini_filter %} data-ink="{{ section.settings.mini_ink | default: '#00ff66' }}"{% endif %}>
         <div class="dh-mini-track" id="dhMiniTrack">
           {%- for b in section.blocks -%}
             {%- if b.type == 'mini_card' and b.settings.image != blank -%}
@@ -1342,7 +1347,7 @@
               {%- else -%}
                 <div class="dh-mini-card" {{ b.shopify_attributes }}>
               {%- endif -%}
-                <img src="{{ b.settings.image | image_url: width: 700 }}" alt="{{ b.settings.label | escape }}" loading="lazy" width="350" height="240">
+                <img src="{{ b.settings.image | image_url: width: 700 }}" alt="{{ b.settings.label | escape }}" loading="lazy" width="350" height="240"{% if section.settings.mini_filter %} crossorigin="anonymous"{% endif %}>
                 {%- if b.settings.label != blank -%}<span class="dh-mini-label">{{ b.settings.label | escape }}</span>{%- endif -%}
               {%- if b.settings.url != blank -%}</a>{%- else -%}</div>{%- endif -%}
             {%- endif -%}
@@ -3184,6 +3189,156 @@
 
 <script>
 (function () {
+  /* Green dither filter for the small gallery: each card's photo hides and
+     a canvas redraws it through the terminal dither pipeline — Bayer cells,
+     contrast + edge emphasis, flicker, scanlines, bloom and a rare glitch. */
+  var mini = document.getElementById("dhMini");
+  if (!mini || !mini.classList.contains("dh-mini--filter")) return;
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var INKM = mini.getAttribute("data-ink") || "#00ff66";
+  var ink = (function () {
+    var m = /^#?([0-9a-f]{6})$/i.exec(INKM.trim());
+    var n = m ? parseInt(m[1], 16) : 0x00ff66;
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  })();
+  var CELLM = 5;
+  var BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(function (n) { return (n + 0.5) / 16; });
+  var units = [];
+
+  function build(card) {
+    var im = card.querySelector("img");
+    if (!im) return;
+    var u = { card: card, img: im, cv: null, ctx: null, gray: null, edges: null, phase: null, cols: 0, rows: 0, w: 0, h: 0 };
+    units.push(u);
+    function ready() { sample(u); }
+    if (im.complete && im.naturalWidth) ready();
+    else { im.addEventListener("load", ready); im.addEventListener("error", function () { card.classList.add("dh-nofilter"); }); }
+  }
+
+  function sample(u) {
+    var r = u.card.getBoundingClientRect();
+    if (r.width < 8 || r.height < 8) { setTimeout(function () { sample(u); }, 200); return; }
+    try {
+      u.w = r.width; u.h = r.height;
+      if (!u.cv) {
+        u.cv = document.createElement("canvas");
+        u.cv.className = "dh-mini-cv";
+        u.cv.setAttribute("aria-hidden", "true");
+        u.card.appendChild(u.cv);
+        u.ctx = u.cv.getContext("2d");
+      }
+      var dpr = Math.min(2, window.devicePixelRatio || 1);
+      u.cv.width = Math.round(u.w * dpr);
+      u.cv.height = Math.round(u.h * dpr);
+      u.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      u.cols = Math.max(6, Math.floor(u.w / CELLM));
+      u.rows = Math.max(6, Math.floor(u.h / CELLM));
+      var oc = document.createElement("canvas");
+      oc.width = u.cols; oc.height = u.rows;
+      var octx = oc.getContext("2d");
+      var s = Math.min(u.cols / u.img.naturalWidth, u.rows / u.img.naturalHeight);
+      var w = u.img.naturalWidth * s, h = u.img.naturalHeight * s;
+      octx.drawImage(u.img, (u.cols - w) / 2, u.rows - h, w, h); /* feet on the baseline */
+      var d = octx.getImageData(0, 0, u.cols, u.rows).data;
+      u.gray = new Float32Array(u.cols * u.rows);
+      u.phase = new Float32Array(u.cols * u.rows);
+      for (var i = 0; i < u.cols * u.rows; i++) {
+        var a = d[i * 4 + 3] / 255;
+        var lum = (0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]) / 255;
+        u.gray[i] = a * (1 - lum * 0.85);
+        u.phase[i] = Math.random() * 6.28;
+      }
+      u.edges = new Float32Array(u.cols * u.rows);
+      for (var y = 1; y < u.rows - 1; y++) {
+        for (var x = 1; x < u.cols - 1; x++) {
+          var j = y * u.cols + x;
+          var gx = u.gray[j + 1] - u.gray[j - 1], gy = u.gray[j + u.cols] - u.gray[j - u.cols];
+          u.edges[j] = Math.min(1, Math.sqrt(gx * gx + gy * gy) * 2);
+        }
+      }
+      draw(u, 0);
+    } catch (err) { u.card.classList.add("dh-nofilter"); u.gray = null; }
+  }
+
+  function draw(u, t) {
+    if (!u.gray || !u.ctx) return;
+    var ctx = u.ctx;
+    ctx.clearRect(0, 0, u.cv.width, u.cv.height);
+    var live = !calm;
+    var cache = "";
+    for (var y = 0; y < u.rows; y++) {
+      for (var x = 0; x < u.cols; x++) {
+        var i = y * u.cols + x;
+        var v = u.gray[i];
+        if (v <= 0.03) continue;
+        v = (v - 0.5) * 1.15 + 0.5;
+        v += u.edges[i] * 0.4;
+        v *= 0.85;
+        if (live) {
+          var fl = Math.sin(t * 0.02 + u.phase[i] * 9);
+          if (fl > 0.965) v = Math.min(1, v + 0.6);
+          else if (fl < -0.985) v *= 0.25;
+        }
+        if (v <= BAYER[(y & 3) * 4 + (x & 3)]) continue;
+        var lum = Math.max(0, Math.min(1, v));
+        var b = 0.3 + 0.7 * lum, wm = lum * lum * 0.5;
+        var fs = "rgb(" + Math.min(255, Math.round(ink[0] * b + 255 * wm)) + "," +
+          Math.min(255, Math.round(ink[1] * b + 255 * wm)) + "," +
+          Math.min(255, Math.round(ink[2] * b + 255 * wm)) + ")";
+        if (fs !== cache) { ctx.fillStyle = fs; cache = fs; }
+        ctx.fillRect(x * CELLM, y * CELLM, CELLM - 1, CELLM - 1);
+      }
+    }
+    /* bloom */
+    if (typeof ctx.filter === "string") {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = 0.35;
+      ctx.filter = "blur(4px)";
+      ctx.drawImage(u.cv, 0, 0, u.w, u.h);
+      ctx.restore();
+      ctx.filter = "none";
+    }
+    /* scanlines */
+    ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
+    for (var sy = 0; sy < u.h; sy += 3) ctx.fillRect(0, sy, u.w, 1);
+    /* rare glitch band */
+    if (live && Math.random() < 0.02) {
+      var gy2 = Math.random() * u.h * 0.8, gh = 4 + Math.random() * 12, gx2 = (Math.random() - 0.5) * 12;
+      var dpr = Math.min(2, window.devicePixelRatio || 1);
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = 0.5;
+      ctx.drawImage(u.cv, 0, gy2 * dpr, u.cv.width, gh * dpr, gx2, gy2, u.w, gh);
+      ctx.restore();
+    }
+  }
+
+  Array.prototype.forEach.call(mini.querySelectorAll(".dh-mini-card"), build);
+
+  var raf = 0, last = 0, running = false;
+  function loop(t) {
+    raf = 0;
+    if (!running) return;
+    if (t - last >= 40) { /* ~24fps for the tiles */
+      last = t;
+      for (var i = 0; i < units.length; i++) draw(units[i], t);
+    }
+    raf = requestAnimationFrame(loop);
+  }
+  function start() { if (!running && !calm) { running = true; if (!raf) raf = requestAnimationFrame(loop); } }
+  function stop() { running = false; }
+  if (typeof IntersectionObserver !== "undefined") {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) start(); else stop(); });
+    }, { threshold: 0.05 }).observe(mini);
+  } else { start(); }
+  window.addEventListener("resize", function () { units.forEach(sample); }, { passive: true });
+})();
+</script>
+
+<script>
+(function () {
   /* ASCII background: draws the hero's backdrop in live text characters —
      a spinning 3D torus or the merchant's image — nudged by the mouse. */
   var cv = document.getElementById("dhAscii");
@@ -3497,6 +3652,8 @@
     { "type": "range", "id": "ascii_opacity", "label": "Strength", "min": 4, "max": 100, "step": 2, "unit": "%", "default": 14 },
     { "type": "range", "id": "ascii_scale", "label": "Character size", "min": 8, "max": 20, "step": 1, "unit": "px", "default": 12 },
     { "type": "color", "id": "ascii_ink", "label": "Character colour", "default": "#0a0a0a" },
+    { "type": "checkbox", "id": "mini_filter", "label": "Green dither filter on the small gallery", "default": false, "info": "Renders each Small gallery card through the terminal dither filter — flickering pixel cells, scanlines, glow and the odd glitch." },
+    { "type": "color", "id": "mini_ink", "label": "Small gallery filter colour", "default": "#00ff66" },
     { "type": "range", "id": "bg_veil", "label": "Background veil", "min": 0, "max": 90, "step": 5, "unit": "%", "default": 30, "info": "White wash over the background image so the logo, search bar and text stay readable. 0 shows the photo untouched." },
     { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
