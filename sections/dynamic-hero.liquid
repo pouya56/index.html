@@ -1576,6 +1576,219 @@
   {%- endif -%}
 </section>
 
+{%- assign sg_n = 0 -%}
+{%- for b in section.blocks -%}{%- if b.type == 'slide' -%}{%- assign sg_n = sg_n | plus: 1 -%}{%- endif -%}{%- endfor -%}
+{%- if sg_n > 0 -%}
+{%- comment -%} Embedded scroll gallery: the Dynamic Scroll Gallery story
+   lives at the bottom of the hero page, inside this same section —
+   add "Slide" blocks to fill it. {%- endcomment -%}
+<style>
+  .dyn-sg { position: relative;
+    height: calc(100vh + {{ sg_n | at_least: 1 | minus: 1 }} * 90vh);
+    background: {{ section.settings.sg_bg | default: '#0b0b0d' }};
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif; }
+  .dyn-sg .sg-stage { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden;
+    display: flex; align-items: center; }
+  .dyn-sg .sg-bg { position: absolute; inset: 0; z-index: 0; }
+  .dyn-sg .sg-bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .dyn-sg .sg-bg-dim { position: absolute; inset: 0; background: #000;
+    opacity: {{ section.settings.sg_bg_dim | default: 20 | divided_by: 100.0 }}; }
+  .dyn-sg .sg-track { position: relative; z-index: 1; display: flex; align-items: center; gap: 1vw; padding: 0;
+    will-change: transform; }
+  .dyn-sg .sg-panel { flex: 0 0 70vw; min-height: 80vh; border-radius: 0; overflow: hidden;
+    position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center;
+    padding: clamp(28px, 5vw, 72px); box-sizing: border-box;
+    background: {{ section.settings.sg_panel_bg | default: '#141418' }};
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.8); }
+  .dyn-sg .sg-panel.has-img { display: block; padding: 0; }
+  .dyn-sg .sg-body { position: relative; z-index: 1; min-width: 0; }
+  .dyn-sg .sg-panel.has-img .sg-body { position: absolute; z-index: 2; left: clamp(16px, 2.2vw, 44px);
+    right: 4%; top: clamp(18px, 5vh, 52px); display: flex; flex-direction: column;
+    align-items: flex-start; text-align: left;
+    transform: translateX(var(--sgtx, 0px)); will-change: transform; }
+  .dyn-sg .sg-panel.has-img .sg-body--center { align-items: center; text-align: center; left: 5%; right: 5%; }
+  .dyn-sg .sg-panel.has-img .sg-body--middle { top: 50%; transform: translateY(-50%) translateX(var(--sgtx, 0px)); }
+  .dyn-sg .sg-panel.has-img .sg-line2 { background: none; color: {{ section.settings.sg_ink | default: '#f2ead9' }}; }
+  .dyn-sg .sg-cap { position: absolute; z-index: 2; left: clamp(16px, 2.2vw, 44px); bottom: clamp(16px, 4vh, 40px);
+    font-size: clamp(11px, 1vw, 15px); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.95); text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4); }
+  .dyn-sg .sg-panel.has-img .sg-sub { order: -1; margin: 0 0 16px; max-width: none; width: 100%;
+    display: flex; justify-content: space-between; gap: 18px;
+    font-size: clamp(11px, 1vw, 14px); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35); }
+  .dyn-sg .sg-panel.has-img .sg-sub span:only-child { margin: 0 auto; }
+  .dyn-sg .sg-panel.has-img .sg-line1 { text-shadow: 0 2px 26px rgba(0, 0, 0, 0.35); }
+  .dyn-sg .sg-panel.has-img .sg-line2 { filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.4)); }
+  .dyn-sg .sg-glow { position: absolute; right: -18%; top: -28%; width: 70%; height: 90%;
+    border-radius: 50%; pointer-events: none; filter: blur(70px); opacity: 0.5;
+    background: radial-gradient(circle, {{ section.settings.sg_accent | default: '#6a5bff' }}, transparent 65%); }
+  .dyn-sg .sg-line1 { color: {{ section.settings.sg_ink | default: '#ffffff' }};
+    font-size: clamp(34px, 6vw, 82px); font-weight: 650; letter-spacing: -0.03em; line-height: 1.04; }
+  .dyn-sg .sg-line2 { font-size: clamp(34px, 6vw, 82px); font-weight: 650; letter-spacing: -0.03em; line-height: 1.04;
+    background: linear-gradient(100deg, {{ section.settings.sg_accent | default: '#6a5bff' }}, #b8b8c4);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .dyn-sg .sg-sub { margin-top: 22px; max-width: 46ch; font-size: clamp(15px, 1.4vw, 18px); line-height: 1.65;
+    color: rgba(255, 255, 255, 0.62); }
+  .dyn-sg .sg-panel--full { flex-basis: 70vw; }
+  .dyn-sg .sg-panel--narrow { flex-basis: 28vw; }
+  .dyn-sg .sg-panel .sg-line1, .dyn-sg .sg-panel .sg-line2 { font-size: clamp(32px, 5vw, 88px); }
+  .dyn-sg .sg-panel--narrow .sg-line1, .dyn-sg .sg-panel--narrow .sg-line2 { font-size: clamp(20px, 2vw, 34px); }
+  .dyn-sg .sg-panel--narrow .sg-sub { font-size: clamp(12px, 0.9vw, 14px); }
+  .dyn-sg .sg-img { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+  .dyn-sg .sg-fg { position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; }
+  .dyn-sg .sg-img img, .dyn-sg .sg-fg img { position: absolute; left: -12%; top: 0; width: 124%;
+    height: 100%; object-fit: cover; display: block; will-change: transform; }
+  .dyn-sg .sg-panel.has-img .sg-glow { display: none; }
+  .dyn-sg .sg-dots { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 3; }
+  .dyn-sg .sg-dot { width: 7px; height: 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.28);
+    transition: background 0.2s, width 0.25s; }
+  .dyn-sg .sg-dot.is-on { background: #fff; width: 22px; }
+  .dyn-sg .sg-scrollhint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px; z-index: 3; white-space: nowrap;
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.85); }
+  .dyn-sg .sg-scrollhint svg { width: 17px; height: 17px; animation: sgSpin 9s linear infinite; }
+  @keyframes sgSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .dyn-sg .sg-scrollhint svg { animation: none; } }
+  @media (max-width: 700px) {
+    .dyn-sg .sg-panel { flex-basis: 84vw; min-height: 72vh; }
+    .dyn-sg .sg-panel--full { flex-basis: 92vw; }
+    .dyn-sg .sg-panel--narrow { flex-basis: 62vw; }
+    .dyn-sg .sg-panel .sg-line1, .dyn-sg .sg-panel .sg-line2 { font-size: clamp(26px, 7vw, 40px); }
+    .dyn-sg .sg-panel--narrow .sg-line1, .dyn-sg .sg-panel--narrow .sg-line2 { font-size: clamp(18px, 4.6vw, 26px); }
+    .dyn-sg .sg-panel.has-img .sg-body { top: 20px; }
+  }
+</style>
+
+<section class="dyn-sg" id="dynSg-{{ section.id }}">
+  <div class="sg-stage">
+    {%- if section.settings.sg_bg_image != blank -%}
+      <div class="sg-bg" aria-hidden="true">
+        <img src="{{ section.settings.sg_bg_image | image_url: width: 2400 }}" alt="" width="1200" height="800" loading="lazy">
+        <span class="sg-bg-dim"></span>
+      </div>
+    {%- endif -%}
+    <div class="sg-track" id="dynSgTrack-{{ section.id }}">
+      {%- for b in section.blocks -%}
+        {%- if b.type == 'slide' -%}
+          <div class="sg-panel{% if b.settings.image != blank %} has-img{% endif %}{% if b.settings.size == 'narrow' %} sg-panel--narrow{% elsif b.settings.size == 'full' %} sg-panel--full{% endif %}" {{ b.shopify_attributes }}>
+            <span class="sg-glow" aria-hidden="true"></span>
+            <div class="sg-body{% if b.settings.text_pos == 'center' %} sg-body--center{% elsif b.settings.text_pos == 'middle' %} sg-body--middle{% endif %}">
+              {%- if b.settings.line1 != blank -%}<div class="sg-line1">{{ b.settings.line1 }}</div>{%- endif -%}
+              {%- if b.settings.line2 != blank -%}<div class="sg-line2">{{ b.settings.line2 }}</div>{%- endif -%}
+              {%- if b.settings.text != blank and b.settings.image != blank -%}
+                {%- assign sg_metas = b.settings.text | split: '|' -%}
+                {%- if sg_metas.size > 1 -%}
+                  <div class="sg-sub">{%- for m in sg_metas -%}<span>{{ m | strip }}</span>{%- endfor -%}</div>
+                {%- endif -%}
+              {%- elsif b.settings.text != blank -%}
+                <div class="sg-sub">{{ b.settings.text }}</div>
+              {%- endif -%}
+            </div>
+            {%- if b.settings.text != blank and b.settings.image != blank -%}
+              {%- assign sg_metas2 = b.settings.text | split: '|' -%}
+              {%- if sg_metas2.size == 1 -%}<div class="sg-cap">{{ b.settings.text }}</div>{%- endif -%}
+            {%- endif -%}
+            {%- if b.settings.image != blank -%}
+              {%- assign sg_imw = 2400 -%}{%- if b.settings.size == 'narrow' -%}{%- assign sg_imw = 1400 -%}{%- endif -%}
+              <div class="sg-img"><img src="{{ b.settings.image | image_url: width: sg_imw }}" alt="{{ b.settings.line1 | escape }}" width="600" height="520" loading="lazy"></div>
+            {%- endif -%}
+            {%- if b.settings.image_fg != blank -%}
+              {%- assign sg_imw2 = 2400 -%}{%- if b.settings.size == 'narrow' -%}{%- assign sg_imw2 = 1400 -%}{%- endif -%}
+              <div class="sg-fg" aria-hidden="true"><img src="{{ b.settings.image_fg | image_url: width: sg_imw2 }}" alt="" width="600" height="520" loading="lazy"></div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+    {%- if section.settings.sg_scroll_label != blank -%}
+      <div class="sg-scrollhint" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 3"/><path d="M9.5 9.5l5 5M14.5 9.5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        {{ section.settings.sg_scroll_label }}
+      </div>
+    {%- else -%}
+      <div class="sg-dots" id="dynSgDots-{{ section.id }}" aria-hidden="true">
+        {%- for b in section.blocks -%}{%- if b.type == 'slide' -%}<span class="sg-dot{% if forloop.first %} is-on{% endif %}"></span>{%- endif -%}{%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+<script>
+(function () {
+  var root = document.getElementById("dynSg-{{ section.id }}");
+  if (!root || root.__sgInit) return;
+  root.__sgInit = true;
+  var track = document.getElementById("dynSgTrack-{{ section.id }}");
+  var dots = document.getElementById("dynSgDots-{{ section.id }}");
+  if (!track) return;
+  var raf = 0, active = false, cur = 0;
+  /* Trackpads stream tiny deltas, so a quick ease feels responsive. A clicky
+     mouse wheel fires one big jump per notch — for those we glide with a much
+     heavier ease, melting the steps into one continuous motion. */
+  var ease = 0.16, lastWheel = 0;
+  window.addEventListener("wheel", function (e) {
+    var now = (window.performance || Date).now();
+    var d = Math.abs(e.deltaY);
+    if (e.deltaMode > 0 || (d >= 60 && now - lastWheel > 40)) ease = 0.07;
+    else if (d > 0 && d < 40) ease = 0.16;
+    lastWheel = now;
+  }, { passive: true });
+  function progress() {
+    var r = root.getBoundingClientRect();
+    var runway = r.height - window.innerHeight;
+    if (runway <= 0) return 0;
+    return Math.max(0, Math.min(1, -r.top / runway));
+  }
+  var plax = [];
+  Array.prototype.forEach.call(track.querySelectorAll(".sg-img img, .sg-fg img"), function (el) { plax.push({ el: el, f: 9 }); });
+  var tbods = Array.prototype.slice.call(track.querySelectorAll(".sg-panel.has-img .sg-body"));
+  function frame() {
+    raf = 0;
+    var p = progress();
+    var max = track.scrollWidth - window.innerWidth;
+    if (max <= 0) return;
+    var target = p * max;
+    cur += (target - cur) * ease;
+    if (Math.abs(target - cur) < 0.5) cur = target;
+    track.style.transform = "translateX(" + (-cur).toFixed(2) + "px)";
+    var vc = window.innerWidth / 2;
+    for (var j = 0; j < plax.length; j++) {
+      var pr = plax[j].el.parentNode.getBoundingClientRect();
+      if (pr.right < -200 || pr.left > window.innerWidth + 200) continue;
+      var off = ((pr.left + pr.width / 2) - vc) / window.innerWidth;
+      plax[j].el.style.transform = "translateX(" + (off * plax[j].f).toFixed(2) + "%)";
+    }
+    for (var q = 0; q < tbods.length; q++) {
+      var tr = tbods[q].parentNode.getBoundingClientRect();
+      if (tr.right < -200 || tr.left > window.innerWidth + 200) continue;
+      var toff = ((tr.left + tr.width / 2) - vc) / window.innerWidth;
+      tbods[q].style.setProperty("--sgtx", (toff * -44).toFixed(1) + "px");
+    }
+    if (dots) {
+      var n = dots.children.length;
+      var i = Math.min(n - 1, Math.round(p * (n - 1)));
+      for (var k = 0; k < n; k++) dots.children[k].classList.toggle("is-on", k === i);
+    }
+    if (Math.abs(target - cur) >= 0.5) queue();
+  }
+  function queue() { if (!raf) raf = requestAnimationFrame(frame); }
+  function onScroll() { if (active) queue(); }
+  if (typeof IntersectionObserver !== "undefined") {
+    new IntersectionObserver(function (es) {
+      active = es[0] && es[0].isIntersecting;
+      if (active) queue();
+    }).observe(root);
+  } else { active = true; }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
+  queue();
+})();
+</script>
+{%- endif -%}
+
 <div id="dhSlide" aria-hidden="true">
   <div class="dh-slide-scrim" data-dh-slide-close></div>
   <div class="dh-slide-panel">
@@ -3513,6 +3726,15 @@
     { "type": "range", "id": "ascii_opacity", "label": "Strength", "min": 4, "max": 100, "step": 2, "unit": "%", "default": 14 },
     { "type": "range", "id": "ascii_scale", "label": "Character size", "min": 8, "max": 20, "step": 1, "unit": "px", "default": 12 },
     { "type": "color", "id": "ascii_ink", "label": "Character colour", "default": "#0a0a0a" },
+    { "type": "header", "content": "Scroll gallery (bottom of the page)" },
+    { "type": "paragraph", "content": "Add \"Slide\" blocks and the Dynamic Scroll Gallery story plays right under the hero, inside this same section: it pins full-screen and scrolling glides the slides sideways. No Slide blocks = no gallery." },
+    { "type": "color", "id": "sg_bg", "label": "Gallery backdrop colour", "default": "#0b0b0d" },
+    { "type": "image_picker", "id": "sg_bg_image", "label": "Gallery backdrop image", "info": "Fills the screen behind the sliding cards." },
+    { "type": "range", "id": "sg_bg_dim", "label": "Darken backdrop image", "min": 0, "max": 80, "step": 5, "unit": "%", "default": 20 },
+    { "type": "color", "id": "sg_panel_bg", "label": "Slide colour", "default": "#141418" },
+    { "type": "color", "id": "sg_ink", "label": "First line colour", "default": "#f2ead9" },
+    { "type": "text", "id": "sg_scroll_label", "label": "Gallery bottom marker text", "default": "Scroll to continue", "info": "Shown bottom-centre with a spinning stamp. Empty it to show progress dots instead." },
+    { "type": "color", "id": "sg_accent", "label": "Gallery accent (second line + glow)", "default": "#6a5bff" },
     { "type": "range", "id": "bg_veil", "label": "Background veil", "min": 0, "max": 90, "step": 5, "unit": "%", "default": 30, "info": "White wash over the background image so the logo, search bar and text stay readable. 0 shows the photo untouched." },
     { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
@@ -3627,6 +3849,21 @@
       { "type": "paragraph", "content": "A sidebar icon on the hero's left. Clicking it pops the chosen page up full-screen, showing its real content. Close with × or Esc." },
       { "type": "text", "id": "label", "label": "Button label (shows on hover)", "default": "About" },
       { "type": "url", "id": "url", "label": "Page to open" }
+    ]},
+    { "type": "slide", "name": "Slide", "limit": 8, "settings": [
+      { "type": "paragraph", "content": "Slides play in the scroll gallery at the bottom of the hero page." },
+      { "type": "select", "id": "size", "label": "Slide size", "default": "wide", "options": [
+        { "value": "wide", "label": "Wide (2.5×)" }, { "value": "narrow", "label": "Narrow" } ],
+        "info": "One wide + one narrow fill exactly one screen." },
+      { "type": "select", "id": "text_pos", "label": "Headline position", "default": "top-left", "options": [
+        { "value": "top-left", "label": "Top left" },
+        { "value": "center", "label": "Top centre" },
+        { "value": "middle", "label": "Middle left" } ] },
+      { "type": "text", "id": "line1", "label": "Line 1", "default": "Runs on the edge" },
+      { "type": "text", "id": "line2", "label": "Line 2 (accent)", "default": "Refuses the ordinary" },
+      { "type": "textarea", "id": "text", "label": "Small text (optional)", "info": "On image slides, split with | into left | centre | right captions along the top." },
+      { "type": "image_picker", "id": "image", "label": "Image (optional)", "info": "Fills the WHOLE slide edge-to-edge; the text overlays on top." },
+      { "type": "image_picker", "id": "image_fg", "label": "Foreground cutout (optional)", "info": "A transparent PNG of JUST the subject, cut from the image above at the SAME size and crop — the headline passes behind it." }
     ]},
     { "type": "mini_card", "name": "Small gallery card", "settings": [
       { "type": "paragraph", "content": "Cards feed the WSM-style gallery under the search bar: large sharp photo panels of different widths, staggered up and down and bleeding off the screen edges, each slowly crossfading through all the card images. Add 5+ cards so the panels have photos to rotate through. Full photos work best (not cutouts)." },
