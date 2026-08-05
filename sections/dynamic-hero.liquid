@@ -3242,7 +3242,10 @@
         { blur: 0, scale: 1 }      /* crisp */
       ];
       var DIRS = "trbl";
-      var W = 0, H = 0, DPR = 1;
+      var W = 0, H = 0, DPR = 1, FSCALE = 1;
+      /* touch vs mouse changes the interaction: bigger tap targets, a
+         tap-to-reveal step in place of hover, and no keyboard pop-up */
+      var lastPtr = "mouse";
 
       /* shuffle bag: deals the word list out in random order and reshuffles
          when it runs dry — so even 30 strips cycle through EVERY word over
@@ -3281,7 +3284,7 @@
       strips.sort(function (a, b2) { return b2.tier.blur - a.tier.blur; });
 
       function makeSprite(st) {
-        var fs = st.fs * st.tier.scale * DPR;
+        var fs = st.fs * st.tier.scale * FSCALE * DPR;
         var mc = document.createElement("canvas");
         var m = mc.getContext("2d");
         var font = "600 " + fs + "px Jost, Futura, 'Century Gothic', sans-serif";
@@ -3320,6 +3323,8 @@
            the pixel count keeps the paint cheap even without a GPU */
         DPR = 1;
         W = r.width; H = r.height;
+        /* phones: shrink the tape so 30 strips fit a narrow screen */
+        FSCALE = W < 640 ? 0.72 : 1;
         labCv.width = Math.round(W * DPR);
         labCv.height = Math.round(H * DPR);
         for (var i2 = 0; i2 < strips.length; i2++) makeSprite(strips[i2]);
@@ -3341,15 +3346,20 @@
       }
 
       var hovered = null, mx = -1, my = -1;
+      function hitStrip(st) {
+        var q = st.last;
+        if (!q) return false;
+        /* fingers are less precise than a cursor — pad the hit box */
+        var pad = lastPtr === "touch" ? 14 : 0;
+        var dx = mx - q.x, dy = my - q.y;
+        var c = Math.cos(-q.r), s2 = Math.sin(-q.r);
+        var lx2 = dx * c - dy * s2, ly2 = dx * s2 + dy * c;
+        return Math.abs(lx2) <= st.w / DPR / 2 + pad && Math.abs(ly2) <= st.h / DPR / 2 + pad;
+      }
       function hitTest() {
         /* iterate topmost (crisp) first — end of the sorted array */
         for (var i3 = strips.length - 1; i3 >= 0; i3--) {
-          var st = strips[i3], q = st.last;
-          if (!q) continue;
-          var dx = mx - q.x, dy = my - q.y;
-          var c = Math.cos(-q.r), s2 = Math.sin(-q.r);
-          var lx2 = dx * c - dy * s2, ly2 = dx * s2 + dy * c;
-          if (Math.abs(lx2) <= st.w / DPR / 2 && Math.abs(ly2) <= st.h / DPR / 2) return st;
+          if (hitStrip(strips[i3])) return strips[i3];
         }
         return null;
       }
@@ -3382,13 +3392,18 @@
           ctx.drawImage(img, -img.width / DPR / 2, -img.height / DPR / 2, img.width / DPR, img.height / DPR);
           ctx.restore();
         }
-        /* hover state follows the moving strips even when the mouse is still */
-        var h2 = mx >= 0 ? hitTest() : null;
-        if (h2 !== hovered) {
-          if (hovered) { var pOld = hovered.frozen; hovered.frozen = -1; hovered.phase = ((pOld - tSec / hovered.dur) % 1 + 1) % 1; }
-          hovered = h2;
-          if (hovered) hovered.frozen = progressOf(hovered, tSec);
-          labCv.style.cursor = hovered ? "pointer" : "";
+        /* hover state follows the moving strips even when the mouse is
+           still — but only for a real cursor: on touch the taps manage
+           selection themselves, so a strip raining through the last tap
+           point can't steal or drop the frozen one */
+        if (lastPtr !== "touch") {
+          var h2 = mx >= 0 ? hitTest() : null;
+          if (h2 !== hovered) {
+            if (hovered) { var pOld = hovered.frozen; hovered.frozen = -1; hovered.phase = ((pOld - tSec / hovered.dur) % 1 + 1) % 1; }
+            hovered = h2;
+            if (hovered) hovered.frozen = progressOf(hovered, tSec);
+            labCv.style.cursor = hovered ? "pointer" : "";
+          }
         }
         if (!calm || hovered) raf = requestAnimationFrame(frame);
       }
@@ -3400,14 +3415,43 @@
       }
 
       labCv.addEventListener("pointermove", function (e) {
+        if (e.pointerType) lastPtr = e.pointerType;
         var r = labCv.getBoundingClientRect();
         mx = e.clientX - r.left; my = e.clientY - r.top;
         kick();
       });
-      labCv.addEventListener("pointerleave", function () { mx = my = -1; });
-      labCv.addEventListener("click", function () {
-        if (!hovered) return;
-        var st = hovered, word = st.word, q = st.last;
+      labCv.addEventListener("pointerdown", function (e) {
+        if (e.pointerType) lastPtr = e.pointerType;
+      });
+      labCv.addEventListener("pointerleave", function (e) {
+        /* touch pointers "leave" after every tap — keeping mx/my parked
+           at the tap point is what makes the reveal stick on phones */
+        if (!e.pointerType || e.pointerType === "mouse") mx = my = -1;
+      });
+      labCv.addEventListener("click", function (e) {
+        var r0 = labCv.getBoundingClientRect();
+        mx = e.clientX - r0.left; my = e.clientY - r0.top;
+        var isTouch = lastPtr === "touch";
+        /* a frozen strip wins ties, so the second tap can't be stolen by
+           another strip raining across the same spot */
+        var hit = (isTouch && hovered && hitStrip(hovered)) ? hovered : hitTest();
+        /* no hover on touch, so the FIRST tap on a strip freezes and
+           reveals it — synchronously, right here, immune to frame-loop
+           races — and only a SECOND tap on it sends it to the bar. A
+           mouse arrives already hovering: its first click goes through.
+           Tapping empty space releases the revealed strip. */
+        if (isTouch) {
+          if (!hit || hit !== hovered) {
+            var tSec0 = tBase != null ? (lastDraw - tBase) / 1000 : 0;
+            if (hovered) { var pO = hovered.frozen; hovered.frozen = -1; hovered.phase = ((pO - tSec0 / hovered.dur) % 1 + 1) % 1; }
+            hovered = hit;
+            if (hovered) hovered.frozen = progressOf(hovered, tSec0);
+            if (!hit) mx = my = -1;
+            kick();
+            return;
+          }
+        } else if (!hit || hit !== hovered) { kick(); return; }
+        var st = hit, word = st.word, q = st.last;
         var input = document.getElementById("dhSearch");
         if (!input) {
           if (cfg.search) location.href = cfg.search + "?q=" + encodeURIComponent(word);
@@ -3423,10 +3467,11 @@
         makeSprite(st);
         hovered = null;
         labCv.style.cursor = "";
+        if (isTouch) mx = my = -1; /* un-park so nothing re-lights at the old tap point */
         if (calm) { /* reduced motion: no flight — the word just fills the bar */
           input.value = word;
           try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (e0) {}
-          input.focus();
+          if (!isTouch) input.focus();
           return;
         }
         /* ... while a DOM twin of the label flies from the strip's spot
@@ -3434,7 +3479,7 @@
         var cr = labCv.getBoundingClientRect();
         var fly = document.createElement("span");
         fly.textContent = word;
-        var ffs = Math.round(st.fs * st.tier.scale);
+        var ffs = Math.round(st.fs * st.tier.scale * FSCALE);
         fly.style.cssText = "position:fixed;left:0;top:0;z-index:200;pointer-events:none;white-space:nowrap;" +
           "background:#0a0a0a;color:#fff;padding:0.55em 0.95em;letter-spacing:0.18em;will-change:transform,opacity;" +
           "font:600 " + ffs + "px Jost, Futura, 'Century Gothic', sans-serif;";
@@ -3447,7 +3492,9 @@
           fly.style.transform = "translate(" + tx + "px," + ty + "px) translate(-50%,-50%) rotate(0rad) scale(0.55)";
           fly.style.opacity = "0";
         }); });
-        input.focus();
+        /* on phones focusing would pop the keyboard and shove the layout
+           around mid-flight — the word lands unfocused there instead */
+        if (!isTouch) input.focus();
         input.value = "";
         setTimeout(function () {
           if (fly.parentNode) fly.parentNode.removeChild(fly);
@@ -3894,7 +3941,7 @@
       "options": [
         { "value": "drift", "label": "Drifting giant words" },
         { "value": "labels", "label": "Floating label strips (poster)" }
-      ], "info": "Label strips: 30 tape labels rain endlessly from every direction, dealing out fresh random words from your list each time they loop. Word strength sets how strong they rest; hovering reveals one at full strength, and clicking sends the word flying into the hero's search bar, where it types itself in — ready for the visitor to search." },
+      ], "info": "Label strips: 30 tape labels rain endlessly from every direction, dealing out fresh random words from your list each time they loop. Word strength sets how strong they rest; hovering reveals one at full strength, and clicking sends the word flying into the hero's search bar, where it types itself in — ready for the visitor to search. On phones: tap a strip once to reveal it, tap it again to send it to the bar." },
     { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
     { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
