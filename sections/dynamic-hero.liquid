@@ -3256,8 +3256,25 @@
           u.edges[j] = Math.min(1, Math.sqrt(gx * gx + gy * gy) * 2);
         }
       }
+      u.card.classList.remove("dh-nofilter");
       draw(u, 0);
-    } catch (err) { u.card.classList.add("dh-nofilter"); u.gray = null; }
+    } catch (err) {
+      /* Usually a cached copy fetched without CORS headers tainting the
+         canvas — refetch once with a cache-busting query, which forces a
+         fresh CORS-enabled response from the CDN. */
+      if (!u.retried) {
+        u.retried = true;
+        var ni = new Image();
+        ni.crossOrigin = "anonymous";
+        ni.onload = function () { u.img = ni; sample(u); };
+        ni.onerror = function () { u.card.classList.add("dh-nofilter"); };
+        var src = u.img.currentSrc || u.img.src;
+        ni.src = src + (src.indexOf("?") > -1 ? "&" : "?") + "dyncors=1";
+      } else {
+        u.card.classList.add("dh-nofilter");
+        u.gray = null;
+      }
+    }
   }
 
   function draw(u, t) {
