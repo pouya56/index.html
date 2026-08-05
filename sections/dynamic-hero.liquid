@@ -3276,6 +3276,25 @@
     })();
   }
 
+  /* Clicking a background word runs it through the HERO's own search bar
+     (the in-page flow), not the theme's search page — the link's href only
+     serves as the no-JS fallback. Works for both field styles. */
+  if (hero) {
+    hero.addEventListener("click", function (e) {
+      var a = e.target && e.target.closest ? e.target.closest("a.dh-word, a.dh-lab") : null;
+      if (!a) return;
+      var input = document.getElementById("dhSearch");
+      if (!input) return; /* no hero search on this page — follow the link */
+      e.preventDefault();
+      var word = (a.querySelector(".dh-lab-f") || a).textContent.trim();
+      input.value = word;
+      try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (err) {}
+      input.focus();
+      var go = document.getElementById("dhSearchGo");
+      if (go) go.click();
+    });
+  }
+
   var field = document.getElementById("dhWords");
   if (!hero || !field) return;
   var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
