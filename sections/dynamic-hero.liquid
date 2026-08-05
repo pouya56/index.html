@@ -219,7 +219,7 @@
      dragging and search then see the hero exactly as before. */
   .dh-introrun { height: calc(100svh + 80vh); }
   .dh-introrun .dyn-hero.dh-landing { position: sticky; top: 0; }
-  .dyn-hero.dh-intro .dh-head, .dyn-hero.dh-intro .dh-search, .dyn-hero.dh-intro .dh-hero-btns, .dyn-hero.dh-intro .dh-mini {
+  .dyn-hero.dh-intro .dh-head, .dyn-hero.dh-intro .dh-search, .dyn-hero.dh-intro .dh-hero-btns, .dyn-hero.dh-intro .dh-wsm {
     opacity: 0; will-change: opacity, transform; }
 
   /* Stacking order over the floating photos (z 1): the search bar is the
@@ -281,33 +281,26 @@
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search-go::before { animation: none; } }
   /* Liquid-glass buttons under the search bar (Google-style) */
   .dyn-hero .dh-hero-btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; position: relative; z-index: 11; }
-  /* Small gallery under the search bar — free-standing cutouts on the page,
-     Bécane style: no frame, no background, all feet on one baseline. */
-  .dyn-hero .dh-mini { position: relative; z-index: 11; margin: 30px auto 0; width: min(92vw, 1100px); }
-  .dyn-hero .dh-mini-track { display: flex; gap: clamp(18px, 3.2vw, 44px); align-items: flex-end;
-    overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
-    -webkit-overflow-scrolling: touch; padding: 4px 2px 10px; cursor: grab; }
-  .dyn-hero .dh-mini-track::-webkit-scrollbar { display: none; }
-  .dyn-hero .dh-mini-track.is-drag { cursor: grabbing; }
-  /* auto side margins centre the row while it fits, and give way to
-     scrolling the moment it overflows */
-  .dyn-hero .dh-mini-card:first-child { margin-left: auto; }
-  .dyn-hero .dh-mini-card:last-child { margin-right: auto; }
-  .dyn-hero .dh-mini-card { position: relative; flex: none; height: clamp(110px, 17vh, 180px);
-    background: none; text-decoration: none; display: flex; align-items: flex-end;
-    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
-  .dyn-hero .dh-mini-card img { display: block; height: 100%; width: auto; object-fit: contain; }
-  @media (hover: hover) { .dyn-hero .dh-mini-card:hover { transform: translateY(-5px); } }
-  .dyn-hero .dh-mini-label { position: absolute; left: 50%; transform: translateX(-50%); bottom: -4px; z-index: 2;
-    background: #fff; color: #0a0a0a; white-space: nowrap;
-    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 8px; }
-  .dyn-hero.dh-searching .dh-mini { display: none; }
-  /* Dither-filter mode: the photo hides and its per-card canvas draws the
-     terminal look in its place (the photo returns if sampling fails). */
-  .dyn-hero .dh-mini--filter .dh-mini-card img { visibility: hidden; }
-  .dyn-hero .dh-mini--filter .dh-mini-card.dh-nofilter img { visibility: visible; }
-  .dyn-hero .dh-mini-cv { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  @media (max-width: 700px) { .dyn-hero .dh-mini { width: 94vw; } .dyn-hero .dh-mini-card { height: 14vh; } }
+  /* Small gallery under the search bar — WSM style: large sharp photo
+     panels of different widths, staggered up/down, bleeding off both
+     screen edges, each slowly crossfading through the image pool. */
+  .dyn-hero .dh-wsm { position: relative; z-index: 11; margin-top: clamp(26px, 6vh, 64px);
+    width: 100vw; margin-left: calc(50% - 50vw); overflow: visible; }
+  .dyn-hero .dh-wsm-row { display: flex; gap: clamp(20px, 3.4vw, 58px); align-items: flex-start; margin: 0 -4vw; }
+  .dyn-hero .dh-wsm-panel { position: relative; display: block; flex: 1 1 0; overflow: hidden;
+    height: clamp(220px, 36vh, 400px); }
+  .dyn-hero .dh-wsm-panel:nth-child(4n+1) { flex-grow: 1.5; }
+  .dyn-hero .dh-wsm-panel:nth-child(4n+2) { flex-grow: 1.0; transform: translateY(clamp(16px, 3.2vh, 38px)); }
+  .dyn-hero .dh-wsm-panel:nth-child(4n+3) { flex-grow: 1.15; transform: translateY(clamp(-10px, -1.2vh, -5px)); }
+  .dyn-hero .dh-wsm-panel:nth-child(4n+4) { flex-grow: 0.9; transform: translateY(clamp(10px, 2.4vh, 28px)); }
+  .dyn-hero .dh-wsm-panel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    opacity: 0; transition: opacity 1.1s ease; }
+  .dyn-hero .dh-wsm-panel img.is-on { opacity: 1; }
+  .dyn-hero.dh-searching .dh-wsm { display: none; }
+  @media (max-width: 700px) {
+    .dyn-hero .dh-wsm-panel { height: clamp(150px, 24vh, 240px); }
+    .dyn-hero .dh-wsm-panel:nth-child(n+3) { display: none; }
+  }
 
   /* "Finding your gift…" loader — full-screen overlay that covers the whole page (moved to <body> so nothing sits on top) */
   .dh-finding { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px;
@@ -1338,22 +1331,33 @@
       {%- if mini_count > 0 -%}
       {%- comment -%} Small gallery under the search bar — a sideways strip of
          cards with the scroll-gallery's in-card parallax. {%- endcomment -%}
-      <div class="dh-mini{% if section.settings.mini_filter %} dh-mini--filter{% endif %}" id="dhMini"{% if section.settings.mini_filter %} data-ink="{{ section.settings.mini_ink | default: '#00ff66' }}"{% endif %}>
-        <div class="dh-mini-track" id="dhMiniTrack">
+      {%- assign wsm_panels = 4 -%}
+      {%- if mini_count < 4 -%}{%- assign wsm_panels = mini_count -%}{%- endif -%}
+      <div class="dh-wsm" id="dhWsm">
+        <div class="dh-wsm-row">
+          {%- assign wi = 0 -%}
           {%- for b in section.blocks -%}
-            {%- if b.type == 'mini_card' and b.settings.image != blank -%}
-              {%- if b.settings.url != blank -%}
-                <a class="dh-mini-card" href="{{ b.settings.url }}" {{ b.shopify_attributes }}>
-              {%- else -%}
-                <div class="dh-mini-card" {{ b.shopify_attributes }}>
-              {%- endif -%}
-                <img src="{{ b.settings.image | image_url: width: 700 }}" alt="{{ b.settings.label | escape }}" loading="lazy" width="350" height="240"{% if section.settings.mini_filter %} crossorigin="anonymous"{% endif %}>
-                {%- if b.settings.label != blank -%}<span class="dh-mini-label">{{ b.settings.label | escape }}</span>{%- endif -%}
-              {%- if b.settings.url != blank -%}</a>{%- else -%}</div>{%- endif -%}
+            {%- if b.type == 'mini_card' and b.settings.image != blank and wi < wsm_panels -%}
+              <a class="dh-wsm-panel" href="{{ b.settings.url | default: '#' }}" data-start="{{ wi }}" aria-label="{{ b.settings.label | default: 'Gallery' | escape }}" {{ b.shopify_attributes }}>
+                {% # theme-check-disable ImgWidthAndHeight %}
+                <img class="is-on" src="{{ b.settings.image | image_url: width: 1200 }}" alt="{{ b.settings.label | escape }}" loading="lazy">
+                <img alt="" loading="lazy">
+                {% # theme-check-enable ImgWidthAndHeight %}
+              </a>
+              {%- assign wi = wi | plus: 1 -%}
             {%- endif -%}
           {%- endfor -%}
         </div>
       </div>
+      <script type="application/json" id="dhWsmPool">[
+        {%- assign wfirst = true -%}
+        {%- for b in section.blocks -%}
+          {%- if b.type == 'mini_card' and b.settings.image != blank -%}
+            {%- unless wfirst -%},{%- endunless -%}{%- assign wfirst = false -%}
+            { "i": {{ b.settings.image | image_url: width: 1200 | json }}, "u": {{ b.settings.url | default: '#' | json }} }
+          {%- endif -%}
+        {%- endfor -%}
+      ]</script>
       {%- endif -%}
       {%- comment -%} Build the category tabs from product type or tag. {%- endcomment -%}
       {%- if section.settings.show_grid -%}
@@ -2995,7 +2999,7 @@
       fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } },
     { el: hero.querySelector(".dh-hero-btns"), a: 0.42, b: 0.75,
       fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } },
-    { el: hero.querySelector(".dh-mini"), a: 0.52, b: 0.85,
+    { el: hero.querySelector(".dh-wsm"), a: 0.52, b: 0.85,
       fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } }
   ].filter(function (x) { return x.el; });
   if (!parts.length) return;
@@ -3137,220 +3141,60 @@
 
 <script>
 (function () {
-  /* Small gallery under the search bar: wheel glides it sideways with the
-     scroll-gallery's eased pursuit and mouse-drag scrubs it. The cutouts
-     themselves stand still — Bécane style, no frames. */
-  var track = document.getElementById("dhMiniTrack");
-  if (!track) return;
-  var raf = 0, target = null, cur = 0;
-
-  function step() {
-    raf = 0;
-    if (target == null) return;
-    cur += (target - cur) * 0.14;
-    track.scrollLeft = cur;
-    if (Math.abs(target - cur) > 0.6) raf = requestAnimationFrame(step);
-    else target = null;
-  }
-  function kick() { if (!raf) raf = requestAnimationFrame(step); }
-
-  track.addEventListener("wheel", function (e) {
-    var max = track.scrollWidth - track.clientWidth;
-    if (max < 2) return;
-    var d = e.deltaMode ? e.deltaY * 40 : e.deltaY;
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; /* native sideways swipes pass through */
-    e.preventDefault();
-    if (target == null) { target = track.scrollLeft; cur = track.scrollLeft; }
-    target = Math.max(0, Math.min(max, target + d));
-    kick();
-  }, { passive: false });
-
-  /* mouse-drag scrubbing (touch keeps native strip scrolling) */
-  var dx = null, moved = false;
-  track.addEventListener("pointerdown", function (e) {
-    if (e.pointerType !== "mouse") return;
-    dx = e.clientX; moved = false; target = null;
-    track.classList.add("is-drag");
-  });
-  track.addEventListener("pointermove", function (e) {
-    if (dx == null) return;
-    var d = e.clientX - dx;
-    if (Math.abs(d) > 3) moved = true;
-    track.scrollLeft -= d;
-    dx = e.clientX;
-  });
-  ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) {
-    track.addEventListener(ev, function () { dx = null; track.classList.remove("is-drag"); });
-  });
-  /* a drag shouldn't fire the card's link on release */
-  track.addEventListener("click", function (e) { if (moved) { e.preventDefault(); moved = false; } }, true);
-})();
-</script>
-
-<script>
-(function () {
-  /* Green dither filter for the small gallery: each card's photo hides and
-     a canvas redraws it through the terminal dither pipeline — Bayer cells,
-     contrast + edge emphasis, flicker, scanlines, bloom and a rare glitch. */
-  var mini = document.getElementById("dhMini");
-  if (!mini || !mini.classList.contains("dh-mini--filter")) return;
+  /* WSM gallery: each panel slowly crossfades through the shared image
+     pool on its own staggered rhythm; clicking follows the image showing. */
+  var wsm = document.getElementById("dhWsm");
+  var poolEl = document.getElementById("dhWsmPool");
+  if (!wsm || !poolEl) return;
   var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var INKM = mini.getAttribute("data-ink") || "#00ff66";
-  var ink = (function () {
-    var m = /^#?([0-9a-f]{6})$/i.exec(INKM.trim());
-    var n = m ? parseInt(m[1], 16) : 0x00ff66;
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  })();
-  var CELLM = 5;
-  var BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(function (n) { return (n + 0.5) / 16; });
-  var units = [];
-
-  function build(card) {
-    var im = card.querySelector("img");
-    if (!im) return;
-    var u = { card: card, img: im, cv: null, ctx: null, gray: null, edges: null, phase: null, cols: 0, rows: 0, w: 0, h: 0 };
-    units.push(u);
-    function ready() { sample(u); }
-    if (im.complete && im.naturalWidth) ready();
-    else { im.addEventListener("load", ready); im.addEventListener("error", function () { card.classList.add("dh-nofilter"); }); }
+  var pool;
+  try { pool = JSON.parse(poolEl.textContent) || []; } catch (err) { pool = []; }
+  var panels = Array.prototype.slice.call(wsm.querySelectorAll(".dh-wsm-panel"));
+  if (!panels.length || pool.length <= panels.length || calm) return;
+  /* warm the pool so fades never pop in half-loaded */
+  pool.forEach(function (p) { var im = new Image(); im.src = p.i; });
+  var units = panels.map(function (el, n) {
+    return { el: el, imgs: el.querySelectorAll("img"), on: 0, idx: parseInt(el.getAttribute("data-start"), 10) || n };
+  });
+  var timers = [];
+  function advance(u) {
+    u.idx = (u.idx + panels.length) % pool.length;
+    var offImg = u.imgs[1 - u.on];
+    var next = pool[u.idx];
+    var done = function () {
+      offImg.classList.add("is-on");
+      u.imgs[u.on].classList.remove("is-on");
+      u.on = 1 - u.on;
+      u.el.setAttribute("href", next.u || "#");
+    };
+    if (offImg.getAttribute("src") === next.i && offImg.complete) { done(); return; }
+    offImg.onload = done;
+    offImg.src = next.i;
+    /* cached images can be complete without ever firing onload */
+    if (offImg.complete && offImg.naturalWidth) { offImg.onload = null; done(); }
   }
-
-  function sample(u) {
-    var r = u.card.getBoundingClientRect();
-    if (r.width < 8 || r.height < 8) { setTimeout(function () { sample(u); }, 200); return; }
-    try {
-      u.w = r.width; u.h = r.height;
-      if (!u.cv) {
-        u.cv = document.createElement("canvas");
-        u.cv.className = "dh-mini-cv";
-        u.cv.setAttribute("aria-hidden", "true");
-        u.card.appendChild(u.cv);
-        u.ctx = u.cv.getContext("2d");
-      }
-      var dpr = Math.min(2, window.devicePixelRatio || 1);
-      u.cv.width = Math.round(u.w * dpr);
-      u.cv.height = Math.round(u.h * dpr);
-      u.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      u.cols = Math.max(6, Math.floor(u.w / CELLM));
-      u.rows = Math.max(6, Math.floor(u.h / CELLM));
-      var oc = document.createElement("canvas");
-      oc.width = u.cols; oc.height = u.rows;
-      var octx = oc.getContext("2d");
-      var s = Math.min(u.cols / u.img.naturalWidth, u.rows / u.img.naturalHeight);
-      var w = u.img.naturalWidth * s, h = u.img.naturalHeight * s;
-      octx.drawImage(u.img, (u.cols - w) / 2, u.rows - h, w, h); /* feet on the baseline */
-      var d = octx.getImageData(0, 0, u.cols, u.rows).data;
-      u.gray = new Float32Array(u.cols * u.rows);
-      u.phase = new Float32Array(u.cols * u.rows);
-      for (var i = 0; i < u.cols * u.rows; i++) {
-        var a = d[i * 4 + 3] / 255;
-        var lum = (0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]) / 255;
-        u.gray[i] = a * (1 - lum * 0.85);
-        u.phase[i] = Math.random() * 6.28;
-      }
-      u.edges = new Float32Array(u.cols * u.rows);
-      for (var y = 1; y < u.rows - 1; y++) {
-        for (var x = 1; x < u.cols - 1; x++) {
-          var j = y * u.cols + x;
-          var gx = u.gray[j + 1] - u.gray[j - 1], gy = u.gray[j + u.cols] - u.gray[j - u.cols];
-          u.edges[j] = Math.min(1, Math.sqrt(gx * gx + gy * gy) * 2);
-        }
-      }
-      u.card.classList.remove("dh-nofilter");
-      draw(u, 0);
-    } catch (err) {
-      /* Usually a cached copy fetched without CORS headers tainting the
-         canvas — refetch once with a cache-busting query, which forces a
-         fresh CORS-enabled response from the CDN. */
-      if (!u.retried) {
-        u.retried = true;
-        var ni = new Image();
-        ni.crossOrigin = "anonymous";
-        ni.onload = function () { u.img = ni; sample(u); };
-        ni.onerror = function () { u.card.classList.add("dh-nofilter"); };
-        var src = u.img.currentSrc || u.img.src;
-        ni.src = src + (src.indexOf("?") > -1 ? "&" : "?") + "dyncors=1";
-      } else {
-        u.card.classList.add("dh-nofilter");
-        u.gray = null;
-      }
-    }
+  function start() {
+    if (timers.length) return;
+    units.forEach(function (u, n) {
+      /* staggered: each panel turns on its own beat, like the reference */
+      timers.push(setTimeout(function () {
+        advance(u);
+        timers.push(setInterval(function () { advance(u); }, 5200));
+      }, 1600 + n * 1300));
+    });
   }
-
-  function draw(u, t) {
-    if (!u.gray || !u.ctx) return;
-    var ctx = u.ctx;
-    ctx.clearRect(0, 0, u.cv.width, u.cv.height);
-    var live = !calm;
-    var cache = "";
-    for (var y = 0; y < u.rows; y++) {
-      for (var x = 0; x < u.cols; x++) {
-        var i = y * u.cols + x;
-        var v = u.gray[i];
-        if (v <= 0.03) continue;
-        v = (v - 0.5) * 1.15 + 0.5;
-        v += u.edges[i] * 0.4;
-        v *= 0.85;
-        if (live) {
-          var fl = Math.sin(t * 0.02 + u.phase[i] * 9);
-          if (fl > 0.965) v = Math.min(1, v + 0.6);
-          else if (fl < -0.985) v *= 0.25;
-        }
-        if (v <= BAYER[(y & 3) * 4 + (x & 3)]) continue;
-        var lum = Math.max(0, Math.min(1, v));
-        var b = 0.3 + 0.7 * lum, wm = lum * lum * 0.5;
-        var fs = "rgb(" + Math.min(255, Math.round(ink[0] * b + 255 * wm)) + "," +
-          Math.min(255, Math.round(ink[1] * b + 255 * wm)) + "," +
-          Math.min(255, Math.round(ink[2] * b + 255 * wm)) + ")";
-        if (fs !== cache) { ctx.fillStyle = fs; cache = fs; }
-        ctx.fillRect(x * CELLM, y * CELLM, CELLM - 1, CELLM - 1);
-      }
-    }
-    /* bloom */
-    if (typeof ctx.filter === "string") {
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.globalAlpha = 0.35;
-      ctx.filter = "blur(4px)";
-      ctx.drawImage(u.cv, 0, 0, u.w, u.h);
-      ctx.restore();
-      ctx.filter = "none";
-    }
-    /* scanlines */
-    ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
-    for (var sy = 0; sy < u.h; sy += 3) ctx.fillRect(0, sy, u.w, 1);
-    /* rare glitch band */
-    if (live && Math.random() < 0.02) {
-      var gy2 = Math.random() * u.h * 0.8, gh = 4 + Math.random() * 12, gx2 = (Math.random() - 0.5) * 12;
-      var dpr = Math.min(2, window.devicePixelRatio || 1);
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.globalAlpha = 0.5;
-      ctx.drawImage(u.cv, 0, gy2 * dpr, u.cv.width, gh * dpr, gx2, gy2, u.w, gh);
-      ctx.restore();
-    }
+  function stop() {
+    timers.forEach(function (t) { clearTimeout(t); clearInterval(t); });
+    timers = [];
   }
-
-  Array.prototype.forEach.call(mini.querySelectorAll(".dh-mini-card"), build);
-
-  var raf = 0, last = 0, running = false;
-  function loop(t) {
-    raf = 0;
-    if (!running) return;
-    if (t - last >= 40) { /* ~24fps for the tiles */
-      last = t;
-      for (var i = 0; i < units.length; i++) draw(units[i], t);
-    }
-    raf = requestAnimationFrame(loop);
-  }
-  function start() { if (!running && !calm) { running = true; if (!raf) raf = requestAnimationFrame(loop); } }
-  function stop() { running = false; }
   if (typeof IntersectionObserver !== "undefined") {
     new IntersectionObserver(function (es) {
       es.forEach(function (e) { if (e.isIntersecting) start(); else stop(); });
-    }, { threshold: 0.05 }).observe(mini);
+    }, { threshold: 0.05 }).observe(wsm);
   } else { start(); }
-  window.addEventListener("resize", function () { units.forEach(sample); }, { passive: true });
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) stop(); else start();
+  });
 })();
 </script>
 
@@ -3669,8 +3513,6 @@
     { "type": "range", "id": "ascii_opacity", "label": "Strength", "min": 4, "max": 100, "step": 2, "unit": "%", "default": 14 },
     { "type": "range", "id": "ascii_scale", "label": "Character size", "min": 8, "max": 20, "step": 1, "unit": "px", "default": 12 },
     { "type": "color", "id": "ascii_ink", "label": "Character colour", "default": "#0a0a0a" },
-    { "type": "checkbox", "id": "mini_filter", "label": "Green dither filter on the small gallery", "default": false, "info": "Renders each Small gallery card through the terminal dither filter — flickering pixel cells, scanlines, glow and the odd glitch." },
-    { "type": "color", "id": "mini_ink", "label": "Small gallery filter colour", "default": "#00ff66" },
     { "type": "range", "id": "bg_veil", "label": "Background veil", "min": 0, "max": 90, "step": 5, "unit": "%", "default": 30, "info": "White wash over the background image so the logo, search bar and text stay readable. 0 shows the photo untouched." },
     { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
@@ -3787,8 +3629,8 @@
       { "type": "url", "id": "url", "label": "Page to open" }
     ]},
     { "type": "mini_card", "name": "Small gallery card", "settings": [
-      { "type": "paragraph", "content": "A small Bécane-style gallery under the search bar: free-standing cutouts with no frame or background, all on one baseline. Use transparent PNGs (Shopify's image editor → Remove background). Wheel or drag glides the row when it overflows." },
-      { "type": "image_picker", "id": "image", "label": "Image (transparent PNG)" },
+      { "type": "paragraph", "content": "Cards feed the WSM-style gallery under the search bar: large sharp photo panels of different widths, staggered up and down and bleeding off the screen edges, each slowly crossfading through all the card images. Add 5+ cards so the panels have photos to rotate through. Full photos work best (not cutouts)." },
+      { "type": "image_picker", "id": "image", "label": "Image" },
       { "type": "text", "id": "label", "label": "Small label (optional)" },
       { "type": "url", "id": "url", "label": "Link (optional)" }
     ]},
