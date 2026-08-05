@@ -156,9 +156,6 @@
   @media (prefers-reduced-motion: reduce) {
     .dyn-hero .dh-lab { animation: none; }
   }
-  /* touch screens can't hover: rest the strips faintly visible there so
-     the tap targets are seen, never invisible traps */
-  @media (hover: none) { .dyn-hero .dh-labs { --wbase: 0.14; } }
   @media (max-width: 700px) {
     .dyn-hero .dh-lab:nth-child(n+13) { display: none; }
     .dyn-hero .dh-lab-f { font-size: calc(var(--lf, 18px) * 0.7); }
@@ -754,9 +751,9 @@
     {%- assign lab_f = '16,22,13,26,30,15,20,28,18,14,34,17,15,21,19,24,31,16,14,23,29,15' | split: ',' -%}
     {%- assign lab_d = '26,34,30,38,24,32,28,36,25,31,27,35,29,33,37,28,40,26,34,30,39,27' | split: ',' -%}
     {%- assign lab_in = 't,r,b,l,t,b,r,l,b,t,l,r,t,b,l,t,r,b,t,l,b,r' | split: ',' -%}
-    {%- comment -%} Strips rest invisible — the mouse discovers them, and a
-       click searches the store for that word. {%- endcomment -%}
-    <div class="dh-labs" id="dhLabs" style="--wbase: 0;">
+    {%- comment -%} Strips rest faded — hovering reveals one, and a click
+       searches the store for that word. {%- endcomment -%}
+    <div class="dh-labs" id="dhLabs" style="--wbase: {{ section.settings.words_opacity | default: 18 | divided_by: 100.0 }};">
       {%- for i in (0..21) -%}
         {%- assign wi = i | modulo: dh_words.size -%}
         {%- assign lab_word = dh_words[wi] | strip -%}
@@ -3687,7 +3684,7 @@
       "options": [
         { "value": "drift", "label": "Drifting giant words" },
         { "value": "labels", "label": "Floating label strips (poster)" }
-      ], "info": "Label strips: 22 invisible tape labels rain endlessly from every direction — the mouse reveals one while hovering it, and clicking searches the store for that word. (On touch screens they rest faintly visible so taps aren't blind.) Word strength applies to the drifting style only." },
+      ], "info": "Label strips: 22 tape labels rain endlessly from every direction, resting faded (Word strength, 15-25% works well). Hovering reveals one at full strength, and clicking searches the store for that word." },
     { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
     { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
