@@ -105,8 +105,17 @@
   .dyn-hero.dh-landing .dh-corner-link svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
   .dyn-hero.dh-landing img.dh-corner-ic { width: 14px; height: 14px; object-fit: contain; }
   /* On phones the corner chips fold into a hamburger menu. */
-  .dh-menu-btn { display: none; position: fixed; top: 16px; left: 16px; z-index: 70; appearance: none; border: 0;
-    background: #fff; color: #0a0a0a; padding: 9px; cursor: pointer; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05); }
+  /* Liquid glass, matching the site-wide hamburger: frosted fill, etched
+     ring and a soft under-shadow, so it reads the same on every page. */
+  .dh-menu-btn { display: none; position: fixed; top: 16px; left: 16px; z-index: 70; appearance: none;
+    width: 46px; height: 46px; border-radius: 50%; padding: 0; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, 0.32);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.65); color: #1d1d1f; cursor: pointer;
+    box-shadow: 0 12px 26px -8px rgba(29, 29, 31, 0.28);
+    transition: box-shadow 0.15s, background 0.15s, transform 0.08s; }
+  .dh-menu-btn:hover { background: rgba(255, 255, 255, 0.5); box-shadow: 0 18px 34px -10px rgba(29, 29, 31, 0.32); }
+  .dh-menu-btn:active { transform: scale(0.95); }
   .dh-menu-btn svg { width: 18px; height: 18px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
   .dh-mmenu { position: fixed; inset: 0; z-index: 140; background: #f5f5f5; color: #0a0a0a;
     transform: translateY(-102%); transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
@@ -121,7 +130,7 @@
     text-transform: uppercase; letter-spacing: 0.01em; line-height: 1.25; }
   @media (max-width: 700px) {
     .dyn-hero.dh-landing .dh-corner-group { display: none; }
-    .dyn-hero.dh-landing:not(.dh-searching) .dh-menu-btn { display: block; }
+    .dyn-hero.dh-landing:not(.dh-searching) .dh-menu-btn { display: flex; }
   }
   @media (prefers-reduced-motion: reduce) { .dh-mmenu { transition: none; } }
   /* The corner links are FIXED to the screen, so the same set rides over
