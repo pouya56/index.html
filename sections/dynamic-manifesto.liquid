@@ -25,6 +25,9 @@
 
   /* Dims the pinned section behind as the panel rises over it. */
   .mf-scrim { position: fixed; inset: 0; z-index: 5; background: #0a0a0a; opacity: 0; pointer-events: none; }
+  /* While a glass hamburger menu is open, the manifesto ducks out so it
+     never shows through the frosted panel. */
+  .dyn-menu-open .dyn-mf, .dyn-menu-open .mf-scrim { visibility: hidden !important; }
 
   .mf-text { max-width: 860px; text-align: center; font-weight: 800; text-transform: uppercase;
     font-size: clamp(21px, {{ section.settings.text_size | default: 32 | divided_by: 10.0 }}vw, {{ section.settings.text_size | default: 32 | times: 1.4 }}px);

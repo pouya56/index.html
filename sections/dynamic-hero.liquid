@@ -117,10 +117,17 @@
   .dh-menu-btn:hover { background: rgba(255, 255, 255, 0.5); box-shadow: 0 18px 34px -10px rgba(29, 29, 31, 0.32); }
   .dh-menu-btn:active { transform: scale(0.95); }
   .dh-menu-btn svg { width: 18px; height: 18px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-  .dh-mmenu { position: fixed; inset: 0; z-index: 140; background: #f5f5f5; color: #0a0a0a;
+  /* Open menu is liquid glass: the page shows through, frosted. */
+  .dh-mmenu { position: fixed; inset: 0; z-index: 140; color: #0a0a0a;
+    background: rgba(255, 255, 255, 0.35);
+    -webkit-backdrop-filter: blur(22px) saturate(1.6) brightness(1.05);
+    backdrop-filter: blur(22px) saturate(1.6) brightness(1.05);
     transform: translateY(-102%); transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     padding: 76px 22px 30px; box-sizing: border-box; overflow-y: auto;
     font-family: "Archivo", "Inter", "Helvetica Neue", Arial, sans-serif; }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .dh-mmenu { background: #f5f5f5; }
+  }
   .dh-mmenu.is-open { transform: translateY(0); }
   .dh-mmenu-close { position: absolute; top: 16px; left: 16px; appearance: none; border: 0; background: #fff;
     color: #0a0a0a; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
@@ -3374,6 +3381,8 @@
     menu.classList.toggle("is-open", v);
     btn.setAttribute("aria-expanded", v ? "true" : "false");
     document.documentElement.style.overflow = v ? "hidden" : "";
+    /* the manifesto ducks out while the glass menu is open */
+    document.documentElement.classList.toggle("dyn-menu-open", v);
   }
   btn.addEventListener("click", function () { setOpen(!menu.classList.contains("is-open")); });
   close.addEventListener("click", function () { setOpen(false); });

@@ -33,10 +33,17 @@
   /* the landing hero brings its own (left-side) hamburger */
   body:has(.dyn-hero.dh-landing) .dyn-gmenu-btn { display: none; }
 
-  .dyn-gmenu { position: fixed; inset: 0; z-index: 140; background: #f5f5f5; color: #0a0a0a;
+  /* Open menu is liquid glass: the page shows through, frosted. */
+  .dyn-gmenu { position: fixed; inset: 0; z-index: 140; color: #0a0a0a;
+    background: rgba(255, 255, 255, 0.35);
+    -webkit-backdrop-filter: blur(22px) saturate(1.6) brightness(1.05);
+    backdrop-filter: blur(22px) saturate(1.6) brightness(1.05);
     transform: translateY(-102%); transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     padding: 76px 22px 30px; box-sizing: border-box; overflow-y: auto;
     font-family: "Archivo", "Inter", "Helvetica Neue", Arial, sans-serif; }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .dyn-gmenu { background: #f5f5f5; }
+  }
   .dyn-gmenu.is-open { transform: translateY(0); }
   .dyn-gmenu-close { position: absolute; top: 16px; right: 16px; appearance: none; border: 0; background: #fff;
     color: #0a0a0a; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
@@ -73,6 +80,8 @@
     menu.classList.toggle("is-open", v);
     btn.setAttribute("aria-expanded", v ? "true" : "false");
     document.documentElement.style.overflow = v ? "hidden" : "";
+    /* the manifesto ducks out while the glass menu is open */
+    document.documentElement.classList.toggle("dyn-menu-open", v);
   }
   btn.addEventListener("click", function () { setOpen(!menu.classList.contains("is-open")); });
   close.addEventListener("click", function () { setOpen(false); });
