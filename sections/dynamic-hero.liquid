@@ -121,6 +121,12 @@
      the strips stay cheap — sprites are pre-rendered (blur baked in) and
      the frame loop just stamps them. Hover/click logic lives in JS. ---- */
   .dyn-hero .dh-labcv { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; }
+  /* Frosted glass over the resting rain: the strips drift behind it, and
+     the interacted strip rides on a second canvas ABOVE the glass. */
+  .dyn-hero .dh-labglass { position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: rgba(255, 255, 255, 0.07);
+    -webkit-backdrop-filter: blur(6px) saturate(1.15); backdrop-filter: blur(6px) saturate(1.15); }
+  .dyn-hero .dh-labcv--top { pointer-events: none; z-index: 1; }
 
   /* ASCII background canvas: behind everything (props z1, content z10+). */
   .dyn-hero .dh-ascii { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%;
@@ -708,6 +714,8 @@
     {%- comment -%} 30 strips drawn on one canvas: config only — the JS
        engine generates the scatter, pre-renders sprites and runs the rain. {%- endcomment -%}
     <canvas class="dh-labcv" id="dhLabCv" aria-hidden="true"></canvas>
+    <div class="dh-labglass" aria-hidden="true"></div>
+    <canvas class="dh-labcv dh-labcv--top" id="dhLabTop" aria-hidden="true"></canvas>
     <script type="application/json" id="dhLabCfg">{
       "words": [{% for w in dh_words %}{% unless forloop.first %},{% endunless %}{{ w | strip | json }}{% endfor %}],
       "search": {{ routes.search_url | json }},
@@ -3216,10 +3224,13 @@
      (black tape, white word, depth blur baked in, plus a crisp twin for
      the hover reveal), and the frame loop just stamps them — far cheaper
      than a pile of individually animated DOM layers.
-     Behaviour: endless rain from all four edges, faded rest, hovering
-     freezes+reveals one strip. Words come from a shuffle bag, and each
-     strip deals itself a fresh one every time its loop wraps, so the
-     whole list gets screen time. Clicking a strip sends its word flying
+     Behaviour: endless rain from all four edges behind a frosted-glass
+     pane; hovering (first tap on phones) freezes a strip and lifts it
+     above the glass in red, its word decoding in like the corner links.
+     Words come from a shuffle bag, and each strip deals itself a fresh
+     one every time its loop wraps, so the whole list gets screen time.
+     Press-and-move drags a strip anywhere; dropping it re-threads it
+     into the rain from that spot. Clicking a strip sends its word flying
      into the hero's search bar, where it types itself in and waits —
      the customer runs the search. */
   var labCv = document.getElementById("dhLabCv");
@@ -3234,6 +3245,10 @@
       var BASE = Math.max(0.03, Math.min(1, cfg.base || 0.18));
       var ctx = labCv.getContext("2d");
       if (!ctx) return;
+      /* second canvas above the frosted glass for the hot (red) strip */
+      var topCv = document.getElementById("dhLabTop");
+      var tctx = topCv ? topCv.getContext("2d") : null;
+      var HOT = "#e10600";
       var N = 30;
       var TIER = [
         { blur: 9, scale: 2.2 },   /* far  */
@@ -3327,6 +3342,7 @@
         FSCALE = W < 640 ? 0.72 : 1;
         labCv.width = Math.round(W * DPR);
         labCv.height = Math.round(H * DPR);
+        if (topCv) { topCv.width = labCv.width; topCv.height = labCv.height; }
         for (var i2 = 0; i2 < strips.length; i2++) makeSprite(strips[i2]);
       }
 
@@ -3346,6 +3362,11 @@
       }
 
       var hovered = null, mx = -1, my = -1;
+      /* drag state: press on a strip and move to carry it around */
+      var dragSt = null, dragPending = null, dragPX = 0, dragPY = 0, didDrag = false;
+      /* scramble frame counter for the corner-link decode effect */
+      var scrF = 0;
+      var CH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&@";
       function hitStrip(st) {
         var q = st.last;
         if (!q) return false;
@@ -3364,6 +3385,37 @@
         return null;
       }
 
+      /* the interacted strip: red tape above the glass, its word decoding
+         through random characters like the corner links do */
+      function drawHot(st, q) {
+        var g = tctx || ctx;
+        var fs = st.fs * st.tier.scale * FSCALE;
+        var w = st.crisp.width / DPR, h = st.crisp.height / DPR;
+        var word = st.word, text = word;
+        if (!calm) {
+          var lock = Math.max(0, Math.floor((scrF - 8) / 2));
+          if (lock < word.length) {
+            text = "";
+            for (var k2 = 0; k2 < word.length; k2++) {
+              var ch = word.charAt(k2);
+              text += (ch === " " || k2 < lock) ? ch : CH.charAt(Math.floor(Math.random() * CH.length));
+            }
+          }
+        }
+        g.save();
+        g.translate(q.x, q.y);
+        g.rotate(q.r);
+        g.globalAlpha = 1;
+        g.fillStyle = HOT;
+        g.fillRect(-w / 2, -h / 2, w, h);
+        g.fillStyle = "#fff";
+        g.font = "600 " + fs + "px Jost, Futura, 'Century Gothic', sans-serif";
+        try { g.letterSpacing = (fs * 0.18) + "px"; } catch (eLs3) {}
+        g.textBaseline = "middle";
+        g.fillText(text, -w / 2 + fs * 0.95, fs * 0.06);
+        g.restore();
+      }
+
       var live = true, raf = 0, tBase = null, lastDraw = 0;
       function frame(tms) {
         raf = 0;
@@ -3377,6 +3429,7 @@
         ctx.clearRect(0, 0, W, H);
         for (var i4 = 0; i4 < strips.length; i4++) {
           var st = strips[i4];
+          if (st === hovered || st === dragSt) continue; /* drawn hot, on the top canvas */
           var p = progressOf(st, tSec);
           /* loop wrapped: this strip re-enters wearing a fresh word */
           if (st.frozen < 0 && st.pPrev != null && p < st.pPrev - 0.5) { st.word = nextWord(); makeSprite(st); }
@@ -3387,25 +3440,34 @@
           ctx.save();
           ctx.translate(q.x, q.y);
           ctx.rotate(q.r);
-          ctx.globalAlpha = st === hovered ? 1 : BASE;
-          var img = st === hovered ? st.crisp : st.sprite;
+          ctx.globalAlpha = BASE;
+          var img = st.sprite;
           ctx.drawImage(img, -img.width / DPR / 2, -img.height / DPR / 2, img.width / DPR, img.height / DPR);
           ctx.restore();
         }
         /* hover state follows the moving strips even when the mouse is
            still — but only for a real cursor: on touch the taps manage
            selection themselves, so a strip raining through the last tap
-           point can't steal or drop the frozen one */
-        if (lastPtr !== "touch") {
+           point can't steal or drop the frozen one. Paused during drag. */
+        if (lastPtr !== "touch" && !dragSt) {
           var h2 = mx >= 0 ? hitTest() : null;
           if (h2 !== hovered) {
             if (hovered) { var pOld = hovered.frozen; hovered.frozen = -1; hovered.phase = ((pOld - tSec / hovered.dur) % 1 + 1) % 1; }
             hovered = h2;
-            if (hovered) hovered.frozen = progressOf(hovered, tSec);
+            if (hovered) { hovered.frozen = progressOf(hovered, tSec); scrF = 0; }
             labCv.style.cursor = hovered ? "pointer" : "";
           }
         }
-        if (!calm || hovered) raf = requestAnimationFrame(frame);
+        /* the hot strip rides the top canvas, above the frosted glass */
+        if (tctx) { tctx.setTransform(DPR, 0, 0, DPR, 0, 0); tctx.clearRect(0, 0, W, H); }
+        var act = dragSt || hovered;
+        if (act) {
+          scrF++;
+          var qa = dragSt ? { x: act.dragX, y: act.dragY, r: act.dragR } : posAt(act, progressOf(act, tSec));
+          act.last = qa;
+          drawHot(act, qa);
+        }
+        if (!calm || hovered || dragSt) raf = requestAnimationFrame(frame);
       }
       function kick() { if (!raf && live) raf = requestAnimationFrame(frame); }
       function setLive(v) { live = v; if (v) { tBase = null; kick(); } }
@@ -3418,17 +3480,76 @@
         if (e.pointerType) lastPtr = e.pointerType;
         var r = labCv.getBoundingClientRect();
         mx = e.clientX - r.left; my = e.clientY - r.top;
+        /* a pressed strip becomes a drag once the pointer travels a bit
+           (staying under the tap threshold keeps plain clicks intact) */
+        if (dragPending && !dragSt && (Math.abs(e.clientX - dragPX) > 6 || Math.abs(e.clientY - dragPY) > 6)) {
+          dragSt = dragPending;
+          didDrag = true;
+          dragSt.dragR = dragSt.last ? dragSt.last.r : dragSt.rot;
+          labCv.style.cursor = "grabbing";
+        }
+        if (dragSt) { dragSt.dragX = mx; dragSt.dragY = my; }
         kick();
       });
       labCv.addEventListener("pointerdown", function (e) {
         if (e.pointerType) lastPtr = e.pointerType;
+        didDrag = false;
+        var r = labCv.getBoundingClientRect();
+        mx = e.clientX - r.left; my = e.clientY - r.top;
+        var t = hovered && hitStrip(hovered) ? hovered : hitTest();
+        /* touch may only drag the strip it has already revealed — every
+           other touch must stay free to scroll the page */
+        if (lastPtr === "touch" && t !== hovered) t = null;
+        if (t) {
+          dragPending = t;
+          dragPX = e.clientX; dragPY = e.clientY;
+          try { labCv.setPointerCapture(e.pointerId); } catch (eCap) {}
+        }
+        kick();
       });
+      /* while a strip is held, its drag beats the page scroll */
+      labCv.addEventListener("touchmove", function (e) {
+        if (dragPending || dragSt) e.preventDefault();
+      }, { passive: false });
+      function endDrag() {
+        dragPending = null;
+        if (!dragSt) return;
+        var st = dragSt;
+        dragSt = null;
+        /* re-thread the strip into its rain path AT the drop point, so it
+           keeps falling from wherever it was left */
+        var tSecD = tBase != null ? (lastDraw - tBase) / 1000 : 0;
+        var p;
+        if (st.dir === "t") { st.xb = Math.max(0, Math.min(1, st.dragX / W)); p = ((st.dragY / H - 0.5) + 1.2) / 2.4; }
+        else if (st.dir === "b") { st.xb = Math.max(0, Math.min(1, st.dragX / W)); p = ((0.5 - st.dragY / H) + 1.2) / 2.4; }
+        else if (st.dir === "l") { st.yb = Math.max(0, Math.min(1, st.dragY / H)); p = ((st.dragX / W - 0.5) + 1.2) / 2.4; }
+        else { st.yb = Math.max(0, Math.min(1, st.dragY / H)); p = ((0.5 - st.dragX / W) + 1.2) / 2.4; }
+        p = Math.max(0, Math.min(1, p));
+        st.rot = st.dragR - (p - 0.5) * 0.7; /* keep the carried angle at the drop point */
+        st.phase = ((p - tSecD / st.dur) % 1 + 1) % 1;
+        st.pPrev = p;
+        if (lastPtr === "touch") {
+          /* dropped by a finger: release it to rain on from there */
+          hovered = null;
+          st.frozen = -1;
+          mx = my = -1;
+        } else {
+          /* the cursor still rests on it: stay frozen and red until it moves off */
+          st.frozen = p;
+          labCv.style.cursor = "pointer";
+        }
+        kick();
+      }
+      labCv.addEventListener("pointerup", endDrag);
+      labCv.addEventListener("pointercancel", endDrag);
       labCv.addEventListener("pointerleave", function (e) {
         /* touch pointers "leave" after every tap — keeping mx/my parked
            at the tap point is what makes the reveal stick on phones */
         if (!e.pointerType || e.pointerType === "mouse") mx = my = -1;
       });
       labCv.addEventListener("click", function (e) {
+        /* a drag is not a click — dropping a strip must not launch it */
+        if (didDrag) { didDrag = false; return; }
         var r0 = labCv.getBoundingClientRect();
         mx = e.clientX - r0.left; my = e.clientY - r0.top;
         var isTouch = lastPtr === "touch";
@@ -3445,7 +3566,7 @@
             var tSec0 = tBase != null ? (lastDraw - tBase) / 1000 : 0;
             if (hovered) { var pO = hovered.frozen; hovered.frozen = -1; hovered.phase = ((pO - tSec0 / hovered.dur) % 1 + 1) % 1; }
             hovered = hit;
-            if (hovered) hovered.frozen = progressOf(hovered, tSec0);
+            if (hovered) { hovered.frozen = progressOf(hovered, tSec0); scrF = 0; }
             if (!hit) mx = my = -1;
             kick();
             return;
@@ -3481,7 +3602,7 @@
         fly.textContent = word;
         var ffs = Math.round(st.fs * st.tier.scale * FSCALE);
         fly.style.cssText = "position:fixed;left:0;top:0;z-index:200;pointer-events:none;white-space:nowrap;" +
-          "background:#0a0a0a;color:#fff;padding:0.55em 0.95em;letter-spacing:0.18em;will-change:transform,opacity;" +
+          "background:" + HOT + ";color:#fff;padding:0.55em 0.95em;letter-spacing:0.18em;will-change:transform,opacity;" +
           "font:600 " + ffs + "px Jost, Futura, 'Century Gothic', sans-serif;";
         fly.style.transform = "translate(" + (cr.left + q.x) + "px," + (cr.top + q.y) + "px) translate(-50%,-50%) rotate(" + q.r + "rad)";
         document.body.appendChild(fly);
@@ -3941,7 +4062,7 @@
       "options": [
         { "value": "drift", "label": "Drifting giant words" },
         { "value": "labels", "label": "Floating label strips (poster)" }
-      ], "info": "Label strips: 30 tape labels rain endlessly from every direction, dealing out fresh random words from your list each time they loop. Word strength sets how strong they rest; hovering reveals one at full strength, and clicking sends the word flying into the hero's search bar, where it types itself in — ready for the visitor to search. On phones: tap a strip once to reveal it, tap it again to send it to the bar." },
+      ], "info": "Label strips: 30 tape labels rain endlessly from every direction behind frosted glass, dealing out fresh random words from your list each time they loop. Word strength sets how strong they rest. Hovering lifts a strip above the glass in red while its word scrambles in; drag it to carry it anywhere on the page; click it to send the word flying into the hero's search bar, typed out and ready for the visitor to search. On phones: tap once to reveal, tap again to send, or drag the revealed strip." },
     { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
     { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
