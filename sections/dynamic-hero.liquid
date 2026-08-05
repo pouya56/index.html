@@ -118,7 +118,7 @@
   }
 
   /* ---- Label-strip style (Blawan-poster look): drawn on ONE canvas so
-     220 strips stay cheap — sprites are pre-rendered (blur baked in) and
+     the strips stay cheap — sprites are pre-rendered (blur baked in) and
      the frame loop just stamps them. Hover/click logic lives in JS. ---- */
   .dyn-hero .dh-labcv { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; }
 
@@ -705,7 +705,7 @@
     {%- if section.settings.words_style == 'labels' -%}
     {%- comment -%} Poster-style label strips: deterministic scatter tables
        keep the layout organic but stable between renders. {%- endcomment -%}
-    {%- comment -%} 220 strips drawn on one canvas: config only — the JS
+    {%- comment -%} 30 strips drawn on one canvas: config only — the JS
        engine generates the scatter, pre-renders sprites and runs the rain. {%- endcomment -%}
     <canvas class="dh-labcv" id="dhLabCv" aria-hidden="true"></canvas>
     <script type="application/json" id="dhLabCfg">{
@@ -3212,12 +3212,15 @@
   var hero = document.getElementById("dynHero");
 
   /* ==================== Label-strip rain (canvas engine) ====================
-     220 strips on ONE canvas: sprites are pre-rendered once per strip
+     30 strips on ONE canvas: sprites are pre-rendered once per strip
      (black tape, white word, depth blur baked in, plus a crisp twin for
-     the hover reveal), and the frame loop just stamps them — hundreds of
-     drawImage calls per frame is cheap, unlike 220 animated DOM layers.
+     the hover reveal), and the frame loop just stamps them — far cheaper
+     than a pile of individually animated DOM layers.
      Behaviour: endless rain from all four edges, faded rest, hovering
-     freezes+reveals one strip, clicking it searches via the hero's bar. */
+     freezes+reveals one strip. Words come from a shuffle bag, and each
+     strip deals itself a fresh one every time its loop wraps, so the
+     whole list gets screen time. Clicking a strip sends its word flying
+     into the hero's search bar, where it types itself and searches. */
   var labCv = document.getElementById("dhLabCv");
   var labCfgEl = document.getElementById("dhLabCfg");
   if (labCv && labCfgEl && hero) {
@@ -3230,7 +3233,7 @@
       var BASE = Math.max(0.03, Math.min(1, cfg.base || 0.18));
       var ctx = labCv.getContext("2d");
       if (!ctx) return;
-      var N = 220;
+      var N = 30;
       var TIER = [
         { blur: 9, scale: 2.2 },   /* far  */
         { blur: 0, scale: 1 },     /* crisp */
@@ -3240,12 +3243,27 @@
       var DIRS = "trbl";
       var W = 0, H = 0, DPR = 1;
 
+      /* shuffle bag: deals the word list out in random order and reshuffles
+         when it runs dry — so even 30 strips cycle through EVERY word over
+         time instead of repeating the same few */
+      var bag = [];
+      function nextWord() {
+        if (!bag.length) {
+          bag = WORDS.slice();
+          for (var b = bag.length - 1; b > 0; b--) {
+            var j = Math.floor(Math.random() * (b + 1));
+            var tw2 = bag[b]; bag[b] = bag[j]; bag[j] = tw2;
+          }
+        }
+        return bag.pop();
+      }
+
       /* deterministic prime scatter — organic but stable */
       var strips = [];
       for (var i = 0; i < N; i++) {
         var tier = TIER[i % 4];
         strips.push({
-          word: WORDS[i % WORDS.length],
+          word: nextWord(),
           xb: ((i * 37 + 13) % 97) / 97,
           yb: ((i * 53 + 7) % 89) / 89,
           rot: (((i * 41) % 121) - 60) * Math.PI / 180,
@@ -3254,7 +3272,7 @@
           dir: DIRS[i % 4],
           tier: tier,
           phase: ((i * 3.7) % ((i * 17) % 19 + 22)) / ((i * 17) % 19 + 22),
-          frozen: -1,
+          frozen: -1, pPrev: null,
           sprite: null, crisp: null, w: 0, h: 0
         });
       }
@@ -3348,7 +3366,11 @@
         ctx.clearRect(0, 0, W, H);
         for (var i4 = 0; i4 < strips.length; i4++) {
           var st = strips[i4];
-          var q = posAt(st, progressOf(st, tSec));
+          var p = progressOf(st, tSec);
+          /* loop wrapped: this strip re-enters wearing a fresh word */
+          if (st.frozen < 0 && st.pPrev != null && p < st.pPrev - 0.5) { st.word = nextWord(); makeSprite(st); }
+          st.pPrev = p;
+          var q = posAt(st, p);
           st.last = q;
           if (q.x < -st.w || q.x > W + st.w || q.y < -st.h || q.y > H + st.h) continue;
           ctx.save();
@@ -3384,17 +3406,65 @@
       labCv.addEventListener("pointerleave", function () { mx = my = -1; });
       labCv.addEventListener("click", function () {
         if (!hovered) return;
-        var word = hovered.word;
+        var st = hovered, word = st.word, q = st.last;
         var input = document.getElementById("dhSearch");
-        if (input) {
-          input.value = word;
-          try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (err) {}
-          input.focus();
-          var go = document.getElementById("dhSearchGo");
-          if (go) go.click();
-        } else if (cfg.search) {
-          location.href = cfg.search + "?q=" + encodeURIComponent(word);
+        if (!input) {
+          if (cfg.search) location.href = cfg.search + "?q=" + encodeURIComponent(word);
+          return;
         }
+        /* the clicked strip leaves the rain (it respawns from the edge
+           later, wearing a fresh word) ... */
+        var tSec = tBase != null ? (lastDraw - tBase) / 1000 : 0;
+        st.frozen = -1;
+        st.phase = ((-tSec / st.dur) % 1 + 1) % 1; /* progress back to 0 = start of path */
+        st.pPrev = 0;
+        st.word = nextWord();
+        makeSprite(st);
+        hovered = null;
+        labCv.style.cursor = "";
+        if (calm) { /* reduced motion: no flight — fill and search directly */
+          input.value = word;
+          try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (e0) {}
+          input.focus();
+          var go0 = document.getElementById("dhSearchGo");
+          if (go0) go0.click();
+          return;
+        }
+        /* ... while a DOM twin of the label flies from the strip's spot
+           into the search bar */
+        var cr = labCv.getBoundingClientRect();
+        var fly = document.createElement("span");
+        fly.textContent = word;
+        var ffs = Math.round(st.fs * st.tier.scale);
+        fly.style.cssText = "position:fixed;left:0;top:0;z-index:200;pointer-events:none;white-space:nowrap;" +
+          "background:#0a0a0a;color:#fff;padding:0.55em 0.95em;letter-spacing:0.18em;will-change:transform,opacity;" +
+          "font:600 " + ffs + "px Jost, Futura, 'Century Gothic', sans-serif;";
+        fly.style.transform = "translate(" + (cr.left + q.x) + "px," + (cr.top + q.y) + "px) translate(-50%,-50%) rotate(" + q.r + "rad)";
+        document.body.appendChild(fly);
+        var ir = input.getBoundingClientRect();
+        var tx = ir.left + Math.min(ir.width * 0.5, 90), ty = ir.top + ir.height / 2;
+        fly.style.transition = "transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s 0.4s";
+        requestAnimationFrame(function () { requestAnimationFrame(function () {
+          fly.style.transform = "translate(" + tx + "px," + ty + "px) translate(-50%,-50%) rotate(0rad) scale(0.55)";
+          fly.style.opacity = "0";
+        }); });
+        input.focus();
+        input.value = "";
+        setTimeout(function () {
+          if (fly.parentNode) fly.parentNode.removeChild(fly);
+          /* the word types itself into the bar, then the search runs */
+          var k = 0;
+          var typer = setInterval(function () {
+            k++;
+            input.value = word.slice(0, k);
+            try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (e1) {}
+            if (k >= word.length) {
+              clearInterval(typer);
+              var go = document.getElementById("dhSearchGo");
+              if (go) go.click();
+            }
+          }, 55);
+        }, 560);
       });
 
       size();
@@ -3830,7 +3900,7 @@
       "options": [
         { "value": "drift", "label": "Drifting giant words" },
         { "value": "labels", "label": "Floating label strips (poster)" }
-      ], "info": "Label strips: 220 tape labels rain endlessly from every direction. Word strength sets how strong they rest; hovering reveals one at full strength, and clicking searches that word through the hero's search bar." },
+      ], "info": "Label strips: 30 tape labels rain endlessly from every direction, dealing out fresh random words from your list each time they loop. Word strength sets how strong they rest; hovering reveals one at full strength, and clicking sends the word flying into the hero's search bar, where it types itself and searches." },
     { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
     { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
