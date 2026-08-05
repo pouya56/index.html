@@ -753,7 +753,9 @@
     {%- assign lab_in = 't,r,b,l,t,b,r,l,b,t,l,r,t,b,l,t,r,b,t,l,b,r' | split: ',' -%}
     {%- comment -%} Strips rest faded — hovering reveals one, and a click
        searches the store for that word. {%- endcomment -%}
-    <div class="dh-labs" id="dhLabs" style="--wbase: {{ section.settings.words_opacity | default: 18 | divided_by: 100.0 }};">
+    {%- comment -%} Rest opacity is capped at 25% so every strip stays faded
+       whatever Word strength is set to — hover is the only full reveal. {%- endcomment -%}
+    <div class="dh-labs" id="dhLabs" style="--wbase: {{ section.settings.words_opacity | default: 18 | at_most: 25 | divided_by: 100.0 }};">
       {%- for i in (0..21) -%}
         {%- assign wi = i | modulo: dh_words.size -%}
         {%- assign lab_word = dh_words[wi] | strip -%}
