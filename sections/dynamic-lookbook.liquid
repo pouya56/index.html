@@ -23,6 +23,10 @@
   .lb-fig { appearance: none; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; position: relative;
     flex: 1 1 0; min-width: 0; transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
   .lb-fig img { display: block; width: 100%; height: {{ section.settings.fig_h | default: 44 }}vh; object-fit: contain; object-position: center bottom; }
+  /* 3D figures: the model turns on its own inside the figure's slot; clicks
+     pass through to the button that opens the look view. */
+  .lb-fig model-viewer.lb-mv { display: block; height: {{ section.settings.fig_h | default: 44 }}vh; width: 100%;
+    pointer-events: none; background: transparent; --poster-color: transparent; }
   @media (hover: hover) { .lb-fig:hover { transform: translateY(-8px) scale(1.04); } }
   .lb-fig:focus-visible { outline: 2px solid currentColor; outline-offset: 6px; }
 
@@ -40,6 +44,8 @@
   .lb-stage.is-drag { cursor: grabbing; }
   .lb-big { height: min(80vh, 900px); width: auto; max-width: 82vw; object-fit: contain; user-select: none; -webkit-user-drag: none;
     pointer-events: none; }
+  .lb-bigmv { height: min(80vh, 900px); width: min(82vw, 980px); background: transparent; --poster-color: transparent; }
+  .lb-bigmv[hidden] { display: none; }
   .lb-view.is-open .lb-big { animation: lbPop 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
   @keyframes lbPop { from { transform: scale(0.62); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
 
@@ -82,6 +88,8 @@
     .lb-row::-webkit-scrollbar { display: none; }
     .lb-fig { flex: 0 0 auto; }
     .lb-fig img { width: auto; height: 30vh; max-width: 44vw; }
+    .lb-fig model-viewer.lb-mv { height: 30vh; width: 38vw; }
+    .lb-bigmv { width: 92vw; height: 62vh; }
     .lb-ghost { display: none; }
     .lb-big { height: 62vh; max-width: 92vw; }
     .lb-look h3 { max-width: 80vw; }
@@ -103,8 +111,23 @@
   <div class="lb-row" id="lbRow-{{ section.id }}">
     {%- if lb_col != blank -%}
       {%- for p in lb_col.products limit: lb_limit -%}
+        {%- assign lb_glb = '' -%}
+        {%- for media in p.media -%}
+          {%- if media.media_type == 'model' and lb_glb == '' -%}
+            {%- for src in media.sources -%}
+              {%- if src.format == 'glb' and lb_glb == '' -%}{%- assign lb_glb = src.url -%}{%- endif -%}
+            {%- endfor -%}
+          {%- endif -%}
+        {%- endfor -%}
         <button class="lb-fig" type="button" data-idx="{{ forloop.index0 }}" aria-label="View {{ p.title | escape }}">
-          <img src="{{ p.featured_image | image_url: width: 900 }}" alt="{{ p.title | escape }}" loading="lazy" width="450" height="600">
+          {%- if lb_glb != '' -%}
+            {%- comment -%} Real 3D: the product's GLB model turns on its own. {%- endcomment -%}
+            <model-viewer class="lb-mv" src="{{ lb_glb }}"{% if p.featured_image %} poster="{{ p.featured_image | image_url: width: 900 }}"{% endif %}
+              auto-rotate rotation-per-second="30deg" interaction-prompt="none" loading="lazy" disable-zoom disable-pan
+              shadow-intensity="0.6" aria-hidden="true"></model-viewer>
+          {%- else -%}
+            <img src="{{ p.featured_image | image_url: width: 900 }}" alt="{{ p.title | escape }}" loading="lazy" width="450" height="600">
+          {%- endif -%}
         </button>
       {%- endfor -%}
     {%- else -%}
@@ -129,6 +152,8 @@
     <button class="lb-ghost lb-ghost--next" type="button" id="lbNext-{{ section.id }}" aria-label="Next look"><img src="" alt="" width="400" height="600" style="height: 100%; width: auto;"></button>
     <div class="lb-stage" id="lbStage-{{ section.id }}">
       <img class="lb-big" id="lbBig-{{ section.id }}" src="" alt="" width="900" height="1350" style="width: auto;">
+      <model-viewer class="lb-bigmv" id="lbBigMv-{{ section.id }}" camera-controls disable-zoom disable-pan
+        interaction-prompt="none" auto-rotate rotation-per-second="20deg" shadow-intensity="0.7" hidden></model-viewer>
     </div>
     {% # theme-check-enable RemoteAsset %}
     <div class="lb-buy" id="lbBuy-{{ section.id }}"></div>
@@ -145,6 +170,14 @@
         "t": {{ p.title | json }},
         "u": {{ p.url | json }},
         "m": {{ p.price | money | strip_html | json }},
+        "g": {%- assign lb_glb2 = '' -%}
+          {%- for media in p.media -%}
+            {%- if media.media_type == 'model' and lb_glb2 == '' -%}
+              {%- for src in media.sources -%}
+                {%- if src.format == 'glb' and lb_glb2 == '' -%}{%- assign lb_glb2 = src.url -%}{%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
+          {%- endfor -%}{{ lb_glb2 | json }},
         "f": [
           {%- assign fc = 0 -%}
           {%- for media in p.media -%}
@@ -183,14 +216,25 @@
   var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var SPIN_MS = {{ section.settings.spin_ms | default: 450 }};
 
+  /* The 3D engine (Google's model-viewer web component) loads once, and
+     only when at least one product actually carries a GLB model. */
+  if (items.some(function (it) { return it.g; }) && !window.__dynMvLoad && !(window.customElements && customElements.get("model-viewer"))) {
+    window.__dynMvLoad = 1;
+    var mvs = document.createElement("script");
+    mvs.type = "module";
+    mvs.src = "https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js";
+    document.head.appendChild(mvs);
+  }
+
   var row = document.getElementById("lbRow-" + sid);
   var figs = Array.prototype.slice.call(row.querySelectorAll(".lb-fig"));
 
   /* ---- lineup: every figure slowly turns, filmstrip-style, once the
-     section is on screen. Frames are just the product's photos. ---- */
+     section is on screen. Frames are just the product's photos; 3D figures
+     turn by themselves and sit out the filmstrip. ---- */
   var seen = false, timer = 0;
   var state = figs.map(function (fig, i) {
-    var fr = (items[i] && items[i].f) || [];
+    var fr = fig.querySelector("model-viewer") ? [] : ((items[i] && items[i].f) || []);
     /* start each figure on a different frame so the row doesn't turn in lock-step */
     return { img: fig.querySelector("img"), frames: fr, at: fr.length ? i % fr.length : 0, loaded: false };
   });
@@ -233,13 +277,16 @@
   var prevBtn = document.getElementById("lbPrev-" + sid);
   var nextBtn = document.getElementById("lbNext-" + sid);
   var closeBtn = document.getElementById("lbClose-" + sid);
-  var cur = 0, frame = 0, open = false;
+  var bigMv = document.getElementById("lbBigMv-" + sid);
+  var degWrap = degEl ? degEl.parentNode : null;
+  var cur = 0, frame = 0, open = false, mvMode = false;
 
   function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
   function frames() { var it = items[cur]; return (it && (it.F.length ? it.F : it.f)) || []; }
   function pad(n) { return (n < 10 ? "0" : "") + n; }
 
   function paintFrame() {
+    if (mvMode) return;
     var fr = frames();
     if (!fr.length) return;
     frame = ((frame % fr.length) + fr.length) % fr.length;
@@ -260,10 +307,19 @@
     nextBtn.querySelector("img").src = (nx.f[0] || "");
     prevBtn.style.display = items.length > 1 ? "" : "none";
     nextBtn.style.display = items.length > 1 ? "" : "none";
+    /* A look with a GLB model swaps the photo stage for the live 3D one:
+       it spins on its own and drag rotates it (scroll works too). */
+    mvMode = !!(it.g && bigMv);
+    if (bigMv) {
+      bigMv.hidden = !mvMode;
+      if (mvMode && bigMv.getAttribute("src") !== it.g) bigMv.setAttribute("src", it.g);
+    }
+    big.style.display = mvMode ? "none" : "";
+    if (degWrap) degWrap.style.display = mvMode ? "none" : "";
     frame = 0;
     paintFrame();
     /* warm the big frames so spinning is instant */
-    frames().forEach(function (u) { var im = new Image(); im.src = u; });
+    if (!mvMode) frames().forEach(function (u) { var im = new Image(); im.src = u; });
   }
   function openView(i) {
     cur = i;
@@ -288,19 +344,31 @@
   prevBtn.addEventListener("click", function () { cur = (cur - 1 + items.length) % items.length; paintLook(); });
   nextBtn.addEventListener("click", function () { cur = (cur + 1) % items.length; paintLook(); });
 
+  /* In model mode, the scroll wheel turns the 3D camera around the model. */
+  function mvSpin(deltaDeg) {
+    if (!bigMv || !bigMv.getCameraOrbit) return;
+    try {
+      var o = bigMv.getCameraOrbit();
+      bigMv.cameraOrbit = (o.theta + deltaDeg * Math.PI / 180) + "rad " + o.phi + "rad " + o.radius + "m";
+    } catch (err) {}
+  }
+
   /* scroll spins the product */
   var acc = 0;
   view.addEventListener("wheel", function (e) {
     e.preventDefault();
+    if (mvMode) { mvSpin((e.deltaMode ? e.deltaY * 40 : e.deltaY) * 0.35); return; }
     acc += (e.deltaMode ? e.deltaY * 40 : e.deltaY);
     var STEP = 90;
     while (acc >= STEP) { frame++; acc -= STEP; paintFrame(); }
     while (acc <= -STEP) { frame--; acc += STEP; paintFrame(); }
   }, { passive: false });
 
-  /* dragging spins it too (and is the touch path) */
+  /* dragging spins it too (and is the touch path) — for 3D looks the
+     model-viewer's own camera controls take the drag instead. */
   var dragX = null, dragAcc = 0;
   stage.addEventListener("pointerdown", function (e) {
+    if (mvMode) return;
     dragX = e.clientX; dragAcc = 0;
     stage.classList.add("is-drag");
     if (stage.setPointerCapture) { try { stage.setPointerCapture(e.pointerId); } catch (err) {} }
@@ -320,8 +388,8 @@
   document.addEventListener("keydown", function (e) {
     if (!open) return;
     if (e.key === "Escape") closeView();
-    else if (e.key === "ArrowRight") { frame++; paintFrame(); }
-    else if (e.key === "ArrowLeft") { frame--; paintFrame(); }
+    else if (e.key === "ArrowRight") { if (mvMode) mvSpin(20); else { frame++; paintFrame(); } }
+    else if (e.key === "ArrowLeft") { if (mvMode) mvSpin(-20); else { frame--; paintFrame(); } }
   });
 })();
 </script>
@@ -331,7 +399,7 @@
   "name": "Dynamic Lookbook",
   "tag": "section",
   "settings": [
-    { "type": "paragraph", "content": "A Bécane-style lookbook: the collection's products stand side by side, slowly turning (each product's photos are its rotation frames — upload angle shots in order for the best spin). Clicking one zooms it in; scroll or drag to spin it, with its neighbours ghosted at the sides." },
+    { "type": "paragraph", "content": "A Bécane-style lookbook: the collection's products stand side by side, slowly turning. Products with a 3D model (upload a .glb file to the product's media) turn as real 3D and can be dragged to spin in the zoom view; products without one use their photos as rotation frames (upload angle shots in order for the best spin). Clicking a figure zooms it in, with its neighbours ghosted at the sides." },
     { "type": "collection", "id": "collection", "label": "Collection" },
     { "type": "range", "id": "limit", "label": "Max products", "min": 4, "max": 16, "step": 1, "default": 12 },
     { "type": "text", "id": "kicker", "label": "Small line above the heading", "default": "Collection 01 / 01" },
