@@ -125,28 +125,26 @@
   .dyn-hero .dh-labs { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
   .dyn-hero .dh-lab { position: absolute; pointer-events: auto; cursor: default; will-change: transform;
     transform: translate(-50%, -50%);
-    animation-duration: 1.1s; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); animation-fill-mode: both;
-    animation-delay: calc(var(--li, 0) * 0.13s); }
-  /* fall-in directions — each strip tumbles in from its own edge */
-  .dyn-hero .dh-lab--in-t { animation-name: dhLabInT; }
-  .dyn-hero .dh-lab--in-b { animation-name: dhLabInB; }
-  .dyn-hero .dh-lab--in-l { animation-name: dhLabInL; }
-  .dyn-hero .dh-lab--in-r { animation-name: dhLabInR; }
-  @keyframes dhLabInT { from { transform: translate(-50%, -50%) translate(0, -120vh) rotate(-50deg); } to { transform: translate(-50%, -50%); } }
-  @keyframes dhLabInB { from { transform: translate(-50%, -50%) translate(0, 120vh) rotate(45deg); } to { transform: translate(-50%, -50%); } }
-  @keyframes dhLabInL { from { transform: translate(-50%, -50%) translate(-120vw, 0) rotate(38deg); } to { transform: translate(-50%, -50%); } }
-  @keyframes dhLabInR { from { transform: translate(-50%, -50%) translate(120vw, 0) rotate(-42deg); } to { transform: translate(-50%, -50%); } }
+    animation-duration: var(--ldur, 30s); animation-timing-function: linear; animation-iteration-count: infinite;
+    animation-delay: calc(var(--li, 0) * -3.7s); }
+  /* endless rain: each strip travels across the whole screen from its own
+     edge and re-enters, tumbling slowly — they never come to rest */
+  .dyn-hero .dh-lab--in-t { animation-name: dhLabFallT; }
+  .dyn-hero .dh-lab--in-b { animation-name: dhLabFallB; }
+  .dyn-hero .dh-lab--in-l { animation-name: dhLabFallL; }
+  .dyn-hero .dh-lab--in-r { animation-name: dhLabFallR; }
+  @keyframes dhLabFallT { from { transform: translate(-50%, -50%) translate(0, -120vh) rotate(-26deg); } to { transform: translate(-50%, -50%) translate(0, 120vh) rotate(20deg); } }
+  @keyframes dhLabFallB { from { transform: translate(-50%, -50%) translate(0, 120vh) rotate(22deg); } to { transform: translate(-50%, -50%) translate(0, -120vh) rotate(-18deg); } }
+  @keyframes dhLabFallL { from { transform: translate(-50%, -50%) translate(-120vw, 0) rotate(18deg); } to { transform: translate(-50%, -50%) translate(120vw, 0) rotate(-24deg); } }
+  @keyframes dhLabFallR { from { transform: translate(-50%, -50%) translate(120vw, 0) rotate(-20deg); } to { transform: translate(-50%, -50%) translate(-120vw, 0) rotate(24deg); } }
+  /* hovering freezes THIS strip mid-fall so it can be read */
+  @media (hover: hover) { .dyn-hero .dh-lab:hover { animation-play-state: paused; } }
   .dyn-hero .dh-lab-r { display: inline-block; transform: rotate(var(--lr, 0deg)) scale(var(--lsc, 1));
     filter: blur(var(--lbl, 0px)); opacity: var(--wbase, 0.18);
     transition: filter 0.3s ease, opacity 0.3s ease; }
   .dyn-hero .dh-lab-f { display: inline-block; background: #0a0a0a; color: #fff;
     font-size: var(--lf, 18px); font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
-    line-height: 1; padding: 0.55em 0.95em 0.5em; white-space: nowrap;
-    animation: dhLabFloat var(--ldur, 30s) ease-in-out var(--ldel, 0s) infinite alternate; }
-  @keyframes dhLabFloat {
-    from { transform: translate(0, 0) rotate(0deg); }
-    to { transform: translate(12px, -10px) rotate(2.5deg); }
-  }
+    line-height: 1; padding: 0.55em 0.95em 0.5em; white-space: nowrap; }
   /* crisp strips sit above blurred ones, so the readable strip always
      wins the hover where they overlap */
   .dyn-hero .dh-lab--far { --lsc: 2.2; --lbl: 9px; z-index: 1; }
@@ -154,10 +152,9 @@
   .dyn-hero .dh-lab--crisp { --lsc: 1; --lbl: 0px; z-index: 3; }
   /* hover reveals ONLY this strip, and holds while the cursor stays */
   @media (hover: hover) { .dyn-hero .dh-lab:hover .dh-lab-r { opacity: 1; filter: blur(0); } }
-  .dyn-hero .dh-labs.is-off .dh-lab-f { animation-play-state: paused; }
+  .dyn-hero .dh-labs.is-off .dh-lab { animation-play-state: paused; }
   @media (prefers-reduced-motion: reduce) {
     .dyn-hero .dh-lab { animation: none; }
-    .dyn-hero .dh-lab-f { animation: none; }
   }
   @media (max-width: 700px) {
     .dyn-hero .dh-lab:nth-child(n+9) { display: none; }
