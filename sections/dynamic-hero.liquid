@@ -3220,7 +3220,8 @@
      freezes+reveals one strip. Words come from a shuffle bag, and each
      strip deals itself a fresh one every time its loop wraps, so the
      whole list gets screen time. Clicking a strip sends its word flying
-     into the hero's search bar, where it types itself and searches. */
+     into the hero's search bar, where it types itself in and waits —
+     the customer runs the search. */
   var labCv = document.getElementById("dhLabCv");
   var labCfgEl = document.getElementById("dhLabCfg");
   if (labCv && labCfgEl && hero) {
@@ -3422,12 +3423,10 @@
         makeSprite(st);
         hovered = null;
         labCv.style.cursor = "";
-        if (calm) { /* reduced motion: no flight — fill and search directly */
+        if (calm) { /* reduced motion: no flight — the word just fills the bar */
           input.value = word;
           try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (e0) {}
           input.focus();
-          var go0 = document.getElementById("dhSearchGo");
-          if (go0) go0.click();
           return;
         }
         /* ... while a DOM twin of the label flies from the strip's spot
@@ -3452,17 +3451,14 @@
         input.value = "";
         setTimeout(function () {
           if (fly.parentNode) fly.parentNode.removeChild(fly);
-          /* the word types itself into the bar, then the search runs */
+          /* the word types itself into the bar and waits there — the
+             customer decides when to run the search */
           var k = 0;
           var typer = setInterval(function () {
             k++;
             input.value = word.slice(0, k);
             try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (e1) {}
-            if (k >= word.length) {
-              clearInterval(typer);
-              var go = document.getElementById("dhSearchGo");
-              if (go) go.click();
-            }
+            if (k >= word.length) clearInterval(typer);
           }, 55);
         }, 560);
       });
@@ -3473,9 +3469,9 @@
     })();
   }
 
-  /* Clicking a background word runs it through the HERO's own search bar
-     (the in-page flow), not the theme's search page — the link's href only
-     serves as the no-JS fallback. Works for both field styles. */
+  /* Clicking a background word drops it into the HERO's own search bar —
+     filled and focused, waiting for the customer to run the search — the
+     link's href only serves as the no-JS fallback. Works for both styles. */
   if (hero) {
     hero.addEventListener("click", function (e) {
       var a = e.target && e.target.closest ? e.target.closest("a.dh-word, a.dh-lab") : null;
@@ -3487,8 +3483,6 @@
       input.value = word;
       try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (err) {}
       input.focus();
-      var go = document.getElementById("dhSearchGo");
-      if (go) go.click();
     });
   }
 
@@ -3900,7 +3894,7 @@
       "options": [
         { "value": "drift", "label": "Drifting giant words" },
         { "value": "labels", "label": "Floating label strips (poster)" }
-      ], "info": "Label strips: 30 tape labels rain endlessly from every direction, dealing out fresh random words from your list each time they loop. Word strength sets how strong they rest; hovering reveals one at full strength, and clicking sends the word flying into the hero's search bar, where it types itself and searches." },
+      ], "info": "Label strips: 30 tape labels rain endlessly from every direction, dealing out fresh random words from your list each time they loop. Word strength sets how strong they rest; hovering reveals one at full strength, and clicking sends the word flying into the hero's search bar, where it types itself in — ready for the visitor to search." },
     { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
     { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
