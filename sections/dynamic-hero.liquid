@@ -219,7 +219,7 @@
      dragging and search then see the hero exactly as before. */
   .dh-introrun { height: calc(100svh + 80vh); }
   .dh-introrun .dyn-hero.dh-landing { position: sticky; top: 0; }
-  .dyn-hero.dh-intro .dh-head, .dyn-hero.dh-intro .dh-search, .dyn-hero.dh-intro .dh-hero-btns {
+  .dyn-hero.dh-intro .dh-head, .dyn-hero.dh-intro .dh-search, .dyn-hero.dh-intro .dh-hero-btns, .dyn-hero.dh-intro .dh-mini {
     opacity: 0; will-change: opacity, transform; }
 
   /* Stacking order over the floating photos (z 1): the search bar is the
@@ -281,6 +281,21 @@
   @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-search-go::before { animation: none; } }
   /* Liquid-glass buttons under the search bar (Google-style) */
   .dyn-hero .dh-hero-btns { display: flex; justify-content: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; position: relative; z-index: 11; }
+  /* Small gallery under the search bar — a sideways strip of parallax cards. */
+  .dyn-hero .dh-mini { position: relative; z-index: 11; margin: 28px auto 0; width: min(92vw, 1040px); }
+  .dyn-hero .dh-mini-track { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch; padding: 4px 2px 12px; cursor: grab; }
+  .dyn-hero .dh-mini-track::-webkit-scrollbar { display: none; }
+  .dyn-hero .dh-mini-track.is-drag { cursor: grabbing; }
+  .dyn-hero .dh-mini-card { position: relative; flex: none; width: clamp(150px, 16vw, 210px); aspect-ratio: 16 / 11;
+    border-radius: 16px; overflow: hidden; background: #fff; box-shadow: 0 12px 26px -14px rgba(0, 0, 0, 0.3);
+    text-decoration: none; display: block; }
+  .dyn-hero .dh-mini-card img { position: absolute; left: -9%; top: 0; width: 118%; height: 100%; object-fit: cover;
+    will-change: transform; }
+  .dyn-hero .dh-mini-label { position: absolute; left: 10px; bottom: 8px; z-index: 2; background: #fff; color: #0a0a0a;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 9px; border-radius: 999px; }
+  .dyn-hero.dh-searching .dh-mini { display: none; }
+  @media (max-width: 700px) { .dyn-hero .dh-mini { width: 94vw; } .dyn-hero .dh-mini-card { width: 44vw; } }
 
   /* "Finding your gift…" loader — full-screen overlay that covers the whole page (moved to <body> so nothing sits on top) */
   .dh-finding { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px;
@@ -1305,6 +1320,28 @@
             <script type="application/json" data-dh-hidekw>{{ section.settings.exclude_keywords | default: '' | downcase | json }}</script>
           {%- endif -%}
         {%- endif -%}
+      {%- endif -%}
+      {%- assign mini_count = 0 -%}
+      {%- for b in section.blocks -%}{%- if b.type == 'mini_card' and b.settings.image != blank -%}{%- assign mini_count = mini_count | plus: 1 -%}{%- endif -%}{%- endfor -%}
+      {%- if mini_count > 0 -%}
+      {%- comment -%} Small gallery under the search bar — a sideways strip of
+         cards with the scroll-gallery's in-card parallax. {%- endcomment -%}
+      <div class="dh-mini" id="dhMini">
+        <div class="dh-mini-track" id="dhMiniTrack">
+          {%- for b in section.blocks -%}
+            {%- if b.type == 'mini_card' and b.settings.image != blank -%}
+              {%- if b.settings.url != blank -%}
+                <a class="dh-mini-card" href="{{ b.settings.url }}" {{ b.shopify_attributes }}>
+              {%- else -%}
+                <div class="dh-mini-card" {{ b.shopify_attributes }}>
+              {%- endif -%}
+                <img src="{{ b.settings.image | image_url: width: 700 }}" alt="{{ b.settings.label | escape }}" loading="lazy" width="350" height="240">
+                {%- if b.settings.label != blank -%}<span class="dh-mini-label">{{ b.settings.label | escape }}</span>{%- endif -%}
+              {%- if b.settings.url != blank -%}</a>{%- else -%}</div>{%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      </div>
       {%- endif -%}
       {%- comment -%} Build the category tabs from product type or tag. {%- endcomment -%}
       {%- if section.settings.show_grid -%}
@@ -2945,6 +2982,8 @@
     { el: hero.querySelector(".dh-search"), a: 0.3, b: 0.65,
       fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } },
     { el: hero.querySelector(".dh-hero-btns"), a: 0.42, b: 0.75,
+      fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } },
+    { el: hero.querySelector(".dh-mini"), a: 0.52, b: 0.85,
       fx: function (t) { return "translateY(" + (26 * (1 - t)).toFixed(1) + "px)"; } }
   ].filter(function (x) { return x.el; });
   if (!parts.length) return;
@@ -3081,6 +3120,78 @@
       txt.textContent = orig;
     });
   });
+})();
+</script>
+
+<script>
+(function () {
+  /* Small gallery under the search bar: wheel glides it sideways with the
+     scroll-gallery's eased pursuit, mouse-drag scrubs it, and each card's
+     image drifts against its frame (the same in-card parallax). */
+  var track = document.getElementById("dhMiniTrack");
+  if (!track) return;
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var cards = Array.prototype.slice.call(track.querySelectorAll(".dh-mini-card"));
+  var raf = 0, target = null, cur = 0;
+
+  function paint() {
+    var tr = track.getBoundingClientRect();
+    var mid = tr.left + tr.width / 2;
+    for (var i = 0; i < cards.length; i++) {
+      var r = cards[i].getBoundingClientRect();
+      if (r.right < tr.left - 60 || r.left > tr.right + 60) continue;
+      var off = ((r.left + r.width / 2) - mid) / Math.max(1, tr.width);
+      var im = cards[i].firstElementChild;
+      if (im && im.tagName === "IMG") im.style.transform = "translateX(" + (off * -9).toFixed(2) + "%)";
+    }
+  }
+  function step() {
+    raf = 0;
+    if (target == null) { paint(); return; }
+    cur += (target - cur) * 0.14;
+    track.scrollLeft = cur;
+    paint();
+    if (Math.abs(target - cur) > 0.6) raf = requestAnimationFrame(step);
+    else target = null;
+  }
+  function kick() { if (!raf) raf = requestAnimationFrame(step); }
+
+  track.addEventListener("wheel", function (e) {
+    var max = track.scrollWidth - track.clientWidth;
+    if (max < 2) return;
+    var d = e.deltaMode ? e.deltaY * 40 : e.deltaY;
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; /* native sideways swipes pass through */
+    e.preventDefault();
+    if (target == null) { target = track.scrollLeft; cur = track.scrollLeft; }
+    target = Math.max(0, Math.min(max, target + d));
+    kick();
+  }, { passive: false });
+
+  /* mouse-drag scrubbing (touch keeps native strip scrolling) */
+  var dx = null, moved = false;
+  track.addEventListener("pointerdown", function (e) {
+    if (e.pointerType !== "mouse") return;
+    dx = e.clientX; moved = false; target = null;
+    track.classList.add("is-drag");
+  });
+  track.addEventListener("pointermove", function (e) {
+    if (dx == null) return;
+    var d = e.clientX - dx;
+    if (Math.abs(d) > 3) moved = true;
+    track.scrollLeft -= d;
+    dx = e.clientX;
+    paint();
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) {
+    track.addEventListener(ev, function () { dx = null; track.classList.remove("is-drag"); });
+  });
+  /* a drag shouldn't fire the card's link on release */
+  track.addEventListener("click", function (e) { if (moved) { e.preventDefault(); moved = false; } }, true);
+
+  track.addEventListener("scroll", function () { if (target == null) paint(); }, { passive: true });
+  window.addEventListener("resize", paint, { passive: true });
+  if (calm) { cards.forEach(function (c) { var im = c.firstElementChild; if (im) im.style.transform = ""; }); }
+  else paint();
 })();
 </script>
 
@@ -3404,6 +3515,12 @@
       { "type": "paragraph", "content": "A sidebar icon on the hero's left. Clicking it pops the chosen page up full-screen, showing its real content. Close with × or Esc." },
       { "type": "text", "id": "label", "label": "Button label (shows on hover)", "default": "About" },
       { "type": "url", "id": "url", "label": "Page to open" }
+    ]},
+    { "type": "mini_card", "name": "Small gallery card", "settings": [
+      { "type": "paragraph", "content": "Cards appear as a small sideways gallery under the search bar (scroll-gallery style: wheel or drag glides it, images drift inside their frames). Add several for the strip to scroll." },
+      { "type": "image_picker", "id": "image", "label": "Image" },
+      { "type": "text", "id": "label", "label": "Small label (optional)" },
+      { "type": "url", "id": "url", "label": "Link (optional)" }
     ]},
     { "type": "prop", "name": "Floating prop", "settings": [
       { "type": "image_picker", "id": "image", "label": "Cutout image (transparent PNG)", "info": "A pen, clip, mug… cut out on a transparent background (Shopify's image editor → Remove background). It sits still on the hero and follows the mouse only while hovered." },
