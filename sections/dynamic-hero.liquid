@@ -69,6 +69,10 @@
   /* Floating props (borrowed from Dynamic Intro): transparent cutouts laid
      over the hero background, behind the logo/search — they wake up ONLY
      under the cursor, following it magnetically with a small wobble. */
+  /* ASCII background canvas: behind everything (props z1, content z10+). */
+  .dyn-hero .dh-ascii { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%;
+    pointer-events: none; opacity: {{ section.settings.ascii_opacity | default: 14 | divided_by: 100.0 }}; }
+
   .dyn-hero .dh-prop { position: absolute; z-index: 1; height: auto; will-change: transform;
     transform: translate(-50%, -50%) translate(var(--px, 0px), var(--py, 0px)) rotate(calc(var(--pr, 0deg) + var(--pw, 0deg)));
     filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.25)); touch-action: none; }
@@ -623,6 +627,13 @@
   data-finding-text="{{ section.settings.finding_text | default: 'Finding your gift…' | escape }}"
   data-finding-ms="{{ section.settings.finding_ms | default: 550 }}"
   data-results-url="{{ section.settings.results_page_url }}">
+  {%- if section.settings.ascii_bg != blank and section.settings.ascii_bg != 'none' -%}
+    {%- comment -%} ASCII background: a retro terminal visual drawn in live
+       text characters behind everything, reacting to the mouse. {%- endcomment -%}
+    <canvas class="dh-ascii" id="dhAscii" aria-hidden="true"
+      data-mode="{{ section.settings.ascii_bg }}"
+      {%- if section.settings.ascii_image != blank %} data-img="{{ section.settings.ascii_image | image_url: width: 400 }}"{% endif %}></canvas>
+  {%- endif -%}
   {%- comment -%} Floating props: decor cutouts that drift under the cursor. {%- endcomment -%}
   {%- for block in section.blocks -%}
     {%- if block.type == 'prop' and block.settings.image != blank -%}
@@ -3075,6 +3086,163 @@
 
 <script>
 (function () {
+  /* ASCII background: draws the hero's backdrop in live text characters —
+     a spinning 3D torus or the merchant's image — nudged by the mouse. */
+  var cv = document.getElementById("dhAscii");
+  var hero = document.getElementById("dynHero");
+  if (!cv || !hero) return;
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var ctx = cv.getContext("2d");
+  if (!ctx) return;
+  var CELL = {{ section.settings.ascii_scale | default: 12 }};
+  var INK = "{{ section.settings.ascii_ink | default: '#0a0a0a' }}";
+  var CH = ".,-~:;=!*#$@";
+  var mode = cv.getAttribute("data-mode") || "torus";
+  var cols = 0, rows = 0, chW = 8, running = false, raf = 0, last = 0;
+  var mx = 0, my = 0, vA = 1.0, vB = 0.6;
+  var gray = null, phase = null, imgReady = false;
+
+  function size() {
+    var r = hero.getBoundingClientRect();
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(r.width * dpr);
+    cv.height = Math.round(r.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.font = CELL + 'px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+    ctx.textBaseline = "top";
+    chW = Math.max(4, ctx.measureText("M").width);
+    cols = Math.max(10, Math.floor(r.width / chW));
+    rows = Math.max(10, Math.floor(r.height / CELL));
+    if (mode === "image" && imgReady) sampleImage();
+  }
+
+  var img = null;
+  function sampleImage() {
+    try {
+      var oc = document.createElement("canvas");
+      oc.width = cols; oc.height = rows;
+      var octx = oc.getContext("2d");
+      /* contain-fit the image in the grid */
+      var s = Math.min(cols / img.width, (rows * 1.9) / img.height);
+      var w = img.width * s, h = img.height * s / 1.9;
+      octx.drawImage(img, (cols - w) / 2, (rows - h) / 2, w, h);
+      var d = octx.getImageData(0, 0, cols, rows).data;
+      gray = new Float32Array(cols * rows);
+      phase = new Float32Array(cols * rows);
+      for (var i = 0; i < cols * rows; i++) {
+        var a = d[i * 4 + 3] / 255;
+        var lum = (0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]) / 255;
+        /* darker & more opaque → denser character */
+        gray[i] = a * (1 - lum);
+        phase[i] = Math.random() * 6.28;
+      }
+    } catch (err) { gray = null; }
+  }
+
+  function drawImageMode(t) {
+    if (!gray) return;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = INK;
+    var r = hero.getBoundingClientRect();
+    var cx = (mx + 0.5) * cols, cy = (my + 0.5) * rows;
+    for (var y = 0; y < rows; y++) {
+      var line = "";
+      for (var x = 0; x < cols; x++) {
+        var v = gray[y * cols + x];
+        if (v < 0.06) { line += " "; continue; }
+        /* gentle shimmer + a soft boost around the cursor */
+        var dx = x - cx, dy = (y - cy) * 1.9;
+        var spot = Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy) / (cols * 0.22)) * 0.25;
+        var sh = calm ? 0 : Math.sin(t * 0.0016 + phase[y * cols + x]) * 0.07;
+        var vv = Math.max(0, Math.min(0.999, v + sh + spot));
+        line += CH.charAt(1 + Math.floor(vv * (CH.length - 2)));
+      }
+      ctx.fillText(line, 0, y * CELL);
+    }
+  }
+
+  var A = 1.0, B = 0.4;
+  function drawTorus(dt) {
+    var tA = 0.9 + my * 1.6, tB = 0.35 + mx * 1.8;
+    vA += (tA - vA) * 0.04; vB += (tB - vB) * 0.04;
+    if (!calm) { A += vA * dt * 0.001; B += vB * dt * 0.001; }
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = INK;
+    var buf = new Array(cols * rows).fill(" ");
+    var zb = new Float32Array(cols * rows);
+    var R1 = 1, R2 = 2, K2 = 5;
+    var K1 = Math.min(cols, rows * 1.9) * K2 * 3 / (8 * (R1 + R2));
+    var cA = Math.cos(A), sA = Math.sin(A), cB = Math.cos(B), sB = Math.sin(B);
+    for (var th = 0; th < 6.28; th += 0.07) {
+      var ct = Math.cos(th), st = Math.sin(th);
+      var circx = R2 + R1 * ct, circy = R1 * st;
+      for (var ph = 0; ph < 6.28; ph += 0.03) {
+        var cp = Math.cos(ph), sp = Math.sin(ph);
+        var x = circx * (cB * cp + sA * sB * sp) - circy * cA * sB;
+        var y = circx * (sB * cp - sA * cB * sp) + circy * cA * cB;
+        var z = K2 + cA * circx * sp + circy * sA;
+        var ooz = 1 / z;
+        var xp = Math.floor(cols / 2 + K1 * ooz * x);
+        var yp = Math.floor(rows / 2 - K1 * 0.5 * ooz * y);
+        if (xp < 0 || xp >= cols || yp < 0 || yp >= rows) continue;
+        var L = cp * ct * sB - cA * ct * sp - sA * st + cB * (cA * st - ct * sA * sp);
+        var idx = yp * cols + xp;
+        if (ooz > zb[idx]) {
+          zb[idx] = ooz;
+          buf[idx] = CH.charAt(Math.max(0, Math.floor(L * 8)));
+        }
+      }
+    }
+    for (var yy = 0; yy < rows; yy++) {
+      ctx.fillText(buf.slice(yy * cols, yy * cols + cols).join(""), 0, yy * CELL);
+    }
+  }
+
+  function frame(t) {
+    raf = 0;
+    if (!running) return;
+    var dt = Math.min(80, t - (last || t));
+    /* ~30fps is plenty for a character grid */
+    if (t - last >= 30) {
+      last = t;
+      if (mode === "image") drawImageMode(t);
+      else drawTorus(dt);
+      if (calm) return; /* one settled frame is enough for reduced motion */
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  function start() { if (!running) { running = true; if (!raf) raf = requestAnimationFrame(frame); } }
+  function stop() { running = false; }
+
+  hero.addEventListener("pointermove", function (e) {
+    var r = hero.getBoundingClientRect();
+    mx = e.clientX / Math.max(1, r.width) - 0.5;
+    my = e.clientY / Math.max(1, r.height) - 0.5;
+    if (calm && running) { last = 0; if (!raf) raf = requestAnimationFrame(frame); }
+  });
+  window.addEventListener("resize", function () { size(); last = 0; }, { passive: true });
+  if (typeof IntersectionObserver !== "undefined") {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) start(); else stop(); });
+    }, { threshold: 0.05 }).observe(hero);
+  }
+
+  size();
+  if (mode === "image") {
+    img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = function () { imgReady = true; sampleImage(); start(); };
+    img.onerror = function () { cv.style.display = "none"; };
+    img.src = cv.getAttribute("data-img") || "";
+    if (!img.src) cv.style.display = "none";
+  } else {
+    start();
+  }
+})();
+</script>
+
+<script>
+(function () {
   /* Phone hamburger: the corner links fold into a drop-down menu. */
   var btn = document.getElementById("dhMenuBtn");
   var menu = document.getElementById("dhMenu");
@@ -3111,6 +3279,17 @@
     { "type": "url", "id": "head_link", "label": "Link for the logo / video", "info": "Optional. Makes the logo/video/heading clickable — e.g. link it to your home page or a featured collection." },
     { "type": "color", "id": "bg_color", "label": "Background colour", "default": "#f5f5f7", "info": "The hero's surface colour. Also shows behind a background image while it loads, or through a low veil." },
     { "type": "image_picker", "id": "bg_image", "label": "Background image", "info": "Fills the whole hero behind everything. Landscape ~2400px wide works best." },
+    { "type": "header", "content": "ASCII art background" },
+    { "type": "select", "id": "ascii_bg", "label": "ASCII background", "default": "none",
+      "options": [
+        { "value": "none", "label": "Off" },
+        { "value": "torus", "label": "Spinning 3D ring" },
+        { "value": "image", "label": "My image, drawn in characters" }
+      ], "info": "A retro terminal visual drawn in live text characters behind the hero — it reacts to the mouse. The ring spins faster/tilts as the cursor moves; the image mode shimmers and brightens near the cursor." },
+    { "type": "image_picker", "id": "ascii_image", "label": "Image to render as ASCII", "info": "For the image mode. Simple, high-contrast images on transparent or white backgrounds work best — your logo or a product cutout." },
+    { "type": "range", "id": "ascii_opacity", "label": "Strength", "min": 4, "max": 60, "step": 2, "unit": "%", "default": 14 },
+    { "type": "range", "id": "ascii_scale", "label": "Character size", "min": 8, "max": 20, "step": 1, "unit": "px", "default": 12 },
+    { "type": "color", "id": "ascii_ink", "label": "Character colour", "default": "#0a0a0a" },
     { "type": "range", "id": "bg_veil", "label": "Background veil", "min": 0, "max": 90, "step": 5, "unit": "%", "default": 30, "info": "White wash over the background image so the logo, search bar and text stay readable. 0 shows the photo untouched." },
     { "type": "select", "id": "heading_font", "label": "Heading font", "default": "serif",
       "options": [ { "value": "serif", "label": "Elegant serif (matches store)" }, { "value": "sans", "label": "Clean sans" } ] },
