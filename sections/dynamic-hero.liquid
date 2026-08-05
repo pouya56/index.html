@@ -116,16 +116,28 @@
     .dyn-hero .dh-wtrack { animation: none; transform: translateX(-25%); }
   }
 
-  /* ---- Label-strip style (Blawan-poster look): the words become black
-     tape labels scattered at steep angles with depth-of-field — far/near
-     strips blurred and enlarged, crisp ones in focus. Each floats gently;
-     the cursor parallaxes them by depth; hover pulls one into focus. ---- */
+  /* ---- Label-strip style (Blawan-poster look): black tape labels at
+     steep angles with depth-of-field blur. Each FALLS IN from its own
+     direction on load, tumbling into place, then rests FADED — hovering
+     one reveals it at full strength for as long as the cursor stays,
+     without touching any other strip. ---- */
   .dyn-hero .dh-labs { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-  .dyn-hero .dh-lab { position: absolute; pointer-events: auto; cursor: default;
-    transform: translate(-50%, -50%) translate3d(var(--lx, 0px), var(--ly, 0px), 0); will-change: transform; }
+  .dyn-hero .dh-lab { position: absolute; pointer-events: auto; cursor: default; will-change: transform;
+    transform: translate(-50%, -50%);
+    animation-duration: 1.1s; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); animation-fill-mode: both;
+    animation-delay: calc(var(--li, 0) * 0.13s); }
+  /* fall-in directions — each strip tumbles in from its own edge */
+  .dyn-hero .dh-lab--in-t { animation-name: dhLabInT; }
+  .dyn-hero .dh-lab--in-b { animation-name: dhLabInB; }
+  .dyn-hero .dh-lab--in-l { animation-name: dhLabInL; }
+  .dyn-hero .dh-lab--in-r { animation-name: dhLabInR; }
+  @keyframes dhLabInT { from { transform: translate(-50%, -50%) translate(0, -120vh) rotate(-50deg); } to { transform: translate(-50%, -50%); } }
+  @keyframes dhLabInB { from { transform: translate(-50%, -50%) translate(0, 120vh) rotate(45deg); } to { transform: translate(-50%, -50%); } }
+  @keyframes dhLabInL { from { transform: translate(-50%, -50%) translate(-120vw, 0) rotate(38deg); } to { transform: translate(-50%, -50%); } }
+  @keyframes dhLabInR { from { transform: translate(-50%, -50%) translate(120vw, 0) rotate(-42deg); } to { transform: translate(-50%, -50%); } }
   .dyn-hero .dh-lab-r { display: inline-block; transform: rotate(var(--lr, 0deg)) scale(var(--lsc, 1));
-    filter: blur(var(--lbl, 0px)); opacity: var(--wbase, 0.92);
-    transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s ease; }
+    filter: blur(var(--lbl, 0px)); opacity: var(--wbase, 0.18);
+    transition: filter 0.3s ease, opacity 0.3s ease; }
   .dyn-hero .dh-lab-f { display: inline-block; background: #0a0a0a; color: #fff;
     font-size: var(--lf, 18px); font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
     line-height: 1; padding: 0.55em 0.95em 0.5em; white-space: nowrap;
@@ -134,12 +146,18 @@
     from { transform: translate(0, 0) rotate(0deg); }
     to { transform: translate(12px, -10px) rotate(2.5deg); }
   }
-  .dyn-hero .dh-lab--far { --lsc: 2.2; --lbl: 9px; }
-  .dyn-hero .dh-lab--mid { --lsc: 1.35; --lbl: 3px; }
-  .dyn-hero .dh-lab--crisp { --lsc: 1; --lbl: 0px; }
-  @media (hover: hover) { .dyn-hero .dh-lab:hover .dh-lab-r { filter: blur(0); transform: rotate(var(--lr, 0deg)) scale(calc(var(--lsc, 1) * 1.05)); } }
+  /* crisp strips sit above blurred ones, so the readable strip always
+     wins the hover where they overlap */
+  .dyn-hero .dh-lab--far { --lsc: 2.2; --lbl: 9px; z-index: 1; }
+  .dyn-hero .dh-lab--mid { --lsc: 1.35; --lbl: 3px; z-index: 2; }
+  .dyn-hero .dh-lab--crisp { --lsc: 1; --lbl: 0px; z-index: 3; }
+  /* hover reveals ONLY this strip, and holds while the cursor stays */
+  @media (hover: hover) { .dyn-hero .dh-lab:hover .dh-lab-r { opacity: 1; filter: blur(0); } }
   .dyn-hero .dh-labs.is-off .dh-lab-f { animation-play-state: paused; }
-  @media (prefers-reduced-motion: reduce) { .dyn-hero .dh-lab-f { animation: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .dyn-hero .dh-lab { animation: none; }
+    .dyn-hero .dh-lab-f { animation: none; }
+  }
   @media (max-width: 700px) {
     .dyn-hero .dh-lab:nth-child(n+9) { display: none; }
     .dyn-hero .dh-lab-f { font-size: calc(var(--lf, 18px) * 0.7); }
@@ -734,11 +752,12 @@
     {%- assign lab_t = 'far,crisp,mid,crisp,far,mid,crisp,far,crisp,mid,far,crisp,mid,crisp' | split: ',' -%}
     {%- assign lab_f = '16,22,13,26,30,15,20,28,18,14,34,17,15,21' | split: ',' -%}
     {%- assign lab_d = '26,34,30,38,24,32,28,36,25,31,27,35,29,33' | split: ',' -%}
-    <div class="dh-labs" id="dhLabs" aria-hidden="true" style="--wbase: {{ section.settings.words_opacity | default: 92 | divided_by: 100.0 }};">
+    {%- assign lab_in = 't,r,b,l,t,b,r,l,b,t,l,r,t,b' | split: ',' -%}
+    <div class="dh-labs" id="dhLabs" aria-hidden="true" style="--wbase: {{ section.settings.words_opacity | default: 18 | divided_by: 100.0 }};">
       {%- for i in (0..13) -%}
         {%- assign wi = i | modulo: dh_words.size -%}
-        <span class="dh-lab dh-lab--{{ lab_t[i] }}" data-depth="{{ lab_t[i] }}"
-          style="left: {{ lab_x[i] }}%; top: {{ lab_y[i] }}%; --lr: {{ lab_r[i] }}deg; --lf: {{ lab_f[i] }}px; --ldur: {{ lab_d[i] }}s; --ldel: -{{ i | times: 3 }}s;">
+        <span class="dh-lab dh-lab--{{ lab_t[i] }} dh-lab--in-{{ lab_in[i] }}" data-depth="{{ lab_t[i] }}"
+          style="left: {{ lab_x[i] }}%; top: {{ lab_y[i] }}%; --li: {{ i }}; --lr: {{ lab_r[i] }}deg; --lf: {{ lab_f[i] }}px; --ldur: {{ lab_d[i] }}s; --ldel: -{{ i | times: 3 }}s;">
           <span class="dh-lab-r"><span class="dh-lab-f">{{ dh_words[wi] | strip | escape }}</span></span>
         </span>
       {%- endfor -%}
@@ -3240,55 +3259,17 @@
      and reduced motion gets a static field. */
   var hero = document.getElementById("dynHero");
 
-  /* ---- Label-strip style: depth parallax + lifecycle ---- */
+  /* ---- Label-strip style lifecycle: strips fall in via CSS and hover is
+     pure per-strip :hover (no cross-strip effects, no parallax) — JS only
+     pauses the ambient float when the tab hides or the hero leaves. ---- */
   var labs = document.getElementById("dhLabs");
   if (labs && hero) {
     (function () {
-      var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      var fine = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
-      var F = { far: 1.7, mid: 1.0, crisp: 0.5 };
-      var items = Array.prototype.slice.call(labs.querySelectorAll(".dh-lab")).map(function (el) {
-        return { el: el, f: F[el.getAttribute("data-depth")] || 1, tx: 0, ty: 0, cx: 0, cy: 0 };
-      });
-      var live = true, raf = 0;
-      function setLive(v) {
-        live = v;
-        labs.classList.toggle("is-off", !v);
-        if (v) kick();
-      }
+      function setLive(v) { labs.classList.toggle("is-off", !v); }
       document.addEventListener("visibilitychange", function () { setLive(!document.hidden); });
       if (typeof IntersectionObserver !== "undefined") {
         new IntersectionObserver(function (es) { setLive(!!(es[0] && es[0].isIntersecting) && !document.hidden); }, { threshold: 0.02 }).observe(hero);
       }
-      if (fine && !calm) {
-        hero.addEventListener("pointermove", function (e) {
-          var r = hero.getBoundingClientRect();
-          var nx = e.clientX / Math.max(1, r.width) - 0.5;
-          var ny = e.clientY / Math.max(1, r.height) - 0.5;
-          for (var i = 0; i < items.length; i++) {
-            items[i].tx = -nx * items[i].f * 26;
-            items[i].ty = -ny * items[i].f * 18;
-          }
-          kick();
-        }, { passive: true });
-      }
-      function frame() {
-        raf = 0;
-        if (!live) return;
-        var busy = false;
-        for (var i = 0; i < items.length; i++) {
-          var it = items[i];
-          it.cx += (it.tx - it.cx) * 0.06;
-          it.cy += (it.ty - it.cy) * 0.06;
-          if (Math.abs(it.tx - it.cx) > 0.1 || Math.abs(it.ty - it.cy) > 0.1) {
-            busy = true;
-            it.el.style.setProperty("--lx", it.cx.toFixed(1) + "px");
-            it.el.style.setProperty("--ly", it.cy.toFixed(1) + "px");
-          }
-        }
-        if (busy) kick();
-      }
-      function kick() { if (!raf && live) raf = requestAnimationFrame(frame); }
     })();
   }
 
@@ -3700,7 +3681,7 @@
       "options": [
         { "value": "drift", "label": "Drifting giant words" },
         { "value": "labels", "label": "Floating label strips (poster)" }
-      ], "info": "Label strips: the words become black tape labels scattered at steep angles with depth-of-field blur — set Word strength to 85-100% for that style." },
+      ], "info": "Label strips: black tape labels fall in from different directions, rest faded, and reveal at full strength while hovered. Word strength sets how faded they rest — 15-25% works well." },
     { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
     { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
