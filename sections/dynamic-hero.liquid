@@ -117,49 +117,10 @@
     .dyn-hero .dh-wtrack { animation: none; transform: translateX(-25%); }
   }
 
-  /* ---- Label-strip style (Blawan-poster look): black tape labels at
-     steep angles with depth-of-field blur. Each FALLS IN from its own
-     direction on load, tumbling into place, then rests FADED — hovering
-     one reveals it at full strength for as long as the cursor stays,
-     without touching any other strip. ---- */
-  .dyn-hero .dh-labs { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-  .dyn-hero .dh-lab { position: absolute; pointer-events: auto; cursor: pointer; text-decoration: none; will-change: transform;
-    transform: translate(-50%, -50%);
-    animation-duration: var(--ldur, 30s); animation-timing-function: linear; animation-iteration-count: infinite;
-    animation-delay: calc(var(--li, 0) * -3.7s); }
-  /* endless rain: each strip travels across the whole screen from its own
-     edge and re-enters, tumbling slowly — they never come to rest */
-  .dyn-hero .dh-lab--in-t { animation-name: dhLabFallT; }
-  .dyn-hero .dh-lab--in-b { animation-name: dhLabFallB; }
-  .dyn-hero .dh-lab--in-l { animation-name: dhLabFallL; }
-  .dyn-hero .dh-lab--in-r { animation-name: dhLabFallR; }
-  @keyframes dhLabFallT { from { transform: translate(-50%, -50%) translate(0, -120vh) rotate(-26deg); } to { transform: translate(-50%, -50%) translate(0, 120vh) rotate(20deg); } }
-  @keyframes dhLabFallB { from { transform: translate(-50%, -50%) translate(0, 120vh) rotate(22deg); } to { transform: translate(-50%, -50%) translate(0, -120vh) rotate(-18deg); } }
-  @keyframes dhLabFallL { from { transform: translate(-50%, -50%) translate(-120vw, 0) rotate(18deg); } to { transform: translate(-50%, -50%) translate(120vw, 0) rotate(-24deg); } }
-  @keyframes dhLabFallR { from { transform: translate(-50%, -50%) translate(120vw, 0) rotate(-20deg); } to { transform: translate(-50%, -50%) translate(-120vw, 0) rotate(24deg); } }
-  /* hovering freezes THIS strip mid-fall so it can be read */
-  @media (hover: hover) { .dyn-hero .dh-lab:hover { animation-play-state: paused; } }
-  .dyn-hero .dh-lab-r { display: inline-block; transform: rotate(var(--lr, 0deg)) scale(var(--lsc, 1));
-    filter: blur(var(--lbl, 0px)); opacity: var(--wbase, 0.18);
-    transition: filter 0.3s ease, opacity 0.3s ease; }
-  .dyn-hero .dh-lab-f { display: inline-block; background: #0a0a0a; color: #fff;
-    font-size: var(--lf, 18px); font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
-    line-height: 1; padding: 0.55em 0.95em 0.5em; white-space: nowrap; }
-  /* crisp strips sit above blurred ones, so the readable strip always
-     wins the hover where they overlap */
-  .dyn-hero .dh-lab--far { --lsc: 2.2; --lbl: 9px; z-index: 1; }
-  .dyn-hero .dh-lab--mid { --lsc: 1.35; --lbl: 3px; z-index: 2; }
-  .dyn-hero .dh-lab--crisp { --lsc: 1; --lbl: 0px; z-index: 3; }
-  /* hover reveals ONLY this strip, and holds while the cursor stays */
-  @media (hover: hover) { .dyn-hero .dh-lab:hover .dh-lab-r { opacity: 1; filter: blur(0); } }
-  .dyn-hero .dh-labs.is-off .dh-lab { animation-play-state: paused; }
-  @media (prefers-reduced-motion: reduce) {
-    .dyn-hero .dh-lab { animation: none; }
-  }
-  @media (max-width: 700px) {
-    .dyn-hero .dh-lab:nth-child(n+13) { display: none; }
-    .dyn-hero .dh-lab-f { font-size: calc(var(--lf, 18px) * 0.7); }
-  }
+  /* ---- Label-strip style (Blawan-poster look): drawn on ONE canvas so
+     220 strips stay cheap — sprites are pre-rendered (blur baked in) and
+     the frame loop just stamps them. Hover/click logic lives in JS. ---- */
+  .dyn-hero .dh-labcv { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; }
 
   /* ASCII background canvas: behind everything (props z1, content z10+). */
   .dyn-hero .dh-ascii { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%;
@@ -744,28 +705,14 @@
     {%- if section.settings.words_style == 'labels' -%}
     {%- comment -%} Poster-style label strips: deterministic scatter tables
        keep the layout organic but stable between renders. {%- endcomment -%}
-    {%- assign lab_x = '10,78,40,88,18,60,30,70,50,6,83,36,58,22,14,66,92,46,26,74,4,54' | split: ',' -%}
-    {%- assign lab_y = '12,20,38,55,72,8,86,30,60,45,76,16,50,90,28,68,42,82,58,5,65,25' | split: ',' -%}
-    {%- assign lab_r = '-38,24,-62,12,48,-18,66,-45,30,-8,55,-28,40,-52,20,-58,35,-15,62,-33,8,-48' | split: ',' -%}
-    {%- assign lab_t = 'far,crisp,mid,crisp,far,mid,crisp,far,crisp,mid,far,crisp,mid,crisp,mid,crisp,far,crisp,mid,crisp,far,mid' | split: ',' -%}
-    {%- assign lab_f = '16,22,13,26,30,15,20,28,18,14,34,17,15,21,19,24,31,16,14,23,29,15' | split: ',' -%}
-    {%- assign lab_d = '26,34,30,38,24,32,28,36,25,31,27,35,29,33,37,28,40,26,34,30,39,27' | split: ',' -%}
-    {%- assign lab_in = 't,r,b,l,t,b,r,l,b,t,l,r,t,b,l,t,r,b,t,l,b,r' | split: ',' -%}
-    {%- comment -%} Strips rest faded — hovering reveals one, and a click
-       searches the store for that word. {%- endcomment -%}
-    {%- comment -%} Rest opacity is capped at 25% so every strip stays faded
-       whatever Word strength is set to — hover is the only full reveal. {%- endcomment -%}
-    <div class="dh-labs" id="dhLabs" style="--wbase: {{ section.settings.words_opacity | default: 18 | at_most: 25 | divided_by: 100.0 }};">
-      {%- for i in (0..21) -%}
-        {%- assign wi = i | modulo: dh_words.size -%}
-        {%- assign lab_word = dh_words[wi] | strip -%}
-        <a class="dh-lab dh-lab--{{ lab_t[i] }} dh-lab--in-{{ lab_in[i] }}" data-depth="{{ lab_t[i] }}"
-          href="{{ routes.search_url }}?q={{ lab_word | url_encode }}" aria-label="Search {{ lab_word | escape }}"
-          style="left: {{ lab_x[i] }}%; top: {{ lab_y[i] }}%; --li: {{ i }}; --lr: {{ lab_r[i] }}deg; --lf: {{ lab_f[i] }}px; --ldur: {{ lab_d[i] }}s;">
-          <span class="dh-lab-r"><span class="dh-lab-f">{{ lab_word | escape }}</span></span>
-        </a>
-      {%- endfor -%}
-    </div>
+    {%- comment -%} 220 strips drawn on one canvas: config only — the JS
+       engine generates the scatter, pre-renders sprites and runs the rain. {%- endcomment -%}
+    <canvas class="dh-labcv" id="dhLabCv" aria-hidden="true"></canvas>
+    <script type="application/json" id="dhLabCfg">{
+      "words": [{% for w in dh_words %}{% unless forloop.first %},{% endunless %}{{ w | strip | json }}{% endfor %}],
+      "search": {{ routes.search_url | json }},
+      "base": {{ section.settings.words_opacity | default: 18 | divided_by: 100.0 }}
+    }</script>
     {%- else -%}
     {%- assign row_sizes = 'md,xs,lg,sm,xl,xs,md,sm' | split: ',' -%}
     {%- assign row_durs = '52,44,60,40,56,47,63,42' | split: ',' -%}
@@ -3264,17 +3211,195 @@
      and reduced motion gets a static field. */
   var hero = document.getElementById("dynHero");
 
-  /* ---- Label-strip style lifecycle: strips fall in via CSS and hover is
-     pure per-strip :hover (no cross-strip effects, no parallax) — JS only
-     pauses the ambient float when the tab hides or the hero leaves. ---- */
-  var labs = document.getElementById("dhLabs");
-  if (labs && hero) {
+  /* ==================== Label-strip rain (canvas engine) ====================
+     220 strips on ONE canvas: sprites are pre-rendered once per strip
+     (black tape, white word, depth blur baked in, plus a crisp twin for
+     the hover reveal), and the frame loop just stamps them — hundreds of
+     drawImage calls per frame is cheap, unlike 220 animated DOM layers.
+     Behaviour: endless rain from all four edges, faded rest, hovering
+     freezes+reveals one strip, clicking it searches via the hero's bar. */
+  var labCv = document.getElementById("dhLabCv");
+  var labCfgEl = document.getElementById("dhLabCfg");
+  if (labCv && labCfgEl && hero) {
     (function () {
-      function setLive(v) { labs.classList.toggle("is-off", !v); }
+      var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var cfg;
+      try { cfg = JSON.parse(labCfgEl.textContent); } catch (err) { return; }
+      var WORDS = cfg.words || [];
+      if (!WORDS.length) return;
+      var BASE = Math.max(0.03, Math.min(1, cfg.base || 0.18));
+      var ctx = labCv.getContext("2d");
+      if (!ctx) return;
+      var N = 220;
+      var TIER = [
+        { blur: 9, scale: 2.2 },   /* far  */
+        { blur: 0, scale: 1 },     /* crisp */
+        { blur: 3, scale: 1.35 },  /* mid  */
+        { blur: 0, scale: 1 }      /* crisp */
+      ];
+      var DIRS = "trbl";
+      var W = 0, H = 0, DPR = 1;
+
+      /* deterministic prime scatter — organic but stable */
+      var strips = [];
+      for (var i = 0; i < N; i++) {
+        var tier = TIER[i % 4];
+        strips.push({
+          word: WORDS[i % WORDS.length],
+          xb: ((i * 37 + 13) % 97) / 97,
+          yb: ((i * 53 + 7) % 89) / 89,
+          rot: (((i * 41) % 121) - 60) * Math.PI / 180,
+          fs: (i * 29) % 22 + 12,
+          dur: (i * 17) % 19 + 22,
+          dir: DIRS[i % 4],
+          tier: tier,
+          phase: ((i * 3.7) % ((i * 17) % 19 + 22)) / ((i * 17) % 19 + 22),
+          frozen: -1,
+          sprite: null, crisp: null, w: 0, h: 0
+        });
+      }
+      /* draw far first so crisp strips sit on top and win the hover */
+      strips.sort(function (a, b2) { return b2.tier.blur - a.tier.blur; });
+
+      function makeSprite(st) {
+        var fs = st.fs * st.tier.scale * DPR;
+        var mc = document.createElement("canvas");
+        var m = mc.getContext("2d");
+        var font = "600 " + fs + "px Jost, Futura, 'Century Gothic', sans-serif";
+        m.font = font;
+        try { m.letterSpacing = (fs * 0.18) + "px"; } catch (eLs) {}
+        var tw = m.measureText(st.word).width;
+        var padX = fs * 0.95, padY = fs * 0.55;
+        var w = Math.ceil(tw + padX * 2), h = Math.ceil(fs + padY * 2);
+        mc.width = w; mc.height = h;
+        m = mc.getContext("2d");
+        m.font = font;
+        try { m.letterSpacing = (fs * 0.18) + "px"; } catch (eLs2) {}
+        m.fillStyle = "#0a0a0a";
+        m.fillRect(0, 0, w, h);
+        m.fillStyle = "#fff";
+        m.textBaseline = "middle";
+        m.fillText(st.word, padX, h / 2 + fs * 0.06);
+        st.crisp = mc;
+        if (st.tier.blur > 0 && typeof m.filter === "string") {
+          var bc = document.createElement("canvas");
+          var pad = st.tier.blur * 3 * DPR;
+          bc.width = w + pad * 2; bc.height = h + pad * 2;
+          var bctx = bc.getContext("2d");
+          bctx.filter = "blur(" + (st.tier.blur * DPR) + "px)";
+          bctx.drawImage(mc, pad, pad);
+          st.sprite = bc;
+        } else {
+          st.sprite = mc;
+        }
+        st.w = st.sprite.width; st.h = st.sprite.height;
+      }
+
+      function size() {
+        var r = hero.getBoundingClientRect();
+        /* device-pixel 1:1 — it's a soft faded background, and halving
+           the pixel count keeps the paint cheap even without a GPU */
+        DPR = 1;
+        W = r.width; H = r.height;
+        labCv.width = Math.round(W * DPR);
+        labCv.height = Math.round(H * DPR);
+        for (var i2 = 0; i2 < strips.length; i2++) makeSprite(strips[i2]);
+      }
+
+      /* position along the rain path at progress p (0..1) */
+      function posAt(st, p) {
+        var span = 2.4, off = -1.2 + span * p;
+        var x, y;
+        if (st.dir === "t") { x = st.xb * W; y = (off + 0.5) * H; }
+        else if (st.dir === "b") { x = st.xb * W; y = (0.5 - off) * H; }
+        else if (st.dir === "l") { x = (off + 0.5) * W; y = st.yb * H; }
+        else { x = (0.5 - off) * W; y = st.yb * H; }
+        return { x: x, y: y, r: st.rot + (p - 0.5) * 0.7 };
+      }
+      function progressOf(st, tSec) {
+        if (st.frozen >= 0) return st.frozen;
+        return (tSec / st.dur + st.phase) % 1;
+      }
+
+      var hovered = null, mx = -1, my = -1;
+      function hitTest() {
+        /* iterate topmost (crisp) first — end of the sorted array */
+        for (var i3 = strips.length - 1; i3 >= 0; i3--) {
+          var st = strips[i3], q = st.last;
+          if (!q) continue;
+          var dx = mx - q.x, dy = my - q.y;
+          var c = Math.cos(-q.r), s2 = Math.sin(-q.r);
+          var lx2 = dx * c - dy * s2, ly2 = dx * s2 + dy * c;
+          if (Math.abs(lx2) <= st.w / DPR / 2 && Math.abs(ly2) <= st.h / DPR / 2) return st;
+        }
+        return null;
+      }
+
+      var live = true, raf = 0, tBase = null, lastDraw = 0;
+      function frame(tms) {
+        raf = 0;
+        if (!live) return;
+        if (tBase == null) tBase = tms;
+        /* ~24fps is ample for slow rain and keeps the paint cheap */
+        if (tms - lastDraw < 41) { raf = requestAnimationFrame(frame); return; }
+        lastDraw = tms;
+        var tSec = (tms - tBase) / 1000;
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+        for (var i4 = 0; i4 < strips.length; i4++) {
+          var st = strips[i4];
+          var q = posAt(st, progressOf(st, tSec));
+          st.last = q;
+          if (q.x < -st.w || q.x > W + st.w || q.y < -st.h || q.y > H + st.h) continue;
+          ctx.save();
+          ctx.translate(q.x, q.y);
+          ctx.rotate(q.r);
+          ctx.globalAlpha = st === hovered ? 1 : BASE;
+          var img = st === hovered ? st.crisp : st.sprite;
+          ctx.drawImage(img, -img.width / DPR / 2, -img.height / DPR / 2, img.width / DPR, img.height / DPR);
+          ctx.restore();
+        }
+        /* hover state follows the moving strips even when the mouse is still */
+        var h2 = mx >= 0 ? hitTest() : null;
+        if (h2 !== hovered) {
+          if (hovered) { var pOld = hovered.frozen; hovered.frozen = -1; hovered.phase = ((pOld - tSec / hovered.dur) % 1 + 1) % 1; }
+          hovered = h2;
+          if (hovered) hovered.frozen = progressOf(hovered, tSec);
+          labCv.style.cursor = hovered ? "pointer" : "";
+        }
+        if (!calm || hovered) raf = requestAnimationFrame(frame);
+      }
+      function kick() { if (!raf && live) raf = requestAnimationFrame(frame); }
+      function setLive(v) { live = v; if (v) { tBase = null; kick(); } }
       document.addEventListener("visibilitychange", function () { setLive(!document.hidden); });
       if (typeof IntersectionObserver !== "undefined") {
         new IntersectionObserver(function (es) { setLive(!!(es[0] && es[0].isIntersecting) && !document.hidden); }, { threshold: 0.02 }).observe(hero);
       }
+
+      labCv.addEventListener("pointermove", function (e) {
+        var r = labCv.getBoundingClientRect();
+        mx = e.clientX - r.left; my = e.clientY - r.top;
+        kick();
+      });
+      labCv.addEventListener("pointerleave", function () { mx = my = -1; });
+      labCv.addEventListener("click", function () {
+        if (!hovered) return;
+        var word = hovered.word;
+        var input = document.getElementById("dhSearch");
+        if (input) {
+          input.value = word;
+          try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (err) {}
+          input.focus();
+          var go = document.getElementById("dhSearchGo");
+          if (go) go.click();
+        } else if (cfg.search) {
+          location.href = cfg.search + "?q=" + encodeURIComponent(word);
+        }
+      });
+
+      size();
+      window.addEventListener("resize", function () { size(); kick(); }, { passive: true });
+      kick();
     })();
   }
 
@@ -3705,7 +3830,7 @@
       "options": [
         { "value": "drift", "label": "Drifting giant words" },
         { "value": "labels", "label": "Floating label strips (poster)" }
-      ], "info": "Label strips: 22 tape labels rain endlessly from every direction, resting faded (Word strength, 15-25% works well). Hovering reveals one at full strength, and clicking searches the store for that word." },
+      ], "info": "Label strips: 220 tape labels rain endlessly from every direction. Word strength sets how strong they rest; hovering reveals one at full strength, and clicking searches that word through the hero's search bar." },
     { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
     { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
