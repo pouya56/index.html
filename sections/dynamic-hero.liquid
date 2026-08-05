@@ -74,6 +74,49 @@
   /* Floating props (borrowed from Dynamic Intro): transparent cutouts laid
      over the hero background, behind the logo/search — they wake up ONLY
      under the cursor, following it magnetically with a small wobble. */
+  /* ============== Living typography background ==============
+     Giant brand words drift diagonally behind the hero content.
+     - The field is one container rotated -12°; each row is a CSS marquee
+       (transform-only, GPU) with two identical word sets for a seamless loop.
+     - Rows alternate direction and speed (40-60s), sizes vary per row and
+       words get small nth-child nudges so nothing reads as a grid.
+     - JS (below) fades out words that overlap the logo/search/buttons
+       (exclusion zones read live from the DOM), pauses rows on hover,
+       and adds the magnetic cursor drift via --wx/--wy. */
+  .dyn-hero .dh-words { position: absolute; inset: -25%; z-index: 0; overflow: hidden; pointer-events: none;
+    display: flex; flex-direction: column; justify-content: center; gap: clamp(6px, 2vh, 26px);
+    transform: rotate(-12deg); }
+  .dyn-hero .dh-wrow { flex: none; white-space: nowrap; }
+  .dyn-hero .dh-wtrack { display: inline-flex; will-change: transform;
+    animation: dhWordsL var(--wdur, 50s) linear infinite; animation-delay: var(--wdel, 0s); }
+  .dyn-hero .dh-wrow--rev .dh-wtrack { animation-name: dhWordsR; }
+  @keyframes dhWordsL { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes dhWordsR { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+  .dyn-hero .dh-wset { display: inline-flex; align-items: baseline; }
+  .dyn-hero .dh-word { display: inline-block; pointer-events: auto; cursor: default;
+    font-weight: 900; line-height: 1; letter-spacing: -0.02em; color: #0a0a0a;
+    opacity: var(--wbase, 0.05); margin-right: clamp(44px, 6vw, 130px);
+    transform: translate(var(--wx, 0px), var(--wy, 0px)) scale(var(--ws, 1));
+    transition: opacity 0.3s ease; }
+  /* organic: stagger baselines and tracking so rows don't grid up */
+  .dyn-hero .dh-word:nth-child(3n) { transform: translate(var(--wx, 0px), calc(var(--wy, 0px) + 0.07em)) scale(var(--ws, 1)); }
+  .dyn-hero .dh-word:nth-child(4n) { letter-spacing: 0.01em; }
+  .dyn-hero .dh-word:nth-child(5n) { transform: translate(var(--wx, 0px), calc(var(--wy, 0px) - 0.05em)) scale(var(--ws, 1)); }
+  /* row size voices: 120-220px on desktop, scaling down on small screens */
+  .dyn-hero .dh-wrow--xl .dh-word { font-size: clamp(96px, 11.5vw, 220px); }
+  .dyn-hero .dh-wrow--lg .dh-word { font-size: clamp(84px, 9.5vw, 180px); }
+  .dyn-hero .dh-wrow--md .dh-word { font-size: clamp(72px, 8vw, 150px); }
+  .dyn-hero .dh-wrow--sm .dh-word { font-size: clamp(64px, 6.8vw, 120px); }
+  /* hover states: the hot word rises above its neighbours (still under the
+     UI, which lives at z10+); nearby words hush */
+  .dyn-hero .dh-word.is-hot { opacity: 0.18; position: relative; z-index: 2; }
+  .dyn-hero .dh-word.is-dim { opacity: calc(var(--wbase, 0.05) * 0.45); }
+  /* exclusion: words over the logo/search/buttons melt away */
+  .dyn-hero .dh-word.is-blocked { opacity: 0 !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .dyn-hero .dh-wtrack { animation: none; transform: translateX(-25%); }
+  }
+
   /* ASCII background canvas: behind everything (props z1, content z10+). */
   .dyn-hero .dh-ascii { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%;
     pointer-events: none; opacity: {{ section.settings.ascii_opacity | default: 14 | divided_by: 100.0 }}; }
@@ -649,6 +692,33 @@
   data-finding-text="{{ section.settings.finding_text | default: 'Finding your gift…' | escape }}"
   data-finding-ms="{{ section.settings.finding_ms | default: 550 }}"
   data-results-url="{{ section.settings.results_page_url }}">
+  {%- if section.settings.words_bg -%}
+    {%- comment -%} Living typography: 5 rows, each cycling the word list
+       from a different starting point; two identical sets per row make the
+       loop seamless. Rows alternate direction with varied speed/offset. {%- endcomment -%}
+    {%- assign dh_words = section.settings.words_list | default: 'PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM' | newline_to_br | strip_newlines | replace: '<br />', ',' | replace: '<br>', ',' | split: ',' -%}
+    {%- assign row_sizes = 'lg,md,xl,sm,lg' | split: ',' -%}
+    {%- assign row_durs = '52,44,60,40,56' | split: ',' -%}
+    {%- assign row_dels = '0,-18,-7,-29,-12' | split: ',' -%}
+    <div class="dh-words" id="dhWords" aria-hidden="true" style="--wbase: {{ section.settings.words_opacity | default: 5 | divided_by: 100.0 }};">
+      {%- for rs in row_sizes -%}
+        {%- assign ri = forloop.index0 -%}
+        <div class="dh-wrow dh-wrow--{{ rs }}{% cycle '', ' dh-wrow--rev' %}" style="--wdur: {{ row_durs[ri] }}s; --wdel: {{ row_dels[ri] }}s;">
+          <div class="dh-wtrack">
+            {%- for set in (1..2) -%}
+              <span class="dh-wset">
+                {%- assign start = ri | times: 4 -%}
+                {%- for i in (0..9) -%}
+                  {%- assign wi = start | plus: i | modulo: dh_words.size -%}
+                  <span class="dh-word">{{ dh_words[wi] | strip | escape }}</span>
+                {%- endfor -%}
+              </span>
+            {%- endfor -%}
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
   {%- if section.settings.ascii_bg != blank and section.settings.ascii_bg != 'none' -%}
     {%- comment -%} ASCII background: a retro terminal visual drawn in live
        text characters behind everything, reacting to the mouse. {%- endcomment -%}
@@ -3108,6 +3178,136 @@
 
 <script>
 (function () {
+  /* ==================== Living typography background ====================
+     Runtime for the word field:
+     1. EXCLUSION — every 160ms, read the live rects of the logo, search
+        bar and buttons (no hardcoded coordinates) and fade out any word
+        overlapping them; the same sweep caches word rects for step 3.
+     2. HOVER — entering a word pauses only its row, scales it to 160% /
+        18% opacity above its neighbours, and hushes nearby words.
+     3. MAGNET — words near the cursor ease away from it, targets lerped
+        each rAF so there are no jumps. All writes are transforms/opacity;
+        all reads are batched in the sweep — no layout thrash.
+     Everything pauses when the tab hides or the hero leaves the screen,
+     and reduced motion gets a static field. */
+  var hero = document.getElementById("dynHero");
+  var field = document.getElementById("dhWords");
+  if (!hero || !field) return;
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var fine = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+
+  var words = Array.prototype.slice.call(field.querySelectorAll(".dh-word")).map(function (el) {
+    return { el: el, rect: null, tx: 0, ty: 0, cx: 0, cy: 0, ts: 1, cs: 1 };
+  });
+  var rows = Array.prototype.slice.call(field.querySelectorAll(".dh-wtrack"));
+
+  /* ---- pause/resume: hidden tab or offscreen hero costs nothing ---- */
+  var live = true;
+  function setLive(v) {
+    live = v;
+    for (var i = 0; i < rows.length; i++) rows[i].style.animationPlayState = v ? "" : "paused";
+    if (v) { kick(); sweep(); }
+  }
+  document.addEventListener("visibilitychange", function () { setLive(!document.hidden); });
+  if (typeof IntersectionObserver !== "undefined") {
+    new IntersectionObserver(function (es) { setLive(!!(es[0] && es[0].isIntersecting) && !document.hidden); }, { threshold: 0.02 }).observe(hero);
+  }
+
+  /* ---- 1. exclusion sweep: batched reads, class writes ---- */
+  var PAD = 26;
+  var guards = [".dh-head", ".dh-search", ".dh-hero-btns"].map(function (sel) {
+    return hero.querySelector(sel);
+  }).filter(Boolean);
+  var sweepT = 0;
+  function sweep() {
+    if (!live) return;
+    var zones = [];
+    for (var g = 0; g < guards.length; g++) {
+      var r = guards[g].getBoundingClientRect();
+      if (r.width && r.height) zones.push({ l: r.left - PAD, t: r.top - PAD, r: r.right + PAD, b: r.bottom + PAD });
+    }
+    for (var i = 0; i < words.length; i++) {
+      var w = words[i], wr = w.el.getBoundingClientRect();
+      w.rect = wr;
+      var hit = false;
+      for (var z = 0; z < zones.length; z++) {
+        var zn = zones[z];
+        if (wr.left < zn.r && wr.right > zn.l && wr.top < zn.b && wr.bottom > zn.t) { hit = true; break; }
+      }
+      w.el.classList.toggle("is-blocked", hit);
+    }
+  }
+  sweep();
+  sweepT = setInterval(sweep, 160);
+  window.addEventListener("resize", sweep, { passive: true });
+
+  /* ---- 2. hover: pause the row, feature the word, hush the neighbours ---- */
+  if (fine && !calm) {
+    words.forEach(function (w) {
+      w.el.addEventListener("pointerenter", function () {
+        var track = w.el.closest(".dh-wtrack");
+        if (track) track.style.animationPlayState = "paused";
+        w.ts = 1.6;
+        w.el.classList.add("is-hot");
+        for (var i = 0; i < words.length; i++) {
+          var o = words[i];
+          if (o === w || !o.rect || !w.rect) continue;
+          if (Math.abs(o.rect.left - w.rect.left) < 640 && Math.abs(o.rect.top - w.rect.top) < 260) o.el.classList.add("is-dim");
+        }
+        kick();
+      });
+      w.el.addEventListener("pointerleave", function () {
+        var track = w.el.closest(".dh-wtrack");
+        if (track && live) track.style.animationPlayState = "";
+        w.ts = 1;
+        w.el.classList.remove("is-hot");
+        for (var i = 0; i < words.length; i++) words[i].el.classList.remove("is-dim");
+        kick();
+      });
+    });
+  }
+
+  /* ---- 3. magnetic drift: lerped targets, transform-only writes ---- */
+  var mx = -1e4, my = -1e4, raf = 0;
+  if (fine && !calm) {
+    hero.addEventListener("pointermove", function (e) { mx = e.clientX; my = e.clientY; kick(); }, { passive: true });
+    hero.addEventListener("pointerleave", function () { mx = my = -1e4; kick(); }, { passive: true });
+  }
+  var REACH = 150, PUSH = 16;
+  function frame() {
+    raf = 0;
+    if (!live) return;
+    var busy = false;
+    for (var i = 0; i < words.length; i++) {
+      var w = words[i];
+      if (w.rect) {
+        var wx = w.rect.left + w.rect.width / 2, wy = w.rect.top + w.rect.height / 2;
+        var dx = wx - mx, dy = wy - my;
+        var d = Math.sqrt(dx * dx + dy * dy);
+        if (d < REACH && d > 0.01) {
+          var f = (REACH - d) / REACH * PUSH;
+          w.tx = dx / d * f; w.ty = dy / d * f;
+        } else { w.tx = 0; w.ty = 0; }
+      }
+      /* ~300ms ease via lerp; skip settled words to keep the loop cheap */
+      w.cx += (w.tx - w.cx) * 0.12;
+      w.cy += (w.ty - w.cy) * 0.12;
+      w.cs += (w.ts - w.cs) * 0.12;
+      if (Math.abs(w.tx - w.cx) > 0.1 || Math.abs(w.ty - w.cy) > 0.1 || Math.abs(w.ts - w.cs) > 0.005) {
+        busy = true;
+        w.el.style.setProperty("--wx", w.cx.toFixed(1) + "px");
+        w.el.style.setProperty("--wy", w.cy.toFixed(1) + "px");
+        w.el.style.setProperty("--ws", w.cs.toFixed(3));
+      }
+    }
+    if (busy) kick();
+  }
+  function kick() { if (!raf && live) raf = requestAnimationFrame(frame); }
+})();
+</script>
+
+<script>
+(function () {
   /* ASCII background: draws the hero's backdrop in live text characters —
      a spinning 3D torus or the merchant's image — nudged by the mouse. */
   var cv = document.getElementById("dhAscii");
@@ -3411,6 +3611,10 @@
     { "type": "url", "id": "head_link", "label": "Link for the logo / video", "info": "Optional. Makes the logo/video/heading clickable — e.g. link it to your home page or a featured collection." },
     { "type": "color", "id": "bg_color", "label": "Background colour", "default": "#f5f5f7", "info": "The hero's surface colour. Also shows behind a background image while it loads, or through a low veil." },
     { "type": "image_picker", "id": "bg_image", "label": "Background image", "info": "Fills the whole hero behind everything. Landscape ~2400px wide works best." },
+    { "type": "header", "content": "Living words background" },
+    { "type": "checkbox", "id": "words_bg", "label": "Show the word field", "default": false, "info": "Giant brand words drift diagonally behind the logo and search bar, flowing around them. Hovering a word pauses its row and features it; words near the cursor drift away softly." },
+    { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
+    { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 10, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
     { "type": "select", "id": "ascii_bg", "label": "ASCII background", "default": "none",
       "options": [
