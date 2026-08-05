@@ -3196,22 +3196,26 @@
   var INK = "{{ section.settings.ascii_ink | default: '#0a0a0a' }}";
   var CH = ".,-~:;=!*#$@";
   var mode = cv.getAttribute("data-mode") || "torus";
-  var cols = 0, rows = 0, chW = 8, running = false, raf = 0, last = 0;
+  /* dither cells are square; character cells are taller than wide */
+  var ASP = mode === "dither" ? 1 : 1.9;
+  var cols = 0, rows = 0, chW = 8, running = false, raf = 0, last = 0, DPR = 1;
   var mx = 0, my = 0, vA = 1.0, vB = 0.6;
-  var gray = null, phase = null, imgReady = false;
+  var gray = null, phase = null, edges = null, imgReady = false;
+  var vigGrad = null, grainCv = null;
 
   function size() {
     var r = hero.getBoundingClientRect();
-    var dpr = Math.min(2, window.devicePixelRatio || 1);
-    cv.width = Math.round(r.width * dpr);
-    cv.height = Math.round(r.height * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(r.width * DPR);
+    cv.height = Math.round(r.height * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     ctx.font = CELL + 'px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
     ctx.textBaseline = "top";
     chW = Math.max(4, ctx.measureText("M").width);
-    cols = Math.max(10, Math.floor(r.width / chW));
+    cols = Math.max(10, Math.floor(r.width / (mode === "dither" ? CELL : chW)));
     rows = Math.max(10, Math.floor(r.height / CELL));
-    if (mode === "image" && imgReady) sampleImage();
+    vigGrad = null;
+    if (imgReady) sampleImage();
   }
 
   var img = null;
@@ -3221,8 +3225,8 @@
       oc.width = cols; oc.height = rows;
       var octx = oc.getContext("2d");
       /* contain-fit the image in the grid */
-      var s = Math.min(cols / img.width, (rows * 1.9) / img.height);
-      var w = img.width * s, h = img.height * s / 1.9;
+      var s = Math.min(cols / img.width, (rows * ASP) / img.height);
+      var w = img.width * s, h = img.height * s / ASP;
       octx.drawImage(img, (cols - w) / 2, (rows - h) / 2, w, h);
       var d = octx.getImageData(0, 0, cols, rows).data;
       gray = new Float32Array(cols * rows);
@@ -3234,7 +3238,21 @@
         gray[i] = a * (1 - lum);
         phase[i] = Math.random() * 6.28;
       }
+      if (mode === "dither") buildEdges();
     } catch (err) { gray = null; }
+  }
+
+  /* per-cell edge strength (Sobel-lite) for the dither's edgeEmphasis */
+  function buildEdges() {
+    if (!gray) { edges = null; return; }
+    edges = new Float32Array(cols * rows);
+    for (var y = 1; y < rows - 1; y++) {
+      for (var x = 1; x < cols - 1; x++) {
+        var i = y * cols + x;
+        var gx = gray[i + 1] - gray[i - 1], gy = gray[i + cols] - gray[i - cols];
+        edges[i] = Math.min(1, Math.sqrt(gx * gx + gy * gy) * 2);
+      }
+    }
   }
 
   function drawImageMode(t) {
@@ -3256,6 +3274,95 @@
         line += CH.charAt(1 + Math.floor(vv * (CH.length - 2)));
       }
       ctx.fillText(line, 0, y * CELL);
+    }
+  }
+
+  /* --- Green dither filter (21st.dev "ascii" recipe): Bayer-ordered cell
+     dither with contrast/edge emphasis, tinted by the character colour,
+     flicker animation and scanlines/vignette/bloom/grain/glitch on top. --- */
+  var BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(function (n) { return (n + 0.5) / 16; });
+  var inkRGB = (function () {
+    var m = /^#?([0-9a-f]{6})$/i.exec(INK.trim());
+    var n = m ? parseInt(m[1], 16) : 0x00ff66;
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  })();
+  function grain() {
+    if (grainCv) return grainCv;
+    grainCv = document.createElement("canvas");
+    grainCv.width = 160; grainCv.height = 160;
+    var g = grainCv.getContext("2d"), id = g.createImageData(160, 160);
+    for (var i = 0; i < id.data.length; i += 4) {
+      var v = 128 + (Math.random() - 0.5) * 255;
+      id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 26;
+    }
+    g.putImageData(id, 0, 0);
+    return grainCv;
+  }
+  function drawDither(t) {
+    if (!gray) return;
+    var r = hero.getBoundingClientRect();
+    var W = r.width, H = r.height;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    var live = !calm;
+    var fillCache = "";
+    for (var y = 0; y < rows; y++) {
+      for (var x = 0; x < cols; x++) {
+        var i = y * cols + x;
+        var v = gray[i];
+        if (v <= 0.02) continue;
+        v = (v - 0.5) * 1.15 + 0.5;             /* contrast 115 */
+        if (edges) v += edges[i] * 0.4;          /* edgeEmphasis 40 */
+        v *= 0.8;                                /* coverage */
+        if (live) {                              /* flicker (speed 100 / intensity 60) */
+          var fl = Math.sin(t * 0.02 + phase[i] * 9);
+          if (fl > 0.965) v = Math.min(1, v + 0.6);
+          else if (fl < -0.985) v *= 0.25;
+        }
+        if (v <= BAYER[(y & 3) * 4 + (x & 3)]) continue;
+        var lum = Math.max(0, Math.min(1, v));
+        var b = 0.3 + 0.7 * lum, wmix = lum * lum * 0.5;
+        var fs = "rgb(" + Math.min(255, Math.round(inkRGB[0] * b + 255 * wmix)) + "," +
+          Math.min(255, Math.round(inkRGB[1] * b + 255 * wmix)) + "," +
+          Math.min(255, Math.round(inkRGB[2] * b + 255 * wmix)) + ")";
+        if (fs !== fillCache) { ctx.fillStyle = fs; fillCache = fs; }
+        ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
+      }
+    }
+    /* bloom 60 — one blurred additive self-composite */
+    if (typeof ctx.filter === "string") {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = 0.35;
+      ctx.filter = "blur(6px)";
+      ctx.drawImage(cv, 0, 0, W, H);
+      ctx.restore();
+      ctx.filter = "none";
+    }
+    /* scanLines 28 */
+    ctx.fillStyle = "rgba(0, 0, 0, 0.14)";
+    for (var sy = 0; sy < H; sy += 3) ctx.fillRect(0, sy, W, 1);
+    /* vignette 38 (cached per size) */
+    if (!vigGrad) {
+      vigGrad = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.72);
+      vigGrad.addColorStop(0, "rgba(0,0,0,0)");
+      vigGrad.addColorStop(1, "rgba(0,0,0,0.38)");
+    }
+    ctx.fillStyle = vigGrad;
+    ctx.fillRect(0, 0, W, H);
+    if (live) {
+      /* filmGrain 40 */
+      ctx.globalAlpha = 0.4;
+      ctx.drawImage(grain(), Math.random() * -40, Math.random() * -40, W + 80, H + 80);
+      ctx.globalAlpha = 1;
+      /* glitch 20 + chromatic fringe: an occasional shifted, tinted band */
+      if (Math.random() < 0.06) {
+        var gy2 = Math.random() * H * 0.9, gh = 6 + Math.random() * 26, gx2 = (Math.random() - 0.5) * 24;
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.globalAlpha = 0.5;
+        ctx.drawImage(cv, 0, gy2 * DPR, cv.width, gh * DPR, gx2, gy2, W, gh);
+        ctx.restore();
+      }
     }
   }
 
@@ -3304,6 +3411,7 @@
     if (t - last >= 30) {
       last = t;
       if (mode === "image") drawImageMode(t);
+      else if (mode === "dither") drawDither(t);
       else drawTorus(dt);
       if (calm) return; /* one settled frame is enough for reduced motion */
     }
@@ -3326,7 +3434,7 @@
   }
 
   size();
-  if (mode === "image") {
+  if (mode === "image" || mode === "dither") {
     img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = function () { imgReady = true; sampleImage(); start(); };
@@ -3382,10 +3490,11 @@
       "options": [
         { "value": "none", "label": "Off" },
         { "value": "torus", "label": "Spinning 3D ring" },
-        { "value": "image", "label": "My image, drawn in characters" }
-      ], "info": "A retro terminal visual drawn in live text characters behind the hero — it reacts to the mouse. The ring spins faster/tilts as the cursor moves; the image mode shimmers and brightens near the cursor." },
-    { "type": "image_picker", "id": "ascii_image", "label": "Image to render as ASCII", "info": "For the image mode. Simple, high-contrast images on transparent or white backgrounds work best — your logo or a product cutout." },
-    { "type": "range", "id": "ascii_opacity", "label": "Strength", "min": 4, "max": 60, "step": 2, "unit": "%", "default": 14 },
+        { "value": "image", "label": "My image, drawn in characters" },
+        { "value": "dither", "label": "Green dither filter (terminal)" }
+      ], "info": "A retro terminal visual behind the hero. The ring spins with the cursor; the character mode shimmers near it; the dither filter renders your image as flickering pixel-dither with scanlines, vignette, bloom, grain and glitch — set the character colour to #00ff66 for the classic terminal green." },
+    { "type": "image_picker", "id": "ascii_image", "label": "Image to render as ASCII", "info": "For the image and dither modes. Simple, high-contrast images on transparent or white backgrounds work best — your logo or a product cutout." },
+    { "type": "range", "id": "ascii_opacity", "label": "Strength", "min": 4, "max": 100, "step": 2, "unit": "%", "default": 14 },
     { "type": "range", "id": "ascii_scale", "label": "Character size", "min": 8, "max": 20, "step": 1, "unit": "px", "default": 12 },
     { "type": "color", "id": "ascii_ink", "label": "Character colour", "default": "#0a0a0a" },
     { "type": "range", "id": "bg_veil", "label": "Background veil", "min": 0, "max": 90, "step": 5, "unit": "%", "default": 30, "info": "White wash over the background image so the logo, search bar and text stay readable. 0 shows the photo untouched." },
