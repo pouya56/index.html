@@ -1,0 +1,21 @@
+{%- comment -%}
+  Sharp corners, site-wide: squares off every rounded corner in the design
+  — cards, buttons, pills, search bars, pop-ups, images — for the Bécane
+  hard-edged look. A short exception list keeps true circles round:
+  indicator dots, the orb mascot's eyes, avatars, count badges, the goo
+  blob and the before/after slider grip. (Decorative circles drawn with
+  ::before/::after pseudo-elements are unaffected automatically.)
+
+  Install: render this once in the <head> of layout/theme.liquid:
+    {% render 'dynamic-sharp' %}
+{%- endcomment -%}
+<style>
+  body * { border-radius: 0 !important; }
+  .sg-dot, .dc-tabhero-dot, .ds-hgal-dot, .ab-dot, .color-dot,
+  .dh-w-saveddots, .dh-w-saveddots *,
+  .dh-orb-eye, .dh-orb-eyes,
+  .dh-avatar, .ig-rv-av,
+  .dh-vbadge,
+  .ds-ba-grip,
+  .dh-goo, .dh-goo *, .dh-goo-follow { border-radius: 999px !important; }
+</style>
