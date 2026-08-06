@@ -179,6 +179,17 @@
     .dyn-abar .dh-apps-btn:hover { color: #fff; background: none; box-shadow: none;
       filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.55)); }
     .dyn-abar .dh-apps-btn:active { cursor: grabbing; }
+    /* Light-bulb mode: two uploaded images replace the character. The
+       bulb rests dark; while the window is open it lights up (second
+       image) with a warm glow, and switches off when it closes. */
+    .dyn-abar .dh-has-bulb { height: 96px; }
+    .dyn-abar .dh-has-bulb .dh-orb-shape, .dyn-abar .dh-has-bulb .dh-orb-eyes { display: none; }
+    .dyn-abar .dh-has-bulb.is-asleep::after, .dyn-abar .dh-has-bulb .dh-orb-eyes.is-nervous::after { display: none; }
+    .dyn-abar .dh-bulb { position: absolute; inset: 0; display: block; pointer-events: none; }
+    .dyn-abar .dh-bulb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.18s; }
+    .dyn-abar .dh-bulb-on { opacity: 0; }
+    .dyn-abar .dh-has-bulb[aria-expanded="true"] .dh-bulb-on { opacity: 1; filter: drop-shadow(0 0 20px rgba(255, 214, 110, 0.9)); }
+    .dyn-abar .dh-has-bulb[aria-expanded="true"] .dh-bulb-off { opacity: 0; }
     /* Clicking him lands like a punch: hard squash, knocked sideways, a
        springy recover with his eyes screwed shut — and only then does the
        window open. */
@@ -924,7 +935,13 @@
     <div class="ab-r">
     {%- if section.settings.show_apps -%}
       <div class="dh-menu dh-apps-menu">
-        <button type="button" class="dh-icon-btn dh-apps-btn" aria-haspopup="true" aria-expanded="false" aria-label="{{ section.settings.apps_title | default: 'Apps' | escape }}">
+        <button type="button" class="dh-icon-btn dh-apps-btn{% if section.settings.bulb_off_image != blank and section.settings.bulb_on_image != blank %} dh-has-bulb{% endif %}" aria-haspopup="true" aria-expanded="false" aria-label="{{ section.settings.apps_title | default: 'Apps' | escape }}">
+          {%- if section.settings.bulb_off_image != blank and section.settings.bulb_on_image != blank -%}
+          <span class="dh-bulb" aria-hidden="true">
+            <img class="dh-bulb-img dh-bulb-off" src="{{ section.settings.bulb_off_image | image_url: width: 320 }}" alt="" width="160" height="280" loading="lazy">
+            <img class="dh-bulb-img dh-bulb-on" src="{{ section.settings.bulb_on_image | image_url: width: 320 }}" alt="" width="160" height="280" loading="lazy">
+          </span>
+          {%- endif -%}
           <span class="dh-orb-shape" aria-hidden="true"><svg viewBox="0 0 128 128">
             <defs><linearGradient id="dynSiriG" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0" stop-color="#4f8cff"/><stop offset="0.25" stop-color="#a06bff"/><stop offset="0.5" stop-color="#ff5ea8"/><stop offset="0.75" stop-color="#ff9d5e"/><stop offset="1" stop-color="#5edfff"/>
@@ -2491,6 +2508,9 @@
   "tag": "section",
   "class": "dynamic-account-bar-section",
   "settings": [
+    { "type": "header", "content": "Light bulb character" },
+    { "type": "image_picker", "id": "bulb_off_image", "label": "Bulb image (off)", "info": "With both images set, the character becomes this bulb. Transparent PNG, hanging vertically." },
+    { "type": "image_picker", "id": "bulb_on_image", "label": "Bulb image (lit)", "info": "Shown while the window is open - clicking the bulb turns it on; closing turns it off." },
     { "type": "paragraph", "content": "A slim bar with a back button (top-left) plus the account menu and 9-dots apps menu (top-right), matching your homepage look. Add it to your Header group so it shows on every page." },
 
     { "type": "header", "content": "Back button" },
