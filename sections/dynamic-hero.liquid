@@ -3265,8 +3265,8 @@
 
       /* ============== Text wall (red poster) — its own render path ==============
          The words pack the screen edge to edge, repeating like a print run:
-         worn black ink on speckled red, a few words popping white. Rows creep
-         sideways at different speeds. The wall flows AROUND the search bar,
+         worn black ink on speckled red. Rows creep sideways at different
+         speeds. The wall flows AROUND the search bar,
          logo and buttons — their rects are re-measured every frame, so
          dragging the search bar pushes the words out of its way live, and
          no word is ever drawn behind the UI. Hover lights a word white;
@@ -3276,6 +3276,13 @@
         var wallGlass = hero.querySelector(".dh-labglass");
         if (wallGlass) wallGlass.style.display = "none";
         if (topCv) { topCv.width = 0; topCv.height = 0; }
+        /* the wall shares the poster style's word pictures: same "Word
+           image" blocks, same zine processing (procPic/stylePic hoist
+           from below — only the cache needs initialising here) */
+        PROC = {};
+        var picW = document.createElement("div");
+        picW.style.cssText = "position:absolute;z-index:2;width:140px;display:none;pointer-events:none;opacity:0;transition:opacity 0.18s;";
+        hero.appendChild(picW);
         var RED = "#d0201a";
         var INKA = Math.max(0.5, Math.min(1, BASE * 4));
         var calmW = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -3348,11 +3355,12 @@
           return ((off % totalW) + totalW) % totalW;
         }
         /* UI rects the words must flow around — re-measured every frame, so
-           a dragged search bar pushes the wall out of its way as it moves */
+           a dragged search bar pushes the wall out of its way as it moves.
+           Corner links are NOT excluded: the wall may pass behind them. */
         function zonesNow() {
           var hr = labCv.getBoundingClientRect();
           var out = [];
-          var sels = [".dh-search", ".dh-head", ".dh-hero-btns", ".dh-corner-group", ".dh-menu-btn", ".dh-reset-btn"];
+          var sels = [".dh-search", ".dh-head", ".dh-hero-btns", ".dh-menu-btn", ".dh-reset-btn"];
           for (var s3 = 0; s3 < sels.length; s3++) {
             var list = hero.querySelectorAll(sels[s3]);
             for (var e3 = 0; e3 < list.length; e3++) {
@@ -3400,8 +3408,7 @@
           ctx.fillStyle = RED;
           ctx.fillRect(0, 0, W, H);
           if (noisePat) { ctx.fillStyle = noisePat; ctx.fillRect(0, 0, W, H); }
-          var epoch = calmW ? 0 : Math.floor(tSec / 4);
-          var hov2 = null;
+          var hov2 = null, selPos = null;
           for (var r2 = 0; r2 < rowsN; r2++) {
             var y2 = r2 * RH;
             var off = rowOff(r2, tSec);
@@ -3416,12 +3423,14 @@
               var wi = ((j2 % seqLen) + seqLen) % seqLen;
               var sw = spB[wi].width, sh = spB[wi].height;
               if (!inZone(zs, x2, y2, sw, sh)) {
-                var white = (selCell && selCell.r === r2 && selCell.j === j2) ||
-                            (r2 * 31 + j2 * 17 + epoch * 7) % 41 === 0;
+                /* every word rests black — only hover (or a tap) goes white */
+                var isSelC = selCell && selCell.r === r2 && selCell.j === j2;
+                var white = isSelC;
                 if (mxw >= x2 && mxw < x2 + sw && myw >= y2 && myw < y2 + sh) {
-                  hov2 = { r: r2, j: j2, w: wi };
+                  hov2 = { r: r2, j: j2, w: wi, x: x2, y: y2, sw: sw };
                   white = true;
                 }
+                if (isSelC) selPos = { r: r2, j: j2, w: wi, x: x2, y: y2, sw: sw };
                 ctx.globalAlpha = white ? 1 : INKA;
                 ctx.drawImage(white ? spW[wi] : spB[wi], x2, y2 + (RH - sh) / 2);
               }
@@ -3431,6 +3440,31 @@
           }
           hovCell = hov2;
           labCv.style.cursor = hov2 ? "pointer" : "";
+          /* the hovered (or tap-lit) word shows its picture beside it —
+             same zine treatment as the poster style */
+          var actC = hov2 || selPos;
+          var psrcW = actC ? PICS[(WORDS[actC.w] || "").toUpperCase()] || null : null;
+          var pelW = psrcW ? procPic(WORDS[actC.w], psrcW) : null;
+          if (pelW) {
+            var keyW = WORDS[actC.w];
+            if (picW.getAttribute("data-w") !== keyW) {
+              picW.setAttribute("data-w", keyW);
+              while (picW.firstChild) picW.removeChild(picW.firstChild);
+              picW.appendChild(pelW);
+            }
+            var pwW = W < 640 ? 96 : 140;
+            picW.style.width = pwW + "px";
+            var pxW = actC.x + actC.sw + 14;
+            if (pxW + pwW > W - 8) pxW = actC.x - 14 - pwW;
+            picW.style.left = Math.max(8, pxW) + "px";
+            picW.style.top = (actC.y + RH / 2) + "px";
+            picW.style.transform = "translateY(-50%)";
+            picW.style.display = "block";
+            picW.style.opacity = "1";
+          } else {
+            picW.style.opacity = "0";
+            picW.style.display = "none";
+          }
           rafW = requestAnimationFrame(frameW);
         }
         function kickW() { if (!rafW && liveW) rafW = requestAnimationFrame(frameW); }
@@ -4702,7 +4736,7 @@
       { "type": "range", "id": "size", "min": 60, "max": 260, "step": 10, "unit": "px", "label": "Size", "default": 140 }
     ]},
     { "type": "word_pic", "name": "Word image 🖼", "settings": [
-      { "type": "paragraph", "content": "For the Blurred poster word field: when a visitor hovers this word, its picture pops up beside it — rendered grainy black & white with a red contour line around the object. Transparent PNG cutouts look best (the red line hugs the shape); regular photos get a floating red frame." },
+      { "type": "paragraph", "content": "For the Blurred poster and Text wall word fields: when a visitor hovers this word, its picture pops up beside it — rendered grainy black & white with a red contour line around the object. Transparent PNG cutouts look best (the red line hugs the shape); regular photos get a floating red frame." },
       { "type": "text", "id": "word", "label": "Word", "info": "Must match a word from the words list (case doesn't matter)." },
       { "type": "image_picker", "id": "image", "label": "Image" }
     ]}
