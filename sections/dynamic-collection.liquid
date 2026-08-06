@@ -657,6 +657,17 @@
     background: url('{{ section.settings.bar_paper_image | image_url: width: 2800 }}') center top / 100% 100% no-repeat;
   }
   .dyn-col.dc-scrolled .dc-tabs-wrap::after, .dyn-col.dc-scrolled .dc-tabs.is-pills::after { display: none; }
+  /* on uploaded (light) paper the bar's type goes back to black ink */
+  .dyn-col.dc-scrolled .dc-tabs.is-pills .dc-tab { color: rgba(20, 17, 16, 0.72); }
+  .dyn-col.dc-scrolled .dc-tabs.is-pills .dc-tab:hover { color: #141110; background: rgba(0, 0, 0, 0.06); }
+  .dyn-col.dc-scrolled .dc-tabs.is-pills .dc-tab.is-active { background: #141110; color: #f5f3ef; }
+  .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-label { color: rgba(20, 17, 16, 0.72); }
+  .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab:hover .dc-tab-label,
+  .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab.is-active .dc-tab-label { color: #141110; opacity: 1; }
+  .dyn-col.dc-scrolled .dc-search-trigger .dc-tab-label,
+  .dyn-col.dc-scrolled .dc-search-trigger[aria-expanded="true"] .dc-tab-label { color: #141110; }
+  .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-init { color: rgba(20, 17, 16, 0.8); }
+  .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-all svg { fill: rgba(20, 17, 16, 0.8); }
   {%- endif %}
 </style>
 
