@@ -3289,6 +3289,10 @@
         var W = 0, H = 0, FS = 26, RH = 35, GAP2 = 9;
         var spB = [], spW = [], seqW = [], cum = [], totalW = 0, seqLen = 0, rowsN = 0;
         var noisePat = null;
+        /* per-row pause state: a hovered row stops creeping (frozen at the
+           moment the pointer lands), and the accrued debt keeps it from
+           jumping when it resumes */
+        var rowDebt = [], rowFrozenAt = [];
 
         function wallSprite(word, color) {
           var c = document.createElement("canvas");
@@ -3328,6 +3332,8 @@
             totalW += seqW[i6];
           }
           rowsN = Math.ceil(H / RH) + 1;
+          rowDebt = []; rowFrozenAt = [];
+          for (var iR = 0; iR < rowsN; iR++) { rowDebt.push(0); rowFrozenAt.push(-1); }
           /* speckle tile for the worn-red paper */
           var nt = document.createElement("canvas");
           nt.width = nt.height = 128;
@@ -3349,9 +3355,11 @@
           buildWall();
         }
         function rowOff(r2, tSec) {
+          /* a frozen row runs on its freeze-time; debt bridges the pause */
+          var eff = (rowFrozenAt[r2] >= 0 ? rowFrozenAt[r2] : tSec) - (rowDebt[r2] || 0);
           var dir2 = r2 % 2 ? 1 : -1;
           var sp = 6 + (r2 * 13) % 7;
-          var off = (r2 * 137) % totalW + tSec * sp * dir2;
+          var off = (r2 * 137) % totalW + eff * sp * dir2;
           return ((off % totalW) + totalW) % totalW;
         }
         /* UI rects the words must flow around — re-measured every frame, so
@@ -3449,6 +3457,17 @@
           }
           hovCell = hov2;
           labCv.style.cursor = hov2 ? "pointer" : "";
+          /* the hovered (or tap-lit) word's row stops creeping, so the
+             word holds still under the pointer; the other rows flow on */
+          for (var rf = 0; rf < rowsN; rf++) {
+            var holdRow = (hov2 && hov2.r === rf) || (selCell && selCell.r === rf);
+            if (holdRow) {
+              if (rowFrozenAt[rf] < 0) rowFrozenAt[rf] = tSec;
+            } else if (rowFrozenAt[rf] >= 0) {
+              rowDebt[rf] += tSec - rowFrozenAt[rf];
+              rowFrozenAt[rf] = -1;
+            }
+          }
           /* the hovered (or tap-lit) word shows its picture beside it —
              same zine treatment as the poster style */
           var actC = hov2 || selPos;
