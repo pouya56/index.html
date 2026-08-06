@@ -554,11 +554,11 @@
   {%- if section.settings.search_paper_image != blank %}
   .dyn-hero .dh-search { background: url('{{ section.settings.search_paper_image | image_url: width: 1800 }}') center / 100% 100% no-repeat;
     border: none; border-radius: 0; box-shadow: none;
-    -webkit-backdrop-filter: none; backdrop-filter: none; padding: 12px 30px; }
+    -webkit-backdrop-filter: none; backdrop-filter: none; padding: 22px 34px; }
   .dyn-hero .dh-search:focus-within { box-shadow: none; }
   .dyn-hero .dh-search-input { color: #141110; font-weight: 600; }
   .dyn-hero .dh-search-input::placeholder { color: rgba(20, 17, 16, 0.72); }
-  .dyn-hero .dh-search-plus svg { stroke: #141110; }
+  .dyn-hero .dh-search-plus svg { opacity: 0; }
   {%- endif %}
 </style>
 
