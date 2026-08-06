@@ -649,6 +649,15 @@
   .dyn-col.dc-scrolled .dc-search-trigger[aria-expanded="true"] .dc-tab-label { color: #f5f3ef; }
   .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-init { color: rgba(245, 243, 239, 0.85); }
   .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-all svg { fill: rgba(245, 243, 239, 0.85); }
+  {%- if section.settings.bar_paper_image != blank %}
+  /* uploaded bar artwork: covers the bar and hangs 28px below it, so the
+     image's own torn bottom edge (transparent PNG) does the ripping */
+  .dyn-col.dc-scrolled .dc-tabs-wrap::before, .dyn-col.dc-scrolled .dc-tabs.is-pills::before {
+    bottom: -28px;
+    background: url('{{ section.settings.bar_paper_image | image_url: width: 2800 }}') center top / 100% 100% no-repeat;
+  }
+  .dyn-col.dc-scrolled .dc-tabs-wrap::after, .dyn-col.dc-scrolled .dc-tabs.is-pills::after { display: none; }
+  {%- endif %}
 </style>
 
 {%- comment -%} Match the store theme's heading font when it exposes one (Dawn & most modern themes). {%- endcomment -%}
@@ -1997,6 +2006,7 @@
   "class": "dynamic-collection-section",
   "settings": [
     { "type": "image_picker", "id": "sleeve_image", "label": "Card sleeve artwork", "info": "Optional worn-sleeve image used as every card's background. Use artwork with the black spine strip on the right (about a quarter of the width) so the title column lines up. Leave empty for the built-in generated texture." },
+    { "type": "image_picker", "id": "bar_paper_image", "label": "Scrolled bar paper", "info": "Optional artwork for the sticky bar once the page is scrolled. Use a wide PNG around 2800\u00d7280px: solid paper texture on top, a torn bottom edge with transparency below it \u2014 the bottom ~60px hang under the bar as the rip. Leave empty for the built-in torn black paper." },
     { "type": "header", "content": "Content" },
     { "type": "collection", "id": "collection", "label": "Collection", "info": "Leave empty on a Collection template to use the current collection automatically." },
     { "type": "text", "id": "heading", "label": "Heading override", "info": "Leave empty to use the collection title." },
