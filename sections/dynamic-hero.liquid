@@ -3262,14 +3262,87 @@
       var topCv = document.getElementById("dhLabTop");
       var tctx = topCv ? topCv.getContext("2d") : null;
       var HOT = "#e10600";
-      /* poster style: a small picture pops up beside the hovered word */
+      /* poster style: a small picture pops up beside the hovered word,
+         processed into the zine look — grainy black & white with a red
+         contour line floating just off the object's edge */
       var pic = null;
       if (SMEAR) {
-        pic = document.createElement("img");
-        pic.alt = "";
-        pic.style.cssText = "position:absolute;z-index:2;width:140px;display:none;pointer-events:none;" +
-          "box-shadow:0 14px 30px -12px rgba(0,0,0,0.35);opacity:0;transition:opacity 0.18s;";
+        pic = document.createElement("div");
+        pic.style.cssText = "position:absolute;z-index:2;width:140px;display:none;pointer-events:none;opacity:0;transition:opacity 0.18s;";
         hero.appendChild(pic);
+      }
+      var PROC = {};
+      function stylePic(img) {
+        var sc = Math.min(1, 280 / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+        var w = Math.max(1, Math.round((img.naturalWidth || 1) * sc));
+        var h = Math.max(1, Math.round((img.naturalHeight || 1) * sc));
+        var m2 = 16;
+        /* photo layer: grayscale, punched-up contrast, baked film grain */
+        var ph = document.createElement("canvas");
+        ph.width = w; ph.height = h;
+        var pg = ph.getContext("2d");
+        pg.drawImage(img, 0, 0, w, h);
+        var id = pg.getImageData(0, 0, w, h); /* throws if CORS-tainted */
+        var d = id.data;
+        for (var i5 = 0; i5 < d.length; i5 += 4) {
+          if (!d[i5 + 3]) continue;
+          var gy = d[i5] * 0.299 + d[i5 + 1] * 0.587 + d[i5 + 2] * 0.114;
+          gy = (gy - 128) * 1.12 + 128 + (Math.random() - 0.5) * 52;
+          gy = gy < 0 ? 0 : gy > 255 ? 255 : gy;
+          d[i5] = d[i5 + 1] = d[i5 + 2] = gy;
+        }
+        pg.putImageData(id, 0, 0);
+        /* red silhouette of the image's alpha shape */
+        var sil = document.createElement("canvas");
+        sil.width = w; sil.height = h;
+        var sg = sil.getContext("2d");
+        sg.drawImage(img, 0, 0, w, h);
+        sg.globalCompositeOperation = "source-in";
+        sg.fillStyle = HOT;
+        sg.fillRect(0, 0, w, h);
+        /* contour: sweep the silhouette wide, then punch out a slightly
+           smaller sweep — a red line hovering just off the edge, with a
+           gap of background showing through (cutout PNGs hug the object;
+           plain rectangles get a floating red frame) */
+        var out = document.createElement("canvas");
+        out.width = w + m2 * 2; out.height = h + m2 * 2;
+        var og = out.getContext("2d");
+        var RO = 9, RI = 5, a3;
+        for (a3 = 0; a3 < 16; a3++) og.drawImage(sil, m2 + Math.cos(a3 * 0.3927) * RO, m2 + Math.sin(a3 * 0.3927) * RO);
+        og.globalCompositeOperation = "destination-out";
+        for (a3 = 0; a3 < 16; a3++) og.drawImage(sil, m2 + Math.cos(a3 * 0.3927) * RI, m2 + Math.sin(a3 * 0.3927) * RI);
+        og.globalCompositeOperation = "source-over";
+        og.drawImage(ph, m2, m2);
+        out.style.cssText = "display:block;width:100%;height:auto;";
+        return out;
+      }
+      function fallbackPic(url) {
+        /* image couldn't be pixel-processed (CORS): approximate the look
+           with CSS — grayscale plus a red sticker outline */
+        var f = document.createElement("img");
+        f.alt = "";
+        f.src = url;
+        f.style.cssText = "display:block;width:100%;height:auto;" +
+          "filter:grayscale(1) contrast(1.1) drop-shadow(2px 0 0 " + HOT + ") drop-shadow(-2px 0 0 " + HOT + ") drop-shadow(0 2px 0 " + HOT + ") drop-shadow(0 -2px 0 " + HOT + ");";
+        return f;
+      }
+      function procPic(word, url) {
+        var got = PROC[word];
+        if (got && got !== "loading") return got;
+        if (got) return null; /* still loading */
+        PROC[word] = "loading";
+        var im = new Image();
+        im.crossOrigin = "anonymous";
+        var finish = function () {
+          try { PROC[word] = stylePic(im); }
+          catch (eP) { PROC[word] = fallbackPic(url); }
+        };
+        im.onload = finish;
+        im.onerror = function () { PROC[word] = fallbackPic(url); };
+        im.src = url;
+        if (im.complete && im.naturalWidth) { im.onload = null; finish(); }
+        var now = PROC[word];
+        return now && now !== "loading" ? now : null;
       }
       /* the poster words are huge, so fewer of them fill the screen */
       var N = SMEAR ? 20 : 30;
@@ -3533,8 +3606,13 @@
            other side near the screen edge); hide it when nothing is hot */
         if (pic) {
           var psrc = act ? PICS[(act.word || "").toUpperCase()] || null : null;
-          if (psrc) {
-            if (pic.getAttribute("data-w") !== act.word) { pic.src = psrc; pic.setAttribute("data-w", act.word); }
+          var pel = psrc ? procPic(act.word, psrc) : null;
+          if (pel) {
+            if (pic.getAttribute("data-w") !== act.word) {
+              pic.setAttribute("data-w", act.word);
+              while (pic.firstChild) pic.removeChild(pic.firstChild);
+              pic.appendChild(pel);
+            }
             var pw2 = W < 640 ? 96 : 140;
             pic.style.width = pw2 + "px";
             var bw2 = act.crisp.width / DPR / 2;
@@ -4362,7 +4440,7 @@
       { "type": "range", "id": "size", "min": 60, "max": 260, "step": 10, "unit": "px", "label": "Size", "default": 140 }
     ]},
     { "type": "word_pic", "name": "Word image 🖼", "settings": [
-      { "type": "paragraph", "content": "For the Blurred poster word field: when a visitor hovers this word, its picture pops up beside it." },
+      { "type": "paragraph", "content": "For the Blurred poster word field: when a visitor hovers this word, its picture pops up beside it — rendered grainy black & white with a red contour line around the object. Transparent PNG cutouts look best (the red line hugs the shape); regular photos get a floating red frame." },
       { "type": "text", "id": "word", "label": "Word", "info": "Must match a word from the words list (case doesn't matter)." },
       { "type": "image_picker", "id": "image", "label": "Image" }
     ]}
