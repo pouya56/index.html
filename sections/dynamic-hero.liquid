@@ -708,7 +708,7 @@
        from a different starting point; two identical sets per row make the
        loop seamless. Rows alternate direction with varied speed/offset. {%- endcomment -%}
     {%- assign dh_words = section.settings.words_list | default: 'PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM' | newline_to_br | strip_newlines | replace: '<br />', ',' | replace: '<br>', ',' | split: ',' -%}
-    {%- if section.settings.words_style == 'labels' or section.settings.words_style == 'smear' -%}
+    {%- if section.settings.words_style == 'labels' or section.settings.words_style == 'smear' or section.settings.words_style == 'wall' -%}
     {%- comment -%} Poster-style label strips: deterministic scatter tables
        keep the layout organic but stable between renders. {%- endcomment -%}
     {%- comment -%} 30 strips drawn on one canvas: config only — the JS
@@ -3262,6 +3262,267 @@
       var topCv = document.getElementById("dhLabTop");
       var tctx = topCv ? topCv.getContext("2d") : null;
       var HOT = "#e10600";
+
+      /* ============== Text wall (red poster) — its own render path ==============
+         The words pack the screen edge to edge, repeating like a print run:
+         worn black ink on speckled red, a few words popping white. Rows creep
+         sideways at different speeds. The wall flows AROUND the search bar,
+         logo and buttons — their rects are re-measured every frame, so
+         dragging the search bar pushes the words out of its way live, and
+         no word is ever drawn behind the UI. Hover lights a word white;
+         clicking sends it flying into the search bar (typed, not searched).
+         Phones: tap lights it, tapping again sends it. */
+      if (cfg.style === "wall") {
+        var wallGlass = hero.querySelector(".dh-labglass");
+        if (wallGlass) wallGlass.style.display = "none";
+        if (topCv) { topCv.width = 0; topCv.height = 0; }
+        var RED = "#d0201a";
+        var INKA = Math.max(0.5, Math.min(1, BASE * 4));
+        var calmW = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var W = 0, H = 0, FS = 26, RH = 35, GAP2 = 9;
+        var spB = [], spW = [], seqW = [], cum = [], totalW = 0, seqLen = 0, rowsN = 0;
+        var noisePat = null;
+
+        function wallSprite(word, color) {
+          var c = document.createElement("canvas");
+          var g = c.getContext("2d");
+          var font = "800 " + FS + "px Jost, Futura, 'Century Gothic', sans-serif";
+          g.font = font;
+          var txt = "“" + word.toUpperCase() + "”";
+          var tw = Math.ceil(g.measureText(txt).width) + 4;
+          c.width = Math.max(2, tw); c.height = Math.ceil(FS * 1.3);
+          g = c.getContext("2d");
+          g.font = font;
+          g.textBaseline = "middle";
+          g.fillStyle = color;
+          g.fillText(txt, 2, c.height / 2 + FS * 0.05);
+          /* rough the print: speckle holes so the ink looks worn */
+          g.globalCompositeOperation = "destination-out";
+          g.globalAlpha = 0.55;
+          for (var n2 = 0, N2 = tw * 1.5; n2 < N2; n2++) {
+            g.fillRect(Math.random() * c.width, Math.random() * c.height, 1.3, 1.3);
+          }
+          g.globalAlpha = 1;
+          g.globalCompositeOperation = "source-over";
+          return c;
+        }
+        function buildWall() {
+          FS = W < 640 ? 17 : 26;
+          RH = Math.ceil(FS * 1.35);
+          GAP2 = Math.ceil(FS * 0.35);
+          spB = []; spW = []; seqW = []; cum = [];
+          totalW = 0;
+          seqLen = WORDS.length;
+          for (var i6 = 0; i6 < seqLen; i6++) {
+            spB.push(wallSprite(WORDS[i6], "#161210"));
+            spW.push(wallSprite(WORDS[i6], "#ffffff"));
+            seqW.push(spB[i6].width + GAP2);
+            cum.push(totalW);
+            totalW += seqW[i6];
+          }
+          rowsN = Math.ceil(H / RH) + 1;
+          /* speckle tile for the worn-red paper */
+          var nt = document.createElement("canvas");
+          nt.width = nt.height = 128;
+          var ng = nt.getContext("2d");
+          var nid = ng.createImageData(128, 128);
+          for (var i7 = 0; i7 < nid.data.length; i7 += 4) {
+            var vv = Math.random() < 0.5 ? 0 : 255;
+            nid.data[i7] = nid.data[i7 + 1] = nid.data[i7 + 2] = vv;
+            nid.data[i7 + 3] = Math.random() * 22;
+          }
+          ng.putImageData(nid, 0, 0);
+          noisePat = ctx.createPattern(nt, "repeat");
+        }
+        function sizeWall() {
+          var r = hero.getBoundingClientRect();
+          W = r.width; H = r.height;
+          labCv.width = Math.round(W);
+          labCv.height = Math.round(H);
+          buildWall();
+        }
+        function rowOff(r2, tSec) {
+          var dir2 = r2 % 2 ? 1 : -1;
+          var sp = 6 + (r2 * 13) % 7;
+          var off = (r2 * 137) % totalW + tSec * sp * dir2;
+          return ((off % totalW) + totalW) % totalW;
+        }
+        /* UI rects the words must flow around — re-measured every frame, so
+           a dragged search bar pushes the wall out of its way as it moves */
+        function zonesNow() {
+          var hr = labCv.getBoundingClientRect();
+          var out = [];
+          var sels = [".dh-search", ".dh-head", ".dh-hero-btns", ".dh-corner-group", ".dh-menu-btn", ".dh-reset-btn"];
+          for (var s3 = 0; s3 < sels.length; s3++) {
+            var list = hero.querySelectorAll(sels[s3]);
+            for (var e3 = 0; e3 < list.length; e3++) {
+              var rc = list[e3].getBoundingClientRect();
+              if (rc.width < 5 || rc.height < 5) continue;
+              out.push({ x: rc.left - hr.left - 10, y: rc.top - hr.top - 8, w: rc.width + 20, h: rc.height + 16 });
+            }
+          }
+          return out;
+        }
+        function inZone(zs, x, y, w2, h2) {
+          for (var z2 = 0; z2 < zs.length; z2++) {
+            var z3 = zs[z2];
+            if (x < z3.x + z3.w && x + w2 > z3.x && y < z3.y + z3.h && y + h2 > z3.y) return true;
+          }
+          return false;
+        }
+        function cellAt(px3, py3, tSec) {
+          var r2 = Math.floor(py3 / RH);
+          if (r2 < 0 || r2 >= rowsN || totalW <= 0) return null;
+          var world = px3 + rowOff(r2, tSec);
+          var q2 = Math.floor(world / totalW);
+          var rem = world - q2 * totalW;
+          for (var i8 = 0; i8 < seqLen; i8++) {
+            if (rem >= cum[i8] && rem < cum[i8] + seqW[i8]) {
+              if (rem > cum[i8] + spB[i8].width) return null; /* in the gap */
+              return { r: r2, j: q2 * seqLen + i8, w: i8 };
+            }
+          }
+          return null;
+        }
+
+        var hovCell = null, selCell = null, mxw = -1, myw = -1;
+        var liveW = true, rafW = 0, tBW = null, lastDW = 0, lastPtrW = "mouse";
+        function frameW(tms) {
+          rafW = 0;
+          if (!liveW) return;
+          if (tBW == null) tBW = tms;
+          if (tms - lastDW < 41) { rafW = requestAnimationFrame(frameW); return; }
+          lastDW = tms;
+          var tSec = calmW ? 0 : (tms - tBW) / 1000;
+          var zs = zonesNow();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = RED;
+          ctx.fillRect(0, 0, W, H);
+          if (noisePat) { ctx.fillStyle = noisePat; ctx.fillRect(0, 0, W, H); }
+          var epoch = calmW ? 0 : Math.floor(tSec / 4);
+          var hov2 = null;
+          for (var r2 = 0; r2 < rowsN; r2++) {
+            var y2 = r2 * RH;
+            var off = rowOff(r2, tSec);
+            var q2 = Math.floor(off / totalW);
+            var rem0 = off - q2 * totalW;
+            var i9 = 0;
+            while (i9 < seqLen && cum[i9] + seqW[i9] <= rem0) i9++;
+            if (i9 >= seqLen) { i9 = 0; q2++; rem0 -= totalW; }
+            var j2 = q2 * seqLen + i9;
+            var x2 = cum[i9] - rem0;
+            while (x2 < W) {
+              var wi = ((j2 % seqLen) + seqLen) % seqLen;
+              var sw = spB[wi].width, sh = spB[wi].height;
+              if (!inZone(zs, x2, y2, sw, sh)) {
+                var white = (selCell && selCell.r === r2 && selCell.j === j2) ||
+                            (r2 * 31 + j2 * 17 + epoch * 7) % 41 === 0;
+                if (mxw >= x2 && mxw < x2 + sw && myw >= y2 && myw < y2 + sh) {
+                  hov2 = { r: r2, j: j2, w: wi };
+                  white = true;
+                }
+                ctx.globalAlpha = white ? 1 : INKA;
+                ctx.drawImage(white ? spW[wi] : spB[wi], x2, y2 + (RH - sh) / 2);
+              }
+              x2 += seqW[wi];
+              j2++;
+            }
+          }
+          hovCell = hov2;
+          labCv.style.cursor = hov2 ? "pointer" : "";
+          rafW = requestAnimationFrame(frameW);
+        }
+        function kickW() { if (!rafW && liveW) rafW = requestAnimationFrame(frameW); }
+        function setLiveW(v) { liveW = v; if (v) { tBW = null; lastDW = 0; kickW(); } }
+        document.addEventListener("visibilitychange", function () { setLiveW(!document.hidden); });
+        if (typeof IntersectionObserver !== "undefined") {
+          new IntersectionObserver(function (es) { setLiveW(!!(es[0] && es[0].isIntersecting) && !document.hidden); }, { threshold: 0.02 }).observe(hero);
+        }
+
+        labCv.addEventListener("pointermove", function (e) {
+          if (e.pointerType) lastPtrW = e.pointerType;
+          var r3 = labCv.getBoundingClientRect();
+          mxw = e.clientX - r3.left; myw = e.clientY - r3.top;
+          kickW();
+        });
+        labCv.addEventListener("pointerdown", function (e) {
+          if (e.pointerType) lastPtrW = e.pointerType;
+        });
+        labCv.addEventListener("pointerleave", function (e) {
+          if (!e.pointerType || e.pointerType === "mouse") { mxw = myw = -1; kickW(); }
+        });
+        labCv.addEventListener("click", function (e) {
+          var r3 = labCv.getBoundingClientRect();
+          mxw = e.clientX - r3.left; myw = e.clientY - r3.top;
+          var tSecC = calmW || tBW == null ? 0 : (lastDW - tBW) / 1000;
+          var cell = cellAt(mxw, myw, tSecC);
+          var isTouchW = lastPtrW === "touch";
+          if (!cell) {
+            selCell = null;
+            if (isTouchW) mxw = myw = -1;
+            kickW();
+            return;
+          }
+          /* touch: first tap lights the word white, second tap sends it */
+          if (isTouchW && !(selCell && selCell.r === cell.r && selCell.j === cell.j)) {
+            selCell = cell;
+            kickW();
+            return;
+          }
+          selCell = null;
+          var word = (WORDS[cell.w] || "").toUpperCase();
+          var input = document.getElementById("dhSearch");
+          if (!input) {
+            if (cfg.search) location.href = cfg.search + "?q=" + encodeURIComponent(word);
+            return;
+          }
+          if (calmW) {
+            input.value = word;
+            try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (e0) {}
+            if (!isTouchW) input.focus();
+            return;
+          }
+          /* the word lifts off the wall — a red chip with white ink — and
+             flies into the search bar, where it types itself and waits */
+          var off2 = rowOff(cell.r, tSecC);
+          var cx2 = Math.floor(cell.j / seqLen) * totalW + cum[cell.w] - off2 + spB[cell.w].width / 2;
+          var cy2 = cell.r * RH + RH / 2;
+          var fly = document.createElement("span");
+          fly.textContent = "“" + word + "”";
+          fly.style.cssText = "position:fixed;left:0;top:0;z-index:200;pointer-events:none;white-space:nowrap;" +
+            "background:" + RED + ";color:#fff;padding:0.22em 0.4em;letter-spacing:0.01em;will-change:transform,opacity;" +
+            "font:800 " + FS + "px Jost, Futura, 'Century Gothic', sans-serif;";
+          fly.style.transform = "translate(" + (r3.left + cx2) + "px," + (r3.top + cy2) + "px) translate(-50%,-50%)";
+          document.body.appendChild(fly);
+          var ir = input.getBoundingClientRect();
+          var tx2 = ir.left + Math.min(ir.width * 0.5, 90), ty2 = ir.top + ir.height / 2;
+          fly.style.transition = "transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s 0.4s";
+          requestAnimationFrame(function () { requestAnimationFrame(function () {
+            fly.style.transform = "translate(" + tx2 + "px," + ty2 + "px) translate(-50%,-50%) scale(0.55)";
+            fly.style.opacity = "0";
+          }); });
+          if (!isTouchW) input.focus();
+          input.value = "";
+          if (isTouchW) mxw = myw = -1;
+          setTimeout(function () {
+            if (fly.parentNode) fly.parentNode.removeChild(fly);
+            var k4 = 0;
+            var typer = setInterval(function () {
+              k4++;
+              input.value = word.slice(0, k4);
+              try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (e1) {}
+              if (k4 >= word.length) clearInterval(typer);
+            }, 55);
+          }, 560);
+        });
+
+        sizeWall();
+        window.addEventListener("resize", function () { sizeWall(); kickW(); }, { passive: true });
+        kickW();
+        return;
+      }
+
       /* poster style: a small picture pops up beside the hovered word,
          processed into the zine look — grainy black & white with a red
          contour line floating just off the object's edge */
@@ -4225,8 +4486,9 @@
       "options": [
         { "value": "drift", "label": "Drifting giant words" },
         { "value": "labels", "label": "Floating label strips (poster)" },
-        { "value": "smear", "label": "Blurred poster (smeared ink)" }
-      ], "info": "Label strips (white-on-black tape) and Blurred poster (giant smeared ink) rain endlessly behind frosted glass, dealing fresh words from your list as they loop. Hovering a tape strip turns it red with a scramble; hovering a poster word sharpens it and shows its picture (add Word image blocks). Drag words anywhere; click to send one flying into the hero's search bar, typed and ready. Phones: tap to reveal, tap again to send." },
+        { "value": "smear", "label": "Blurred poster (smeared ink)" },
+        { "value": "wall", "label": "Text wall (red poster)" }
+      ], "info": "Label strips and Blurred poster rain behind frosted glass: hover reveals (red scramble for tape, picture for poster ink), drag words anywhere, click to fly the word into the search bar. Text wall packs your words edge to edge on worn red, flowing around the search bar, logo and buttons — even while you drag them; hover lights a word white, click sends it to the bar. Phones: tap to reveal, tap again to send." },
     { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
     { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
