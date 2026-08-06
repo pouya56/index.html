@@ -708,7 +708,7 @@
        from a different starting point; two identical sets per row make the
        loop seamless. Rows alternate direction with varied speed/offset. {%- endcomment -%}
     {%- assign dh_words = section.settings.words_list | default: 'PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM' | newline_to_br | strip_newlines | replace: '<br />', ',' | replace: '<br>', ',' | split: ',' -%}
-    {%- if section.settings.words_style == 'labels' -%}
+    {%- if section.settings.words_style == 'labels' or section.settings.words_style == 'smear' -%}
     {%- comment -%} Poster-style label strips: deterministic scatter tables
        keep the layout organic but stable between renders. {%- endcomment -%}
     {%- comment -%} 30 strips drawn on one canvas: config only — the JS
@@ -719,6 +719,7 @@
     <script type="application/json" id="dhLabCfg">{
       "words": [{% for w in dh_words %}{% unless forloop.first %},{% endunless %}{{ w | strip | json }}{% endfor %}],
       "search": {{ routes.search_url | json }},
+      "style": {{ section.settings.words_style | json }},
       "base": {{ section.settings.words_opacity | default: 18 | divided_by: 100.0 }}
     }</script>
     {%- else -%}
@@ -3220,8 +3221,9 @@
   var hero = document.getElementById("dynHero");
 
   /* ==================== Label-strip rain (canvas engine) ====================
-     30 strips on ONE canvas: sprites are pre-rendered once per strip
-     (black tape, white word, depth blur baked in, plus a crisp twin for
+     Strips on ONE canvas: sprites are pre-rendered once per strip
+     (black tape with a white word — or, in the "smear" style, giant
+     bare ink with a wavy motion smear baked in — plus a crisp twin for
      the hover reveal), and the frame loop just stamps them — far cheaper
      than a pile of individually animated DOM layers.
      Behaviour: endless rain from all four edges behind a frosted-glass
@@ -3243,13 +3245,20 @@
       var WORDS = cfg.words || [];
       if (!WORDS.length) return;
       var BASE = Math.max(0.03, Math.min(1, cfg.base || 0.18));
+      /* smear = the blurred-poster look: giant bare ink, no tape, with a
+         wavy motion smear baked into each sprite */
+      var SMEAR = cfg.style === "smear";
+      /* the poster look reads near-full ink — the smear itself softens it,
+         so its resting strength runs hotter than the tape strips' */
+      var REST = SMEAR ? Math.min(1, BASE * 4) : BASE;
       var ctx = labCv.getContext("2d");
       if (!ctx) return;
       /* second canvas above the frosted glass for the hot (red) strip */
       var topCv = document.getElementById("dhLabTop");
       var tctx = topCv ? topCv.getContext("2d") : null;
       var HOT = "#e10600";
-      var N = 30;
+      /* the poster words are huge, so fewer of them fill the screen */
+      var N = SMEAR ? 20 : 30;
       var TIER = [
         { blur: 9, scale: 2.2 },   /* far  */
         { blur: 0, scale: 1 },     /* crisp */
@@ -3285,8 +3294,9 @@
           word: nextWord(),
           xb: ((i * 37 + 13) % 97) / 97,
           yb: ((i * 53 + 7) % 89) / 89,
-          rot: (((i * 41) % 121) - 60) * Math.PI / 180,
-          fs: (i * 29) % 22 + 12,
+          rot: SMEAR ? (((i * 41) % 25) - 12) * Math.PI / 180
+                     : (((i * 41) % 121) - 60) * Math.PI / 180,
+          fs: SMEAR ? (i * 29) % 40 + 30 : (i * 29) % 22 + 12,
           dur: (i * 17) % 19 + 22,
           dir: DIRS[i % 4],
           tier: tier,
@@ -3302,23 +3312,50 @@
         var fs = st.fs * st.tier.scale * FSCALE * DPR;
         var mc = document.createElement("canvas");
         var m = mc.getContext("2d");
-        var font = "600 " + fs + "px Jost, Futura, 'Century Gothic', sans-serif";
+        var font = (SMEAR ? "700 " : "600 ") + fs + "px Jost, Futura, 'Century Gothic', sans-serif";
+        var ls = fs * (SMEAR ? 0.02 : 0.18);
         m.font = font;
-        try { m.letterSpacing = (fs * 0.18) + "px"; } catch (eLs) {}
+        try { m.letterSpacing = ls + "px"; } catch (eLs) {}
         var tw = m.measureText(st.word).width;
-        var padX = fs * 0.95, padY = fs * 0.55;
+        var padX = SMEAR ? fs * 0.3 : fs * 0.95, padY = SMEAR ? fs * 0.3 : fs * 0.55;
         var w = Math.ceil(tw + padX * 2), h = Math.ceil(fs + padY * 2);
         mc.width = w; mc.height = h;
         m = mc.getContext("2d");
         m.font = font;
-        try { m.letterSpacing = (fs * 0.18) + "px"; } catch (eLs2) {}
-        m.fillStyle = "#0a0a0a";
-        m.fillRect(0, 0, w, h);
-        m.fillStyle = "#fff";
-        m.textBaseline = "middle";
-        m.fillText(st.word, padX, h / 2 + fs * 0.06);
+        try { m.letterSpacing = ls + "px"; } catch (eLs2) {}
+        if (SMEAR) {
+          /* poster style: bare ink on the page, no tape behind it */
+          m.fillStyle = "#0a0a0a";
+          m.textBaseline = "middle";
+          m.fillText(st.word, padX, h / 2 + fs * 0.06);
+        } else {
+          m.fillStyle = "#0a0a0a";
+          m.fillRect(0, 0, w, h);
+          m.fillStyle = "#fff";
+          m.textBaseline = "middle";
+          m.fillText(st.word, padX, h / 2 + fs * 0.06);
+        }
         st.crisp = mc;
-        if (st.tier.blur > 0 && typeof m.filter === "string") {
+        st.padX = padX / DPR;
+        if (SMEAR && typeof m.filter === "string") {
+          /* bake the wavy ink smear: ghost trails fan out above and below
+             on a slight wave, most blurred first, then a strong near-crisp
+             core on top — a print caught mid-shake, still readable */
+          var pad2 = Math.ceil((st.tier.blur + 10) * 3 * DPR + fs * 0.6);
+          var bc2 = document.createElement("canvas");
+          bc2.width = w + pad2 * 2; bc2.height = h + pad2 * 2;
+          var bx = bc2.getContext("2d");
+          var seed = st.fs + st.word.length;
+          for (var k3 = 6; k3 >= 0; k3--) {
+            var tt = k3 / 6; /* 1 = farthest ghost, 0 = core */
+            bx.globalAlpha = 0.16 + (1 - tt) * 0.6;
+            bx.filter = "blur(" + ((1 + st.tier.blur * 0.5 + tt * 8) * DPR) + "px)";
+            var oy = (k3 % 2 ? 1 : -1) * tt * fs * 0.5 + Math.sin(seed + k3 * 1.9) * fs * 0.12 * tt;
+            var ox = Math.sin(seed * 1.3 + k3 * 2.3) * fs * 0.14 * tt;
+            bx.drawImage(mc, pad2 + ox, pad2 + oy);
+          }
+          st.sprite = bc2;
+        } else if (!SMEAR && st.tier.blur > 0 && typeof m.filter === "string") {
           var bc = document.createElement("canvas");
           var pad = st.tier.blur * 3 * DPR;
           bc.width = w + pad * 2; bc.height = h + pad * 2;
@@ -3406,13 +3443,18 @@
         g.translate(q.x, q.y);
         g.rotate(q.r);
         g.globalAlpha = 1;
-        g.fillStyle = HOT;
-        g.fillRect(-w / 2, -h / 2, w, h);
-        g.fillStyle = "#fff";
-        g.font = "600 " + fs + "px Jost, Futura, 'Century Gothic', sans-serif";
-        try { g.letterSpacing = (fs * 0.18) + "px"; } catch (eLs3) {}
+        if (SMEAR) {
+          /* poster style goes hot as bare red ink — no tape */
+          g.fillStyle = HOT;
+        } else {
+          g.fillStyle = HOT;
+          g.fillRect(-w / 2, -h / 2, w, h);
+          g.fillStyle = "#fff";
+        }
+        g.font = (SMEAR ? "700 " : "600 ") + fs + "px Jost, Futura, 'Century Gothic', sans-serif";
+        try { g.letterSpacing = (fs * (SMEAR ? 0.02 : 0.18)) + "px"; } catch (eLs3) {}
         g.textBaseline = "middle";
-        g.fillText(text, -w / 2 + fs * 0.95, fs * 0.06);
+        g.fillText(text, -w / 2 + st.padX, fs * 0.06);
         g.restore();
       }
 
@@ -3440,7 +3482,7 @@
           ctx.save();
           ctx.translate(q.x, q.y);
           ctx.rotate(q.r);
-          ctx.globalAlpha = BASE;
+          ctx.globalAlpha = REST;
           var img = st.sprite;
           ctx.drawImage(img, -img.width / DPR / 2, -img.height / DPR / 2, img.width / DPR, img.height / DPR);
           ctx.restore();
@@ -3602,8 +3644,10 @@
         fly.textContent = word;
         var ffs = Math.round(st.fs * st.tier.scale * FSCALE);
         fly.style.cssText = "position:fixed;left:0;top:0;z-index:200;pointer-events:none;white-space:nowrap;" +
-          "background:" + HOT + ";color:#fff;padding:0.55em 0.95em;letter-spacing:0.18em;will-change:transform,opacity;" +
-          "font:600 " + ffs + "px Jost, Futura, 'Century Gothic', sans-serif;";
+          (SMEAR ? "background:transparent;color:" + HOT + ";padding:0.3em;letter-spacing:0.02em;"
+                 : "background:" + HOT + ";color:#fff;padding:0.55em 0.95em;letter-spacing:0.18em;") +
+          "will-change:transform,opacity;" +
+          "font:" + (SMEAR ? "700 " : "600 ") + ffs + "px Jost, Futura, 'Century Gothic', sans-serif;";
         fly.style.transform = "translate(" + (cr.left + q.x) + "px," + (cr.top + q.y) + "px) translate(-50%,-50%) rotate(" + q.r + "rad)";
         document.body.appendChild(fly);
         var ir = input.getBoundingClientRect();
@@ -4061,8 +4105,9 @@
     { "type": "select", "id": "words_style", "label": "Field style", "default": "drift",
       "options": [
         { "value": "drift", "label": "Drifting giant words" },
-        { "value": "labels", "label": "Floating label strips (poster)" }
-      ], "info": "Label strips: 30 tape labels rain endlessly from every direction behind frosted glass, dealing out fresh random words from your list each time they loop. Word strength sets how strong they rest. Hovering lifts a strip above the glass in red while its word scrambles in; drag it to carry it anywhere on the page; click it to send the word flying into the hero's search bar, typed out and ready for the visitor to search. On phones: tap once to reveal, tap again to send, or drag the revealed strip." },
+        { "value": "labels", "label": "Floating label strips (poster)" },
+        { "value": "smear", "label": "Blurred poster (smeared ink)" }
+      ], "info": "Label strips and Blurred poster share the same rain: words fall endlessly from every direction behind frosted glass, dealing out fresh random words from your list each time they loop. Label strips are white-on-black tape; Blurred poster is giant bare ink with a wavy motion smear, like a print caught mid-shake. Word strength sets how strong they rest. Hovering turns one red while its word scrambles in; drag it anywhere; click it to send the word flying into the hero's search bar, typed out and ready to search. On phones: tap once to reveal, tap again to send, or drag the revealed one." },
     { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
     { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
