@@ -321,8 +321,17 @@
     border: none;
     box-shadow: inset 0 0 46px rgba(60, 0, 0, 0.35), 0 6px 22px rgba(0, 0, 0, 0.18);
   }
+  /* sleeves are square, like the record they'd hold */
+  .dyn-col .dc-card, .dyn-col .dc-grid .dc-card, .dyn-col .dc-gridall .dc-card {
+    aspect-ratio: 1 / 1; min-height: 0; }
   .dyn-col .dc-media-wrap { margin-right: 24%; }
+  .dyn-col .dc-media-wrap, .dyn-col .dc-grid .dc-media-wrap, .dyn-col .dc-gridall .dc-media-wrap {
+    min-height: 0; aspect-ratio: auto; flex: 1 1 auto; }
   .dyn-col.dc-fill .dc-media-wrap { margin-right: 0; }
+  /* the product photo takes 60% of the red front, centred */
+  .dyn-col .dc-media img, .dyn-col .dc-grid .dc-media img, .dyn-col .dc-gridall .dc-media img {
+    inset: 20%; width: 60%; height: 60%; object-fit: contain; }
+  .dyn-col.dc-fill .dc-media img { inset: 0; width: 100%; height: 100%; object-fit: cover; }
   /* the b/w photo prints INTO the red like ink on the sleeve; hovering
      (with the glitch) lifts it off as the original photo */
   .dyn-col .dc-media img { mix-blend-mode: multiply; }
