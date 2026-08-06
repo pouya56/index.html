@@ -278,6 +278,35 @@
     /* Keep the first image on hover — no swap to the 2nd gallery photo. */
     .dyn-col .dc-card:hover .dc-media img { transform: scale(1.04); }
   }
+  /* ---- Zine cards: product photos rest as grainy black & white (the
+     same treatment as the hero's word photos), and hovering glitches
+     them — slice-jitter, RGB fringes — into the original colour. ---- */
+  .dyn-col .dc-media img,
+  .dyn-col.dc-blend:not(.dc-fill) .dc-media img {
+    filter: grayscale(1) contrast(1.08) brightness(1.05);
+  }
+  .dyn-col .dc-media::before { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 240px 240px; opacity: 0.16; mix-blend-mode: overlay; transition: opacity 0.25s; }
+  @media (hover: hover) and (pointer: fine) {
+    .dyn-col .dc-card:hover .dc-media::before { opacity: 0; }
+    .dyn-col .dc-card:hover .dc-media img,
+    .dyn-col.dc-blend:not(.dc-fill) .dc-card:hover .dc-media img {
+      animation: dcGlitch 0.5s steps(1, end) both;
+    }
+  }
+  @keyframes dcGlitch {
+    0%   { filter: grayscale(1) contrast(1.3); transform: none; }
+    12%  { filter: grayscale(1) contrast(1.45) brightness(1.2) drop-shadow(4px 0 0 rgba(255, 0, 60, 0.55)) drop-shadow(-4px 0 0 rgba(0, 220, 255, 0.5)); transform: translate(-5px, 2px) skewX(2deg); }
+    24%  { filter: hue-rotate(70deg) saturate(3.5) contrast(1.3); transform: translate(4px, -2px) skewX(-3deg); }
+    36%  { filter: grayscale(0.6) drop-shadow(-3px 0 0 rgba(255, 0, 60, 0.5)) drop-shadow(3px 0 0 rgba(0, 220, 255, 0.45)); transform: translate(-3px, 1px) scale(1.02); }
+    48%  { filter: none; transform: translate(2px, -1px) scale(1.03); }
+    60%, 100% { filter: none; transform: scale(1.04); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dyn-col .dc-card:hover .dc-media img { animation: none; filter: none; transition: filter 0.2s; }
+  }
+
   .dyn-col .dc-badges { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
   .dyn-col .dc-badge { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; padding: 5px 10px;
     border-radius: 999px; background: var(--ink); color: #fff; }
