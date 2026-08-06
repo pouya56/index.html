@@ -3281,7 +3281,7 @@
            from below — only the cache needs initialising here) */
         PROC = {};
         var picW = document.createElement("div");
-        picW.style.cssText = "position:absolute;z-index:2;width:210px;display:none;pointer-events:none;opacity:0;transition:opacity 0.18s;";
+        picW.style.cssText = "position:absolute;z-index:120;width:210px;display:none;pointer-events:none;opacity:0;transition:opacity 0.18s;";
         hero.appendChild(picW);
         var RED = "#d0201a";
         var INKA = Math.max(0.5, Math.min(1, BASE * 4));
@@ -3368,15 +3368,21 @@
         function zonesNow() {
           var hr = labCv.getBoundingClientRect();
           var out = [];
-          /* the search bar, logo and buttons sit on aged-white paper
-             panels (poster style); the small round buttons just get a gap */
           var sels = [".dh-search", ".dh-head", ".dh-hero-btns", ".dh-menu-btn", ".dh-reset-btn"];
           for (var s3 = 0; s3 < sels.length; s3++) {
             var list = hero.querySelectorAll(sels[s3]);
             for (var e3 = 0; e3 < list.length; e3++) {
               var rc = list[e3].getBoundingClientRect();
               if (rc.width < 5 || rc.height < 5) continue;
-              out.push({ x: rc.left - hr.left - 10, y: rc.top - hr.top - 8, w: rc.width + 20, h: rc.height + 16, paper: s3 < 3 });
+              out.push({ x: rc.left - hr.left - 10, y: rc.top - hr.top - 8, w: rc.width + 20, h: rc.height + 16 });
+            }
+          }
+          /* the word's photo carves its own gap too — the text flows
+             around it while it's up */
+          if (picW.style.display === "block") {
+            var pr = picW.getBoundingClientRect();
+            if (pr.width > 5 && pr.height > 5) {
+              out.push({ x: pr.left - hr.left - 8, y: pr.top - hr.top - 8, w: pr.width + 16, h: pr.height + 16 });
             }
           }
           return out;
@@ -3418,13 +3424,6 @@
           ctx.fillStyle = RED;
           ctx.fillRect(0, 0, W, H);
           if (noisePat) { ctx.fillStyle = noisePat; ctx.fillRect(0, 0, W, H); }
-          /* aged-white paper panels under the search bar, logo and buttons */
-          for (var zp = 0; zp < zs.length; zp++) {
-            if (!zs[zp].paper) continue;
-            ctx.fillStyle = "#efe9dc";
-            ctx.fillRect(zs[zp].x, zs[zp].y, zs[zp].w, zs[zp].h);
-            if (noisePat) { ctx.fillStyle = noisePat; ctx.fillRect(zs[zp].x, zs[zp].y, zs[zp].w, zs[zp].h); }
-          }
           var hov2 = null, selPos = null;
           for (var r2 = 0; r2 < rowsN; r2++) {
             var y2 = r2 * RH;
@@ -3591,7 +3590,7 @@
       var pic = null;
       if (SMEAR) {
         pic = document.createElement("div");
-        pic.style.cssText = "position:absolute;z-index:2;width:210px;display:none;pointer-events:none;opacity:0;transition:opacity 0.18s;";
+        pic.style.cssText = "position:absolute;z-index:120;width:210px;display:none;pointer-events:none;opacity:0;transition:opacity 0.18s;";
         hero.appendChild(pic);
       }
       var PROC = {};
