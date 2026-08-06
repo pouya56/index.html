@@ -720,6 +720,7 @@
       "words": [{% for w in dh_words %}{% unless forloop.first %},{% endunless %}{{ w | strip | json }}{% endfor %}],
       "search": {{ routes.search_url | json }},
       "style": {{ section.settings.words_style | json }},
+      "pics": { {%- assign dh_pfirst = true -%}{%- for block in section.blocks -%}{%- if block.type == 'word_pic' and block.settings.word != blank and block.settings.image != blank -%}{%- unless dh_pfirst -%},{%- endunless -%}{%- assign dh_pfirst = false -%}{{ block.settings.word | strip | upcase | json }}: {{ block.settings.image | image_url: width: 400 | json }}{%- endif -%}{%- endfor -%} },
       "base": {{ section.settings.words_opacity | default: 18 | divided_by: 100.0 }}
     }</script>
     {%- else -%}
@@ -3228,7 +3229,9 @@
      than a pile of individually animated DOM layers.
      Behaviour: endless rain from all four edges behind a frosted-glass
      pane; hovering (first tap on phones) freezes a strip and lifts it
-     above the glass in red, its word decoding in like the corner links.
+     above the glass — tape style goes red with the corner-link decode,
+     poster style sharpens to crisp ink and shows the word's picture
+     beside it (from the section's "Word image" blocks).
      Words come from a shuffle bag, and each strip deals itself a fresh
      one every time its loop wraps, so the whole list gets screen time.
      Press-and-move drags a strip anywhere; dropping it re-threads it
@@ -3248,6 +3251,8 @@
       /* smear = the blurred-poster look: giant bare ink, no tape, with a
          wavy motion smear baked into each sprite */
       var SMEAR = cfg.style === "smear";
+      /* word -> image URL map from the section's "Word image" blocks */
+      var PICS = cfg.pics || {};
       /* the poster look reads near-full ink — the smear itself softens it,
          so its resting strength runs hotter than the tape strips' */
       var REST = SMEAR ? Math.min(1, BASE * 4) : BASE;
@@ -3257,6 +3262,15 @@
       var topCv = document.getElementById("dhLabTop");
       var tctx = topCv ? topCv.getContext("2d") : null;
       var HOT = "#e10600";
+      /* poster style: a small picture pops up beside the hovered word */
+      var pic = null;
+      if (SMEAR) {
+        pic = document.createElement("img");
+        pic.alt = "";
+        pic.style.cssText = "position:absolute;z-index:2;width:140px;display:none;pointer-events:none;" +
+          "box-shadow:0 14px 30px -12px rgba(0,0,0,0.35);opacity:0;transition:opacity 0.18s;";
+        hero.appendChild(pic);
+      }
       /* the poster words are huge, so fewer of them fill the screen */
       var N = SMEAR ? 20 : 30;
       var TIER = [
@@ -3422,10 +3436,21 @@
         return null;
       }
 
-      /* the interacted strip: red tape above the glass, its word decoding
-         through random characters like the corner links do */
+      /* the interacted strip above the glass. Tape style: red with the
+         corner-link decode scramble. Poster style: the ink just sharpens
+         to crisp — its picture (shown beside it) does the talking. */
       function drawHot(st, q) {
         var g = tctx || ctx;
+        if (SMEAR) {
+          var ci = st.crisp;
+          g.save();
+          g.translate(q.x, q.y);
+          g.rotate(q.r);
+          g.globalAlpha = 1;
+          g.drawImage(ci, -ci.width / DPR / 2, -ci.height / DPR / 2, ci.width / DPR, ci.height / DPR);
+          g.restore();
+          return;
+        }
         var fs = st.fs * st.tier.scale * FSCALE;
         var w = st.crisp.width / DPR, h = st.crisp.height / DPR;
         var word = st.word, text = word;
@@ -3443,16 +3468,11 @@
         g.translate(q.x, q.y);
         g.rotate(q.r);
         g.globalAlpha = 1;
-        if (SMEAR) {
-          /* poster style goes hot as bare red ink — no tape */
-          g.fillStyle = HOT;
-        } else {
-          g.fillStyle = HOT;
-          g.fillRect(-w / 2, -h / 2, w, h);
-          g.fillStyle = "#fff";
-        }
-        g.font = (SMEAR ? "700 " : "600 ") + fs + "px Jost, Futura, 'Century Gothic', sans-serif";
-        try { g.letterSpacing = (fs * (SMEAR ? 0.02 : 0.18)) + "px"; } catch (eLs3) {}
+        g.fillStyle = HOT;
+        g.fillRect(-w / 2, -h / 2, w, h);
+        g.fillStyle = "#fff";
+        g.font = "600 " + fs + "px Jost, Futura, 'Century Gothic', sans-serif";
+        try { g.letterSpacing = (fs * 0.18) + "px"; } catch (eLs3) {}
         g.textBaseline = "middle";
         g.fillText(text, -w / 2 + st.padX, fs * 0.06);
         g.restore();
@@ -3508,6 +3528,27 @@
           var qa = dragSt ? { x: act.dragX, y: act.dragY, r: act.dragR } : posAt(act, progressOf(act, tSec));
           act.last = qa;
           drawHot(act, qa);
+        }
+        /* poster style: park the word's picture beside it (flipping to the
+           other side near the screen edge); hide it when nothing is hot */
+        if (pic) {
+          var psrc = act ? PICS[(act.word || "").toUpperCase()] || null : null;
+          if (psrc) {
+            if (pic.getAttribute("data-w") !== act.word) { pic.src = psrc; pic.setAttribute("data-w", act.word); }
+            var pw2 = W < 640 ? 96 : 140;
+            pic.style.width = pw2 + "px";
+            var bw2 = act.crisp.width / DPR / 2;
+            var px2 = act.last.x + bw2 + 16;
+            if (px2 + pw2 > W - 8) px2 = act.last.x - bw2 - 16 - pw2;
+            pic.style.left = Math.max(8, px2) + "px";
+            pic.style.top = act.last.y + "px";
+            pic.style.transform = "translateY(-50%)";
+            pic.style.display = "block";
+            pic.style.opacity = "1";
+          } else {
+            pic.style.opacity = "0";
+            pic.style.display = "none";
+          }
         }
         if (!calm || hovered || dragSt) raf = requestAnimationFrame(frame);
       }
@@ -3644,7 +3685,7 @@
         fly.textContent = word;
         var ffs = Math.round(st.fs * st.tier.scale * FSCALE);
         fly.style.cssText = "position:fixed;left:0;top:0;z-index:200;pointer-events:none;white-space:nowrap;" +
-          (SMEAR ? "background:transparent;color:" + HOT + ";padding:0.3em;letter-spacing:0.02em;"
+          (SMEAR ? "background:transparent;color:#0a0a0a;padding:0.3em;letter-spacing:0.02em;"
                  : "background:" + HOT + ";color:#fff;padding:0.55em 0.95em;letter-spacing:0.18em;") +
           "will-change:transform,opacity;" +
           "font:" + (SMEAR ? "700 " : "600 ") + ffs + "px Jost, Futura, 'Century Gothic', sans-serif;";
@@ -4107,7 +4148,7 @@
         { "value": "drift", "label": "Drifting giant words" },
         { "value": "labels", "label": "Floating label strips (poster)" },
         { "value": "smear", "label": "Blurred poster (smeared ink)" }
-      ], "info": "Label strips (white-on-black tape) and Blurred poster (giant smeared ink) rain endlessly behind frosted glass, dealing fresh words from your list as they loop. Hover turns one red with a scramble; drag it anywhere; click to send it flying into the hero's search bar, typed and ready. Phones: tap to reveal, tap again to send." },
+      ], "info": "Label strips (white-on-black tape) and Blurred poster (giant smeared ink) rain endlessly behind frosted glass, dealing fresh words from your list as they loop. Hovering a tape strip turns it red with a scramble; hovering a poster word sharpens it and shows its picture (add Word image blocks). Drag words anywhere; click to send one flying into the hero's search bar, typed and ready. Phones: tap to reveal, tap again to send." },
     { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
     { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
     { "type": "header", "content": "ASCII art background" },
@@ -4319,6 +4360,11 @@
     { "type": "float", "name": "Floating photo 🎈", "settings": [
       { "type": "image_picker", "id": "image", "label": "Photo (transparent PNG works best)", "info": "Lands in a new random spot on every visit, floats gently, colors in under the mouse, and can be dragged anywhere (on phones: hold a moment to pick it up). The put-it-back button returns moved photos to their spot." },
       { "type": "range", "id": "size", "min": 60, "max": 260, "step": 10, "unit": "px", "label": "Size", "default": 140 }
+    ]},
+    { "type": "word_pic", "name": "Word image 🖼", "settings": [
+      { "type": "paragraph", "content": "For the Blurred poster word field: when a visitor hovers this word, its picture pops up beside it." },
+      { "type": "text", "id": "word", "label": "Word", "info": "Must match a word from the words list (case doesn't matter)." },
+      { "type": "image_picker", "id": "image", "label": "Image" }
     ]}
   ],
   "max_blocks": 30,
