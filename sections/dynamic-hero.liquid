@@ -3377,14 +3377,6 @@
               out.push({ x: rc.left - hr.left - 10, y: rc.top - hr.top - 8, w: rc.width + 20, h: rc.height + 16 });
             }
           }
-          /* the word's photo carves its own gap too — the text flows
-             around it while it's up */
-          if (picW.style.display === "block") {
-            var pr = picW.getBoundingClientRect();
-            if (pr.width > 5 && pr.height > 5) {
-              out.push({ x: pr.left - hr.left - 8, y: pr.top - hr.top - 8, w: pr.width + 16, h: pr.height + 16 });
-            }
-          }
           return out;
         }
         function inZone(zs, x, y, w2, h2) {
