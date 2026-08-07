@@ -675,6 +675,14 @@
   .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-init { color: rgba(20, 17, 16, 0.8); }
   .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-all svg { fill: rgba(20, 17, 16, 0.8); }
   {%- endif %}
+  /* the label wears the same white die-cut sticker edge as its image:
+     solid ink type with a white outline and a soft paper shadow */
+  .dyn-col .dc-tabs.is-images .dc-tab-label {
+    color: #141110 !important; opacity: 1 !important; font-weight: 700;
+    text-shadow:
+      1.5px 0 0 #f5f3ef, -1.5px 0 0 #f5f3ef, 0 1.5px 0 #f5f3ef, 0 -1.5px 0 #f5f3ef,
+      1.1px 1.1px 0 #f5f3ef, -1.1px 1.1px 0 #f5f3ef, 1.1px -1.1px 0 #f5f3ef, -1.1px -1.1px 0 #f5f3ef,
+      2px 3px 3px rgba(20,17,16,0.25) !important; }
 </style>
 
 {%- comment -%} Match the store theme's heading font when it exposes one (Dawn & most modern themes). {%- endcomment -%}
