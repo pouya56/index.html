@@ -294,6 +294,9 @@ box-shadow: 0 18px 52px rgba(0,0,0,0.18); }
 box-shadow: 0 8px 18px rgba(0,0,0,0.14), 0 80px 130px -28px rgba(29,29,31,0.5); }
 #dhSlide.dh-slide-half .dh-slide-fade { background: linear-gradient(rgba(236,231,218,0), rgba(236,231,218,0.97)); }
 #dhSlide.dh-slide-half .dh-slide-inject .gallery-main, #dhSlide.dh-slide-half .dh-slide-inject .gal-thumb { background: rgba(255,255,255,0.35); }
+{%- if section.settings.popup_bg_image != blank %}
+#dhSlide.dh-slide-half .dh-slide-panel { background: url('{{ section.settings.popup_bg_image | image_url: width: 1400 }}') center / cover no-repeat; }
+{%- endif %}
 .dyn-hero .dh-goo-wrap { position: relative; display: inline-flex; }
 .dyn-hero .dh-goo { position: absolute; inset: 0; z-index: 0; pointer-events: none; filter: url(#dhGooey); opacity: 0; transition: opacity .3s ease; }
 .dyn-hero .dh-goo-wrap:hover .dh-goo { opacity: 1; }
@@ -1487,6 +1490,7 @@ title="{{ val | escape }}" aria-label="{{ val | escape }}"></button>
 <script>
 (function () {
 var slide = document.getElementById("dhSlide"); if (!slide) return;
+if (slide.parentNode !== document.body) document.body.appendChild(slide);
 var sbody = slide.querySelector(".dh-slide-body");
 var spanel = slide.querySelector(".dh-slide-panel");
 var cache = {};
@@ -4088,6 +4092,7 @@ apply();
 { "type": "checkbox", "id": "show_phone", "label": "Show the hanging telephone", "default": true, "info": "A red handset dangles from the top-right on a coiled cord. Visitors can pull it around (it springs back) and clicking it opens the contact page." },
 { "type": "url", "id": "phone_url", "label": "Phone link", "info": "Defaults to /pages/contact." },
 { "type": "image_picker", "id": "phone_image", "label": "Handset image (optional)", "info": "Replaces the drawn handset. Transparent PNG, hanging vertically, ~400px tall." },
+{ "type": "image_picker", "id": "popup_bg_image", "label": "Surprise popup background", "info": "Optional artwork behind the surprise-me product window (shown at 50vw\u00d786vh on desktop; use ~1400\u00d71600px, it crops to fit). Empty keeps the drawn crumpled paper." },
 
 { "type": "header", "content": "Content" },
 { "type": "collection", "id": "collection", "label": "Collection", "info": "Leave empty on a Collection template to use the current collection automatically." },
