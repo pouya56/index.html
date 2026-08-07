@@ -675,20 +675,34 @@
   .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-init { color: rgba(20, 17, 16, 0.8); }
   .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-all svg { fill: rgba(20, 17, 16, 0.8); }
   {%- endif %}
-  /* ransom-note labels: each category name is pasted on its own cut
-     paper block - a different aged tone, size and tilt per tab, like
-     letters clipped from old newspapers */
+  /* ransom-note tabs: each category - picture AND name together - is
+     pasted on its own cut paper block; a different aged tone, label
+     size and tilt per tab, like letters clipped from old newspapers */
+  .dyn-col .dc-tabs.is-images .dc-tab:not(.dc-search-trigger) {
+    padding: 10px 12px 6px !important; border-radius: 0 !important;
+    box-shadow: 2px 3px 6px rgba(20,17,16,0.25); }
   .dyn-col .dc-tabs.is-images .dc-tab-label {
     color: #141110 !important; opacity: 1 !important; font-weight: 800;
     text-transform: uppercase; letter-spacing: 0.05em;
-    padding: 4px 9px 3px; text-shadow: none !important;
-    background: #e8e0cd; box-shadow: 1.5px 2.5px 4px rgba(20,17,16,0.28); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+1) .dc-tab-label { background: #e8e0cd; font-size: 13.5px; transform: rotate(-2deg); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+2) .dc-tab-label { background: #cfc6b5; font-size: 12px;   transform: rotate(1.6deg); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+3) .dc-tab-label { background: #b6a685; font-size: 14.5px; transform: rotate(2.2deg); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+4) .dc-tab-label { background: #efe9dc; font-size: 11.5px; transform: rotate(-1.2deg); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+5) .dc-tab-label { background: #a99a86; font-size: 13px;   transform: rotate(-2.8deg); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+6) .dc-tab-label { background: #ded4c0; font-size: 15px;   transform: rotate(1deg); }
+    background: transparent; text-shadow: none !important; }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+1):not(.dc-search-trigger) { background: #e8e0cd !important; transform: rotate(-2deg); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+2):not(.dc-search-trigger) { background: #cfc6b5 !important; transform: rotate(1.6deg); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+3):not(.dc-search-trigger) { background: #b6a685 !important; transform: rotate(2.2deg); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+4):not(.dc-search-trigger) { background: #efe9dc !important; transform: rotate(-1.2deg); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+5):not(.dc-search-trigger) { background: #a99a86 !important; transform: rotate(-2.8deg); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+6):not(.dc-search-trigger) { background: #ded4c0 !important; transform: rotate(1deg); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+1) .dc-tab-label { font-size: 13.5px; }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+2) .dc-tab-label { font-size: 12px; }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+3) .dc-tab-label { font-size: 14.5px; }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+4) .dc-tab-label { font-size: 11.5px; }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+5) .dc-tab-label { font-size: 13px; }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+6) .dc-tab-label { font-size: 15px; }
+  /* the Search tile: a drawn halftone hand holding a magnifier, on its
+     torn white sticker - no paper block behind it */
+  .dyn-col .dc-tabs.is-images .dc-search-trigger .dc-tab-img {
+    background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20150'%3E%3Cdefs%3E%3Cpattern%20id='ht'%20width='5'%20height='5'%20patternUnits='userSpaceOnUse'%20patternTransform='rotate(35)'%3E%3Crect%20width='5'%20height='5'%20fill='%23efece5'/%3E%3Ccircle%20cx='2.5'%20cy='2.5'%20r='1.25'%20fill='%2317130f'/%3E%3C/pattern%3E%3Cpattern%20id='hts'%20width='6'%20height='6'%20patternUnits='userSpaceOnUse'%20patternTransform='rotate(65)'%3E%3Crect%20width='6'%20height='6'%20fill='%23e9e5dc'/%3E%3Ccircle%20cx='3'%20cy='3'%20r='0.95'%20fill='%23221d18'/%3E%3C/pattern%3E%3C/defs%3E%3Cpath%20d='M116.3%2074.0%20L119.2%2090.7%20L112.3%20105.4%20L104.1%20118.6%20L91.3%20125.8%20L75.9%20122.0%20L64.7%20118.5%20L54.9%20121.9%20L48.0%20110.2%20L41.5%20104.5%20L29.7%20104.7%20L25.8%2094.5%20L14.9%2086.7%20L11.6%2074.0%20L6.7%2059.0%20L11.7%2045.1%20L14.0%2027.5%20L23.6%2013.9%20L39.0%2010.9%20L53.1%208.8%20L66.3%2015.0%20L74.6%2030.0%20L84.3%2033.8%20L88.2%2045.5%20L89.4%2056.4%20L90.2%2065.5Z'%20fill='%23f4f1ea'%20stroke='%23d8d2c4'%20stroke-width='1.5'/%3E%3Ccircle%20cx='46'%20cy='42'%20r='27'%20fill='url(%23ht)'/%3E%3Ccircle%20cx='46'%20cy='42'%20r='27'%20fill='none'%20stroke='%2317130f'%20stroke-width='7'/%3E%3Ccircle%20cx='46'%20cy='42'%20r='31.5'%20fill='none'%20stroke='%2317130f'%20stroke-width='2'/%3E%3Cpath%20d='M65%2064%20L80%2084'%20stroke='%2317130f'%20stroke-width='9'%20stroke-linecap='round'/%3E%3Cpath%20d='M62%2092%20C58%2080%2070%2074%2080%2080%20C94%2074%20104%2082%20103%2094%20C110%2096%20110%20106%20104%20110%20C108%20118%20100%20126%2092%20124%20C88%20132%2074%20132%2068%20126%20C58%20122%2056%20100%2062%2092%20Z'%20fill='url(%23hts)'%20stroke='%2317130f'%20stroke-width='3.4'/%3E%3Cpath%20d='M66%2096%20C74%2092%2084%2092%2092%2096'%20fill='none'%20stroke='%2317130f'%20stroke-width='2.6'%20stroke-linecap='round'/%3E%3Cpath%20d='M66%20106%20C74%20102%2086%20102%2096%20106'%20fill='none'%20stroke='%2317130f'%20stroke-width='2.6'%20stroke-linecap='round'/%3E%3Cpath%20d='M68%20116%20C76%20112%2086%20112%2094%20116'%20fill='none'%20stroke='%2317130f'%20stroke-width='2.6'%20stroke-linecap='round'/%3E%3Cpath%20d='M76%2082%20C82%2076%2092%2078%2092%2088%20C92%2094%2084%2096%2078%2092'%20fill='url(%23hts)'%20stroke='%2317130f'%20stroke-width='3'/%3E%3C/svg%3E") center / contain no-repeat !important;
+    border-radius: 0 !important; }
+  .dyn-col .dc-tabs.is-images .dc-search-trigger .dc-tab-img svg { display: none !important; }
   /* save button: a vintage heart postage stamp, top-left of the card -
      perforated cream paper, red frame, hatched heart. Saving inks the
      heart solid red and cancels the stamp with a black postmark. */
