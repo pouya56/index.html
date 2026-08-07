@@ -948,6 +948,12 @@
     .dyn-abar .dh-vbar {
       background: #151210 url('{{ section.settings.window_paper_image | image_url: width: 400 }}') center / cover no-repeat; }
     {%- endif %}
+
+    {%- if section.settings.rail_paper_image != blank %}
+    /* dedicated rail artwork trumps the window texture's dark-side crop */
+    .dyn-abar .dh-vbar {
+      background: #151210 url('{{ section.settings.rail_paper_image | image_url: width: 400 }}') center / 100% 100% no-repeat; }
+    {%- endif %}
 </style>
 
   <div class="ab-inner">
@@ -2538,6 +2544,7 @@
     { "type": "image_picker", "id": "bulb_off_image", "label": "Bulb image (off)", "info": "With both images set, the character becomes this bulb. Transparent PNG, hanging vertically." },
     { "type": "image_picker", "id": "bulb_on_image", "label": "Bulb image (lit)", "info": "Shown while the window is open - clicking the bulb turns it on; closing turns it off." },
     { "type": "image_picker", "id": "window_paper_image", "label": "Window paper texture", "info": "Replaces the liquid glass on the character's window, tab rail and widget cards. A square worn-paper image (~1400px) works best - a dark strip on its right edge shows along the window's right side." },
+    { "type": "image_picker", "id": "rail_paper_image", "label": "Tab bar texture", "info": "Optional artwork just for the vertical tab bar (tall and narrow, ~300\u00d71200px; it stretches to fit). Empty: the bar uses the window texture's dark side, or the built-in black paper." },
     { "type": "paragraph", "content": "A slim bar with a back button (top-left) plus the account menu and 9-dots apps menu (top-right), matching your homepage look. Add it to your Header group so it shows on every page." },
 
     { "type": "header", "content": "Back button" },
