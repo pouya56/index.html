@@ -700,11 +700,12 @@
      with a white die-cut edge, thrown on the paper at pseudo-random
      sizes, offsets and tilts, slightly overlapping - like a sticker
      sheet. The 8-step pattern repeats for any number of banners. ---- */
-  /* no visible box - the stickers just share one compact band: smaller
-     sizes and tighter overlap keep the whole collage about half the
-     height it had */
+  /* one sheet holds them all: a rounded paper panel, like the reference -
+     the padding gives drifted stickers room and overflow keeps every
+     sticker inside the box */
   .dyn-col .dc-banners { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0;
-    padding: 14px 0; }
+    background: #f7f6f2; border-radius: 30px; padding: 52px 36px; overflow: hidden;
+    box-shadow: 0 2px 6px rgba(20,17,16,0.05), 0 18px 44px rgba(20,17,16,0.09); }
   .dyn-col .dc-banner { background: transparent !important; border-radius: 0; overflow: visible;
     box-shadow: none !important; padding: 8px; grid-column: auto; grid-row: auto;
     display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -718,33 +719,33 @@
       drop-shadow(2px 4px 5px rgba(20,17,16,0.3)); }
   .dyn-col a.dc-banner:hover .dc-banner-img { transform: translateY(-6px); }
   /* pseudo-random sizes */
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+1) { width: 21%; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+2) { width: 11%; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+3) { width: 16%; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+4) { width: 9%; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+5) { width: 18%; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+6) { width: 13%; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+7) { width: 15%; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+8) { width: 10%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+1) { width: 33%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+2) { width: 17%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+3) { width: 26%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+4) { width: 15%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+5) { width: 29%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+6) { width: 20%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+7) { width: 24%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+8) { width: 16%; }
   /* pseudo-random placement: tilts, vertical drift and gentle overlap */
   .dyn-col .dc-banners > .dc-banner:nth-child(8n+1) { transform: rotate(-3deg); margin: 0 -2.5% -20px 0; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+2) { transform: rotate(2.4deg) translateY(16px); margin-left: -2%; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+3) { transform: rotate(1.6deg) translateY(-10px); margin: 0 -2% 0 -1.5%; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+4) { transform: rotate(-4deg) translateY(12px); }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+2) { transform: rotate(2.4deg) translateY(28px); margin-left: -2%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+3) { transform: rotate(1.6deg) translateY(-16px); margin: 0 -2% 0 -1.5%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+4) { transform: rotate(-4deg) translateY(34px); }
   .dyn-col .dc-banners > .dc-banner:nth-child(8n+5) { transform: rotate(2.8deg) translateY(6px); margin: -26px -2% 0 -2.5%; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+6) { transform: rotate(-2deg) translateY(-14px); margin-right: -1.5%; }
-  .dyn-col .dc-banners > .dc-banner:nth-child(8n+7) { transform: rotate(3.4deg) translateY(12px); margin: -18px 0 0 -2%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+6) { transform: rotate(-2deg) translateY(-24px); margin-right: -1.5%; }
+  .dyn-col .dc-banners > .dc-banner:nth-child(8n+7) { transform: rotate(3.4deg) translateY(18px); margin: -18px 0 0 -2%; }
   .dyn-col .dc-banners > .dc-banner:nth-child(8n+8) { transform: rotate(-1.4deg) translateY(-8px); margin-left: -2.5%; }
   /* phones: same scatter, everything roughly 1.5x wider */
   @media (max-width: 900px) {
-    .dyn-col .dc-banners > .dc-banner:nth-child(8n+1) { width: 30%; }
-    .dyn-col .dc-banners > .dc-banner:nth-child(8n+2) { width: 18%; }
-    .dyn-col .dc-banners > .dc-banner:nth-child(8n+3) { width: 25%; }
-    .dyn-col .dc-banners > .dc-banner:nth-child(8n+4) { width: 16%; }
-    .dyn-col .dc-banners > .dc-banner:nth-child(8n+5) { width: 28%; }
-    .dyn-col .dc-banners > .dc-banner:nth-child(8n+6) { width: 20%; }
-    .dyn-col .dc-banners > .dc-banner:nth-child(8n+7) { width: 23%; }
-    .dyn-col .dc-banners > .dc-banner:nth-child(8n+8) { width: 17%; }
+    .dyn-col .dc-banners > .dc-banner:nth-child(8n+1) { width: 46%; }
+    .dyn-col .dc-banners > .dc-banner:nth-child(8n+2) { width: 28%; }
+    .dyn-col .dc-banners > .dc-banner:nth-child(8n+3) { width: 39%; }
+    .dyn-col .dc-banners > .dc-banner:nth-child(8n+4) { width: 25%; }
+    .dyn-col .dc-banners > .dc-banner:nth-child(8n+5) { width: 43%; }
+    .dyn-col .dc-banners > .dc-banner:nth-child(8n+6) { width: 31%; }
+    .dyn-col .dc-banners > .dc-banner:nth-child(8n+7) { width: 36%; }
+    .dyn-col .dc-banners > .dc-banner:nth-child(8n+8) { width: 27%; }
   }
 </style>
 
