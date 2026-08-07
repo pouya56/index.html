@@ -34,11 +34,14 @@
   /* let the paper show through the main content area */
   main, #MainContent { background: transparent !important; }
   /* page sections that paint their own full-page backdrop go clear —
-     their cards, bars and panels keep their own backgrounds */
-  .dyn-col, .dyn-sug, .dyn-search, .dyn-cart, .dyn-wish, .dyn-acct,
+     their cards, bars and panels keep their own backgrounds.
+     the bag DRAWER is an <aside class="dyn-cart"> and must stay solid,
+     so only the cart page's <section class="dyn-cart"> goes clear */
+  .dyn-col, .dyn-sug, .dyn-search, section.dyn-cart, .dyn-wish, .dyn-acct,
   .dyn-about, .dyn-contact, .dyn-faq, .dyn-pol, .dyn-gc {
     background: transparent !important;
   }
+  aside.dyn-cart { background: #ffffff !important; }
   /* the landing hero paints its own world — no paper there */
   html:has(.dyn-hero.dh-landing) {
     background-image: none !important;
