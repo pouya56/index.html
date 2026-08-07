@@ -708,6 +708,13 @@
       drop-shadow(0 3px 0 #ffffff) drop-shadow(0 -3px 0 #ffffff)
       drop-shadow(3px 5px 6px rgba(0,0,0,0.25));
   }
+  /* no dot under the tabs anymore - the selected tab announces itself
+     by its image turning cream: the ink is inverted to paper-white and
+     warmed (sepia), with a soft dark shadow for separation */
+  .dyn-col .dc-tabs.is-images .dc-tab::after { display: none !important; }
+  .dyn-col .dc-tabs.is-images .dc-tab.is-active .dc-tab-img img {
+    filter: grayscale(1) contrast(1.4) brightness(1.04) invert(1) sepia(0.35) brightness(0.96)
+      drop-shadow(2px 3px 4px rgba(20,17,16,0.5)) !important; }
 </style>
 
 {%- comment -%} Match the store theme's heading font when it exposes one (Dawn & most modern themes). {%- endcomment -%}
