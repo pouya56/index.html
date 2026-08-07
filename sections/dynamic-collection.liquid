@@ -715,6 +715,9 @@
   .dyn-col .dc-tabs.is-images .dc-tab.is-active .dc-tab-img img {
     filter: grayscale(1) contrast(1.4) brightness(1.04) invert(1) sepia(0.35) brightness(0.96)
       drop-shadow(2px 3px 4px rgba(20,17,16,0.5)) !important; }
+  /* category stickers 25% bigger (74px -> 92px desktop, 59px -> 74px phones) */
+  .dyn-col .dc-tabs.is-images .dc-tab-img { width: 92px; height: 92px; }
+  @media (max-width: 800px) { .dyn-col .dc-tabs.is-images .dc-tab-img { width: 74px; height: 74px; } }
 </style>
 
 {%- comment -%} Match the store theme's heading font when it exposes one (Dawn & most modern themes). {%- endcomment -%}
