@@ -188,7 +188,10 @@
        image) with a warm glow, and switches off when it closes. */
     .dyn-abar .dh-has-bulb { width: 80px; height: 120px; }
     .dyn-abar .dh-has-bulb .dh-orb-shape, .dyn-abar .dh-has-bulb .dh-orb-eyes { display: none; }
-    .dyn-abar .dh-has-bulb.is-asleep::after, .dyn-abar .dh-has-bulb .dh-orb-eyes.is-nervous::after { display: none; }
+    /* the bulb has no moods: every emotion animation, wobble, bounce,
+       sleep-breathing and doodad is switched off in bulb mode */
+    .dyn-abar .dh-has-bulb, .dyn-abar .dh-has-bulb * { animation: none !important; }
+    .dyn-abar .dh-has-bulb::before, .dyn-abar .dh-has-bulb::after { display: none !important; }
     .dyn-abar .dh-bulb { position: absolute; inset: 0; display: block; pointer-events: none; }
     .dyn-abar .dh-bulb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.18s; }
     .dyn-abar .dh-bulb-on { opacity: 0; }
