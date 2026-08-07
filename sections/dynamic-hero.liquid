@@ -296,6 +296,11 @@ box-shadow: 0 8px 18px rgba(0,0,0,0.14), 0 80px 130px -28px rgba(29,29,31,0.5); 
 #dhSlide .dh-slide-inject .gallery-main, #dhSlide .dh-slide-inject .gal-thumb {
 background: transparent; border: none; box-shadow: none; }
 #dhSlide .dh-slide-inject .gallery-main img { background: transparent; }
+#dhSlide .dh-slide-panel, #dhSlide .dh-slide-body, #dhSlide .dh-slide-inject,
+#dhSlide .dh-slide-inject > *, #dhSlide .dh-slide-inject .product,
+#dhSlide .dh-slide-inject main, #dhSlide .dh-slide-inject .page-width {
+border: 0 !important; outline: 0 !important; }
+#dhSlide.dh-slide-half .dh-slide-panel { border: 0 !important; }
 {%- if section.settings.popup_bg_image != blank %}
 #dhSlide.dh-slide-half .dh-slide-panel { background: url('{{ section.settings.popup_bg_image | image_url: width: 1400 }}') center / cover no-repeat; }
 {%- endif %}
