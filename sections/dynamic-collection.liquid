@@ -675,20 +675,14 @@
   .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-init { color: rgba(20, 17, 16, 0.8); }
   .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-all svg { fill: rgba(20, 17, 16, 0.8); }
   {%- endif %}
-  /* ransom-note labels: each category name is pasted on its own cut
-     paper block - a different aged tone, size and tilt per tab, like
-     letters clipped from old newspapers */
+  /* the names under the category images are hidden - the uploaded
+     word-art IS the label. The text stays in the markup, visually
+     hidden, so screen readers still announce each tab. */
   .dyn-col .dc-tabs.is-images .dc-tab-label {
-    color: #141110 !important; opacity: 1 !important; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.05em;
-    padding: 4px 9px 3px; text-shadow: none !important;
-    background: #e8e0cd; box-shadow: 1.5px 2.5px 4px rgba(20,17,16,0.28); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+1) .dc-tab-label { background: #e8e0cd; font-size: 13.5px; transform: rotate(-2deg); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+2) .dc-tab-label { background: #cfc6b5; font-size: 12px;   transform: rotate(1.6deg); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+3) .dc-tab-label { background: #b6a685; font-size: 14.5px; transform: rotate(2.2deg); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+4) .dc-tab-label { background: #efe9dc; font-size: 11.5px; transform: rotate(-1.2deg); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+5) .dc-tab-label { background: #a99a86; font-size: 13px;   transform: rotate(-2.8deg); }
-  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+6) .dc-tab-label { background: #ded4c0; font-size: 15px;   transform: rotate(1deg); }
+    position: absolute !important; width: 1px !important; height: 1px !important;
+    margin: -1px !important; padding: 0 !important; border: 0 !important;
+    clip: rect(0 0 0 0) !important; overflow: hidden !important; white-space: nowrap !important;
+    background: none !important; box-shadow: none !important; text-shadow: none !important; }
   /* save button: a vintage heart postage stamp, top-left of the card -
      perforated cream paper, red frame, hatched heart. Saving inks the
      heart solid red and cancels the stamp with a black postmark. */
@@ -832,7 +826,13 @@
         <div class="dc-tabs is-images" id="dcTabs" role="tablist">
           {%- if section.settings.show_search -%}
           <button type="button" class="dc-tab dc-search-trigger" id="dcSearchTrigger" aria-label="Search" aria-expanded="false">
-            <span class="dc-tab-img dc-tab-all"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+            <span class="dc-tab-img dc-tab-all">
+              {%- if section.settings.search_image != blank -%}
+                <img src="{{ section.settings.search_image | image_url: width: 200 }}" alt="Search" width="68" height="68" loading="lazy">
+              {%- else -%}
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              {%- endif -%}
+            </span>
             <span class="dc-tab-label">Search</span>
           </button>
           {%- endif -%}
@@ -2099,6 +2099,7 @@
     { "type": "checkbox", "id": "show_all_tab", "label": "Show 'All' tab", "default": true, "info": "Turn off to start on the first category instead of an All tab." },
     { "type": "text", "id": "all_label", "label": "'All' tab label", "default": "All" },
     { "type": "image_picker", "id": "all_image", "label": "'All' tab image (optional)", "info": "Shown on the 'All' tab when you add image tabs below. Leave empty for a grid icon." },
+    { "type": "image_picker", "id": "search_image", "label": "Search tile image (optional)", "info": "Shown on the Search tile instead of the magnifier icon. A transparent PNG cutout works best." },
 
     { "type": "header", "content": "Grid" },
     { "type": "range", "id": "columns", "min": 2, "max": 5, "step": 1, "label": "Products visible at once (desktop)", "default": 4,
