@@ -1651,7 +1651,10 @@
     query = "";
     badgeFilter = null;
     currentCat = btn.getAttribute("data-cat"); applyFilters();
-    // (No jump-to-products on tab click — the page stays where it is.)
+    // At the top of the page the view stays put; once the visitor has
+    // scrolled down (sticky bar), picking a category jumps straight to
+    // the products so the choice is visible immediately.
+    if (root.classList.contains("dc-scrolled") && !btn.classList.contains("dc-search-trigger")) jumpToProducts();
   });
 
   // Scroll the product grid up under the sticky bar (used by tabs AND search,
