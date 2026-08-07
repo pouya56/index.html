@@ -589,12 +589,14 @@ button { font-family: inherit; cursor: pointer; }
 .dyn-actionbar .customize-summary:empty { display: none; }
 .dyn-actionbar #giftMount:empty { display: none; }
 .dyn-actionbar .bulk-link { margin: 0; }
-/* The masthead rides along: sticky at the very top, above the page content,
-   on a translucent paper wash so whatever scrolls under it stays quiet. */
+/* The logo rides along: sticky at the very top, above the page content.
+   No bar behind it — the strip is invisible and click-through (so the
+   corner back button underneath keeps working); only the logo itself
+   is clickable. */
 .dyn-topbar { position: sticky; top: 0; z-index: 500; max-width: none; margin: 0;
   padding: 14px 22px 10px; display: flex; align-items: center;
-  background: rgba(233,233,231,0.85);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  background: none; pointer-events: none; }
+.dyn-topbar .dyn-logo { pointer-events: auto; }
 .dyn-topbar.is-left { justify-content: flex-start; }
 .dyn-topbar.is-center { justify-content: center; }
 .dyn-logo { display: inline-flex; align-items: center; text-decoration: none; transition: opacity .16s; }
