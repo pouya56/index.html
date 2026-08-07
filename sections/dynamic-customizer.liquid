@@ -1374,7 +1374,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
   }
   #buyBox.col-right {
     min-height: 0; max-height: 100%; overflow-y: auto; align-self: center;
-    padding: 8px 6px 8px 0; scrollbar-width: none;
+    /* the scroll container clips sideways too - the selected swatch's ring
+       pokes 7px past the buttons, so the column needs left padding or the
+       first colour's ring gets shaved off */
+    padding: 8px 6px 8px 10px; scrollbar-width: none;
   }
   #buyBox.col-right::-webkit-scrollbar { display: none; }
   .gallery { position: static; min-height: 0; align-items: center; justify-content: center; }
