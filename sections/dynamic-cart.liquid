@@ -338,7 +338,10 @@
     catch (e) { return "$" + ((cents || 0) / 100).toFixed(2); }
   }
   function setSub(cents) { if (subEl) subEl.textContent = money(cents); if (subTotalEl) subTotalEl.textContent = money(cents); }
-  function syncHeader() { try { if (window.DynamicHeader && window.DynamicHeader.refreshCart) window.DynamicHeader.refreshCart(); } catch (e) {} }
+  function syncHeader() {
+    try { if (window.DynamicHeader && window.DynamicHeader.refreshCart) window.DynamicHeader.refreshCart(); } catch (e) {}
+    try { window.dispatchEvent(new Event("dyn:cart-changed")); } catch (e2) {}
+  }
 
   function recalc() {
     var total = 0;

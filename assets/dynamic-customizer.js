@@ -4493,6 +4493,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     document.querySelectorAll("[data-cart-count]").forEach(function (b) {
       b.textContent = n; if (n > 0) b.removeAttribute("hidden"); else b.setAttribute("hidden", "");
     });
+    // every add/remove/quantity path lands here - tell the account bar
+    // (and anyone else listening) that the cart changed
+    try { window.dispatchEvent(new CustomEvent("dyn:cart-changed")); } catch (e) {}
   }
 
   function render(cart) {

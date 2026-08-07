@@ -917,7 +917,7 @@
       .dyn-abar .dh-vitem img, .dyn-abar .dh-vitem-ph { border-radius: 10px; }
       .dyn-abar .dh-vitem-t { font-size: 12px; }
       .dyn-abar .dh-vitem-p { font-size: 11px; }
-      .dyn-abar .dh-vdel { width: 24px; height: 24px; top: 6px; right: 6px; }
+      .dyn-abar .dh-vdel { width: 24px; height: 24px; top: 6px; left: 6px; right: auto; }
     }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
     @media (max-width: 700px) {
@@ -1771,6 +1771,10 @@
       window.addEventListener("dyn-wishlist-change", tune);
       window.addEventListener("storage", function (e) { if (e && e.key === "dyn_wishlist") tune(); });
       window.addEventListener("dyn:added-to-cart", tune);
+      /* any component that changes the cart announces it here - drawer,
+         cart page, this window's own X - so the bubble is always live */
+      window.addEventListener("dyn:cart-changed", tune);
+      window.addEventListener("pageshow", tune);
     })();
     /* Every app gets its own tab; its window shows a live preview of the
        page (same-shop links embed; outside links get an Open button). */
@@ -1970,7 +1974,10 @@
         fetch("/cart/change.js", { method: "POST", credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: key, quantity: 0 }) })
-          .then(function () { paintVision(); })
+          .then(function () {
+            paintVision();
+            try { window.dispatchEvent(new Event("dyn:cart-changed")); } catch (eD) {}
+          })
           .catch(function () { del.disabled = false; });
       }
     });
