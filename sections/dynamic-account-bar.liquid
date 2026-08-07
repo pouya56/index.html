@@ -163,7 +163,7 @@
        anywhere and snaps to the screen edges; the window opens beside it. */
     /* Above everything — cart drawers, modals, theme popups all stack
        below him (he's re-homed to the end of <body>, so he wins ties too). */
-    .dyn-abar .dh-apps-menu { position: fixed; top: 12px; right: 12px; z-index: 2147483646;
+    .dyn-abar .dh-apps-menu { position: fixed; top: 36vh; left: 12px; right: auto; z-index: 2147483646;
       transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05), top 0.22s ease; }
     .dyn-abar .dh-apps-menu.is-dragging { transition: none; }
     /* The Dynaeimic logo: a thick black rounded-D stroke, open toward
@@ -1966,7 +1966,7 @@
           .catch(function () { del.disabled = false; });
       }
     });
-    var KEY = "dyn_abar_apps_pos";
+    var KEY = "dyn_abar_apps_pos_v2";
     function zones() {
       /* Things the circle must not cover: corner links, back button,
          avatar, copyright — measured live on whatever page we're on. */
