@@ -675,14 +675,20 @@
   .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-init { color: rgba(20, 17, 16, 0.8); }
   .dyn-col.dc-scrolled .dc-tabs.is-images .dc-tab-all svg { fill: rgba(20, 17, 16, 0.8); }
   {%- endif %}
-  /* the label wears the same white die-cut sticker edge as its image:
-     solid ink type with a white outline and a soft paper shadow */
+  /* ransom-note labels: each category name is pasted on its own cut
+     paper block - a different aged tone, size and tilt per tab, like
+     letters clipped from old newspapers */
   .dyn-col .dc-tabs.is-images .dc-tab-label {
-    color: #141110 !important; opacity: 1 !important; font-weight: 700;
-    text-shadow:
-      1.5px 0 0 #f5f3ef, -1.5px 0 0 #f5f3ef, 0 1.5px 0 #f5f3ef, 0 -1.5px 0 #f5f3ef,
-      1.1px 1.1px 0 #f5f3ef, -1.1px 1.1px 0 #f5f3ef, 1.1px -1.1px 0 #f5f3ef, -1.1px -1.1px 0 #f5f3ef,
-      2px 3px 3px rgba(20,17,16,0.25) !important; }
+    color: #141110 !important; opacity: 1 !important; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 4px 9px 3px; text-shadow: none !important;
+    background: #e8e0cd; box-shadow: 1.5px 2.5px 4px rgba(20,17,16,0.28); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+1) .dc-tab-label { background: #e8e0cd; font-size: 13.5px; transform: rotate(-2deg); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+2) .dc-tab-label { background: #cfc6b5; font-size: 12px;   transform: rotate(1.6deg); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+3) .dc-tab-label { background: #b6a685; font-size: 14.5px; transform: rotate(2.2deg); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+4) .dc-tab-label { background: #efe9dc; font-size: 11.5px; transform: rotate(-1.2deg); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+5) .dc-tab-label { background: #a99a86; font-size: 13px;   transform: rotate(-2.8deg); }
+  .dyn-col .dc-tabs.is-images .dc-tab:nth-child(6n+6) .dc-tab-label { background: #ded4c0; font-size: 15px;   transform: rotate(1deg); }
   /* save button: a vintage heart postage stamp, top-left of the card -
      perforated cream paper, red frame, hatched heart. Saving inks the
      heart solid red and cancels the stamp with a black postmark. */
