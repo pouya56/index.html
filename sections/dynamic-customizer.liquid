@@ -1456,15 +1456,22 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
    never scrolls. */
 .dyn-popup-open { display: none; }
 #dhSlide.dh-slide-half .dh-slide-body { overflow: hidden !important; }
-#dhSlide .dh-slide-inject .product { gap: 14px !important; padding-top: 16px !important; padding-bottom: 18px !important; }
+/* inside the popup the product page's grid (and its 100dvh desktop
+   height) must not apply - one simple column, photo then name/price */
+#dhSlide .dh-slide-inject .product { display: flex !important; flex-direction: column !important;
+  height: auto !important; max-height: none !important; overflow: visible !important;
+  gap: 14px !important; padding-top: 16px !important; padding-bottom: 18px !important; }
+#dhSlide .dh-slide-inject .gallery { order: -1; position: static !important; }
 #dhSlide .dh-slide-inject .gallery-main { width: min(100%, 42vh) !important; }
-#dhSlide .dh-slide-inject #buyBox.col-right { display: grid; grid-template-columns: 1fr auto;
-  column-gap: 22px; align-items: center; }
-#dhSlide .dh-slide-inject #buyBox.col-right > * { grid-column: 1; }
+#dhSlide .dh-slide-inject #buyBox.col-right { display: flex !important; flex-direction: column;
+  align-items: center; text-align: center; gap: 8px; padding: 0 0 6px !important; }
 #dhSlide .dh-slide-inject #buyBox.col-right .headline { margin: 0; }
-#dhSlide .dh-slide-inject #buyBox.col-right .price-row { margin: 6px 0 0; }
-#dhSlide .dh-slide-inject #buyBox.col-right .dyn-popup-open { display: flex; align-items: center; justify-content: center;
-  grid-column: 2; grid-row: 1 / span 2; align-self: center; margin: 0; }
+#dhSlide .dh-slide-inject #buyBox.col-right .price-row { margin: 0; justify-content: center; }
+#dhSlide .dh-slide-inject #buyBox.col-right .dyn-popup-open { display: inline-flex !important;
+  align-items: center; justify-content: center; width: auto; min-width: 250px; margin: 8px 0 0; }
+/* prev / next arrows ride OUTSIDE the photo, floating on the paper */
+#dhSlide .dh-slide-inject .gal-nav .gal-prev { left: -72px; }
+#dhSlide .dh-slide-inject .gal-nav .gal-next { right: -72px; }
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-actionbar,
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-steps,
 #dhSlide .dh-slide-inject #buyBox.col-right .eyebrow,
