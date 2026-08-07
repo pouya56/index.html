@@ -302,6 +302,24 @@ background: transparent; border: none; box-shadow: none; }
 border: 0 !important; outline: 0 !important; }
 #dhSlide.dh-slide-half .dh-slide-panel { border: 0 !important; border-radius: 0 !important; }
 #dhSlide.dh-slide-half .dh-slide-fade, #dhSlide.dh-slide-half .dh-slide-hint { display: none !important; }
+#dhSlide.dh-slide-half.is-open .dh-slide-panel { animation: dhUncrumple 0.75s cubic-bezier(0.25, 0.9, 0.3, 1) both; }
+@keyframes dhUncrumple {
+0% { transform: translate(-50%, -50%) scale(0.12) rotate(-14deg); opacity: 0;
+clip-path: polygon(30% 10%, 70% 5%, 95% 40%, 80% 85%, 40% 95%, 8% 60%); }
+18% { transform: translate(-50%, -50%) scale(0.34) rotate(9deg); opacity: 1;
+clip-path: polygon(18% 8%, 82% 3%, 98% 40%, 88% 92%, 30% 97%, 3% 55%); }
+36% { transform: translate(-50%, -50%) scale(0.52) rotate(-6deg);
+clip-path: polygon(10% 4%, 90% 2%, 99% 50%, 93% 95%, 18% 99%, 1% 45%); }
+55% { transform: translate(-50%, -50%) scale(0.78) rotate(3.5deg);
+clip-path: polygon(4% 2%, 96% 1%, 100% 60%, 97% 98%, 8% 100%, 0% 35%); }
+72% { transform: translate(-50%, -50%) scale(0.94) rotate(-1.5deg);
+clip-path: polygon(1% 1%, 99% 0%, 100% 70%, 99% 99%, 2% 100%, 0% 20%); }
+86% { transform: translate(-50%, -50%) scale(1.015) rotate(0.6deg);
+clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 50%, 0 25%); }
+100% { transform: translate(-50%, -50%) scale(1) rotate(0deg);
+clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 50%, 0 25%); }
+}
+@media (prefers-reduced-motion: reduce) { #dhSlide.dh-slide-half.is-open .dh-slide-panel { animation: none; } }
 {%- if section.settings.popup_bg_image != blank %}
 #dhSlide.dh-slide-half .dh-slide-panel { background: url('{{ section.settings.popup_bg_image | image_url: width: 1400 }}') center / 100% 100% no-repeat; }
 {%- endif %}
