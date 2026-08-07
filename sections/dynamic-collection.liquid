@@ -718,6 +718,12 @@
   /* category stickers 25% bigger (74px -> 92px desktop, 59px -> 74px phones) */
   .dyn-col .dc-tabs.is-images .dc-tab-img { width: 92px; height: 92px; }
   @media (max-width: 800px) { .dyn-col .dc-tabs.is-images .dc-tab-img { width: 74px; height: 74px; } }
+  /* the open inline search squeezes the row: give the bar more width
+     and shrink the stickers so Search, All and every category stay
+     fully visible instead of the edge ones getting cut off */
+  .dyn-col .dc-tabs-wrap:has(.dc-inline-search.is-open) { max-width: min(1280px, 96vw); }
+  .dyn-col .dc-tabs-wrap:has(.dc-inline-search.is-open) .dc-tabs.is-images { gap: 8px; }
+  .dyn-col .dc-tabs-wrap:has(.dc-inline-search.is-open) .dc-tab-img { width: 62px; height: 62px; }
 </style>
 
 {%- comment -%} Match the store theme's heading font when it exposes one (Dawn & most modern themes). {%- endcomment -%}
