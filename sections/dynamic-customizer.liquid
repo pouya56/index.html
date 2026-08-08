@@ -1464,9 +1464,9 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 #dhSlide .dh-slide-inject .gallery-main { width: min(100%, 36vh) !important; }
 #dhSlide .dh-slide-inject .gal-nav .gal-prev { left: -72px; }
 #dhSlide .dh-slide-inject .gal-nav .gal-next { right: -72px; }
-#dhSlide .dh-slide-inject #buyBox.col-right { display: grid !important;
-  grid-template-columns: 11.5% 1fr 27%; column-gap: 14px; align-content: center;
-  width: min(100%, 660px); margin: 0 auto; padding: 30px 40px 32px 36px !important;
+#dhSlide .dh-slide-inject #buyBox.col-right { display: grid !important; position: relative;
+  grid-template-columns: 11.5% 1fr; column-gap: 14px; align-content: center;
+  width: min(100%, 660px); margin: 0 auto; padding: 30px calc(27% + 18px) 32px 36px !important;
   text-align: center; }
 #dhSlide .dh-slide-inject #buyBox.col-right > * { grid-column: 2; }
 #dhSlide .dh-slide-inject #buyBox.col-right .price-row { grid-column: 1; grid-row: 1 / span 9;
@@ -1495,7 +1495,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-acc .desc { margin: 0 0 6px; font-size: 13.5px; max-height: 10vh; overflow: auto; }
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-popup-open { display: flex !important; flex-direction: column;
   align-items: center; justify-content: center; gap: 7px;
-  grid-column: 3; grid-row: 1 / span 9; align-self: stretch; margin: 0; min-width: 0; width: auto; min-height: 150px;
+  /* pinned to the ticket's right side - no grid placement involved, so
+     it renders identically in every browser */
+  position: absolute !important; top: 14%; bottom: 14%; right: 3.5%; width: 22%;
+  margin: 0; min-width: 0; min-height: 0; height: auto;
   background: none !important; border: none; box-shadow: none; border-radius: 0; padding: 8px 2px;
   font-family: Georgia, "Times New Roman", serif !important; font-weight: 700; font-size: 12.5px;
   text-transform: uppercase; letter-spacing: 0.1em; color: #17130f !important; text-decoration: none !important; }
