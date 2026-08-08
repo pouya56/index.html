@@ -2603,8 +2603,11 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
   }
   #dynInlineTools .btn-ghost:hover { border-color: #17130f; background: rgba(23, 19, 15, 0.04); }
   /* Add design: matte ink, red on hover - the flip-skin faces retire */
-  #dynInlineTools #uploadApply.btn-primary {
+  #dynInlineTools #uploadApply.btn-primary,
+  #dynInlineTools #uploadApply.btn-primary.is-flipped {
     background: #17130f !important; border-radius: 2px; box-shadow: none; text-shadow: none;
+    /* the retired flip skin sets color: transparent mid-flip - keep the label */
+    color: #f6f5f1 !important;
     font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
     transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   }
