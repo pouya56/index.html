@@ -2519,21 +2519,32 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
 {%- endif -%}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
-{%- comment -%} Inline designer: the customize/personalize workspace opens in
-  the page flow (under the product) instead of as a popup. Same machinery -
-  only the presentation of #modalRoot changes, so Close, Escape, pricing and
-  Add to Cart all keep working. Turn off in settings to get the popup back. {%- endcomment -%}
+{%- comment -%} In-place designer: Start Designing switches the product page
+  into design mode right where it stands - no popup, no scrolling. The
+  workspace paints over the product area on the same paper (the product
+  content hides while designing, the sticky logo stays), so the stage sits
+  where the image was and the tools where the buy box was. Same machinery -
+  Close, Escape, pricing and Add to Cart all keep working and closing
+  returns the product exactly as it was. Turn off in settings for the popup. {%- endcomment -%}
 {%- unless section.settings.inline_designer == false -%}
 <style>
-  #modalRoot { position: static; inset: auto; z-index: auto; }
-  #modalRoot.open { display: block; background: none; padding: 0 0 64px; overflow: visible; }
+  /* Below the sticky masthead (z 500) so the logo stays visible and clickable. */
+  #modalRoot { z-index: 450; }
+  #modalRoot.open { background: transparent; padding: 0; overflow: hidden; }
   #modalRoot .modal-scrim { display: none; }
   #modalRoot .modal-sheet {
     opacity: 1 !important; transform: none !important;
-    margin: 18px auto 0; width: min(1240px, 96vw); max-width: 96vw;
-    scroll-margin-top: 18px;
+    width: 100%; max-width: none; height: 100%; margin: 0;
+    background: transparent; border-radius: 0; box-shadow: none;
+    padding-top: var(--dyn-top-h, 56px);
   }
-  @media (max-width: 720px) { #modalRoot.open { padding: 0 0 40px; } }
+  #modalRoot .modal-body { flex: 1; min-height: 0; }
+  #modalRoot .stage { background: none; }
+  #modalRoot .panel { background: transparent; }
+  #modalRoot .modal-foot { background: transparent; }
+  #modalRoot .modal-head { padding-top: 10px; padding-bottom: 12px; }
+  /* While designing, the product page content steps aside (layout kept). */
+  html.dyn-designing main.product { visibility: hidden; }
 </style>
 <script>
 (function () {
@@ -2542,13 +2553,7 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
     var root = document.getElementById("modalRoot");
     if (!root || !window.MutationObserver) return;
     new MutationObserver(function () {
-      if (!root.classList.contains("open")) return;
-      /* the app locks page scroll for the popup - inline keeps it scrollable */
-      document.body.style.overflow = "";
-      setTimeout(function () {
-        var sheet = root.querySelector(".modal-sheet");
-        (sheet || root).scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 60);
+      document.documentElement.classList.toggle("dyn-designing", root.classList.contains("open"));
     }).observe(root, { attributes: true, attributeFilter: ["class"] });
   });
 })();
@@ -2856,9 +2861,9 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
     {
       "type": "checkbox",
       "id": "inline_designer",
-      "label": "Open the designer on the page (not as a popup)",
+      "label": "Design directly on the product page (no popup)",
       "default": true,
-      "info": "The customize/personalize workspace appears under the product and the page scrolls to it. Untick to get the floating popup back."
+      "info": "Start Designing switches the page into design mode in place - the workspace appears where the product was, on the same paper. Untick for the floating popup."
     },
     {
       "type": "header",
