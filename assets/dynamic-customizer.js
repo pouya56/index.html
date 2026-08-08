@@ -2505,6 +2505,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-open.is-solo:hover{background:#e8e8ed}' +
       '.dc-gift-open.is-solo .dc-gift-open-txt em{color:var(--gf)}' +
       '.dc-gift-open-ic{font-size:19px;flex:none}' +
+      /* Gate row: the gift pill and its Skip neighbour share one line */
+      '.dc-gift-row{display:flex;gap:10px;align-items:stretch}' +
+      '.dc-gift-row .dc-gift-open{flex:1;min-width:0}' +
+      '.dc-gift-skip{flex:none;height:58px;padding:0 24px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#0a0a0a;background:transparent;border:1px solid rgba(10,10,10,.35);border-radius:999px;transition:background .16s,border-color .16s}' +
+      '.dc-gift-skip:hover{border-color:#0a0a0a;background:rgba(10,10,10,.04)}' +
       '.dc-gift-open-txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '.dc-gift-open-txt em{font-style:normal;color:rgba(255,255,255,.65);font-weight:500}' +
       /* After the decision, a quiet one-line summary for edits */
@@ -2615,9 +2620,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     return css +
       '<div class="dc-gift" id="giftBlock">' +
         '<button type="button" class="dc-gift-open" id="giftOpenBtn" style="display:none">' +
-          '<span class="dc-gift-open-ic" aria-hidden="true">🎁</span>' +
           '<span class="dc-gift-open-txt" id="giftOpenTxt">Make it a gift <em>(optional)</em></span>' +
         '</button>' +
+        '<button type="button" class="dc-gift-skip" id="giftSkipBtn" style="display:none">Skip</button>' +
         '<button type="button" class="dc-gift-mini" id="giftMini" hidden>🎁 Gift added · <u>edit</u></button>' +
         '<div class="dc-giftm" id="giftModal" role="dialog" aria-modal="true" aria-label="Make it a gift">' +
           '<div class="dc-giftm-card">' +
@@ -2936,7 +2941,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
        just sits in the buy box, always available, ghost-styled. */
     const gateEnabled = (typeof customizeEnabled === "function") ? !!customizeEnabled() : true;
     let decided = false, readySeen = !!(gateEnabled && addBtn && !addBtn.hidden), selfFlip = false;
-    if (gateEnabled && addBtn && addBtn.parentNode && openBtn) addBtn.parentNode.insertBefore(openBtn, addBtn);
+    const skipBtn = mount.querySelector("#giftSkipBtn");
+    if (gateEnabled && addBtn && addBtn.parentNode && openBtn) {
+      const giftRow = document.createElement("div");
+      giftRow.className = "dc-gift-row";
+      addBtn.parentNode.insertBefore(giftRow, addBtn);
+      giftRow.appendChild(openBtn);
+      if (skipBtn) giftRow.appendChild(skipBtn);
+    }
     const sync = () => {
       if (!gateEnabled) {
         window.__dynGiftGate = false;
@@ -2949,6 +2961,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       window.__dynGiftGate = gateOn;
       window.__dynGiftDecided = decided;
       if (openBtn) openBtn.style.display = gateOn ? "" : "none";
+      if (skipBtn) skipBtn.style.display = gateOn ? "" : "none";
       if (addBtn) {
         const wantHidden = gateOn || !readySeen;
         if (addBtn.hidden !== wantHidden) { selfFlip = true; addBtn.hidden = wantHidden; }
@@ -2981,6 +2994,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (closeBtn) closeBtn.onclick = () => { setOpen(false); };
     if (modal) { modal.addEventListener("input", updateFoot); modal.addEventListener("change", updateFoot); }
     if (giftSave) giftSave.onclick = () => { decided = true; setOpen(false); sync(); };
+    /* Skip next to the pill: counts as handling the gift step. */
+    if (skipBtn) skipBtn.onclick = () => { decided = true; sync(); };
     if (giftRemove) giftRemove.onclick = () => {
       fields.forEach((f) => { f.value = ""; });
       giftIsGift.checked = false;
