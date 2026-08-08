@@ -2528,33 +2528,27 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
   returns the product exactly as it was. Turn off in settings for the popup. {%- endcomment -%}
 {%- unless section.settings.inline_designer == false -%}
 <style>
-  /* Below the sticky masthead (z 500) so the logo stays visible and clickable. */
-  #modalRoot { z-index: 450; }
-  #modalRoot.open { background: transparent; padding: 0; overflow: hidden; }
-  #modalRoot .modal-scrim { display: none; }
-  #modalRoot .modal-sheet {
-    opacity: 1 !important; transform: none !important;
-    width: 100%; max-width: none; height: 100%; margin: 0;
-    background: transparent; border-radius: 0; box-shadow: none;
-    padding-top: var(--dyn-top-h, 56px); position: relative;
+  /* While designing (dyn-designing set only when the in-page move worked),
+     the modal shell never shows: its stage lives on the product image and
+     its tabs/controls/footer sit under Start Designing in the buy box. */
+  html.dyn-designing #modalRoot.open { display: none !important; }
+  html.dyn-designing #customizeBtn { display: none !important; }
+  html.dyn-designing .gallery-main .dyn-cards,
+  html.dyn-designing .gallery-main .gal-nav,
+  html.dyn-designing .gallery-main .gallery-stage { visibility: hidden; }
+  #dynInlineStage { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; }
+  #dynInlineStage .engrave-stage { width: 100%; height: 100%; display: grid; place-items: center; padding: 0; }
+  /* the stage sits straight on the paper - no white backdrop */
+  #dynInlineStage .engrave-stage, #dynInlineStage .engrave-frame {
+    background: none; box-shadow: none; border: 0; border-radius: 0;
   }
-  /* No workspace headline - just the close button floating top-right, so
-     nothing announces "a new screen". The layout below mirrors the product
-     page grid: canvas where the photo was, tools where the buy box was. */
-  #modalRoot .modal-head { position: absolute; top: calc(var(--dyn-top-h, 56px) - 46px); right: 26px; padding: 0; z-index: 5; }
-  #modalRoot .modal-head > div:first-child { display: none; }
-  #modalRoot .modal-body { flex: 1; min-height: 0; grid-template-columns: 1.8fr 1fr; gap: 32px; padding: 0 40px; }
-  #modalRoot .stage { background: none; }
-  #modalRoot .stage-toolbar { border-bottom-color: rgba(23, 19, 15, 0.12); }
-  #modalRoot .panel { background: transparent; border-left: none; }
-  #modalRoot .modal-foot { background: transparent; border-top-color: rgba(23, 19, 15, 0.12); padding: 14px 40px; }
-  @media (max-width: 900px) {
-    #modalRoot .modal-body { grid-template-columns: 1fr; padding: 0 16px; gap: 0; }
-    #modalRoot .modal-foot { padding: 12px 16px; }
-    #modalRoot .modal-head { right: 14px; }
-  }
-  /* While designing, the product page content steps aside (layout kept). */
-  html.dyn-designing main.product { visibility: hidden; }
+  #dynInlineTools { display: flex; flex-direction: column; gap: 12px; margin: 14px 0 0; }
+  #dynInlineTools[hidden], #dynInlineStage[hidden] { display: none !important; }
+  #dynInlineTools .side-tabs { margin: 0; justify-content: flex-start; }
+  #dynInlineTools .up-controls { margin: 0; }
+  #dynInlineTools .modal-foot { background: none; border: 0; padding: 0; display: flex; align-items: center; gap: 12px; }
+  #dynInlineTools .price-breakdown { flex: 1; min-width: 0; }
+  #dynInlineTools .price-breakdown-toggle .total { font-size: 20px; }
 </style>
 <script>
 (function () {
@@ -2562,9 +2556,55 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
   ready(function () {
     var root = document.getElementById("modalRoot");
     if (!root || !window.MutationObserver) return;
-    new MutationObserver(function () {
-      document.documentElement.classList.toggle("dyn-designing", root.classList.contains("open"));
-    }).observe(root, { attributes: true, attributeFilter: ["class"] });
+    var stageHolder = null, toolsHolder = null;
+
+    function cleanup() {
+      if (stageHolder && stageHolder.parentNode) stageHolder.parentNode.removeChild(stageHolder);
+      if (toolsHolder && toolsHolder.parentNode) toolsHolder.parentNode.removeChild(toolsHolder);
+      stageHolder = toolsHolder = null;
+    }
+    /* Adopt the designer's live nodes into the page (listeners ride along):
+       the stage onto the product image, tabs/controls/footer under the
+       Start Designing button. Returns false for modal types this doesn't
+       cover (they keep the normal popup). */
+    function engage() {
+      if (!root.querySelector(".modal-sheet.engrave-sheet")) return false;
+      var stage = root.querySelector(".engrave-stage");
+      if (stage) { /* fresh build - (re)adopt it */
+        cleanup();
+        var gal = document.querySelector(".gallery-main");
+        var bar = document.getElementById("dynActionBar");
+        if (!gal || !bar || !bar.parentNode) return false;
+        stageHolder = document.createElement("div");
+        stageHolder.id = "dynInlineStage";
+        stageHolder.appendChild(stage);
+        gal.appendChild(stageHolder);
+        toolsHolder = document.createElement("div");
+        toolsHolder.id = "dynInlineTools";
+        var tabs = root.querySelector(".side-tabs");
+        if (tabs) toolsHolder.appendChild(tabs);
+        var ctr = root.querySelector(".up-controls");
+        if (ctr) toolsHolder.appendChild(ctr);
+        var foot = root.querySelector(".modal-foot");
+        if (foot) toolsHolder.appendChild(foot);
+        bar.parentNode.insertBefore(toolsHolder, bar.nextSibling);
+      }
+      if (!stageHolder || !toolsHolder) return false;
+      stageHolder.hidden = false;
+      toolsHolder.hidden = false;
+      return true;
+    }
+    function sync() {
+      var open = root.classList.contains("open");
+      var inline = open && engage();
+      document.documentElement.classList.toggle("dyn-designing", inline);
+      if (inline) document.body.style.overflow = ""; /* page stays scrollable */
+      if (!open) {
+        if (stageHolder) stageHolder.hidden = true;
+        if (toolsHolder) toolsHolder.hidden = true;
+      }
+    }
+    new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ["class"], childList: true });
   });
 })();
 </script>
