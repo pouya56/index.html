@@ -783,6 +783,31 @@
   .dyn-col .dc-gridall::after { content: "Archive \00b7  Collection 02 \00b7  Designed in NYC"; position: absolute;
     top: -30px; right: 2px; pointer-events: none; font-size: 9px; font-weight: 600;
     letter-spacing: 0.3em; text-transform: uppercase; color: rgba(20,17,16,0.45); }
+  /* ==== Premium sticky navigation: an almost-invisible editorial bar ==== */
+  /* always pinned; nothing on the page may unstick it */
+  .dyn-col .dc-tabs-wrap { position: sticky !important; top: 0 !important; z-index: 40 !important; }
+  /* at rest the bar sits in the layout as-is; once scrolled it compacts
+     into a 58px translucent row that fades and slides into view */
+  .dyn-col.dc-scrolled .dc-tabs-wrap { min-height: 58px; align-items: center; margin-top: 0;
+    animation: dcStickIn 0.35s cubic-bezier(0.2, 0.8, 0.25, 1); }
+  @keyframes dcStickIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .dyn-col.dc-scrolled .dc-tabs-wrap { animation: none; } }
+  .dyn-col.dc-scrolled .dc-tabs-wrap::before, .dyn-col.dc-scrolled .dc-tabs.is-pills::before {
+    background: rgba(246, 245, 241, 0.93) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(1.05); backdrop-filter: blur(10px) saturate(1.05);
+    border-bottom: 1px solid rgba(20, 17, 16, 0.12);
+    box-shadow: 0 12px 26px -20px rgba(20, 17, 16, 0.4); }
+  .dyn-col.dc-scrolled .dc-tabs.is-images { justify-content: center; }
+  /* refined link interactions: colour + a breath of letter-spacing, no scaling */
+  .dyn-col .dc-tabs.is-images .dc-tab-label { transition: color 0.25s ease, letter-spacing 0.25s ease, border-color 0.25s ease; }
+  .dyn-col .dc-tabs.is-images .dc-tab:hover .dc-tab-label { letter-spacing: 0.34em; }
+  /* phones: one row, swiped sideways, never wrapped */
+  @media (max-width: 800px) {
+    .dyn-col .dc-tabs.is-images { flex-wrap: nowrap !important; overflow-x: auto; justify-content: flex-start;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 14px; }
+    .dyn-col .dc-tabs.is-images::-webkit-scrollbar { display: none; }
+    .dyn-col.dc-scrolled .dc-tabs-wrap { min-height: 52px; }
+  }
 </style>
 
 {%- comment -%} Match the store theme's heading font when it exposes one (Dawn & most modern themes). {%- endcomment -%}
@@ -1730,7 +1755,7 @@
     if (!target) return;
     var barH = tabsWrap ? tabsWrap.offsetHeight : 0;
     var y = target.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - barH - 14;
-    window.scrollTo({ top: Math.max(0, y), behavior: "auto" }); // instant — no scrolling animation
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" }); // premium: glide, don't jump
   }
   // Enter decides where to land: matching products — or, when nothing matched,
   // the "no results" message (so it's never stranded out of view at the top).
