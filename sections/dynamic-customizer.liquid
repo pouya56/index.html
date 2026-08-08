@@ -2519,6 +2519,42 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
 {%- endif -%}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
+{%- comment -%} Inline designer: the customize/personalize workspace opens in
+  the page flow (under the product) instead of as a popup. Same machinery -
+  only the presentation of #modalRoot changes, so Close, Escape, pricing and
+  Add to Cart all keep working. Turn off in settings to get the popup back. {%- endcomment -%}
+{%- unless section.settings.inline_designer == false -%}
+<style>
+  #modalRoot { position: static; inset: auto; z-index: auto; }
+  #modalRoot.open { display: block; background: none; padding: 0 0 64px; overflow: visible; }
+  #modalRoot .modal-scrim { display: none; }
+  #modalRoot .modal-sheet {
+    opacity: 1 !important; transform: none !important;
+    margin: 18px auto 0; width: min(1240px, 96vw); max-width: 96vw;
+    scroll-margin-top: 18px;
+  }
+  @media (max-width: 720px) { #modalRoot.open { padding: 0 0 40px; } }
+</style>
+<script>
+(function () {
+  function ready(fn) { if (document.readyState !== "loading") fn(); else document.addEventListener("DOMContentLoaded", fn); }
+  ready(function () {
+    var root = document.getElementById("modalRoot");
+    if (!root || !window.MutationObserver) return;
+    new MutationObserver(function () {
+      if (!root.classList.contains("open")) return;
+      /* the app locks page scroll for the popup - inline keeps it scrollable */
+      document.body.style.overflow = "";
+      setTimeout(function () {
+        var sheet = root.querySelector(".modal-sheet");
+        (sheet || root).scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 60);
+    }).observe(root, { attributes: true, attributeFilter: ["class"] });
+  });
+})();
+</script>
+{%- endunless -%}
+
 {%- if section.settings.show_top_logo -%}
 {%- assign top_logo = section.settings.top_logo | default: settings.logo -%}
 <script>
@@ -2812,6 +2848,17 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
       "id": "story_shipping",
       "label": "Shipping & Returns section",
       "info": "Type hide to remove it."
+    },
+    {
+      "type": "header",
+      "content": "Designer"
+    },
+    {
+      "type": "checkbox",
+      "id": "inline_designer",
+      "label": "Open the designer on the page (not as a popup)",
+      "default": true,
+      "info": "The customize/personalize workspace appears under the product and the page scrolls to it. Untick to get the floating popup back."
     },
     {
       "type": "header",
