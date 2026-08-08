@@ -463,6 +463,45 @@
   addBtn.addEventListener("click", addRow);
   var firstRow = addRow();
 
+  // Designs carried over from the product page (?designs=<url per line>):
+  // show them as a small attached-artwork card and ride them into the email.
+  window.__dboCarriedDesigns = [];
+  (function () {
+    try {
+      var d = new URLSearchParams(window.location.search).get("designs");
+      if (!d) return;
+      var urls = d.split("\n").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 12);
+      if (!urls.length) return;
+      window.__dboCarriedDesigns = urls;
+      var summary = root.querySelector(".dbo-summary") || root;
+      var card = document.createElement("div");
+      card.id = "dboCarried";
+      card.style.cssText = "margin-top:16px;padding:12px 14px;background:#fff;border:1px solid rgba(20,17,16,0.16);border-left:3px solid #b3242a;border-radius:2px;";
+      var h = document.createElement("div");
+      h.textContent = "Your uploaded designs";
+      h.style.cssText = "font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:rgba(20,17,16,0.6);margin-bottom:8px;";
+      card.appendChild(h);
+      urls.forEach(function (line) {
+        var url = line.replace(/^\w+:\s*/, "");
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:8px;margin-top:6px;";
+        var img = document.createElement("img");
+        img.src = url; img.alt = ""; img.loading = "lazy";
+        img.style.cssText = "width:34px;height:34px;object-fit:contain;background:#f6f5f1;border:1px solid rgba(20,17,16,0.12);border-radius:2px;flex:none;";
+        var lbl = document.createElement("span");
+        lbl.textContent = line.split(":")[0].replace(/^f/, "F").replace(/^b/, "B");
+        lbl.style.cssText = "font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(20,17,16,0.7);";
+        row.appendChild(img); row.appendChild(lbl);
+        card.appendChild(row);
+      });
+      var note = document.createElement("div");
+      note.textContent = "These travel with your request automatically.";
+      note.style.cssText = "margin-top:9px;font-size:10.5px;color:rgba(20,17,16,0.5);letter-spacing:0.03em;";
+      card.appendChild(note);
+      summary.appendChild(card);
+    } catch (e) {}
+  })();
+
   // Preselect a product if the page was opened with ?product=<handle>
   (function () {
     try {
@@ -543,6 +582,8 @@
 
     buildBody().then(function (body) {
       if (!body) { alert("Please pick a product, choose the options, and enter a quantity for at least one variation."); submitting = false; submitBtn.disabled = false; submitBtn.textContent = t; return; }
+      var carried = window.__dboCarriedDesigns || [];
+      if (carried.length) body += "\n\nDesigns uploaded on the product page:\n" + carried.join("\n");
       var payload = {
         _subject: "Bulk order request" + (name ? " — " + name : ""),
         name: name || "(no name)",
