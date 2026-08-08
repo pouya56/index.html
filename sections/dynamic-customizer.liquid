@@ -1600,6 +1600,50 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       </div>
       <!-- Only shows inside the surprise popup: one button, straight to the product page -->
       <a class="btn btn-primary btn-lg btn-block dyn-popup-open" href="{% if dyn_product %}{{ dyn_product.url }}{% else %}#{% endif %}">View full product</a>
+      <script>
+      /* Belt and braces for the popup's ticket stub: when this page runs
+         inside the surprise window, guarantee the Admit One link exists,
+         sits on the ticket's right, and is visible - inline styles with
+         !important, immune to any stylesheet. Does nothing on the normal
+         product page. */
+      (function () {
+        var tries = 0;
+        function imp(el, map) { for (var k in map) { try { el.style.setProperty(k, map[k], "important"); } catch (e) {} } }
+        function stub() {
+          tries++;
+          var bb = document.querySelector("#dhSlide .dh-slide-inject #buyBox");
+          if (!bb) { if (tries < 80) setTimeout(stub, 250); return; }
+          var a = bb.querySelector(".dyn-popup-open");
+          if (!a) {
+            a = document.createElement("a");
+            a.className = "dyn-popup-open";
+            var url = "#";
+            try { url = (JSON.parse(document.getElementById("dyn-config").textContent).shopify || {}).productUrl || "#"; } catch (e) {}
+            a.href = url;
+            bb.appendChild(a);
+          }
+          if (getComputedStyle(bb).position === "static") bb.style.position = "relative";
+          imp(a, { position: "absolute", top: "14%", bottom: "14%", right: "3.5%", width: "22%",
+            display: "flex", "flex-direction": "column", gap: "8px", "align-items": "center",
+            "justify-content": "center", "text-decoration": "none", "z-index": "6",
+            visibility: "visible", opacity: "1", background: "none", border: "0", "box-shadow": "none",
+            padding: "8px 2px", margin: "0", "min-height": "0", height: "auto" });
+          var art = getComputedStyle(a).backgroundImage;
+          if ((!art || art === "none") && !a.querySelector(".dyn-po-t")) {
+            a.innerHTML = "";
+            var s1 = document.createElement("span");
+            s1.className = "dyn-po-t"; s1.textContent = "Admit One";
+            s1.style.cssText = "font:800 19px Georgia,'Times New Roman',serif;letter-spacing:.08em;text-transform:uppercase;color:#17130f;border-bottom:2px solid #17130f;padding-bottom:7px;";
+            var s2 = document.createElement("span");
+            s2.textContent = "View full product";
+            s2.style.cssText = "font:700 12px Georgia,'Times New Roman',serif;letter-spacing:.1em;text-transform:uppercase;color:#17130f;";
+            a.appendChild(s1); a.appendChild(s2);
+          }
+          if (tries < 80) setTimeout(stub, 500);
+        }
+        stub();
+      })();
+      </script>
 
       <div class="opt-group" id="pSizeGroup">
         <div class="opt-label">Size</div>
