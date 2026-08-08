@@ -2536,13 +2536,23 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
     opacity: 1 !important; transform: none !important;
     width: 100%; max-width: none; height: 100%; margin: 0;
     background: transparent; border-radius: 0; box-shadow: none;
-    padding-top: var(--dyn-top-h, 56px);
+    padding-top: var(--dyn-top-h, 56px); position: relative;
   }
-  #modalRoot .modal-body { flex: 1; min-height: 0; }
+  /* No workspace headline - just the close button floating top-right, so
+     nothing announces "a new screen". The layout below mirrors the product
+     page grid: canvas where the photo was, tools where the buy box was. */
+  #modalRoot .modal-head { position: absolute; top: calc(var(--dyn-top-h, 56px) - 46px); right: 26px; padding: 0; z-index: 5; }
+  #modalRoot .modal-head > div:first-child { display: none; }
+  #modalRoot .modal-body { flex: 1; min-height: 0; grid-template-columns: 1.8fr 1fr; gap: 32px; padding: 0 40px; }
   #modalRoot .stage { background: none; }
-  #modalRoot .panel { background: transparent; }
-  #modalRoot .modal-foot { background: transparent; }
-  #modalRoot .modal-head { padding-top: 10px; padding-bottom: 12px; }
+  #modalRoot .stage-toolbar { border-bottom-color: rgba(23, 19, 15, 0.12); }
+  #modalRoot .panel { background: transparent; border-left: none; }
+  #modalRoot .modal-foot { background: transparent; border-top-color: rgba(23, 19, 15, 0.12); padding: 14px 40px; }
+  @media (max-width: 900px) {
+    #modalRoot .modal-body { grid-template-columns: 1fr; padding: 0 16px; gap: 0; }
+    #modalRoot .modal-foot { padding: 12px 16px; }
+    #modalRoot .modal-head { right: 14px; }
+  }
   /* While designing, the product page content steps aside (layout kept). */
   html.dyn-designing main.product { visibility: hidden; }
 </style>
