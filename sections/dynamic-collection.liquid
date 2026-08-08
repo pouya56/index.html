@@ -731,6 +731,58 @@
   .dyn-col .dc-inline-mag { display: none; }
   .dyn-col .dc-inline-input { margin-left: 13.5%; margin-right: 6%; color: #141110; font-weight: 600; font-size: 16px; }
   .dyn-col .dc-inline-input::placeholder { color: rgba(20, 17, 16, 0.72); }
+  /* ==== Editorial archive pass: the grid becomes a curated worktable ==== */
+  /* three larger columns with generous, uneven air */
+  @media (min-width: 1101px) {
+    .dyn-col .dc-gridall { grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 48px 36px !important; margin-top: 44px !important; }
+  }
+  /* cards are printed objects laid on the paper: tiny scatter rotations,
+     natural vertical drift, layered physical shadows */
+  .dyn-col .dc-gridall > .dc-card { transition: transform .35s cubic-bezier(.2,.8,.25,1), box-shadow .35s cubic-bezier(.2,.8,.25,1); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+1) { transform: rotate(-1.6deg); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+2) { transform: rotate(1.1deg) translateY(30px); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+3) { transform: rotate(2.2deg) translateY(-10px); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+4) { transform: rotate(1.3deg) translateY(16px); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+5) { transform: rotate(-2.4deg) translateY(38px); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+6) { transform: rotate(-1deg) translateY(-4px); }
+  .dyn-col .dc-card { box-shadow: 0 2px 3px rgba(20,17,16,0.14), 0 14px 28px -10px rgba(20,17,16,0.3), 0 34px 64px -30px rgba(20,17,16,0.35) !important; }
+  @media (hover: hover) and (pointer: fine) {
+    .dyn-col .dc-gridall > .dc-card:hover { transform: rotate(0deg) translateY(-8px) !important;
+      box-shadow: 0 4px 6px rgba(20,17,16,0.16), 0 28px 50px -14px rgba(20,17,16,0.42), 0 64px 95px -40px rgba(20,17,16,0.45) !important; }
+  }
+  /* product cutouts run a touch larger and may poke past the card edge */
+  .dyn-col:not(.dc-fill) .dc-media { overflow: visible !important; }
+  .dyn-col:not(.dc-fill) .dc-media img { transform: scale(1.08); }
+  @media (hover: hover) and (pointer: fine) {
+    .dyn-col:not(.dc-fill) .dc-card:hover .dc-media img { transform: scale(1.13); }
+  }
+  /* minimalist editorial category navigation: printed-label type, no pictures */
+  .dyn-col .dc-tabs.is-images .dc-tab-img { display: none !important; }
+  .dyn-col .dc-tabs.is-images { gap: 30px; }
+  .dyn-col .dc-tabs.is-images .dc-tab { padding: 0 !important; gap: 0 !important; }
+  .dyn-col .dc-tabs.is-images .dc-tab-label { position: static !important; width: auto !important; height: auto !important;
+    margin: 0 !important; padding: 7px 1px !important; clip: auto !important; overflow: visible !important; white-space: nowrap !important;
+    font-size: 11.5px; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase;
+    color: rgba(20,17,16,0.5) !important; background: none !important; box-shadow: none !important; text-shadow: none !important;
+    border-bottom: 2px solid transparent; }
+  .dyn-col .dc-tabs.is-images .dc-tab:hover .dc-tab-label { color: #141110 !important; }
+  .dyn-col .dc-tabs.is-images .dc-tab.is-active .dc-tab-label { color: #141110 !important; border-bottom-color: #141110; }
+  /* masthead-small bar logo */
+  .dyn-col .dc-bar-logo img { height: 30px; }
+  /* whispering prices: FROM $35 in tracked microtype (cents stripped in Liquid) */
+  .dyn-col .dc-price .dc-now::before { content: "From "; }
+  .dyn-col .dc-price .dc-now, .dyn-col .dc-price .dc-now.on-sale { font-size: 10px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase; }
+  /* a worktable's few artefacts: one masking-tape strip over the grid's
+     corner and a printed archive line at its top right - nothing more */
+  .dyn-col .dc-gridall { position: relative; }
+  .dyn-col .dc-gridall::before { content: ""; position: absolute; top: -30px; left: -12px; width: 128px; height: 32px;
+    z-index: 5; pointer-events: none; transform: rotate(-7deg); opacity: 0.9;
+    background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20130%2032'%3E%3Cpath%20d='M8%204%20L4%2010%20L9%2016%20L5%2022%20L9%2028%20L122%2030%20L126%2022%20L121%2016%20L125%209%20L120%203%20Z'%20fill='%23d9c9a3'%20opacity='0.72'/%3E%3Crect%20x='83'%20y='8'%20width='13'%20height='1.5'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='43'%20y='7'%20width='6'%20height='1.5'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='28'%20y='24'%20width='13'%20height='1.5'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='57'%20y='16'%20width='18'%20height='1.5'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='12'%20y='14'%20width='13'%20height='1.5'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='35'%20y='19'%20width='14'%20height='1.5'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='79'%20y='9'%20width='9'%20height='1.5'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='82'%20y='23'%20width='17'%20height='1.5'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+  .dyn-col .dc-gridall::after { content: "Archive \00b7  Collection 02 \00b7  Designed in NYC"; position: absolute;
+    top: -30px; right: 2px; pointer-events: none; font-size: 9px; font-weight: 600;
+    letter-spacing: 0.3em; text-transform: uppercase; color: rgba(20,17,16,0.45); }
 </style>
 
 {%- comment -%} Match the store theme's heading font when it exposes one (Dawn & most modern themes). {%- endcomment -%}
@@ -1040,7 +1092,7 @@
               data-wl-title="{{ product.title | escape }}"
               data-wl-url="{{ product.url }}"
               data-wl-image="{{ product.featured_image | image_url: width: 400 }}"
-              data-wl-price="{{ product.price | money }}">
+              data-wl-price="{{ product.price | money_without_trailing_zeros }}">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1Z"/></svg>
             </button>
 
@@ -1050,8 +1102,8 @@
               {%- endif -%}
               <h3 class="dc-title"><a href="{{ product.url }}">{{ product.title }}</a></h3>
               <div class="dc-price">
-                <span class="dc-now{% if on_sale %} on-sale{% endif %}">{{ product.price | money }}</span>
-                {%- if on_sale -%}<span class="dc-was">{{ product.compare_at_price | money }}</span>{%- endif -%}
+                <span class="dc-now{% if on_sale %} on-sale{% endif %}">{{ product.price | money_without_trailing_zeros }}</span>
+                {%- if on_sale -%}<span class="dc-was">{{ product.compare_at_price | money_without_trailing_zeros }}</span>{%- endif -%}
               </div>
 
               {%- if section.settings.show_swatches -%}
@@ -1082,7 +1134,7 @@
                 {%- endif -%}
               {%- endif -%}
               {%- if section.settings.show_buy_link -%}
-                <a class="dc-buy" href="{{ product.url }}">{{ section.settings.buy_label | default: 'Buy' }} <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></a>
+                <a class="dc-buy" href="{{ product.url }}">{{ section.settings.buy_label | default: 'Open' }} <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></a>
               {%- endif -%}
             </div>
           </div>
