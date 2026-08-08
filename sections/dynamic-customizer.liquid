@@ -1455,6 +1455,10 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
    button underneath. No variations, no description. */
 .dyn-popup-open { display: none; }
 #dhSlide.dh-slide-half .dh-slide-body { overflow: hidden !important; }
+/* vertical centering: the content block floats in the middle of the
+   window (auto margins collapse safely if it ever outgrows the panel) */
+#dhSlide.dh-slide-half .dh-slide-inject { min-height: 100%; display: flex !important; flex-direction: column; }
+#dhSlide.dh-slide-half .dh-slide-inject .product { margin-top: auto !important; margin-bottom: auto !important; }
 #dhSlide .dh-slide-inject .product { display: flex !important; flex-direction: column !important;
   height: auto !important; max-height: none !important; overflow: visible !important;
   gap: 12px !important; padding-top: 14px !important; padding-bottom: 16px !important; }
