@@ -45,6 +45,11 @@
   color: rgba(23, 19, 15, 0.55);
 }
 
+/* The retired spec/proof lines stay hidden even if an older section
+   version still prints them. */
+.dyx-specs,
+.dyx-proof { display: none !important; }
+
 /* ---- Production workflow strip ---------------------------------------- */
 /* The helper script builds circled 1-2-3 steps; restyle them as numbered
    editorial captions — 01 PRODUCT / 02 ARTWORK / 03 GIFT / 04 ORDER. */
