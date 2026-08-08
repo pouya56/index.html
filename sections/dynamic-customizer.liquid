@@ -1585,7 +1585,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
       <!-- Only shows inside the surprise popup: one button, straight to the product page.
            Every style is inline so no stylesheet or script is needed for it to render;
            the popup CSS only flips display:none to flex. -->
-      <a class="dyn-popup-open" href="{% if dyn_product %}{{ dyn_product.url }}{% else %}#{% endif %}"
+      <a class="dyn-popup-open" href="#"
         style="display:none;position:absolute;top:14%;bottom:14%;right:3.5%;width:22%;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-decoration:none;z-index:6;background:none;border:0;box-shadow:none;padding:8px 2px;margin:0;">
         <span style="font:800 19px Georgia,'Times New Roman',serif;letter-spacing:.08em;text-transform:uppercase;color:#17130f;border-bottom:2px solid #17130f;padding-bottom:7px;">Admit One</span>
         <span style="font:700 12px Georgia,'Times New Roman',serif;letter-spacing:.1em;text-transform:uppercase;color:#17130f;">View full product</span>
@@ -1607,11 +1607,14 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
           if (!a) {
             a = document.createElement("a");
             a.className = "dyn-popup-open";
-            var url = "#";
-            try { url = (JSON.parse(document.getElementById("dyn-config").textContent).shopify || {}).productUrl || "#"; } catch (e) {}
-            a.href = url;
             bb.appendChild(a);
           }
+          /* the product URL comes from the page's own config JSON - the
+             markup href stays a plain # so no Liquid ever sits in it */
+          var url = "#";
+          try { url = (JSON.parse(document.getElementById("dyn-config").textContent).shopify || {}).productUrl || "#"; } catch (e) {}
+          var cur = a.getAttribute("href") || "#";
+          if (url && url !== "#" && (cur === "#" || cur.indexOf("%7B") !== -1 || cur.indexOf("{") !== -1)) a.href = url;
           if (getComputedStyle(bb).position === "static") bb.style.position = "relative";
           imp(a, { position: "absolute", top: "14%", bottom: "14%", right: "3.5%", width: "22%",
             display: "flex", "flex-direction": "column", gap: "8px", "align-items": "center",
