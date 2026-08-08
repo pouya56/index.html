@@ -1461,26 +1461,47 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 #dhSlide.dh-slide-half .dh-slide-inject .product { margin-top: auto !important; margin-bottom: auto !important; }
 #dhSlide .dh-slide-inject .product { display: flex !important; flex-direction: column !important;
   height: auto !important; max-height: none !important; overflow: visible !important;
-  gap: 12px !important; padding-top: 14px !important; padding-bottom: 16px !important; }
+  gap: 20px !important; padding-top: 14px !important; padding-bottom: 18px !important; }
 #dhSlide .dh-slide-inject .gallery { order: -1; position: static !important; }
-#dhSlide .dh-slide-inject .gallery-main { width: min(100%, 38vh) !important; }
-#dhSlide .dh-slide-inject .gal-nav .gal-prev { left: -72px; }
-#dhSlide .dh-slide-inject .gal-nav .gal-next { right: -72px; }
+/* the product is the focal point: ~13% larger, floating on a soft white
+   wash that quiets the paper wrinkles behind it, over a faint gallery
+   ground shadow */
+#dhSlide .dh-slide-inject .gallery-main { width: min(100%, 43vh) !important; position: relative;
+  background: radial-gradient(closest-side, rgba(255,255,255,0.9), rgba(255,255,255,0.55) 60%, rgba(255,255,255,0) 100%) !important; }
+#dhSlide .dh-slide-inject .gallery-main::after { content: ""; position: absolute; left: 50%; bottom: 2%;
+  transform: translateX(-50%); width: 52%; height: 16px; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse closest-side, rgba(20,17,16,0.16), rgba(20,17,16,0) 75%); }
+/* editorial navigation: the hand-drawn arrows keep tiny letterspaced labels */
+#dhSlide .dh-slide-inject .gal-nav .gal-prev { left: -84px; }
+#dhSlide .dh-slide-inject .gal-nav .gal-next { right: -84px; }
+#dhSlide .dh-slide-inject .gal-nav .gal-arrow { overflow: visible !important; }
+#dhSlide .dh-slide-inject .gal-nav .gal-arrow::after { position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%); margin-top: 7px; font-size: 9px; font-weight: 600;
+  letter-spacing: 0.32em; text-transform: uppercase; color: rgba(23,19,15,0.62); white-space: nowrap; }
+#dhSlide .dh-slide-inject .gal-nav .gal-prev::after { content: "Previous"; }
+#dhSlide .dh-slide-inject .gal-nav .gal-next::after { content: "Next"; }
+/* tiny collectible product line above the photo, magazine-style */
+#dhSlide .dh-slide-inject .dyn-popup-meta { order: -2; text-align: center; margin: 0;
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.34em; text-transform: uppercase;
+  color: rgba(23,19,15,0.55); }
+/* while the window is open, the brand mark rises a touch */
+body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: translateY(-10px); }
 #dhSlide .dh-slide-inject #buyBox.col-right { display: flex !important; position: relative;
-  flex-direction: column; align-items: center; text-align: center; gap: 10px;
-  width: min(100%, 660px); margin: 0 auto; padding: 28px 8% 30px !important; }
+  flex-direction: column; align-items: center; text-align: center; gap: 14px;
+  width: min(100%, 660px); margin: 0 auto; padding: 26px 8% 30px !important; }
 #dhSlide .dh-slide-inject #buyBox.col-right .headline {
-  margin: 0; padding: 0 0 8px; border-bottom: 2.5px solid #17130f; min-width: 46%;
+  margin: 0; padding: 0 0 10px; border-bottom: 2.5px solid #17130f; min-width: 46%;
   font-family: Georgia, "Times New Roman", serif !important; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.04em; font-size: clamp(20px, 2vw, 30px); color: #17130f !important; }
+  text-transform: uppercase; letter-spacing: 0.06em; font-size: clamp(23px, 2.3vw, 34px); color: #17130f !important; }
+/* the price whispers: small letterspaced label, not a shouting number */
 #dhSlide .dh-slide-inject #buyBox.col-right .price-row { margin: 0; justify-content: center; }
 #dhSlide .dh-slide-inject #buyBox.col-right .price-row .price {
-  font-family: Georgia, "Times New Roman", serif !important; font-weight: 700;
-  font-size: 24px; letter-spacing: 0.14em; color: #a1272e !important; }
+  font-family: Georgia, "Times New Roman", serif !important; font-weight: 600;
+  font-size: 13.5px; letter-spacing: 0.28em; text-transform: uppercase; color: #8f2b30 !important; }
 #dhSlide .dh-slide-inject #buyBox.col-right .price-row .price-note { display: none; }
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-popup-open { display: flex !important;
   position: static !important; top: auto !important; bottom: auto !important; right: auto !important;
-  width: auto !important; margin: 6px 0 0 !important; }
+  width: auto !important; margin: 12px 0 0 !important; }
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-popup-open:hover span { color: #a1272e !important; border-color: #a1272e !important; }
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-actionbar,
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-steps,
@@ -1576,8 +1597,8 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
            the popup CSS only flips display:none to flex. -->
       <a class="dyn-popup-open" href="#"
         style="display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-decoration:none;z-index:6;background:none;border:0;box-shadow:none;padding:8px 2px;margin:6px 0 0;">
-        <span style="font:800 19px Georgia,'Times New Roman',serif;letter-spacing:.08em;text-transform:uppercase;color:#17130f;border-bottom:2px solid #17130f;padding-bottom:7px;">Admit One</span>
-        <span style="font:700 12px Georgia,'Times New Roman',serif;letter-spacing:.1em;text-transform:uppercase;color:#17130f;">View full product</span>
+        <span style="font:800 19px Georgia,'Times New Roman',serif;letter-spacing:.14em;text-transform:uppercase;color:#17130f;border-bottom:2px solid #17130f;padding-bottom:7px;white-space:nowrap;">Open Product</span>
+        <span style="font:600 10.5px Georgia,'Times New Roman',serif;letter-spacing:.3em;text-transform:uppercase;color:rgba(23,19,15,0.72);white-space:nowrap;">Start customizing</span>
       </a>
       <script>
       /* Belt and braces for the popup's ticket stub: when this page runs
@@ -1614,12 +1635,28 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
           if ((!art || art === "none") && !a.querySelector("span") && !a.querySelector(".dyn-po-t")) {
             a.innerHTML = "";
             var s1 = document.createElement("span");
-            s1.className = "dyn-po-t"; s1.textContent = "Admit One";
-            s1.style.cssText = "font:800 19px Georgia,'Times New Roman',serif;letter-spacing:.08em;text-transform:uppercase;color:#17130f;border-bottom:2px solid #17130f;padding-bottom:7px;";
+            s1.className = "dyn-po-t"; s1.textContent = "Open Product";
+            s1.style.cssText = "font:800 19px Georgia,'Times New Roman',serif;letter-spacing:.14em;text-transform:uppercase;color:#17130f;border-bottom:2px solid #17130f;padding-bottom:7px;white-space:nowrap;";
             var s2 = document.createElement("span");
-            s2.textContent = "View full product";
-            s2.style.cssText = "font:700 12px Georgia,'Times New Roman',serif;letter-spacing:.1em;text-transform:uppercase;color:#17130f;";
+            s2.textContent = "Start customizing";
+            s2.style.cssText = "font:600 10.5px Georgia,'Times New Roman',serif;letter-spacing:.3em;text-transform:uppercase;color:rgba(23,19,15,0.72);white-space:nowrap;";
             a.appendChild(s1); a.appendChild(s2);
+          }
+          /* premium price copy: "$22.00" reads as "FROM $22" */
+          var pp = document.querySelector("#dhSlide .dh-slide-inject #pPrice");
+          if (pp) {
+            var pt = (pp.textContent || "").trim();
+            if (pt && !/^from/i.test(pt)) pp.textContent = "From " + pt.replace(/\.00$/, "");
+          }
+          /* collectible product number above the photo, derived from the URL */
+          var prod = document.querySelector("#dhSlide .dh-slide-inject .product");
+          if (prod && !prod.querySelector(".dyn-popup-meta")) {
+            var hsh = 0, uu = url || "";
+            for (var hi = 0; hi < uu.length; hi++) hsh = (hsh * 31 + uu.charCodeAt(hi)) % 997;
+            var meta = document.createElement("div");
+            meta.className = "dyn-popup-meta";
+            meta.textContent = "Dynaeimic \u00b7 Product " + String(hsh + 1).replace(/^(\d)$/, "00$1").replace(/^(\d\d)$/, "0$1");
+            prod.insertBefore(meta, prod.firstChild);
           }
           if (tries < 80) setTimeout(stub, 500);
         }
