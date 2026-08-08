@@ -1460,9 +1460,12 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 #dhSlide.dh-slide-half .dh-slide-inject { min-height: 100%; display: flex !important; flex-direction: column; }
 #dhSlide.dh-slide-half .dh-slide-inject .product { margin-top: auto !important; margin-bottom: auto !important; }
 #dhSlide .dh-slide-inject .product { display: flex !important; flex-direction: column !important;
+  align-items: center !important; width: 100% !important; max-width: none !important;
+  margin-left: 0 !important; margin-right: 0 !important;
   height: auto !important; max-height: none !important; overflow: visible !important;
   gap: 20px !important; padding-top: 14px !important; padding-bottom: 18px !important; }
-#dhSlide .dh-slide-inject .gallery { order: -1; position: static !important; }
+#dhSlide .dh-slide-inject .gallery { order: -1; position: static !important;
+  width: 100%; display: flex !important; flex-direction: column; align-items: center; }
 /* the product is the focal point: ~13% larger, floating on a soft white
    wash that quiets the paper wrinkles behind it, over a faint gallery
    ground shadow */
@@ -1481,7 +1484,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 #dhSlide .dh-slide-inject .gal-nav .gal-prev::after { content: "Previous"; }
 #dhSlide .dh-slide-inject .gal-nav .gal-next::after { content: "Next"; }
 /* tiny collectible product line above the photo, magazine-style */
-#dhSlide .dh-slide-inject .dyn-popup-meta { order: -2; text-align: center; margin: 0;
+#dhSlide .dh-slide-inject .dyn-popup-meta { order: -2; text-align: center; margin: 0; width: 100%;
   font-size: 9.5px; font-weight: 600; letter-spacing: 0.34em; text-transform: uppercase;
   color: rgba(23,19,15,0.55); }
 /* while the window is open, the brand mark rises a touch */
