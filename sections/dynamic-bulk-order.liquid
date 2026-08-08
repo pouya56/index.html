@@ -107,6 +107,118 @@
   @media (max-width:640px) { .dbo-contact { grid-template-columns:1fr; } }
 </style>
 
+
+<style>
+/* ==== DYNAEIMIC studio intake re-skin: same machinery, editorial skin ==== */
+.dbo { --paper:#faf8f2; --inkk:#17130f; --rule:rgba(20,17,16,0.18); --red:#b8221c;
+  font-family: var(--font); max-width: 1180px; padding: 56px 26px 110px; }
+/* header: serif masthead with breathing room and one strip of tape */
+.dbo-head { position: relative; margin: 0 0 44px; padding-top: 10px; }
+.dbo-head::before { content: ""; position: absolute; top: -20px; left: 50%; margin-left: -180px;
+  width: 120px; height: 29px; transform: rotate(-6deg); opacity: 0.9; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20124%2030'%3E%3Cpath%20d='M7%203%20L3%209%20L8%2015%20L4%2021%20L8%2027%20L116%2029%20L120%2021%20L115%2015%20L119%208%20L114%202%20Z'%20fill='%23d9c9a3'%20opacity='0.7'/%3E%3Crect%20x='38'%20y='14'%20width='7'%20height='1.4'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='58'%20y='20'%20width='8'%20height='1.4'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='19'%20y='7'%20width='6'%20height='1.4'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='59'%20y='22'%20width='10'%20height='1.4'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='15'%20y='12'%20width='14'%20height='1.4'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='76'%20y='16'%20width='10'%20height='1.4'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3Crect%20x='30'%20y='8'%20width='10'%20height='1.4'%20fill='%23c4b28a'%20opacity='0.5'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+.dbo-head::after { content: "Dynaeimic Studio \00b7  Project Intake"; display: block; margin-top: 14px;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.32em; text-transform: uppercase; color: rgba(23,19,15,0.45); }
+.dbo-head h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.05em; font-size: clamp(30px, 4.4vw, 52px); margin: 0 0 14px; color: var(--inkk); }
+.dbo-head p { font-size: 15px; color: rgba(23,19,15,0.6); max-width: 560px; line-height: 1.65; }
+/* the three-step strip */
+.dbo-steps { list-style: none; display: flex; justify-content: center; gap: clamp(18px, 5vw, 64px);
+  margin: 0 0 54px; padding: 0 0 26px; border-bottom: 1px solid var(--rule); }
+.dbo-steps li { display: flex; flex-direction: column; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase;
+  color: rgba(23,19,15,0.38); transition: color 0.3s; }
+.dbo-steps li span { font-family: Georgia, serif; font-size: 21px; font-weight: 800; letter-spacing: 0.06em; }
+.dbo-steps li.is-on { color: var(--inkk); }
+.dbo-steps li.is-on span { border-bottom: 2px solid var(--inkk); padding-bottom: 3px; }
+/* two balanced columns on desktop: information left, details right */
+@media (min-width: 941px) {
+  #dboForm { display: grid; grid-template-columns: 5fr 7fr; gap: 48px; align-items: start; }
+  .dbo-coltitle-right, .dbo-rows, .dbo-add { grid-column: 2; }
+  .dbo-coltitle-right { grid-row: 1; }
+  .dbo-rows { grid-row: 2; }
+  .dbo-add { grid-row: 3; justify-self: start; }
+  .dbo-summary { grid-column: 1; grid-row: 1 / span 3; position: sticky; top: 76px; margin-top: 0; }
+}
+.dbo-coltitle { font-family: Georgia, "Times New Roman", serif; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.08em; font-size: 17px; color: var(--inkk); margin: 0 0 18px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--inkk); }
+/* product rows: miniature printed cards on the worktable */
+.dbo-rows { gap: 26px; }
+.dbo-row { background: var(--paper); border: 1px solid var(--rule); border-left: 5px solid var(--red);
+  border-radius: 3px; box-shadow: 0 1px 2px rgba(20,17,16,0.1), 0 14px 30px -18px rgba(20,17,16,0.3);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.25, 1); }
+.dbo-row:nth-child(odd) { transform: rotate(-0.4deg); }
+.dbo-row:nth-child(even) { transform: rotate(0.35deg); }
+@media (hover: hover) { .dbo-row:hover { transform: rotate(0deg) translateY(-3px);
+  box-shadow: 0 2px 4px rgba(20,17,16,0.12), 0 22px 44px -18px rgba(20,17,16,0.38); } }
+.dbo-pick { border-radius: 2px; border: 1.5px dashed rgba(20,17,16,0.3); background: #fff; }
+.dbo-pick:hover { border-color: var(--inkk); background: #fff; }
+.dbo-pname { font-family: Georgia, serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+.dbo-varline { background: rgba(255,255,255,0.7); border: 1px solid var(--rule); border-radius: 2px; }
+.dbo-optname, .dbo-qtywrap span { letter-spacing: 0.18em; color: rgba(23,19,15,0.5); }
+.dbo-opt, .dbo-qty { border: 1px solid rgba(20,17,16,0.25); border-radius: 2px; background: #fdfcf9;
+  transition: border-color 0.25s, box-shadow 0.25s; }
+.dbo-opt:focus, .dbo-qty:focus { border-color: var(--inkk); box-shadow: 0 1px 0 var(--inkk); }
+.dbo-varremove { border-radius: 2px; border-color: rgba(20,17,16,0.25); background: #fdfcf9; }
+.dbo-addvar { color: var(--inkk); text-transform: uppercase; font-size: 11px; letter-spacing: 0.2em; }
+.dbo-remove { text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.18em; }
+/* upload: a wide drop workspace per variation */
+.dbo-varfile { flex: 1 1 100%; max-width: none; height: 74px; border: 1.5px dashed rgba(20,17,16,0.35);
+  border-radius: 2px; background: #fdfcf9; justify-content: center; flex-direction: column; gap: 3px;
+  text-transform: uppercase; letter-spacing: 0.16em; font-size: 10.5px; color: rgba(23,19,15,0.55);
+  transition: border-color 0.25s, background 0.25s, transform 0.25s; }
+.dbo-varfile::after { content: "PDF \00b7 AI \00b7 EPS \00b7 SVG \00b7 PNG \00b7 JPG \2014  or click to browse";
+  font-size: 8.5px; letter-spacing: 0.2em; color: rgba(23,19,15,0.4); }
+.dbo-varfile.has-file { border-style: solid; border-color: var(--inkk); color: var(--inkk); }
+.dbo-varfile.has-file::after { content: "Attached \2713"; color: var(--inkk); }
+.dbo-varfile.is-drag { border-color: var(--red); background: #fdf1ef; transform: scale(1.01); }
+.dbo-varfile:hover { border-color: var(--inkk); color: var(--inkk); }
+/* add-product: a strong editorial control */
+.dbo-add { border-radius: 2px; border: 2px solid var(--inkk); background: var(--inkk); color: #f5f3ef;
+  text-transform: uppercase; letter-spacing: 0.2em; font-size: 12px; font-weight: 700; height: 50px;
+  transition: transform 0.25s, box-shadow 0.25s, background 0.25s; }
+.dbo-add:hover { background: #000; transform: translateY(-2px); box-shadow: 0 14px 26px -14px rgba(20,17,16,0.5); }
+/* left column: the brief */
+.dbo-summary { background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(20,17,16,0.1), 0 16px 34px -20px rgba(20,17,16,0.3); padding: 26px 26px 24px; }
+.dbo-contact { gap: 16px; margin-bottom: 22px; }
+.dbo-contact label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(23,19,15,0.55); gap: 7px; }
+.dbo-contact input, .dbo-contact textarea { border: 1px solid rgba(20,17,16,0.25); border-radius: 2px;
+  background: #fdfcf9; height: 46px; padding: 0 12px; transition: border-color 0.25s, box-shadow 0.25s; }
+.dbo-contact textarea { height: auto; min-height: 86px; padding: 11px 12px; }
+.dbo-contact input:focus, .dbo-contact textarea:focus { outline: none; border-color: var(--inkk); box-shadow: 0 1px 0 var(--inkk); }
+/* the matte black promise */
+.dbo-submit { border-radius: 2px; height: 56px; background: var(--inkk); letter-spacing: 0.18em;
+  text-transform: uppercase; font-size: 13px; font-weight: 700;
+  transition: transform 0.25s, box-shadow 0.25s, background 0.25s; }
+.dbo-submit::after { content: " \2192"; }
+.dbo-submit:hover { opacity: 1; background: #000; transform: translateY(-2px); box-shadow: 0 16px 30px -14px rgba(20,17,16,0.55); }
+.dbo-note { letter-spacing: 0.04em; }
+/* trust notes: quiet editorial checklist */
+.dbo-trust { list-style: none; margin: 20px 0 0; padding: 16px 0 0; border-top: 1px solid var(--rule);
+  display: flex; flex-direction: column; gap: 9px; }
+.dbo-trust li { font-size: 10.5px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(23,19,15,0.55); }
+.dbo-trust li::before { content: "\2713"; margin-right: 9px; color: var(--inkk); }
+/* picker modal on paper */
+.dbo-picker-panel { border-radius: 4px; background: #f8f6f0; }
+.dbo-picker-head h3 { font-family: Georgia, serif; text-transform: uppercase; letter-spacing: 0.06em; }
+.dbo-picker-search input { border-radius: 2px; background: #fdfcf9; border-color: rgba(20,17,16,0.25); }
+.dbo-tile { border-radius: 2px; background: #fdfcf9; transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; }
+.dbo-tile:hover { border-color: var(--inkk); transform: translateY(-3px); box-shadow: 0 12px 24px -12px rgba(20,17,16,0.35); }
+.dbo-tile-img { border-radius: 2px; }
+/* success note on paper */
+.dbo-success { background: var(--paper); border-radius: 3px; border-color: var(--rule); }
+.dbo-success h2 { font-family: Georgia, serif; text-transform: uppercase; letter-spacing: 0.06em; }
+/* one registration mark near the foot - nothing more */
+.dbo { position: relative; }
+.dbo::after { content: ""; position: absolute; bottom: 34px; right: 8px; width: 26px; height: 26px; opacity: 0.35; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Ccircle cx='13' cy='13' r='8' fill='none' stroke='%2317130f' stroke-width='1.4'/%3E%3Cpath d='M13 1 V25 M1 13 H25' stroke='%2317130f' stroke-width='1.2'/%3E%3C/svg%3E") center / contain no-repeat; }
+@media (max-width: 940px) { .dbo-steps { gap: 16px; } .dbo-summary { margin-top: 30px; } }
+</style>
+
 <section class="dbo" id="dboRoot" data-minqty="{{ section.settings.min_qty | default: 1 }}" data-notify="{{ notify_email }}">
   {%- assign bo_logo = section.settings.logo | default: settings.logo -%}
   {%- if section.settings.show_logo != false -%}
@@ -124,9 +236,15 @@
   {%- endif -%}
 
   <div class="dbo-head">
-    <h1>{{ section.settings.heading | default: 'Bulk order' }}</h1>
-    {%- if section.settings.intro != blank -%}<p>{{ section.settings.intro }}</p>{%- endif -%}
+    <h1>{{ section.settings.heading | default: 'Start a Project' }}</h1>
+    <p>{{ section.settings.intro | default: "Create a custom order with multiple products, upload your artwork, specify quantities, and we'll prepare a production-ready quote before printing." }}</p>
   </div>
+
+  <ol class="dbo-steps" id="dboSteps" aria-label="How it works">
+    <li class="is-on"><span>01</span>Choose Products</li>
+    <li><span>02</span>Upload Artwork</li>
+    <li><span>03</span>Submit Project</li>
+  </ol>
 
   {%- if bo_coll.products.size == 0 -%}
     <div class="dbo-empty">No products are available for bulk order yet.</div>
@@ -147,20 +265,28 @@
     </script>
 
     <div id="dboForm">
+      <h2 class="dbo-coltitle dbo-coltitle-right">Project Details</h2>
       <div class="dbo-rows" id="dboRows"></div>
       <button type="button" class="dbo-add" id="dboAdd">
         <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         {{ section.settings.add_label | default: 'Add another product' }}
       </button>
       <div class="dbo-summary">
+        <h2 class="dbo-coltitle">Project Information</h2>
         <div class="dbo-contact">
           <label class="dbo-full">Name<input type="text" id="dboName" autocomplete="name"></label>
           <label>Email<input type="email" id="dboEmail" autocomplete="email" required></label>
           <label>Phone (optional)<input type="tel" id="dboPhone" autocomplete="tel"></label>
           <label class="dbo-full">Notes (optional)<textarea id="dboNotes" placeholder="Deadline, special instructions…"></textarea></label>
         </div>
-        <button type="button" class="dbo-submit" id="dboSubmit">{{ section.settings.submit_label | default: 'Send my bulk order' }}</button>
+        <button type="button" class="dbo-submit" id="dboSubmit">{{ section.settings.submit_label | default: 'Request Quote' }}</button>
         <p class="dbo-note">{{ section.settings.submit_note | default: 'We’ll email you a confirmation. Your uploaded designs are included automatically.' }}</p>
+        <ul class="dbo-trust" aria-label="What to expect">
+          <li>Proof sent before production</li>
+          <li>Premium papers &amp; materials</li>
+          <li>Fast turnaround</li>
+          <li>Dedicated design support</li>
+        </ul>
       </div>
     </div>
 
@@ -431,6 +557,43 @@
         .then(function () { formBox.style.display = "none"; if (successBox) successBox.hidden = false; window.scrollTo({ top: root.offsetTop - 20, behavior: "smooth" }); })
         .catch(function () { alert("Sorry, we couldn’t send that. Please try again or email us directly."); submitting = false; submitBtn.disabled = false; submitBtn.textContent = t; });
     });
+  });
+})();
+</script>
+
+
+<script>
+(function () {
+  var root = document.getElementById("dboRoot");
+  var steps = document.getElementById("dboSteps");
+  if (!root || !steps) return;
+  var items = steps.querySelectorAll("li");
+  function setStep(n) { items.forEach ? null : 0;
+    Array.prototype.forEach.call(items, function (li, i) { li.classList.toggle("is-on", i === n - 1); }); }
+  setInterval(function () {
+    var rows = document.getElementById("dboRows");
+    if (!rows) return;
+    var filed = rows.querySelector(".dbo-varfile.has-file");
+    var picked = rows.querySelector(".dbo-pick img");
+    setStep(filed ? 3 : (picked ? 2 : 1));
+  }, 700);
+  /* the upload strips accept real drag-and-drop */
+  document.addEventListener("dragover", function (e) {
+    var l = e.target.closest && e.target.closest(".dbo-varfile");
+    if (l) { e.preventDefault(); l.classList.add("is-drag"); }
+  });
+  document.addEventListener("dragleave", function (e) {
+    var l = e.target.closest && e.target.closest(".dbo-varfile");
+    if (l) l.classList.remove("is-drag");
+  });
+  document.addEventListener("drop", function (e) {
+    var l = e.target.closest && e.target.closest(".dbo-varfile");
+    if (!l) return;
+    e.preventDefault(); l.classList.remove("is-drag");
+    var inp = l.querySelector("input[type=file]");
+    if (inp && e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      try { inp.files = e.dataTransfer.files; inp.dispatchEvent(new Event("change", { bubbles: true })); } catch (err) {}
+    }
   });
 })();
 </script>
