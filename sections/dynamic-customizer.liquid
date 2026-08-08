@@ -1496,7 +1496,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-popup-open { display: flex !important; }
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-popup-open:hover span { color: #a1272e !important; border-color: #a1272e !important; }
 /* tiny printed serial so we can always tell which version is live */
-#dhSlide .dh-slide-inject #buyBox.col-right::after { content: "No. 9"; position: absolute;
+#dhSlide .dh-slide-inject #buyBox.col-right::after { content: "No. 10"; position: absolute;
   right: 6px; bottom: 2px; font: 700 10px Georgia, serif; letter-spacing: 0.12em;
   color: #a1272e; opacity: 0.85; pointer-events: none; }
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-actionbar,
@@ -1509,12 +1509,7 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
 #dhSlide .dh-slide-inject #buyBox.col-right {
   background: url('{{ section.settings.popup_ticket_image | image_url: width: 1400 }}') center / 100% 100% no-repeat; }
 {%- endif -%}
-{%- if section.settings.popup_btn_image != blank -%}
-/* uploaded artwork replaces the stub's Admit One text */
-#dhSlide .dh-slide-inject #buyBox.col-right .dyn-popup-open {
-  background: url('{{ section.settings.popup_btn_image | image_url: width: 600 }}') center / contain no-repeat !important; }
-#dhSlide .dh-slide-inject #buyBox.col-right .dyn-popup-open span { display: none !important; }
-{%- endif -%}
+
 </style>
 
   <!-- Header (logo + glass bar + search) is now its own section: dynamic-header.liquid -->
@@ -2713,12 +2708,6 @@ textarea.engrave-input { resize: none; overflow-y: hidden; line-height: 1.35; fo
     {
       "type": "header",
       "content": "Surprise popup"
-    },
-    {
-      "type": "image_picker",
-      "id": "popup_btn_image",
-      "label": "Popup button image",
-      "info": "Optional artwork for the View-full-product button inside the surprise window. A wide transparent PNG (about 700x180px) works best; empty keeps the plain black button."
     },
     {
       "type": "image_picker",
