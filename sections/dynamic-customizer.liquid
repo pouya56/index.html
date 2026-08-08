@@ -2547,13 +2547,73 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
   #dynInlineStage .engrave-stage { margin: 0; }
   #dynInlineStage .engrave-frame { width: 100%; max-width: none; }
   #dynInlineStage .engrave-frame > img { max-height: 100%; object-fit: contain; }
-  #dynInlineTools { display: flex; flex-direction: column; gap: 12px; margin: 14px 0 0; }
+  /* The design tools live in an obvious archive card: white stock, hairline
+     border, red spine, small tracked label - the page's own language. */
+  #dynInlineTools {
+    display: flex; flex-direction: column; gap: 14px; margin: 14px 0 0;
+    background: #ffffff; border: 1px solid rgba(23, 19, 15, 0.16);
+    border-left: 3px solid #b3242a; border-radius: 2px; padding: 16px;
+    box-shadow: 0 14px 30px -22px rgba(23, 19, 15, 0.45);
+  }
+  #dynInlineTools::before {
+    content: "Design Studio"; display: block;
+    font-size: 9.5px; font-weight: 800; letter-spacing: 0.26em; text-transform: uppercase;
+    color: rgba(23, 19, 15, 0.55);
+    padding-bottom: 10px; border-bottom: 1px solid rgba(23, 19, 15, 0.12);
+  }
   #dynInlineTools[hidden], #dynInlineStage[hidden] { display: none !important; }
   #dynInlineTools .side-tabs { margin: 0; justify-content: flex-start; }
+  #dynInlineTools .side-tab {
+    border-radius: 2px; border: 1px solid rgba(23, 19, 15, 0.4); background: transparent;
+    color: #17130f; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  #dynInlineTools .side-tab:hover { border-color: #17130f; }
+  #dynInlineTools .side-tab.on { background: #17130f; color: #f6f5f1; border-color: #17130f; }
   #dynInlineTools .up-controls { margin: 0; }
-  #dynInlineTools .modal-foot { background: none; border: 0; padding: 0; display: flex; align-items: center; gap: 12px; }
-  #dynInlineTools .price-breakdown { flex: 1; min-width: 0; }
-  #dynInlineTools .price-breakdown-toggle .total { font-size: 20px; }
+  /* text pill, font picker, emoji + plus buttons: square + hairline */
+  #dynInlineTools .engrave-input {
+    border-radius: 2px !important; border: 1px solid rgba(23, 19, 15, 0.25) !important;
+    background: #fbfaf7 !important; box-shadow: none !important;
+  }
+  #dynInlineTools .engrave-input:focus {
+    border-color: #17130f !important; box-shadow: 0 0 0 3px rgba(23, 19, 15, 0.07) !important;
+  }
+  #dynInlineTools .up-controls button,
+  #dynInlineTools .up-controls select,
+  #dynInlineTools .up-controls .ios-field { border-radius: 2px !important; }
+  /* footer inside the card: price row on top, buttons full-width below */
+  #dynInlineTools .modal-foot {
+    background: none; border: 0; padding: 0;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px;
+  }
+  #dynInlineTools .price-breakdown { flex: 1 1 100%; min-width: 0; }
+  #dynInlineTools .price-breakdown-toggle .total {
+    font-family: Georgia, "Times New Roman", serif; font-weight: 700; font-size: 22px;
+  }
+  #dynInlineTools .price-breakdown-toggle .meta {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(23, 19, 15, 0.55);
+  }
+  #dynInlineTools .foot-actions { display: flex; gap: 10px; width: 100%; }
+  #dynInlineTools .foot-actions .btn { flex: 1; }
+  #dynInlineTools .btn-ghost {
+    border-radius: 2px; border: 1px solid rgba(23, 19, 15, 0.35); background: transparent;
+    color: #17130f; font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+  }
+  #dynInlineTools .btn-ghost:hover { border-color: #17130f; background: rgba(23, 19, 15, 0.04); }
+  /* Add design: matte ink, red on hover - the flip-skin faces retire */
+  #dynInlineTools #uploadApply.btn-primary {
+    background: #17130f !important; border-radius: 2px; box-shadow: none; text-shadow: none;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  #dynInlineTools #uploadApply.btn-primary::before,
+  #dynInlineTools #uploadApply.btn-primary::after { display: none; }
+  #dynInlineTools #uploadApply.btn-primary:hover:not(:disabled) {
+    background: #b3242a !important; transform: translateY(-1px);
+    box-shadow: 0 12px 24px -14px rgba(23, 19, 15, 0.5);
+  }
+  #dynInlineTools #uploadApply.btn-primary:disabled { opacity: 0.35; }
 </style>
 <script>
 (function () {
