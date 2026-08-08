@@ -301,3 +301,138 @@
   letter-spacing: 0.14em;
   font-weight: 700;
 }
+
+/* ---- Cart drawer ------------------------------------------------------- */
+/* The drawer lives at body level, outside .product — give it the palette too. */
+aside.dyn-cart,
+.dyn-cart-overlay {
+  --accent: #17130f;
+  --accent-hover: #000000;
+  --accent-press: #000000;
+  --accent-soft: #f1efe9;
+}
+/* Graph paper over cream (the paper snippet forces white — match its
+   `aside.dyn-cart` selector so this later sheet wins the tie). */
+aside.dyn-cart {
+  background:
+    repeating-linear-gradient(0deg, rgba(23, 19, 15, 0.045) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, rgba(23, 19, 15, 0.045) 0 1px, transparent 1px 24px),
+    #faf9f5 !important;
+  border-left: 1px solid rgba(23, 19, 15, 0.2);
+}
+.dyn-cart-overlay { background: rgba(23, 19, 15, 0.5); }
+.dyn-cart-head {
+  border-bottom: 1px solid rgba(23, 19, 15, 0.85);
+  padding: 20px 22px 14px;
+}
+.dyn-cart-head h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 15px;
+}
+.dyn-cart-head h3::after {
+  content: "Dynaeimic \00b7 Studio Archive";
+  display: block;
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  color: rgba(23, 19, 15, 0.5);
+  margin-top: 4px;
+}
+.dyn-cart-close {
+  border-radius: 2px;
+  background: transparent;
+  border: 1px solid rgba(23, 19, 15, 0.35);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.dyn-cart-close:hover { background: #17130f; color: #f6f5f1; }
+.dyn-cart-items { padding: 8px 18px; }
+/* Each line is a miniature archive card: white stock, ink hairline, red
+   spine, the faintest alternating tilt. */
+.dyn-cart-item {
+  background: #ffffff;
+  border: 1px solid rgba(23, 19, 15, 0.16);
+  border-left: 3px solid #b3242a;
+  border-radius: 2px;
+  padding: 14px;
+  margin: 12px 0;
+  box-shadow: 0 10px 22px -16px rgba(23, 19, 15, 0.4);
+  transform: rotate(-0.35deg);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.dyn-cart-item:nth-child(even) { transform: rotate(0.3deg); }
+.dyn-cart-item:hover {
+  transform: rotate(0deg) translateY(-2px);
+  box-shadow: 0 14px 26px -16px rgba(23, 19, 15, 0.5);
+}
+.dyn-cart-item img {
+  border-radius: 2px;
+  border: 1px solid rgba(23, 19, 15, 0.12);
+}
+.dyn-cart-item .ci-title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 800;
+}
+.dyn-cart-item .ci-opt,
+.dyn-cart-item .ci-fee {
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(23, 19, 15, 0.6);
+}
+.dyn-cart-item .ci-fee-remove { color: #b3242a; }
+.dyn-cart-item .ci-price {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+}
+.dyn-cart-qty {
+  border-radius: 2px;
+  border-color: rgba(23, 19, 15, 0.3);
+}
+.dyn-cart-remove {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+}
+.dyn-cart-remove:hover { color: #b3242a; }
+.dyn-cart-foot:not(:empty) {
+  border-top: 1px solid rgba(23, 19, 15, 0.85);
+  background: rgba(255, 255, 255, 0.6);
+}
+.dyn-cart-subtotal {
+  font-family: Georgia, "Times New Roman", serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.dyn-cart-note {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(23, 19, 15, 0.55);
+}
+.dyn-cart-foot .btn { text-decoration: none; }
+.dyn-cart-foot .btn-primary {
+  background: #17130f;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.dyn-cart-foot .btn-primary:hover { background: #b3242a; }
+.dyn-cart-foot .btn-ghost {
+  border: 1px solid rgba(23, 19, 15, 0.4);
+  border-radius: 2px;
+  background: transparent;
+  color: #17130f;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.dyn-cart-foot .btn-ghost:hover { border-color: #17130f; background: rgba(23, 19, 15, 0.04); }
