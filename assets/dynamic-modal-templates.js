@@ -1,7 +1,7 @@
 /* ==========================================================================
    DYNAEIMIC — specialized customization modal templates.
    --------------------------------------------------------------------------
-   The theme ships four customization experiences that share one design
+   The theme ships three customization experiences that share one design
    system (same sheet, head, footer, close button, buttons and animations —
    the shell reuses the app's .modal-root / .modal-sheet / .modal-head /
    .modal-foot classes so the editorial chrome applies everywhere):
@@ -10,18 +10,15 @@
         rotate, print areas, live preview). Built by dynamic-customizer.js.
      2. Text personalization — the app's engrave sheet (text, fonts, emoji,
         live preview). Built by dynamic-customizer.js.
-     3. Paper product designer — THIS FILE. "Prepare Your Artwork": front and
-        back artwork, bleed / trim / safe-area proof, paper and finish.
-     4. Premium configurator — THIS FILE. "Build Your Product": material,
+     3. Premium configurator — THIS FILE. "Build Your Product": material,
         size, printing, finish, artwork, review.
 
    Which one a product uses comes from the section's "Customization modal
    template" setting (read from #dyn-tpl-config). "auto" keeps the app's own
-   image/text choice; "paper" and "configurator" take over the Customize
-   button and open the templates below. Both add to cart through
-   /cart/add.js with the configuration as line-item properties and the
-   artwork attached as property files (Shopify hosts them, same as the
-   app's own pipeline).
+   image/text choice; "configurator" takes over the Customize button and
+   opens the template below, adding to cart through /cart/add.js with the
+   configuration as line-item properties and the artwork attached as
+   property files (Shopify hosts them, same as the app's own pipeline).
    ========================================================================== */
 (function () {
   "use strict";
@@ -37,7 +34,7 @@
   }
   var cfg = readCfg();
   var MODE = (cfg.template || "auto").toLowerCase();
-  if (MODE !== "paper" && MODE !== "configurator") return; // auto → app engines
+  if (MODE !== "configurator") return; // auto → app engines
 
   function productName() {
     return (window.DYN_SHOPIFY && window.DYN_SHOPIFY.productTitle) || "";
@@ -67,24 +64,12 @@
       "transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease;}" +
     "#dynTplRoot .dyn-tpl-chip:hover{border-color:#17130f;transform:translateY(-1px);}" +
     "#dynTplRoot .dyn-tpl-chip[aria-pressed=\"true\"]{background:#17130f;color:#f6f5f1;border-color:#17130f;}" +
-    /* proof (paper template) */
-    "#dynTplRoot .dyn-tpl-proof{position:relative;width:100%;max-width:520px;}" +
-    "#dynTplRoot .dyn-tpl-bleedbox{position:relative;width:100%;background:#fff;box-shadow:0 18px 44px -20px rgba(23,19,15,.45);overflow:hidden;}" +
-    "#dynTplRoot .dyn-tpl-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}" +
-    "#dynTplRoot .dyn-tpl-trim{position:absolute;border:1.5px solid #b3242a;pointer-events:none;}" +
-    "#dynTplRoot .dyn-tpl-safe{position:absolute;border:1.5px dashed rgba(23,19,15,.55);pointer-events:none;}" +
-    "#dynTplRoot .dyn-tpl-bleedhatch{position:absolute;inset:0;pointer-events:none;" +
-      "background:repeating-linear-gradient(45deg,rgba(179,36,42,.10) 0 6px,transparent 6px 12px);}" +
-    "#dynTplRoot .dyn-tpl-guide-tags{position:absolute;left:0;right:0;top:100%;display:flex;gap:14px;padding-top:10px;justify-content:center;}" +
-    "#dynTplRoot .dyn-tpl-guide-tag{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(23,19,15,.55);}" +
-    "#dynTplRoot .dyn-tpl-guide-tag i{font-style:normal;color:#b3242a;}" +
-    "#dynTplRoot .dyn-tpl-dropface{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;" +
+    "#dynTplRoot .dyn-tpl-dropface{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;" +
       "border:1.5px dashed rgba(23,19,15,.35);cursor:pointer;transition:border-color .18s ease,background .18s ease;}" +
     "#dynTplRoot .dyn-tpl-dropface:hover{border-color:#17130f;}" +
     "#dynTplRoot .dyn-tpl-dropface.is-drag{border-color:#b3242a;background:rgba(255,255,255,.7);}" +
     "#dynTplRoot .dyn-tpl-dropface b{font-size:10px;font-weight:800;letter-spacing:.26em;text-transform:uppercase;}" +
     "#dynTplRoot .dyn-tpl-dropface span{font-size:12px;color:rgba(23,19,15,.6);}" +
-    "#dynTplRoot .dyn-tpl-sidetabs{display:flex;gap:8px;margin-bottom:18px;}" +
     "#dynTplRoot .dyn-tpl-filerow{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:8px 10px;margin-top:8px;" +
       "background:#fff;border:1px solid rgba(23,19,15,.16);border-left:3px solid #b3242a;border-radius:2px;}" +
     "#dynTplRoot .dyn-tpl-filerow small{color:rgba(23,19,15,.5);margin-left:auto;white-space:nowrap;}" +
@@ -218,135 +203,6 @@
   }
 
   /* ====================================================================== */
-  /* Template 3 — Paper product designer: "Prepare Your Artwork"            */
-  /* ====================================================================== */
-  function openPaper() {
-    var papers = list(cfg.paper, "Matte 350gsm, Silk 400gsm, Uncoated 300gsm, Recycled 350gsm");
-    var finishes = list(cfg.finish, "None, Soft-touch lamination, Gloss UV");
-    /* trim size, e.g. "3.5 x 2" (inches) — bleed is 0.125in each edge */
-    var dims = String(cfg.paperSize || "3.5 x 2").split(/x/i).map(parseFloat);
-    var tw = dims[0] > 0 ? dims[0] : 3.5, th = dims[1] > 0 ? dims[1] : 2;
-    var BLEED = 0.125, SAFE = 0.125;
-    var bw = tw + BLEED * 2, bh = th + BLEED * 2;
-    var state = { side: "front", art: { front: null, back: null }, Paper: papers[0], Finish: finishes[0],
-      guides: { bleed: true, trim: true, safe: true } };
-
-    var pctX = function (inches) { return (inches / bw) * 100; };
-    var pctY = function (inches) { return (inches / bh) * 100; };
-    var trimInset = "top:" + pctY(BLEED) + "%;left:" + pctX(BLEED) + "%;right:" + pctX(BLEED) + "%;bottom:" + pctY(BLEED) + "%;";
-    var safeInset = "top:" + pctY(BLEED + SAFE) + "%;left:" + pctX(BLEED + SAFE) + "%;right:" + pctX(BLEED + SAFE) + "%;bottom:" + pctY(BLEED + SAFE) + "%;";
-
-    var body =
-      '<div class="modal-body">' +
-        '<section class="dyn-tpl-stage" aria-label="Live proof">' +
-          '<div class="dyn-tpl-proof">' +
-            '<div class="dyn-tpl-bleedbox" id="tplBleedBox" style="aspect-ratio:' + bw + "/" + bh + ';">' +
-              '<img class="dyn-tpl-art" id="tplArt" alt="" hidden>' +
-              '<div class="dyn-tpl-bleedhatch" id="tplHatch" hidden></div>' +
-              '<div class="dyn-tpl-trim" id="tplTrim" style="' + trimInset + '"></div>' +
-              '<div class="dyn-tpl-safe" id="tplSafe" style="' + safeInset + '"></div>' +
-              '<div class="dyn-tpl-dropface" id="tplDrop"><b>Drag &amp; drop</b><span>or click to place your ' +
-                '<span id="tplSideWord">front</span> artwork</span></div>' +
-              '<input type="file" id="tplFile" accept=".pdf,.ai,.psd,.svg,.png,.jpg,.jpeg" hidden>' +
-            "</div>" +
-            '<div class="dyn-tpl-guide-tags">' +
-              '<span class="dyn-tpl-guide-tag"><i>\u2014</i> Trim</span>' +
-              '<span class="dyn-tpl-guide-tag">- - Safe area</span>' +
-              '<span class="dyn-tpl-guide-tag"><i>\u2591</i> Bleed ' + BLEED + '"</span>' +
-            "</div>" +
-          "</div>" +
-        "</section>" +
-        '<aside class="dyn-tpl-panel">' +
-          '<div class="dyn-tpl-group"><div class="dyn-tpl-label">Side</div>' +
-            '<div class="dyn-tpl-sidetabs">' + chipRow("side", ["Front", "Back"], "Front") + "</div>" +
-            '<div id="tplFiles"></div>' +
-          "</div>" +
-          '<div class="dyn-tpl-group"><div class="dyn-tpl-label">Guides</div>' +
-            '<div class="dyn-tpl-chips">' +
-              '<button type="button" class="dyn-tpl-chip" data-guide="bleed" aria-pressed="true">Bleed</button>' +
-              '<button type="button" class="dyn-tpl-chip" data-guide="trim" aria-pressed="true">Trim</button>' +
-              '<button type="button" class="dyn-tpl-chip" data-guide="safe" aria-pressed="true">Safe</button>' +
-            "</div>" +
-          "</div>" +
-          '<div class="dyn-tpl-group"><div class="dyn-tpl-label">Paper</div>' + chipRow("Paper", papers, papers[0]) + "</div>" +
-          '<div class="dyn-tpl-group"><div class="dyn-tpl-label">Finish</div>' + chipRow("Finish", finishes, finishes[0]) + "</div>" +
-          '<div class="dyn-tpl-note">Keep text inside the dashed safe area. Anything reaching the paper edge must extend into the bleed. We review every file before printing.</div>' +
-        "</aside>" +
-      "</div>";
-
-    var foot =
-      '<span class="dyn-tpl-hint">Trim ' + tw + '" \u00d7 ' + th + '" \u00b7 professional prepress review included</span>' +
-      '<button class="btn btn-ghost" data-close>Cancel</button>' +
-      '<button class="btn btn-primary" id="tplPaperAdd">Add to Cart</button>';
-
-    shell("Prepare Your Artwork", productName() ? "Live proof \u00b7 " + productName() : "Live proof", body, foot);
-
-    var art = document.getElementById("tplArt");
-    var hatch = document.getElementById("tplHatch");
-    var drop = document.getElementById("tplDrop");
-    var fileIn = document.getElementById("tplFile");
-    var filesEl = document.getElementById("tplFiles");
-    var sideWord = document.getElementById("tplSideWord");
-
-    function paint() {
-      var f = state.art[state.side];
-      sideWord.textContent = state.side;
-      if (f && f.url) { art.src = f.url; art.hidden = false; drop.style.display = "none"; hatch.hidden = !state.guides.bleed; }
-      else { art.hidden = true; drop.style.display = "flex"; hatch.hidden = true; }
-      document.getElementById("tplTrim").style.display = state.guides.trim ? "" : "none";
-      document.getElementById("tplSafe").style.display = state.guides.safe ? "" : "none";
-      filesEl.innerHTML = ["front", "back"].map(function (s) {
-        var g = state.art[s]; if (!g) return "";
-        return '<div class="dyn-tpl-filerow"><span>' + esc(s === "front" ? "Front" : "Back") + " \u00b7 " + esc(g.file.name) +
-          "</span><small>" + fmtSize(g.file.size) + '</small><button type="button" class="dyn-tpl-fx" data-clear="' + s + '" aria-label="Remove">\u00d7</button></div>';
-      }).join("");
-    }
-    filesEl.addEventListener("click", function (e) {
-      var b = e.target.closest("[data-clear]"); if (!b) return;
-      var s = b.getAttribute("data-clear");
-      if (state.art[s] && state.art[s].url) URL.revokeObjectURL(state.art[s].url);
-      state.art[s] = null; paint();
-    });
-    wireDrop(drop, fileIn, function (fl) {
-      var f = fl[0]; if (!f) return;
-      var url = /\.(png|jpe?g|svg)$/i.test(f.name) ? URL.createObjectURL(f) : null;
-      state.art[state.side] = { file: f, url: url };
-      paint();
-    });
-    state.onChange = function (key) {
-      if (key === "side") { state.side = (state.side === "front" ? "front" : state.side); }
-    };
-    /* chips: side tabs + paper + finish */
-    wireChips(rootEl, state);
-    rootEl.querySelector('[data-chips="side"]').addEventListener("click", function (e) {
-      var btn = e.target.closest(".dyn-tpl-chip"); if (!btn) return;
-      state.side = btn.getAttribute("data-value").toLowerCase();
-      paint();
-    });
-    rootEl.querySelectorAll("[data-guide]").forEach(function (g) {
-      g.addEventListener("click", function () {
-        var k = g.getAttribute("data-guide");
-        state.guides[k] = !state.guides[k];
-        g.setAttribute("aria-pressed", String(state.guides[k]));
-        paint();
-      });
-    });
-    document.getElementById("tplPaperAdd").addEventListener("click", function () {
-      if (!state.art.front) { alert("Add your front artwork first."); return; }
-      var files = [{ label: "Front artwork", file: state.art.front.file }];
-      if (state.art.back) files.push({ label: "Back artwork", file: state.art.back.file });
-      addToCart(this, {
-        "Template": "Paper designer",
-        "Paper": state.Paper,
-        "Finish": state.Finish,
-        "Sides": state.art.back ? "Front + Back" : "Front only",
-        "Trim size": tw + '" x ' + th + '"'
-      }, files);
-    });
-    paint();
-  }
-
-  /* ====================================================================== */
   /* Template 4 — Premium configurator: "Build Your Product"                */
   /* ====================================================================== */
   function openConfigurator() {
@@ -449,7 +305,7 @@
   }
 
   /* ---- take over the Customize button ---------------------------------- */
-  function openTemplate() { MODE === "paper" ? openPaper() : openConfigurator(); }
+  function openTemplate() { openConfigurator(); }
   document.addEventListener("click", function (e) {
     var btn = e.target.closest ? e.target.closest("#customizeBtn") : null;
     if (!btn) return;

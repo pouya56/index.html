@@ -2519,14 +2519,11 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
 {%- endif -%}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
-{%- comment -%} Specialized customization modal templates (paper designer /
-  premium configurator). "auto" keeps the app's own image/text engines. {%- endcomment -%}
+{%- comment -%} Specialized customization modal templates (premium
+  configurator). "auto" keeps the app's own image/text engines. {%- endcomment -%}
 <script type="application/json" id="dyn-tpl-config">
 {
   "template": {{ section.settings.modal_template | default: 'auto' | json }},
-  "paper": {{ section.settings.tpl_paper_options | default: 'Matte 350gsm, Silk 400gsm, Uncoated 300gsm, Recycled 350gsm' | json }},
-  "finish": {{ section.settings.tpl_finish_options | default: 'None, Soft-touch lamination, Gloss UV' | json }},
-  "paperSize": {{ section.settings.tpl_paper_size | default: '3.5 x 2' | json }},
   "materials": {{ section.settings.tpl_materials | default: 'Rigid board, Kraft, Linen wrap, Soft-touch' | json }},
   "sizes": {{ section.settings.tpl_sizes | default: 'Small, Medium, Large, Custom' | json }},
   "printing": {{ section.settings.tpl_printing | default: 'Foil stamp, Screen print, Digital, Letterpress, Embossing' | json }},
@@ -2840,29 +2837,9 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
       "default": "auto",
       "options": [
         { "value": "auto", "label": "Auto — Image customizer or Text personalization" },
-        { "value": "paper", "label": "Paper product designer (Prepare Your Artwork)" },
         { "value": "configurator", "label": "Premium configurator (Build Your Product)" }
       ],
-      "info": "Auto uses the designer or the engraving sheet, chosen by your method block. Paper and Configurator replace the Customize flow with their own modal."
-    },
-    {
-      "type": "text",
-      "id": "tpl_paper_size",
-      "label": "Paper: trim size (inches)",
-      "default": "3.5 x 2",
-      "info": "Width x height, e.g. 3.5 x 2 for business cards, 5 x 7 for invitations."
-    },
-    {
-      "type": "text",
-      "id": "tpl_paper_options",
-      "label": "Paper: stock options (comma-separated)",
-      "default": "Matte 350gsm, Silk 400gsm, Uncoated 300gsm, Recycled 350gsm"
-    },
-    {
-      "type": "text",
-      "id": "tpl_finish_options",
-      "label": "Paper: finish options (comma-separated)",
-      "default": "None, Soft-touch lamination, Gloss UV"
+      "info": "Auto uses the designer or the engraving sheet, chosen by your method block. Configurator replaces the Customize flow with its own modal."
     },
     {
       "type": "text",
