@@ -1652,7 +1652,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const giftCfg = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
     const giftEl = document.querySelector("#giftIsGift");
     const giftOn = !!(giftCfg.enabled && giftEl && giftEl.checked);
-    const hasBack = (sideLayers.back || []).some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text));
+    // The sides upcharge pays for a SECOND printed side — back-only designs
+    // stay at the base price, so "back" only bills when the front is used too.
+    const sideHas = (s) => (sideLayers[s] || []).some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text));
+    const hasBack = sideHas("back") && sideHas("front");
     const cents = (s) => { const n = parseFloat(String(s).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
     const fmt = (c, sample) => { const sym = (String(sample).match(/^[^\d.-]*/) || [""])[0] || "$"; return sym + (c / 100).toFixed(2); };
     let base = (window.DYN_SHOPIFY || {}).priceMoney || pr.textContent;
@@ -2218,7 +2221,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (!totalEl) return;
     const S = window.DYN_SHOPIFY || {};
     const has = (s) => (sideLayers[s] || []).some((l) => (l.kind === "img" && l.url) || (l.kind === "text" && l.text));
-    const hasBackDesign = has("back");
+    // second-side fee only when BOTH sides carry a design
+    const hasBackDesign = has("back") && has("front");
     const giftCfg = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
     const giftOnEl = document.querySelector("#giftIsGift");
     const giftOn = !!(giftCfg.enabled && giftOnEl && giftOnEl.checked);
@@ -3124,6 +3128,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const imgs = (s) => sideLayers[s].filter((l) => l.kind === "img" && l.url);
       const txts = (s) => sideLayers[s].filter((l) => l.kind === "text" && l.text);
       const hasBackDesign = !!(imgs("back").length || txts("back").length);
+      const hasFrontDesign = !!(imgs("front").length || txts("front").length);
+      // The sides upcharge pays for a SECOND printed side: back-only stays base.
+      const backBillable = hasBackDesign && hasFrontDesign;
       // Merchant-configurable labels (what shows on the order) + a base for the
       // downloadable file names (product + colour), so files are identifiable.
       const L = labels();
@@ -3132,11 +3139,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       // Customer-facing: one clean note. Everything else is prefixed "_" so Shopify
       // hides it from the cart/checkout but keeps it on your order (admin) page.
       // (Plain products — no design — skip all personalization properties.)
-      if (hasDesign) props["Personalized"] = hasBackDesign ? "Front + Back" : "Front";
+      if (hasDesign) props["Personalized"] = hasBackDesign ? (hasFrontDesign ? "Front + Back" : "Back") : "Front";
       if (txts("front").length) props["_" + L.text] = txts("front").map((l) => l.text).join(" | ");
       if (hasBackDesign) {
         if (txts("back").length) props["_" + L.backText] = txts("back").map((l) => l.text).join(" | ");
-        props["_Sides"] = "Front + Back";
+        props["_Sides"] = hasFrontDesign ? "Front + Back" : "Back";
       }
       if (hasDesign && product && product.method) props["_Print method"] = product.method;
       // Collect the raw design files + composed previews — Shopify hosts them for
@@ -3198,17 +3205,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const gift = (window.DYN_SETTINGS && window.DYN_SETTINGS.gift) || {};
       const giftOnEl = $("#giftIsGift");
       const giftOn = !!(gift.enabled && giftOnEl && giftOnEl.checked);
-      const sidesVariant = (typeof _sidesResolve === "function" && _sidesResolve) ? _sidesResolve(hasBackDesign, giftOn) : null;
+      const sidesVariant = (typeof _sidesResolve === "function" && _sidesResolve) ? _sidesResolve(backBillable, giftOn) : null;
       // Record the back-print upcharge (the Front+Back vs Front-only price gap) so
       // the cart can show it as its own line in the breakdown.
-      if (hasBackDesign && sidesVariant && typeof _sidesResolve === "function") {
+      if (backBillable && sidesVariant && typeof _sidesResolve === "function") {
         const vFront = _sidesResolve(false, giftOn);
         const c = (s) => { const n = parseFloat(String(s).replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : Math.round(n * 100); };
         const diff = c(sidesVariant.price) - (vFront ? c(vFront.price) : 0);
         if (diff > 0) props["_back_fee"] = "$" + (diff / 100).toFixed(2);
       }
       const extraItems = [];
-      if (!sidesVariant && hasBackDesign && S.backFeeVariantId) {
+      if (!sidesVariant && backBillable && S.backFeeVariantId) {
         const grp = "g" + Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36);
         props["_grp"] = grp;
         const qty = Math.max(1, (store.get().quantity) || 1);
