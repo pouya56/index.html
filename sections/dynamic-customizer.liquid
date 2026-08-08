@@ -225,7 +225,7 @@
     "priceNote": {{ section.settings.price_note | default: '' | json }},
     "description": "",
     "modelLabel": "",
-    "customizeLabel": {{ 'Customize' | json }},
+    "customizeLabel": {{ 'Start Designing' | json }},
     "addcartLabel": {{ 'Add to Cart' | json }},
     "customPrintLabel": {{ 'Custom print' | json }},
     "reassure": [
@@ -1512,6 +1512,8 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
 #dhSlide .dh-slide-inject #buyBox.col-right .opt-group,
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-acc,
 #dhSlide .dh-slide-inject #buyBox.col-right .reassure,
+#dhSlide .dh-slide-inject #buyBox.col-right .dyx-specs,
+#dhSlide .dh-slide-inject #buyBox.col-right .dyx-proof,
 #dhSlide .dh-slide-inject #buyBox.col-right .ig-social { display: none !important; }
 {%- if section.settings.popup_ticket_image != blank -%}
 /* uploaded ticket artwork behind the whole info area */
@@ -1536,6 +1538,10 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
       <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
   </svg>
+
+  <!-- Premium editorial overlay — loaded after the base styles so its
+       equal-specificity rules win the cascade. -->
+  {{ 'dynamic-editorial.css' | asset_url | stylesheet_tag }}
 
   <!-- Product page -->
   <main class="product">
@@ -1580,12 +1586,24 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
         <span class="price-note" id="pPriceNote"></span>
       </div>
 
+      <!-- Editorial spec line + quiet social proof (type "hide" to remove). -->
+      {%- assign dyx_spec = section.settings.spec_line -%}
+      {%- if dyx_spec == blank -%}{%- assign dyx_spec = 'Made to order · Printed in NYC · Ships worldwide' -%}{%- endif -%}
+      {%- unless dyx_spec == 'hide' -%}
+      <div class="dyx-specs">{{ dyx_spec }}</div>
+      {%- endunless -%}
+      {%- assign dyx_proof = section.settings.proof_text -%}
+      {%- if dyx_proof == blank -%}{%- assign dyx_proof = '4.9 · Based on 200+ orders' -%}{%- endif -%}
+      {%- unless dyx_proof == 'hide' -%}
+      <div class="dyx-proof"><span class="dyx-stars">★★★★★</span> {{ dyx_proof }}</div>
+      {%- endunless -%}
+
       <!-- Primary actions (Add to Cart / Customize) sit right under the price. -->
       <div class="dyn-actionbar" id="dynActionBar">
         <div class="dyn-actionbar-inner">
           <div class="cta-stack">
             <div class="cta-row">
-              <button class="btn btn-primary btn-lg btn-block" id="customizeBtn">Customize</button>
+              <button class="btn btn-primary btn-lg btn-block" id="customizeBtn">Start Designing</button>
             </div>
             <!-- Appears once a design is saved; submits it with the gift-wrap choice. -->
             <button class="btn btn-primary btn-lg btn-block" id="pageAddCart" hidden>Add to Cart</button>
@@ -1689,9 +1707,35 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
       </div>
 
       <details class="dyn-acc" id="pDescAcc">
-        <summary>Description</summary>
+        <summary>About</summary>
         <div class="desc" id="pDesc"></div>
       </details>
+
+      <!-- Editorial product story (edit in section settings; type "hide" to remove one). -->
+      {%- assign dyx_mat = section.settings.story_materials -%}
+      {%- if dyx_mat == blank -%}{%- assign dyx_mat = 'Heavyweight, gift-grade blanks chosen for daily use — thick cotton, sturdy ceramic, solid steel. Every piece is inspected by hand before it enters production.' -%}{%- endif -%}
+      {%- unless dyx_mat == 'hide' -%}
+      <details class="dyn-acc">
+        <summary>Materials</summary>
+        <div class="desc">{{ dyx_mat }}</div>
+      </details>
+      {%- endunless -%}
+      {%- assign dyx_print = section.settings.story_printing -%}
+      {%- if dyx_print == blank -%}{%- assign dyx_print = 'Your artwork is printed to order in our NYC studio with archival inks that survive the dishwasher, the dryer and the years. Wash cold, inside out; hand-wash drinkware to keep the print crisp.' -%}{%- endif -%}
+      {%- unless dyx_print == 'hide' -%}
+      <details class="dyn-acc">
+        <summary>Printing &amp; Care</summary>
+        <div class="desc">{{ dyx_print }}</div>
+      </details>
+      {%- endunless -%}
+      {%- assign dyx_ship = section.settings.story_shipping -%}
+      {%- if dyx_ship == blank -%}{%- assign dyx_ship = 'Made in 3–5 days, then shipped tracked to your door. If anything arrives less than perfect, we reprint or refund — no forms, no fuss.' -%}{%- endif -%}
+      {%- unless dyx_ship == 'hide' -%}
+      <details class="dyn-acc">
+        <summary>Shipping &amp; Returns</summary>
+        <div class="desc">{{ dyx_ship }}</div>
+      </details>
+      {%- endunless -%}
 
       <div class="reassure">
         <div class="reassure-item" data-reassure-item="0">
@@ -1762,6 +1806,25 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
 
   <!-- Fullscreen customization modal (populated by app.js) -->
   <div class="modal-root" id="modalRoot" aria-hidden="true"></div>
+
+  <script>
+  /* Editorial step labels: the conversion helper builds the strip as
+     Customize / Design / Gift (optional) / Add to cart — rename to the
+     studio's workflow words once it appears. Step behaviour is index-based,
+     so only the text changes. */
+  (function () {
+    var names = { "Customize": "Product", "Design": "Artwork", "Gift (optional)": "Gift", "Add to cart": "Order" };
+    var tries = 0;
+    (function relabel() {
+      var strip = document.getElementById("dynSteps");
+      if (!strip) { if (++tries < 60) setTimeout(relabel, 250); return; }
+      Array.prototype.forEach.call(strip.querySelectorAll(".dyn-step-txt"), function (el) {
+        var t = el.textContent.trim();
+        if (names[t]) el.textContent = names[t];
+      });
+    })();
+  })();
+  </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
@@ -2658,14 +2721,20 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
     {% if blk_bulk.settings.bulk_link_icon %}
     a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
     {% endif %}
-    a.appendChild(document.createTextNode({{ blk_bulk.settings.bulk_link_label | default: 'Order in bulk' | json }}));
+    /* An old stored label/note ("Order in bulk" / "Volume pricing from 10+")
+       is upgraded to the studio wording; anything else the merchant typed wins. */
+    var dyxLbl = {{ blk_bulk.settings.bulk_link_label | default: 'Request Bulk Pricing' | json }};
+    if (!dyxLbl || /order in bulk/i.test(dyxLbl)) dyxLbl = "Request Bulk Pricing";
+    a.appendChild(document.createTextNode(dyxLbl));
     slot.appendChild(a);
-    {% if blk_bulk.settings.bulk_link_note != blank %}
-    var note = document.createElement("div");
-    note.className = "bulk-note";
-    note.textContent = {{ blk_bulk.settings.bulk_link_note | json }};
-    bulkNoteEl = note; // placed under the whole quantity row, not inside the inline slot
-    {% endif %}
+    var dyxNote = {{ blk_bulk.settings.bulk_link_note | json }};
+    if (!dyxNote || /volume pricing from 10/i.test(dyxNote)) dyxNote = "Ordering 25 or more? We’ll prepare custom pricing and production options.";
+    if (dyxNote !== "hide") {
+      var note = document.createElement("div");
+      note.className = "bulk-note";
+      note.textContent = dyxNote;
+      bulkNoteEl = note; // placed under the whole quantity row, not inside the inline slot
+    }
     {%- endif -%}
   }
 
@@ -2732,6 +2801,40 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
       "label": "Text next to the price",
       "default": "Free shipping",
       "info": "Small grey text beside the price. Leave empty to hide it."
+    },
+    {
+      "type": "header",
+      "content": "Editorial product story"
+    },
+    {
+      "type": "text",
+      "id": "spec_line",
+      "label": "Spec line under the price",
+      "info": "Small tracked caps, e.g. Made to order · Printed in NYC · Ships worldwide. Type hide to remove it."
+    },
+    {
+      "type": "text",
+      "id": "proof_text",
+      "label": "Social proof line",
+      "info": "Shown after five red stars, e.g. 4.9 · Based on 200+ orders. Type hide to remove it."
+    },
+    {
+      "type": "textarea",
+      "id": "story_materials",
+      "label": "Materials section",
+      "info": "Shown under About. Type hide to remove it."
+    },
+    {
+      "type": "textarea",
+      "id": "story_printing",
+      "label": "Printing & Care section",
+      "info": "Type hide to remove it."
+    },
+    {
+      "type": "textarea",
+      "id": "story_shipping",
+      "label": "Shipping & Returns section",
+      "info": "Type hide to remove it."
     },
     {
       "type": "header",
@@ -3464,7 +3567,7 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
           "type": "text",
           "id": "bulk_link_label",
           "label": "Button text",
-          "default": "Order in bulk"
+          "default": "Request Bulk Pricing"
         },
         {
           "type": "checkbox",
@@ -3476,8 +3579,8 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
           "type": "text",
           "id": "bulk_link_note",
           "label": "Small note under the button",
-          "default": "Volume pricing from 10+ — save more per item.",
-          "info": "Leave empty to hide."
+          "default": "Ordering 25 or more? We'll prepare custom pricing and production options.",
+          "info": "Type hide to remove it."
         }
       ]
     },
