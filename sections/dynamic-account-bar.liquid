@@ -927,7 +927,8 @@
         max-width: calc(100vw - 24px); max-height: none;
         overflow-x: auto; overflow-y: hidden; padding: 8px; }
       /* While the window is open the lamp rides IN FRONT, sitting on the
-         left of the bar (see the open handler) - visible, lit, tappable. */
+         left of the bar at the bar's height (see the open handler). */
+      .dyn-abar .dh-apps-btn { transition: width 0.22s ease, height 0.22s ease; }
       .dyn-abar .dh-apps-btn[aria-expanded="true"] { z-index: 5; }
     }
   
@@ -2368,11 +2369,16 @@
     function syncLock() {
       document.documentElement.classList.remove("dyn-ablock");
       if (pop.hidden) vbar.classList.remove("is-on");
-      /* phone: the lamp glides back home when the window closes */
+      /* phone: the lamp glides back home (and back to size) on close */
       if (pop.hidden && menu.__dynHome) {
         menu.style.left = menu.__dynHome.left;
         menu.style.top = menu.__dynHome.top;
         menu.__dynHome = null;
+      }
+      if (pop.hidden && menu.__dynSize) {
+        btn.style.width = menu.__dynSize.w;
+        btn.style.height = menu.__dynSize.h;
+        menu.__dynSize = null;
       }
     }
     new MutationObserver(syncLock).observe(pop, { attributes: true, attributeFilter: ["hidden"] });
@@ -2402,7 +2408,12 @@
            the lamp home on every close path. */
         var byP = Math.max(12, innerHeight - bh - 16);
         if (!menu.__dynHome) menu.__dynHome = { left: menu.style.left || "", top: menu.style.top || "" };
-        var mw = menu.offsetWidth || 80, mh = menu.offsetHeight || 120;
+        /* the docked lamp shrinks to the bar's height (aspect kept) */
+        if (!menu.__dynSize) menu.__dynSize = { w: btn.style.width || "", h: btn.style.height || "" };
+        var ratio = (btn.offsetWidth || 64) / Math.max(1, btn.offsetHeight || 64);
+        btn.style.height = bh + "px";
+        btn.style.width = Math.round(bh * ratio) + "px";
+        var mw = menu.offsetWidth || 64, mh = menu.offsetHeight || bh;
         var gap = 10, group = mw + gap + bw;
         var gx = Math.max(8, (innerWidth - group) / 2);
         menu.style.left = Math.round(gx) + "px";
