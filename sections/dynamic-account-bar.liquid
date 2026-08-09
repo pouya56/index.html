@@ -926,11 +926,9 @@
       .dyn-abar .dh-vbar { flex-direction: row; align-items: center; animation: none;
         max-width: calc(100vw - 24px); max-height: none;
         overflow-x: auto; overflow-y: hidden; padding: 8px; }
-      /* While the window is open the lamp steps aside (it only went behind
-         the window anyway); it fades back the moment the window closes.
-         Tapping anywhere outside still closes everything. */
-      .dyn-abar .dh-apps-btn { transition: opacity 0.2s ease; }
-      .dyn-abar .dh-apps-btn[aria-expanded="true"] { opacity: 0; pointer-events: none; }
+      /* While the window is open the lamp rides IN FRONT and glides to the
+         top-right corner (see the open handler) - visible, lit, tappable. */
+      .dyn-abar .dh-apps-btn[aria-expanded="true"] { z-index: 5; }
     }
   
     /* Aged-paper windows: cream stock with hairline cracks and a black
@@ -2370,6 +2368,12 @@
     function syncLock() {
       document.documentElement.classList.remove("dyn-ablock");
       if (pop.hidden) vbar.classList.remove("is-on");
+      /* phone: the lamp glides back home when the window closes */
+      if (pop.hidden && menu.__dynHome) {
+        menu.style.left = menu.__dynHome.left;
+        menu.style.top = menu.__dynHome.top;
+        menu.__dynHome = null;
+      }
     }
     new MutationObserver(syncLock).observe(pop, { attributes: true, attributeFilter: ["hidden"] });
     document.addEventListener("touchmove", function (e) {
@@ -2398,6 +2402,12 @@
         var bxP = (innerWidth - bw) / 2;
         vbar.style.left = Math.round(Math.min(Math.max(12, bxP), innerWidth - bw - 12)) + "px";
         vbar.style.top = Math.round(Math.max(12, byP)) + "px";
+        /* the lamp glides to the top-right corner while the window is open
+           (syncLock glides it home on every close path) */
+        if (!menu.__dynHome) menu.__dynHome = { left: menu.style.left || "", top: menu.style.top || "" };
+        var mw = menu.offsetWidth || 80;
+        menu.style.left = Math.round(Math.max(8, innerWidth - mw - 10)) + "px";
+        menu.style.top = "10px";
       } else {
         /* The bar stands beside him — on whichever side faces the screen
            center — vertically centered on the orb. */
