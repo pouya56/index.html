@@ -2419,7 +2419,9 @@
         btn.style.height = bh + "px";
         btn.style.width = Math.round(bh * ratio) + "px";
         var mw = menu.offsetWidth || 64, mh = menu.offsetHeight || bh;
-        var gap = 10, group = mw + gap + bw;
+        /* the bulb art carries transparent padding, so the boxes touch -
+           the visible gap comes from the art itself */
+        var gap = 0, group = mw + gap + bw;
         var gx = Math.max(8, (innerWidth - group) / 2);
         menu.style.left = Math.round(gx) + "px";
         menu.style.top = "auto";
