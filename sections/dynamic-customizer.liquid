@@ -1797,10 +1797,7 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
   <div class="modal-root" id="modalRoot" aria-hidden="true"></div>
 
   <script>
-  /* Editorial step labels: the conversion helper builds the strip as
-     Customize / Design / Gift (optional) / Add to cart — rename to the
-     studio's workflow words once it appears. Step behaviour is index-based,
-     so only the text changes. */
+  /* Rename the step strip to the studio words (behaviour is index-based). */
   (function () {
     var names = { "Customize": "Product", "Design": "Artwork", "Gift (optional)": "Gift", "Add to cart": "Order" };
     var tries = 0;
@@ -2519,13 +2516,9 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
 {%- endif -%}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
-{%- comment -%} In-place designer: Start Designing switches the product page
-  into design mode right where it stands - no popup, no scrolling. The
-  workspace paints over the product area on the same paper (the product
-  content hides while designing, the sticky logo stays), so the stage sits
-  where the image was and the tools where the buy box was. Same machinery -
-  Close, Escape, pricing and Add to Cart all keep working and closing
-  returns the product exactly as it was. Turn off in settings for the popup. {%- endcomment -%}
+{%- comment -%} In-place designer: the workspace mounts into the product
+  page itself (stage on the image, tools in the buy box). Same machinery;
+  untick the setting for the popup. {%- endcomment -%}
 {%- unless section.settings.inline_designer == false -%}
 <style>
   /* While designing (dyn-designing set only when the in-page move worked),
@@ -2545,8 +2538,7 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
   #dynInlineStage .engrave-stage, #dynInlineStage .engrave-frame {
     background: none; box-shadow: none; border: 0; border-radius: 0;
   }
-  /* The upload prompt rides on a paper tag so it reads on any product
-     colour - cream card, ink text, soft shadow. */
+  /* upload prompt on a paper tag - readable on any product colour */
   #dynInlineStage .print-hint { background: rgba(23, 19, 15, 0.08); }
   #dynInlineStage .print-hint::before {
     content: ""; position: absolute; left: 50%; top: 50%;
@@ -2912,15 +2904,20 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
     a.href = base + (handle ? ((base.indexOf("?") >= 0 ? "&" : "?") + "product=" + encodeURIComponent(handle)) : "");
     /* If the customer already designed something, their uploaded artwork
        rides along to the bulk request (URLs published by the designer). */
-    /* The customer's designs ride along to the bulk request. Local (not yet
-       hosted) artwork is uploaded to Shopify first — attached to a temporary
-       cart line whose hosted URL we read back, then that one line is removed
-       (never the whole cart) — so only small https URLs are handed over. */
+    /* Designs ride along to the bulk request: local artwork is hosted via a
+       temporary cart line (only that line is removed), then we navigate. */
     a.addEventListener("click", function (ev) {
       var href = base + (handle ? ((base.indexOf("?") >= 0 ? "&" : "?") + "product=" + encodeURIComponent(handle)) : "");
       var all = window.DYN_DESIGN_FILES || [];
       var http = all.filter(function (d) { return /^https?:/i.test(d.url || ""); });
       var locals = all.filter(function (d) { return /^data:/i.test(d.url || ""); });
+      /* placement previews ride too */
+      try {
+        var pv = window.DYN_DESIGN_PREVIEWS || {};
+        ["front", "back"].forEach(function (s) {
+          if (pv[s]) locals.push({ side: s + " preview", url: pv[s] });
+        });
+      } catch (e) {}
       var S = window.DYN_SHOPIFY || {};
       var stash = function (list) {
         try {
@@ -2950,11 +2947,12 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
       var hosted = http.slice(), names = [];
       var fd = new FormData();
       fd.append("id", String(S.variantId)); fd.append("quantity", "1");
-      locals.slice(0, 8).forEach(function (d, i) {
+      locals.slice(0, 10).forEach(function (d, i) {
         var bl = toBlob(d.url); if (!bl) return;
-        var pname = "_bulk_design_" + (i + 1) + "_" + d.side;
+        var safe = String(d.side).replace(/\s+/g, "-");
+        var pname = "_bulk_design_" + (i + 1) + "_" + safe;
         names.push({ prop: pname, side: d.side });
-        fd.append("properties[" + pname + "]", bl, "design-" + d.side + "-" + (i + 1) + ".png");
+        fd.append("properties[" + pname + "]", bl, "design-" + safe + "-" + (i + 1) + ".png");
       });
       fetch("/cart/add.js", { method: "POST", headers: { Accept: "application/json" }, body: fd })
         .then(function (r) { return r.ok ? r.json() : Promise.reject(); })

@@ -2249,6 +2249,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       window.DYN_DESIGN_URLS = _du;
       window.DYN_DESIGN_FILES = _df;
     } catch (e) {}
+    /* Placement previews: the design composited ON the product, per side —
+       carried into bulk requests so the studio sees the exact positioning. */
+    try {
+      if (typeof compositeSide !== "function") return;
+      ["front", "back"].forEach(function (s) {
+        var has = (sideLayers[s] || []).some(function (l) { return (l.kind === "img" && l.url) || (l.kind === "text" && l.text); });
+        if (!has) { if (window.DYN_DESIGN_PREVIEWS) delete window.DYN_DESIGN_PREVIEWS[s]; return; }
+        compositeSide(sideLayers[s], sideImage(s), sidePrint(s)).then(function (u) {
+          if (!u) return;
+          window.DYN_DESIGN_PREVIEWS = window.DYN_DESIGN_PREVIEWS || {};
+          window.DYN_DESIGN_PREVIEWS[s] = u;
+        });
+      });
+    } catch (e) {}
   }
   // Photo-only methods (e.g. DTF) allow just ONE design; others allow up to MAX_IMG.
   function maxImages() { return (product && product.photoOnly) ? 1 : MAX_IMG; }
