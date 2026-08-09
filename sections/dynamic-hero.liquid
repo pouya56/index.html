@@ -3028,7 +3028,9 @@ return ((off % totalW) + totalW) % totalW;
 function zonesNow() {
 var hr = labCv.getBoundingClientRect();
 var out = [];
-var sels = [".dh-search", ".dh-head", ".dh-hero-btns", ".dh-menu-btn", ".dh-reset-btn"];
+/* the hamburger and reset buttons float ABOVE the wall - words paint
+   behind them (they used to punch bare holes top-left and bottom-right) */
+var sels = [".dh-search", ".dh-head", ".dh-hero-btns"];
 for (var s3 = 0; s3 < sels.length; s3++) {
 var list = hero.querySelectorAll(sels[s3]);
 for (var e3 = 0; e3 < list.length; e3++) {
