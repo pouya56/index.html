@@ -920,8 +920,13 @@
       .dyn-abar .dh-vdel { width: 24px; height: 24px; top: 6px; left: 6px; right: auto; }
     }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
-    /* Phones use the SAME setup as desktop: the lamp character stays, the
-       tab rail appears beside it on tap — no bottom dock. */
+    /* Phones keep the desktop lamp (no persistent dock), but the tab rail
+       lies HORIZONTAL and the window sits on top of it — never overlapping. */
+    @media (max-width: 700px) {
+      .dyn-abar .dh-vbar { flex-direction: row; align-items: center; animation: none;
+        max-width: calc(100vw - 24px); max-height: none;
+        overflow-x: auto; overflow-y: hidden; padding: 8px; }
+    }
   
     /* Aged-paper windows: cream stock with hairline cracks and a black
        strip down the right (drawn inline; the "Window paper texture"
