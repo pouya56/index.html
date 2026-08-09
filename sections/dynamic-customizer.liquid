@@ -2888,23 +2888,71 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
     a.href = base + (handle ? ((base.indexOf("?") >= 0 ? "&" : "?") + "product=" + encodeURIComponent(handle)) : "");
     /* If the customer already designed something, their uploaded artwork
        rides along to the bulk request (URLs published by the designer). */
-    a.addEventListener("click", function () {
-      var urls = window.DYN_DESIGN_URLS || [];
+    /* The customer's designs ride along to the bulk request. Local (not yet
+       hosted) artwork is uploaded to Shopify first — attached to a temporary
+       cart line whose hosted URL we read back, then that one line is removed
+       (never the whole cart) — so only small https URLs are handed over. */
+    a.addEventListener("click", function (ev) {
       var href = base + (handle ? ((base.indexOf("?") >= 0 ? "&" : "?") + "product=" + encodeURIComponent(handle)) : "");
-      if (urls.length) href += (href.indexOf("?") >= 0 ? "&" : "?") + "designs=" + encodeURIComponent(urls.join("\n"));
-      a.href = href;
-      /* full design list (incl. local data URLs when no CDN is configured)
-         hands over via sessionStorage - same-origin navigation keeps it */
-      try {
-        var all = window.DYN_DESIGN_FILES || [];
-        if (all.length) sessionStorage.setItem("dyn_bulk_designs", JSON.stringify(all.slice(0, 8)));
-        else sessionStorage.removeItem("dyn_bulk_designs");
-      } catch (e) {
+      var all = window.DYN_DESIGN_FILES || [];
+      var http = all.filter(function (d) { return /^https?:/i.test(d.url || ""); });
+      var locals = all.filter(function (d) { return /^data:/i.test(d.url || ""); });
+      var S = window.DYN_SHOPIFY || {};
+      var stash = function (list) {
         try {
-          var httpOnly = (window.DYN_DESIGN_FILES || []).filter(function (d) { return /^https?:/i.test(d.url || ""); });
-          if (httpOnly.length) sessionStorage.setItem("dyn_bulk_designs", JSON.stringify(httpOnly));
-        } catch (e2) {}
+          if (list.length) sessionStorage.setItem("dyn_bulk_designs", JSON.stringify(list.slice(0, 8)));
+          else sessionStorage.removeItem("dyn_bulk_designs");
+        } catch (e) {}
+      };
+      var withParam = function (list) {
+        if (!list.length) return href;
+        return href + (href.indexOf("?") >= 0 ? "&" : "?") + "designs=" +
+          encodeURIComponent(list.map(function (d) { return d.side + ": " + d.url; }).join("\n"));
+      };
+      if (!locals.length || !S.variantId || !window.FormData) {
+        stash(http); a.href = withParam(http); return; /* normal navigation */
       }
+      ev.preventDefault();
+      a.style.pointerEvents = "none"; a.style.opacity = "0.6";
+      a.textContent = "Attaching your designs…";
+      var toBlob = function (dataurl) {
+        try {
+          var arr = String(dataurl).split(","), m = (arr[0].match(/:(.*?);/) || [])[1] || "image/png";
+          var b = atob(arr[1]), n = b.length, u = new Uint8Array(n);
+          while (n--) u[n] = b.charCodeAt(n);
+          return new Blob([u], { type: m });
+        } catch (e) { return null; }
+      };
+      var hosted = http.slice(), names = [];
+      var fd = new FormData();
+      fd.append("id", String(S.variantId)); fd.append("quantity", "1");
+      locals.slice(0, 8).forEach(function (d, i) {
+        var bl = toBlob(d.url); if (!bl) return;
+        var pname = "_bulk_design_" + (i + 1) + "_" + d.side;
+        names.push({ prop: pname, side: d.side });
+        fd.append("properties[" + pname + "]", bl, "design-" + d.side + "-" + (i + 1) + ".png");
+      });
+      fetch("/cart/add.js", { method: "POST", headers: { Accept: "application/json" }, body: fd })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function (j) {
+          var it = (j.items && j.items[0]) || j;
+          names.forEach(function (n) {
+            var u = it && it.properties && it.properties[n.prop];
+            if (u && /^https?:/i.test(u)) hosted.push({ side: n.side, url: u });
+          });
+          if (it && it.key) {
+            return fetch("/cart/change.js", {
+              method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+              body: JSON.stringify({ id: it.key, quantity: 0 })
+            }).catch(function () {});
+          }
+        })
+        .catch(function () {})
+        .then(function () {
+          try { document.dispatchEvent(new CustomEvent("dyn:cart-changed")); } catch (e) {}
+          stash(hosted);
+          window.location.href = withParam(hosted);
+        });
     });
     {% if blk_bulk.settings.bulk_link_icon %}
     a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
