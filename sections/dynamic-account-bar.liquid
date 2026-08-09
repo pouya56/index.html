@@ -930,6 +930,7 @@
          left of the bar at the bar's height (see the open handler). */
       .dyn-abar .dh-apps-btn { transition: width 0.22s ease, height 0.22s ease; }
       .dyn-abar .dh-apps-btn[aria-expanded="true"] { z-index: 5; }
+      .dyn-abar .dh-apps-menu { transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05), top 0.22s ease, bottom 0.22s ease; }
     }
   
     /* Aged-paper windows: cream stock with hairline cracks and a black
@@ -2373,6 +2374,7 @@
       if (pop.hidden && menu.__dynHome) {
         menu.style.left = menu.__dynHome.left;
         menu.style.top = menu.__dynHome.top;
+        menu.style.bottom = "";
         menu.__dynHome = null;
       }
       if (pop.hidden && menu.__dynSize) {
@@ -2380,6 +2382,7 @@
         btn.style.height = menu.__dynSize.h;
         menu.__dynSize = null;
       }
+      if (pop.hidden) vbar.style.bottom = "";
     }
     new MutationObserver(syncLock).observe(pop, { attributes: true, attributeFilter: ["hidden"] });
     document.addEventListener("touchmove", function (e) {
@@ -2402,13 +2405,11 @@
       vbar.classList.add("is-on");
       var bw = vbar.offsetWidth, bh = vbar.offsetHeight;
       if (innerWidth <= 700) {
-        /* Phone: lamp + bar sit side by side (lamp on the LEFT of the bar),
-           the whole group centred on the screen near the bottom; the window
-           stacks above, also centred - one aligned stack. syncLock glides
-           the lamp home on every close path. */
-        var byP = Math.max(12, innerHeight - bh - 16);
+        /* Phone: lamp + bar sit side by side (lamp on the LEFT, bar-height),
+           the pair centred near the bottom and pinned there with BOTTOM
+           anchoring - Safari's collapsing toolbar can't drift them on
+           scroll. syncLock glides the lamp home on every close path. */
         if (!menu.__dynHome) menu.__dynHome = { left: menu.style.left || "", top: menu.style.top || "" };
-        /* the docked lamp shrinks to the bar's height (aspect kept) */
         if (!menu.__dynSize) menu.__dynSize = { w: btn.style.width || "", h: btn.style.height || "" };
         var ratio = (btn.offsetWidth || 64) / Math.max(1, btn.offsetHeight || 64);
         btn.style.height = bh + "px";
@@ -2417,11 +2418,13 @@
         var gap = 10, group = mw + gap + bw;
         var gx = Math.max(8, (innerWidth - group) / 2);
         menu.style.left = Math.round(gx) + "px";
-        menu.style.top = Math.round(byP + bh / 2 - mh / 2) + "px";
-        var bxP = gx + mw + gap;
-        vbar.style.left = Math.round(Math.min(bxP, innerWidth - bw - 8)) + "px";
-        vbar.style.top = Math.round(byP) + "px";
+        menu.style.top = "auto";
+        menu.style.bottom = Math.round(16 + Math.max(0, (bh - mh) / 2)) + "px";
+        vbar.style.left = Math.round(Math.min(gx + mw + gap, innerWidth - bw - 8)) + "px";
+        vbar.style.top = "auto";
+        vbar.style.bottom = "16px";
       } else {
+        vbar.style.bottom = "";
         /* The bar stands beside him — on whichever side faces the screen
            center — vertically centered on the orb. */
         var orbLeftHalf = br2.left + br2.width / 2 < innerWidth / 2;
@@ -2527,12 +2530,14 @@
       }
       var vb = vbar.getBoundingClientRect();
       if (innerWidth <= 700) {
-        /* Phone dock: the window floats centred ABOVE the bottom bar. */
+        /* Phone: the window floats centred ABOVE the bottom bar, anchored
+           from the bottom so toolbar collapse can't drift it on scroll. */
         var pwP = pop.offsetWidth || Math.min(innerWidth - 24, 560);
         pop.style.left = Math.round(Math.max(12, (innerWidth - pwP) / 2)) + "px";
-        var phP = pop.offsetHeight;
-        pop.style.top = Math.round(Math.max(12, vb.top - 12 - phP)) + "px";
+        pop.style.top = "auto";
+        pop.style.bottom = Math.round((innerHeight - vb.top) + 12) + "px";
       } else {
+        pop.style.bottom = "";
         var pw = pop.offsetWidth || 560;
         var onLeft = vb.left + vb.width / 2 < innerWidth / 2;
         pop.style.left = onLeft
