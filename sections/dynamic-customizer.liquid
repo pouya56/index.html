@@ -2545,6 +2545,30 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
   #dynInlineStage .engrave-stage, #dynInlineStage .engrave-frame {
     background: none; box-shadow: none; border: 0; border-radius: 0;
   }
+  /* The upload prompt rides on a paper tag so it reads on any product
+     colour - cream card, ink text, soft shadow. */
+  #dynInlineStage .print-hint { background: rgba(23, 19, 15, 0.08); }
+  #dynInlineStage .print-hint::before {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(82%, 300px); height: 112px;
+    background: rgba(250, 249, 245, 0.96);
+    border: 1px solid rgba(23, 19, 15, 0.2); border-radius: 2px;
+    box-shadow: 0 12px 26px -12px rgba(23, 19, 15, 0.5);
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+  }
+  #dynInlineStage .print-hint:hover::before {
+    transform: translate(-50%, -50%) translateY(-2px);
+    box-shadow: 0 16px 30px -12px rgba(23, 19, 15, 0.6);
+  }
+  #dynInlineStage .print-hint svg,
+  #dynInlineStage .print-hint span { position: relative; z-index: 1; }
+  #dynInlineStage .print-hint svg { stroke: #17130f; width: 26px; height: 26px; }
+  #dynInlineStage .print-hint span {
+    color: #17130f; font-size: 11.5px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase; max-width: 240px;
+  }
+  #dynInlineStage .print-hint:hover { background: rgba(23, 19, 15, 0.12); }
   /* same footprint as the product photo: the frame fills the gallery box
      instead of the designer's 429px default, so the image size never jumps */
   #dynInlineStage .engrave-stage { margin: 0; }
