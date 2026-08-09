@@ -1513,6 +1513,8 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-acc,
 #dhSlide .dh-slide-inject #buyBox.col-right .reassure,
 #dhSlide .dh-slide-inject #buyBox.col-right .ig-social { display: none !important; }
+/* the masthead sits a little lower so top and bottom breathe the same */
+#dhSlide .dh-slide-inject .dyn-topbar { position: static; padding: 42px 22px 0; }
 {%- if section.settings.popup_ticket_image != blank -%}
 /* uploaded ticket artwork behind the whole info area */
 #dhSlide .dh-slide-inject #buyBox.col-right {
