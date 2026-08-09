@@ -115,17 +115,20 @@ transition: background 0.16s, color 0.16s; white-space: nowrap; }
 .dyn-hero.dh-landing .dh-corner-ic { display: inline-flex; }
 .dyn-hero.dh-landing .dh-corner-link svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
 .dyn-hero.dh-landing img.dh-corner-ic { width: 14px; height: 14px; object-fit: contain; }
-.dh-menu-btn { display: none; position: fixed; top: 16px; left: 16px; z-index: 70; appearance: none;
-width: 46px; height: 46px; border-radius: 50%; padding: 0; align-items: center; justify-content: center;
-/* bare glyph: no frosted disc, so the word collage runs visibly behind it */
-background: transparent;
+.dh-menu-btn { display: none; position: fixed; top: 22px; left: 20px; z-index: 70; appearance: none;
+/* a small torn-paper tab, cut and pasted on: cream stock, hand-drawn ink
+   outline, halftone-dot drop shadow - same recipe as the hero buttons */
+width: auto; height: 52px; padding: 2px 20px 8px 16px; border: none; border-radius: 0;
+background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20210%2066'%20preserveAspectRatio='none'%3E%3Cdefs%3E%3Cpattern%20id='d'%20width='7'%20height='7'%20patternUnits='userSpaceOnUse'%3E%3Ccircle%20cx='3'%20cy='3'%20r='1.6'%20fill='%23141110'/%3E%3C/pattern%3E%3C/defs%3E%3Crect%20x='22'%20y='56'%20width='180'%20height='10'%20fill='url(%23d)'/%3E%3Crect%20x='200'%20y='16'%20width='10'%20height='44'%20fill='url(%23d)'/%3E%3Cpath%20d='M6.0%204.0%20L19.2%203.3%20L33.4%203.0%20L46.8%203.5%20L59.4%203.7%20L73.0%203.5%20L86.6%202.8%20L100.9%204.1%20L113.8%202.9%20L128.4%204.2%20L141.9%203.1%20L156.2%202.3%20L169.5%202.7%20L181.7%202.3%20L196.0%203.0%20L196.1%2013.4%20L196.2%2022.7%20L197.4%2032.2%20L197.7%2041.4%20L198.0%2052.0%20L183.5%2051.6%20L171.2%2052.3%20L156.9%2052.8%20L143.6%2052.4%20L130.8%2053.5%20L116.0%2053.4%20L103.1%2054.3%20L89.9%2053.3%20L76.9%2053.1%20L62.1%2054.7%20L48.0%2054.3%20L34.2%2054.9%20L22.1%2054.9%20L8.0%2055.0%20L8.3%2044.5%20L7.5%2034.8%20L6.9%2024.3%20L7.0%2015.0%20Z'%20fill='%23efe9da'%20stroke='%23141110'%20stroke-width='2'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
 -webkit-backdrop-filter: none; backdrop-filter: none;
-border: none; color: #141110; cursor: pointer;
-box-shadow: none;
-transition: transform 0.08s; }
-.dh-menu-btn:hover { transform: scale(1.06); }
-.dh-menu-btn:active { transform: scale(0.95); }
-.dh-menu-btn svg { width: 18px; height: 18px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+color: #141110; cursor: pointer; align-items: center; gap: 9px;
+box-shadow: none; transform: rotate(-1.6deg);
+transition: transform 0.12s; }
+.dh-menu-btn:hover { transform: rotate(-1.6deg) scale(1.05); }
+.dh-menu-btn:active { transform: rotate(-1.6deg) scale(0.95); }
+.dh-menu-btn svg { width: 21px; height: 21px; display: block; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
+.dh-menu-btn .dh-menu-txt { font: 900 15px/1 "Archivo Narrow", "Arial Narrow", "Helvetica Neue Condensed", Arial, sans-serif;
+letter-spacing: 0.1em; padding-top: 1px; }
 .dh-mmenu { position: fixed; inset: 0; z-index: 140; color: #0a0a0a;
 background: rgba(255, 255, 255, 0.35);
 -webkit-backdrop-filter: blur(22px) saturate(1.6) brightness(1.05);
@@ -1182,6 +1185,7 @@ if (document.readyState !== "loading") boot(); else document.addEventListener("D
 {%- if menu_rows != blank -%}
 <button class="dh-menu-btn" type="button" id="dhMenuBtn" aria-label="Menu" aria-expanded="false">
 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
+<span class="dh-menu-txt" aria-hidden="true">MENU</span>
 </button>
 <div class="dh-mmenu" id="dhMenu" role="dialog" aria-modal="true" aria-label="Menu">
 <button class="dh-mmenu-close" type="button" id="dhMenuClose">Close &times;</button>
