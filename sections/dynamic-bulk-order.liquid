@@ -468,11 +468,19 @@
   window.__dboCarriedDesigns = [];
   (function () {
     try {
-      var d = new URLSearchParams(window.location.search).get("designs");
-      if (!d) return;
-      var urls = d.split("\n").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 12);
-      if (!urls.length) return;
-      window.__dboCarriedDesigns = urls;
+      var designs = [];
+      try {
+        var stored = sessionStorage.getItem("dyn_bulk_designs");
+        if (stored) designs = JSON.parse(stored) || [];
+      } catch (e2) {}
+      if (!designs.length) {
+        var d = new URLSearchParams(window.location.search).get("designs");
+        if (d) designs = d.split("\n").map(function (s) { return s.trim(); }).filter(Boolean)
+          .map(function (line) { var ix = line.indexOf(":"); return { side: line.slice(0, ix).trim(), url: line.slice(ix + 1).trim() }; });
+      }
+      designs = designs.filter(function (x) { return x && x.url; }).slice(0, 12);
+      if (!designs.length) return;
+      window.__dboCarriedDesigns = designs;
       var summary = root.querySelector(".dbo-summary") || root;
       var card = document.createElement("div");
       card.id = "dboCarried";
@@ -481,15 +489,14 @@
       h.textContent = "Your uploaded designs";
       h.style.cssText = "font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:rgba(20,17,16,0.6);margin-bottom:8px;";
       card.appendChild(h);
-      urls.forEach(function (line) {
-        var url = line.replace(/^\w+:\s*/, "");
+      designs.forEach(function (dd) {
         var row = document.createElement("div");
         row.style.cssText = "display:flex;align-items:center;gap:8px;margin-top:6px;";
         var img = document.createElement("img");
-        img.src = url; img.alt = ""; img.loading = "lazy";
+        img.src = dd.url; img.alt = ""; img.loading = "lazy";
         img.style.cssText = "width:34px;height:34px;object-fit:contain;background:#f6f5f1;border:1px solid rgba(20,17,16,0.12);border-radius:2px;flex:none;";
         var lbl = document.createElement("span");
-        lbl.textContent = line.split(":")[0].replace(/^f/, "F").replace(/^b/, "B");
+        lbl.textContent = dd.side || "design";
         lbl.style.cssText = "font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(20,17,16,0.7);";
         row.appendChild(img); row.appendChild(lbl);
         card.appendChild(row);
@@ -531,6 +538,22 @@
     } catch (e) { return ""; }
   }
   async function clearCart() { try { await fetch("/cart/clear.js", { method: "POST", headers: { Accept: "application/json" } }); } catch (e) {} }
+  function dataUrlToFile(dataurl, name) {
+    try {
+      var arr = String(dataurl).split(","), mime = (arr[0].match(/:(.*?);/) || [])[1] || "image/png";
+      var b = atob(arr[1]), n = b.length, u8 = new Uint8Array(n);
+      while (n--) u8[n] = b.charCodeAt(n);
+      return new File([u8], name || "design.png", { type: mime });
+    } catch (e) { return null; }
+  }
+  function anyVariantId() {
+    var rws = rows();
+    for (var i = 0; i < rws.length; i++) {
+      var p = rws[i]._product;
+      if (p && p.variants && p.variants[0] && p.variants[0].id) return p.variants[0].id;
+    }
+    return (PRODUCTS[0] && PRODUCTS[0].variants && PRODUCTS[0].variants[0] && PRODUCTS[0].variants[0].id) || null;
+  }
 
   async function buildBody() {
     var phone = (document.getElementById("dboPhone").value || "").trim();
@@ -583,7 +606,22 @@
     buildBody().then(function (body) {
       if (!body) { alert("Please pick a product, choose the options, and enter a quantity for at least one variation."); submitting = false; submitBtn.disabled = false; submitBtn.textContent = t; return; }
       var carried = window.__dboCarriedDesigns || [];
-      if (carried.length) body += "\n\nDesigns uploaded on the product page:\n" + carried.join("\n");
+      var send = function (designLines) {
+        if (designLines.length) body += "\n\nDesigns uploaded on the product page:\n" + designLines.join("\n");
+        if (_addedToCart) clearCart();
+        sendPayload(body);
+      };
+      if (!carried.length) { send([]); return; }
+      var vid = anyVariantId();
+      Promise.all(carried.map(function (d) {
+        var side = d.side || "design";
+        if (/^https?:/i.test(d.url || "")) return Promise.resolve(side + ": " + d.url);
+        var f = dataUrlToFile(d.url, "product-page-design-" + side + ".png");
+        if (!f || !vid) return Promise.resolve(side + ": (couldn't attach the uploaded file)");
+        return uploadViaShopify(f, vid).then(function (u) { return side + ": " + (u || "(couldn't attach the uploaded file)"); });
+      })).then(send);
+    });
+    function sendPayload(body) {
       var payload = {
         _subject: "Bulk order request" + (name ? " — " + name : ""),
         name: name || "(no name)",
@@ -597,7 +635,7 @@
       }).then(function (res) { return res.ok ? res.json() : Promise.reject(); })
         .then(function () { formBox.style.display = "none"; if (successBox) successBox.hidden = false; window.scrollTo({ top: root.offsetTop - 20, behavior: "smooth" }); })
         .catch(function () { alert("Sorry, we couldn’t send that. Please try again or email us directly."); submitting = false; submitBtn.disabled = false; submitBtn.textContent = t; });
-    });
+    }
   });
 })();
 </script>

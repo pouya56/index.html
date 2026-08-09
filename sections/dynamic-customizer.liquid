@@ -2893,6 +2893,18 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
       var href = base + (handle ? ((base.indexOf("?") >= 0 ? "&" : "?") + "product=" + encodeURIComponent(handle)) : "");
       if (urls.length) href += (href.indexOf("?") >= 0 ? "&" : "?") + "designs=" + encodeURIComponent(urls.join("\n"));
       a.href = href;
+      /* full design list (incl. local data URLs when no CDN is configured)
+         hands over via sessionStorage - same-origin navigation keeps it */
+      try {
+        var all = window.DYN_DESIGN_FILES || [];
+        if (all.length) sessionStorage.setItem("dyn_bulk_designs", JSON.stringify(all.slice(0, 8)));
+        else sessionStorage.removeItem("dyn_bulk_designs");
+      } catch (e) {
+        try {
+          var httpOnly = (window.DYN_DESIGN_FILES || []).filter(function (d) { return /^https?:/i.test(d.url || ""); });
+          if (httpOnly.length) sessionStorage.setItem("dyn_bulk_designs", JSON.stringify(httpOnly));
+        } catch (e2) {}
+      }
     });
     {% if blk_bulk.settings.bulk_link_icon %}
     a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';

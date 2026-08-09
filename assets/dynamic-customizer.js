@@ -3084,15 +3084,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // Publish the uploaded artwork URLs so other flows (e.g. the bulk-order
     // request) can carry the customer's designs along.
     try {
-      var _du = [];
+      var _du = [], _df = [];
       ["front", "back"].forEach(function (s) {
         (sideLayers[s] || []).forEach(function (l) {
           if (l.kind !== "img") return;
-          var u = l.cloudUrl || (l.file && l.file._cloudUrl) || (/^https?:/i.test(l.url || "") ? l.url : null);
-          if (u) _du.push(s + ": " + u);
+          var u = l.cloudUrl || (l.file && l.file._cloudUrl) || l.url || null;
+          if (!u) return;
+          if (/^https?:/i.test(u)) _du.push(s + ": " + u);
+          _df.push({ side: s, url: u });
         });
       });
       window.DYN_DESIGN_URLS = _du;
+      window.DYN_DESIGN_FILES = _df; // includes local data URLs (no Cloudinary needed)
     } catch (e) {}
     // Render a small preview of the saved design so the page can show a
     // "your design is ready" thumbnail. Fire-and-forget; failure is harmless.
@@ -3428,15 +3431,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const sum = document.querySelector("#customizeSummary"); if (sum) sum.textContent = "Editing your saved design";
     setDesignReady(true); // the restored design can be re-added from the page
     try {
-      var _du2 = [];
+      var _du2 = [], _df2 = [];
       ["front", "back"].forEach(function (s) {
         (sideLayers[s] || []).forEach(function (l) {
           if (l.kind !== "img") return;
-          var u = l.cloudUrl || (l.file && l.file._cloudUrl) || (/^https?:/i.test(l.url || "") ? l.url : null);
-          if (u) _du2.push(s + ": " + u);
+          var u = l.cloudUrl || (l.file && l.file._cloudUrl) || l.url || null;
+          if (!u) return;
+          if (/^https?:/i.test(u)) _du2.push(s + ": " + u);
+          _df2.push({ side: s, url: u });
         });
       });
       window.DYN_DESIGN_URLS = _du2;
+      window.DYN_DESIGN_FILES = _df2;
     } catch (e) {}
   }
 
