@@ -926,8 +926,8 @@
       .dyn-abar .dh-vbar { flex-direction: row; align-items: center; animation: none;
         max-width: calc(100vw - 24px); max-height: none;
         overflow-x: auto; overflow-y: hidden; padding: 8px; }
-      /* While the window is open the lamp rides IN FRONT and glides to the
-         top-right corner (see the open handler) - visible, lit, tappable. */
+      /* While the window is open the lamp rides IN FRONT, sitting on the
+         left of the bar (see the open handler) - visible, lit, tappable. */
       .dyn-abar .dh-apps-btn[aria-expanded="true"] { z-index: 5; }
     }
   
@@ -2396,18 +2396,20 @@
       vbar.classList.add("is-on");
       var bw = vbar.offsetWidth, bh = vbar.offsetHeight;
       if (innerWidth <= 700) {
-        /* Phone: the bar centres on the SCREEN near the bottom (it doesn't
-           follow the lamp); the window then stacks directly above it. */
-        var byP = innerHeight - bh - 16;
-        var bxP = (innerWidth - bw) / 2;
-        vbar.style.left = Math.round(Math.min(Math.max(12, bxP), innerWidth - bw - 12)) + "px";
-        vbar.style.top = Math.round(Math.max(12, byP)) + "px";
-        /* the lamp glides to the top-right corner while the window is open
-           (syncLock glides it home on every close path) */
+        /* Phone: lamp + bar sit side by side (lamp on the LEFT of the bar),
+           the whole group centred on the screen near the bottom; the window
+           stacks above, also centred - one aligned stack. syncLock glides
+           the lamp home on every close path. */
+        var byP = Math.max(12, innerHeight - bh - 16);
         if (!menu.__dynHome) menu.__dynHome = { left: menu.style.left || "", top: menu.style.top || "" };
-        var mw = menu.offsetWidth || 80;
-        menu.style.left = Math.round(Math.max(8, innerWidth - mw - 10)) + "px";
-        menu.style.top = "10px";
+        var mw = menu.offsetWidth || 80, mh = menu.offsetHeight || 120;
+        var gap = 10, group = mw + gap + bw;
+        var gx = Math.max(8, (innerWidth - group) / 2);
+        menu.style.left = Math.round(gx) + "px";
+        menu.style.top = Math.round(byP + bh / 2 - mh / 2) + "px";
+        var bxP = gx + mw + gap;
+        vbar.style.left = Math.round(Math.min(bxP, innerWidth - bw - 8)) + "px";
+        vbar.style.top = Math.round(byP) + "px";
       } else {
         /* The bar stands beside him — on whichever side faces the screen
            center — vertically centered on the orb. */
