@@ -28,6 +28,10 @@ url('{{ section.settings.bg_image | image_url: width: 1100 }}'); }
 .dyn-hero .dh-wrap { max-width: 1280px; margin: 0 auto; padding: 44px 22px 90px; }
 
 .dyn-hero.dh-landing { --media-w: min(86vw, 500px); height: 100svh; min-height: 520px; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+/* Phone rubber-band: the bounce used to reveal the browser's light root
+   behind the red collage (a white blink on pull-down). Kill the reveal on
+   the landing page and tint the root to the hero surface as a fallback. */
+html:has(.dyn-hero.dh-landing) { overscroll-behavior-y: none; background-color: {{ section.settings.bg_color | default: '#f5f5f7' }} !important; }
 .dyn-hero .dh-game { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
 .dyn-hero .dh-game canvas { display: block; }
 .dyn-hero .dh-motion-btn {
