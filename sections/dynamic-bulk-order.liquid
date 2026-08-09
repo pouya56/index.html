@@ -174,6 +174,13 @@
 .dbo-varfile.has-file::after { content: "Attached \2713"; color: var(--inkk); }
 .dbo-varfile.is-drag { border-color: var(--red); background: #fdf1ef; transform: scale(1.01); }
 .dbo-varfile:hover { border-color: var(--inkk); color: var(--inkk); }
+.dbo-varfiles { flex: 1 1 100%; display: flex; flex-direction: column; gap: 6px; }
+.dbo-varfiles:empty { display: none; }
+.dbo-filechip { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 7px 10px;
+  background: #fff; border: 1px solid rgba(20,17,16,0.16); border-left: 3px solid #b3242a; border-radius: 2px; }
+.dbo-filechip small { color: rgba(20,17,16,0.5); margin-left: auto; white-space: nowrap; }
+.dbo-filechip-x { border: 0; background: none; cursor: pointer; font-size: 14px; color: rgba(20,17,16,0.5); padding: 2px 4px; }
+.dbo-filechip-x:hover { color: var(--red); }
 /* add-product: a strong editorial control */
 .dbo-add { border-radius: 2px; border: 2px solid var(--inkk); background: var(--inkk); color: #f5f3ef;
   text-transform: uppercase; letter-spacing: 0.2em; font-size: 12px; font-weight: 700; height: 50px;
@@ -426,13 +433,36 @@
     var fileWrap = document.createElement("label"); fileWrap.className = "dbo-file-btn dbo-varfile";
     fileWrap.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="dbo-varfile-label">Design</span><input type="file" class="dbo-varfile-input" accept="image/*,.pdf,.ai,.svg">';
     var fileInput = fileWrap.querySelector("input");
+    fileInput.multiple = true;
     var fileLabel = fileWrap.querySelector(".dbo-varfile-label");
+    var filesBox = document.createElement("div");
+    filesBox.className = "dbo-varfiles";
+    line._files = [];
+    function paintFiles() {
+      filesBox.innerHTML = "";
+      line._files.forEach(function (f, i) {
+        var chip = document.createElement("div"); chip.className = "dbo-filechip";
+        var nm = document.createElement("span"); nm.textContent = f.name;
+        var sz = document.createElement("small"); sz.textContent = Math.max(1, Math.round(f.size / 1024)) + " KB";
+        var x = document.createElement("button"); x.type = "button"; x.className = "dbo-filechip-x";
+        x.setAttribute("aria-label", "Remove " + f.name); x.textContent = "\u00d7";
+        x.addEventListener("click", function (ev) { ev.preventDefault(); line._files.splice(i, 1); paintFiles(); });
+        chip.appendChild(nm); chip.appendChild(sz); chip.appendChild(x);
+        filesBox.appendChild(chip);
+      });
+      fileWrap.classList.toggle("has-file", line._files.length > 0);
+      fileLabel.textContent = line._files.length ? (line._files.length + (line._files.length === 1 ? " file attached" : " files attached")) : "Design";
+    }
     fileInput.addEventListener("change", function () {
-      var f = fileInput.files && fileInput.files[0];
-      if (!f) { line._file = null; fileWrap.classList.remove("has-file"); fileLabel.textContent = "Design"; return; }
-      line._file = f; fileWrap.classList.add("has-file"); fileLabel.textContent = f.name;
+      Array.prototype.forEach.call(fileInput.files || [], function (f) {
+        var dup = line._files.some(function (g) { return g.name === f.name && g.size === f.size; });
+        if (!dup && line._files.length < 10) line._files.push(f);
+      });
+      fileInput.value = "";
+      paintFiles();
     });
     line.appendChild(fileWrap);
+    line.appendChild(filesBox);
     var rm = document.createElement("button"); rm.type = "button"; rm.className = "dbo-varremove"; rm.setAttribute("aria-label", "Remove variation"); rm.textContent = "×";
     rm.addEventListener("click", function () { var box = line.parentNode; line.remove(); if (!box.querySelector(".dbo-varline")) box.appendChild(makeVarLine(prod)); });
     line.appendChild(rm);
@@ -503,18 +533,37 @@
       h.textContent = "Your uploaded designs";
       h.style.cssText = "font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:rgba(20,17,16,0.6);margin-bottom:8px;";
       card.appendChild(h);
-      designs.forEach(function (dd) {
-        var row = document.createElement("div");
-        row.style.cssText = "display:flex;align-items:center;gap:8px;margin-top:6px;";
-        var img = document.createElement("img");
-        img.src = dd.url; img.alt = ""; img.loading = "lazy";
-        img.style.cssText = "width:34px;height:34px;object-fit:contain;background:#f6f5f1;border:1px solid rgba(20,17,16,0.12);border-radius:2px;flex:none;";
-        var lbl = document.createElement("span");
-        lbl.textContent = dd.side || "design";
-        lbl.style.cssText = "font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(20,17,16,0.7);";
-        row.appendChild(img); row.appendChild(lbl);
-        card.appendChild(row);
-      });
+      var listBox = document.createElement("div");
+      card.appendChild(listBox);
+      function paintCarried() {
+        window.__dboCarriedDesigns = designs;
+        try {
+          if (designs.length) sessionStorage.setItem("dyn_bulk_designs", JSON.stringify(designs));
+          else sessionStorage.removeItem("dyn_bulk_designs");
+        } catch (e3) {}
+        if (!designs.length) { card.remove(); return; }
+        listBox.innerHTML = "";
+        designs.forEach(function (dd, di) {
+          var row = document.createElement("div");
+          row.style.cssText = "display:flex;align-items:center;gap:8px;margin-top:6px;";
+          var img = document.createElement("img");
+          img.src = dd.url; img.alt = ""; img.loading = "lazy";
+          img.style.cssText = "width:34px;height:34px;object-fit:contain;background:#f6f5f1;border:1px solid rgba(20,17,16,0.12);border-radius:2px;flex:none;";
+          var lbl = document.createElement("span");
+          lbl.textContent = dd.side || "design";
+          lbl.style.cssText = "font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(20,17,16,0.7);";
+          var x = document.createElement("button");
+          x.type = "button"; x.textContent = "\u00d7";
+          x.setAttribute("aria-label", "Remove this design");
+          x.style.cssText = "border:0;background:none;cursor:pointer;font-size:15px;color:rgba(20,17,16,0.5);padding:2px 6px;margin-left:auto;";
+          x.addEventListener("click", function () { designs.splice(di, 1); paintCarried(); });
+          x.addEventListener("mouseenter", function () { x.style.color = "#b3242a"; });
+          x.addEventListener("mouseleave", function () { x.style.color = "rgba(20,17,16,0.5)"; });
+          row.appendChild(img); row.appendChild(lbl); row.appendChild(x);
+          listBox.appendChild(row);
+        });
+      }
+      paintCarried();
       var note = document.createElement("div");
       note.textContent = "These travel with your request automatically.";
       note.style.cssText = "margin-top:9px;font-size:10.5px;color:rgba(20,17,16,0.5);letter-spacing:0.03em;";
@@ -580,9 +629,10 @@
         var label = parts.length ? parts.join(", ") : "Standard";
         itemLines.push("- " + pName + " — " + label + " — Qty " + q);
         // upload this variation's own design, if any
-        if (line._file) {
-          var url = await uploadViaShopify(line._file, resolveVariantId(prod, line));
-          itemLines.push("    Design: " + (url || ("(couldn't attach '" + line._file.name + "')")));
+        var vf = line._files || (line._file ? [line._file] : []);
+        for (var fi = 0; fi < vf.length; fi++) {
+          var url = await uploadViaShopify(vf[fi], resolveVariantId(prod, line));
+          itemLines.push("    Design: " + (url || ("(couldn't attach '" + vf[fi].name + "')")));
         }
         any = true;
       }
