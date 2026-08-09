@@ -463,6 +463,19 @@
   addBtn.addEventListener("click", addRow);
   var firstRow = addRow();
 
+  // Preselect a product if the page was opened with ?product=<handle>
+  (function () {
+    try {
+      var pre = new URLSearchParams(window.location.search).get("product");
+      if (!pre) return;
+      var match = null;
+      for (var i = 0; i < PRODUCTS.length; i++) {
+        if (String(PRODUCTS[i].handle) === pre || String(PRODUCTS[i].id) === pre) { match = PRODUCTS[i]; break; }
+      }
+      if (match && firstRow) setRowProduct(firstRow, match);
+    } catch (e) {}
+  })();
+
   // Designs carried over from the product page (?designs=<url per line>):
   // show them as a small attached-artwork card and ride them into the email.
   window.__dboCarriedDesigns = [];
@@ -481,10 +494,11 @@
       designs = designs.filter(function (x) { return x && x.url; }).slice(0, 12);
       if (!designs.length) return;
       window.__dboCarriedDesigns = designs;
-      var summary = root.querySelector(".dbo-summary") || root;
+      /* the designs belong to the product - mount inside its row */
+      var mountEl = (typeof firstRow !== "undefined" && firstRow) ? firstRow : null;
       var card = document.createElement("div");
       card.id = "dboCarried";
-      card.style.cssText = "margin-top:16px;padding:12px 14px;background:#fff;border:1px solid rgba(20,17,16,0.16);border-left:3px solid #b3242a;border-radius:2px;";
+      card.style.cssText = "grid-column:1 / -1;margin-top:4px;padding:12px 14px;background:#fff;border:1px solid rgba(20,17,16,0.16);border-left:3px solid #b3242a;border-radius:2px;";
       var h = document.createElement("div");
       h.textContent = "Your uploaded designs";
       h.style.cssText = "font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:rgba(20,17,16,0.6);margin-bottom:8px;";
@@ -505,22 +519,11 @@
       note.textContent = "These travel with your request automatically.";
       note.style.cssText = "margin-top:9px;font-size:10.5px;color:rgba(20,17,16,0.5);letter-spacing:0.03em;";
       card.appendChild(note);
-      summary.appendChild(card);
+      if (mountEl) mountEl.appendChild(card);
+      else (root.querySelector(".dbo-summary") || root).appendChild(card);
     } catch (e) {}
   })();
 
-  // Preselect a product if the page was opened with ?product=<handle>
-  (function () {
-    try {
-      var pre = new URLSearchParams(window.location.search).get("product");
-      if (!pre) return;
-      var match = null;
-      for (var i = 0; i < PRODUCTS.length; i++) {
-        if (String(PRODUCTS[i].handle) === pre || String(PRODUCTS[i].id) === pre) { match = PRODUCTS[i]; break; }
-      }
-      if (match && firstRow) setRowProduct(firstRow, match);
-    } catch (e) {}
-  })();
 
   // ---- Shopify file hosting (upload to cart, read hosted URL, then clear) ----
   var _addedToCart = false;
