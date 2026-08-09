@@ -926,6 +926,10 @@
       .dyn-abar .dh-vbar { flex-direction: row; align-items: center; animation: none;
         max-width: calc(100vw - 24px); max-height: none;
         overflow-x: auto; overflow-y: hidden; padding: 8px; }
+      /* the lamp rests bottom-left on phones (dragging still works — an
+         inline top from the drag wins over this resting spot) */
+      .dyn-abar .dh-apps-menu { top: auto; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); left: 12px; }
+      .dyn-abar .dh-apps-menu[style*="top"] { bottom: auto; }
     }
   
     /* Aged-paper windows: cream stock with hairline cracks and a black
@@ -2390,6 +2394,8 @@
         /* Phone: the bar centres on the SCREEN near the bottom (it doesn't
            follow the lamp); the window then stacks directly above it. */
         var byP = innerHeight - bh - 16;
+        /* keep clear of the lamp when he rests in the bottom strip */
+        if (br2.bottom > byP - 8) byP = Math.max(12, br2.top - 12 - bh);
         var bxP = (innerWidth - bw) / 2;
         vbar.style.left = Math.round(Math.min(Math.max(12, bxP), innerWidth - bw - 12)) + "px";
         vbar.style.top = Math.round(Math.max(12, byP)) + "px";
