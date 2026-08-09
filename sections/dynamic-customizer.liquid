@@ -1528,8 +1528,7 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
     <a class="dyn-logo" id="dynTopLogo" href="/" aria-label="Home"></a>
   </div>
 
-  <!-- Inflation filter: low-frequency turbulence gently warps the CTA buttons'
-       outline into soft irregular bulges, like air-filled vinyl. -->
+  <!-- Inflation filter for CTA outlines. -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <filter id="dynPuff" x="-8%" y="-20%" width="116%" height="140%">
       <feTurbulence type="fractalNoise" baseFrequency="0.012 0.045" numOctaves="2" seed="4" result="n"/>
@@ -1537,17 +1536,14 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
     </filter>
   </svg>
 
-  <!-- Premium editorial overlay — loaded after the base styles so its
-       equal-specificity rules win the cascade. (The surrounding markup sits
-       inside one big raw block, so step out of it for the Liquid.) -->
+  <!-- Editorial overlay (loads after base styles; steps out of raw). -->
   {% endraw %}{{ 'dynamic-editorial.css' | asset_url | stylesheet_tag }}{% raw %}
 
   <!-- Product page -->
   <main class="product">
     <div class="gallery">
       <div class="gallery-main">
-        <!-- Original single-image stage + arrows kept (hidden) so the app script
-             still finds them, and used as a fallback if the card deck can't load. -->
+        <!-- Hidden original stage + arrows: app hooks + fallback. -->
         <div class="gallery-stage" id="galleryStage" hidden></div>
         <button class="gal-arrow" id="galPrev" hidden aria-hidden="true">&#8249;</button>
         <button class="gal-arrow" id="galNext" hidden aria-hidden="true">&#8250;</button>
@@ -1559,7 +1555,7 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
           <button class="gal-arrow gal-next" id="cardsNext" aria-label="Next image">&#8250;</button>
         </div>
       </div>
-      <!-- Thumbnails removed from view; kept hidden so the app's wiring is intact. -->
+      <!-- Thumbnails hidden; app wiring intact. -->
       <div class="gallery-thumbs" id="galleryThumbs" hidden></div>
       <script type="application/json" id="dynCardsData">
         {
@@ -1585,7 +1581,7 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
         <span class="price-note" id="pPriceNote"></span>
       </div>
 
-      <!-- Primary actions (Add to Cart / Customize) sit right under the price. -->
+      <!-- Primary actions under the price. -->
       <div class="dyn-actionbar" id="dynActionBar">
         <div class="dyn-actionbar-inner">
           <div class="cta-stack">
@@ -1600,20 +1596,15 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
           <div id="giftMount"></div>
         </div>
       </div>
-      <!-- Only shows inside the surprise popup: one button, straight to the product page.
-           Every style is inline so no stylesheet or script is needed for it to render;
-           the popup CSS only flips display:none to flex. -->
+      <!-- Popup-only: one button straight to the product page (inline styles). -->
       <a class="dyn-popup-open" href="#"
         style="display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-decoration:none;z-index:6;background:none;border:0;box-shadow:none;padding:8px 2px;margin:6px 0 0;">
         <span style="font:800 19px Georgia,'Times New Roman',serif;letter-spacing:.14em;text-transform:uppercase;color:#17130f;border-bottom:2px solid #17130f;padding-bottom:7px;white-space:nowrap;">Open Product</span>
         <span style="font:600 10.5px Georgia,'Times New Roman',serif;letter-spacing:.3em;text-transform:uppercase;color:rgba(23,19,15,0.72);white-space:nowrap;">Start customizing</span>
       </a>
       <script>
-      /* Belt and braces for the popup's ticket stub: when this page runs
-         inside the surprise window, guarantee the Admit One link exists,
-         sits on the ticket's right, and is visible - inline styles with
-         !important, immune to any stylesheet. Does nothing on the normal
-         product page. */
+      /* Popup stub belt-and-braces: guarantee the link exists and shows
+         inside the surprise window; no-op on the normal product page. */
       (function () {
         var tries = 0;
         function imp(el, map) { for (var k in map) { try { el.style.setProperty(k, map[k], "important"); } catch (e) {} } }
@@ -1698,7 +1689,7 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
         <div class="desc" id="pDesc"></div>
       </details>
 
-      <!-- Editorial product story (edit in section settings; type "hide" to remove one). -->
+      <!-- Editorial story sections (settings; type "hide" to remove). -->
       {% endraw %}
       {%- assign dyx_mat = section.settings.story_materials -%}
       {%- if dyx_mat == blank -%}{%- assign dyx_mat = 'Heavyweight, gift-grade blanks chosen for daily use — thick cotton, sturdy ceramic, solid steel. Every piece is inspected by hand before it enters production.' -%}{%- endif -%}
@@ -2516,9 +2507,7 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
 {%- endif -%}
 <script src="{{ 'dynamic-customizer.js' | asset_url }}" defer></script>
 
-{%- comment -%} Pointing hands flanking the popup's Open Product button: the
-  uploaded artwork (pointing RIGHT) sits left of the button; a mirrored copy
-  sits on the right, so both hands point at the button. {%- endcomment -%}
+{%- comment -%} Hands flanking the popup button (right one mirrored). {%- endcomment -%}
 {%- if section.settings.popup_hand_image != blank -%}
 <style>
 #dhSlide .dh-slide-inject #buyBox.col-right .dyn-popup-open { position: relative !important; }
@@ -2929,8 +2918,7 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
     a.href = base + (handle ? ((base.indexOf("?") >= 0 ? "&" : "?") + "product=" + encodeURIComponent(handle)) : "");
     /* If the customer already designed something, their uploaded artwork
        rides along to the bulk request (URLs published by the designer). */
-    /* Designs ride along to the bulk request: local artwork is hosted via a
-       temporary cart line (only that line is removed), then we navigate. */
+    /* Bulk request: host local artwork via a temp cart line, then go. */
     a.addEventListener("click", function (ev) {
       var href = base + (handle ? ((base.indexOf("?") >= 0 ? "&" : "?") + "product=" + encodeURIComponent(handle)) : "");
       var all = window.DYN_DESIGN_FILES || [];
