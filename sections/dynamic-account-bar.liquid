@@ -2387,14 +2387,12 @@
       vbar.classList.add("is-on");
       var bw = vbar.offsetWidth, bh = vbar.offsetHeight;
       if (innerWidth <= 700) {
-        /* Phone: the bar opens BELOW him (or above when there's no room),
-           horizontally centred on him — never on top of him. */
-        var fitsBelow = br2.bottom + 14 + bh <= innerHeight - 12;
-        var byP = fitsBelow ? br2.bottom + 14 : br2.top - 14 - bh;
-        byP = Math.min(Math.max(12, byP), innerHeight - bh - 12);
-        var bxP = br2.left + br2.width / 2 - bw / 2;
+        /* Phone: the bar centres on the SCREEN near the bottom (it doesn't
+           follow the lamp); the window then stacks directly above it. */
+        var byP = innerHeight - bh - 16;
+        var bxP = (innerWidth - bw) / 2;
         vbar.style.left = Math.round(Math.min(Math.max(12, bxP), innerWidth - bw - 12)) + "px";
-        vbar.style.top = Math.round(byP) + "px";
+        vbar.style.top = Math.round(Math.max(12, byP)) + "px";
       } else {
         /* The bar stands beside him — on whichever side faces the screen
            center — vertically centered on the orb. */
