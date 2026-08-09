@@ -2057,6 +2057,10 @@
       requestAnimationFrame(function () { menu.classList.remove("is-dragging"); });
     });
     window.addEventListener("resize", function () {
+      /* While the window is open the lamp is docked beside the bar — iOS
+         fires resize when the Safari toolbar collapses mid-scroll, and the
+         edge-snap would yank him to the left edge. Stay docked. */
+      if (pop && !pop.hidden) return;
       var r = menu.getBoundingClientRect();
       place(r.left, r.top, true);
     });
