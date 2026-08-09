@@ -926,6 +926,11 @@
       .dyn-abar .dh-vbar { flex-direction: row; align-items: center; animation: none;
         max-width: calc(100vw - 24px); max-height: none;
         overflow-x: auto; overflow-y: hidden; padding: 8px; }
+      /* While the window is open the lamp steps aside (it only went behind
+         the window anyway); it fades back the moment the window closes.
+         Tapping anywhere outside still closes everything. */
+      .dyn-abar .dh-apps-btn { transition: opacity 0.2s ease; }
+      .dyn-abar .dh-apps-btn[aria-expanded="true"] { opacity: 0; pointer-events: none; }
     }
   
     /* Aged-paper windows: cream stock with hairline cracks and a black
