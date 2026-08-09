@@ -118,9 +118,10 @@ transition: box-shadow 0.15s, background 0.15s, transform 0.08s; }
 .dh-menu-btn:active { transform: scale(0.95); }
 .dh-menu-btn svg { width: 18px; height: 18px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .dh-mmenu { position: fixed; inset: 0; z-index: 140; color: #0a0a0a;
-background: rgba(255, 255, 255, 0.35);
--webkit-backdrop-filter: blur(22px) saturate(1.6) brightness(1.05);
-backdrop-filter: blur(22px) saturate(1.6) brightness(1.05);
+/* light frost: the word collage stays readable behind the open menu */
+background: rgba(255, 255, 255, 0.2);
+-webkit-backdrop-filter: blur(6px) saturate(1.5);
+backdrop-filter: blur(6px) saturate(1.5);
 transform: translateY(-102%); transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 padding: 76px 22px 30px; box-sizing: border-box; overflow-y: auto;
 font-family: "Archivo", "Inter", "Helvetica Neue", Arial, sans-serif; }
