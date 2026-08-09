@@ -920,20 +920,8 @@
       .dyn-abar .dh-vdel { width: 24px; height: 24px; top: 6px; left: 6px; right: auto; }
     }
     @media (max-width: 700px) { .dyn-abar .ab-inner { padding: 8px 16px; } }
-    @media (max-width: 700px) {
-      /* Phone: the orb steps aside and the tab bar becomes a persistent
-         Instagram-style dock across the bottom — always there, no orb tap
-         needed. Hidden on the landing-hero page, which stays clean. */
-      .dyn-abar .dh-apps-btn { display: none !important; }
-      .dyn-abar .dh-vbar { display: flex; flex-direction: row; align-items: center;
-        left: 50% !important; top: auto !important; right: auto;
-        bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-        transform: translateX(-50%); animation: none;
-        max-width: calc(100vw - 20px); max-height: none;
-        overflow-x: auto; overflow-y: hidden; padding: 8px; }
-      body:has(.dyn-hero.dh-landing) .dyn-abar .dh-vbar,
-      .dyn-abar .dh-vbar.dh-vbar--hero { display: none !important; }
-    }
+    /* Phones use the SAME setup as desktop: the lamp character stays, the
+       tab rail appears beside it on tap — no bottom dock. */
   
     /* Aged-paper windows: cream stock with hairline cracks and a black
        strip down the right (drawn inline; the "Window paper texture"
