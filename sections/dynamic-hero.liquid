@@ -50,11 +50,13 @@ padding-top: 4vh; padding-bottom: calc(18vh + 1in); }
 .dyn-hero .dh-words { position: absolute; inset: -25%; z-index: 0; overflow: hidden; pointer-events: none;
 display: flex; flex-direction: column; justify-content: center; gap: clamp(2px, 1vh, 14px);
 transform: rotate(-12deg); }
-/* Tall phone screens: the row stack is shorter than the rotated plane, so
-   the -12deg tilt exposed bare corners top-left and bottom-right. Spreading
-   the rows across the plane's full height keeps every corner covered. */
+/* Rows 9-14 exist for tall phone screens only: 8 rows can't fill the
+   rotated plane there, which bared the top-left / bottom-right corners.
+   Desktop keeps its original 8. */
+.dyn-hero .dh-wrow:nth-child(n+9) { display: none; }
 @media (max-width: 700px) {
-  .dyn-hero .dh-words { justify-content: space-between; inset: -35% -30%; }
+  .dyn-hero .dh-words { inset: -8% -28%; }
+  .dyn-hero .dh-wrow:nth-child(n+9) { display: block; }
 }
 .dyn-hero .dh-wrow { flex: none; white-space: nowrap; }
 .dyn-hero .dh-wtrack { display: inline-flex; will-change: transform;
@@ -661,9 +663,9 @@ data-results-url="{{ section.settings.results_page_url }}">
 "base": {{ section.settings.words_opacity | default: 18 | divided_by: 100.0 }}
 }</script>
 {%- else -%}
-{%- assign row_sizes = 'md,xs,lg,sm,xl,xs,md,sm' | split: ',' -%}
-{%- assign row_durs = '52,44,60,40,56,47,63,42' | split: ',' -%}
-{%- assign row_dels = '0,-18,-7,-29,-12,-23,-4,-34' | split: ',' -%}
+{%- assign row_sizes = 'md,xs,lg,sm,xl,xs,md,sm,xs,lg,sm,md,xs,sm' | split: ',' -%}
+{%- assign row_durs = '52,44,60,40,56,47,63,42,49,58,43,54,46,41' | split: ',' -%}
+{%- assign row_dels = '0,-18,-7,-29,-12,-23,-4,-34,-15,-9,-26,-20,-31,-11' | split: ',' -%}
 <div class="dh-words" id="dhWords" aria-hidden="true" style="--wbase: {{ section.settings.words_opacity | default: 5 | divided_by: 100.0 }};">
 {%- for rs in row_sizes -%}
 {%- assign ri = forloop.index0 -%}
