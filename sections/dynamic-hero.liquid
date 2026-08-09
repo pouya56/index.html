@@ -50,6 +50,12 @@ padding-top: 4vh; padding-bottom: calc(18vh + 1in); }
 .dyn-hero .dh-words { position: absolute; inset: -25%; z-index: 0; overflow: hidden; pointer-events: none;
 display: flex; flex-direction: column; justify-content: center; gap: clamp(2px, 1vh, 14px);
 transform: rotate(-12deg); }
+/* Tall phone screens: the row stack is shorter than the rotated plane, so
+   the -12deg tilt exposed bare corners top-left and bottom-right. Spreading
+   the rows across the plane's full height keeps every corner covered. */
+@media (max-width: 700px) {
+  .dyn-hero .dh-words { justify-content: space-between; inset: -35% -30%; }
+}
 .dyn-hero .dh-wrow { flex: none; white-space: nowrap; }
 .dyn-hero .dh-wtrack { display: inline-flex; will-change: transform;
 animation: dhWordsL var(--wdur, 50s) linear infinite; animation-delay: var(--wdel, 0s); }
