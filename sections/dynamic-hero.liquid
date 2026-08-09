@@ -109,12 +109,13 @@ transition: background 0.16s, color 0.16s; white-space: nowrap; }
 .dyn-hero.dh-landing img.dh-corner-ic { width: 14px; height: 14px; object-fit: contain; }
 .dh-menu-btn { display: none; position: fixed; top: 16px; left: 16px; z-index: 70; appearance: none;
 width: 46px; height: 46px; border-radius: 50%; padding: 0; align-items: center; justify-content: center;
-background: rgba(255, 255, 255, 0.32);
--webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5);
-border: 1px solid rgba(255, 255, 255, 0.65); color: #1d1d1f; cursor: pointer;
-box-shadow: 0 12px 26px -8px rgba(29, 29, 31, 0.28);
-transition: box-shadow 0.15s, background 0.15s, transform 0.08s; }
-.dh-menu-btn:hover { background: rgba(255, 255, 255, 0.5); box-shadow: 0 18px 34px -10px rgba(29, 29, 31, 0.32); }
+/* bare glyph: no frosted disc, so the word collage runs visibly behind it */
+background: transparent;
+-webkit-backdrop-filter: none; backdrop-filter: none;
+border: none; color: #141110; cursor: pointer;
+box-shadow: none;
+transition: transform 0.08s; }
+.dh-menu-btn:hover { transform: scale(1.06); }
 .dh-menu-btn:active { transform: scale(0.95); }
 .dh-menu-btn svg { width: 18px; height: 18px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .dh-mmenu { position: fixed; inset: 0; z-index: 140; color: #0a0a0a;
