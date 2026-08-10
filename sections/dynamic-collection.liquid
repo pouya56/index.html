@@ -739,16 +739,18 @@
   }
   /* cards are printed objects laid on the paper: tiny scatter rotations,
      natural vertical drift, layered physical shadows */
+  /* --cdx/--cdy carry the desktop drag offset - every transform below
+     includes them so the !important hover lift can't wipe a drag */
   .dyn-col .dc-gridall > .dc-card { transition: transform .35s cubic-bezier(.2,.8,.25,1), box-shadow .35s cubic-bezier(.2,.8,.25,1); }
-  .dyn-col .dc-gridall > .dc-card:nth-child(6n+1) { transform: rotate(-1.6deg); }
-  .dyn-col .dc-gridall > .dc-card:nth-child(6n+2) { transform: rotate(1.1deg) translateY(30px); }
-  .dyn-col .dc-gridall > .dc-card:nth-child(6n+3) { transform: rotate(2.2deg) translateY(-10px); }
-  .dyn-col .dc-gridall > .dc-card:nth-child(6n+4) { transform: rotate(1.3deg) translateY(16px); }
-  .dyn-col .dc-gridall > .dc-card:nth-child(6n+5) { transform: rotate(-2.4deg) translateY(38px); }
-  .dyn-col .dc-gridall > .dc-card:nth-child(6n+6) { transform: rotate(-1deg) translateY(-4px); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+1) { transform: translate(var(--cdx, 0px), var(--cdy, 0px)) rotate(-1.6deg); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+2) { transform: translate(var(--cdx, 0px), var(--cdy, 0px)) rotate(1.1deg) translateY(30px); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+3) { transform: translate(var(--cdx, 0px), var(--cdy, 0px)) rotate(2.2deg) translateY(-10px); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+4) { transform: translate(var(--cdx, 0px), var(--cdy, 0px)) rotate(1.3deg) translateY(16px); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+5) { transform: translate(var(--cdx, 0px), var(--cdy, 0px)) rotate(-2.4deg) translateY(38px); }
+  .dyn-col .dc-gridall > .dc-card:nth-child(6n+6) { transform: translate(var(--cdx, 0px), var(--cdy, 0px)) rotate(-1deg) translateY(-4px); }
   .dyn-col .dc-card { box-shadow: 0 2px 3px rgba(20,17,16,0.14), 0 14px 28px -10px rgba(20,17,16,0.3), 0 34px 64px -30px rgba(20,17,16,0.35) !important; }
   @media (hover: hover) and (pointer: fine) {
-    .dyn-col .dc-gridall > .dc-card:hover { transform: rotate(0deg) translateY(-8px) !important;
+    .dyn-col .dc-gridall > .dc-card:hover { transform: translate(var(--cdx, 0px), var(--cdy, 0px)) rotate(0deg) translateY(-8px) !important;
       box-shadow: 0 4px 6px rgba(20,17,16,0.16), 0 28px 50px -14px rgba(20,17,16,0.42), 0 64px 95px -40px rgba(20,17,16,0.45) !important; }
   }
   /* product cutouts run a touch larger and may poke past the card edge */
@@ -802,6 +804,9 @@
   .dyn-col .dc-tabs.is-images .dc-tab-label { transition: color 0.25s ease, letter-spacing 0.25s ease, border-color 0.25s ease; }
   .dyn-col .dc-tabs.is-images .dc-tab:hover .dc-tab-label { letter-spacing: 0.34em; }
   /* phones: one row, swiped sideways, never wrapped */
+  /* card mid-drag: floats over the grid, no text selection */
+  .dyn-col .dc-card.is-cdrag { position: relative; z-index: 60; cursor: grabbing;
+    user-select: none; -webkit-user-select: none; transition: none; }
   @media (max-width: 800px) {
     .dyn-col .dc-tabs.is-images { flex-wrap: nowrap !important; overflow-x: auto; justify-content: flex-start;
       -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 14px; }
@@ -2144,7 +2149,8 @@
 
 <script>
 /* 3D card tilt: each card leans toward the cursor (max ~7deg) with a slight
-   lift, and settles back on leave. Fine pointers only. */
+   lift, and settles back on leave. Fine pointers only. (In the zine grid the
+   scatter/hover transforms outrank this - it only shows in other layouts.) */
 (function () {
   var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
   var TILT = 7;
@@ -2152,7 +2158,7 @@
     if (card.__tilt) return;
     card.__tilt = true;
     card.addEventListener("mousemove", function (e) {
-      if (!fine.matches) return;
+      if (!fine.matches || card.classList.contains("is-cdrag")) return;
       var r = card.getBoundingClientRect();
       var px = (e.clientX - r.left) / r.width - 0.5;
       var py = (e.clientY - r.top) / r.height - 0.5;
@@ -2161,6 +2167,54 @@
     });
     card.addEventListener("mouseleave", function () { card.style.transform = ""; });
   });
+})();
+
+/* Free drag (desktop): pick any card up and drop it anywhere on the page.
+   The offset rides in the --cdx/--cdy custom properties that every zine
+   transform includes, so the scatter rotation and hover lift survive. A
+   real drag swallows the click; a plain click still opens the product. */
+(function () {
+  var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
+  var col = document.getElementById("dynCol");
+  if (!col) return;
+  var drag = null, squelch = 0;
+  document.addEventListener("click", function (e) {
+    if (Date.now() < squelch) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+  col.addEventListener("dragstart", function (e) {
+    if (e.target && e.target.closest && e.target.closest(".dc-card")) e.preventDefault();
+  });
+  col.addEventListener("pointerdown", function (e) {
+    if (!fine.matches || window.innerWidth <= 800) return;
+    if (e.button !== 0 || drag) return;
+    var card = e.target && e.target.closest ? e.target.closest(".dc-gridall .dc-card") : null;
+    if (!card) return;
+    drag = { el: card, sx: e.clientX, sy: e.clientY,
+      bx: parseFloat(card.dataset.dgx || 0), by: parseFloat(card.dataset.dgy || 0), moved: false };
+  });
+  window.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+    if (!drag.moved) {
+      if (dx * dx + dy * dy < 64) return;   // an 8px wobble is still a click
+      drag.moved = true;
+      drag.el.classList.add("is-cdrag");
+      drag.el.style.transform = "";         // drop any tilt residue
+    }
+    var nx = drag.bx + dx, ny = drag.by + dy;
+    drag.el.dataset.dgx = nx;
+    drag.el.dataset.dgy = ny;
+    drag.el.style.setProperty("--cdx", nx + "px");
+    drag.el.style.setProperty("--cdy", ny + "px");
+  }, { passive: true });
+  function end() {
+    if (!drag) return;
+    if (drag.moved) squelch = Date.now() + 320;
+    drag.el.classList.remove("is-cdrag");
+    drag = null;
+  }
+  window.addEventListener("pointerup", end, { passive: true });
+  window.addEventListener("pointercancel", end, { passive: true });
 })();
 </script>
 
