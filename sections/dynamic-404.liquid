@@ -1,95 +1,151 @@
 {% comment %}
   ============================================================================
-  Dynamic 404 — a video 404 page where the person in the clip "follows" the
-  mouse: the video is paused and the cursor's X position scrubs the timeline,
-  so their movement tracks the pointer. On touch screens (no cursor) the clip
-  simply plays on a loop.
+  Dynamic 404 — a zine collage poster: giant 404, torn red/black/cream
+  scraps ("PAGE / NOT / FOUND."), typewriter notes, and two paper buttons.
+  Built in code so it stays sharp and the buttons really work; upload your
+  own poster art in the settings to replace the drawn collage entirely
+  (the buttons then float over the bottom of your image).
   SETUP:
   1. Theme editor > Sections > add "dynamic-404" > paste this file.
   2. Online Store > Customize > template dropdown > "404 page" > Add section >
      "Dynamic 404" (remove the theme's default 404 section if you like).
-  3. In the section settings, pick your video (it uploads to Content > Files).
   ============================================================================
 {% endcomment %}
 
 {%- assign s4 = section.settings -%}
 
 <style>
-  .dyn404 { --ink:#1d1d1f; --soft:#6e6e73; --accent:#0071e3;
-    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    font-family:var(--font); color:var(--ink); -webkit-font-smoothing:antialiased;
-    min-height:{{ s4.height | default: 86 }}svh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; padding:48px 22px 64px; }
-  .dyn404 .d4-stage { position:relative; width:min({{ s4.video_width | default: 420 }}px, 86vw); border-radius:26px; overflow:hidden;
-    box-shadow:0 24px 70px rgba(0,0,0,0.18); background:#000; }
-  .dyn404 .d4-stage video { display:block; width:100%; height:auto; }
-  .dyn404 h1 { font-size:clamp(44px,9vw,84px); font-weight:700; letter-spacing:-0.03em; margin:30px 0 6px; line-height:1; }
-  .dyn404 p { font-size:17px; color:var(--soft); margin:0 0 24px; max-width:460px; line-height:1.55; }
-  .dyn404 .d4-btn { display:inline-flex; align-items:center; gap:8px; height:50px; padding:0 26px; border-radius:999px;
-    background:var(--ink); color:#fff; font-size:15.5px; font-weight:600; text-decoration:none; transition:opacity .16s, transform .1s; }
-  .dyn404 .d4-btn:hover { opacity:.9; } .dyn404 .d4-btn:active { transform:scale(.98); }
-  .dyn404 .d4-hint { font-size:12.5px; color:var(--soft); opacity:.7; margin-top:14px; }
-  @media (hover: none) { .dyn404 .d4-hint { display:none; } }
+  .dyn404 { --ink: #17130f; --cream: #efe8d8; --paper: #e7dfcf; --red: #c22127;
+    --head: "Archivo Black", "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --type: "Courier Prime", "Courier New", Courier, monospace;
+    background: var(--paper);
+    background-image: radial-gradient(rgba(23, 19, 15, 0.05) 1px, transparent 1.4px);
+    background-size: 26px 26px;
+    color: var(--ink); -webkit-font-smoothing: antialiased;
+    min-height: 92svh; display: flex; align-items: center; justify-content: center;
+    padding: clamp(28px, 6vw, 70px) 18px; overflow: hidden; }
+
+  .dyn404 .d4-poster { position: relative; width: min(720px, 94vw); }
+
+  /* decorative ground scraps: graph paper top-right, kraft bottom-right */
+  .dyn404 .d4-poster::before { content: ""; position: absolute; top: -3%; right: -6%;
+    width: 42%; height: 46%; transform: rotate(3deg);
+    background: #f4efe4;
+    background-image: linear-gradient(rgba(23,19,15,0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(23,19,15,0.12) 1px, transparent 1px);
+    background-size: 15px 15px;
+    clip-path: polygon(2% 3%, 26% 0%, 55% 4%, 82% 1%, 100% 6%, 97% 34%, 100% 62%, 96% 88%, 74% 100%, 44% 96%, 18% 100%, 0% 93%, 3% 60%, 0% 31%);
+    opacity: 0.85; }
+  .dyn404 .d4-poster::after { content: ""; position: absolute; bottom: 9%; right: -4%;
+    width: 34%; height: 30%; transform: rotate(-4deg);
+    background: #cdb28c;
+    clip-path: polygon(0% 8%, 22% 0%, 58% 5%, 88% 1%, 100% 12%, 96% 44%, 100% 74%, 90% 100%, 55% 95%, 24% 100%, 2% 92%, 5% 52%);
+    opacity: 0.55; }
+  .dyn404 .d4-in { position: relative; z-index: 1; }
+
+  /* tiny "printed page" scrap, top-right */
+  .dyn404 .d4-print { position: absolute; top: -12px; right: 2%; max-width: 40%;
+    background: #f6f1e6; padding: 12px 14px; transform: rotate(-2deg);
+    font-family: var(--type); font-size: 10px; line-height: 1.55; color: rgba(23,19,15,0.62);
+    clip-path: polygon(1% 6%, 30% 0%, 68% 4%, 100% 1%, 98% 40%, 100% 78%, 94% 100%, 60% 95%, 26% 100%, 0% 94%, 3% 48%);
+    filter: drop-shadow(3px 4px 0 rgba(23,19,15,0.16)); }
+
+  .dyn404 .d4-num { font-family: var(--head); font-weight: 900; margin: 0;
+    font-size: clamp(120px, 30vw, 236px); line-height: 0.86; letter-spacing: -0.045em;
+    transform: rotate(-1.4deg); }
+
+  .dyn404 .d4-wrong { display: inline-block; background: #1a1613; color: var(--cream);
+    font-family: var(--type); font-size: clamp(12px, 1.9vw, 14.5px); line-height: 1.75;
+    padding: 18px 22px; max-width: 210px; transform: rotate(-2.4deg);
+    margin: -34px 0 0 clamp(0px, 2vw, 16px); position: relative; z-index: 2;
+    clip-path: polygon(3% 5%, 34% 0%, 70% 3%, 100% 0%, 97% 30%, 100% 66%, 96% 96%, 62% 100%, 30% 96%, 0% 100%, 2% 62%, 0% 28%);
+    filter: drop-shadow(4px 5px 0 rgba(23,19,15,0.22)); }
+
+  .dyn404 .d4-word { font-family: var(--head); font-weight: 900; text-transform: uppercase;
+    line-height: 0.95; letter-spacing: -0.015em; display: inline-block;
+    padding: 0.13em 0.3em 0.18em; }
+  .dyn404 .d4-page { background: var(--red); color: var(--cream);
+    font-size: clamp(58px, 13vw, 108px); transform: rotate(1.6deg); margin: 10px 0 0;
+    clip-path: polygon(1% 8%, 24% 0%, 52% 5%, 78% 1%, 100% 7%, 98% 48%, 100% 90%, 76% 100%, 48% 94%, 20% 100%, 0% 92%, 2% 46%);
+    filter: drop-shadow(5px 6px 0 rgba(23,19,15,0.2)); }
+  .dyn404 .d4-row { display: flex; align-items: flex-start; gap: clamp(14px, 3vw, 30px); flex-wrap: wrap; }
+  .dyn404 .d4-note { background: #f6f1e6; font-family: var(--type);
+    font-size: clamp(12px, 1.9vw, 14.5px); line-height: 1.7; max-width: 250px;
+    padding: 16px 18px; transform: rotate(2deg); margin-top: clamp(18px, 5vw, 46px);
+    clip-path: polygon(2% 7%, 28% 0%, 60% 5%, 100% 2%, 97% 38%, 100% 72%, 95% 100%, 64% 94%, 30% 100%, 0% 95%, 3% 50%);
+    filter: drop-shadow(4px 5px 0 rgba(23,19,15,0.18)); }
+
+  .dyn404 .d4-not { background: #f4efe3; color: var(--ink);
+    font-size: clamp(50px, 11vw, 92px); transform: rotate(-1.2deg);
+    margin: 4px 0 0 clamp(60px, 22vw, 220px);
+    clip-path: polygon(2% 10%, 30% 0%, 62% 6%, 100% 2%, 97% 50%, 100% 88%, 70% 100%, 36% 93%, 0% 100%, 3% 52%);
+    filter: drop-shadow(4px 5px 0 rgba(23,19,15,0.2)); }
+  .dyn404 .d4-found { background: #16120f; color: var(--cream);
+    font-size: clamp(54px, 12vw, 100px); transform: rotate(1deg);
+    margin: -8px 0 0 clamp(30px, 12vw, 130px); position: relative;
+    clip-path: polygon(1% 9%, 22% 0%, 50% 6%, 80% 1%, 100% 10%, 97% 52%, 100% 92%, 74% 100%, 46% 94%, 18% 100%, 0% 90%, 3% 48%);
+    filter: drop-shadow(5px 6px 0 rgba(23,19,15,0.22)); }
+  /* red swatch pasted beside FOUND. */
+  .dyn404 .d4-found::after { content: ""; position: absolute; right: -26px; top: -14px;
+    width: 34px; height: 58px; background: var(--red); transform: rotate(7deg);
+    clip-path: polygon(8% 4%, 60% 0%, 100% 10%, 92% 55%, 100% 92%, 40% 100%, 0% 88%, 10% 45%); }
+
+  .dyn404 .d4-track { font-family: var(--type); font-size: clamp(13px, 2.1vw, 16px);
+    letter-spacing: 0.04em; text-align: center; margin: clamp(24px, 5vw, 44px) 0 18px; }
+
+  .dyn404 .d4-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .dyn404 .d4-btn { font-family: var(--head); font-weight: 900; text-transform: uppercase;
+    font-size: clamp(12px, 1.8vw, 14px); letter-spacing: 0.08em; text-decoration: none;
+    padding: 15px 22px 14px; display: inline-block; line-height: 1;
+    clip-path: polygon(1% 12%, 28% 0%, 58% 8%, 100% 3%, 98% 55%, 100% 90%, 68% 100%, 34% 92%, 0% 98%, 2% 50%);
+    filter: drop-shadow(3px 4px 0 rgba(23,19,15,0.28));
+    transition: transform 0.14s ease; }
+  .dyn404 .d4-btn:hover { transform: translateY(-2px) rotate(-0.6deg); }
+  .dyn404 .d4-home { background: #16120f; color: var(--cream); transform: rotate(-1deg); }
+  .dyn404 .d4-shop { background: var(--red); color: var(--cream); transform: rotate(0.8deg); }
+
+  /* uploaded-poster mode: the art is the page, live buttons sit over its bottom */
+  .dyn404 .d4-imgmode { position: relative; width: min(720px, 94vw); }
+  .dyn404 .d4-imgmode img { display: block; width: 100%; height: auto; }
+  .dyn404 .d4-imgmode .d4-btns { position: absolute; left: 0; right: 0; bottom: 3.6%; }
+
+  @media (max-width: 560px) {
+    .dyn404 .d4-print { display: none; }
+    .dyn404 .d4-wrong { margin-top: -18px; }
+  }
 </style>
 
-<div class="dyn404" id="dyn404">
-  <div class="d4-stage">
-    <video id="d4Video" muted playsinline preload="auto" loop
-      {%- if s4.vid.preview_image %} poster="{{ s4.vid.preview_image | image_url: width: 900 }}"{%- endif -%}>
-      {%- if s4.vid != blank -%}
-        {%- for src in s4.vid.sources -%}
-          <source src="{{ src.url }}" type="{{ src.mime_type }}">
-        {%- endfor -%}
-      {%- elsif s4.video_url != blank -%}
-        <source src="{{ s4.video_url }}" type="video/mp4">
-      {%- endif -%}
-    </video>
-  </div>
-  <h1>{{ s4.heading | default: '404' }}</h1>
-  <p>{{ s4.message | default: "This page wandered off — but she's keeping an eye on you." }}</p>
-  <a class="d4-btn" href="{{ s4.button_url | default: routes.root_url }}">{{ s4.button_label | default: 'Back to home' }}</a>
-  {%- if s4.hint != blank -%}<div class="d4-hint">{{ s4.hint }}</div>{%- endif -%}
+<div class="dyn404">
+  {%- if s4.poster_image != blank -%}
+    <div class="d4-imgmode">
+      <img src="{{ s4.poster_image | image_url: width: 1400 }}" alt="{{ s4.word_1 | default: 'Page' }} {{ s4.word_2 | default: 'not' }} {{ s4.word_3 | default: 'found' }}" width="{{ s4.poster_image.width }}" height="{{ s4.poster_image.height }}">
+      <div class="d4-btns">
+        <a class="d4-btn d4-home" href="{{ s4.button_url | default: routes.root_url }}">&larr; {{ s4.button_label | default: 'Go back home' }}</a>
+        <a class="d4-btn d4-shop" href="{{ s4.button2_url | default: routes.all_products_collection_url }}">{{ s4.button2_label | default: 'Browse collection' }}</a>
+      </div>
+    </div>
+  {%- else -%}
+    <div class="d4-poster">
+      <div class="d4-in">
+        <div class="d4-print" aria-hidden="true">excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
+        <h1 class="d4-num">{{ s4.heading | default: '404' }}</h1>
+        <div class="d4-wrong">{{ s4.scrap_text | default: 'looks like you took a wrong turn.' }}</div>
+        <div class="d4-row">
+          <div class="d4-word d4-page">{{ s4.word_1 | default: 'Page' }}</div>
+          <div class="d4-note">{{ s4.note_text | default: "the page you're looking for doesn't exist or has been moved." }}</div>
+        </div>
+        <div class="d4-word d4-not">{{ s4.word_2 | default: 'Not' }}</div>
+        <br>
+        <div class="d4-word d4-found">{{ s4.word_3 | default: 'Found.' }}</div>
+        <div class="d4-track">{{ s4.track_text | default: "let's get you back on track." }}</div>
+        <div class="d4-btns">
+          <a class="d4-btn d4-home" href="{{ s4.button_url | default: routes.root_url }}">&larr; {{ s4.button_label | default: 'Go back home' }}</a>
+          <a class="d4-btn d4-shop" href="{{ s4.button2_url | default: routes.all_products_collection_url }}">{{ s4.button2_label | default: 'Browse collection' }}</a>
+        </div>
+      </div>
+    </div>
+  {%- endif -%}
 </div>
-
-<script>
-(function () {
-  var v = document.getElementById("d4Video");
-  if (!v || !v.querySelector("source")) return;
-  var INVERT = {% if s4.invert %}true{% else %}false{% endif %};
-  var R0 = {{ s4.scrub_start | default: 0 | divided_by: 100.0 }};
-  var R1 = {{ s4.scrub_end | default: 100 | divided_by: 100.0 }};
-  var noHover = window.matchMedia && window.matchMedia("(hover: none)").matches;
-
-  // Touch screens: no cursor to follow — just play the clip on a loop.
-  if (noHover) { v.autoplay = true; v.play().catch(function () {}); return; }
-
-  var dur = 0, target = 0, cur = 0, started = false;
-  v.addEventListener("loadedmetadata", function () {
-    dur = v.duration || 0;
-    v.pause();
-    // Park on the middle frame so she starts looking straight ahead.
-    cur = target = dur * (R0 + (R1 - R0) * 0.5);
-    try { v.currentTime = cur; } catch (e) {}
-  });
-  // The cursor's X position picks a point on the timeline; we glide toward it.
-  document.addEventListener("mousemove", function (e) {
-    if (!dur) return;
-    var x = e.clientX / Math.max(1, window.innerWidth);
-    if (INVERT) x = 1 - x;
-    target = dur * (R0 + (R1 - R0) * Math.min(1, Math.max(0, x)));
-    started = true;
-  });
-  (function tick() {
-    if (dur && started) {
-      cur += (target - cur) * 0.14;                    // easing — feels like she turns to you
-      if (Math.abs(cur - (v.currentTime || 0)) > 0.033) {
-        try { if (v.fastSeek) v.fastSeek(cur); else v.currentTime = cur; } catch (e) {}
-      }
-    }
-    requestAnimationFrame(tick);
-  })();
-})();
-</script>
 
 {% schema %}
 {
@@ -97,21 +153,22 @@
   "tag": "section",
   "class": "dynamic-404-section",
   "settings": [
-    { "type": "paragraph", "content": "A 404 page where the person in your video follows the mouse: the clip is paused and the cursor scrubs its timeline. Works best with a clip where they turn their head or move across the frame. On phones it just plays on a loop." },
-    { "type": "video", "id": "vid", "label": "Video", "info": "Upload your clip here (goes to Content → Files). Short clips (5–20s, a few MB) feel the most responsive." },
-    { "type": "text", "id": "video_url", "label": "…or a direct video URL", "info": "Only used if no video is picked above. Paste an .mp4 URL from Content → Files." },
-    { "type": "range", "id": "video_width", "label": "Video width", "min": 260, "max": 720, "step": 20, "unit": "px", "default": 420 },
-    { "type": "range", "id": "height", "label": "Section height", "min": 60, "max": 100, "step": 2, "unit": "%", "default": 86 },
-    { "type": "header", "content": "Mouse follow" },
-    { "type": "range", "id": "scrub_start", "label": "Use clip from", "min": 0, "max": 90, "step": 5, "unit": "%", "default": 0, "info": "Trim the scrub range if only part of the clip has the movement." },
-    { "type": "range", "id": "scrub_end", "label": "Use clip to", "min": 10, "max": 100, "step": 5, "unit": "%", "default": 100 },
-    { "type": "checkbox", "id": "invert", "label": "Reverse direction", "default": false, "info": "Tick if she looks the wrong way (moves opposite to the mouse)." },
-    { "type": "header", "content": "Text" },
-    { "type": "text", "id": "heading", "label": "Heading", "default": "404" },
-    { "type": "textarea", "id": "message", "label": "Message", "default": "This page wandered off — but she's keeping an eye on you." },
-    { "type": "text", "id": "button_label", "label": "Button text", "default": "Back to home" },
-    { "type": "url", "id": "button_url", "label": "Button link", "info": "Defaults to the home page." },
-    { "type": "text", "id": "hint", "label": "Small hint under the button", "default": "Psst — move your mouse." }
+    { "type": "paragraph", "content": "A zine-collage 404 poster: giant 404, torn PAGE / NOT / FOUND. scraps, typewriter notes and two paper buttons. Everything below is optional — empty fields use the drawn defaults." },
+    { "type": "image_picker", "id": "poster_image", "label": "Poster image (optional)", "info": "Replaces the drawn collage with your own artwork (portrait, ~1100×1400px works best). The two buttons float over the bottom of the image." },
+    { "type": "header", "content": "Words" },
+    { "type": "text", "id": "heading", "label": "Big number", "default": "404" },
+    { "type": "text", "id": "word_1", "label": "Word 1 (red block)", "default": "Page" },
+    { "type": "text", "id": "word_2", "label": "Word 2 (white strip)", "default": "Not" },
+    { "type": "text", "id": "word_3", "label": "Word 3 (black block)", "default": "Found." },
+    { "type": "header", "content": "Notes" },
+    { "type": "textarea", "id": "scrap_text", "label": "Black scrap note", "default": "looks like you took a wrong turn." },
+    { "type": "textarea", "id": "note_text", "label": "Cream scrap note", "default": "the page you're looking for doesn't exist or has been moved." },
+    { "type": "text", "id": "track_text", "label": "Line above the buttons", "default": "let's get you back on track." },
+    { "type": "header", "content": "Buttons" },
+    { "type": "text", "id": "button_label", "label": "Black button text", "default": "Go back home" },
+    { "type": "url", "id": "button_url", "label": "Black button link", "info": "Defaults to the home page." },
+    { "type": "text", "id": "button2_label", "label": "Red button text", "default": "Browse collection" },
+    { "type": "url", "id": "button2_url", "label": "Red button link", "info": "Defaults to the all-products collection." }
   ],
   "presets": [ { "name": "Dynamic 404" } ],
   "enabled_on": { "templates": ["404", "page", "index"] }
