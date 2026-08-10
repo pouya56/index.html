@@ -99,12 +99,8 @@
   z-index: -1;
   pointer-events: none;
 }
-.gal-nav .gal-arrow {
-  border-radius: 2px;
-  border: 1px solid rgba(23, 19, 15, 0.25);
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 8px 20px -10px rgba(23, 19, 15, 0.35);
-}
+/* (the gallery arrows are the hand-scribbled ink ones from the section CSS —
+   no chip styling here or it paints over the drawing) */
 
 /* ---- Options: swatches + sizes ---------------------------------------- */
 .opt-label {
