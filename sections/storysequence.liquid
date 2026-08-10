@@ -475,26 +475,27 @@
 .ds-divider{width:40px;height:1px;background:linear-gradient(to right,transparent,var(--ds-accent),transparent);margin:0 0 1.8rem}
 .ds-body{font-size:calc(17px * var(--ds-body-scale,1));line-height:1.65;color:var(--ds-muted);margin-bottom:2.5rem}
 .ds-icon-row{display:flex;gap:12px;flex-wrap:wrap}
-/* printed-label chips: same size/behavior, but the pill becomes a small
-   screen-printed label - a faintly irregular cut edge (the border is eaten
-   unevenly by the clip), paper grain, a hand-drawn ring around the icon and
-   a whisper of tilt. Subtle on purpose. */
-.ds-chip{position:relative;background:var(--ds-chip-bg);border:1.5px solid var(--ds-chip-border);border-radius:2px;
+/* cut-out paper chips: newspaper-clipping strips in varied cream/tan
+   stocks with dark ink type, slightly scattered - like the pieces of a
+   collage taped to the black page. Same size, links and reveal. */
+.ds-chip{position:relative;background-color:var(--ds-chip-paper,#e6dcc6);border:none;border-radius:1px;
   padding:14px 18px;text-align:center;opacity:0;transform:translateY(16px) rotate(var(--ds-chip-tilt,0deg));
-  transition:opacity .5s ease,transform .5s ease,border-color .2s,background .2s;text-decoration:none;display:inline-block;color:inherit;
-  clip-path:polygon(0.6% 2.6%,11% 0.6%,32% 2%,55% 0.4%,79% 1.8%,99.5% 0.9%,99.2% 27%,100% 52%,99% 78%,99.4% 97.6%,80% 99.5%,56% 98.3%,30% 100%,4% 98.7%,0.9% 74%,0.3% 45%,1.1% 20%);
-  background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='120'%20height='120'%3E%3Cfilter%20id='g'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='120'%20height='120'%20filter='url(%23g)'%20opacity='0.055'/%3E%3C/svg%3E")}
-.ds-chip:nth-child(odd){--ds-chip-tilt:-0.5deg}
-.ds-chip:nth-child(even){--ds-chip-tilt:0.45deg}
+  transition:opacity .5s ease,transform .5s ease,filter .2s;text-decoration:none;display:inline-block;color:#1c1813;
+  clip-path:polygon(0.6% 3%,10% 0.6%,31% 2.4%,54% 0.4%,78% 2%,99.5% 0.9%,99.1% 28%,100% 53%,99% 79%,99.4% 97.4%,81% 99.5%,57% 98%,31% 100%,4% 98.6%,0.9% 73%,0.3% 44%,1.2% 19%);
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='120'%20height='120'%3E%3Cfilter%20id='g'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3C/filter%3E%3Crect%20width='120'%20height='120'%20filter='url(%23g)'%20opacity='0.07'/%3E%3C/svg%3E");
+  box-shadow:0 2px 0 rgba(0,0,0,.55),0 12px 24px -12px rgba(0,0,0,.8)}
+.ds-chip:nth-child(5n+1){--ds-chip-paper:#e9e1d0;--ds-chip-tilt:-0.8deg}
+.ds-chip:nth-child(5n+2){--ds-chip-paper:#d8ccb2;--ds-chip-tilt:0.6deg}
+.ds-chip:nth-child(5n+3){--ds-chip-paper:#f0e7d5;--ds-chip-tilt:-0.4deg}
+.ds-chip:nth-child(5n+4){--ds-chip-paper:#ccbda1;--ds-chip-tilt:0.9deg}
+.ds-chip:nth-child(5n+5){--ds-chip-paper:#e1d3bb;--ds-chip-tilt:-0.6deg}
 .ds-chip-link{cursor:pointer}
-.ds-chip-link:hover{border-color:var(--ds-chip-hover-border,rgba(212,169,106,.6));background-color:var(--ds-chip-hover-bg,rgba(212,169,106,.1));transform:translateY(-2px) rotate(0deg) scale(1.03)}
-.ds-chip:hover{border-color:var(--ds-chip-hover-border,rgba(212,169,106,.4));background-color:var(--ds-chip-hover-bg,rgba(212,169,106,.06))}
+.ds-chip-link:hover,.ds-chip:hover{filter:brightness(1.05);transform:translateY(-2px) rotate(0deg) scale(1.03)}
 .ds-chip.ds-chip-visible{opacity:1;transform:translateY(0) rotate(var(--ds-chip-tilt,0deg))}
 .ds-chip.ds-chip-visible:hover{transform:translateY(-2px) rotate(0deg) scale(1.03)}
-.ds-chip-icon{font-size:22px;margin:0 auto 7px;width:38px;height:38px;line-height:36px;color:var(--ds-chip-ink,inherit);
-  background:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2040%2040'%3E%3Cpath%20d='M20%202.8%20C28.6%202.2%2037.4%208.8%2037.2%2019.8%20C37%2029.8%2030.2%2037.4%2020.4%2037.2%20C10.4%2037%203%2030.2%202.8%2020.4%20C2.6%2010.4%2011.2%203.4%2020%202.8%20Z'%20fill='none'%20stroke='%23f4efe1'%20stroke-width='1.5'%20stroke-opacity='0.55'/%3E%3Ccircle%20cx='33.5'%20cy='7.5'%20r='0.7'%20fill='%23f4efe1'%20fill-opacity='0.5'/%3E%3Ccircle%20cx='5.5'%20cy='30'%20r='0.6'%20fill='%23f4efe1'%20fill-opacity='0.4'/%3E%3C/svg%3E") center / contain no-repeat}
-.ds-chip-label{font-size:10px;color:var(--ds-chip-label);letter-spacing:.14em;text-transform:uppercase}
-.ds-theme-light .ds-chip-icon{background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2040%2040'%3E%3Cpath%20d='M20%202.8%20C28.6%202.2%2037.4%208.8%2037.2%2019.8%20C37%2029.8%2030.2%2037.4%2020.4%2037.2%20C10.4%2037%203%2030.2%202.8%2020.4%20C2.6%2010.4%2011.2%203.4%2020%202.8%20Z'%20fill='none'%20stroke='%2314110f'%20stroke-width='1.5'%20stroke-opacity='0.55'/%3E%3C/svg%3E")}
+.ds-chip-icon{font-size:22px;margin:0 auto 7px;width:38px;height:38px;line-height:36px;color:#1c1813;
+  background:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2040%2040'%3E%3Cpath%20d='M20%202.8%20C28.6%202.2%2037.4%208.8%2037.2%2019.8%20C37%2029.8%2030.2%2037.4%2020.4%2037.2%20C10.4%2037%203%2030.2%202.8%2020.4%20C2.6%2010.4%2011.2%203.4%2020%202.8%20Z'%20fill='none'%20stroke='%231c1813'%20stroke-width='1.5'%20stroke-opacity='0.75'/%3E%3Ccircle%20cx='33.5'%20cy='7.5'%20r='0.7'%20fill='%231c1813'%20fill-opacity='0.55'/%3E%3C/svg%3E") center / contain no-repeat}
+.ds-chip-label{font-family:Georgia,"Times New Roman",Times,serif;font-size:11px;font-weight:600;color:#241f18;letter-spacing:.06em;text-transform:uppercase}
 
 .ds-cta-section{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem;background:var(--ds-bg);position:relative;overflow:hidden;transition:background-color .5s ease}
 @keyframes dsGlow{to{background-position:300% 0}}
@@ -798,7 +799,7 @@
       var scrolled = Math.min(Math.max(-top, 0), total);
       var progress = total > 0 ? scrolled / total : 0;
       if(video && video.duration && !pinMobile){ pinTarget = progress * video.duration; pinKick(); }
-      for(var i=0;i<n;i++){
+      for(var i=0;n>i;i++){
         var center = (i + 0.5) / n, half = 0.5 / n, plateau = half * 0.62;
         var d = Math.abs(progress - center);
         var op = d <= plateau ? 1 : 1 - (d - plateau) / (half - plateau);
@@ -835,7 +836,7 @@
     var itemsEls=[].slice.call(stage.querySelectorAll('[data-hgal-item]'));
     function goTo(k){ var it=itemsEls[k]; if(!it) return; stage.scrollTo({left:it.offsetLeft-(stage.clientWidth-it.clientWidth)/2, behavior:'smooth'}); }
     dots.forEach(function(d){ d.addEventListener('click', function(){ goTo(parseInt(d.getAttribute('data-hgal-dot'),10)); }); });
-    function updateActive(){ var c=stage.scrollLeft+stage.clientWidth/2, best=0, bd=1e9; itemsEls.forEach(function(it,k){ var ic=it.offsetLeft+it.clientWidth/2, dd=Math.abs(ic-c); if(dd<bd){ bd=dd; best=k; } }); dots.forEach(function(d,k){ d.classList.toggle('ds-active', k===best); }); }
+    function updateActive(){ var c=stage.scrollLeft+stage.clientWidth/2, best=0, bd=1e9; itemsEls.forEach(function(it,k){ var ic=it.offsetLeft+it.clientWidth/2, dd=Math.abs(ic-c); if(bd>dd){ bd=dd; best=k; } }); dots.forEach(function(d,k){ d.classList.toggle('ds-active', k===best); }); }
     if(dots.length){ stage.addEventListener('scroll', updateActive, {passive:true}); updateActive(); }
   }
   document.querySelectorAll('[data-hgal-wrap]').forEach(initHGal);
@@ -897,7 +898,7 @@
     function ensureStamp(b){ if(b&&b.ready&&!b.stampReady&&b.sctx){ b.sctx.clearRect(0,0,b.stamp.width,b.stamp.height); drawContain(b.sctx,b.img,b.stamp.width,b.stamp.height); b.stampReady=true; } }
     function softDab(mctx,x,y,rad,alpha){ var g=mctx.createRadialGradient(x,y,0,x,y,rad); g.addColorStop(0,'rgba(255,255,255,'+alpha+')'); g.addColorStop(0.55,'rgba(255,255,255,'+(alpha*0.55)+')'); g.addColorStop(1,'rgba(255,255,255,0)'); mctx.fillStyle=g; mctx.beginPath(); mctx.arc(x,y,rad,0,7); mctx.fill(); }
     // bristle cluster: several scattered soft dabs along the stroke direction
-    function dab(b,x,y){ if(!b||!b.mctx) return; var W=b.cv.width; var base=W*0.13; var dx=(b.px==null?0:x-b.px), dy=(b.py==null?0:y-b.py); var ang=Math.atan2(dy,dx); var nx=Math.cos(ang+1.5708), ny=Math.sin(ang+1.5708); var m=b.mctx; m.globalCompositeOperation='source-over'; var k=7; for(var i=0;i<k;i++){ var t=(i/(k-1)-0.5); var off=t*base*1.7; var jx=(Math.random()-0.5)*base*0.5, jy=(Math.random()-0.5)*base*0.5; softDab(m, x+nx*off+jx, y+ny*off+jy, base*(0.4+Math.random()*0.5), 0.5+Math.random()*0.4); } b.px=x; b.py=y; }
+    function dab(b,x,y){ if(!b||!b.mctx) return; var W=b.cv.width; var base=W*0.13; var dx=(b.px==null?0:x-b.px), dy=(b.py==null?0:y-b.py); var ang=Math.atan2(dy,dx); var nx=Math.cos(ang+1.5708), ny=Math.sin(ang+1.5708); var m=b.mctx; m.globalCompositeOperation='source-over'; var k=7; for(var i=0;k>i;i++){ var t=(i/(k-1)-0.5); var off=t*base*1.7; var jx=(Math.random()-0.5)*base*0.5, jy=(Math.random()-0.5)*base*0.5; softDab(m, x+nx*off+jx, y+ny*off+jy, base*(0.4+Math.random()*0.5), 0.5+Math.random()*0.4); } b.px=x; b.py=y; }
     function render(b){ if(!b) return; ensureStamp(b); var c=b.ctx,W=b.cv.width,H=b.cv.height; c.clearRect(0,0,W,H); if(!b.stampReady) return; c.globalCompositeOperation='source-over'; c.drawImage(b.stamp,0,0); c.globalCompositeOperation='destination-in'; c.drawImage(b.mask,0,0); c.globalCompositeOperation='source-over'; }
     function toXY(b,cx,cy){ var r=b.cv.getBoundingClientRect(); return {x:(cx-r.left)/r.width*b.cv.width, y:(cy-r.top)/r.height*b.cv.height}; }
     function clearMask(b){ if(b&&b.mctx){ b.mctx.clearRect(0,0,b.cv.width,b.cv.height); b.px=null; b.py=null; } }
