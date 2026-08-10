@@ -2506,14 +2506,36 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
 </script>
 {%- endif -%}
 {%- comment -%} Instant pre-fill: paint the REAL title/price the moment the shell
-   exists, so nothing flashes while the deferred app JS loads. {%- endcomment -%}
+   exists, so nothing flashes while the deferred app JS loads. The price mirrors
+   the app's boot choice: a "Print sides" option is forced to its front-only
+   value, so the number doesn't change once the app resolves variants. {%- endcomment -%}
 {%- if dyn_product -%}
+{%- assign pf_first = dyn_product.selected_or_first_available_variant -%}
+{%- assign pf_price = pf_first.price -%}
+{%- assign pf_front_val = blk_print.settings.sides_front_value | default: 'Front only' | downcase -%}
+{%- assign pf_idx = -1 -%}
+{%- for o in dyn_product.options_with_values -%}
+  {%- assign pf_on = o.name | downcase -%}
+  {%- if pf_on contains 'side' and o.values.size > 1 and pf_idx == -1 -%}{%- assign pf_idx = forloop.index0 -%}{%- endif -%}
+{%- endfor -%}
+{%- if pf_idx > -1 -%}
+  {%- assign pf_match = blank -%}{%- assign pf_any = blank -%}
+  {%- for v in dyn_product.variants -%}
+    {%- assign pf_v = v.options[pf_idx] | downcase -%}
+    {%- if pf_v == pf_front_val -%}
+      {%- if pf_any == blank -%}{%- assign pf_any = v -%}{%- endif -%}
+      {%- if pf_match == blank and v.options.first == pf_first.options.first -%}{%- assign pf_match = v -%}{%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if pf_match != blank -%}{%- assign pf_price = pf_match.price -%}
+  {%- elsif pf_any != blank -%}{%- assign pf_price = pf_any.price -%}{%- endif -%}
+{%- endif -%}
 <script>
 (function () {
   var set = function (id, v) { var el = document.getElementById(id); if (el && v) el.textContent = v; };
   set("pEyebrow", {{ dyn_product.vendor | default: '' | json }});
   set("pName", {{ dyn_product.title | json }});
-  set("pPrice", {{ dyn_product.selected_or_first_available_variant.price | money | json }});
+  set("pPrice", {{ pf_price | money | json }});
   set("pPriceNote", {{ section.settings.price_note | default: '' | json }});
 })();
 </script>

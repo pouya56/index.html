@@ -4318,7 +4318,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     setText("#customizeBtn", S.customizeLabel);
     setText("#pageAddCart", S.addcartLabel);
     const _shop = window.DYN_SHOPIFY || {};
-    setText("#pPrice", _shop.priceMoney || S.price);
+    // fallback only: the variant resolver owns this element (it writes the
+    // sides-forced variant price), so never clobber a price that's already set
+    const _pr = document.querySelector("#pPrice");
+    if (_pr && !_pr.textContent.trim()) _pr.textContent = _shop.priceMoney || S.price || "";
     const RZ = Array.isArray(S.reassure) ? S.reassure : [];
     const RI = Array.isArray(S.reassureIcons) ? S.reassureIcons : [];
     let shownRz = 0;
