@@ -1,9 +1,9 @@
 {% comment %}
   ============================================================================
-  Dynamic Gift Card Product - the BUYING page for the gift card product,
-  styled as a piece of printed stationery: a large paper gift-card preview
-  on the left that updates live as the customer fills in the amount,
-  recipient, sender and message on the right.
+  Dynamic Gift Card Product - the BUYING page for the gift card product as a
+  zine collage: torn-paper GIFT CARDS headline and a taped-down card preview
+  on the left (updates live), a typewriter order form with numbered black
+  step tags on the right, a perks row and a balance banner below.
   (The separate "dynamic-gift-card" section stays as the page a recipient
   sees for an issued card - this one is the shop page.)
   INSTALL:
@@ -12,7 +12,6 @@
   2. Theme editor (Customize) > open your gift card product > create a new
      template (e.g. product.gift-card) > remove the default product section
      and add "Dynamic Gift Card Product" instead.
-  3. Assign that template to the gift card product in the admin.
   Uses Shopify's native gift-card recipient fields, so the card is emailed
   straight to the recipient with the message attached. No apps required.
   ============================================================================
@@ -21,162 +20,254 @@
 {%- assign gp = section.settings -%}
 
 <style>
-  .dyn-gcp { --paper: #ece5d5; --stock: #f6f1e4; --ink: #17130f; --red: #b3242a;
-    --soft: rgba(23, 19, 15, 0.62); --faint: rgba(23, 19, 15, 0.42); --line: rgba(23, 19, 15, 0.28);
-    --sans: "Archivo", "Inter", "Helvetica Neue", Arial, sans-serif;
-    --serif: "Cormorant Garamond", Georgia, "Times New Roman", Times, serif;
+  .dyn-gcp { --paper: #e9e2d2; --stock: #f4efe1; --ink: #17130f; --red: #c22127;
+    --soft: rgba(23, 19, 15, 0.66); --faint: rgba(23, 19, 15, 0.45); --line: rgba(23, 19, 15, 0.3);
+    --head: "Archivo Black", "Archivo", "Helvetica Neue", Arial, sans-serif;
     --type: "Courier Prime", "Courier New", Courier, monospace;
-    font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased;
+    --script: "Snell Roundhand", "Brush Script MT", "Segoe Script", cursive;
+    font-family: var(--type); color: var(--ink); -webkit-font-smoothing: antialiased;
     background: var(--paper);
-    background-image: radial-gradient(rgba(23, 19, 15, 0.045) 1px, transparent 1.3px);
-    background-size: 26px 26px; }
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)' opacity='0.05'/%3E%3C/svg%3E"); }
   .dyn-gcp, .dyn-gcp *, .dyn-gcp *::before, .dyn-gcp *::after { box-sizing: border-box; }
-  .dyn-gcp .gcp-wrap { max-width: 1180px; margin: 0 auto; padding: clamp(30px, 5vw, 72px) 22px 110px;
-    display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(30px, 5vw, 76px); align-items: start; }
+  .dyn-gcp .gcp-wrap { max-width: 1180px; margin: 0 auto; padding: clamp(26px, 4vw, 60px) 22px 30px;
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(26px, 4.5vw, 64px); align-items: start; }
 
-  /* ---- the printed card ---- */
-  .dyn-gcp .gcp-stage { position: sticky; top: 34px; }
-  .dyn-gcp .gcp-card { position: relative; background: var(--stock); aspect-ratio: 1.55;
-    padding: clamp(20px, 3vw, 34px) clamp(22px, 3.4vw, 40px);
-    display: flex; flex-direction: column;
-    border: 1px solid var(--ink);
-    box-shadow: 0 2px 3px rgba(23, 19, 15, 0.12), 0 24px 44px -22px rgba(23, 19, 15, 0.38);
-    transform: rotate(-0.6deg); }
-  /* grain + two faint age spots; restrained */
-  .dyn-gcp .gcp-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23g)' opacity='0.06'/%3E%3C/svg%3E"),
-      radial-gradient(140px 90px at 88% 8%, rgba(151, 121, 73, 0.09), transparent 70%),
-      radial-gradient(120px 80px at 6% 94%, rgba(151, 121, 73, 0.08), transparent 70%); }
-  /* inner hairline frame, like a letterpress plate */
-  .dyn-gcp .gcp-card::after { content: ""; position: absolute; inset: 9px; pointer-events: none;
-    border: 1px solid var(--line); }
-  .dyn-gcp .gcp-card > * { position: relative; z-index: 1; }
+  /* ================= LEFT: the collage ================= */
+  .dyn-gcp .gcp-collage { position: relative; padding-bottom: 10px; }
+  /* graph-paper scrap behind the headline */
+  .dyn-gcp .gcp-collage::before { content: ""; position: absolute; top: -2%; left: -4%;
+    width: 42%; height: 26%; transform: rotate(-3deg); opacity: 0.9;
+    background: #f2ede0;
+    background-image: linear-gradient(rgba(23,19,15,0.16) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(23,19,15,0.16) 1px, transparent 1px);
+    background-size: 13px 13px;
+    clip-path: polygon(3% 2%, 30% 0%, 62% 4%, 100% 1%, 97% 36%, 100% 68%, 95% 100%, 60% 96%, 28% 100%, 0% 94%, 4% 48%); }
+  /* black torn scrap top, headline sits over it */
+  .dyn-gcp .gcp-head-scrap { position: relative; background: #f6f2e6; display: inline-block;
+    padding: clamp(18px, 2.6vw, 34px) clamp(20px, 3vw, 40px) clamp(14px, 2vw, 26px);
+    transform: rotate(-1.8deg); margin: 6px 0 0 2%;
+    clip-path: polygon(2% 4%, 26% 0%, 55% 3%, 84% 1%, 100% 6%, 98% 38%, 100% 70%, 96% 96%, 68% 100%, 38% 96%, 10% 100%, 0% 92%, 2% 50%);
+    filter: drop-shadow(5px 6px 0 rgba(23, 19, 15, 0.2)); }
+  .dyn-gcp .gcp-head-scrap h2 { margin: 0; font-family: var(--head); font-weight: 900;
+    font-size: clamp(46px, 6.4vw, 84px); line-height: 0.88; letter-spacing: -0.02em; text-transform: uppercase; }
+  .dyn-gcp .gcp-occasion { position: relative; display: inline-block; background: var(--red); color: var(--stock);
+    font: 700 clamp(11px, 1.2vw, 14px)/1.5 var(--type); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 10px 16px; transform: rotate(1.6deg); margin: -6px 0 0 6%; max-width: 260px;
+    clip-path: polygon(1% 10%, 30% 0%, 64% 6%, 100% 2%, 97% 52%, 100% 90%, 66% 100%, 32% 94%, 0% 98%, 3% 46%);
+    filter: drop-shadow(4px 5px 0 rgba(23, 19, 15, 0.22)); }
+  .dyn-gcp .gcp-blurb { position: relative; font-size: clamp(11px, 1.2vw, 13px); line-height: 1.7;
+    color: var(--ink); max-width: 200px; margin: 14px 0 0 4%; }
+  {%- if gp.collage_photo != blank -%}
+  .dyn-gcp .gcp-photo { position: absolute; top: 0; right: -2%; width: 46%; z-index: 1;
+    transform: rotate(2deg);
+    clip-path: polygon(2% 5%, 28% 0%, 60% 3%, 100% 1%, 98% 34%, 100% 66%, 96% 98%, 64% 100%, 30% 96%, 0% 99%, 3% 52%);
+    filter: drop-shadow(5px 7px 0 rgba(23, 19, 15, 0.24)); }
+  .dyn-gcp .gcp-photo img { display: block; width: 100%; height: auto;
+    filter: grayscale(1) contrast(1.15) brightness(1.02); }
+  /* red bar pasted across the photo, like the reference censor strip */
+  .dyn-gcp .gcp-photo::after { content: ""; position: absolute; top: 26%; left: -6%; width: 84%; height: 13%;
+    background: var(--red); opacity: 0.94; transform: rotate(-7deg);
+    clip-path: polygon(1% 12%, 24% 0%, 56% 8%, 100% 3%, 98% 88%, 70% 100%, 34% 92%, 0% 97%); }
+  {%- endif -%}
 
-  .dyn-gcp .gcp-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
-    border-bottom: 1px solid var(--line); padding-bottom: 10px; }
-  .dyn-gcp .gcp-brand { font-size: clamp(11px, 1.2vw, 13px); font-weight: 700; letter-spacing: 0.34em;
-    text-transform: uppercase; }
-  .dyn-gcp .gcp-no { font-family: var(--type); font-size: 9px; letter-spacing: 0.18em; color: var(--faint); }
-
-  .dyn-gcp .gcp-card-mid { flex: 1 1 auto; display: flex; align-items: center; justify-content: space-between;
-    gap: 18px; min-height: 0; padding: 6px 0; }
-  .dyn-gcp .gcp-title { font-family: var(--serif); font-weight: 500; font-size: clamp(24px, 3.4vw, 42px);
-    line-height: 0.98; letter-spacing: 0.02em; text-transform: uppercase; }
-  .dyn-gcp .gcp-title small { display: block; font-family: var(--sans); font-size: clamp(8px, 0.9vw, 10px);
-    font-weight: 600; letter-spacing: 0.3em; color: var(--soft); margin-top: 8px; }
-  .dyn-gcp .gcp-amt { font-family: var(--serif); font-size: clamp(38px, 5.2vw, 66px); line-height: 1;
-    color: var(--red); white-space: nowrap; transition: opacity 0.18s ease; }
+  /* ---- the card preview: torn cream paper, taped down ---- */
+  .dyn-gcp .gcp-card { position: relative; z-index: 2; background: var(--stock);
+    width: min(88%, 470px); margin: clamp(18px, 3vw, 34px) auto 0; padding: clamp(20px, 3vw, 34px) clamp(20px, 3vw, 36px);
+    transform: rotate(-1.2deg); text-align: center;
+    clip-path: polygon(1.5% 3%, 20% 0%, 44% 2.5%, 70% 0.5%, 92% 2%, 100% 5%, 98.5% 28%, 100% 52%, 97.5% 77%, 99% 96%, 76% 100%, 50% 97%, 26% 100%, 4% 98%, 0% 72%, 2% 46%, 0% 20%);
+    filter: drop-shadow(6px 8px 0 rgba(23, 19, 15, 0.22)); }
+  .dyn-gcp .gcp-tape { position: absolute; width: 92px; height: 30px; background: rgba(214, 199, 161, 0.62);
+    box-shadow: inset 0 0 6px rgba(23, 19, 15, 0.08); }
+  .dyn-gcp .gcp-tape.t1 { top: -14px; left: 8%; transform: rotate(-5deg); }
+  .dyn-gcp .gcp-tape.t2 { top: -12px; right: 10%; transform: rotate(4deg); }
+  .dyn-gcp .gcp-card h3 { margin: 0 0 14px; font-family: var(--type); font-weight: 700;
+    font-size: clamp(22px, 2.8vw, 34px); letter-spacing: 0.22em; text-transform: uppercase; }
+  .dyn-gcp .gcp-amt-label { font-size: 10px; letter-spacing: 0.3em; color: var(--soft); text-transform: uppercase; }
+  .dyn-gcp .gcp-amt { font-family: var(--type); font-weight: 700; font-size: clamp(44px, 5.6vw, 68px);
+    line-height: 1.05; letter-spacing: -0.02em; transition: opacity 0.18s ease; }
   .dyn-gcp .gcp-amt.is-turning { opacity: 0; }
-
-  .dyn-gcp .gcp-card-lines { border-top: 1px solid var(--line); padding-top: 10px;
-    display: grid; gap: 7px; font-size: clamp(10px, 1.15vw, 12.5px); }
-  .dyn-gcp .gcp-line { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-  .dyn-gcp .gcp-line b { font-size: clamp(8px, 0.85vw, 9.5px); font-weight: 700; letter-spacing: 0.24em;
-    color: var(--soft); flex: none; }
-  .dyn-gcp .gcp-line span { font-family: var(--type); border-bottom: 1px dotted var(--line);
-    flex: 1 1 auto; min-width: 0; padding-bottom: 1px; white-space: nowrap; overflow: hidden;
-    text-overflow: ellipsis; min-height: 1.2em; }
-  .dyn-gcp .gcp-msg { font-family: var(--serif); font-style: italic; font-size: clamp(12px, 1.4vw, 15.5px);
-    line-height: 1.45; color: var(--ink); min-height: 2.9em;
+  .dyn-gcp .gcp-card-lines { margin-top: 14px; text-align: left; display: grid; gap: 10px; }
+  .dyn-gcp .gcp-line { display: flex; align-items: baseline; gap: 10px; }
+  .dyn-gcp .gcp-line b { font-size: 11px; letter-spacing: 0.14em; flex: none; }
+  .dyn-gcp .gcp-line span { font-family: var(--script); font-size: clamp(19px, 2.2vw, 26px); line-height: 1.1;
+    border-bottom: 1px solid var(--line); flex: 1 1 auto; min-width: 0; min-height: 1.15em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px 2px; }
+  .dyn-gcp .gcp-card-msg { margin-top: 12px; text-align: left; font-size: clamp(11px, 1.2vw, 13px);
+    line-height: 1.6; min-height: 3.2em; color: var(--ink);
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .dyn-gcp .gcp-msg:empty::before { content: "your message, set in type, will appear here."; color: var(--faint); }
+  .dyn-gcp .gcp-card-msg:empty::before { content: "your message will be typed here."; color: var(--faint); }
+  /* enjoy chip + rubber stamp on the card */
+  .dyn-gcp .gcp-enjoy { position: absolute; right: -18px; top: 42%; background: #17130f; color: var(--stock);
+    font: 700 12px/1 var(--type); letter-spacing: 0.08em; padding: 10px 14px; transform: rotate(3deg);
+    clip-path: polygon(2% 12%, 34% 0%, 68% 8%, 100% 2%, 97% 86%, 62% 100%, 30% 90%, 0% 96%); }
+  .dyn-gcp .gcp-stamp { position: absolute; right: 7%; bottom: 6%; width: clamp(58px, 7vw, 84px);
+    opacity: 0.85; transform: rotate(-12deg); pointer-events: none; }
+  .dyn-gcp .gcp-stamp circle { fill: none; stroke: var(--red); stroke-width: 3; stroke-dasharray: 5 3; }
+  .dyn-gcp .gcp-stamp text { fill: var(--red); font-family: var(--head); }
+  .dyn-gcp .gcp-kraft { position: relative; display: inline-block; background: #c9ae87; color: #2c2318;
+    font: 400 clamp(11px, 1.2vw, 13.5px)/1.6 var(--type); padding: 12px 18px;
+    transform: rotate(-2deg); margin: 22px 0 0 52%;
+    clip-path: polygon(2% 8%, 28% 0%, 62% 5%, 100% 1%, 97% 44%, 100% 84%, 68% 100%, 32% 93%, 0% 98%, 3% 48%);
+    filter: drop-shadow(4px 5px 0 rgba(23, 19, 15, 0.2)); }
+  .dyn-gcp .gcp-preview-note { text-align: center; font-size: 10.5px; line-height: 1.7; color: var(--soft);
+    margin: 22px 0 0; }
 
-  /* registration marks on the sheet corners, outside the card */
-  .dyn-gcp .gcp-stage::before, .dyn-gcp .gcp-stage::after { content: "+"; position: absolute;
-    font: 400 14px/1 var(--type); color: var(--faint); }
-  .dyn-gcp .gcp-stage::before { top: -18px; left: -6px; }
-  .dyn-gcp .gcp-stage::after { bottom: -20px; right: -4px; }
-  .dyn-gcp .gcp-plate { margin: 18px 4px 0; display: flex; justify-content: space-between;
-    font-family: var(--type); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint); }
+  /* ================= RIGHT: the order form ================= */
+  .dyn-gcp .gcp-tag { display: inline-block; background: #17130f; color: var(--stock);
+    font: 700 11px/1 var(--type); letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 9px 12px 8px; transform: rotate(-0.8deg);
+    clip-path: polygon(1% 14%, 30% 0%, 62% 10%, 100% 3%, 98% 88%, 66% 100%, 32% 90%, 0% 97%); }
+  .dyn-gcp h1 { font-family: var(--type); font-weight: 700; font-size: clamp(36px, 4.4vw, 58px);
+    letter-spacing: 0.04em; line-height: 1; margin: 16px 0 6px; }
+  .dyn-gcp .gcp-underline { display: block; width: min(320px, 80%); height: 4px; margin-top: 8px;
+    background: var(--red);
+    clip-path: polygon(0% 30%, 8% 0%, 22% 45%, 37% 10%, 52% 55%, 66% 15%, 80% 60%, 91% 20%, 100% 55%, 100% 100%, 0% 100%); }
+  .dyn-gcp .gcp-sub { font-size: 13.5px; line-height: 1.8; color: var(--ink); margin: 14px 0 4px; max-width: 48ch; }
 
-  /* ---- the order form ---- */
-  .dyn-gcp .gcp-kicker { font-size: 10px; font-weight: 700; letter-spacing: 0.34em; text-transform: uppercase;
-    color: var(--soft); margin: 0 0 10px; }
-  .dyn-gcp h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(34px, 4vw, 52px);
-    line-height: 1.02; margin: 0 0 12px; letter-spacing: 0.01em; }
-  .dyn-gcp .gcp-sub { font-size: 14.5px; line-height: 1.65; color: var(--soft); margin: 0 0 8px; max-width: 46ch; }
+  .dyn-gcp .gcp-sect { margin-top: 24px; }
+  .dyn-gcp .gcp-sect .gcp-tag { margin-bottom: 14px; }
+  .dyn-gcp .gcp-amts { display: flex; flex-wrap: wrap; gap: 10px; }
+  .dyn-gcp .gcp-amts button { appearance: none; font: 700 14px/1 var(--type); letter-spacing: 0.04em;
+    min-width: 74px; padding: 15px 12px 14px; background: var(--stock); border: 1px solid var(--ink); color: var(--ink);
+    cursor: pointer; border-radius: 0; transition: background 0.14s, color 0.14s, transform 0.1s;
+    box-shadow: 2px 3px 0 rgba(23, 19, 15, 0.16); }
+  .dyn-gcp .gcp-amts button:hover { transform: translateY(-1px); }
+  .dyn-gcp .gcp-amts button[aria-pressed="true"] { background: var(--ink); color: var(--stock); }
+  .dyn-gcp .gcp-custom { display: flex; align-items: center; gap: 0; margin-top: 12px;
+    border: 1px solid var(--ink); background: var(--stock); box-shadow: 2px 3px 0 rgba(23, 19, 15, 0.16); }
+  .dyn-gcp .gcp-custom label { font: 700 11px/1 var(--type); letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 0 14px; flex: none; }
+  .dyn-gcp .gcp-custom .gcp-dollar { color: var(--faint); font-weight: 700; }
+  .dyn-gcp .gcp-custom input { border: none !important; box-shadow: none !important; background: transparent !important;
+    flex: 1 1 auto; min-width: 0; padding-left: 7px; }
+  .dyn-gcp .gcp-custom-note { font-size: 10px; color: var(--faint); padding: 0 12px; flex: none; }
 
-  .dyn-gcp .gcp-sect { border-top: 1px solid var(--line); margin-top: 26px; padding-top: 16px; }
-  .dyn-gcp .gcp-label { display: flex; align-items: baseline; gap: 10px; margin: 0 0 12px;
-    font-size: 10px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; }
-  .dyn-gcp .gcp-label i { font-style: normal; font-family: var(--type); font-weight: 400;
-    font-size: 9px; letter-spacing: 0.1em; color: var(--faint); text-transform: none; }
-
-  .dyn-gcp .gcp-amts { display: flex; flex-wrap: wrap; gap: 9px; }
-  .dyn-gcp .gcp-amts button { appearance: none; font: 600 13px/1 var(--sans); letter-spacing: 0.04em;
-    padding: 11px 16px 10px; background: transparent; border: 1px solid var(--line); color: var(--ink);
-    cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s; }
-  .dyn-gcp .gcp-amts button:hover { border-color: var(--ink); }
-  .dyn-gcp .gcp-amts button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--stock); }
-  .dyn-gcp .gcp-custom { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-  .dyn-gcp .gcp-custom label { font-family: var(--type); font-size: 11px; letter-spacing: 0.08em; color: var(--soft); }
-  .dyn-gcp .gcp-custom input { width: 110px; }
-  .dyn-gcp .gcp-custom-note { font-family: var(--type); font-size: 10px; color: var(--faint); }
-
+  .dyn-gcp .gcp-field { border: 1px solid var(--ink); background: var(--stock);
+    box-shadow: 2px 3px 0 rgba(23, 19, 15, 0.16); padding: 9px 12px 4px; }
+  .dyn-gcp .gcp-field b { display: block; font-size: 9px; font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--soft); }
   .dyn-gcp input[type="text"], .dyn-gcp input[type="email"], .dyn-gcp input[type="number"], .dyn-gcp textarea {
-    appearance: none; width: 100%; font: 400 14px/1.4 var(--sans); color: var(--ink);
-    background: rgba(255, 253, 247, 0.6); border: 1px solid var(--line); border-radius: 0;
-    padding: 11px 12px; transition: border-color 0.15s; }
-  .dyn-gcp input:focus, .dyn-gcp textarea:focus { outline: none; border-color: var(--ink); }
+    appearance: none; width: 100%; font: 400 14.5px/1.5 var(--type); color: var(--ink);
+    background: transparent; border: none; border-radius: 0; padding: 4px 0 7px; }
+  .dyn-gcp input:focus, .dyn-gcp textarea:focus { outline: none; }
+  .dyn-gcp .gcp-field:focus-within, .dyn-gcp .gcp-custom:focus-within { border-color: var(--red); }
   .dyn-gcp ::placeholder { color: var(--faint); }
-  .dyn-gcp .gcp-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .dyn-gcp textarea { resize: vertical; min-height: 84px; font-family: var(--serif); font-style: italic; font-size: 15px; }
-  .dyn-gcp .gcp-count { text-align: right; font-family: var(--type); font-size: 10px; color: var(--faint); margin-top: 4px; }
+  .dyn-gcp .gcp-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .dyn-gcp textarea { resize: vertical; min-height: 76px; }
+  .dyn-gcp .gcp-count { text-align: right; font-size: 10px; color: var(--faint); margin-top: 2px; }
 
-  .dyn-gcp .gcp-delivery { display: flex; gap: 10px; align-items: baseline;
-    font-size: 13px; color: var(--soft); line-height: 1.5; }
-  .dyn-gcp .gcp-delivery b { font-size: 10px; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase;
-    color: var(--ink); flex: none; }
+  .dyn-gcp .gcp-delivery { display: flex; align-items: center; gap: 14px;
+    border: 1px solid var(--ink); background: var(--stock); box-shadow: 2px 3px 0 rgba(23, 19, 15, 0.16);
+    padding: 14px 16px; }
+  .dyn-gcp .gcp-delivery svg { width: 26px; height: 26px; flex: none; stroke: var(--ink); fill: none; stroke-width: 1.6; }
+  .dyn-gcp .gcp-delivery-txt b { display: block; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .dyn-gcp .gcp-delivery-txt span { font-size: 11.5px; color: var(--soft); }
+  .dyn-gcp .gcp-check { margin-left: auto; flex: none; width: 26px; height: 26px; background: #17130f;
+    display: grid; place-items: center; transform: rotate(-3deg); }
+  .dyn-gcp .gcp-check svg { width: 15px; height: 15px; stroke: var(--stock); stroke-width: 3; fill: none; }
 
-  .dyn-gcp .gcp-add { appearance: none; width: 100%; margin-top: 24px; cursor: pointer;
-    font: 700 13px/1 var(--sans); letter-spacing: 0.22em; text-transform: uppercase;
-    background: var(--ink); color: var(--stock); border: 1px solid var(--ink); padding: 18px 20px 17px;
-    transition: background 0.15s, color 0.15s, transform 0.12s; }
-  .dyn-gcp .gcp-add:hover { background: var(--red); border-color: var(--red); }
+  .dyn-gcp .gcp-add { appearance: none; width: 100%; margin-top: 22px; cursor: pointer;
+    font: 700 15px/1 var(--type); letter-spacing: 0.16em; text-transform: uppercase;
+    background: var(--red); color: var(--stock); border: none; padding: 19px 20px 18px;
+    clip-path: polygon(0.5% 12%, 12% 0%, 34% 8%, 58% 1%, 82% 9%, 100% 3%, 99% 55%, 100% 92%, 78% 100%, 52% 91%, 26% 100%, 6% 94%, 0% 62%);
+    filter: drop-shadow(4px 5px 0 rgba(23, 19, 15, 0.28));
+    transition: transform 0.12s; }
+  .dyn-gcp .gcp-add:hover { transform: translateY(-2px) rotate(-0.4deg); }
   .dyn-gcp .gcp-add:active { transform: translateY(1px); }
-  .dyn-gcp .gcp-note { text-align: center; font-family: var(--type); font-size: 11px; letter-spacing: 0.06em;
-    color: var(--soft); margin: 12px 0 0; }
-  .dyn-gcp .gcp-err { display: none; margin-top: 12px; font-size: 12.5px; color: var(--red);
-    border: 1px solid var(--red); padding: 9px 12px; }
+  .dyn-gcp .gcp-note { text-align: center; font-size: 11px; letter-spacing: 0.04em; color: var(--ink); margin: 14px 0 0; }
+  .dyn-gcp .gcp-err { display: none; margin-top: 12px; font-size: 12px; color: var(--red);
+    border: 1px solid var(--red); padding: 9px 12px; background: var(--stock); }
   .dyn-gcp .gcp-err.is-on { display: block; }
 
+  /* ================= perks row ================= */
+  .dyn-gcp .gcp-perks { max-width: 1180px; margin: clamp(26px, 4vw, 50px) auto 0; padding: 0 22px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(16px, 3vw, 40px); }
+  .dyn-gcp .gcp-perk { display: flex; gap: 13px; align-items: flex-start; }
+  .dyn-gcp .gcp-perk-ic { flex: none; width: 56px; height: 56px; background: var(--stock);
+    display: grid; place-items: center; transform: rotate(-2deg);
+    clip-path: polygon(3% 6%, 34% 0%, 68% 4%, 100% 2%, 97% 38%, 100% 70%, 95% 98%, 62% 100%, 30% 95%, 0% 99%, 4% 50%);
+    filter: drop-shadow(3px 4px 0 rgba(23, 19, 15, 0.18)); }
+  .dyn-gcp .gcp-perk-ic svg { width: 26px; height: 26px; stroke: var(--ink); fill: none; stroke-width: 1.7;
+    stroke-linecap: round; stroke-linejoin: round; }
+  .dyn-gcp .gcp-perk b { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; margin-bottom: 4px; }
+  .dyn-gcp .gcp-perk p { margin: 0; font-size: 11.5px; line-height: 1.6; color: var(--soft); }
+
+  /* ================= balance banner ================= */
+  .dyn-gcp .gcp-balance { max-width: 1180px; margin: clamp(30px, 4.5vw, 60px) auto 0; padding: 0 22px 70px; }
+  .dyn-gcp .gcp-balance-in { background: #17130f; color: var(--stock);
+    padding: clamp(22px, 3vw, 34px) clamp(20px, 3.4vw, 44px);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 18px 28px;
+    clip-path: polygon(0.4% 8%, 8% 0%, 24% 6%, 42% 0.5%, 60% 7%, 79% 1%, 93% 6%, 100% 2%, 99.5% 50%, 100% 91%, 90% 100%, 72% 93%, 52% 100%, 33% 92%, 14% 99%, 0% 95%, 0.6% 46%);
+    filter: drop-shadow(5px 7px 0 rgba(23, 19, 15, 0.25)); }
+  .dyn-gcp .gcp-balance-txt { flex: 1 1 280px; }
+  .dyn-gcp .gcp-balance-txt b { display: block; font-size: clamp(15px, 1.8vw, 20px); letter-spacing: 0.18em;
+    text-transform: uppercase; margin-bottom: 6px; }
+  .dyn-gcp .gcp-balance-txt span { font-size: 12px; color: rgba(244, 239, 225, 0.72); }
+  .dyn-gcp .gcp-balance-form { flex: 1 1 380px; display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
+  .dyn-gcp .gcp-balance-form input { flex: 1 1 200px; min-width: 0; font: 400 13px/1 var(--type);
+    letter-spacing: 0.14em; color: var(--stock); background: transparent;
+    border: 1px solid rgba(244, 239, 225, 0.5); padding: 14px; }
+  .dyn-gcp .gcp-balance-form input::placeholder { color: rgba(244, 239, 225, 0.4); }
+  .dyn-gcp .gcp-balance-form input:focus { outline: none; border-color: var(--stock); }
+  .dyn-gcp .gcp-balance-btn { appearance: none; cursor: pointer; font: 700 12px/1 var(--type);
+    letter-spacing: 0.12em; text-transform: uppercase; background: var(--red); color: var(--stock);
+    border: none; padding: 14px 22px;
+    clip-path: polygon(1% 16%, 26% 0%, 58% 10%, 100% 4%, 98% 84%, 64% 100%, 30% 88%, 0% 96%); }
+  .dyn-gcp .gcp-balance-note { flex-basis: 100%; font-size: 11px; color: rgba(244, 239, 225, 0.72); display: none; }
+  .dyn-gcp .gcp-balance-note.is-on { display: block; }
+
   @media (max-width: 900px) {
-    .dyn-gcp .gcp-wrap { grid-template-columns: 1fr; gap: 8px; padding-bottom: 80px; }
-    .dyn-gcp .gcp-stage { position: relative; top: auto; margin-bottom: 26px; }
-    .dyn-gcp .gcp-card { transform: rotate(-0.4deg); }
+    .dyn-gcp .gcp-wrap { grid-template-columns: 1fr; gap: 30px; }
     .dyn-gcp .gcp-grid2 { grid-template-columns: 1fr; }
+    .dyn-gcp .gcp-perks { grid-template-columns: 1fr 1fr; }
+    .dyn-gcp .gcp-kraft { margin-left: 38%; }
   }
+  @media (max-width: 520px) { .dyn-gcp .gcp-perks { grid-template-columns: 1fr; } }
 </style>
 
 {%- assign gc_product = product -%}
 {%- if gp.gift_product != blank -%}{%- assign gc_product = gp.gift_product -%}{%- endif -%}
+{%- assign shop_initial = shop.name | slice: 0 -%}
 
 <section class="dyn-gcp">
   <div class="gcp-wrap">
 
-    <div class="gcp-stage" aria-hidden="true">
-      <div class="gcp-card">
-        <div class="gcp-card-head">
-          <span class="gcp-brand">{{ shop.name }}</span>
-          <span class="gcp-no">No. {{ 'now' | date: '%y%m' }} &middot; printed in-house</span>
-        </div>
-        <div class="gcp-card-mid">
-          <div class="gcp-title">Gift Card<small>good for everything we make</small></div>
+    <div>
+      <div class="gcp-collage">
+        {%- if gp.collage_photo != blank -%}
+          <div class="gcp-photo"><img src="{{ gp.collage_photo | image_url: width: 700 }}" alt=""
+            width="{{ gp.collage_photo.width }}" height="{{ gp.collage_photo.height }}" loading="lazy"></div>
+        {%- endif -%}
+        <div class="gcp-head-scrap"><h2>Gift<br>Cards</h2></div>
+        <div class="gcp-occasion">{{ gp.occasion_text | default: 'A gift for any occasion.' }}</div>
+        <p class="gcp-blurb">{{ gp.blurb | default: 'Redeemable on all products across our store.' }}</p>
+
+        <div class="gcp-card" aria-hidden="true">
+          <span class="gcp-tape t1"></span><span class="gcp-tape t2"></span>
+          <h3>Gift Card</h3>
+          <div class="gcp-amt-label">Amount</div>
           <div class="gcp-amt" id="gcpAmt">&mdash;</div>
+          <div class="gcp-card-lines">
+            <div class="gcp-line"><b>TO:</b><span id="gcpFor"></span></div>
+            <div class="gcp-line"><b>FROM:</b><span id="gcpFrom"></span></div>
+          </div>
+          <div class="gcp-card-msg" id="gcpMsg"></div>
+          <span class="gcp-enjoy">enjoy.</span>
+          <svg class="gcp-stamp" viewBox="0 0 90 90" aria-hidden="true">
+            <circle cx="45" cy="45" r="40"/><circle cx="45" cy="45" r="27"/>
+            <text x="45" y="57" text-anchor="middle" font-size="34">{{ shop_initial }}</text>
+          </svg>
         </div>
-        <div class="gcp-card-lines">
-          <div class="gcp-line"><b>FOR</b><span id="gcpFor"></span></div>
-          <div class="gcp-msg" id="gcpMsg"></div>
-          <div class="gcp-line"><b>FROM</b><span id="gcpFrom"></span></div>
-        </div>
+        <div class="gcp-kraft">{{ gp.kraft_text | default: 'good things take time.' }}</div>
       </div>
-      <div class="gcp-plate"><span>plate 02 &mdash; gift series</span><span>never expires</span></div>
+      <p class="gcp-preview-note">This is a preview.<br>The final gift card will be emailed to the recipient.</p>
     </div>
 
     <div>
-      <p class="gcp-kicker">{{ gp.kicker | default: 'Stationery for giving' }}</p>
-      <h1>{{ gp.heading | default: 'Gift Cards' }}</h1>
-      <p class="gcp-sub">{{ gp.subheading | default: "Give them something they'll actually want. A gift card can be used toward custom gifts, stationery, paper goods, printing, and more." }}</p>
+      <span class="gcp-tag">{{ gp.kicker | default: 'Give more choice' }}</span>
+      <h1>{{ gp.heading | default: 'Gift Cards' }}<span class="gcp-underline"></span></h1>
+      <p class="gcp-sub">{{ gp.subheading | default: 'The perfect gift for any occasion. Redeemable on all products across our store.' }}</p>
 
       {%- if gc_product == blank or gc_product.variants.size == 0 -%}
         <p class="gcp-sub"><em>Pick your gift card product in this section's settings (or assign this section to the gift card product's template).</em></p>
@@ -185,7 +276,7 @@
         <input type="hidden" name="id" id="gcpVariant" value="{{ gc_product.selected_or_first_available_variant.id }}">
 
         <div class="gcp-sect">
-          <p class="gcp-label">Amount <i>choose a printed value</i></p>
+          <span class="gcp-tag">1. Choose amount</span>
           <div class="gcp-amts" id="gcpAmts">
             {%- for variant in gc_product.variants -%}
               <button type="button" data-id="{{ variant.id }}" data-cents="{{ variant.price }}"
@@ -195,127 +286,176 @@
           </div>
           {%- if gc_product.variants.size > 1 -%}
           <div class="gcp-custom">
-            <label for="gcpCustom">custom amount</label>
-            <input type="number" id="gcpCustom" min="1" step="1" inputmode="numeric" placeholder="{{ gc_product.variants.last.price | divided_by: 100 }}">
+            <label for="gcpCustom">Custom amount</label>
+            <span class="gcp-dollar">$</span>
+            <input type="number" id="gcpCustom" min="1" step="1" inputmode="numeric" placeholder="Enter amount">
             <span class="gcp-custom-note" id="gcpCustomNote"></span>
           </div>
           {%- endif -%}
         </div>
 
         <div class="gcp-sect">
-          <p class="gcp-label">Recipient <i>who is it for?</i></p>
+          <span class="gcp-tag">2. Recipient</span>
           <div class="gcp-grid2">
-            <input type="text" id="gcpForName" name="properties[Recipient name]" placeholder="Recipient name" autocomplete="off">
-            <input type="email" id="gcpForEmail" name="properties[Recipient email]" placeholder="Recipient email" autocomplete="off">
+            <div class="gcp-field"><b>Recipient name</b>
+              <input type="text" id="gcpForName" name="properties[Recipient name]" placeholder="Jane Smith" autocomplete="off"></div>
+            <div class="gcp-field"><b>Recipient email</b>
+              <input type="email" id="gcpForEmail" name="properties[Recipient email]" placeholder="jane@email.com" autocomplete="off"></div>
           </div>
           <input type="hidden" name="properties[__shopify_send_gift_card_to_recipient]" id="gcpSendFlag" value="" disabled>
         </div>
 
         <div class="gcp-sect">
-          <p class="gcp-label">From <i>signed by</i></p>
-          <input type="text" id="gcpFromName" name="properties[From]" placeholder="Your name" autocomplete="off">
+          <span class="gcp-tag">3. From</span>
+          <div class="gcp-field"><b>Your name</b>
+            <input type="text" id="gcpFromName" name="properties[From]" placeholder="Your name" autocomplete="off"></div>
         </div>
 
         <div class="gcp-sect">
-          <p class="gcp-label">Message <i>set in italic type</i></p>
-          <textarea id="gcpMsgIn" name="properties[Message]" maxlength="200" placeholder="Happy Birthday! Thought you'd find something you love."></textarea>
+          <span class="gcp-tag">4. Message</span>
+          <div class="gcp-field">
+            <textarea id="gcpMsgIn" name="properties[Message]" maxlength="200" placeholder="Happy Birthday! Thought you'd find something you love."></textarea>
+          </div>
           <div class="gcp-count"><span id="gcpCount">0</span> / 200</div>
         </div>
 
         <div class="gcp-sect">
-          <div class="gcp-delivery"><b>Delivery</b><span>{{ gp.delivery_text | default: 'Email delivery — the gift card and your message are delivered by email.' }}</span></div>
+          <span class="gcp-tag">5. Delivery</span>
+          <div class="gcp-delivery">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="1"/><path d="M3 6.2 12 13l9-6.8"/></svg>
+            <div class="gcp-delivery-txt"><b>Email delivery</b>
+              <span>{{ gp.delivery_text | default: 'Gift card will be delivered by email.' }}</span></div>
+            <span class="gcp-check"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 10 18 19.5 6.5"/></svg></span>
+          </div>
         </div>
 
-        <button class="gcp-add" type="submit">{{ gp.button_label | default: 'Add Gift Card' }}</button>
-        <p class="gcp-note">{{ gp.note | default: 'Delivered instantly by email.' }}</p>
+        <button class="gcp-add" type="submit">{{ gp.button_label | default: 'Add gift card to cart' }}</button>
+        <p class="gcp-note">&#128274; {{ gp.note | default: 'Delivered instantly by email.' }}</p>
         <div class="gcp-err" id="gcpErr"></div>
       </form>
       {%- endif -%}
     </div>
-
   </div>
+
+  {%- if section.blocks.size > 0 -%}
+  <div class="gcp-perks">
+    {%- for block in section.blocks -%}
+      <div class="gcp-perk" {{ block.shopify_attributes }}>
+        <span class="gcp-perk-ic">
+          {%- case block.settings.icon -%}
+          {%- when 'gift' -%}<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12"/><path d="M3 13h18M12 9v12M12 9c-4 0-5.5-2-5-4 .6-2.2 4-1.5 5 4Zm0 0c4 0 5.5-2 5-4-.6-2.2-4-1.5-5 4Z"/></svg>
+          {%- when 'heart' -%}<svg viewBox="0 0 24 24"><path d="M12 20.5C5.5 16 3.5 12.4 4.5 9.5c1-2.9 4.7-3.3 6.4-.8L12 10l1.1-1.3c1.7-2.5 5.4-2.1 6.4.8 1 2.9-1 6.5-7.5 11Z"/></svg>
+          {%- when 'card' -%}<svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="1"/><path d="M2.5 10.5h19M6 15.5h5"/></svg>
+          {%- else -%}<svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="1"/><path d="M3 6.2 12 13l9-6.8"/></svg>
+          {%- endcase -%}
+        </span>
+        <div><b>{{ block.settings.title }}</b><p>{{ block.settings.text }}</p></div>
+      </div>
+    {%- endfor -%}
+  </div>
+  {%- endif -%}
+
+  {%- unless gp.show_balance == false -%}
+  <div class="gcp-balance">
+    <div class="gcp-balance-in">
+      <div class="gcp-balance-txt">
+        <b>{{ gp.balance_heading | default: 'Check your gift card balance' }}</b>
+        <span>{{ gp.balance_sub | default: 'Enter your gift card code to check your balance.' }}</span>
+      </div>
+      <form class="gcp-balance-form" id="gcpBalForm">
+        <input type="text" id="gcpBalCode" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false">
+        <button class="gcp-balance-btn" type="submit">{{ gp.balance_button | default: 'Check balance' }}</button>
+        <span class="gcp-balance-note" id="gcpBalNote">{{ gp.balance_note | default: 'Open the gift card email and tap "View gift card" — it shows the live balance and a QR code for checkout.' }}</span>
+      </form>
+    </div>
+  </div>
+  {%- endunless -%}
 </section>
 
 <script>
 (function () {
   var root = document.getElementById("gcpForm");
-  if (!root) return;
-  var money = function (cents) {
-    var n = cents / 100;
-    return "$" + (n % 1 === 0 ? n.toFixed(0) : n.toFixed(2));
-  };
-  var amtEl = document.getElementById("gcpAmt");
-  var amts = document.getElementById("gcpAmts");
-  var buttons = Array.prototype.slice.call(amts.querySelectorAll("button"));
-  var variantIn = document.getElementById("gcpVariant");
-  var custom = document.getElementById("gcpCustom");
-  var customNote = document.getElementById("gcpCustomNote");
+  if (root) {
+    var money = function (cents) {
+      var n = cents / 100;
+      return "$" + (n % 1 === 0 ? n.toFixed(0) : n.toFixed(2));
+    };
+    var amtEl = document.getElementById("gcpAmt");
+    var amts = document.getElementById("gcpAmts");
+    var buttons = Array.prototype.slice.call(amts.querySelectorAll("button"));
+    var variantIn = document.getElementById("gcpVariant");
+    var custom = document.getElementById("gcpCustom");
+    var customNote = document.getElementById("gcpCustomNote");
 
-  function setAmount(btn, fromCustom) {
-    buttons.forEach(function (b) { b.setAttribute("aria-pressed", b === btn ? "true" : "false"); });
-    variantIn.value = btn.dataset.id;
-    amtEl.classList.add("is-turning");
-    setTimeout(function () {
-      amtEl.textContent = money(parseInt(btn.dataset.cents, 10));
-      amtEl.classList.remove("is-turning");
-    }, 160);
-    if (!fromCustom && custom) { custom.value = ""; customNote.textContent = ""; }
-  }
-  buttons.forEach(function (b) {
-    b.addEventListener("click", function () { setAmount(b, false); });
-  });
-  if (custom) custom.addEventListener("input", function () {
-    var v = parseFloat(custom.value);
-    if (!v || v <= 0) { customNote.textContent = ""; return; }
-    var best = null, bd = Infinity;
+    var setAmount = function (btn, fromCustom) {
+      buttons.forEach(function (b) { b.setAttribute("aria-pressed", b === btn ? "true" : "false"); });
+      variantIn.value = btn.dataset.id;
+      amtEl.classList.add("is-turning");
+      setTimeout(function () {
+        amtEl.textContent = money(parseInt(btn.dataset.cents, 10));
+        amtEl.classList.remove("is-turning");
+      }, 160);
+      if (!fromCustom && custom) { custom.value = ""; customNote.textContent = ""; }
+    };
     buttons.forEach(function (b) {
-      var d = Math.abs(parseInt(b.dataset.cents, 10) - v * 100);
-      if (d < bd) { bd = d; best = b; }
+      b.addEventListener("click", function () { setAmount(b, false); });
     });
-    if (!best) return;
-    setAmount(best, true);
-    customNote.textContent = bd < 1 ? "" : "closest printed value: " + money(parseInt(best.dataset.cents, 10));
-  });
+    if (custom) custom.addEventListener("input", function () {
+      var v = parseFloat(custom.value);
+      if (!v || v <= 0) { customNote.textContent = ""; return; }
+      var best = null, bd = Infinity;
+      buttons.forEach(function (b) {
+        var d = Math.abs(parseInt(b.dataset.cents, 10) - v * 100);
+        if (d < bd) { bd = d; best = b; }
+      });
+      if (!best) return;
+      setAmount(best, true);
+      customNote.textContent = bd < 1 ? "" : "closest: " + money(parseInt(best.dataset.cents, 10));
+    });
 
-  function bindLive(inputId, outId) {
-    var i = document.getElementById(inputId), o = document.getElementById(outId);
-    if (!i || !o) return;
-    i.addEventListener("input", function () { o.textContent = i.value; });
+    var bindLive = function (inputId, outId) {
+      var i = document.getElementById(inputId), o = document.getElementById(outId);
+      if (!i || !o) return;
+      i.addEventListener("input", function () { o.textContent = i.value; });
+    };
+    bindLive("gcpForName", "gcpFor");
+    bindLive("gcpFromName", "gcpFrom");
+    var msgIn = document.getElementById("gcpMsgIn"), msgOut = document.getElementById("gcpMsg");
+    var count = document.getElementById("gcpCount");
+    msgIn.addEventListener("input", function () {
+      msgOut.textContent = msgIn.value;
+      count.textContent = String(msgIn.value.length);
+    });
+
+    /* the recipient-delivery flag only rides along when there is an email */
+    var email = document.getElementById("gcpForEmail");
+    var flag = document.getElementById("gcpSendFlag");
+    var err = document.getElementById("gcpErr");
+    root.addEventListener("submit", function (e) {
+      err.classList.remove("is-on");
+      var v = (email.value || "").trim();
+      if (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) {
+        e.preventDefault();
+        err.textContent = "That recipient email doesn't look right - mind checking it?";
+        err.classList.add("is-on");
+        email.focus();
+        return;
+      }
+      if (v) { flag.disabled = false; flag.value = "on"; }
+      else { flag.disabled = true; email.disabled = true; }
+    });
+
+    var pressed = buttons.filter(function (b) { return b.getAttribute("aria-pressed") === "true"; })[0] || buttons[0];
+    if (pressed) amtEl.textContent = money(parseInt(pressed.dataset.cents, 10));
   }
-  bindLive("gcpForName", "gcpFor");
-  bindLive("gcpFromName", "gcpFrom");
-  var msgIn = document.getElementById("gcpMsgIn"), msgOut = document.getElementById("gcpMsg");
-  var count = document.getElementById("gcpCount");
-  msgIn.addEventListener("input", function () {
-    msgOut.textContent = msgIn.value;
-    count.textContent = String(msgIn.value.length);
-  });
 
-  /* the recipient-delivery flag only rides along when there is an email */
-  var email = document.getElementById("gcpForEmail");
-  var flag = document.getElementById("gcpSendFlag");
-  var err = document.getElementById("gcpErr");
-  root.addEventListener("submit", function (e) {
-    err.classList.remove("is-on");
-    var v = (email.value || "").trim();
-    if (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) {
-      e.preventDefault();
-      err.textContent = "That recipient email doesn't look right - mind checking it?";
-      err.classList.add("is-on");
-      email.focus();
-      return;
-    }
-    if (v) { flag.disabled = false; flag.value = "on"; }
-    else {
-      flag.disabled = true;
-      /* no recipient email: send the card to the buyer, fields stay as notes */
-      email.disabled = true;
-    }
+  /* balance: Shopify has no public lookup by code, so this points people to
+     the live-balance link every gift card email contains */
+  var bal = document.getElementById("gcpBalForm");
+  if (bal) bal.addEventListener("submit", function (e) {
+    e.preventDefault();
+    document.getElementById("gcpBalNote").classList.add("is-on");
   });
-
-  /* seed the preview with the pre-selected variant */
-  var pressed = buttons.filter(function (b) { return b.getAttribute("aria-pressed") === "true"; })[0] || buttons[0];
-  if (pressed) amtEl.textContent = money(parseInt(pressed.dataset.cents, 10));
 })();
 </script>
 
@@ -325,17 +465,53 @@
   "tag": "section",
   "class": "dynamic-gift-card-product-section",
   "settings": [
-    { "type": "paragraph", "content": "The buying page for your gift card, styled as printed stationery with a live card preview. Assign this section to the gift card product's template - or pick the product below to use it on any page." },
+    { "type": "paragraph", "content": "The buying page for your gift card as a zine collage: torn-paper headline and a taped-down live card preview on the left, a typewriter order form with numbered step tags on the right, plus a perks row (blocks below) and a balance banner." },
     { "type": "product", "id": "gift_product", "label": "Gift card product", "info": "Leave empty on a product template to use the current product." },
-    { "type": "header", "content": "Words" },
-    { "type": "text", "id": "kicker", "label": "Kicker line", "default": "Stationery for giving" },
+    { "type": "image_picker", "id": "collage_photo", "label": "Collage photo (optional)", "info": "Pasted top-right of the collage in newspaper black & white with a red strip across it, like a zine cutout. Portrait crop works best." },
+    { "type": "header", "content": "Collage words" },
+    { "type": "text", "id": "occasion_text", "label": "Red chip", "default": "A gift for any occasion." },
+    { "type": "textarea", "id": "blurb", "label": "Small note", "default": "Redeemable on all products across our store." },
+    { "type": "text", "id": "kraft_text", "label": "Kraft scrap", "default": "good things take time." },
+    { "type": "header", "content": "Form words" },
+    { "type": "text", "id": "kicker", "label": "Top tag", "default": "Give more choice" },
     { "type": "text", "id": "heading", "label": "Heading", "default": "Gift Cards" },
-    { "type": "textarea", "id": "subheading", "label": "Introduction", "default": "Give them something they'll actually want. A gift card can be used toward custom gifts, stationery, paper goods, printing, and more." },
-    { "type": "text", "id": "delivery_text", "label": "Delivery description", "default": "Email delivery — the gift card and your message are delivered by email." },
-    { "type": "text", "id": "button_label", "label": "Button text", "default": "Add Gift Card" },
-    { "type": "text", "id": "note", "label": "Line under the button", "default": "Delivered instantly by email." }
+    { "type": "textarea", "id": "subheading", "label": "Introduction", "default": "The perfect gift for any occasion. Redeemable on all products across our store." },
+    { "type": "text", "id": "delivery_text", "label": "Delivery description", "default": "Gift card will be delivered by email." },
+    { "type": "text", "id": "button_label", "label": "Button text", "default": "Add gift card to cart" },
+    { "type": "text", "id": "note", "label": "Line under the button", "default": "Delivered instantly by email." },
+    { "type": "header", "content": "Balance banner" },
+    { "type": "checkbox", "id": "show_balance", "label": "Show the balance banner", "default": true },
+    { "type": "text", "id": "balance_heading", "label": "Heading", "default": "Check your gift card balance" },
+    { "type": "text", "id": "balance_sub", "label": "Subline", "default": "Enter your gift card code to check your balance." },
+    { "type": "text", "id": "balance_button", "label": "Button", "default": "Check balance" },
+    { "type": "textarea", "id": "balance_note", "label": "Answer shown on submit", "info": "Shopify can't look balances up by code alone, so the button reveals this pointer to the live-balance link in the gift card email.", "default": "Open the gift card email and tap \"View gift card\" — it shows the live balance and a QR code for checkout." }
   ],
-  "presets": [ { "name": "Dynamic Gift Card Product" } ],
+  "blocks": [
+    {
+      "type": "perk",
+      "name": "Perk",
+      "settings": [
+        { "type": "select", "id": "icon", "label": "Icon", "default": "mail", "options": [
+          { "value": "mail", "label": "Envelope" },
+          { "value": "gift", "label": "Gift" },
+          { "value": "heart", "label": "Heart" },
+          { "value": "card", "label": "Card" }
+        ] },
+        { "type": "text", "id": "title", "label": "Title", "default": "Instant delivery" },
+        { "type": "textarea", "id": "text", "label": "Text", "default": "Gift cards are delivered instantly by email." }
+      ]
+    }
+  ],
+  "max_blocks": 4,
+  "presets": [ {
+    "name": "Dynamic Gift Card Product",
+    "blocks": [
+      { "type": "perk", "settings": { "icon": "mail", "title": "Instant delivery", "text": "Gift cards are delivered instantly by email." } },
+      { "type": "perk", "settings": { "icon": "gift", "title": "Perfect for any occasion", "text": "Birthdays, holidays, thank you gifts & more." } },
+      { "type": "perk", "settings": { "icon": "heart", "title": "Easy to redeem", "text": "Use at checkout online or in-store." } },
+      { "type": "perk", "settings": { "icon": "card", "title": "Check balance", "text": "Check your balance at any time." } }
+    ]
+  } ],
   "enabled_on": { "templates": ["product", "page", "index"] }
 }
 {% endschema %}
