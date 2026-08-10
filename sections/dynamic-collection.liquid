@@ -807,6 +807,12 @@
       -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 14px; }
     .dyn-col .dc-tabs.is-images::-webkit-scrollbar { display: none; }
     .dyn-col.dc-scrolled .dc-tabs-wrap { min-height: 52px; }
+    /* Phone spine: the generic phone-card padding crushed the price strip
+       to a sliver - keep the zine spine's slim padding and print just the
+       number (no "From ") so it fits the narrow column */
+    .dyn-col .dc-gridall .dc-body { padding: 10px 5px 10px; gap: 6px; }
+    .dyn-col .dc-price .dc-now::before { content: none; }
+    .dyn-col .dc-price .dc-now, .dyn-col .dc-price .dc-now.on-sale { letter-spacing: 0.06em; }
   }
 </style>
 
