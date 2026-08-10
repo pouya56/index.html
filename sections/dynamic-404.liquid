@@ -109,15 +109,42 @@
   .dyn404 .d4-imgmode img { display: block; width: 100%; height: auto; }
   .dyn404 .d4-imgmode .d4-btns { position: absolute; left: 0; right: 0; bottom: 3.6%; }
 
+  /* uploaded photo scraps: torn paper border, draggable by visitors */
+  .dyn404 .d4-photo { position: absolute; z-index: 4; cursor: grab; touch-action: none;
+    user-select: none; -webkit-user-select: none; background: #f6f1e6; padding: 3.2%;
+    box-sizing: border-box; transform: rotate(var(--rot, 0deg));
+    filter: drop-shadow(4px 6px 0 rgba(23, 19, 15, 0.22)); }
+  .dyn404 .d4-photo img { display: block; width: 100%; height: auto; pointer-events: none;
+    -webkit-user-drag: none; }
+  .dyn404 .d4-photo.d4-bw img { filter: grayscale(1) contrast(1.06); }
+  .dyn404 .d4-photo, .dyn404 .d4-photo img {
+    clip-path: polygon(1.5% 4%, 18% 0%, 42% 3%, 68% 0.5%, 88% 3.5%, 100% 1%, 98.5% 26%, 100% 52%, 97.5% 76%, 99.5% 97%, 78% 100%, 52% 96.5%, 28% 100%, 6% 97%, 0% 74%, 2% 48%, 0% 22%); }
+  .dyn404 .d4-photo.is-drag { cursor: grabbing; z-index: 40;
+    filter: drop-shadow(7px 10px 0 rgba(23, 19, 15, 0.28)); }
+
   @media (max-width: 560px) {
     .dyn404 .d4-print { display: none; }
     .dyn404 .d4-wrong { margin-top: -18px; }
   }
 </style>
 
+{%- capture d4_scraps -%}
+  {%- for block in section.blocks -%}
+    {%- if block.settings.image != blank -%}
+      <div class="d4-photo{% if block.settings.bw %} d4-bw{% endif %}"
+        style="left: {{ block.settings.x }}%; top: {{ block.settings.y }}%; width: {{ block.settings.w }}%; --rot: {{ block.settings.tilt }}deg;"
+        {{ block.shopify_attributes }}>
+        <img src="{{ block.settings.image | image_url: width: 640 }}" alt="" loading="lazy"
+          width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}">
+      </div>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+
 <div class="dyn404">
   {%- if s4.poster_image != blank -%}
     <div class="d4-imgmode">
+      {{ d4_scraps }}
       <img src="{{ s4.poster_image | image_url: width: 1400 }}" alt="{{ s4.word_1 | default: 'Page' }} {{ s4.word_2 | default: 'not' }} {{ s4.word_3 | default: 'found' }}" width="{{ s4.poster_image.width }}" height="{{ s4.poster_image.height }}">
       <div class="d4-btns">
         <a class="d4-btn d4-home" href="{{ s4.button_url | default: routes.root_url }}">&larr; {{ s4.button_label | default: 'Go back home' }}</a>
@@ -126,6 +153,7 @@
     </div>
   {%- else -%}
     <div class="d4-poster">
+      {{ d4_scraps }}
       <div class="d4-in">
         <div class="d4-print" aria-hidden="true">excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
         <h1 class="d4-num">{{ s4.heading | default: '404' }}</h1>
@@ -147,13 +175,44 @@
   {%- endif -%}
 </div>
 
+<script>
+(function () {
+  var scraps = document.querySelectorAll(".dyn404 .d4-photo");
+  Array.prototype.forEach.call(scraps, function (el) {
+    el.addEventListener("pointerdown", function (e) {
+      if (e.button && e.button !== 0) return;
+      e.preventDefault();
+      var sx = e.clientX, sy = e.clientY;
+      var bx = parseFloat(el.dataset.dx || 0), by = parseFloat(el.dataset.dy || 0);
+      el.classList.add("is-drag");
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      function mv(ev) {
+        var dx = bx + ev.clientX - sx, dy = by + ev.clientY - sy;
+        el.dataset.dx = dx; el.dataset.dy = dy;
+        el.style.transform = "translate(" + dx + "px," + dy + "px) rotate(var(--rot, 0deg))";
+      }
+      function up(ev) {
+        el.classList.remove("is-drag");
+        try { el.releasePointerCapture(ev.pointerId); } catch (err) {}
+        el.removeEventListener("pointermove", mv);
+        el.removeEventListener("pointerup", up);
+        el.removeEventListener("pointercancel", up);
+      }
+      el.addEventListener("pointermove", mv);
+      el.addEventListener("pointerup", up);
+      el.addEventListener("pointercancel", up);
+    });
+  });
+})();
+</script>
+
 {% schema %}
 {
   "name": "Dynamic 404",
   "tag": "section",
   "class": "dynamic-404-section",
   "settings": [
-    { "type": "paragraph", "content": "A zine-collage 404 poster: giant 404, torn PAGE / NOT / FOUND. scraps, typewriter notes and two paper buttons. Everything below is optional — empty fields use the drawn defaults." },
+    { "type": "paragraph", "content": "A zine-collage 404 poster: giant 404, torn PAGE / NOT / FOUND. scraps, typewriter notes and two paper buttons. Add 'Photo scrap' blocks (bottom of this panel) to paste your own photos onto the collage — visitors can pick them up and drag them around. Everything below is optional — empty fields use the drawn defaults." },
     { "type": "image_picker", "id": "poster_image", "label": "Poster image (optional)", "info": "Replaces the drawn collage with your own artwork (portrait, ~1100×1400px works best). The two buttons float over the bottom of the image." },
     { "type": "header", "content": "Words" },
     { "type": "text", "id": "heading", "label": "Big number", "default": "404" },
@@ -170,6 +229,21 @@
     { "type": "text", "id": "button2_label", "label": "Red button text", "default": "Browse collection" },
     { "type": "url", "id": "button2_url", "label": "Red button link", "info": "Defaults to the all-products collection." }
   ],
+  "blocks": [
+    {
+      "type": "photo",
+      "name": "Photo scrap",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Photo", "info": "Pasted on the collage as a torn-edge paper photo. Visitors can pick it up and drag it around (moves don't save)." },
+        { "type": "range", "id": "x", "label": "Left position", "min": -10, "max": 90, "step": 1, "unit": "%", "default": 60 },
+        { "type": "range", "id": "y", "label": "Top position", "min": -8, "max": 92, "step": 1, "unit": "%", "default": 20 },
+        { "type": "range", "id": "w", "label": "Width", "min": 12, "max": 60, "step": 1, "unit": "%", "default": 30 },
+        { "type": "range", "id": "tilt", "label": "Tilt", "min": -14, "max": 14, "step": 1, "unit": "deg", "default": -3 },
+        { "type": "checkbox", "id": "bw", "label": "Black & white", "default": true, "info": "Prints the photo in newspaper grayscale like the reference collage." }
+      ]
+    }
+  ],
+  "max_blocks": 8,
   "presets": [ { "name": "Dynamic 404" } ],
   "enabled_on": { "templates": ["404", "page", "index"] }
 }
