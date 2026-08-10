@@ -807,6 +807,18 @@
   /* card mid-drag: floats over the grid, no text selection */
   .dyn-col .dc-card.is-cdrag { position: relative; z-index: 60; cursor: grabbing;
     user-select: none; -webkit-user-select: none; transition: none; }
+  /* hand-drawn refresh: appears bottom-right once a card has been moved,
+     puts every card back in its printed spot */
+  .dyn-col .dc-reset-btn { position: fixed; right: 22px; bottom: 26px; z-index: 70;
+    width: 58px; height: 58px; border: none; padding: 0; cursor: pointer;
+    background: transparent url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke-linecap='round'%3E%3Cpath%20d='M87%2035%20A35%2035%200%201%200%2096%2062'%20stroke='%23e7d7c1'%20stroke-width='26'/%3E%3Cpath%20d='M83%2016%20L90%2041%20L64%2037'%20stroke='%23e7d7c1'%20stroke-width='22'%20stroke-linejoin='round'/%3E%3Cpath%20d='M86%2036%20A34%2034%200%201%200%2095%2061'%20stroke='%231b2225'%20stroke-width='4.5'/%3E%3Cpath%20d='M89%2040%20A31%2031%200%201%200%2093%2058'%20stroke='%231b2225'%20stroke-width='1.6'/%3E%3Cpath%20d='M84%2019%20L89%2040%20L67%2036'%20stroke='%231b2225'%20stroke-width='4'%20stroke-linejoin='round'/%3E%3Cpath%20d='M81%2023%20L87%2038'%20stroke='%231b2225'%20stroke-width='1.5'/%3E%3C/g%3E%3Cg%20fill='%231b2225'%3E%3Ccircle%20cx='94'%20cy='14'%20r='1.2'/%3E%3Ccircle%20cx='98'%20cy='19'%20r='0.8'/%3E%3Ccircle%20cx='16'%20cy='34'%20r='1.1'/%3E%3Ccircle%20cx='13'%20cy='40'%20r='0.7'/%3E%3Ccircle%20cx='100'%20cy='70'%20r='1'/%3E%3Ccircle%20cx='60'%20cy='103'%20r='0.9'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+    opacity: 0; transform: scale(0.6) rotate(20deg); pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    filter: drop-shadow(0 6px 14px rgba(20, 17, 16, 0.25)); }
+  .dyn-col .dc-reset-btn.is-on { opacity: 1; transform: scale(1) rotate(0deg); pointer-events: auto; }
+  .dyn-col .dc-reset-btn:hover { transform: scale(1.08) rotate(-14deg); }
+  .dyn-col .dc-reset-btn:active { transform: scale(0.92) rotate(-40deg); }
+  @media (max-width: 800px), (hover: none) { .dyn-col .dc-reset-btn { display: none; } }
   @media (max-width: 800px) {
     .dyn-col .dc-tabs.is-images { flex-wrap: nowrap !important; overflow-x: auto; justify-content: flex-start;
       -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 14px; }
@@ -2209,12 +2221,30 @@
   }, { passive: true });
   function end() {
     if (!drag) return;
-    if (drag.moved) squelch = Date.now() + 320;
+    if (drag.moved) { squelch = Date.now() + 320; moved.add(drag.el); updateReset(); }
     drag.el.classList.remove("is-cdrag");
     drag = null;
   }
   window.addEventListener("pointerup", end, { passive: true });
   window.addEventListener("pointercancel", end, { passive: true });
+  /* hand-drawn refresh puts every moved card back in its printed spot */
+  var moved = new Set();
+  var resetBtn = document.createElement("button");
+  resetBtn.type = "button";
+  resetBtn.className = "dc-reset-btn";
+  resetBtn.setAttribute("aria-label", "Put the cards back");
+  col.appendChild(resetBtn);
+  function updateReset() { resetBtn.classList.toggle("is-on", moved.size > 0); }
+  resetBtn.addEventListener("click", function () {
+    moved.forEach(function (card) {
+      card.style.removeProperty("--cdx");
+      card.style.removeProperty("--cdy");
+      delete card.dataset.dgx;
+      delete card.dataset.dgy;
+    });
+    moved.clear();
+    updateReset();
+  });
 })();
 </script>
 
