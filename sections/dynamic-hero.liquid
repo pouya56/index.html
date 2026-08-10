@@ -1580,13 +1580,10 @@ setTimeout(updateFade, 1400);
 }
 function lockScroll(on) {
 var de = document.documentElement;
-if (on) {
-var sbw = window.innerWidth - de.clientWidth; // width of the scrollbar about to disappear
-de.style.overflow = "hidden";
-if (sbw > 0) de.style.paddingRight = sbw + "px"; // keep content from shifting right
-} else {
-de.style.overflow = ""; de.style.paddingRight = "";
-}
+/* no scrollbar-gutter padding here: the reserved strip showed the plain page
+   background as a white bar beside the word wall. The wall canvas stretches
+   (width:100%), so letting the page widen those few px is invisible. */
+de.style.overflow = on ? "hidden" : "";
 }
 function openSlide(url, half) {
 if (!url) return;
