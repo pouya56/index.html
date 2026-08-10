@@ -24,6 +24,9 @@
     background-size: 26px 26px;
     color: var(--ink); -webkit-font-smoothing: antialiased;
     display: flex; align-items: center; justify-content: center;
+    /* the paper always covers the whole screen - no page ground peeking
+       out under the collage (100lvh backstop for browsers without svh) */
+    min-height: 100vh; min-height: 100svh; box-sizing: border-box;
     padding: clamp(20px, 4vw, 48px) 18px; overflow: hidden; }
 
   .dyn404 .d4-poster { position: relative; width: min(760px, 94vw);
