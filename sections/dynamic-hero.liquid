@@ -932,6 +932,8 @@ var downQ = null, downT = 0, moved = 0, swallowClick = false;
 root.addEventListener("pointerdown", function (e) {
 swallowClick = false;
 if (e.button && e.button !== 0) return;
+// real UI wins over the toys: never grab a box lying on a link or button
+if (e.target && e.target.closest && e.target.closest("a, button, input, select, textarea, [role='button']")) return;
 var q = pos(e), best = null, bd = 1e9;
 for (var i = bodies.length - 1; i >= 0; i--) {
 var b = bodies[i], dx = b.x - q.x, dy = b.y - q.y, d = dx * dx + dy * dy;
