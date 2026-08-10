@@ -639,8 +639,11 @@ button { font-family: inherit; cursor: pointer; }
 .gal-nav .gal-prev::after { content: "Previous"; }
 .gal-nav .gal-next::after { content: "Next"; }
 @media (min-width: 1041px) {
-  .gal-nav .gal-prev { left: 4%; bottom: -78px; }
-  .gal-nav .gal-next { right: 4%; bottom: -78px; }
+  /* the container's bottom corners: with contain-fit photos these are
+     whitespace, so the arrows read as sitting on the paper beside the
+     product - and never fall below the fold like a negative offset did */
+  .gal-nav .gal-prev { left: 2.5%; bottom: 14px; }
+  .gal-nav .gal-next { right: 2.5%; bottom: 14px; }
   .gal-nav .gal-arrow:hover { transform: scale(1.1); }
   .gal-nav .gal-arrow:active { transform: scale(0.95); }
 }
