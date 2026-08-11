@@ -148,6 +148,7 @@
   .dbo-coltitle-right { grid-row: 1; }
   .dbo-rows { grid-row: 2; }
   .dbo-add { grid-row: 3; justify-self: start; }
+  .dbo-next { grid-column: 2; grid-row: 3; justify-self: end; }
   .dbo-summary { grid-column: 1; grid-row: 1 / span 3; position: sticky; top: 76px; margin-top: 0; }
 }
 .dbo-coltitle { font-family: Georgia, "Times New Roman", serif; font-weight: 800; text-transform: uppercase;
@@ -236,6 +237,14 @@
 .dbo::after { content: ""; position: absolute; bottom: 34px; right: 8px; width: 26px; height: 26px; opacity: 0.35; pointer-events: none;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Ccircle cx='13' cy='13' r='8' fill='none' stroke='%2317130f' stroke-width='1.4'/%3E%3Cpath d='M13 1 V25 M1 13 H25' stroke='%2317130f' stroke-width='1.2'/%3E%3C/svg%3E") center / contain no-repeat; }
 @media (max-width: 940px) { .dbo-steps { gap: 16px; } .dbo-summary { margin-top: 30px; } }
+/* the Next button carries the customer from step 02 to 03 */
+.dbo-next { display:inline-flex; align-items:center; gap:8px; margin-top:18px; height:46px; padding:0 28px;
+  border:2px solid var(--red); background:var(--red); color:#f5f3ef; font:inherit; font-size:12px; font-weight:700;
+  letter-spacing:.18em; text-transform:uppercase; border-radius:2px; cursor:pointer;
+  transition:transform .15s, opacity .15s, box-shadow .15s; }
+.dbo-next:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 14px 26px -14px rgba(23,19,15,.5); }
+.dbo-next:disabled { opacity:.35; cursor:not-allowed; }
+.dbo.dbo-stage3 .dbo-next { display:none; }
 /* Project Information only shows on the final step (03 Submit Project) */
 .dbo:not(.dbo-stage3) .dbo-summary { display: none; }
 .dbo.dbo-stage3 .dbo-summary { animation: dboSummaryIn 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
@@ -244,7 +253,8 @@
   .dbo:not(.dbo-stage3) #dboForm { grid-template-columns: 1fr; max-width: 780px; margin: 0 auto; }
   .dbo:not(.dbo-stage3) .dbo-coltitle-right,
   .dbo:not(.dbo-stage3) .dbo-rows,
-  .dbo:not(.dbo-stage3) .dbo-add { grid-column: 1; }
+  .dbo:not(.dbo-stage3) .dbo-add,
+  .dbo:not(.dbo-stage3) .dbo-next { grid-column: 1; }
 }
 </style>
 
@@ -300,6 +310,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         {{ section.settings.add_label | default: 'Add another product' }}
       </button>
+      <button type="button" class="dbo-next" id="dboNext" disabled>Next &rarr;</button>
       <div class="dbo-summary">
         <h2 class="dbo-coltitle">Project Information</h2>
         <div class="dbo-contact">
@@ -762,6 +773,16 @@
   function setStep(n) { items.forEach ? null : 0;
     Array.prototype.forEach.call(items, function (li, i) { li.classList.toggle("is-on", i === n - 1); }); }
   var minQ = Math.max(12, parseInt(root.getAttribute("data-minqty"), 10) || 1);
+  var advanced = false;
+  var nextBtn = document.getElementById("dboNext");
+  if (nextBtn) nextBtn.addEventListener("click", function () {
+    if (nextBtn.disabled) return;
+    advanced = true;
+    root.classList.add("dbo-stage3");
+    setStep(3);
+    var sum = root.querySelector(".dbo-summary");
+    if (sum) { try { sum.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {} }
+  });
   setInterval(function () {
     var rows = document.getElementById("dboRows");
     if (!rows) return;
@@ -778,10 +799,15 @@
       for (var i = 0; i < sels.length; i++) { if (!sels[i].value) return; }
       detailsOk = true;
     });
-    /* the final step - and the Project Information card - arrives once the
-       details are complete AND a design is attached (uploaded here or
-       carried over from the product page) */
-    var s3 = picked && detailsOk && (filed || carried);
+    /* details complete + design attached ARMS the Next button; only
+       pressing it moves to step 03 and reveals Project Information */
+    var ready = picked && detailsOk && (filed || carried);
+    if (!ready) advanced = false;
+    var s3 = ready && advanced;
+    if (nextBtn) {
+      nextBtn.disabled = !ready;
+      nextBtn.title = ready ? "" : "Complete the options, a 12+ quantity and a design first";
+    }
     setStep(s3 ? 3 : (picked ? 2 : 1));
     root.classList.toggle("dbo-stage3", s3);
   }, 700);
