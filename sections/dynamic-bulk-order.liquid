@@ -234,6 +234,16 @@
 .dbo::after { content: ""; position: absolute; bottom: 34px; right: 8px; width: 26px; height: 26px; opacity: 0.35; pointer-events: none;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Ccircle cx='13' cy='13' r='8' fill='none' stroke='%2317130f' stroke-width='1.4'/%3E%3Cpath d='M13 1 V25 M1 13 H25' stroke='%2317130f' stroke-width='1.2'/%3E%3C/svg%3E") center / contain no-repeat; }
 @media (max-width: 940px) { .dbo-steps { gap: 16px; } .dbo-summary { margin-top: 30px; } }
+/* Project Information only shows on the final step (03 Submit Project) */
+.dbo:not(.dbo-stage3) .dbo-summary { display: none; }
+.dbo.dbo-stage3 .dbo-summary { animation: dboSummaryIn 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes dboSummaryIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (min-width: 941px) {
+  .dbo:not(.dbo-stage3) #dboForm { grid-template-columns: 1fr; max-width: 780px; margin: 0 auto; }
+  .dbo:not(.dbo-stage3) .dbo-coltitle-right,
+  .dbo:not(.dbo-stage3) .dbo-rows,
+  .dbo:not(.dbo-stage3) .dbo-add { grid-column: 1; }
+}
 </style>
 
 <section class="dbo" id="dboRoot" data-minqty="{{ section.settings.min_qty | default: 12 }}" data-notify="{{ notify_email }}">
@@ -736,12 +746,23 @@
   var items = steps.querySelectorAll("li");
   function setStep(n) { items.forEach ? null : 0;
     Array.prototype.forEach.call(items, function (li, i) { li.classList.toggle("is-on", i === n - 1); }); }
+  var minQ = Math.max(12, parseInt(root.getAttribute("data-minqty"), 10) || 1);
   setInterval(function () {
     var rows = document.getElementById("dboRows");
     if (!rows) return;
-    var filed = rows.querySelector(".dbo-varfile.has-file");
-    var picked = rows.querySelector(".dbo-pick img");
-    setStep(filed ? 3 : (picked ? 2 : 1));
+    var filed = !!rows.querySelector(".dbo-varfile.has-file");
+    var picked = !!rows.querySelector(".dbo-pick img");
+    var carried = (window.__dboCarriedDesigns || []).length > 0;
+    var qtyOk = false;
+    Array.prototype.forEach.call(rows.querySelectorAll(".dbo-qty"), function (q) {
+      if ((parseInt(q.value, 10) || 0) >= minQ) qtyOk = true;
+    });
+    /* the final step - and with it the Project Information card - arrives
+       once a product is picked AND there's artwork (uploaded or carried
+       from the product page) or a valid quantity */
+    var s3 = picked && (filed || carried || qtyOk);
+    setStep(s3 ? 3 : (picked ? 2 : 1));
+    root.classList.toggle("dbo-stage3", s3);
   }, 700);
   /* the upload strips accept real drag-and-drop */
   document.addEventListener("dragover", function (e) {
