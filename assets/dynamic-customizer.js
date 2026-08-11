@@ -1299,9 +1299,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let galIndex = 0;
   function galleryList() {
     // an applied design replaces the plain photo everywhere the gallery is
-    // shown - the main stage, the thumbnails and the zoom lightbox
+    // shown - the main stage, the thumbnails and the zoom lightbox - and a
+    // back-side design rides along as the second image
     const pv = window.DYN_DESIGN_PREVIEWS || {};
-    return [pv.front || product.image].concat(GAL_EXTRAS[product.id] || []);
+    const list = [pv.front || product.image];
+    if (pv.back) list.push(pv.back);
+    return list.concat(GAL_EXTRAS[product.id] || []);
   }
   function renderGallery() {
     const list = galleryList();
@@ -1359,10 +1362,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   }
   function openLightbox(list, i) {
     // the list was captured when the gallery rendered - possibly before a
-    // design was applied. Substitute the composited preview at open time.
+    // design was applied. Substitute the composited previews at open time:
+    // front replaces the base photo, back slots in as the second image.
     const pv = window.DYN_DESIGN_PREVIEWS || {};
     lbList = list.slice();
     if (pv.front && lbList.length) lbList[0] = pv.front;
+    if (pv.back && lbList.indexOf(pv.back) < 0) lbList.splice(1, 0, pv.back);
     lbIndex = i;
     const lb = ensureLightbox();
     lb.querySelector(".lb-img").src = lbList[lbIndex];
