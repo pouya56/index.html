@@ -55,7 +55,7 @@
    editorial captions — 01 PRODUCT / 02 ARTWORK / 03 GIFT / 04 ORDER. */
 /* one line, always: steps never wrap - the connecting rules flex down to
    make room - and the resting ink is darker so the strip reads at a glance */
-.dyn-steps { gap: 8px 10px !important; flex-wrap: nowrap !important; }
+.dyn-steps { gap: 8px 10px !important; flex-wrap: nowrap !important; container-type: inline-size; }
 .dyn-step {
   color: rgba(23, 19, 15, 0.55) !important;
   font-size: 11px !important;
@@ -88,12 +88,29 @@
   background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%2044'%20preserveAspectRatio='none'%3E%3Cg%20fill='none'%20stroke='%23b3242a'%20stroke-linecap='round'%3E%3Cpath%20d='M9%2024%20C6%2011%2033%204.5%2061%205%20C95%205.6%20115%2011%20113.5%2023%20C112%2035.5%2087%2041%2055%2040%20C26%2039%2010.5%2034%209.5%2023.5'%20stroke-width='2.6'/%3E%3Cpath%20d='M15%2027%20C11%2014%2040%206.5%2066%207.4%20C97%208.4%20112%2015%20110%2025%20C108%2034.5%2083%2038.6%2053%2037.8%20C29%2037%2015%2032.5%2014.2%2025'%20stroke-width='1.7'%20stroke-opacity='0.75'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat;
   pointer-events: none;
 }
-/* phone: compress type and gaps a notch so 04 ORDER never crops */
+/* fallback for browsers without container queries */
 @media (max-width: 560px) {
   .dyn-steps { gap: 6px 7px !important; }
   .dyn-step { font-size: 10px !important; letter-spacing: 0.08em; gap: 5px !important; }
   .dyn-step-line { flex-basis: 10px !important; min-width: 4px; }
   .dyn-step.is-active::after { inset: -5px -8px; }
+}
+/* the strip measures its own column and compresses until all four steps
+   fit - so 04 ORDER never crops, desktop or phone, whatever the layout */
+@container (max-width: 500px) {
+  .dyn-steps { gap: 7px 8px !important; }
+  .dyn-step { font-size: 10.5px !important; letter-spacing: 0.09em; gap: 5px !important; }
+  .dyn-step-line { flex-basis: 12px !important; min-width: 4px; }
+  .dyn-step.is-active::after { inset: -6px -9px; }
+}
+@container (max-width: 400px) {
+  .dyn-steps { gap: 6px 6px !important; }
+  .dyn-step { font-size: 10px !important; letter-spacing: 0.06em; gap: 4px !important; }
+  .dyn-step-line { flex-basis: 8px !important; min-width: 3px; }
+  .dyn-step.is-active::after { inset: -5px -8px; }
+}
+@container (max-width: 330px) {
+  .dyn-step { font-size: 9px !important; letter-spacing: 0.04em; }
 }
 .dyn-step.is-done { color: rgba(23, 19, 15, 0.6) !important; }
 /* the script swaps the done digit for a check, which read as "0(check)" with
