@@ -440,7 +440,12 @@
   }
   var _activeRow = null;
   function openPicker(row) { _activeRow = row; picker.classList.add("is-open"); pickerSearch.value = ""; filterPicker(""); setTimeout(function(){ pickerSearch.focus(); }, 50); }
-  function closePicker() { picker.classList.remove("is-open"); _activeRow = null; }
+  function closePicker() {
+    picker.classList.remove("is-open");
+    /* a cancelled pick folds its empty just-added row away again */
+    if (_activeRow && !_activeRow._product && rows().length > 1) _activeRow.remove();
+    _activeRow = null;
+  }
   function filterPicker(q) {
     q = (q || "").toLowerCase();
     Array.prototype.forEach.call(pickerGrid.children, function (t) { t.style.display = (!q || t.getAttribute("data-name").indexOf(q) >= 0) ? "" : "none"; });
@@ -568,7 +573,7 @@
     addBtn.disabled = !ok;
     addBtn.title = ok ? "" : "Pick a product for the item above first";
   }
-  addBtn.addEventListener("click", function () { if (allRowsPicked()) addRow(); });
+  addBtn.addEventListener("click", function () { if (allRowsPicked()) openPicker(addRow()); });
   setInterval(syncAddBtn, 500);
   var firstRow = addRow();
   syncAddBtn();
