@@ -59,12 +59,14 @@
   .dbo-qty:focus { outline:none; border-color:var(--accent); }
   .dbo-qty.is-low, .dbo-qty.is-low:focus { border-color:#b3242a; }
   /* the warning floats below the field, out of flow, so the qty input stays
-     bottom-aligned with the option selects beside it */
+     bottom-aligned with the option selects beside it; the row opens up a
+     little so it never lies on the design dropzone underneath */
+  .dbo-varline { row-gap:18px; }
   .dbo-qtywrap { position:relative; }
   .dbo-qtywrap .dbo-qty { width:96px; }
-  .dbo-qty-err { position:absolute; top:100%; left:0; margin-top:2px; white-space:nowrap;
+  .dbo-qty-err { position:absolute; top:100%; right:0; margin-top:2px; white-space:nowrap; z-index:2;
     font-style:normal; font-size:10px; font-weight:700; letter-spacing:.06em;
-    text-transform:uppercase; color:#b3242a; }
+    text-transform:uppercase; color:#b3242a; background:rgba(253,252,249,.92); padding:0 2px; }
   .dbo-varremove { flex:none; width:36px; height:40px; border:1px solid var(--line2); border-radius:10px; background:#fff; color:var(--danger); font-size:19px; line-height:1; cursor:pointer; }
   .dbo-varremove:hover { background:#fdeceb; border-color:#f3c6c3; }
   .dbo-addvar { align-self:flex-start; display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; color:var(--accent); font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; padding:2px 0; }
