@@ -228,12 +228,18 @@
   background: #fdfcf9; height: 46px; padding: 0 12px; transition: border-color 0.25s, box-shadow 0.25s; }
 .dbo-contact textarea { height: auto; min-height: 86px; padding: 11px 12px; }
 .dbo-contact input:focus, .dbo-contact textarea:focus { outline: none; border-color: var(--inkk); box-shadow: 0 1px 0 var(--inkk); }
-/* required marks + the hand-drawn red line under a field left empty */
+/* required marks + the hand-drawn red line under anything left empty:
+   contact fields, option selects, quantities and the product tile alike */
 .dbo-req { font-style: normal; color: var(--red); font-size: 13px; line-height: 0; margin: 0 0 0 1px; letter-spacing: 0; }
 .dbo-contact label { position: relative; }
-.dbo-contact label.dbo-miss input { border-color: rgba(184,34,28,0.65); }
-.dbo-contact label.dbo-miss::after { content: ""; position: absolute; left: -3px; right: -5px; bottom: -7px; height: 13px; pointer-events: none;
+.dbo-miss { position: relative; }
+.dbo-miss::after { content: ""; position: absolute; left: -3px; right: -5px; bottom: -7px; height: 13px; pointer-events: none; z-index: 2;
   background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%2013'%20preserveAspectRatio='none'%3E%3Cpath%20d='M3%207%20C%2038%202.5,%2082%2010,%20121%205%20S%20181%209,%20197%204.5'%20fill='none'%20stroke='%23b8221c'%20stroke-width='2.6'%20stroke-linecap='round'%20opacity='0.9'/%3E%3Cpath%20d='M7%2010%20C%2052%206.5,%20112%2011,%20195%207.5'%20fill='none'%20stroke='%23b8221c'%20stroke-width='1.5'%20stroke-linecap='round'%20opacity='0.6'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+.dbo-contact label.dbo-miss input, .dbo-optgroup.dbo-miss .dbo-opt, .dbo-qtywrap.dbo-miss .dbo-qty { border-color: rgba(184,34,28,0.65); }
+/* the product tile clips its inside, so it flags with a red dashed edge instead */
+.dbo-pick.dbo-miss { border-color: #b8221c; }
+.dbo-pick.dbo-miss::after { display: none; }
+.dbo-qtywrap.dbo-miss .dbo-qty-err { margin-top: 7px; }
 /* the matte black promise */
 .dbo-submit { border-radius: 2px; height: 56px; background: var(--inkk); letter-spacing: 0.18em;
   text-transform: uppercase; font-size: 13px; font-weight: 700;
@@ -470,15 +476,17 @@
     if (!isDefault(prod)) {
       prod.options.forEach(function (o) {
         var grp = document.createElement("div"); grp.className = "dbo-optgroup";
-        var nm = document.createElement("span"); nm.className = "dbo-optname"; nm.textContent = o.name; grp.appendChild(nm);
+        var nm = document.createElement("span"); nm.className = "dbo-optname";
+        nm.innerHTML = esc(o.name) + '<em class="dbo-req" aria-hidden="true">*</em>'; grp.appendChild(nm);
         var sel = document.createElement("select"); sel.className = "dbo-opt"; sel.setAttribute("data-name", o.name);
         var first = document.createElement("option"); first.value = ""; first.textContent = "Select " + o.name.toLowerCase(); sel.appendChild(first);
         o.values.forEach(function (v) { var op = document.createElement("option"); op.value = v; op.textContent = v; sel.appendChild(op); });
+        sel.addEventListener("change", function () { if (sel.value) grp.classList.remove("dbo-miss"); });
         grp.appendChild(sel); line.appendChild(grp);
       });
     }
     var qw = document.createElement("div"); qw.className = "dbo-qtywrap";
-    qw.innerHTML = '<span>Qty \u00b7 min ' + minQty + '</span><input type="number" class="dbo-qty" min="0" step="1" value="0" inputmode="numeric" placeholder="' + minQty + '+">'
+    qw.innerHTML = '<span>Qty \u00b7 min ' + minQty + '<em class="dbo-req" aria-hidden="true">*</em></span><input type="number" class="dbo-qty" min="0" step="1" value="0" inputmode="numeric" placeholder="' + minQty + '+">'
     var qin = qw.querySelector(".dbo-qty");
     var qerr = document.createElement("em");
     qerr.className = "dbo-qty-err";
@@ -490,6 +498,7 @@
       var low = v > 0 && v < minQty;
       qerr.hidden = !low;
       qin.classList.toggle("is-low", low);
+      if (v >= minQty) qw.classList.remove("dbo-miss");
     });
     line.appendChild(qw);
     // per-variation design upload
@@ -549,6 +558,7 @@
   function setRowProduct(row, prod) {
     row._product = prod;
     var pick = row.querySelector(".dbo-pick");
+    pick.classList.remove("dbo-miss");
     pick.innerHTML = prod.image ? '<img src="' + prod.image + '" alt="">' : '<span class="dbo-plus">' + esc(prod.title) + '</span>';
     var pname = row.querySelector(".dbo-pname"); pname.textContent = prod.title; pname.classList.remove("empty");
     var varlines = row.querySelector(".dbo-varlines"); varlines.innerHTML = ""; varlines.appendChild(makeVarLine(prod));
@@ -709,17 +719,50 @@
   reqEls().forEach(function (el) {
     el.addEventListener("input", function () { if (el.value.trim()) el.closest("label").classList.remove("dbo-miss"); });
   });
+  /* items: every row needs a product; every variation needs its options
+     picked and a quantity at or above the minimum */
+  function markItems() {
+    var bad = [];
+    rows().forEach(function (row) {
+      if (!row._product) {
+        var pk = row.querySelector(".dbo-pick");
+        pk.classList.add("dbo-miss");
+        bad.push(pk);
+        return;
+      }
+      Array.prototype.forEach.call(row.querySelectorAll(".dbo-varline"), function (line) {
+        Array.prototype.forEach.call(line.querySelectorAll(".dbo-optgroup"), function (g) {
+          var s = g.querySelector(".dbo-opt");
+          var empty = !!(s && !s.value);
+          g.classList.toggle("dbo-miss", empty);
+          if (empty) bad.push(s);
+        });
+        var qw2 = line.querySelector(".dbo-qtywrap");
+        var qin2 = line.querySelector(".dbo-qty");
+        var badQ = (parseInt(qin2.value, 10) || 0) < minQty;
+        qw2.classList.toggle("dbo-miss", badQ);
+        if (badQ) bad.push(qin2);
+      });
+    });
+    return bad;
+  }
   submitBtn.addEventListener("click", function () {
     if (submitting) return;
     var name = (document.getElementById("dboName").value || "").trim();
     var email = (document.getElementById("dboEmail").value || "").trim();
+    var missItems = markItems();
     var miss = [];
     reqEls().forEach(function (el) {
       var empty = !el.value.trim();
       el.closest("label").classList.toggle("dbo-miss", empty);
       if (empty) miss.push(el);
     });
-    if (miss.length) { miss[0].focus(); return; }
+    if (missItems.length || miss.length) {
+      var first = missItems[0] || miss[0];
+      try { first.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e0) {}
+      try { first.focus({ preventScroll: true }); } catch (e1) { try { first.focus(); } catch (e2) {} }
+      return;
+    }
     if (!NOTIFY) { alert("This form isn’t set up yet (missing notification email)."); return; }
     submitting = true; submitBtn.disabled = true; var t = submitBtn.textContent; submitBtn.textContent = "Sending…";
 
