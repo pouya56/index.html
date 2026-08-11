@@ -159,6 +159,14 @@
 .dbo-row { background: var(--paper); border: 1px solid var(--rule); border-left: 5px solid var(--red);
   border-radius: 3px; box-shadow: 0 1px 2px rgba(20,17,16,0.1), 0 14px 30px -18px rgba(20,17,16,0.3);
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.25, 1); }
+/* compact cards, two across - like small printed order slips side by side */
+@media (min-width: 700px) {
+  .dbo-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+}
+.dbo-row { grid-template-columns: 72px 1fr; gap: 12px; padding: 14px; }
+.dbo-pick { width: 72px; height: 72px; }
+.dbo-pname { font-size: 14px; }
+.dbo-varline { padding: 8px; }
 .dbo-row:nth-child(odd) { transform: rotate(-0.4deg); }
 .dbo-row:nth-child(even) { transform: rotate(0.35deg); }
 @media (hover: hover) { .dbo-row:hover { transform: rotate(0deg) translateY(-3px);
@@ -175,7 +183,7 @@
 .dbo-addvar { color: var(--inkk); text-transform: uppercase; font-size: 11px; letter-spacing: 0.2em; }
 .dbo-remove { text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.18em; }
 /* upload: a wide drop workspace per variation */
-.dbo-varfile { flex: 1 1 100%; max-width: none; height: 74px; border: 1.5px dashed rgba(20,17,16,0.35);
+.dbo-varfile { flex: 1 1 100%; max-width: none; height: 58px; border: 1.5px dashed rgba(20,17,16,0.35);
   border-radius: 2px; background: #fdfcf9; justify-content: center; flex-direction: column; gap: 3px;
   text-transform: uppercase; letter-spacing: 0.16em; font-size: 10.5px; color: rgba(23,19,15,0.55);
   transition: border-color 0.25s, background 0.25s, transform 0.25s; }
