@@ -2695,6 +2695,27 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
     var root = document.getElementById("modalRoot");
     if (!root || !window.MutationObserver) return;
     var stageHolder = null, toolsHolder = null;
+    var appliedOrig = null; /* the untouched product photo, kept while a design preview is painted over it */
+
+    /* After Add design, the page photo shows the customer's design in place
+       (the same composited preview the bulk request attaches). Removing the
+       design puts the original photo back. */
+    function pageImgs() {
+      return Array.prototype.slice.call(document.querySelectorAll(
+        ".gallery-main .dyn-cards img, #galleryStage img")).slice(0, 2);
+    }
+    function paintAppliedPreview() {
+      var pv = (window.DYN_DESIGN_PREVIEWS || {});
+      var imgs = pageImgs();
+      if (!imgs.length) return;
+      if (pv.front) {
+        if (appliedOrig === null) appliedOrig = imgs[0].currentSrc || imgs[0].src;
+        imgs.forEach(function (im) { im.removeAttribute("srcset"); im.src = pv.front; });
+      } else if (appliedOrig !== null) {
+        imgs.forEach(function (im) { im.src = appliedOrig; });
+        appliedOrig = null;
+      }
+    }
 
     function cleanup() {
       if (stageHolder && stageHolder.parentNode) stageHolder.parentNode.removeChild(stageHolder);
@@ -2732,7 +2753,9 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
           var pageImg = document.querySelector(".gallery-main .dyn-cards img") ||
                         document.querySelector("#galleryStage img");
           var frameImg = stageHolder && stageHolder.querySelector(".engrave-frame > img");
-          var src = pageImg && (pageImg.currentSrc || pageImg.src);
+          /* never seed the designer with an already-composited preview - the
+             live layers would print on top of themselves */
+          var src = appliedOrig || (pageImg && (pageImg.currentSrc || pageImg.src));
           if (frameImg && src) frameImg.src = src;
         };
         applyPageImage();
@@ -2759,6 +2782,12 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
       if (!open) {
         if (stageHolder) stageHolder.hidden = true;
         if (toolsHolder) toolsHolder.hidden = true;
+        /* the composite renders just after apply - retry briefly until it lands */
+        var tries = 0;
+        (function poll() {
+          paintAppliedPreview();
+          if (++tries < 8 && !(window.DYN_DESIGN_PREVIEWS || {}).front) setTimeout(poll, 150);
+        })();
       }
     }
     new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ["class"], childList: true });
