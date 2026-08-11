@@ -135,47 +135,36 @@
 /* the three-step strip */
 /* two balanced columns on desktop: information left, details right */
 @media (min-width: 941px) {
-  #dboForm { display: grid; grid-template-columns: 7fr 5fr; gap: 12px 48px; align-items: start; }
-  .dbo-coltitle-right, .dbo-listhead, .dbo-rows, .dbo-add { grid-column: 1; }
-  .dbo-coltitle-right { grid-row: 1; margin-bottom: 0; }
-  .dbo-listhead { grid-row: 2; }
-  .dbo-rows { grid-row: 3; }
-  .dbo-add { grid-row: 4; justify-self: start; }
-  .dbo-summary { grid-column: 2; grid-row: 1 / span 4; position: sticky; top: 76px; margin-top: 0; }
+  #dboForm { display: grid; grid-template-columns: 7fr 5fr; gap: 48px; align-items: start; }
+  .dbo-coltitle-right, .dbo-rows, .dbo-add { grid-column: 1; }
+  .dbo-coltitle-right { grid-row: 1; }
+  .dbo-rows { grid-row: 2; }
+  .dbo-add { grid-row: 3; justify-self: start; }
+  .dbo-summary { grid-column: 2; grid-row: 1 / span 3; position: sticky; top: 76px; margin-top: 0; }
 }
 .dbo-coltitle { font-family: Georgia, "Times New Roman", serif; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.08em; font-size: 17px; color: var(--inkk); margin: 0 0 18px;
   padding-bottom: 10px; border-bottom: 2px solid var(--inkk); }
-/* items list: a cart table — Product | Quantity | Total | action */
-.dbo-listhead { display: none; }
-.dbo-rows { gap: 0; }
-.dbo-row { background: transparent; border: 0; border-bottom: 1px solid var(--rule);
-  border-radius: 0; box-shadow: none; }
-.dbo-fields { position: relative; }
+/* product rows: miniature printed cards on the worktable */
+.dbo-rows { gap: 26px; }
+.dbo-row { background: transparent; border: 0; border-left: 3px solid var(--red);
+  border-bottom: 1px solid var(--rule); border-radius: 0; box-shadow: none; }
+/* items as a quiet list: hairline-separated rows with compact controls */
 @media (min-width: 700px) {
-  .dbo-row-foot { position: absolute; top: -2px; right: 0; padding: 0; }
-  .dbo-pname { padding-right: 130px; }
-  /* header columns mirror the widths + gaps of the controls in each line,
-     offset by the thumbnail column (14+56+14+8 = 92px) */
-  .dbo-listhead { display: flex; align-items: center; gap: 10px; padding: 0 12px 8px 92px;
-    border-bottom: 2px solid var(--inkk); font-size: 9px; font-weight: 700;
-    letter-spacing: 0.22em; text-transform: uppercase; color: rgba(23,19,15,0.55); }
-  .dbo-lh-p { flex: 1; }
-  .dbo-lh-q { flex: none; width: 104px; text-align: center; }
-  .dbo-lh-t { flex: none; width: 72px; text-align: right; }
-  .dbo-lh-a { flex: none; width: 32px; }
   .dbo-rows { display: flex; flex-direction: column; gap: 0; }
-  .dbo-row { grid-template-columns: 56px 1fr; gap: 14px; padding: 14px 4px 14px 14px; }
+  .dbo-row { grid-template-columns: 56px 1fr; gap: 14px; padding: 16px 4px 16px 14px; }
   .dbo-row:last-child { border-bottom: 0; }
   .dbo-pick { width: 56px; height: 56px; }
   .dbo-pname { font-size: 13px; }
   .dbo-fields { gap: 8px; }
   .dbo-varlines { gap: 6px; }
-  .dbo-varline { padding: 8px; gap: 10px; row-gap: 16px; }
-  .dbo-optgroup { flex: 1 1 45%; min-width: 104px; gap: 2px; }
+  .dbo-varline { padding: 8px; gap: 8px; row-gap: 14px; }
+  /* option selects pair up two to a row inside the card */
+  .dbo-optgroup { flex: 1 1 40%; min-width: 96px; gap: 2px; }
   .dbo-opt { height: 32px; font-size: 12.5px; padding: 0 6px; }
-  .dbo-optname { font-size: 9px; }
-  .dbo-qtywrap > span { display: none; }
+  .dbo-optname, .dbo-qtywrap span { font-size: 9px; }
+  .dbo-qtywrap { gap: 2px; }
+  .dbo-qtywrap .dbo-qty { width: 64px; height: 32px; font-size: 13px; }
   .dbo-qty-err { font-size: 9px; }
   .dbo-varfile { height: 40px; }
   .dbo-varfile svg { width: 14px; height: 14px; }
@@ -183,38 +172,7 @@
   .dbo-addvar { font-size: 10px; }
   .dbo-remove { font-size: 9.5px; }
 }
-/* column order inside a variation line: options | qty | total | trash;
-   the upload dropzone and its file chips wrap onto their own full line */
-.dbo-opts { order: 1; flex: 1 1 200px; min-width: 0; display: flex; flex-wrap: wrap;
-  gap: 8px; align-items: flex-end; }
-.dbo-opts .dbo-std { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
-  color: rgba(23,19,15,0.5); line-height: 32px; }
-.dbo-qtywrap { order: 2; flex: none; }
-.dbo-linetot { order: 3; flex: none; width: 72px; height: 32px; display: inline-flex;
-  align-items: center; justify-content: flex-end; font-style: normal; font-weight: 700;
-  font-size: 13px; color: var(--inkk); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.dbo-varremove { order: 4; }
-.dbo-varfile { order: 5; }
-.dbo-varfiles { order: 6; }
-/* pill quantity stepper */
-.dbo-step { display: flex; align-items: center; height: 32px; width: 104px;
-  border: 1px solid rgba(20,17,16,0.25); border-radius: 999px; background: #fdfcf9;
-  overflow: hidden; transition: border-color 0.2s; }
-.dbo-step.is-low { border-color: #b3242a; }
-.dbo-stepbtn { flex: none; width: 30px; height: 100%; border: 0; background: none;
-  cursor: pointer; font-size: 15px; line-height: 1; color: var(--inkk); padding: 0; }
-.dbo-stepbtn:hover { background: rgba(20,17,16,0.06); }
-.dbo-step .dbo-qty { flex: 1; width: auto; min-width: 0; height: 100%; border: 0;
-  border-radius: 0; background: none; text-align: center; font-size: 13px; padding: 0; }
-.dbo-step .dbo-qty:focus, .dbo-step .dbo-qty.is-low, .dbo-step .dbo-qty.is-low:focus { border: 0; outline: none; box-shadow: none; }
-.dbo-step .dbo-qty::-webkit-outer-spin-button, .dbo-step .dbo-qty::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.dbo-step .dbo-qty[type=number] { -moz-appearance: textfield; appearance: textfield; }
-/* trash action */
-.dbo-varremove { width: 32px; height: 32px; display: inline-flex; align-items: center;
-  justify-content: center; font-size: 0; color: #b3242a; }
-.dbo-varremove svg { width: 15px; height: 15px; fill: none; stroke: currentColor;
-  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.dbo-pick { border-radius: 8px; border: 1.5px dashed rgba(20,17,16,0.3); background: #fff; }
+.dbo-pick { border-radius: 2px; border: 1.5px dashed rgba(20,17,16,0.3); background: #fff; }
 .dbo-pick:hover { border-color: var(--inkk); background: #fff; }
 .dbo-pname { font-family: Georgia, serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
 .dbo-varline { background: rgba(255,255,255,0.7); border: 1px solid var(--rule); border-radius: 2px; }
@@ -236,10 +194,6 @@
 .dbo-varfile.has-file::after { content: "Attached \2713"; color: var(--inkk); }
 .dbo-varfile.is-drag { border-color: var(--red); background: #fdf1ef; transform: scale(1.01); }
 .dbo-varfile:hover { border-color: var(--inkk); color: var(--inkk); }
-/* phones: the caption wraps to several lines, so let the box grow */
-@media (max-width: 699px) {
-  .dbo-varfile { height: auto; min-height: 58px; padding: 10px 8px; }
-}
 .dbo-varfiles { flex: 1 1 100%; display: flex; flex-direction: column; gap: 6px; }
 .dbo-varfiles:empty { display: none; }
 .dbo-filechip { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 7px 10px;
@@ -294,7 +248,7 @@
 @media (max-width: 940px) { .dbo-summary { margin-top: 30px; } }
 </style>
 
-<section class="dbo" id="dboRoot" data-minqty="{{ section.settings.min_qty | default: 12 }}" data-cursym="{{ cart.currency.symbol | default: '$' }}" data-notify="{{ notify_email }}">
+<section class="dbo" id="dboRoot" data-minqty="{{ section.settings.min_qty | default: 12 }}" data-notify="{{ notify_email }}">
   {%- assign bo_logo = section.settings.logo | default: settings.logo -%}
   {%- if section.settings.show_logo != false -%}
     {%- assign lw = settings.logo_width | default: 140 -%}
@@ -328,7 +282,7 @@
     "title": {{ product.title | json }},
     "image": {% if product.featured_image %}{{ product.featured_image | image_url: width: 500 | json }}{% else %}null{% endif %},
     "options": [{%- for o in product.options_with_values -%}{%- assign o_vals = o.values | join: '@@@' | split: '@@@' -%}{ "name": {{ o.name | json }}, "values": {{ o_vals | json }} }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}],
-    "variants": [{%- for v in product.variants -%}{ "id": {{ v.id }}, "price": {{ v.price | default: 0 }}, "options": {{ v.options | json }}, "available": {{ v.available }} }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}]
+    "variants": [{%- for v in product.variants -%}{ "id": {{ v.id }}, "options": {{ v.options | json }}, "available": {{ v.available }} }{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}]
   }{%- unless forloop.last -%},{%- endunless -%}
 {%- endfor -%}
 ]
@@ -336,7 +290,6 @@
 
     <div id="dboForm">
       <h2 class="dbo-coltitle dbo-coltitle-right">Project Details</h2>
-      <div class="dbo-listhead" aria-hidden="true"><span class="dbo-lh-p">Product</span><span class="dbo-lh-q">Quantity</span><span class="dbo-lh-t">Total</span><span class="dbo-lh-a"></span></div>
       <div class="dbo-rows" id="dboRows"></div>
       <button type="button" class="dbo-add" id="dboAdd">
         <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -419,14 +372,6 @@
      unless the merchant set something higher in the editor */
   var minQty = Math.max(12, parseInt(root.getAttribute("data-minqty"), 10) || 1);
   var NOTIFY = (root.getAttribute("data-notify") || "").trim();
-  var CUR = root.getAttribute("data-cursym") || "$";
-  function fmtMoney(cents) {
-    var s = (cents / 100).toFixed(2);
-    if (s.slice(-3) === ".00") s = s.slice(0, -3);
-    var p = s.split(".");
-    p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return CUR + p.join(".");
-  }
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); }
   function rows() { return Array.prototype.slice.call(rowsEl.querySelectorAll(".dbo-row")); }
@@ -490,7 +435,6 @@
   // ---- variation line (dropdowns) ----
   function makeVarLine(prod) {
     var line = document.createElement("div"); line.className = "dbo-varline";
-    var optsBox = document.createElement("div"); optsBox.className = "dbo-opts";
     if (!isDefault(prod)) {
       prod.options.forEach(function (o) {
         var grp = document.createElement("div"); grp.className = "dbo-optgroup";
@@ -498,20 +442,12 @@
         var sel = document.createElement("select"); sel.className = "dbo-opt"; sel.setAttribute("data-name", o.name);
         var first = document.createElement("option"); first.value = ""; first.textContent = "Select " + o.name.toLowerCase(); sel.appendChild(first);
         o.values.forEach(function (v) { var op = document.createElement("option"); op.value = v; op.textContent = v; sel.appendChild(op); });
-        grp.appendChild(sel); optsBox.appendChild(grp);
+        grp.appendChild(sel); line.appendChild(grp);
       });
-    } else {
-      var std = document.createElement("span"); std.className = "dbo-std"; std.textContent = "Standard";
-      optsBox.appendChild(std);
     }
-    line.appendChild(optsBox);
     var qw = document.createElement("div"); qw.className = "dbo-qtywrap";
-    qw.innerHTML = '<span>Qty \u00b7 min ' + minQty + '</span>' +
-      '<div class="dbo-step"><button type="button" class="dbo-stepbtn" data-d="1" aria-label="Increase quantity">+</button>' +
-      '<input type="number" class="dbo-qty" min="0" step="1" value="0" inputmode="numeric" placeholder="' + minQty + '+">' +
-      '<button type="button" class="dbo-stepbtn" data-d="-1" aria-label="Decrease quantity">\u2212</button></div>';
+    qw.innerHTML = '<span>Qty \u00b7 min ' + minQty + '</span><input type="number" class="dbo-qty" min="0" step="1" value="0" inputmode="numeric" placeholder="' + minQty + '+">'
     var qin = qw.querySelector(".dbo-qty");
-    var stepBox = qw.querySelector(".dbo-step");
     var qerr = document.createElement("em");
     qerr.className = "dbo-qty-err";
     qerr.hidden = true;
@@ -522,36 +458,8 @@
       var low = v > 0 && v < minQty;
       qerr.hidden = !low;
       qin.classList.toggle("is-low", low);
-      stepBox.classList.toggle("is-low", low);
-    });
-    /* stepping up from empty jumps straight to the minimum; stepping down
-       below the minimum clears the line instead of stranding it in the red */
-    Array.prototype.forEach.call(qw.querySelectorAll(".dbo-stepbtn"), function (b) {
-      b.addEventListener("click", function () {
-        var v = parseInt(qin.value, 10) || 0;
-        var d = parseInt(b.getAttribute("data-d"), 10);
-        if (d > 0) { v = (v >= minQty) ? v + 1 : minQty; }
-        else { v = (v > minQty) ? v - 1 : 0; }
-        qin.value = v;
-        qin.dispatchEvent(new Event("input", { bubbles: true }));
-      });
     });
     line.appendChild(qw);
-    var tot = document.createElement("em"); tot.className = "dbo-linetot"; tot.textContent = "\u2014";
-    line.appendChild(tot);
-    function updateTot() {
-      var q = parseInt(qin.value, 10) || 0;
-      var complete = true;
-      Array.prototype.forEach.call(line.querySelectorAll(".dbo-opt"), function (s) { if (!s.value) complete = false; });
-      var pr = null;
-      if (complete && q > 0) {
-        var vid = resolveVariantId(prod, line);
-        for (var i = 0; i < prod.variants.length; i++) { if (prod.variants[i].id === vid) { pr = prod.variants[i].price; break; } }
-      }
-      tot.textContent = (pr == null || isNaN(pr)) ? "\u2014" : fmtMoney(pr * q);
-    }
-    line.addEventListener("change", updateTot);
-    qin.addEventListener("input", updateTot);
     // per-variation design upload
     var fileWrap = document.createElement("label"); fileWrap.className = "dbo-file-btn dbo-varfile";
     fileWrap.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="dbo-varfile-label">Design</span><input type="file" class="dbo-varfile-input" accept="image/*,.pdf,.ai,.svg">';
@@ -586,8 +494,7 @@
     });
     line.appendChild(fileWrap);
     line.appendChild(filesBox);
-    var rm = document.createElement("button"); rm.type = "button"; rm.className = "dbo-varremove"; rm.setAttribute("aria-label", "Remove variation");
-    rm.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
+    var rm = document.createElement("button"); rm.type = "button"; rm.className = "dbo-varremove"; rm.setAttribute("aria-label", "Remove variation"); rm.textContent = "×";
     rm.addEventListener("click", function () { var box = line.parentNode; line.remove(); if (!box.querySelector(".dbo-varline")) box.appendChild(makeVarLine(prod)); });
     line.appendChild(rm);
     return line;
