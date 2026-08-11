@@ -1298,7 +1298,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   };
   let galIndex = 0;
   function galleryList() {
-    return [product.image].concat(GAL_EXTRAS[product.id] || []);
+    // an applied design replaces the plain photo everywhere the gallery is
+    // shown - the main stage, the thumbnails and the zoom lightbox
+    const pv = window.DYN_DESIGN_PREVIEWS || {};
+    return [pv.front || product.image].concat(GAL_EXTRAS[product.id] || []);
   }
   function renderGallery() {
     const list = galleryList();
