@@ -192,6 +192,8 @@
 .dbo-filechip-x { border: 0; background: none; cursor: pointer; font-size: 14px; color: rgba(20,17,16,0.5); padding: 2px 4px; }
 .dbo-filechip-x:hover { color: var(--red); }
 /* add-product: a strong editorial control */
+.dbo-add:disabled { opacity: 0.35; cursor: not-allowed; }
+.dbo-add:disabled:hover { background: var(--inkk); }
 .dbo-add { border-radius: 2px; border: 2px solid var(--inkk); background: var(--inkk); color: #f5f3ef;
   text-transform: uppercase; letter-spacing: 0.2em; font-size: 12px; font-weight: 700; height: 50px;
   transition: transform 0.25s, box-shadow 0.25s, background 0.25s; }
@@ -524,8 +526,21 @@
     node.querySelector(".dbo-remove").addEventListener("click", function () { node.remove(); if (!rows().length) addRow(); });
     return node;
   }
-  addBtn.addEventListener("click", addRow);
+  /* no second product until every existing row has one picked */
+  function allRowsPicked() {
+    var rs = rows();
+    for (var i = 0; i < rs.length; i++) { if (!rs[i]._product) return false; }
+    return true;
+  }
+  function syncAddBtn() {
+    var ok = allRowsPicked();
+    addBtn.disabled = !ok;
+    addBtn.title = ok ? "" : "Pick a product for the item above first";
+  }
+  addBtn.addEventListener("click", function () { if (allRowsPicked()) addRow(); });
+  setInterval(syncAddBtn, 500);
   var firstRow = addRow();
+  syncAddBtn();
 
   // Preselect a product if the page was opened with ?product=<handle>
   (function () {
