@@ -2540,11 +2540,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       /* "Make it a gift" — takes the PRIMARY button slot after the design is
          saved (Add to cart stays hidden until they add a gift or skip). */
       '.dc-gift-open{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;' +
-        'cursor:pointer;font-family:inherit;font-size:15px;font-weight:600;letter-spacing:.04em;' +
-        'text-transform:uppercase;color:#fff;background:#0a0a0a;border:none;border-radius:999px;' +
-        'box-shadow:0 8px 24px rgba(0,0,0,.10);transition:background .16s,transform .12s}' +
-      '.dc-gift-open:hover{background:#000}' +
-      '.dc-gift-open:active{transform:scale(.97)}' +
+        'cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:700;letter-spacing:.18em;' +
+        'text-transform:uppercase;color:#f6f5f1;background:#17130f;border:none;border-radius:2px;' +
+        'transition:background .18s,transform .18s,box-shadow .18s}' +
+      '.dc-gift-open:hover{background:#000;transform:translateY(-2px);box-shadow:0 18px 34px -12px rgba(23,19,15,.45)}' +
+      '.dc-gift-open:active{transform:translateY(0) scale(.98)}' +
       /* Non-customize products: no gate, quiet ghost styling instead */
       '.dc-gift-open.is-solo{background:var(--gp);color:var(--gi);box-shadow:none}' +
       '.dc-gift-open.is-solo:hover{background:#e8e8ed}' +
@@ -2553,8 +2553,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       /* Gate row: the gift pill and its Skip neighbour share one line */
       '.dc-gift-row{display:flex;gap:10px;align-items:stretch}' +
       '.dc-gift-row .dc-gift-open{flex:1;min-width:0}' +
-      '.dc-gift-skip{flex:none;height:58px;padding:0 24px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#0a0a0a;background:transparent;border:1px solid rgba(10,10,10,.35);border-radius:999px;transition:background .16s,border-color .16s}' +
-      '.dc-gift-skip:hover{border-color:#0a0a0a;background:rgba(10,10,10,.04)}' +
+      '.dc-gift-skip{flex:none;height:58px;padding:0 24px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#17130f;background:transparent;border:1px solid rgba(23,19,15,.4);border-radius:2px;transition:background .18s,border-color .18s}' +
+      '.dc-gift-skip:hover{border-color:#17130f;background:rgba(23,19,15,.04)}' +
       '.dc-gift-open-txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '.dc-gift-open-txt em{font-style:normal;color:rgba(255,255,255,.65);font-weight:500}' +
       /* After the decision, a quiet one-line summary for edits */
