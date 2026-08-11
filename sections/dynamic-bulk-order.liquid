@@ -57,6 +57,9 @@
   .dbo-qtywrap span { font-size:11px; font-weight:600; letter-spacing:.02em; text-transform:uppercase; color:var(--faint); }
   .dbo-qty { width:80px; height:40px; padding:0 10px; border:1px solid var(--line2); border-radius:10px; font:inherit; font-size:15px; text-align:center; background:#fff; }
   .dbo-qty:focus { outline:none; border-color:var(--accent); }
+  .dbo-qty.is-low, .dbo-qty.is-low:focus { border-color:#b3242a; }
+  .dbo-qty-err { font-style:normal; font-size:10.5px; font-weight:700; letter-spacing:.06em;
+    text-transform:uppercase; color:#b3242a; }
   .dbo-varremove { flex:none; width:36px; height:40px; border:1px solid var(--line2); border-radius:10px; background:#fff; color:var(--danger); font-size:19px; line-height:1; cursor:pointer; }
   .dbo-varremove:hover { background:#fdeceb; border-color:#f3c6c3; }
   .dbo-addvar { align-self:flex-start; display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; color:var(--accent); font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; padding:2px 0; }
@@ -429,7 +432,19 @@
       });
     }
     var qw = document.createElement("div"); qw.className = "dbo-qtywrap";
-    qw.innerHTML = '<span>Qty \u00b7 min ' + minQty + '</span><input type="number" class="dbo-qty" min="0" step="1" value="0" inputmode="numeric" placeholder="' + minQty + '+">';
+    qw.innerHTML = '<span>Qty \u00b7 min ' + minQty + '</span><input type="number" class="dbo-qty" min="0" step="1" value="0" inputmode="numeric" placeholder="' + minQty + '+">'
+    var qin = qw.querySelector(".dbo-qty");
+    var qerr = document.createElement("em");
+    qerr.className = "dbo-qty-err";
+    qerr.hidden = true;
+    qerr.textContent = "Minimum " + minQty + " pcs";
+    qw.appendChild(qerr);
+    qin.addEventListener("input", function () {
+      var v = parseInt(qin.value, 10) || 0;
+      var low = v > 0 && v < minQty;
+      qerr.hidden = !low;
+      qin.classList.toggle("is-low", low);
+    });
     line.appendChild(qw);
     // per-variation design upload
     var fileWrap = document.createElement("label"); fileWrap.className = "dbo-file-btn dbo-varfile";
