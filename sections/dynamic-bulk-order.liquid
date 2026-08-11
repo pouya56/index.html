@@ -484,7 +484,7 @@
       line._files.forEach(function (f, i) {
         var chip = document.createElement("div"); chip.className = "dbo-filechip";
         var nm = document.createElement("span"); nm.textContent = f.name;
-        var sz = document.createElement("small"); sz.textContent = Math.max(1, Math.round(f.size / 1024)) + " KB";
+        var sz = document.createElement("small"); sz.textContent = f.url ? "your design" : (Math.max(1, Math.round(f.size / 1024)) + " KB");
         var x = document.createElement("button"); x.type = "button"; x.className = "dbo-filechip-x";
         x.setAttribute("aria-label", "Remove " + f.name); x.textContent = "\u00d7";
         x.addEventListener("click", function (ev) { ev.preventDefault(); line._files.splice(i, 1); paintFiles(); });
@@ -494,6 +494,7 @@
       fileWrap.classList.toggle("has-file", line._files.length > 0);
       fileLabel.textContent = line._files.length ? (line._files.length + (line._files.length === 1 ? " file attached" : " files attached")) : "Design";
     }
+    line._paintFiles = paintFiles;
     fileInput.addEventListener("change", function () {
       Array.prototype.forEach.call(fileInput.files || [], function (f) {
         var dup = line._files.some(function (g) { return g.name === f.name && g.size === f.size; });
@@ -510,6 +511,19 @@
     return line;
   }
 
+  /* designs the shopper made on the product page wait here until a product is
+     picked, then attach to its first variation like a hand-uploaded file */
+  var _pendingCarried = [];
+  function injectCarried(row) {
+    if (!_pendingCarried.length || !row) return;
+    var vl = row.querySelector(".dbo-varline");
+    if (!vl || !vl._files) return;
+    vl._files.push.apply(vl._files, _pendingCarried);
+    _pendingCarried = [];
+    window.__dboCarriedDesigns = [];
+    if (vl._paintFiles) vl._paintFiles();
+  }
+
   function setRowProduct(row, prod) {
     row._product = prod;
     var pick = row.querySelector(".dbo-pick");
@@ -517,6 +531,7 @@
     var pname = row.querySelector(".dbo-pname"); pname.textContent = prod.title; pname.classList.remove("empty");
     var varlines = row.querySelector(".dbo-varlines"); varlines.innerHTML = ""; varlines.appendChild(makeVarLine(prod));
     row.querySelector(".dbo-addvar").hidden = isDefault(prod);
+    injectCarried(row);
   }
 
   function bindRow(row) {
@@ -560,8 +575,9 @@
     } catch (e) {}
   })();
 
-  // Designs carried over from the product page (?designs=<url per line>):
-  // show them as a small attached-artwork card and ride them into the email.
+  // Designs carried over from the product page (?designs=<url per line> or
+  // sessionStorage): queue them, then attach to the first variation line the
+  // moment its product is picked - same chips, same place, as a manual upload.
   window.__dboCarriedDesigns = [];
   (function () {
     try {
@@ -578,52 +594,12 @@
       designs = designs.filter(function (x) { return x && x.url; }).slice(0, 12);
       if (!designs.length) return;
       window.__dboCarriedDesigns = designs;
-      /* the designs belong to the product - mount inside its row */
-      var mountEl = (typeof firstRow !== "undefined" && firstRow) ? firstRow : null;
-      var card = document.createElement("div");
-      card.id = "dboCarried";
-      card.style.cssText = "grid-column:1 / -1;margin-top:4px;padding:12px 14px;background:#fff;border:1px solid rgba(20,17,16,0.16);border-left:3px solid #b3242a;border-radius:2px;";
-      var h = document.createElement("div");
-      h.textContent = "Your uploaded designs";
-      h.style.cssText = "font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:rgba(20,17,16,0.6);margin-bottom:8px;";
-      card.appendChild(h);
-      var listBox = document.createElement("div");
-      card.appendChild(listBox);
-      function paintCarried() {
-        window.__dboCarriedDesigns = designs;
-        try {
-          if (designs.length) sessionStorage.setItem("dyn_bulk_designs", JSON.stringify(designs));
-          else sessionStorage.removeItem("dyn_bulk_designs");
-        } catch (e3) {}
-        if (!designs.length) { card.remove(); return; }
-        listBox.innerHTML = "";
-        designs.forEach(function (dd, di) {
-          var row = document.createElement("div");
-          row.style.cssText = "display:flex;align-items:center;gap:8px;margin-top:6px;";
-          var img = document.createElement("img");
-          img.src = dd.url; img.alt = ""; img.loading = "lazy";
-          img.style.cssText = "width:34px;height:34px;object-fit:contain;background:#f6f5f1;border:1px solid rgba(20,17,16,0.12);border-radius:2px;flex:none;";
-          var lbl = document.createElement("span");
-          lbl.textContent = dd.side || "design";
-          lbl.style.cssText = "font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(20,17,16,0.7);";
-          var x = document.createElement("button");
-          x.type = "button"; x.textContent = "\u00d7";
-          x.setAttribute("aria-label", "Remove this design");
-          x.style.cssText = "border:0;background:none;cursor:pointer;font-size:15px;color:rgba(20,17,16,0.5);padding:2px 6px;margin-left:auto;";
-          x.addEventListener("click", function () { designs.splice(di, 1); paintCarried(); });
-          x.addEventListener("mouseenter", function () { x.style.color = "#b3242a"; });
-          x.addEventListener("mouseleave", function () { x.style.color = "rgba(20,17,16,0.5)"; });
-          row.appendChild(img); row.appendChild(lbl); row.appendChild(x);
-          listBox.appendChild(row);
-        });
-      }
-      paintCarried();
-      var note = document.createElement("div");
-      note.textContent = "These travel with your request automatically.";
-      note.style.cssText = "margin-top:9px;font-size:10.5px;color:rgba(20,17,16,0.5);letter-spacing:0.03em;";
-      card.appendChild(note);
-      if (mountEl) mountEl.appendChild(card);
-      else (root.querySelector(".dbo-summary") || root).appendChild(card);
+      designs.forEach(function (dd) {
+        var nm = String(dd.side || "design").replace(/\s+/g, "-").toLowerCase() + "-design.png";
+        if (/^https?:/i.test(dd.url)) { _pendingCarried.push({ name: nm, size: 0, url: dd.url }); }
+        else { var f = dataUrlToFile(dd.url, nm); if (f) _pendingCarried.push(f); }
+      });
+      if (firstRow && firstRow._product) injectCarried(firstRow);
     } catch (e) {}
   })();
 
@@ -687,7 +663,8 @@
         // upload this variation's own design, if any
         var vf = line._files || (line._file ? [line._file] : []);
         for (var fi = 0; fi < vf.length; fi++) {
-          var url = await uploadViaShopify(vf[fi], resolveVariantId(prod, line));
+          // designs carried from the product page are already hosted - reuse the URL
+          var url = vf[fi].url ? vf[fi].url : await uploadViaShopify(vf[fi], resolveVariantId(prod, line));
           itemLines.push("    Design: " + (url || ("(couldn't attach '" + vf[fi].name + "')")));
         }
         any = true;
@@ -750,7 +727,10 @@
       fetch("https://formsubmit.co/ajax/" + encodeURIComponent(NOTIFY), {
         method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify(payload)
       }).then(function (res) { return res.ok ? res.json() : Promise.reject(); })
-        .then(function () { formBox.style.display = "none"; if (successBox) successBox.hidden = false; window.scrollTo({ top: root.offsetTop - 20, behavior: "smooth" }); })
+        .then(function () {
+          try { sessionStorage.removeItem("dyn_bulk_designs"); } catch (e) {}
+          formBox.style.display = "none"; if (successBox) successBox.hidden = false; window.scrollTo({ top: root.offsetTop - 20, behavior: "smooth" });
+        })
         .catch(function () { alert("Sorry, we couldn’t send that. Please try again or email us directly."); submitting = false; submitBtn.disabled = false; submitBtn.textContent = t; });
     }
   });
