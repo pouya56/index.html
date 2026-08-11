@@ -79,6 +79,15 @@
 .dyn-step-line { background: rgba(23, 19, 15, 0.22) !important; flex: 1 1 22px !important; min-width: 5px; }
 .dyn-step.is-active { color: #17130f !important; }
 .dyn-step.is-active .dyn-step-num { background: none !important; color: #b3242a !important; }
+/* a hand-drawn red ring scribbled around whichever step you're on */
+.dyn-step.is-active { position: relative; }
+.dyn-step.is-active::after {
+  content: "";
+  position: absolute;
+  inset: -7px -11px;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%2044'%20preserveAspectRatio='none'%3E%3Cg%20fill='none'%20stroke='%23b3242a'%20stroke-linecap='round'%3E%3Cpath%20d='M9%2024%20C6%2011%2033%204.5%2061%205%20C95%205.6%20115%2011%20113.5%2023%20C112%2035.5%2087%2041%2055%2040%20C26%2039%2010.5%2034%209.5%2023.5'%20stroke-width='2.6'/%3E%3Cpath%20d='M15%2027%20C11%2014%2040%206.5%2066%207.4%20C97%208.4%20112%2015%20110%2025%20C108%2034.5%2083%2038.6%2053%2037.8%20C29%2037%2015%2032.5%2014.2%2025'%20stroke-width='1.7'%20stroke-opacity='0.75'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
 .dyn-step.is-done { color: rgba(23, 19, 15, 0.6) !important; }
 /* the script swaps the done digit for a check, which read as "0(check)" with
    the 0 prefix - hide the number and let the label's own check speak */
