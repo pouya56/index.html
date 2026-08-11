@@ -2539,11 +2539,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '.dc-gift-save:active{transform:translateY(1px)}' +
       /* "Make it a gift" — takes the PRIMARY button slot after the design is
          saved (Add to cart stays hidden until they add a gift or skip). */
-      '.dc-gift-open{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;' +
+      '.dc-gift-open{position:relative;z-index:0;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:58px;' +
         'cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:700;letter-spacing:.18em;' +
-        'text-transform:uppercase;color:#f6f5f1;background:#17130f;border:none;border-radius:2px;' +
-        'transition:background .18s,transform .18s,box-shadow .18s}' +
-      '.dc-gift-open:hover{background:#000;transform:translateY(-2px);box-shadow:0 18px 34px -12px rgba(23,19,15,.45)}' +
+        'text-transform:uppercase;color:#f6f5f1;background:none;border:none;border-radius:2px;' +
+        'transition:transform .18s,box-shadow .18s}' +
+      /* same hover as Add to cart: the red circle grows from where the pointer enters */
+      '.dc-gift-open::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-2;background:#17130f}' +
+      '.dc-gift-open::after{content:"";position:absolute;left:var(--mx,50%);top:var(--my,50%);width:16px;height:16px;z-index:-1;' +
+        'border-radius:50%;background:#b3242a;pointer-events:none;transform:translate(-50%,-50%) scale(0);' +
+        'transition:transform .8s cubic-bezier(0.4,0,0.2,1)}' +
+      '.dc-gift-open:hover{color:#fff;transform:translateY(-2px);box-shadow:0 18px 34px -12px rgba(23,19,15,.45)}' +
+      '.dc-gift-open:hover::after{transform:translate(-50%,-50%) scale(60)}' +
+      '.dc-gift-open.is-solo::before,.dc-gift-open.is-solo::after{display:none}' +
       '.dc-gift-open:active{transform:translateY(0) scale(.98)}' +
       /* Non-customize products: no gate, quiet ghost styling instead */
       '.dc-gift-open.is-solo{background:var(--gp);color:var(--gi);box-shadow:none}' +
@@ -2553,8 +2560,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       /* Gate row: the gift pill and its Skip neighbour share one line */
       '.dc-gift-row{display:flex;gap:10px;align-items:stretch}' +
       '.dc-gift-row .dc-gift-open{flex:1;min-width:0}' +
-      '.dc-gift-skip{flex:none;height:58px;padding:0 24px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#17130f;background:transparent;border:1px solid rgba(23,19,15,.4);border-radius:2px;transition:background .18s,border-color .18s}' +
-      '.dc-gift-skip:hover{border-color:#17130f;background:rgba(23,19,15,.04)}' +
+      '.dc-gift-skip{flex:none;height:58px;padding:0 24px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b3242a;background:transparent;border:1px solid rgba(179,36,42,.55);border-radius:2px;transition:background .18s,border-color .18s}' +
+      '.dc-gift-skip:hover{border-color:#b3242a;background:rgba(179,36,42,.06)}' +
       '.dc-gift-open-txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '.dc-gift-open-txt em{font-style:normal;color:rgba(255,255,255,.65);font-weight:500}' +
       /* After the decision, a quiet one-line summary for edits */
@@ -2665,7 +2672,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     return css +
       '<div class="dc-gift" id="giftBlock">' +
         '<button type="button" class="dc-gift-open" id="giftOpenBtn" style="display:none">' +
-          '<span class="dc-gift-open-txt" id="giftOpenTxt">Make it a gift <em>(optional)</em></span>' +
+          '<span class="dc-gift-open-txt" id="giftOpenTxt">Make it a gift</span>' +
         '</button>' +
         '<button type="button" class="dc-gift-skip" id="giftSkipBtn" style="display:none">Skip</button>' +
         '<button type="button" class="dc-gift-mini" id="giftMini" hidden>🎁 Gift added · <u>edit</u></button>' +
@@ -3034,6 +3041,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         if (!readySeen) decided = false;
         sync();
       }).observe(addBtn, { attributes: true, attributeFilter: ["hidden"] });
+    }
+    if (openBtn) {
+      const setO = (e) => { const r = openBtn.getBoundingClientRect();
+        openBtn.style.setProperty("--mx", (e.clientX - r.left) + "px");
+        openBtn.style.setProperty("--my", (e.clientY - r.top) + "px"); };
+      openBtn.addEventListener("pointerenter", setO);
+      openBtn.addEventListener("pointerleave", setO);
     }
     if (openBtn) openBtn.onclick = () => { setOpen(true); updateFoot(); const f = mount.querySelector("#giftFrom"); if (f) { try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } } };
     if (mini) mini.onclick = () => { setOpen(true); updateFoot(); };
