@@ -1358,7 +1358,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     return lbEl;
   }
   function openLightbox(list, i) {
-    lbList = list;
+    // the list was captured when the gallery rendered - possibly before a
+    // design was applied. Substitute the composited preview at open time.
+    const pv = window.DYN_DESIGN_PREVIEWS || {};
+    lbList = list.slice();
+    if (pv.front && lbList.length) lbList[0] = pv.front;
     lbIndex = i;
     const lb = ensureLightbox();
     lb.querySelector(".lb-img").src = lbList[lbIndex];
