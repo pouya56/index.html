@@ -53,14 +53,18 @@
 /* ---- Production workflow strip ---------------------------------------- */
 /* The helper script builds circled 1-2-3 steps; restyle them as numbered
    editorial captions — 01 PRODUCT / 02 ARTWORK / 03 GIFT / 04 ORDER. */
-.dyn-steps { gap: 8px 10px !important; flex-wrap: wrap; }
+/* one line, always: steps never wrap - the connecting rules flex down to
+   make room - and the resting ink is darker so the strip reads at a glance */
+.dyn-steps { gap: 8px 10px !important; flex-wrap: nowrap !important; }
 .dyn-step {
-  color: rgba(23, 19, 15, 0.38) !important;
-  font-size: 10px !important;
+  color: rgba(23, 19, 15, 0.55) !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  gap: 7px !important;
+  gap: 6px !important;
+  flex: none;
+  white-space: nowrap;
 }
 .dyn-step-num {
   width: auto !important;
@@ -72,11 +76,13 @@
   display: inline !important;
 }
 .dyn-step-num::before { content: "0"; }
-.dyn-step-line { background: rgba(23, 19, 15, 0.16) !important; }
+.dyn-step-line { background: rgba(23, 19, 15, 0.22) !important; flex: 1 1 22px !important; min-width: 5px; }
 .dyn-step.is-active { color: #17130f !important; }
 .dyn-step.is-active .dyn-step-num { background: none !important; color: #b3242a !important; }
-.dyn-step.is-done { color: rgba(23, 19, 15, 0.55) !important; }
-.dyn-step.is-done .dyn-step-num { background: none !important; color: inherit !important; }
+.dyn-step.is-done { color: rgba(23, 19, 15, 0.6) !important; }
+/* the script swaps the done digit for a check, which read as "0(check)" with
+   the 0 prefix - hide the number and let the label's own check speak */
+.dyn-step.is-done .dyn-step-num { display: none !important; }
 .dyn-step.is-done .dyn-step-txt::after { content: " \2713"; color: #b3242a; }
 
 /* ---- Bigger hero ------------------------------------------------------- */
