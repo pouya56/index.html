@@ -226,7 +226,7 @@
 @media (max-width: 940px) { .dbo-steps { gap: 16px; } .dbo-summary { margin-top: 30px; } }
 </style>
 
-<section class="dbo" id="dboRoot" data-minqty="{{ section.settings.min_qty | default: 1 }}" data-notify="{{ notify_email }}">
+<section class="dbo" id="dboRoot" data-minqty="{{ section.settings.min_qty | default: 12 }}" data-notify="{{ notify_email }}">
   {%- assign bo_logo = section.settings.logo | default: settings.logo -%}
   {%- if section.settings.show_logo != false -%}
     {%- assign lw = settings.logo_width | default: 140 -%}
@@ -351,7 +351,9 @@
   var picker = document.getElementById("dboPicker");
   var pickerGrid = document.getElementById("dboPickerGrid");
   var pickerSearch = document.getElementById("dboPickerSearch");
-  var minQty = parseInt(root.getAttribute("data-minqty"), 10) || 1;
+  /* stores that saved the old default of 1 keep serving it - floor at 12
+     unless the merchant set something higher in the editor */
+  var minQty = Math.max(12, parseInt(root.getAttribute("data-minqty"), 10) || 1);
   var NOTIFY = (root.getAttribute("data-notify") || "").trim();
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); }
@@ -427,7 +429,7 @@
       });
     }
     var qw = document.createElement("div"); qw.className = "dbo-qtywrap";
-    qw.innerHTML = '<span>Qty</span><input type="number" class="dbo-qty" min="0" step="1" value="0" inputmode="numeric">';
+    qw.innerHTML = '<span>Qty \u00b7 min ' + minQty + '</span><input type="number" class="dbo-qty" min="0" step="1" value="0" inputmode="numeric" placeholder="' + minQty + '+">';
     line.appendChild(qw);
     // per-variation design upload
     var fileWrap = document.createElement("label"); fileWrap.className = "dbo-file-btn dbo-varfile";
@@ -610,6 +612,7 @@
   async function buildBody() {
     var phone = (document.getElementById("dboPhone").value || "").trim();
     var notes = (document.getElementById("dboNotes").value || "").trim();
+    _tooLow = 0;
     var itemLines = [], any = false;
     var rws = rows();
     for (var r = 0; r < rws.length; r++) {
@@ -621,7 +624,8 @@
       for (var l = 0; l < lines.length; l++) {
         var line = lines[l];
         var q = parseInt(line.querySelector(".dbo-qty").value, 10) || 0;
-        if (q < Math.max(1, minQty)) continue;
+        if (q > 0 && q < minQty) { _tooLow++; continue; }
+        if (q < 1) continue;
         var sels = Array.prototype.slice.call(line.querySelectorAll(".dbo-opt"));
         var parts = [], complete = true;
         sels.forEach(function (s) { if (!s.value) complete = false; else parts.push(s.getAttribute("data-name") + ": " + s.value); });
@@ -647,6 +651,7 @@
     return out.join("\n");
   }
 
+  var _tooLow = 0;
   var submitting = false;
   submitBtn.addEventListener("click", function () {
     if (submitting) return;
@@ -657,7 +662,14 @@
     submitting = true; submitBtn.disabled = true; var t = submitBtn.textContent; submitBtn.textContent = "Sending…";
 
     buildBody().then(function (body) {
-      if (!body) { alert("Please pick a product, choose the options, and enter a quantity for at least one variation."); submitting = false; submitBtn.disabled = false; submitBtn.textContent = t; return; }
+      if (_tooLow > 0) {
+        alert("Bulk orders start at " + minQty + " pieces per variation \u2014 please raise the quantity.");
+        submitting = false; submitBtn.disabled = false; submitBtn.textContent = t; return;
+      }
+      if (!body) {
+        alert("Please pick a product, choose the options, and enter a quantity for at least one variation.");
+        submitting = false; submitBtn.disabled = false; submitBtn.textContent = t; return;
+      }
       var carried = window.__dboCarriedDesigns || [];
       var send = function (designLines) {
         if (designLines.length) body += "\n\nDesigns uploaded on the product page:\n" + designLines.join("\n");
@@ -752,7 +764,7 @@
     { "type": "text", "id": "submit_note", "label": "Note under the submit button", "default": "We’ll email you a confirmation. Your uploaded designs are included automatically." },
     { "type": "text", "id": "success_title", "label": "Success title", "default": "Request sent!" },
     { "type": "textarea", "id": "success_text", "label": "Success message", "default": "Thanks — we’ve received your bulk order request and will email you a confirmation and quote shortly." },
-    { "type": "range", "id": "min_qty", "label": "Minimum quantity per variation", "min": 1, "max": 100, "step": 1, "default": 1 }
+    { "type": "range", "id": "min_qty", "label": "Minimum quantity per variation", "min": 1, "max": 100, "step": 1, "default": 12 }
   ],
   "presets": [ { "name": "Dynamic Bulk Order" } ],
   "enabled_on": { "templates": ["page", "index"] }
