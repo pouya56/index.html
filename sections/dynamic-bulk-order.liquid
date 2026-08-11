@@ -228,6 +228,12 @@
   background: #fdfcf9; height: 46px; padding: 0 12px; transition: border-color 0.25s, box-shadow 0.25s; }
 .dbo-contact textarea { height: auto; min-height: 86px; padding: 11px 12px; }
 .dbo-contact input:focus, .dbo-contact textarea:focus { outline: none; border-color: var(--inkk); box-shadow: 0 1px 0 var(--inkk); }
+/* required marks + the hand-drawn red line under a field left empty */
+.dbo-req { font-style: normal; color: var(--red); font-size: 13px; line-height: 0; margin: 0 0 0 1px; letter-spacing: 0; }
+.dbo-contact label { position: relative; }
+.dbo-contact label.dbo-miss input { border-color: rgba(184,34,28,0.65); }
+.dbo-contact label.dbo-miss::after { content: ""; position: absolute; left: -3px; right: -5px; bottom: -7px; height: 13px; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%2013'%20preserveAspectRatio='none'%3E%3Cpath%20d='M3%207%20C%2038%202.5,%2082%2010,%20121%205%20S%20181%209,%20197%204.5'%20fill='none'%20stroke='%23b8221c'%20stroke-width='2.6'%20stroke-linecap='round'%20opacity='0.9'/%3E%3Cpath%20d='M7%2010%20C%2052%206.5,%20112%2011,%20195%207.5'%20fill='none'%20stroke='%23b8221c'%20stroke-width='1.5'%20stroke-linecap='round'%20opacity='0.6'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
 /* the matte black promise */
 .dbo-submit { border-radius: 2px; height: 56px; background: var(--inkk); letter-spacing: 0.18em;
   text-transform: uppercase; font-size: 13px; font-weight: 700;
@@ -315,8 +321,8 @@
       <div class="dbo-summary">
         <h2 class="dbo-coltitle">Project Information</h2>
         <div class="dbo-contact">
-          <label class="dbo-full">Name<input type="text" id="dboName" autocomplete="name"></label>
-          <label>Email<input type="email" id="dboEmail" autocomplete="email" required></label>
+          <label class="dbo-full"><span>Name<em class="dbo-req" aria-hidden="true">*</em></span><input type="text" id="dboName" autocomplete="name" required></label>
+          <label><span>Email<em class="dbo-req" aria-hidden="true">*</em></span><input type="email" id="dboEmail" autocomplete="email" required></label>
           <label>Phone (optional)<input type="tel" id="dboPhone" autocomplete="tel"></label>
           <label class="dbo-full">Notes (optional)<textarea id="dboNotes" placeholder="Deadline, special instructions…"></textarea></label>
         </div>
@@ -698,11 +704,22 @@
 
   var _tooLow = 0;
   var submitting = false;
+  /* required fields get the hand-drawn red line while empty at submit */
+  function reqEls() { return [document.getElementById("dboName"), document.getElementById("dboEmail")].filter(Boolean); }
+  reqEls().forEach(function (el) {
+    el.addEventListener("input", function () { if (el.value.trim()) el.closest("label").classList.remove("dbo-miss"); });
+  });
   submitBtn.addEventListener("click", function () {
     if (submitting) return;
     var name = (document.getElementById("dboName").value || "").trim();
     var email = (document.getElementById("dboEmail").value || "").trim();
-    if (!email) { document.getElementById("dboEmail").focus(); return; }
+    var miss = [];
+    reqEls().forEach(function (el) {
+      var empty = !el.value.trim();
+      el.closest("label").classList.toggle("dbo-miss", empty);
+      if (empty) miss.push(el);
+    });
+    if (miss.length) { miss[0].focus(); return; }
     if (!NOTIFY) { alert("This form isn’t set up yet (missing notification email)."); return; }
     submitting = true; submitBtn.disabled = true; var t = submitBtn.textContent; submitBtn.textContent = "Sending…";
 
