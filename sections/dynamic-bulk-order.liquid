@@ -135,26 +135,25 @@
 /* the three-step strip */
 /* two balanced columns on desktop: information left, details right */
 @media (min-width: 941px) {
-  #dboForm { display: grid; grid-template-columns: 5fr 7fr; gap: 48px; align-items: start; }
-  .dbo-coltitle-right, .dbo-rows, .dbo-add { grid-column: 2; }
+  #dboForm { display: grid; grid-template-columns: 7fr 5fr; gap: 48px; align-items: start; }
+  .dbo-coltitle-right, .dbo-rows, .dbo-add { grid-column: 1; }
   .dbo-coltitle-right { grid-row: 1; }
   .dbo-rows { grid-row: 2; }
   .dbo-add { grid-row: 3; justify-self: start; }
-  .dbo-summary { grid-column: 1; grid-row: 1 / span 3; position: sticky; top: 76px; margin-top: 0; }
+  .dbo-summary { grid-column: 2; grid-row: 1 / span 3; position: sticky; top: 76px; margin-top: 0; }
 }
 .dbo-coltitle { font-family: Georgia, "Times New Roman", serif; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.08em; font-size: 17px; color: var(--inkk); margin: 0 0 18px;
   padding-bottom: 10px; border-bottom: 2px solid var(--inkk); }
 /* product rows: miniature printed cards on the worktable */
 .dbo-rows { gap: 26px; }
-.dbo-row { background: var(--paper); border: 1px solid var(--rule); border-left: 5px solid var(--red);
-  border-radius: 3px; box-shadow: 0 1px 2px rgba(20,17,16,0.1), 0 14px 30px -18px rgba(20,17,16,0.3);
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.25, 1); }
-/* compact cards, two across - like small printed order slips side by side.
-   Everything inside shrinks so a card with a few options stays near-square. */
+.dbo-row { background: transparent; border: 0; border-left: 3px solid var(--red);
+  border-bottom: 1px solid var(--rule); border-radius: 0; box-shadow: none; }
+/* items as a quiet list: hairline-separated rows with compact controls */
 @media (min-width: 700px) {
-  .dbo-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
-  .dbo-row { grid-template-columns: 56px 1fr; gap: 10px; padding: 12px; }
+  .dbo-rows { display: flex; flex-direction: column; gap: 0; }
+  .dbo-row { grid-template-columns: 56px 1fr; gap: 14px; padding: 16px 4px 16px 14px; }
+  .dbo-row:last-child { border-bottom: 0; }
   .dbo-pick { width: 56px; height: 56px; }
   .dbo-pname { font-size: 13px; }
   .dbo-fields { gap: 8px; }
@@ -173,10 +172,6 @@
   .dbo-addvar { font-size: 10px; }
   .dbo-remove { font-size: 9.5px; }
 }
-.dbo-row:nth-child(odd) { transform: rotate(-0.4deg); }
-.dbo-row:nth-child(even) { transform: rotate(0.35deg); }
-@media (hover: hover) { .dbo-row:hover { transform: rotate(0deg) translateY(-3px);
-  box-shadow: 0 2px 4px rgba(20,17,16,0.12), 0 22px 44px -18px rgba(20,17,16,0.38); } }
 .dbo-pick { border-radius: 2px; border: 1.5px dashed rgba(20,17,16,0.3); background: #fff; }
 .dbo-pick:hover { border-color: var(--inkk); background: #fff; }
 .dbo-pname { font-family: Georgia, serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
