@@ -58,7 +58,12 @@
   .dbo-qty { width:80px; height:40px; padding:0 10px; border:1px solid var(--line2); border-radius:10px; font:inherit; font-size:15px; text-align:center; background:#fff; }
   .dbo-qty:focus { outline:none; border-color:var(--accent); }
   .dbo-qty.is-low, .dbo-qty.is-low:focus { border-color:#b3242a; }
-  .dbo-qty-err { font-style:normal; font-size:10.5px; font-weight:700; letter-spacing:.06em;
+  /* the warning floats below the field, out of flow, so the qty input stays
+     bottom-aligned with the option selects beside it */
+  .dbo-qtywrap { position:relative; }
+  .dbo-qtywrap .dbo-qty { width:96px; }
+  .dbo-qty-err { position:absolute; top:100%; left:0; margin-top:2px; white-space:nowrap;
+    font-style:normal; font-size:10px; font-weight:700; letter-spacing:.06em;
     text-transform:uppercase; color:#b3242a; }
   .dbo-varremove { flex:none; width:36px; height:40px; border:1px solid var(--line2); border-radius:10px; background:#fff; color:var(--danger); font-size:19px; line-height:1; cursor:pointer; }
   .dbo-varremove:hover { background:#fdeceb; border-color:#f3c6c3; }
