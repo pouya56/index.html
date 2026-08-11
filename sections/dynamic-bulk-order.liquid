@@ -753,14 +753,20 @@
     var filed = !!rows.querySelector(".dbo-varfile.has-file");
     var picked = !!rows.querySelector(".dbo-pick img");
     var carried = (window.__dboCarriedDesigns || []).length > 0;
-    var qtyOk = false;
-    Array.prototype.forEach.call(rows.querySelectorAll(".dbo-qty"), function (q) {
-      if ((parseInt(q.value, 10) || 0) >= minQ) qtyOk = true;
+    /* a line counts as complete when its options are all chosen and the
+       quantity meets the minimum */
+    var detailsOk = false;
+    Array.prototype.forEach.call(rows.querySelectorAll(".dbo-varline"), function (line) {
+      var q = parseInt((line.querySelector(".dbo-qty") || {}).value, 10) || 0;
+      if (q < minQ) return;
+      var sels = line.querySelectorAll(".dbo-opt");
+      for (var i = 0; i < sels.length; i++) { if (!sels[i].value) return; }
+      detailsOk = true;
     });
-    /* the final step - and with it the Project Information card - arrives
-       once a product is picked AND there's artwork (uploaded or carried
-       from the product page) or a valid quantity */
-    var s3 = picked && (filed || carried || qtyOk);
+    /* the final step - and the Project Information card - arrives once the
+       details are complete AND a design is attached (uploaded here or
+       carried over from the product page) */
+    var s3 = picked && detailsOk && (filed || carried);
     setStep(s3 ? 3 : (picked ? 2 : 1));
     root.classList.toggle("dbo-stage3", s3);
   }, 700);
