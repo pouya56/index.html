@@ -88,45 +88,11 @@
   .fq-answer p { margin: 0 0 9px; } .fq-answer p:last-child { margin-bottom: 0; }
   .fq-answer a { color: var(--blue); }
   .fq-empty { padding: 30px 6px; color: var(--soft); font-size: 15px; }
-  /* full-banner band image: the picture IS the band and links to contact */
-  .fq-band-img { display: block; max-width: 1240px; margin: 0 auto; transition: opacity .16s; }
+  /* bottom band: one full-width collage image linking to contact */
+  .fq-band { margin-top: clamp(30px, 4vw, 56px); }
+  .fq-band-img { display: block; width: 100%; transition: opacity .16s; }
   .fq-band-img:hover { opacity: 0.94; }
   .fq-band-img img { display: block; width: 100%; height: auto; }
-  /* ---- "Still have questions?" band above the footer ---- */
-  .fq-band { background: var(--paper); margin-top: clamp(30px, 4vw, 56px);
-    background-image: repeating-linear-gradient(0deg, rgba(140,130,110,0.12) 0 1px, transparent 1px 26px),
-      repeating-linear-gradient(90deg, rgba(140,130,110,0.12) 0 1px, transparent 1px 26px); }
-  .fq-band-in { max-width: 1240px; margin: 0 auto; padding: clamp(36px, 5vw, 64px) clamp(20px, 4vw, 64px);
-    display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 420px); gap: clamp(20px, 4vw, 60px); align-items: center; }
-  .fq-band h2 { margin: 0 0 12px; font-size: clamp(28px, 3.6vw, 44px); font-weight: 700; letter-spacing: -0.015em; color: var(--ink); line-height: 1.1; }
-  .fq-band p { margin: 0 0 22px; font-family: var(--mono); font-size: 13px; line-height: 1.8; color: #3c3c40; max-width: 380px; }
-  .fq-band-btn { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 26px; border-radius: 999px;
-    background: #111; color: #fff; font-size: 13.5px; font-weight: 600; text-decoration: none; transition: opacity .16s, transform .1s; }
-  .fq-band-btn:hover { opacity: .88; } .fq-band-btn:active { transform: scale(.98); }
-  /* envelope collage (CSS fallback; replaced by an uploaded image) */
-  .fq-band-art { position: relative; height: clamp(180px, 20vw, 250px); pointer-events: none; }
-  .fq-band-art > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-  .fq-band-art i { position: absolute; font-style: normal; }
-  .fb-gridp { left: 8%; top: 8%; width: 52%; height: 80%; transform: rotate(-4deg); background:
-    repeating-linear-gradient(0deg, rgba(140,150,160,0.4) 0 1px, transparent 1px 11px),
-    repeating-linear-gradient(90deg, rgba(140,150,160,0.4) 0 1px, transparent 1px 11px), #f7f5ef;
-    clip-path: polygon(1.5% 3%, 32% 0.5%, 68% 2.8%, 98% 1%, 99.5% 36%, 97.4% 68%, 99% 97%, 64% 99.4%, 30% 97.6%, 1% 99%, 2.6% 64%, 0.5% 30%);
-    filter: drop-shadow(2px 4px 5px rgba(20,17,16,0.25)); }
-  .fb-chip { right: 0; top: 6%; width: 34%; padding: 4% 3%; transform: rotate(3deg); background: #141110; color: #f2efe8;
-    font-family: var(--mono); font-size: clamp(10px, 1vw, 13px); line-height: 1.55;
-    clip-path: polygon(1.8% 4%, 34% 0.6%, 68% 3%, 98.6% 1.2%, 99.4% 38%, 97% 66%, 99% 96.4%, 64% 99.2%, 30% 97.4%, 1% 99%, 3% 62%, 0.6% 32%);
-    filter: drop-shadow(3px 5px 7px rgba(20,17,16,0.35)); }
-  .fb-red { left: 30%; bottom: 4%; width: 26%; height: 26%; transform: rotate(-3deg); background: #ce231d;
-    clip-path: polygon(3% 5%, 50% 0.8%, 97% 4%, 99.4% 50%, 96% 96%, 52% 99.4%, 2.4% 97%, 4% 48%);
-    filter: drop-shadow(2px 4px 6px rgba(20,17,16,0.3)); }
-  .fb-env { left: 22%; top: 18%; width: 44%; height: 56%; transform: rotate(-2deg); background: #a89878;
-    border-radius: 3px; filter: drop-shadow(4px 7px 10px rgba(20,17,16,0.4)); overflow: hidden; }
-  .fb-env::before { content: ""; position: absolute; inset: 0; background: #97876a;
-    clip-path: polygon(0 0, 100% 0, 50% 58%); }
-  .fb-env::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 100%;
-    background: linear-gradient(180deg, rgba(0,0,0,0.12), transparent 30%); }
-  .fb-scrib { right: -1%; top: -10%; width: 24%; height: 34%; background:
-    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cpath%20d='M8%2082%20L90%2012%20M22%2090%20L94%2030%20M6%2066%20L72%208'%20stroke='%2317130f'%20stroke-width='1.6'%20fill='none'%20stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; opacity: 0.7; }
   /* phone */
   @media (max-width: 860px) {
     .fq-hero { grid-template-columns: 1fr; }
@@ -134,8 +100,6 @@
     .fq-sec { grid-template-columns: 1fr; gap: 8px; }
     .fq-rail { padding-top: 0; }
     .fq-grid { grid-template-columns: 1fr; }
-    .fq-band-in { grid-template-columns: 1fr; }
-    .fq-band-art { max-width: 380px; width: 100%; margin: 0 auto; }
   }
   @media (max-width: 760px) {
     .dyn-faq-card { margin: 10px 10px 0; padding: 20px 16px 28px; border-radius: 10px; }
@@ -256,42 +220,11 @@
 
   </div>
 
-  {%- assign band_full = false -%}
-  {%- if section.settings.band_image != blank and section.settings.band_full -%}{%- assign band_full = true -%}{%- endif -%}
-  {%- if band_full -%}
+  {%- if section.settings.band_image != blank -%}
     <div class="fq-band">
-      <a class="fq-band-img" href="{{ section.settings.band_link | default: section.settings.cta_link | default: '/pages/contact' }}" aria-label="{{ section.settings.band_btn | default: 'Contact us' }}">
-        <img src="{{ section.settings.band_image | image_url: width: 2400 }}" alt="{{ section.settings.band_title | default: 'Still have questions?' | escape }}" width="{{ section.settings.band_image.width }}" height="{{ section.settings.band_image.height }}" loading="lazy">
+      <a class="fq-band-img" href="{{ section.settings.band_link | default: section.settings.cta_link | default: '/pages/contact' }}" aria-label="Contact us">
+        <img src="{{ section.settings.band_image | image_url: width: 2800 }}" alt="Still have questions? Contact us" width="{{ section.settings.band_image.width }}" height="{{ section.settings.band_image.height }}" loading="lazy">
       </a>
-    </div>
-  {%- elsif section.settings.band_title != blank -%}
-    <div class="fq-band">
-      <div class="fq-band-in">
-        <div>
-          <h2>{{ section.settings.band_title }}</h2>
-          {% if section.settings.band_text != blank %}<p>{{ section.settings.band_text }}</p>{% endif %}
-          <a class="fq-band-btn" href="{{ section.settings.cta_link | default: '/pages/contact' }}">{{ section.settings.band_btn | default: 'Contact us' }} &rarr;</a>
-        </div>
-        {%- assign scrap2_n = 0 -%}
-        {%- for block in section.blocks -%}{%- if block.type == 'scrap2' and block.settings.image != blank -%}{%- assign scrap2_n = scrap2_n | plus: 1 -%}{%- endif -%}{%- endfor -%}
-        <div class="fq-band-art" aria-hidden="true">
-          {%- if scrap2_n > 0 -%}
-            {%- for block in section.blocks -%}
-              {%- if block.type == 'scrap2' and block.settings.image != blank -%}
-                <span class="fq-scrap" style="left:{{ block.settings.x }}%;top:{{ block.settings.y }}%;width:{{ block.settings.w }}%;--rot:{{ block.settings.tilt }}deg;" {{ block.shopify_attributes }}><img src="{{ block.settings.image | image_url: width: 800 }}" alt="" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" loading="lazy" draggable="false"></span>
-              {%- endif -%}
-            {%- endfor -%}
-          {%- elsif section.settings.band_image != blank -%}
-            <img src="{{ section.settings.band_image | image_url: width: 800 }}" alt="" width="{{ section.settings.band_image.width }}" height="{{ section.settings.band_image.height }}" loading="lazy">
-          {%- else -%}
-            <i class="fb-gridp"></i>
-            <i class="fb-red"></i>
-            <i class="fb-env"></i>
-            <i class="fb-chip">we'd love<br>to hear<br>from you.</i>
-            <i class="fb-scrib"></i>
-          {%- endif -%}
-        </div>
-      </div>
     </div>
   {%- endif -%}
 </section>
@@ -404,13 +337,9 @@
     { "type": "checkbox", "id": "show_search", "label": "Show search bar", "default": true, "info": "Customers can type to filter the questions live." },
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder text", "default": "Search questions\u2026" },
     { "type": "checkbox", "id": "open_first", "label": "Open first question by default", "default": false },
-    { "type": "header", "content": "Bottom band" },
-    { "type": "text", "id": "band_title", "label": "Band title", "default": "Still have questions?", "info": "Leave empty to hide the band." },
-    { "type": "textarea", "id": "band_text", "label": "Band text", "default": "Can\u2019t find what you\u2019re looking for? We\u2019re happy to help." },
-    { "type": "text", "id": "band_btn", "label": "Band button text", "default": "Contact us" },
-    { "type": "image_picker", "id": "band_image", "label": "Band collage image (right side)", "info": "Optional. Leave empty for the built-in envelope collage." },
-    { "type": "checkbox", "id": "band_full", "label": "Band image is the full banner", "default": false, "info": "Tick this when the uploaded image already contains the title, text and button. The whole image becomes the band and clicking it opens the band image link." },
-    { "type": "url", "id": "band_link", "label": "Band image link", "info": "Where the full-banner band image points. Defaults to the Button link above." }
+    { "type": "header", "content": "Bottom collage banner" },
+    { "type": "image_picker", "id": "band_image", "label": "Banner image (full width)", "info": "Shown edge to edge under the questions and linked to contact. Leave empty to hide." },
+    { "type": "url", "id": "band_link", "label": "Banner link", "info": "Where clicking the banner goes. Defaults to the Button link above." }
   ],
   "blocks": [
     {
@@ -419,18 +348,6 @@
       "limit": 12,
       "settings": [
         { "type": "image_picker", "id": "image", "label": "PNG piece", "info": "Shown as-is in the hero collage area. Pieces drift at different speeds as the page scrolls." },
-        { "type": "range", "id": "x", "label": "Left position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
-        { "type": "range", "id": "y", "label": "Top position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
-        { "type": "range", "id": "w", "label": "Width (%)", "min": 6, "max": 60, "step": 1, "default": 30 },
-        { "type": "range", "id": "tilt", "label": "Tilt (deg)", "min": -15, "max": 15, "step": 0.5, "default": 0 }
-      ]
-    },
-    {
-      "type": "scrap2",
-      "name": "Collage piece (band)",
-      "limit": 12,
-      "settings": [
-        { "type": "image_picker", "id": "image", "label": "PNG piece", "info": "Shown in the band's right side. Drifts as the page scrolls." },
         { "type": "range", "id": "x", "label": "Left position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
         { "type": "range", "id": "y", "label": "Top position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
         { "type": "range", "id": "w", "label": "Width (%)", "min": 6, "max": 60, "step": 1, "default": 30 },
