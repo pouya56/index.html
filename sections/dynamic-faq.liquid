@@ -93,6 +93,9 @@
   .fq-band-img { display: block; width: 100%; transition: opacity .16s; }
   .fq-band-img:hover { opacity: 0.94; }
   .fq-band-img img { display: block; width: 100%; height: auto; }
+  /* full-width piece canvas: same collage pieces as the hero, edge to edge */
+  .fq-band-cnv { position: relative; display: block; width: 100%; overflow: hidden; }
+  @media (max-width: 760px) { .fq-band-cnv { height: 260px !important; } }
   /* phone */
   @media (max-width: 860px) {
     .fq-hero { grid-template-columns: 1fr; }
@@ -220,10 +223,22 @@
 
   </div>
 
-  {%- if section.settings.band_image != blank -%}
+  {%- assign bscrap_n = 0 -%}
+  {%- for block in section.blocks -%}{%- if block.type == 'bscrap' and block.settings.image != blank -%}{%- assign bscrap_n = bscrap_n | plus: 1 -%}{%- endif -%}{%- endfor -%}
+  {%- if bscrap_n > 0 or section.settings.band_image != blank -%}
     <div class="fq-band">
       <a class="fq-band-img" href="{{ section.settings.band_link | default: section.settings.cta_link | default: '/pages/contact' }}" aria-label="Contact us">
-        <img src="{{ section.settings.band_image | image_url: width: 2800 }}" alt="Still have questions? Contact us" width="{{ section.settings.band_image.width }}" height="{{ section.settings.band_image.height }}" loading="lazy">
+        {%- if bscrap_n > 0 -%}
+          <span class="fq-band-cnv" style="height: {{ section.settings.band_height | default: 380 }}px;">
+            {%- for block in section.blocks -%}
+              {%- if block.type == 'bscrap' and block.settings.image != blank -%}
+                <span class="fq-scrap" style="left:{{ block.settings.x }}%;top:{{ block.settings.y }}%;width:{{ block.settings.w }}%;--rot:{{ block.settings.tilt }}deg;" {{ block.shopify_attributes }}><img src="{{ block.settings.image | image_url: width: 1200 }}" alt="" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" loading="lazy" draggable="false"></span>
+              {%- endif -%}
+            {%- endfor -%}
+          </span>
+        {%- else -%}
+          <img src="{{ section.settings.band_image | image_url: width: 2800 }}" alt="Still have questions? Contact us" width="{{ section.settings.band_image.width }}" height="{{ section.settings.band_image.height }}" loading="lazy">
+        {%- endif -%}
       </a>
     </div>
   {%- endif -%}
@@ -338,8 +353,10 @@
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder text", "default": "Search questions\u2026" },
     { "type": "checkbox", "id": "open_first", "label": "Open first question by default", "default": false },
     { "type": "header", "content": "Bottom collage banner" },
-    { "type": "image_picker", "id": "band_image", "label": "Banner image (full width)", "info": "Shown edge to edge under the questions and linked to contact. Leave empty to hide." },
-    { "type": "url", "id": "band_link", "label": "Banner link", "info": "Where clicking the banner goes. Defaults to the Button link above." }
+    { "type": "paragraph", "content": "Add \u201cCollage piece (band)\u201d blocks to compose the bottom collage from PNG pieces \u2014 same as the top. With no pieces, the single banner image below is used instead." },
+    { "type": "range", "id": "band_height", "label": "Collage canvas height (px)", "min": 160, "max": 640, "step": 20, "default": 380 },
+    { "type": "image_picker", "id": "band_image", "label": "Banner image (full width)", "info": "Fallback: one image edge to edge, used only when no band collage pieces are added." },
+    { "type": "url", "id": "band_link", "label": "Banner link", "info": "Where clicking the bottom collage goes. Defaults to the Button link above." }
   ],
   "blocks": [
     {
@@ -351,6 +368,18 @@
         { "type": "range", "id": "x", "label": "Left position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
         { "type": "range", "id": "y", "label": "Top position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
         { "type": "range", "id": "w", "label": "Width (%)", "min": 6, "max": 60, "step": 1, "default": 30 },
+        { "type": "range", "id": "tilt", "label": "Tilt (deg)", "min": -15, "max": 15, "step": 0.5, "default": 0 }
+      ]
+    },
+    {
+      "type": "bscrap",
+      "name": "Collage piece (band)",
+      "limit": 12,
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "PNG piece", "info": "Composes the full-width bottom collage. Drifts as the page scrolls." },
+        { "type": "range", "id": "x", "label": "Left position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
+        { "type": "range", "id": "y", "label": "Top position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
+        { "type": "range", "id": "w", "label": "Width (%)", "min": 2, "max": 60, "step": 1, "default": 20 },
         { "type": "range", "id": "tilt", "label": "Tilt (deg)", "min": -15, "max": 15, "step": 0.5, "default": 0 }
       ]
     },
