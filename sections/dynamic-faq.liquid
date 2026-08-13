@@ -109,6 +109,10 @@
   .fq-answer p { margin: 0 0 9px; } .fq-answer p:last-child { margin-bottom: 0; }
   .fq-answer a { color: var(--blue); }
   .fq-empty { padding: 30px 6px; color: var(--soft); font-size: 15px; }
+  /* full-banner band image: the picture IS the band and links to contact */
+  .fq-band-img { display: block; max-width: 1240px; margin: 0 auto; transition: opacity .16s; }
+  .fq-band-img:hover { opacity: 0.94; }
+  .fq-band-img img { display: block; width: 100%; height: auto; }
   /* ---- "Still have questions?" band above the footer ---- */
   .fq-band { background: var(--paper); margin-top: clamp(30px, 4vw, 56px);
     background-image: repeating-linear-gradient(0deg, rgba(140,130,110,0.12) 0 1px, transparent 1px 26px),
@@ -272,7 +276,15 @@
 
   </div>
 
-  {%- if section.settings.band_title != blank -%}
+  {%- assign band_full = false -%}
+  {%- if section.settings.band_image != blank and section.settings.band_full -%}{%- assign band_full = true -%}{%- endif -%}
+  {%- if band_full -%}
+    <div class="fq-band">
+      <a class="fq-band-img" href="{{ section.settings.cta_link | default: '/pages/contact' }}" aria-label="{{ section.settings.band_btn | default: 'Contact us' }}">
+        <img src="{{ section.settings.band_image | image_url: width: 2400 }}" alt="{{ section.settings.band_title | default: 'Still have questions?' | escape }}" loading="lazy">
+      </a>
+    </div>
+  {%- elsif section.settings.band_title != blank -%}
     <div class="fq-band">
       <div class="fq-band-in">
         <div>
@@ -363,7 +375,8 @@
     { "type": "text", "id": "band_title", "label": "Band title", "default": "Still have questions?", "info": "Leave empty to hide the band." },
     { "type": "textarea", "id": "band_text", "label": "Band text", "default": "Can\u2019t find what you\u2019re looking for? We\u2019re happy to help." },
     { "type": "text", "id": "band_btn", "label": "Band button text", "default": "Contact us" },
-    { "type": "image_picker", "id": "band_image", "label": "Band collage image (right side)", "info": "Optional. Leave empty for the built-in envelope collage." }
+    { "type": "image_picker", "id": "band_image", "label": "Band collage image (right side)", "info": "Optional. Leave empty for the built-in envelope collage." },
+    { "type": "checkbox", "id": "band_full", "label": "Band image is the full banner", "default": false, "info": "Tick this when the uploaded image already contains the title, text and button. The whole image becomes the band and clicking it opens the contact link." }
   ],
   "blocks": [
     {
