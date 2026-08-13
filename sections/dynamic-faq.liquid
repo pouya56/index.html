@@ -1,6 +1,9 @@
+{% # theme-check-disable UnclosedHTMLElement %}
 {% comment %}
   ============================================================================
   Dynamic FAQ — collage editorial layout
+  (UnclosedHTMLElement is disabled on purpose: category groups open in one
+  Liquid branch and close in another; the rendered HTML is balanced.)
   ----------------------------------------------------------------------------
   Torn-paper FAQ collage hero (auto-drawn; replace with your own image in the
   section settings), typewriter intro + live search, categories with a small
@@ -214,7 +217,7 @@
       </div>
       <div class="fq-art" aria-hidden="true">
         {%- if section.settings.hero_image != blank -%}
-          <img src="{{ section.settings.hero_image | image_url: width: 900 }}" alt="" loading="lazy">
+          <img src="{{ section.settings.hero_image | image_url: width: 900 }}" alt="" width="{{ section.settings.hero_image.width }}" height="{{ section.settings.hero_image.height }}" loading="lazy">
         {%- else -%}
           <i class="fa-gridp"></i>
           <i class="fa-hand"></i>
@@ -281,7 +284,7 @@
   {%- if band_full -%}
     <div class="fq-band">
       <a class="fq-band-img" href="{{ section.settings.cta_link | default: '/pages/contact' }}" aria-label="{{ section.settings.band_btn | default: 'Contact us' }}">
-        <img src="{{ section.settings.band_image | image_url: width: 2400 }}" alt="{{ section.settings.band_title | default: 'Still have questions?' | escape }}" loading="lazy">
+        <img src="{{ section.settings.band_image | image_url: width: 2400 }}" alt="{{ section.settings.band_title | default: 'Still have questions?' | escape }}" width="{{ section.settings.band_image.width }}" height="{{ section.settings.band_image.height }}" loading="lazy">
       </a>
     </div>
   {%- elsif section.settings.band_title != blank -%}
@@ -294,7 +297,7 @@
         </div>
         <div class="fq-band-art" aria-hidden="true">
           {%- if section.settings.band_image != blank -%}
-            <img src="{{ section.settings.band_image | image_url: width: 800 }}" alt="" loading="lazy">
+            <img src="{{ section.settings.band_image | image_url: width: 800 }}" alt="" width="{{ section.settings.band_image.width }}" height="{{ section.settings.band_image.height }}" loading="lazy">
           {%- else -%}
             <i class="fb-gridp"></i>
             <i class="fb-red"></i>
