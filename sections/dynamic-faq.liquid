@@ -60,11 +60,9 @@
   /* ---- hero collage canvas: your PNG pieces, visitor-draggable ---- */
   .fq-art { position: relative; height: clamp(230px, 26vw, 320px); }
   .fq-art > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-  .fq-scrap { position: absolute; display: block; cursor: grab; touch-action: none;
-    user-select: none; -webkit-user-select: none; will-change: transform;
-    transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--rot, 0deg)); }
-  .fq-scrap img { display: block; width: 100%; height: auto; pointer-events: none; }
-  .fq-scrap.is-drag { cursor: grabbing; z-index: 30; }
+  .fq-scrap { position: absolute; display: block; pointer-events: none; will-change: transform;
+    transform: translate3d(var(--px, 0px), var(--py, 0px), 0) rotate(calc(var(--rot, 0deg) + var(--pr, 0deg))); }
+  .fq-scrap img { display: block; width: 100%; height: auto; }
   /* ---- category sections: rail label left, questions right ---- */
   .fq-sec { display: grid; grid-template-columns: 148px minmax(0, 1fr); gap: 18px clamp(20px, 3vw, 44px);
     margin-bottom: clamp(26px, 3.4vw, 44px); }
@@ -337,25 +335,32 @@
   var root = document.getElementById("dynFaq-{{ section.id }}");
   if (!root || root.__scrapInit) return;
   root.__scrapInit = true;
-  Array.prototype.forEach.call(root.querySelectorAll(".fq-scrap"), function (el) {
-    var on = false, sx = 0, sy = 0, bx = 0, by = 0;
-    el.addEventListener("pointerdown", function (e) {
-      on = true; sx = e.clientX; sy = e.clientY;
-      bx = parseFloat(el.style.getPropertyValue("--dx")) || 0;
-      by = parseFloat(el.style.getPropertyValue("--dy")) || 0;
-      el.classList.add("is-drag");
-      try { el.setPointerCapture(e.pointerId); } catch (err) {}
-      e.preventDefault();
+  var scraps = Array.prototype.slice.call(root.querySelectorAll(".fq-scrap"));
+  if (!scraps.length) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var art = root.querySelector(".fq-art");
+  /* per-piece drift seeds: alternating directions and depths */
+  var SY = [-34, 22, -16, 28, -24, 14, -30, 18, -12, 26, -20, 16];
+  var SX = [10, -14, 6, -8, 12, -6, 8, -12, 5, -10, 7, -9];
+  var SR = [2.5, -3, 1.5, -2, 3, -1.5, 2, -2.5, 1, -3, 1.5, -2];
+  var ticking = false;
+  function paint() {
+    ticking = false;
+    var r = art.getBoundingClientRect();
+    var vh = window.innerHeight || 1;
+    /* -1 with the collage below the fold, +1 once it has scrolled past */
+    var t = ((vh / 2) - (r.top + r.height / 2)) / (vh / 2);
+    if (t > 1.4) { t = 1.4; } else if (t < -1.4) { t = -1.4; }
+    scraps.forEach(function (el, i) {
+      el.style.setProperty("--py", (t * SY[i % SY.length]).toFixed(1) + "px");
+      el.style.setProperty("--px", (t * SX[i % SX.length]).toFixed(1) + "px");
+      el.style.setProperty("--pr", (t * SR[i % SR.length]).toFixed(2) + "deg");
     });
-    el.addEventListener("pointermove", function (e) {
-      if (!on) return;
-      el.style.setProperty("--dx", (bx + e.clientX - sx) + "px");
-      el.style.setProperty("--dy", (by + e.clientY - sy) + "px");
-    });
-    function up() { on = false; el.classList.remove("is-drag"); }
-    el.addEventListener("pointerup", up);
-    el.addEventListener("pointercancel", up);
-  });
+  }
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(paint); } }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll);
+  paint();
 })();
 </script>
 
@@ -391,7 +396,7 @@
       "name": "Collage piece (hero)",
       "limit": 12,
       "settings": [
-        { "type": "image_picker", "id": "image", "label": "PNG piece", "info": "Shown as-is in the hero collage area. Visitors can drag it around." },
+        { "type": "image_picker", "id": "image", "label": "PNG piece", "info": "Shown as-is in the hero collage area. Pieces drift at different speeds as the page scrolls." },
         { "type": "range", "id": "x", "label": "Left position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
         { "type": "range", "id": "y", "label": "Top position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
         { "type": "range", "id": "w", "label": "Width (%)", "min": 6, "max": 60, "step": 1, "default": 30 },
