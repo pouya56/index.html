@@ -141,10 +141,17 @@
     gap: 14px 48px; align-items: start; }
   .dbo-coltitle-right, .dbo-rows, .dbo-add { grid-column: 1; }
   .dbo-coltitle-right { grid-row: 1; margin-bottom: 0; }
-  .dbo-rows { grid-row: 2; }
+  /* the items list scrolls inside its own window so a long order never
+     pushes the form off screen; the add button stays under it, outside */
+  .dbo-rows { grid-row: 2; overflow-y: auto; max-height: calc(100vh - 360px); min-height: 240px;
+    padding: 2px 8px 10px 2px; scrollbar-width: thin;
+    scrollbar-color: rgba(20,17,16,0.35) rgba(20,17,16,0.06); }
+  .dbo-rows::-webkit-scrollbar { width: 8px; }
+  .dbo-rows::-webkit-scrollbar-track { background: rgba(20,17,16,0.06); }
+  .dbo-rows::-webkit-scrollbar-thumb { background: rgba(20,17,16,0.35); }
   .dbo-add { grid-row: 3; justify-self: start; }
-  /* anchored, not sticky: the box keeps its spot on the page while scrolling */
-  .dbo-summary { grid-column: 2; grid-row: 1 / span 3; margin-top: 0; }
+  /* the brief rides the viewport - Project Information stays on screen */
+  .dbo-summary { grid-column: 2; grid-row: 1 / span 3; margin-top: 0; position: sticky; top: 90px; }
 }
 .dbo-coltitle { font-family: Georgia, "Times New Roman", serif; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.08em; font-size: 17px; color: var(--inkk); margin: 0 0 18px;
