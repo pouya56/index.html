@@ -272,8 +272,16 @@
           {% if section.settings.band_text != blank %}<p>{{ section.settings.band_text }}</p>{% endif %}
           <a class="fq-band-btn" href="{{ section.settings.cta_link | default: '/pages/contact' }}">{{ section.settings.band_btn | default: 'Contact us' }} &rarr;</a>
         </div>
+        {%- assign scrap2_n = 0 -%}
+        {%- for block in section.blocks -%}{%- if block.type == 'scrap2' and block.settings.image != blank -%}{%- assign scrap2_n = scrap2_n | plus: 1 -%}{%- endif -%}{%- endfor -%}
         <div class="fq-band-art" aria-hidden="true">
-          {%- if section.settings.band_image != blank -%}
+          {%- if scrap2_n > 0 -%}
+            {%- for block in section.blocks -%}
+              {%- if block.type == 'scrap2' and block.settings.image != blank -%}
+                <span class="fq-scrap" style="left:{{ block.settings.x }}%;top:{{ block.settings.y }}%;width:{{ block.settings.w }}%;--rot:{{ block.settings.tilt }}deg;" {{ block.shopify_attributes }}><img src="{{ block.settings.image | image_url: width: 800 }}" alt="" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" loading="lazy" draggable="false"></span>
+              {%- endif -%}
+            {%- endfor -%}
+          {%- elsif section.settings.band_image != blank -%}
             <img src="{{ section.settings.band_image | image_url: width: 800 }}" alt="" width="{{ section.settings.band_image.width }}" height="{{ section.settings.band_image.height }}" loading="lazy">
           {%- else -%}
             <i class="fb-gridp"></i>
@@ -338,20 +346,34 @@
   var scraps = Array.prototype.slice.call(root.querySelectorAll(".fq-scrap"));
   if (!scraps.length) return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  var art = root.querySelector(".fq-art");
   /* per-piece drift seeds: alternating directions and depths */
-  var SY = [-34, 22, -16, 28, -24, 14, -30, 18, -12, 26, -20, 16];
-  var SX = [10, -14, 6, -8, 12, -6, 8, -12, 5, -10, 7, -9];
-  var SR = [2.5, -3, 1.5, -2, 3, -1.5, 2, -2.5, 1, -3, 1.5, -2];
+  var SY = [-78, 50, -38, 64, -54, 32, -70, 42, -28, 58, -46, 36];
+  var SX = [22, -30, 14, -18, 26, -12, 18, -26, 10, -22, 16, -20];
+  var SR = [5.5, -6.5, 3.5, -4.5, 7, -3, 5, -5.5, 2.5, -6.5, 3.5, -4.5];
+  /* pieces group by their own collage (hero or band); each group tracks its
+     container's viewport progress so both collages animate independently */
+  var conts = [];
+  var items = scraps.map(function (el) {
+    var c = el.parentElement, g = null;
+    for (var k = 0; k < conts.length; k++) { if (conts[k].el === c) { g = conts[k]; break; } }
+    if (!g) { g = { el: c, n: 0, t: 0 }; conts.push(g); }
+    var it = { el: el, g: g, i: g.n };
+    g.n++;
+    return it;
+  });
   var ticking = false;
   function paint() {
     ticking = false;
-    var r = art.getBoundingClientRect();
     var vh = window.innerHeight || 1;
-    /* -1 with the collage below the fold, +1 once it has scrolled past */
-    var t = ((vh / 2) - (r.top + r.height / 2)) / (vh / 2);
-    if (t > 1.4) { t = 1.4; } else if (t < -1.4) { t = -1.4; }
-    scraps.forEach(function (el, i) {
+    conts.forEach(function (g) {
+      var r = g.el.getBoundingClientRect();
+      /* -1 with the collage below the fold, +1 once it has scrolled past */
+      var t = ((vh / 2) - (r.top + r.height / 2)) / (vh / 2);
+      if (t > 1.4) { t = 1.4; } else if (t < -1.4) { t = -1.4; }
+      g.t = t;
+    });
+    items.forEach(function (it) {
+      var t = it.g.t, i = it.i, el = it.el;
       el.style.setProperty("--py", (t * SY[i % SY.length]).toFixed(1) + "px");
       el.style.setProperty("--px", (t * SX[i % SX.length]).toFixed(1) + "px");
       el.style.setProperty("--pr", (t * SR[i % SR.length]).toFixed(2) + "deg");
@@ -404,6 +426,18 @@
       ]
     },
     {
+      "type": "scrap2",
+      "name": "Collage piece (bottom band)",
+      "limit": 12,
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "PNG piece", "info": "Shown in the band's right side. Drifts as the page scrolls." },
+        { "type": "range", "id": "x", "label": "Left position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
+        { "type": "range", "id": "y", "label": "Top position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
+        { "type": "range", "id": "w", "label": "Width (%)", "min": 6, "max": 60, "step": 1, "default": 30 },
+        { "type": "range", "id": "tilt", "label": "Tilt (deg)", "min": -15, "max": 15, "step": 0.5, "default": 0 }
+      ]
+    },
+    {
       "type": "nav_link",
       "name": "Nav link (unused)",
       "limit": 6,
@@ -429,7 +463,7 @@
       ]
     }
   ],
-  "max_blocks": 50,
+  "max_blocks": 80,
   "presets": [{
     "name": "Dynamic FAQ",
     "blocks": [
