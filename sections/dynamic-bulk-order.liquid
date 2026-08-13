@@ -135,7 +135,7 @@
 /* the three-step strip */
 /* two balanced columns on desktop: information left, details right */
 @media (min-width: 941px) {
-  /* the tall sticky summary spans every row - route its spare height into the
+  /* the tall summary spans every row - route its spare height into the
      last (1fr) track so it can't open gaps between the title and the cards */
   #dboForm { display: grid; grid-template-columns: 7fr 5fr; grid-template-rows: auto auto 1fr;
     gap: 14px 48px; align-items: start; }
@@ -143,7 +143,8 @@
   .dbo-coltitle-right { grid-row: 1; margin-bottom: 0; }
   .dbo-rows { grid-row: 2; }
   .dbo-add { grid-row: 3; justify-self: start; }
-  .dbo-summary { grid-column: 2; grid-row: 1 / span 3; position: sticky; top: 76px; margin-top: 0; }
+  /* anchored, not sticky: the box keeps its spot on the page while scrolling */
+  .dbo-summary { grid-column: 2; grid-row: 1 / span 3; margin-top: 0; }
 }
 .dbo-coltitle { font-family: Georgia, "Times New Roman", serif; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.08em; font-size: 17px; color: var(--inkk); margin: 0 0 18px;
