@@ -17,7 +17,7 @@
   .dyn-faq { --ink: #17130f; --navy: #16334d; --blue: #1a6ef5; --soft: #5f5f64; --line: #e4e4e6; --paper: #efe7d7;
     --mono: "Courier Prime", "Courier New", ui-monospace, SFMono-Regular, monospace;
     width: 100%; margin: 0; padding: 0; color: var(--ink); -webkit-font-smoothing: antialiased; }
-  .dyn-faq-card { max-width: 1240px; margin: 22px auto 0; background: #fff; border-radius: 4px;
+  .dyn-faq-card { max-width: 1240px; box-sizing: border-box; margin: 22px auto 0; background: #fff; border-radius: 4px;
     padding: clamp(26px, 4vw, 54px) clamp(20px, 4vw, 64px) clamp(30px, 4vw, 60px); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
   /* top bar: logo left, black pill right */
   .dyn-faq-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: clamp(26px, 4vw, 46px); }
@@ -88,8 +88,9 @@
   .fq-answer p { margin: 0 0 9px; } .fq-answer p:last-child { margin-bottom: 0; }
   .fq-answer a { color: var(--blue); }
   .fq-empty { padding: 30px 6px; color: var(--soft); font-size: 15px; }
-  /* bottom band: one full-width collage image linking to contact */
-  .fq-band { margin-top: clamp(30px, 4vw, 56px); }
+  /* bottom band: same width as the white card and connected to it */
+  .fq-band { max-width: 1240px; margin: 0 auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .fq-band .fq-band-cnv, .fq-band .fq-band-img img { border-radius: 0 0 4px 4px; }
   .fq-band-img { display: block; width: 100%; transition: opacity .16s; }
   .fq-band-img:hover { opacity: 0.94; }
   .fq-band-img img { display: block; width: 100%; height: auto; }
@@ -109,7 +110,9 @@
     .fq-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 760px) {
-    .dyn-faq-card { margin: 10px 10px 0; padding: 20px 16px 28px; border-radius: 10px; }
+    .dyn-faq-card { margin: 10px 10px 0; padding: 20px 16px 28px; border-radius: 10px 10px 0 0; }
+    .fq-band { margin: 0 10px; }
+    .fq-band .fq-band-cnv, .fq-band .fq-band-img img { border-radius: 0 0 10px 10px; }
     /* clear the fixed back button (top-left) and menu tab (top-right) */
     .dyn-faq-top { margin-top: 64px; margin-bottom: 18px; gap: 10px; }
     .dyn-faq-logo img { width: min(112px, 34vw) !important; }
