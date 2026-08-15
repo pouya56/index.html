@@ -94,12 +94,8 @@
   .fq-band-img { display: block; width: 100%; transition: opacity .16s; }
   .fq-band-img:hover { opacity: 0.94; }
   .fq-band-img img { display: block; width: 100%; height: auto; }
-  /* full-width piece canvas: a cream paper band; pieces clip inside the box */
-  .fq-band-cnv { position: relative; display: block; width: 100%; overflow: hidden;
-    background-color: #efe7d7;
-    background-image: repeating-linear-gradient(0deg, rgba(140,130,110,0.16) 0 1px, transparent 1px 26px),
-      repeating-linear-gradient(90deg, rgba(140,130,110,0.16) 0 1px, transparent 1px 26px);
-    border-top: 1px solid rgba(20,17,16,0.12); border-bottom: 1px solid rgba(20,17,16,0.12); }
+  /* piece canvas: plain white, reads as part of the card; pieces clip inside */
+  .fq-band-cnv { position: relative; display: block; width: 100%; overflow: hidden; background: #fff; }
   @media (max-width: 760px) { .fq-band-cnv { height: 260px !important; } }
   /* phone */
   @media (max-width: 860px) {
