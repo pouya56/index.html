@@ -1,0 +1,110 @@
+{% comment %}
+  ============================================================================
+  Dynamic Collage Band — standalone full-width collage strip
+  ----------------------------------------------------------------------------
+  A white canvas the same width as the FAQ card (1240px). Add "Collage piece"
+  blocks: each is a PNG placed with left/top/width/tilt sliders. Pieces drift
+  at different speeds as the page scrolls and clip inside the box. Clicking
+  anywhere on the band opens the link (defaults to /pages/contact).
+  Add it from the theme editor: Add section > "Dynamic Collage Band".
+  ============================================================================
+{% endcomment %}
+
+<style>
+  .dcb { max-width: 1240px; margin: 0 auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .dcb-lnk { display: block; text-decoration: none; }
+  .dcb-cnv { position: relative; display: block; width: 100%; overflow: hidden;
+    background: {{ section.settings.bg | default: '#ffffff' }};
+    border-radius: {% if section.settings.round_top %}4px 4px{% else %}0 0{% endif %} 4px 4px; }
+  .dcb-scrap { position: absolute; display: block; pointer-events: none; will-change: transform;
+    transform: translate3d(var(--px, 0px), var(--py, 0px), 0) rotate(calc(var(--rot, 0deg) + var(--pr, 0deg))); }
+  .dcb-scrap img { display: block; width: 100%; height: auto; }
+  .dcb-empty { display: flex; align-items: center; justify-content: center; height: 100%;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(20,17,16,0.35); }
+  @media (max-width: 760px) {
+    .dcb { margin: 0 10px; }
+    .dcb-cnv { height: {{ section.settings.height_phone | default: 260 }}px !important; border-radius: 0 0 10px 10px; }
+  }
+</style>
+
+<section class="dcb" id="dcb-{{ section.id }}">
+  <a class="dcb-lnk" href="{{ section.settings.link | default: '/pages/contact' }}" aria-label="{{ section.settings.link_label | default: 'Contact us' | escape }}">
+    <span class="dcb-cnv" style="height: {{ section.settings.height | default: 380 }}px;">
+      {%- assign dcb_n = 0 -%}
+      {%- for block in section.blocks -%}
+        {%- if block.settings.image != blank -%}
+          {%- assign dcb_n = dcb_n | plus: 1 -%}
+          <span class="dcb-scrap" style="left:{{ block.settings.x }}%;top:{{ block.settings.y }}%;width:{{ block.settings.w }}%;--rot:{{ block.settings.tilt }}deg;" {{ block.shopify_attributes }}><img src="{{ block.settings.image | image_url: width: 1200 }}" alt="" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" loading="lazy" draggable="false"></span>
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if dcb_n == 0 and request.design_mode -%}
+        <span class="dcb-empty">Add &ldquo;Collage piece&rdquo; blocks to fill this band</span>
+      {%- endif -%}
+    </span>
+  </a>
+</section>
+
+<script>
+(function () {
+  var root = document.getElementById("dcb-{{ section.id }}");
+  if (!root || root.__dcbInit) return;
+  root.__dcbInit = true;
+  var scraps = Array.prototype.slice.call(root.querySelectorAll(".dcb-scrap"));
+  if (!scraps.length) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var cnv = root.querySelector(".dcb-cnv");
+  /* per-piece drift seeds: alternating directions and depths */
+  var SY = [-78, 50, -38, 64, -54, 32, -70, 42, -28, 58, -46, 36];
+  var SX = [22, -30, 14, -18, 26, -12, 18, -26, 10, -22, 16, -20];
+  var SR = [5.5, -6.5, 3.5, -4.5, 7, -3, 5, -5.5, 2.5, -6.5, 3.5, -4.5];
+  var ticking = false;
+  function paint() {
+    ticking = false;
+    var vh = window.innerHeight || 1;
+    var r = cnv.getBoundingClientRect();
+    /* -1 with the band below the fold, +1 once it has scrolled past */
+    var t = ((vh / 2) - (r.top + r.height / 2)) / (vh / 2);
+    if (t > 1.4) { t = 1.4; } else if (t < -1.4) { t = -1.4; }
+    scraps.forEach(function (el, i) {
+      el.style.setProperty("--py", (t * SY[i % SY.length]).toFixed(1) + "px");
+      el.style.setProperty("--px", (t * SX[i % SX.length]).toFixed(1) + "px");
+      el.style.setProperty("--pr", (t * SR[i % SR.length]).toFixed(2) + "deg");
+    });
+  }
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(paint); } }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll);
+  paint();
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dynamic Collage Band",
+  "tag": "section",
+  "settings": [
+    { "type": "range", "id": "height", "label": "Band height (px)", "min": 160, "max": 640, "step": 20, "default": 380 },
+    { "type": "range", "id": "height_phone", "label": "Band height on phones (px)", "min": 120, "max": 480, "step": 20, "default": 260 },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#ffffff" },
+    { "type": "checkbox", "id": "round_top", "label": "Round the top corners too", "default": false, "info": "Leave off when the band sits directly under the FAQ card." },
+    { "type": "url", "id": "link", "label": "Click-through link", "info": "Where clicking the band goes. Defaults to /pages/contact." },
+    { "type": "text", "id": "link_label", "label": "Link label (accessibility)", "default": "Contact us" }
+  ],
+  "blocks": [
+    {
+      "type": "piece",
+      "name": "Collage piece",
+      "limit": 30,
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "PNG piece", "info": "Placed as-is; drifts as the page scrolls." },
+        { "type": "range", "id": "x", "label": "Left position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
+        { "type": "range", "id": "y", "label": "Top position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
+        { "type": "range", "id": "w", "label": "Width (%)", "min": 2, "max": 60, "step": 1, "default": 20 },
+        { "type": "range", "id": "tilt", "label": "Tilt (deg)", "min": -15, "max": 15, "step": 0.5, "default": 0 }
+      ]
+    }
+  ],
+  "max_blocks": 30,
+  "presets": [ { "name": "Dynamic Collage Band" } ]
+}
+{% endschema %}

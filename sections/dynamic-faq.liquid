@@ -88,15 +88,6 @@
   .fq-answer p { margin: 0 0 9px; } .fq-answer p:last-child { margin-bottom: 0; }
   .fq-answer a { color: var(--blue); }
   .fq-empty { padding: 30px 6px; color: var(--soft); font-size: 15px; }
-  /* bottom band: same width as the white card and connected to it */
-  .fq-band { max-width: 1240px; margin: 0 auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-  .fq-band .fq-band-cnv, .fq-band .fq-band-img img { border-radius: 0 0 4px 4px; }
-  .fq-band-img { display: block; width: 100%; transition: opacity .16s; }
-  .fq-band-img:hover { opacity: 0.94; }
-  .fq-band-img img { display: block; width: 100%; height: auto; }
-  /* piece canvas: plain white, reads as part of the card; pieces clip inside */
-  .fq-band-cnv { position: relative; display: block; width: 100%; overflow: hidden; background: #fff; }
-  @media (max-width: 760px) { .fq-band-cnv { height: 260px !important; } }
   /* phone */
   @media (max-width: 860px) {
     .fq-hero { grid-template-columns: 1fr; }
@@ -106,9 +97,7 @@
     .fq-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 760px) {
-    .dyn-faq-card { margin: 10px 10px 0; padding: 20px 16px 28px; border-radius: 10px 10px 0 0; }
-    .fq-band { margin: 0 10px; }
-    .fq-band .fq-band-cnv, .fq-band .fq-band-img img { border-radius: 0 0 10px 10px; }
+    .dyn-faq-card { margin: 10px 10px 0; padding: 20px 16px 28px; border-radius: 10px; }
     /* clear the fixed back button (top-left) and menu tab (top-right) */
     .dyn-faq-top { margin-top: 64px; margin-bottom: 18px; gap: 10px; }
     .dyn-faq-logo img { width: min(112px, 34vw) !important; }
@@ -226,25 +215,6 @@
 
   </div>
 
-  {%- assign bscrap_n = 0 -%}
-  {%- for block in section.blocks -%}{%- if block.type == 'bscrap' and block.settings.image != blank -%}{%- assign bscrap_n = bscrap_n | plus: 1 -%}{%- endif -%}{%- endfor -%}
-  {%- if bscrap_n > 0 or section.settings.band_image != blank -%}
-    <div class="fq-band">
-      <a class="fq-band-img" href="{{ section.settings.band_link | default: section.settings.cta_link | default: '/pages/contact' }}" aria-label="Contact us">
-        {%- if bscrap_n > 0 -%}
-          <span class="fq-band-cnv" style="height: {{ section.settings.band_height | default: 380 }}px;">
-            {%- for block in section.blocks -%}
-              {%- if block.type == 'bscrap' and block.settings.image != blank -%}
-                <span class="fq-scrap" style="left:{{ block.settings.x }}%;top:{{ block.settings.y }}%;width:{{ block.settings.w }}%;--rot:{{ block.settings.tilt }}deg;" {{ block.shopify_attributes }}><img src="{{ block.settings.image | image_url: width: 1200 }}" alt="" width="{{ block.settings.image.width }}" height="{{ block.settings.image.height }}" loading="lazy" draggable="false"></span>
-              {%- endif -%}
-            {%- endfor -%}
-          </span>
-        {%- else -%}
-          <img src="{{ section.settings.band_image | image_url: width: 2800 }}" alt="Still have questions? Contact us" width="{{ section.settings.band_image.width }}" height="{{ section.settings.band_image.height }}" loading="lazy">
-        {%- endif -%}
-      </a>
-    </div>
-  {%- endif -%}
 </section>
 
 <script>
@@ -355,11 +325,8 @@
     { "type": "checkbox", "id": "show_search", "label": "Show search bar", "default": true, "info": "Customers can type to filter the questions live." },
     { "type": "text", "id": "search_placeholder", "label": "Search placeholder text", "default": "Search questions\u2026" },
     { "type": "checkbox", "id": "open_first", "label": "Open first question by default", "default": false },
-    { "type": "header", "content": "Bottom collage banner" },
-    { "type": "paragraph", "content": "Add \u201cCollage piece (band)\u201d blocks to compose the bottom collage from PNG pieces \u2014 same as the top. With no pieces, the single banner image below is used instead." },
-    { "type": "range", "id": "band_height", "label": "Collage canvas height (px)", "min": 160, "max": 640, "step": 20, "default": 380 },
-    { "type": "image_picker", "id": "band_image", "label": "Banner image (full width)", "info": "Fallback: one image edge to edge, used only when no band collage pieces are added." },
-    { "type": "url", "id": "band_link", "label": "Banner link", "info": "Where clicking the bottom collage goes. Defaults to the Button link above." }
+    { "type": "header", "content": "Bottom collage" },
+    { "type": "paragraph", "content": "The bottom collage moved to its own section: add \u201cDynamic Collage Band\u201d right below this one." }
   ],
   "blocks": [
     {
@@ -376,10 +343,11 @@
     },
     {
       "type": "bscrap",
-      "name": "Collage piece (band)",
+      "name": "Old band piece (unused)",
       "limit": 12,
       "settings": [
-        { "type": "image_picker", "id": "image", "label": "PNG piece", "info": "Composes the full-width bottom collage. Drifts as the page scrolls." },
+        { "type": "paragraph", "content": "This block moved to the \u201cDynamic Collage Band\u201d section. You can delete it." },
+        { "type": "image_picker", "id": "image", "label": "PNG piece (unused)" },
         { "type": "range", "id": "x", "label": "Left position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
         { "type": "range", "id": "y", "label": "Top position (%)", "min": -10, "max": 90, "step": 1, "default": 10 },
         { "type": "range", "id": "w", "label": "Width (%)", "min": 2, "max": 60, "step": 1, "default": 20 },
