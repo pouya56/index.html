@@ -2757,8 +2757,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       /* red spray-paint frame fading in around the upload art on hover */
       var uhs = document.createElement("style"); uhs.id = "dynUpSprayCss";
       uhs.textContent =
-        ".print-hint.has-img::after{content:\"\";position:absolute;left:1%;right:1%;top:1.5%;bottom:1.5%;pointer-events:none;" +
-          "opacity:0;transform:scale(.985);transition:opacity .2s ease,transform .2s ease;" +
+        /* the wrap shrinks to the art, so the spray frame hugs the button itself */
+        ".print-hint-wrap{position:relative;display:flex;align-items:center;justify-content:center;max-width:80%;max-height:80%;pointer-events:none}" +
+        ".print-hint.has-img .print-hint-wrap .print-hint-art{max-width:100%;max-height:100%}" +
+        ".print-hint.has-img .print-hint-wrap::after{content:\"\";position:absolute;left:-8%;right:-8%;top:-16%;bottom:-16%;pointer-events:none;" +
+          "opacity:0;transform:scale(.97);transition:opacity .2s ease,transform .2s ease;" +
           "background:url(\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20400%20300'%20preserveAspectRatio='none'%3E" +
           "%3Cdefs%3E%3Cfilter%20id='b'%20x='-15%25'%20y='-15%25'%20width='130%25'%20height='130%25'%3E%3CfeGaussianBlur%20stdDeviation='2'/%3E%3C/filter%3E%3C/defs%3E" +
           "%3Cg%20filter='url(%23b)'%20fill='none'%20stroke='%23d8231d'%20stroke-linecap='round'%3E" +
@@ -2779,8 +2782,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           "%3Ccircle%20cx='140'%20cy='274'%20r='1.6'/%3E%3Ccircle%20cx='300'%20cy='292'%20r='1.3'/%3E%3Ccircle%20cx='370'%20cy='60'%20r='1.5'/%3E" +
           "%3Ccircle%20cx='390'%20cy='210'%20r='1.3'/%3E%3Ccircle%20cx='316'%20cy='96'%20r='1.4'/%3E%3Ccircle%20cx='344'%20cy='104'%20r='1'/%3E" +
           "%3C/g%3E%3C/svg%3E\") center/100% 100% no-repeat}" +
-        ".print-hint.has-img:hover::after{opacity:1;transform:scale(1)}" +
-        "@media (prefers-reduced-motion: reduce){.print-hint.has-img::after{transform:none;transition:opacity .2s ease}}";
+        ".print-hint.has-img:hover .print-hint-wrap::after{opacity:1;transform:scale(1)}" +
+        "@media (prefers-reduced-motion: reduce){.print-hint.has-img .print-hint-wrap::after{transform:none;transition:opacity .2s ease}}";
       (document.head || document.documentElement).appendChild(uhs);
     }
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
@@ -2817,7 +2820,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               // Click-to-upload box: the customer uploads by clicking the image itself.
               (showHint ? '<button type="button" class="print-hint' + (upImg ? ' has-img' : '') + '" id="printHint" data-drop="design" aria-label="Click to upload your design">' +
                 (upImg
-                  ? '<img class="print-hint-art" src="' + upImg + '" alt="" draggable="false">'
+                  ? '<span class="print-hint-wrap"><img class="print-hint-art" src="' + upImg + '" alt="" draggable="false"></span>'
                   : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
                     '<span>Click to upload your design</span>') + '</button>' : '') +
             '</div>' +
