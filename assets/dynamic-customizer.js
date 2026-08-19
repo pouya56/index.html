@@ -2753,6 +2753,25 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const showCompose = hasBlockToggles ? product.allowText : !photoOnly;
     const exampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.exampleImage) || "";
     const upImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.uploadImage) || "";
+    const upHov = (window.DYN_SETTINGS && window.DYN_SETTINGS.uploadHover) || "press";
+    if (upImg && !document.getElementById("dynUpHovCss")) {
+      var uhs = document.createElement("style"); uhs.id = "dynUpHovCss";
+      uhs.textContent =
+        ".print-hint.has-img .print-hint-art{transition:transform .18s ease,filter .18s ease}" +
+        ".print-hint.hov-none:hover .print-hint-art{transform:none}" +
+        ".print-hint.hov-press:hover .print-hint-art{transform:scale(.965) rotate(-.6deg)}" +
+        ".print-hint.hov-lift:hover .print-hint-art{transform:translateY(-4px) scale(1.02);filter:drop-shadow(0 14px 22px rgba(0,0,0,.4))}" +
+        ".print-hint.hov-wiggle:hover .print-hint-art{transform:none;animation:dynUpWig .5s ease}" +
+        "@keyframes dynUpWig{0%{transform:rotate(0)}30%{transform:rotate(-2.2deg)}60%{transform:rotate(1.6deg)}100%{transform:rotate(0)}}" +
+        ".print-hint.hov-ring:hover .print-hint-art{transform:none}" +
+        ".print-hint.hov-ring::after{content:\"\";position:absolute;left:4%;right:4%;top:6%;bottom:6%;pointer-events:none;opacity:0;transition:opacity .15s ease;" +
+          "background:url(\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20120'%20preserveAspectRatio='none'%3E%3Cellipse%20cx='100'%20cy='60'%20rx='94'%20ry='52'%20fill='none'%20stroke='%23e10600'%20stroke-width='3'%20opacity='0.9'/%3E%3Cellipse%20cx='103'%20cy='57'%20rx='89'%20ry='48'%20fill='none'%20stroke='%23e10600'%20stroke-width='1.5'%20opacity='0.55'/%3E%3C/svg%3E\") center/100% 100% no-repeat}" +
+        ".print-hint.hov-ring:hover::after{opacity:1}" +
+        ".print-hint.hov-cursor{cursor:copy}" +
+        ".print-hint.hov-cursor:hover .print-hint-art{transform:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.3)) brightness(1.06)}" +
+        "@media (prefers-reduced-motion: reduce){.print-hint.has-img .print-hint-art{transition:none;animation:none!important}}";
+      (document.head || document.documentElement).appendChild(uhs);
+    }
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
     const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (!showCompose
       ? ("Click the image to upload your design, then drag, resize or rotate it on your " + noun + ".")
@@ -2785,7 +2804,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               '<span class="print-area-label">Print area</span>' +
               '<div class="up-guide up-guide-v" id="guideV"></div><div class="up-guide up-guide-h" id="guideH"></div>' +
               // Click-to-upload box: the customer uploads by clicking the image itself.
-              (showHint ? '<button type="button" class="print-hint' + (upImg ? ' has-img' : '') + '" id="printHint" data-drop="design" aria-label="Click to upload your design">' +
+              (showHint ? '<button type="button" class="print-hint' + (upImg ? ' has-img hov-' + upHov : '') + '" id="printHint" data-drop="design" aria-label="Click to upload your design">' +
                 (upImg
                   ? '<img class="print-hint-art" src="' + upImg + '" alt="" draggable="false">'
                   : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +

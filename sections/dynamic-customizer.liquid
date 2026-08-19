@@ -193,6 +193,7 @@
     "frontImage": {% if blk_print.settings.front_image %}{{ blk_print.settings.front_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "exampleImage": {% if blk_print.settings.example_image %}{{ blk_print.settings.example_image | image_url: width: 1000 | json }}{% else %}""{% endif %},
     "uploadImage": {% if blk_print.settings.upload_image %}{{ blk_print.settings.upload_image | image_url: width: 800 | json }}{% else %}""{% endif %},
+    "uploadHover": {{ blk_print.settings.upload_hover | default: 'press' | json }},
     "sampleImage": {% if blk_print.settings.sample_image %}{{ blk_print.settings.sample_image | image_url: width: 1200 | json }}{% else %}""{% endif %},
     "sampleImage2": {% if blk_print.settings.sample_image_2 %}{{ blk_print.settings.sample_image_2 | image_url: width: 1200 | json }}{% else %}""{% endif %},
     "sampleCaption": {{ blk_print.settings.sample_caption | default: 'How your finished product will look' | json }},
@@ -3774,6 +3775,20 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
           "id": "upload_image",
           "label": "Upload button image",
           "info": "Your own art for the 'Click to upload your design' box. Clicking it still opens the file picker."
+        },
+        {
+          "type": "select",
+          "id": "upload_hover",
+          "label": "Upload image hover",
+          "options": [
+            { "value": "press", "label": "Ink-stamp press" },
+            { "value": "lift", "label": "Lift & shadow" },
+            { "value": "wiggle", "label": "Wiggle" },
+            { "value": "ring", "label": "Hand-drawn red ring" },
+            { "value": "cursor", "label": "Cursor hint only" },
+            { "value": "none", "label": "None" }
+          ],
+          "default": "press"
         },
         {
           "type": "image_picker",
