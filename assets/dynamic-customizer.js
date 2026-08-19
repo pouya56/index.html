@@ -2752,6 +2752,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const showHint = hasBlockToggles ? !(product && product.noUpload) : photoOnly;
     const showCompose = hasBlockToggles ? product.allowText : !photoOnly;
     const exampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.exampleImage) || "";
+    const upImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.uploadImage) || "";
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
     const eSub = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveSub) || (!showCompose
       ? ("Click the image to upload your design, then drag, resize or rotate it on your " + noun + ".")
@@ -2784,9 +2785,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               '<span class="print-area-label">Print area</span>' +
               '<div class="up-guide up-guide-v" id="guideV"></div><div class="up-guide up-guide-h" id="guideH"></div>' +
               // Click-to-upload box: the customer uploads by clicking the image itself.
-              (showHint ? '<button type="button" class="print-hint" id="printHint" data-drop="design">' +
-                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
-                '<span>Click to upload your design</span></button>' : '') +
+              (showHint ? '<button type="button" class="print-hint' + (upImg ? ' has-img' : '') + '" id="printHint" data-drop="design" aria-label="Click to upload your design">' +
+                (upImg
+                  ? '<img class="print-hint-art" src="' + upImg + '" alt="" draggable="false">'
+                  : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
+                    '<span>Click to upload your design</span>') + '</button>' : '') +
             '</div>' +
             // Small upload chip pinned to the image's bottom-right corner; takes
             // over from the big box once something is on the print area.

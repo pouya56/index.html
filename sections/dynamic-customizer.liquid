@@ -192,6 +192,7 @@
     "enableBack": {% if blk_print.settings.enable_back %}true{% else %}false{% endif %},
     "frontImage": {% if blk_print.settings.front_image %}{{ blk_print.settings.front_image | image_url: width: 1400 | json }}{% else %}""{% endif %},
     "exampleImage": {% if blk_print.settings.example_image %}{{ blk_print.settings.example_image | image_url: width: 1000 | json }}{% else %}""{% endif %},
+    "uploadImage": {% if blk_print.settings.upload_image %}{{ blk_print.settings.upload_image | image_url: width: 800 | json }}{% else %}""{% endif %},
     "sampleImage": {% if blk_print.settings.sample_image %}{{ blk_print.settings.sample_image | image_url: width: 1200 | json }}{% else %}""{% endif %},
     "sampleImage2": {% if blk_print.settings.sample_image_2 %}{{ blk_print.settings.sample_image_2 | image_url: width: 1200 | json }}{% else %}""{% endif %},
     "sampleCaption": {{ blk_print.settings.sample_caption | default: 'How your finished product will look' | json }},
@@ -1157,6 +1158,11 @@ button { font-family: inherit; cursor: pointer; }
   transition: background .15s ease; }
 .print-hint:hover { background: rgba(0,113,227,0.1); }
 .print-hint svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+/* merchant-supplied upload art replaces the box entirely */
+.print-hint.has-img, .print-hint.has-img:hover, #dynInlineStage .print-hint.has-img { background: none; border: 0; padding: 0; }
+.print-hint.has-img .print-hint-art { max-width: 80%; max-height: 80%; object-fit: contain;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,0.3)); transition: transform .15s ease; }
+.print-hint.has-img:hover .print-hint-art { transform: scale(1.03); }
 /* Once anything is on the print area, the big box gives way to a small chip
    pinned to the image's bottom-right corner. */
 .print-hint-chip { position: absolute; right: 10px; bottom: 10px; z-index: 6; pointer-events: auto; cursor: pointer;
@@ -3759,6 +3765,12 @@ body:has(#dhSlide.dh-slide-half.is-open) .dyn-hero .dh-head { transform: transla
           "id": "example_image",
           "label": "Example design (placeholder)",
           "info": "A faded sample shown in the print area to show where the design goes. It disappears when they upload. Leave empty to hide."
+        },
+        {
+          "type": "image_picker",
+          "id": "upload_image",
+          "label": "Upload button image",
+          "info": "Your own art for the 'Click to upload your design' box. Clicking it still opens the file picker."
         },
         {
           "type": "image_picker",
