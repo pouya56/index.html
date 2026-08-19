@@ -2753,23 +2753,34 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const showCompose = hasBlockToggles ? product.allowText : !photoOnly;
     const exampleImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.exampleImage) || "";
     const upImg = (window.DYN_SETTINGS && window.DYN_SETTINGS.uploadImage) || "";
-    const upHov = (window.DYN_SETTINGS && window.DYN_SETTINGS.uploadHover) || "press";
-    if (upImg && !document.getElementById("dynUpHovCss")) {
-      var uhs = document.createElement("style"); uhs.id = "dynUpHovCss";
+    if (upImg && !document.getElementById("dynUpSprayCss")) {
+      /* red spray-paint frame fading in around the upload art on hover */
+      var uhs = document.createElement("style"); uhs.id = "dynUpSprayCss";
       uhs.textContent =
-        ".print-hint.has-img .print-hint-art{transition:transform .18s ease,filter .18s ease}" +
-        ".print-hint.hov-none:hover .print-hint-art{transform:none}" +
-        ".print-hint.hov-press:hover .print-hint-art{transform:scale(.965) rotate(-.6deg)}" +
-        ".print-hint.hov-lift:hover .print-hint-art{transform:translateY(-4px) scale(1.02);filter:drop-shadow(0 14px 22px rgba(0,0,0,.4))}" +
-        ".print-hint.hov-wiggle:hover .print-hint-art{transform:none;animation:dynUpWig .5s ease}" +
-        "@keyframes dynUpWig{0%{transform:rotate(0)}30%{transform:rotate(-2.2deg)}60%{transform:rotate(1.6deg)}100%{transform:rotate(0)}}" +
-        ".print-hint.hov-ring:hover .print-hint-art{transform:none}" +
-        ".print-hint.hov-ring::after{content:\"\";position:absolute;left:4%;right:4%;top:6%;bottom:6%;pointer-events:none;opacity:0;transition:opacity .15s ease;" +
-          "background:url(\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20120'%20preserveAspectRatio='none'%3E%3Cellipse%20cx='100'%20cy='60'%20rx='94'%20ry='52'%20fill='none'%20stroke='%23e10600'%20stroke-width='3'%20opacity='0.9'/%3E%3Cellipse%20cx='103'%20cy='57'%20rx='89'%20ry='48'%20fill='none'%20stroke='%23e10600'%20stroke-width='1.5'%20opacity='0.55'/%3E%3C/svg%3E\") center/100% 100% no-repeat}" +
-        ".print-hint.hov-ring:hover::after{opacity:1}" +
-        ".print-hint.hov-cursor{cursor:copy}" +
-        ".print-hint.hov-cursor:hover .print-hint-art{transform:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.3)) brightness(1.06)}" +
-        "@media (prefers-reduced-motion: reduce){.print-hint.has-img .print-hint-art{transition:none;animation:none!important}}";
+        ".print-hint.has-img::after{content:\"\";position:absolute;left:1%;right:1%;top:1.5%;bottom:1.5%;pointer-events:none;" +
+          "opacity:0;transform:scale(.985);transition:opacity .2s ease,transform .2s ease;" +
+          "background:url(\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20400%20300'%20preserveAspectRatio='none'%3E" +
+          "%3Cdefs%3E%3Cfilter%20id='b'%20x='-15%25'%20y='-15%25'%20width='130%25'%20height='130%25'%3E%3CfeGaussianBlur%20stdDeviation='2'/%3E%3C/filter%3E%3C/defs%3E" +
+          "%3Cg%20filter='url(%23b)'%20fill='none'%20stroke='%23d8231d'%20stroke-linecap='round'%3E" +
+          "%3Cpath%20d='M30%2022%20C110%2015%20200%2027%20268%2021'%20stroke-width='14'/%3E" +
+          "%3Cpath%20d='M300%2020%20C340%2017%20368%2023%20384%2026'%20stroke-width='15'/%3E" +
+          "%3Cpath%20d='M22%2034%20C18%20100%2026%20190%2020%20274'%20stroke-width='13'/%3E" +
+          "%3Cpath%20d='M20%2070%20C23%20110%2018%20140%2021%20176'%20stroke-width='19'/%3E" +
+          "%3Cpath%20d='M26%20282%20C120%20292%20240%20278%20378%20285'%20stroke-width='14'/%3E" +
+          "%3Cpath%20d='M180%20284%20C230%20280%20280%20288%20330%20283'%20stroke-width='20'/%3E" +
+          "%3Cpath%20d='M382%2036%20C388%2090%20378%20180%20383%20262'%20stroke-width='13'/%3E" +
+          "%3Cpath%20d='M384%2088%20C381%2078%20360%2072%20330%2074'%20stroke-width='16'/%3E" +
+          "%3C/g%3E%3Cg%20fill='%23d8231d'%20filter='url(%23b)'%3E" +
+          "%3Cpath%20d='M330%2078%20c2%2016%20-2%2030%201%2042%20c1%205%204%205%205%200%20c2%20-12%20-1%20-28%200%20-42%20z'/%3E" +
+          "%3Cpath%20d='M287%2024%20c2%2010%20-1%2020%201%2028%20c1%204%203%204%204%200%20c1%20-8%200%20-19%200%20-28%20z'/%3E" +
+          "%3C/g%3E%3Cg%20fill='%23d8231d'%20opacity='0.5'%3E" +
+          "%3Ccircle%20cx='70'%20cy='34'%20r='1.6'/%3E%3Ccircle%20cx='120'%20cy='13'%20r='1.2'/%3E%3Ccircle%20cx='250'%20cy='32'%20r='1.8'/%3E" +
+          "%3Ccircle%20cx='30'%20cy='120'%20r='1.4'/%3E%3Ccircle%20cx='11'%20cy='200'%20r='1.7'/%3E%3Ccircle%20cx='34'%20cy='250'%20r='1.2'/%3E" +
+          "%3Ccircle%20cx='140'%20cy='274'%20r='1.6'/%3E%3Ccircle%20cx='300'%20cy='292'%20r='1.3'/%3E%3Ccircle%20cx='370'%20cy='60'%20r='1.5'/%3E" +
+          "%3Ccircle%20cx='390'%20cy='210'%20r='1.3'/%3E%3Ccircle%20cx='316'%20cy='96'%20r='1.4'/%3E%3Ccircle%20cx='344'%20cy='104'%20r='1'/%3E" +
+          "%3C/g%3E%3C/svg%3E\") center/100% 100% no-repeat}" +
+        ".print-hint.has-img:hover::after{opacity:1;transform:scale(1)}" +
+        "@media (prefers-reduced-motion: reduce){.print-hint.has-img::after{transform:none;transition:opacity .2s ease}}";
       (document.head || document.documentElement).appendChild(uhs);
     }
     const eTitle = (window.DYN_SETTINGS && window.DYN_SETTINGS.engraveTitle) || ("Personalize your " + noun + ".");
@@ -2804,7 +2815,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               '<span class="print-area-label">Print area</span>' +
               '<div class="up-guide up-guide-v" id="guideV"></div><div class="up-guide up-guide-h" id="guideH"></div>' +
               // Click-to-upload box: the customer uploads by clicking the image itself.
-              (showHint ? '<button type="button" class="print-hint' + (upImg ? ' has-img hov-' + upHov : '') + '" id="printHint" data-drop="design" aria-label="Click to upload your design">' +
+              (showHint ? '<button type="button" class="print-hint' + (upImg ? ' has-img' : '') + '" id="printHint" data-drop="design" aria-label="Click to upload your design">' +
                 (upImg
                   ? '<img class="print-hint-art" src="' + upImg + '" alt="" draggable="false">'
                   : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
