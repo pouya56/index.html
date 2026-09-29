@@ -1518,7 +1518,9 @@
     var vars = variantsOf(tok), best = 0;
     for (var vi = 0; vi < vars.length; vi++) {
       var q = vars[vi];
-      var tol = q.length <= 5 ? 1 : (q.length <= 8 ? 2 : 3);
+      /* typo tolerance: none for 3-letter words (mug~men, cup~cus were false
+         hits) and only on the typed token - synonyms must match cleanly */
+      var tol = q.length <= 3 ? 0 : (q.length <= 5 ? 1 : (q.length <= 8 ? 2 : 3));
       for (var k = 0; k < words.length; k++) {
         var w = words[k]; if (!w) continue;
         var s = 0;
@@ -1526,7 +1528,7 @@
         else if (w.indexOf(q) === 0) s = 4;
         else if (w.indexOf(q) >= 0) s = 3;
         else if (stem(w) === stem(q)) s = 4;
-        else if (q.length >= 3) {
+        else if (q.length >= 3 && tol && vi === 0) {
           if (lev(q, w) <= tol) s = 2;
           else if (w.length > q.length && lev(q, w.slice(0, q.length)) <= tol) s = 2;
         }
