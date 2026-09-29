@@ -1478,7 +1478,7 @@
   // ("cup=mug", one per line or comma-separated). Both directions are applied.
   var SYN = {}, RELAX3 = false;
   function addSyn(a, b) { if (!a || !b || a === b) return; (SYN[a] = SYN[a] || []).indexOf(b) < 0 && SYN[a].push(b); }
-  "cup=mug,tee=t-shirt,tshirt=t-shirt,shirt=t-shirt,top=t-shirt,journal=notebook,diary=notebook,notepad=notebook,planner=notebook,jumper=hoodie,sweater=hoodie,sweatshirt=hoodie,cap=hat,beanie=hat,tumbler=mug,bottle=tumbler,tote=bag,poster=print,artwork=print,photo=picture".split(",").forEach(function (p) {
+  "cup=mug,tee=t-shirt,tshirt=t-shirt,shirt=t-shirt,top=t-shirt,journal=notebook,diary=notebook,notepad=notebook,planner=notebook,jumper=hoodie,sweater=hoodie,sweatshirt=hoodie,cap=hat,beanie=hat,tumbler=mug,bottle=tumbler,tote=bag,poster=print,artwork=print,photo=picture,book=notebook".split(",").forEach(function (p) {
     var kv = p.split("="); addSyn(kv[0], kv[1]); addSyn(kv[1], kv[0]);
   });
   String(SMART.synonyms || "").toLowerCase().split(/[\n,]+/).forEach(function (p) {
@@ -1530,7 +1530,8 @@
         /* prefix/inside-word hits need 4+ letters: 'pen' was lighting up
            pendants and everything containing those three letters */
         else if ((q.length >= 4 || RELAX3) && w.indexOf(q) === 0) s = 4;
-        else if (q.length >= 4 && w.indexOf(q) >= 0) s = 3;
+        /* no inside-word matches: 'friend' must not hit 'girlfriend' -
+           real compound aliases (book=notebook) live in the synonym list */
         else if (q.length >= 4 && tol && vi === 0) {
           if (lev(q, w) <= tol) s = 2;
           else if (w.length > q.length && lev(q, w.slice(0, q.length)) <= tol) s = 2;
