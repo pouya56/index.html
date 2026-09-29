@@ -769,6 +769,13 @@
   .dyn-col .dc-bar-logo img { height: 30px; }
   /* categories move with the wheel or a drag - no arrow buttons */
   .dyn-col .dc-tabs-arrow { display: none !important; }
+  /* scroll affordance: grab cursor + edges that fade where more tabs hide */
+  .dyn-col .dc-tabs.is-images { cursor: grab; --dcfL: 0px; --dcfR: 0px;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--dcfL), #000 calc(100% - var(--dcfR)), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 var(--dcfL), #000 calc(100% - var(--dcfR)), transparent 100%); }
+  .dyn-col .dc-tabs.is-images:active { cursor: grabbing; }
+  .dyn-col .dc-tabs.is-images.is-moreL { --dcfL: 56px; }
+  .dyn-col .dc-tabs.is-images.is-moreR { --dcfR: 56px; }
   /* whispering prices: FROM $35 in tracked microtype (cents stripped in Liquid) */
   .dyn-col .dc-price .dc-now::before { content: "From "; }
   .dyn-col .dc-price .dc-now, .dyn-col .dc-price .dc-now.on-sale { font-size: 10px; font-weight: 700;
@@ -2274,6 +2281,25 @@
     if (dragPx > 6) { e.stopPropagation(); e.preventDefault(); }
     dragPx = 0;
   }, true);
+  /* fade the edges that hide more tabs */
+  function fades() {
+    var max = t.scrollWidth - t.clientWidth;
+    t.classList.toggle("is-moreL", t.scrollLeft > 4);
+    t.classList.toggle("is-moreR", max > 4 && t.scrollLeft < max - 4);
+  }
+  t.addEventListener("scroll", fades, { passive: true });
+  window.addEventListener("resize", fades);
+  fades();
+  /* one-time nudge on first view: slide out and spring back */
+  try {
+    if (t.scrollWidth > t.clientWidth + 40 && !sessionStorage.getItem("dcTabsNudged")) {
+      sessionStorage.setItem("dcTabsNudged", "1");
+      setTimeout(function () {
+        t.scrollTo({ left: 44, behavior: "smooth" });
+        setTimeout(function () { t.scrollTo({ left: 0, behavior: "smooth" }); }, 420);
+      }, 900);
+    }
+  } catch (e0) {}
 })();
 </script>
 
