@@ -767,18 +767,8 @@
   .dyn-col .dc-tabs.is-images .dc-tab.is-active .dc-tab-label { color: #141110 !important; border-bottom-color: #141110; }
   /* masthead-small bar logo */
   .dyn-col .dc-bar-logo img { height: 30px; }
-  /* hand-drawn ink arrows for the category bar (left one mirrored) */
-  .dyn-col .dc-tabs-arrow { width: 46px; height: 30px; border: 0; border-radius: 0; box-shadow: none;
-    background: transparent url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%2060'%3E%3Cpath%20d='M4%2025%20C12%2022%2022%2027%2035%2024%20L35%2029%20C22%2026%2013%2031%205%2029%20Z'%20fill='%23141110'/%3E%3Cpath%20d='M9%2035%20C16%2032%2024%2036%2034%2033%20L34%2037%20C24%2035%2016%2039%2010%2038%20Z'%20fill='%23141110'%20opacity='0.85'/%3E%3Cpath%20fill-rule='evenodd'%20fill='%23141110'%20d='M39%207%20C50%2012%2076%2022%2095%2029%20C78%2038%2052%2049%2041%2055%20C37%2046%2043%2040%2039%2031%20C43%2023%2036%2015%2039%207%20Z%20M56%2028%20a3%203%200%201%200%200.1%200%20Z%20M68%2024%20a2%202%200%201%200%200.1%200%20Z%20M61%2038%20a2.4%202.4%200%201%200%200.1%200%20Z%20M76%2031%20a1.8%201.8%200%201%200%200.1%200%20Z%20M49%2020%20a1.5%201.5%200%201%200%200.1%200%20Z'/%3E%3Ccircle%20cx='44'%20cy='44'%20r='1.1'%20fill='%23141110'/%3E%3Ccircle%20cx='90'%20cy='24'%20r='1'%20fill='%23141110'/%3E%3Ccircle%20cx='47'%20cy='12'%20r='0.9'%20fill='%23141110'/%3E%3C/svg%3E") center / contain no-repeat;
-    transition: transform .15s ease; }
-  .dyn-col .dc-tabs-arrow:hover { background-color: transparent; transform: scale(1.1) rotate(-2deg); }
-  .dyn-col .dc-tabs-arrow.dc-prev { transform: scaleX(-1); }
-  .dyn-col .dc-tabs-arrow.dc-prev:hover { transform: scaleX(-1) scale(1.1) rotate(-2deg); }
-  .dyn-col .dc-tabs-arrow svg { display: none; }
-  /* the Search tab pins to the bar's left edge; categories scroll beneath it,
-     so search stays reachable even with the logo in the scrolled bar */
-  .dyn-col .dc-tabs.is-images .dc-search-trigger { position: sticky; left: 0; z-index: 3;
-    background: {{ section.settings.page_bg | default: '#f5f5f7' }}; padding-right: 14px !important; }
+  /* categories move with the wheel or a drag - no arrow buttons */
+  .dyn-col .dc-tabs-arrow { display: none !important; }
   /* whispering prices: FROM $35 in tracked microtype (cents stripped in Liquid) */
   .dyn-col .dc-price .dc-now::before { content: "From "; }
   .dyn-col .dc-price .dc-now, .dyn-col .dc-price .dc-now.on-sale { font-size: 10px; font-weight: 700;
@@ -806,7 +796,7 @@
     -webkit-backdrop-filter: blur(10px) saturate(1.05); backdrop-filter: blur(10px) saturate(1.05);
     border-bottom: 1px solid rgba(20, 17, 16, 0.12);
     box-shadow: 0 12px 26px -20px rgba(20, 17, 16, 0.4); }
-  .dyn-col.dc-scrolled .dc-tabs.is-images { justify-content: center; }
+  .dyn-col.dc-scrolled .dc-tabs.is-images { justify-content: flex-start; }
   /* refined link interactions: colour + a breath of letter-spacing, no scaling */
   .dyn-col .dc-tabs.is-images .dc-tab-label { transition: color 0.25s ease, letter-spacing 0.25s ease, border-color 0.25s ease; }
   .dyn-col .dc-tabs.is-images .dc-tab:hover .dc-tab-label { letter-spacing: 0.34em; }
@@ -2252,6 +2242,38 @@
     moved.clear();
     updateReset();
   });
+})();
+</script>
+
+<script>
+(function () {
+  var t = document.getElementById("dcTabs");
+  if (!t || t.__dcWheel) return;
+  t.__dcWheel = true;
+  /* vertical wheel scrolls the row horizontally while the pointer is on it */
+  t.addEventListener("wheel", function (e) {
+    if (t.scrollWidth <= t.clientWidth + 2) return;
+    var d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (!d) return;
+    t.scrollLeft += d;
+    e.preventDefault();
+  }, { passive: false });
+  /* mouse drag scrolls too; a real drag swallows the click so no tab fires */
+  var down = false, sx = 0, sl = 0, dragPx = 0;
+  t.addEventListener("pointerdown", function (e) {
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    down = true; sx = e.clientX; sl = t.scrollLeft; dragPx = 0;
+  });
+  t.addEventListener("pointermove", function (e) {
+    if (!down) return;
+    var dx = e.clientX - sx;
+    if (Math.abs(dx) > 4) { dragPx = Math.abs(dx); t.scrollLeft = sl - dx; }
+  });
+  window.addEventListener("pointerup", function () { down = false; });
+  t.addEventListener("click", function (e) {
+    if (dragPx > 6) { e.stopPropagation(); e.preventDefault(); }
+    dragPx = 0;
+  }, true);
 })();
 </script>
 
