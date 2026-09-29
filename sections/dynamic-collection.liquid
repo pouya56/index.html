@@ -523,12 +523,11 @@
   }
   @media (max-width: 460px)  { .dyn-col .dc-grid { gap: 12px; } .dyn-col .dc-gridall .dc-body { padding: 10px 14px 14px; } .dyn-col .dc-gridall .dc-title { font-size: 17px; } }
 
-  /* ---- Zine cards: product photos rest as grainy black & white (the
-     same treatment as the hero's word photos), and hovering glitches
-     them — slice-jitter, RGB fringes — into the original colour. ---- */
+  /* ---- Zine cards: product photos show in their true colours (no red
+     ink, no black & white); upload cutout PNGs so no photo box shows. ---- */
   .dyn-col .dc-media img,
   .dyn-col.dc-blend:not(.dc-fill) .dc-media img {
-    filter: grayscale(1) contrast(1.08) brightness(1.05);
+    filter: none; mix-blend-mode: normal;
   }
   .dyn-col .dc-media::before { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -541,8 +540,8 @@
     }
   }
   @keyframes dcGlitch {
-    0%   { filter: grayscale(1) contrast(1.3); transform: none; }
-    12%  { filter: grayscale(1) contrast(1.45) brightness(1.2) drop-shadow(4px 0 0 rgba(255, 0, 60, 0.55)) drop-shadow(-4px 0 0 rgba(0, 220, 255, 0.5)); transform: translate(-5px, 2px) skewX(2deg); }
+    0%   { filter: contrast(1.3); transform: none; }
+    12%  { filter: contrast(1.45) brightness(1.2) drop-shadow(4px 0 0 rgba(255, 0, 60, 0.55)) drop-shadow(-4px 0 0 rgba(0, 220, 255, 0.5)); transform: translate(-5px, 2px) skewX(2deg); }
     24%  { filter: hue-rotate(70deg) saturate(3.5) contrast(1.3); transform: translate(4px, -2px) skewX(-3deg); }
     36%  { filter: grayscale(0.6) drop-shadow(-3px 0 0 rgba(255, 0, 60, 0.5)) drop-shadow(3px 0 0 rgba(0, 220, 255, 0.45)); transform: translate(-3px, 1px); }
     48%  { filter: none; transform: translate(2px, -1px); }
@@ -576,12 +575,8 @@
   .dyn-col .dc-media img, .dyn-col .dc-grid .dc-media img, .dyn-col .dc-gridall .dc-media img {
     inset: 6%; width: 88%; height: 88%; object-fit: contain; }
   .dyn-col.dc-fill .dc-media img { inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  /* the b/w photo prints INTO the red like ink on the sleeve; hovering
-     (with the glitch) lifts it off as the original photo */
-  .dyn-col .dc-media img { mix-blend-mode: multiply; }
-  @media (hover: hover) and (pointer: fine) {
-    .dyn-col .dc-card:hover .dc-media img { mix-blend-mode: normal; }
-  }
+  /* photos sit on the sleeve in their true colours - no ink blend */
+  .dyn-col .dc-media img { mix-blend-mode: normal; }
   .dyn-col .dc-body, .dyn-col.dc-fill .dc-body { position: absolute; top: 0; right: 0; bottom: 0; z-index: 3; order: 0; width: 24%;
     margin: 0; padding: 12px 8px 10px; box-sizing: border-box;
     display: flex; flex-direction: column; align-items: center; gap: 8px;
