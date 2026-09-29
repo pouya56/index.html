@@ -611,7 +611,7 @@ border: none; border-radius: 0; box-shadow: none;
 .dyn-hero .dh-search-go:hover { background: #e10600; }
 .dyn-hero .dh-search-go::before { display: none; }
 .dyn-hero .dh-go-ic svg { stroke: #f5f3ef; }
-/* Phone: search art scales proportionally (1.5x native height) */
+/* phone: search art scales 1.5x */
 @media (max-width: 700px) {
   /* 1.5x the art's native height for comfier tapping (1200/140 * 2/3) */
   .dyn-hero .dh-search { aspect-ratio: 800 / 140; height: auto; padding: 0; align-items: center; gap: 6px; }
@@ -1580,9 +1580,7 @@ setTimeout(updateFade, 1400);
 }
 function lockScroll(on) {
 var de = document.documentElement;
-/* no scrollbar-gutter padding here: the reserved strip showed the plain page
-   background as a white bar beside the word wall. The wall canvas stretches
-   (width:100%), so letting the page widen those few px is invisible. */
+/* no gutter padding: it painted a white bar beside the word wall */
 de.style.overflow = on ? "hidden" : "";
 }
 function openSlide(url, half) {
@@ -2957,7 +2955,7 @@ var calmW = window.matchMedia && window.matchMedia("(prefers-reduced-motion: red
 var W = 0, H = 0, FS = 26, RH = 35, GAP2 = 9;
 var spB = [], spW = [], seqW = [], cum = [], totalW = 0, seqLen = 0, rowsN = 0;
 var noisePat = null;
-var rowDebt = [], rowFrozenAt = [];
+var rowDebt = [], rowFrozenAt = [], rowPerm = [], rowCum = [];
 
 function wallSprite(word, color) {
 var c = document.createElement("canvas");
@@ -2996,8 +2994,20 @@ cum.push(totalW);
 totalW += seqW[i6];
 }
 rowsN = Math.ceil(H / RH) + 1;
-rowDebt = []; rowFrozenAt = [];
-for (var iR = 0; iR < rowsN; iR++) { rowDebt.push(0); rowFrozenAt.push(-1); }
+rowDebt = []; rowFrozenAt = []; rowPerm = []; rowCum = [];
+for (var iR = 0; iR < rowsN; iR++) {
+rowDebt.push(0); rowFrozenAt.push(-1);
+var sd = iR * 9301 + 49297, pm = [], k9, j9, t9;
+for (k9 = 0; k9 < seqLen; k9++) pm.push(k9);
+for (k9 = seqLen - 1; k9 > 0; k9--) {
+sd = (sd * 9301 + 49297) % 233280;
+j9 = sd % (k9 + 1); t9 = pm[k9]; pm[k9] = pm[j9]; pm[j9] = t9;
+}
+rowPerm.push(pm);
+var cc = [], ac = 0;
+for (k9 = 0; k9 < seqLen; k9++) { cc.push(ac); ac += seqW[pm[k9]]; }
+rowCum.push(cc);
+}
 var nt = document.createElement("canvas");
 nt.width = nt.height = 128;
 var ng = nt.getContext("2d");
@@ -3052,9 +3062,11 @@ if (r2 < 0 || r2 >= rowsN || totalW <= 0) return null;
 var world = px3 + rowOff(r2, tSec);
 var q2 = Math.floor(world / totalW);
 var rem = world - q2 * totalW;
+var pmC = rowPerm[r2], cmC = rowCum[r2];
 for (var i8 = 0; i8 < seqLen; i8++) {
-if (rem >= cum[i8] && rem < cum[i8] + seqW[i8]) {
-if (rem > cum[i8] + spB[i8].width) return null;              return { r: r2, j: q2 * seqLen + i8, w: i8 };
+if (rem >= cmC[i8] && rem < cmC[i8] + seqW[pmC[i8]]) {
+if (rem > cmC[i8] + spB[pmC[i8]].width) return null;
+return { r: r2, j: q2 * seqLen + i8, w: pmC[i8] };
 }
 }
 return null;
@@ -3081,13 +3093,14 @@ var y2 = r2 * RH;
 var off = rowOff(r2, tSec);
 var q2 = Math.floor(off / totalW);
 var rem0 = off - q2 * totalW;
+var pmR = rowPerm[r2], cmR = rowCum[r2];
 var i9 = 0;
-while (i9 < seqLen && cum[i9] + seqW[i9] <= rem0) i9++;
+while (i9 < seqLen && cmR[i9] + seqW[pmR[i9]] <= rem0) i9++;
 if (i9 >= seqLen) { i9 = 0; q2++; rem0 -= totalW; }
 var j2 = q2 * seqLen + i9;
-var x2 = cum[i9] - rem0;
+var x2 = cmR[i9] - rem0;
 while (x2 < W) {
-var wi = ((j2 % seqLen) + seqLen) % seqLen;
+var wi = pmR[((j2 % seqLen) + seqLen) % seqLen];
 var sw = spB[wi].width, sh = spB[wi].height;
 if (!inZone(zs, x2, y2, sw, sh)) {
 var isSelC = selCell && selCell.r === r2 && selCell.j === j2;
@@ -3190,7 +3203,7 @@ if (!isTouchW) input.focus();
 return;
 }
 var off2 = rowOff(cell.r, tSecC);
-var cx2 = Math.floor(cell.j / seqLen) * totalW + cum[cell.w] - off2 + spB[cell.w].width / 2;
+var cx2 = Math.floor(cell.j / seqLen) * totalW + rowCum[cell.r][((cell.j % seqLen) + seqLen) % seqLen] - off2 + spB[cell.w].width / 2;
 var cy2 = cell.r * RH + RH / 2;
 var fly = document.createElement("span");
 fly.textContent = "“" + word + "”";
@@ -4164,7 +4177,7 @@ apply();
 { "value": "labels", "label": "Floating label strips (poster)" },
 { "value": "smear", "label": "Blurred poster (smeared ink)" },
 { "value": "wall", "label": "Text wall (red poster)" }
-], "info": "Label strips and Blurred poster rain behind frosted glass: hover reveals (red scramble for tape, picture for poster ink), drag words anywhere, click to fly the word into the search bar. Text wall packs your words edge to edge on worn red, flowing around the search bar, logo and buttons — even while you drag them; hover lights a word white, click sends it to the bar. Phones: tap to reveal, tap again to send." },
+], "info": "Text wall packs your words edge to edge on worn red, flowing around the search bar, logo and buttons; hover lights a word white, click sends it to the search bar. Phones: tap to reveal, tap again to send." },
 { "type": "textarea", "id": "words_list", "label": "Words (one per line or comma-separated)", "default": "PERSONALIZED,CUSTOM,CREATE,DESIGN,GIFTS,MEMORIES,UNIQUE,YOURS,MUGS,NOTEBOOKS,APPAREL,EMBROIDERY,PRINTING,ENGRAVED,CORPORATE,WEDDING,PREMIUM" },
 { "type": "range", "id": "words_opacity", "label": "Word strength", "min": 3, "max": 100, "step": 1, "unit": "%", "default": 5 },
 { "type": "header", "content": "ASCII art background" },
