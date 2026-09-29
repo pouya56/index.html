@@ -1518,9 +1518,10 @@
     var vars = variantsOf(tok), best = 0;
     for (var vi = 0; vi < vars.length; vi++) {
       var q = vars[vi];
-      /* typo tolerance: none for 3-letter words (mug~men, cup~cus were false
-         hits) and only on the typed token - synonyms must match cleanly */
-      var tol = q.length <= 3 ? 0 : (q.length <= 5 ? 1 : (q.length <= 8 ? 2 : 3));
+      /* typo tolerance: none for 3-letter words, one edit up to 7 letters,
+         two beyond - distance 2 on short words let wallet match walnut,
+         valet and tablet; synonyms must still match cleanly */
+      var tol = q.length <= 3 ? 0 : (q.length <= 7 ? 1 : 2);
       for (var k = 0; k < words.length; k++) {
         var w = words[k]; if (!w) continue;
         var s = 0;
