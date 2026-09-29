@@ -1526,10 +1526,12 @@
         var w = words[k]; if (!w) continue;
         var s = 0;
         if (w === q) s = 6;
-        else if (w.indexOf(q) === 0) s = 4;
-        else if (w.indexOf(q) >= 0) s = 3;
         else if (stem(w) === stem(q)) s = 4;
-        else if (q.length >= 3 && tol && vi === 0) {
+        /* prefix/inside-word hits need 4+ letters: 'pen' was lighting up
+           pendants and everything containing those three letters */
+        else if (q.length >= 4 && w.indexOf(q) === 0) s = 4;
+        else if (q.length >= 4 && w.indexOf(q) >= 0) s = 3;
+        else if (q.length >= 4 && tol && vi === 0) {
           if (lev(q, w) <= tol) s = 2;
           else if (w.length > q.length && lev(q, w.slice(0, q.length)) <= tol) s = 2;
         }
