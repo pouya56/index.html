@@ -1476,7 +1476,7 @@
   var OCC = { bday: "birthday", xmas: "christmas", valentines: "valentine", "father's": "men", "mother's": "women" };
   // Synonyms: sensible defaults + the merchant's own pairs from the settings
   // ("cup=mug", one per line or comma-separated). Both directions are applied.
-  var SYN = {};
+  var SYN = {}, RELAX3 = false;
   function addSyn(a, b) { if (!a || !b || a === b) return; (SYN[a] = SYN[a] || []).indexOf(b) < 0 && SYN[a].push(b); }
   "cup=mug,tee=t-shirt,tshirt=t-shirt,shirt=t-shirt,top=t-shirt,journal=notebook,diary=notebook,notepad=notebook,planner=notebook,jumper=hoodie,sweater=hoodie,sweatshirt=hoodie,cap=hat,beanie=hat,tumbler=mug,bottle=tumbler,tote=bag,poster=print,artwork=print,photo=picture".split(",").forEach(function (p) {
     var kv = p.split("="); addSyn(kv[0], kv[1]); addSyn(kv[1], kv[0]);
@@ -1529,7 +1529,7 @@
         else if (stem(w) === stem(q)) s = 4;
         /* prefix/inside-word hits need 4+ letters: 'pen' was lighting up
            pendants and everything containing those three letters */
-        else if (q.length >= 4 && w.indexOf(q) === 0) s = 4;
+        else if ((q.length >= 4 || RELAX3) && w.indexOf(q) === 0) s = 4;
         else if (q.length >= 4 && w.indexOf(q) >= 0) s = 3;
         else if (q.length >= 4 && tol && vi === 0) {
           if (lev(q, w) <= tol) s = 2;
@@ -1691,23 +1691,32 @@
       }
       return okQ;
     }
-    var visible = [];
-    cards.forEach(function (c) {
-      var m = shelfMatch(c);
-      if (m && shelfBestOnly) {
-        var fl = " " + (c.getAttribute("data-flags") || "") + " ";
-        if (fl.indexOf(" best ") < 0) m = false;
-      }
-      c.style.display = m ? "" : "none";
-      if (m) visible.push(c);
-    });
-    // Vertical grid below: every matched card.
-    var visibleAll = [];
-    allCards.forEach(function (c) {
-      var m = baseMatch(c);
-      c.style.display = m ? "" : "none";
-      if (m) visibleAll.push(c);
-    });
+    var visible = [], visibleAll = [];
+    function paintCards() {
+      visible = []; visibleAll = [];
+      cards.forEach(function (c) {
+        var m = shelfMatch(c);
+        if (m && shelfBestOnly) {
+          var fl = " " + (c.getAttribute("data-flags") || "") + " ";
+          if (fl.indexOf(" best ") < 0) m = false;
+        }
+        c.style.display = m ? "" : "none";
+        if (m) visible.push(c);
+      });
+      // Vertical grid below: every matched card.
+      allCards.forEach(function (c) {
+        var m = baseMatch(c);
+        c.style.display = m ? "" : "none";
+        if (m) visibleAll.push(c);
+      });
+    }
+    paintCards();
+    /* short tokens match whole words only, which would strand mid-word typing
+       (rin -> ring) at zero results: retry once allowing prefix matches */
+    if (searching && visible.length + visibleAll.length === 0 && sq && sq.tokens &&
+        sq.tokens.some(function (tk) { return tk.length <= 3; })) {
+      RELAX3 = true; paintCards(); RELAX3 = false;
+    }
     // Google-like ranking: while searching, reorder the grid best-match-first;
     // when the search clears, restore the catalog order.
     var ranked = visibleAll.slice().sort(function (a, b) { return (b._score || 0) - (a._score || 0); });
