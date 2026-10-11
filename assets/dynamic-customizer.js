@@ -2815,22 +2815,30 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const eBtn = (eRaw && eRaw !== "Add to Bag" && eRaw !== "Save design") ? eRaw : "Add design";
     const ePlaceholder = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupPlaceholder) || "Add your text";
     if (showHint && showCompose && !upImg && !document.getElementById("dynPhChoiceCss")) {
-      /* compact stacked pills so the choice fits small or round print areas */
+      /* marker-art paper card, matching the merchant's CLICK TO UPLOAD artwork:
+         white paper, rough ink frame, yellow brush corners, scribbles, marker caps */
+      if (!document.getElementById("dynMarkerFont")) {
+        var mfl = document.createElement("link"); mfl.id = "dynMarkerFont"; mfl.rel = "stylesheet";
+        mfl.href = "https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap";
+        (document.head || document.documentElement).appendChild(mfl);
+      }
       var phcss = document.createElement("style"); phcss.id = "dynPhChoiceCss";
       phcss.textContent =
-        ".print-hint.is-choice{flex-direction:column;gap:6px;padding:10px;cursor:default}" +
-        ".print-hint.is-choice:hover{background:rgba(0,113,227,0.05)}" +
-        ".ph-opt{display:flex;flex-direction:row;align-items:center;gap:7px;padding:7px 13px;border:1.6px dashed rgba(0,113,227,0.55);" +
-          "border-radius:999px;background:rgba(255,255,255,0.88);color:var(--accent,#0071e3);font:inherit;font-size:11.5px;" +
-          "font-weight:600;cursor:pointer;white-space:nowrap;max-width:94%}" +
-        ".ph-opt:hover{background:#fff;border-style:solid}" +
-        ".ph-opt svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}" +
-        ".ph-or{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(0,0,0,0.55);background:rgba(255,255,255,0.85);padding:2px 8px;border-radius:999px}" +
-        "#dynInlineStage .ph-opt{background:transparent;border-color:rgba(23,19,15,0.5);color:#17130f}" +
-        "#dynInlineStage .ph-opt:hover{background:rgba(23,19,15,0.07)}" +
-        "#dynInlineStage .ph-opt svg{width:14px;height:14px;stroke:#17130f}" +
-        "#dynInlineStage .print-hint.is-choice span{font-size:10px;letter-spacing:0.1em;max-width:none}" +
-        "#dynInlineStage .ph-or{color:rgba(23,19,15,0.5);background:none;padding:0}";
+        ".print-hint.is-choice{flex-direction:column;gap:3px;padding:12px 12px 14px;cursor:default;" +
+          "background:#fbfaf4 url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120' preserveAspectRatio='none'><path fill='%23e8b63a' opacity='.85' d='M0 0h52C38 11 24 21 7 29L0 32z'/><path fill='%23e8b63a' opacity='.85' d='M200 120h-50c13-11 28-20 44-27l6-3z'/><path fill='none' stroke='%2317130f' stroke-width='1.1' opacity='.5' d='M10 102c6-9 9-8 3-1s-5 9 4 3 11-7 4 1 0 7 7 2'/><path fill='none' stroke='%2317130f' stroke-width='1' opacity='.45' d='M160 16c9-7 12-6 5 0s-6 7 4 3 9-3 3 2'/></svg>\") center/100% 100% no-repeat;" +
+          "border:2px solid #17130f;border-radius:14px 10px 15px 9px/10px 15px 9px 14px;" +
+          "box-shadow:2px 3px 0 rgba(23,19,15,0.22)}" +
+        ".print-hint.is-choice:hover{background-color:#fbfaf4}" +
+        ".ph-opt{display:flex;flex-direction:row;align-items:center;gap:7px;padding:3px 10px;border:0;border-radius:3px;" +
+          "background:transparent;color:#17130f;font-family:'Permanent Marker',cursive;font-size:14px;letter-spacing:0.04em;" +
+          "text-transform:uppercase;cursor:pointer;white-space:nowrap;max-width:96%;position:relative}" +
+        ".ph-opt:hover{background:rgba(232,182,58,0.4)}" +
+        ".ph-opt svg{width:17px;height:17px;flex:none;fill:none;stroke:#17130f;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}" +
+        ".print-hint.is-choice .ph-opt:last-of-type::after{content:\"\";position:absolute;left:14%;right:8%;bottom:-3px;height:7px;" +
+          "background:url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10' preserveAspectRatio='none'><path d='M4 5c22-4 44-4 62-2 18 1 34 1 50 0M16 8c30-3 62-3 92-2' fill='none' stroke='%2317130f' stroke-width='2' stroke-linecap='round'/></svg>\") center/100% 100% no-repeat}" +
+        ".ph-or{font-family:Caveat,cursive;font-size:15px;font-weight:600;color:#17130f;background:none;padding:0;line-height:1}" +
+        "#dynInlineStage .ph-opt{font-size:12px}" +
+        "#dynInlineStage .ph-opt svg{width:14px;height:14px}";
       (document.head || document.documentElement).appendChild(phcss);
     }
     const html =
