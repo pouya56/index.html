@@ -1099,6 +1099,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
 (function (root) {
   "use strict";
+  // The designer is a singleton. If this script tag renders twice (the section
+  // added twice, or an app embed duplicating it), a second module would run
+  // with its own layer state: clicks would edit one copy while the other
+  // paints the stage — fonts "not applying", doubled overlay buttons, etc.
+  if (root.__DYN_CUSTOMIZER_LOADED__) return;
+  root.__DYN_CUSTOMIZER_LOADED__ = true;
   const D = root.Dynamic;
   const $ = (sel, ctx) => (ctx || document).querySelector(sel);
   const el = (tag, cls, html) => {
