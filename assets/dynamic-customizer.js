@@ -2035,7 +2035,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         "<circle cx='24' cy='5' r='1.2'/><circle cx='23' cy='41' r='1.4'/>" +
         "</g></svg>\")";
       dcs.textContent =
-        ".dpv-close{width:46px;height:46px;border:0;border-radius:0;color:transparent;font-size:0;" +
+        /* !important throughout: the section's own .dpv-close rules render later
+           in the body and would otherwise win, leaving the white ✕ glyph visible
+           on top of the artwork — which reads as two crosses stacked. */
+        ".dpv-close{width:46px!important;height:46px!important;border:0!important;border-radius:0!important;" +
+          "color:transparent!important;font-size:0!important;line-height:0!important;text-shadow:none!important;" +
           "background:" + dpvX + " center/contain no-repeat!important;" +
           "filter:drop-shadow(0 0 1px rgba(255,255,255,1)) drop-shadow(0 0 3px rgba(255,255,255,1)) drop-shadow(0 0 6px rgba(255,255,255,0.8));transition:transform .14s ease}" +
         ".dpv-close:hover{background:" + dpvX + " center/contain no-repeat!important;transform:scale(1.12) rotate(-5deg)}";
