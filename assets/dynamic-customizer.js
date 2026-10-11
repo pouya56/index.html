@@ -1289,8 +1289,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   const UPLOAD_FONTS = [
     { name: "Montserrat", sub: "Modern sans", stack: "'Montserrat', -apple-system, 'Helvetica Neue', Arial, sans-serif" },
     { name: "Playfair", sub: "Elegant serif", stack: "'Playfair Display', Georgia, 'Times New Roman', serif" },
-    { name: "Great Vibes", sub: "Script", stack: "'Great Vibes', 'Snell Roundhand', 'Brush Script MT', cursive" },
     { name: "Bebas", sub: "Bold display", stack: "'Bebas Neue', 'Arial Narrow', Impact, sans-serif" },
+    { name: "Great Vibes", sub: "Script", stack: "'Great Vibes', 'Snell Roundhand', 'Brush Script MT', cursive" },
+    { name: "Dancing Script", sub: "Flowing script", stack: "'Dancing Script', 'Snell Roundhand', 'Brush Script MT', cursive" },
     { name: "Caveat", sub: "Handwritten", stack: "'Caveat', 'Segoe Print', 'Comic Sans MS', cursive" },
   ];
 
@@ -2328,6 +2329,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // Order buttons only matter with 2+ layers.
     const pa2 = q2("#printArea");
     if (pa2) pa2.classList.toggle("multi", layers.length > 1);
+    // Font chips follow the selected text box.
+    const fc = q2("#fontChips");
+    if (fc) {
+      const alT = activeTextLayer();
+      fc.hidden = !alT;
+      if (alT) fc.querySelectorAll(".font-chip").forEach(function (b) {
+        b.classList.toggle("on", b.dataset.stack === alT.font);
+      });
+    }
     // Example placeholder: hide as soon as the customer adds any design.
     const example = q2("#upExample");
     if (example) example.style.display = (layers && layers.length) ? "none" : "";
@@ -2408,6 +2418,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       c.style.left = "calc(" + px2 + "% + " + off + "px)";
       if (!c.hidden && c.offsetWidth) off += c.offsetWidth + 8;
     });
+    const fr2 = q2("#fontChips");
+    if (fr2) {
+      fr2.style.top = "calc(" + Math.min(py2 + ph2, 92) + "% + 48px)";
+      fr2.style.left = px2 + "%";
+      fr2.style.right = "8px";
+    }
   }
   function fitInArea(ov, area, state, kind) {
     const prop = kind === "text" ? "size" : "scale";
@@ -3107,6 +3123,28 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (phText) phText.onclick = () => { const b = q2("#addTextBtn"); if (b) b.click(); };
     const txChip = q2("#textChip");
     if (txChip) txChip.onclick = () => { const b = q2("#addTextBtn"); if (b) b.click(); };
+    // Font chips: a second row under the stage chips; applies to the selected text box.
+    const frame0 = q2(".engrave-frame");
+    if (showCompose && frame0 && !frame0.querySelector("#fontChips")) {
+      const fr = document.createElement("div");
+      fr.id = "fontChips"; fr.hidden = true;
+      UPLOAD_FONTS.forEach(function (f) {
+        const fb = document.createElement("button");
+        fb.type = "button"; fb.className = "print-hint-chip font-chip";
+        fb.textContent = f.name;
+        fb.dataset.stack = f.stack;
+        fb.style.setProperty("font-family", f.stack, "important");
+        fb.onclick = function (e) {
+          e.stopPropagation();
+          const l = activeTextLayer(); if (!l) return;
+          l.font = f.stack;
+          try { setKbdFont(f.stack); } catch (err) {}
+          renderUpEls();
+        };
+        fr.appendChild(fb);
+      });
+      frame0.appendChild(fr);
+    }
     if (!document.getElementById("dynChipCss")) {
       /* stage chips (Upload / Add text / Preview) in the hand-drawn ink style:
          marker caps inside a sketched loop, white halo for dark products */
@@ -3126,7 +3164,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           "filter:drop-shadow(0 2px 5px rgba(0,0,0,0.3));" +
           "transition:transform .14s ease!important}" +
         ".print-hint-chip:hover{transform:rotate(-2deg) scale(1.06)}" +
-        ".print-hint-chip svg{stroke:#f6f3ec!important;stroke-width:2.3!important;width:14px!important;height:14px!important}";
+        ".print-hint-chip svg{stroke:#f6f3ec!important;stroke-width:2.3!important;width:14px!important;height:14px!important}" +
+        /* second row: font chips — each label in its own typeface, black fill when active */
+        "#fontChips{position:absolute;display:flex;gap:8px;flex-wrap:wrap;z-index:6;pointer-events:auto}" +
+        "#fontChips[hidden]{display:none}" +
+        ".print-hint-chip.font-chip{text-transform:none;font-size:12.5px!important;letter-spacing:0.01em!important;padding:7px 15px!important}" +
+        ".print-hint-chip.font-chip.on{background:" +
+          "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' preserveAspectRatio='none'><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 83 5z' fill='%23141311'/><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 85 5c31-1 57 6 60 16' fill='none' stroke='%23141311' stroke-width='2.4' stroke-linecap='round' vector-effect='non-scaling-stroke'/></svg>\")" +
+          " center/100% 100% no-repeat!important}";
       (document.head || document.documentElement).appendChild(ccs);
     }
     // echo pad: mirror every layer as a non-interactive shadow copy
