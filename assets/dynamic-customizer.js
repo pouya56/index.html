@@ -1967,6 +1967,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   function switchSide(side) {
     if (side === currentSide) return;
+    pruneEmptyText();                                // abandoned empty text boxes don't survive a side switch
     sideActive[currentSide] = activeLayerId;         // remember selection per side
     const pa = q2("#printArea");
     if (pa) pa.querySelectorAll(".up-el").forEach(function (e) { e.remove(); });
@@ -3019,7 +3020,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
     const frame = q2(".engrave-frame");
     if (frame) frame.addEventListener("pointerdown", (e) => {
-      if (!e.target.closest(".up-el")) { activeLayerId = null; if (txt) txt.value = ""; renderUpEls(); }
+      // Deselecting also drops never-typed text boxes — an invisible empty
+      // layer would otherwise keep the upload/add-text prompt hidden.
+      if (!e.target.closest(".up-el")) { activeLayerId = null; pruneEmptyText(); if (txt) txt.value = ""; renderUpEls(); }
     });
     const pvChip = q2("#previewChip");
     if (pvChip) pvChip.onclick = () => openDesignPreview();
