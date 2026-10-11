@@ -1279,6 +1279,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let sideLayers = { front: [], back: [] };
   let sideActive = { front: null, back: null };
   let currentSide = "front";
+  let fontRowOpen = false;   // FONT chip toggles the typeface row
   let curVariantOpts = [];   // option values of the currently-selected variant (for per-variant back image)
   let curVariantImage = "";  // the selected variant's own photo — the design surface follows the chosen colour
   let _sidesResolve = null;  // (hasBack) => variant matching current options with the "sides" option forced; set by the variant picker
@@ -2329,13 +2330,19 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // Order buttons only matter with 2+ layers.
     const pa2 = q2("#printArea");
     if (pa2) pa2.classList.toggle("multi", layers.length > 1);
-    // Font chips follow the selected text box.
-    const fc = q2("#fontChips");
+    // FONT chip shows once any text box exists; the row only when toggled open.
+    const fcT = q2("#fontChip"), fc = q2("#fontChips");
+    const hasText = layers.some(function (x) { return x.kind === "text"; });
+    if (!hasText) fontRowOpen = false;
+    if (fcT) {
+      fcT.hidden = !hasText;
+      fcT.classList.toggle("on", fontRowOpen);
+    }
     if (fc) {
-      const alT = activeTextLayer();
-      fc.hidden = !alT;
-      if (alT) fc.querySelectorAll(".font-chip").forEach(function (b) {
-        b.classList.toggle("on", b.dataset.stack === alT.font);
+      fc.hidden = !(fontRowOpen && hasText);
+      const refT = activeTextLayer() || layers.filter(function (x) { return x.kind === "text"; }).pop();
+      if (!fc.hidden && refT) fc.querySelectorAll(".font-chip").forEach(function (b) {
+        b.classList.toggle("on", b.dataset.stack === refT.font);
       });
     }
     // Example placeholder: hide as soon as the customer adds any design.
@@ -2418,9 +2425,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       c.style.left = "calc(" + px2 + "% + " + off + "px)";
       if (!c.hidden && c.offsetWidth) off += c.offsetWidth + 8;
     });
+    const ftC = q2("#fontChip");
+    if (ftC) {
+      ftC.style.top = "calc(" + Math.min(py2 + ph2, 92) + "% + 48px)";
+      ftC.style.left = px2 + "%";
+      ftC.style.bottom = "auto"; ftC.style.right = "auto";
+    }
     const fr2 = q2("#fontChips");
     if (fr2) {
-      fr2.style.top = "calc(" + Math.min(py2 + ph2, 92) + "% + 48px)";
+      fr2.style.top = "calc(" + Math.min(py2 + ph2, 92) + "% + 88px)";
       fr2.style.left = px2 + "%";
       fr2.style.right = "8px";
     }
@@ -3123,9 +3136,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (phText) phText.onclick = () => { const b = q2("#addTextBtn"); if (b) b.click(); };
     const txChip = q2("#textChip");
     if (txChip) txChip.onclick = () => { const b = q2("#addTextBtn"); if (b) b.click(); };
-    // Font chips: a second row under the stage chips; applies to the selected text box.
+    // Font picker: a FONT chip under the stage chips toggles a row of six
+    // typeface chips; picks apply to the selected (or latest) text box.
     const frame0 = q2(".engrave-frame");
     if (showCompose && frame0 && !frame0.querySelector("#fontChips")) {
+      const ft = document.createElement("button");
+      ft.type = "button"; ft.className = "print-hint-chip"; ft.id = "fontChip"; ft.hidden = true;
+      ft.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="M5 19 11 5l6 14M7.4 14h7.2"/></svg><span>Font</span>';
+      frame0.appendChild(ft);
       const fr = document.createElement("div");
       fr.id = "fontChips"; fr.hidden = true;
       UPLOAD_FONTS.forEach(function (f) {
@@ -3136,7 +3154,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         fb.style.setProperty("font-family", f.stack, "important");
         fb.onclick = function (e) {
           e.stopPropagation();
-          const l = activeTextLayer(); if (!l) return;
+          const l = activeTextLayer() || layers.filter(function (x) { return x.kind === "text"; }).pop();
+          if (!l) return;
+          if (activeLayerId !== l.id) selectLayer(l.id);
           l.font = f.stack;
           try { setKbdFont(f.stack); } catch (err) {}
           renderUpEls();
@@ -3144,6 +3164,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         fr.appendChild(fb);
       });
       frame0.appendChild(fr);
+      ft.onclick = function (e) {
+        e.stopPropagation();
+        fontRowOpen = !fontRowOpen;
+        if (fontRowOpen && !activeTextLayer()) {
+          const lt = layers.filter(function (x) { return x.kind === "text"; }).pop();
+          if (lt) selectLayer(lt.id);
+        }
+        renderUpEls();
+      };
     }
     if (!document.getElementById("dynChipCss")) {
       /* stage chips (Upload / Add text / Preview) in the hand-drawn ink style:
@@ -3169,7 +3198,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         "#fontChips{position:absolute;display:flex;gap:8px;flex-wrap:wrap;z-index:6;pointer-events:auto}" +
         "#fontChips[hidden]{display:none}" +
         ".print-hint-chip.font-chip{text-transform:none;font-size:12.5px!important;letter-spacing:0.01em!important;padding:7px 15px!important}" +
-        ".print-hint-chip.font-chip.on{background:" +
+        ".print-hint-chip.on{background:" +
           "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' preserveAspectRatio='none'><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 83 5z' fill='%23141311'/><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 85 5c31-1 57 6 60 16' fill='none' stroke='%23141311' stroke-width='2.4' stroke-linecap='round' vector-effect='non-scaling-stroke'/></svg>\")" +
           " center/100% 100% no-repeat!important}";
       (document.head || document.documentElement).appendChild(ccs);
