@@ -2456,11 +2456,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         P = P || {};
         const aX = (P.x != null ? P.x : 22) / 100 * W, aY = (P.y != null ? P.y : 30) / 100 * H,
               aW = (P.w != null ? P.w : 56) / 100 * W, aH = (P.h != null ? P.h : 40) / 100 * H;
+        // No clipping: the designer stage lets a design poke past the print
+        // area outline, so the composed preview draws the same, uncropped.
         ctx.save();
-        ctx.beginPath();
-        if (P.shape === "circle") ctx.ellipse(aX + aW / 2, aY + aH / 2, aW / 2, aH / 2, 0, 0, Math.PI * 2);
-        else ctx.rect(aX, aY, aW, aH);
-        ctx.clip();
         const imgLayers = layersArr.filter((l) => l.kind === "img" && l.url);
         const imgMap = {};
         let pending = imgLayers.length;
@@ -2501,10 +2499,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           const mdx = ((+MS.mirrorDX || 0) / 100) * W, mdy = ((+MS.mirrorDY || 0) / 100) * H;
           if (mdx || mdy) {
             ctx.save();
-            ctx.beginPath();
-            if (P.shape === "circle") ctx.ellipse(aX + mdx + aW / 2, aY + mdy + aH / 2, aW / 2, aH / 2, 0, 0, Math.PI * 2);
-            else ctx.rect(aX + mdx, aY + mdy, aW, aH);
-            ctx.clip();
             drawAll(mdx, mdy);
             ctx.restore();
           }
