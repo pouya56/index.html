@@ -2225,6 +2225,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         '<span class="rotate-handle" title="Rotate"></span>' +
         '<span class="upload-handle"></span>' +
         '<button class="up-remove" type="button" aria-label="Remove text">×</button>' + ORDER_BTNS;
+      el.addEventListener("dblclick", (e) => { e.stopPropagation(); startEditText(layer); });
     }
     pa.appendChild(el);
     makeUpInteractive(el, layer);
@@ -2266,6 +2267,41 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     activeLayerId = layer.id;
     renderUpEls();
     return layer;
+  }
+
+  // In-place typing: the panel's field is gone, so the text box itself takes
+  // the caret. Enter or clicking away commits; an emptied box is removed.
+  function startEditText(layer) {
+    const el = layerEl(layer.id); if (!el) return;
+    const c = el.querySelector(".up-txt-content"); if (!c) return;
+    selectLayer(layer.id);
+    c.contentEditable = "plaintext-only";
+    if (c.contentEditable !== "plaintext-only") c.contentEditable = "true";
+    c.style.pointerEvents = "auto";
+    c.style.minWidth = "26px"; c.style.minHeight = "1em";
+    if (!c.__dynEdit) {
+      c.__dynEdit = true;
+      c.addEventListener("pointerdown", function (ev) { ev.stopPropagation(); });
+      c.addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); c.blur(); } });
+      c.addEventListener("input", function () {
+        let v = (c.textContent || "").replace(/\n/g, "").slice(0, 60);
+        if (v !== c.textContent) c.textContent = v;
+        layer.text = v;
+        renderUpEls();
+        const area = q2("#printArea");
+        if (area && v) fitInArea(el, area, layer, "text");
+      });
+      c.addEventListener("blur", function () {
+        c.contentEditable = "false"; c.style.pointerEvents = "";
+        layer.text = (c.textContent || "").trim();
+        if (!layer.text) removeLayer(layer.id); else renderUpEls();
+      });
+    }
+    try {
+      c.focus();
+      const r = document.createRange(); r.selectNodeContents(c);
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    } catch (e) {}
   }
 
   function addImageLayer(url, file, geom) {
@@ -2313,7 +2349,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         el.style.fontSize = layer.size + "cqw";
         const c = el.querySelector(".up-txt-content");
         if (c) {
-          c.textContent = layer.text;
+          // Never clobber the caret of a box being typed in.
+          if (document.activeElement !== c) c.textContent = layer.text;
           // "important" priority: the chip labels set their fonts this way and
           // render correctly on pages where a plain inline style loses to some
           // !important font rule — the stage text must win the same way.
@@ -2343,13 +2380,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // Order buttons only matter with 2+ layers.
     const pa2 = q2("#printArea");
     if (pa2) pa2.classList.toggle("multi", layers.length > 1);
-    // The artwork panel stays lean — Front/Back and the footer only. The
-    // typing field and its font/emoji tools appear just while a text box is
-    // selected (the stage chips handle adding text).
+    // The artwork panel keeps only Front/Back and the footer: the typing
+    // field, plus button and font/emoji tools are gone for good — text is
+    // typed directly on the product and fonts picked from the stage chips.
     const composeWrap = q2(".ios-compose"), toolsWrap = q2(".engrave-tools");
-    const showTyping = !!activeTextLayer();
-    if (composeWrap) composeWrap.style.display = showTyping ? "" : "none";
-    if (toolsWrap) toolsWrap.style.display = showTyping ? "" : "none";
+    if (composeWrap) composeWrap.style.display = "none";
+    if (toolsWrap) toolsWrap.style.display = "none";
     // FONT chip shows once any text box exists; the row only when toggled open.
     const fcT = q2("#fontChip"), fc = q2("#fontChips");
     const hasText = layers.some(function (x) { return x.kind === "text"; });
@@ -3144,7 +3180,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (addTextBtn) addTextBtn.onclick = () => {
         if (countKind("text") >= MAX_TXT) return toast("Up to " + MAX_TXT + " text boxes");
         const l = addTextLayer(); if (!l) return;
-        txt.value = ""; try { txt.focus(); } catch (e) {}
+        txt.value = "";
+        startEditText(l); // type right on the product — the panel field is gone
       };
     }
     const phText = q2("#phTextOpt");
