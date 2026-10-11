@@ -3082,15 +3082,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       var ccs = document.createElement("style"); ccs.id = "dynChipCss";
       ccs.textContent =
         ".print-hint-chip{border:0!important;border-radius:0!important;background:" +
-          "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' preserveAspectRatio='none'><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 85 5c31-1 57 6 60 16' fill='none' stroke='%23141311' stroke-width='2.4' stroke-linecap='round' opacity='.9' vector-effect='non-scaling-stroke'/></svg>\")" +
+          "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' preserveAspectRatio='none'><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 83 5z' fill='%23b3242a'/><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 85 5c31-1 57 6 60 16' fill='none' stroke='%23141311' stroke-width='2.4' stroke-linecap='round' opacity='.9' vector-effect='non-scaling-stroke'/></svg>\")" +
           " center/100% 100% no-repeat!important;" +
           "-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;" +
-          "color:#141311!important;font-family:'Permanent Marker',cursive!important;font-size:11.5px!important;" +
+          "color:#f6f3ec!important;font-family:'Permanent Marker',cursive!important;font-size:11.5px!important;" +
           "font-weight:400!important;letter-spacing:0.05em!important;text-transform:uppercase;padding:8px 16px!important;" +
-          "filter:drop-shadow(0 0 1px rgba(255,255,255,1)) drop-shadow(0 0 3px rgba(255,255,255,0.95)) drop-shadow(0 0 6px rgba(255,255,255,0.7));" +
+          "filter:drop-shadow(0 2px 5px rgba(0,0,0,0.3));" +
           "transition:transform .14s ease!important}" +
         ".print-hint-chip:hover{transform:rotate(-2deg) scale(1.06)}" +
-        ".print-hint-chip svg{stroke:#141311!important;stroke-width:2.3!important;width:14px!important;height:14px!important}";
+        ".print-hint-chip svg{stroke:#f6f3ec!important;stroke-width:2.3!important;width:14px!important;height:14px!important}";
       (document.head || document.documentElement).appendChild(ccs);
     }
     // echo pad: mirror every layer as a non-interactive shadow copy
