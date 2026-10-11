@@ -2818,11 +2818,22 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               '<span class="print-area-label">Print area</span>' +
               '<div class="up-guide up-guide-v" id="guideV"></div><div class="up-guide up-guide-h" id="guideH"></div>' +
               // Click-to-upload box: the customer uploads by clicking the image itself.
-              (showHint ? '<button type="button" class="print-hint' + (upImg ? ' has-img' : '') + '" id="printHint" data-drop="design" aria-label="Click to upload your design">' +
-                (upImg
-                  ? '<span class="print-hint-wrap"><img class="print-hint-art" src="' + upImg + '" alt="" draggable="false"></span>'
-                  : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
-                    '<span>Click to upload your design</span>') + '</button>' : '') +
+              (showHint ? (upImg || !showCompose
+                ? '<button type="button" class="print-hint' + (upImg ? ' has-img' : '') + '" id="printHint" data-drop="design" aria-label="Click to upload your design">' +
+                  (upImg
+                    ? '<span class="print-hint-wrap"><img class="print-hint-art" src="' + upImg + '" alt="" draggable="false"></span>'
+                    : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
+                      '<span>Click to upload your design</span>') + '</button>'
+                // typing is on: the empty area offers both ways in
+                : '<div class="print-hint is-choice" id="printHint">' +
+                    '<button type="button" class="ph-opt" data-drop="design">' +
+                      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
+                      '<span>Upload design</span></button>' +
+                    '<span class="ph-or">or</span>' +
+                    '<button type="button" class="ph-opt" id="phTextOpt">' +
+                      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7V5h14v2M12 5v14M9 19h6"/></svg>' +
+                      '<span>Add text</span></button>' +
+                  '</div>') : '') +
             '</div>' +
             // Small upload chip pinned to the image's bottom-right corner; takes
             // over from the big box once something is on the print area.
@@ -2912,6 +2923,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         txt.value = ""; try { txt.focus(); } catch (e) {}
       };
     }
+    const phText = q2("#phTextOpt");
+    if (phText) phText.onclick = () => { const b = q2("#addTextBtn"); if (b) b.click(); };
     const frame = q2(".engrave-frame");
     if (frame) frame.addEventListener("pointerdown", (e) => {
       if (!e.target.closest(".up-el")) { activeLayerId = null; if (txt) txt.value = ""; renderUpEls(); }
