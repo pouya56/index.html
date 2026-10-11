@@ -2027,7 +2027,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       /* zine-style close: chunky hand-drawn X on a torn paper circle, ink dots */
       var dcs = document.createElement("style"); dcs.id = "dynDpvCss";
       var dpvX = "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'>" +
-        "<g transform='rotate(-6 24 23)' fill='%23c81e1e'>" +
+        "<g transform='rotate(-6 24 23)' fill='%23141311'>" +
         "<path d='M14 11 L20 8 L34 34 L28 37 Z'/>" +
         "<path d='M34 11 L28 8 L14 34 L20 37 Z'/>" +
         "<circle cx='9' cy='16' r='1.5'/><circle cx='39' cy='15' r='1.3'/>" +
