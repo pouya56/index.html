@@ -2464,13 +2464,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         const imgLayers = layersArr.filter((l) => l.kind === "img" && l.url);
         const imgMap = {};
         let pending = imgLayers.length;
-        const paint = () => {
+        const drawAll = (ox, oy) => {
           layersArr.forEach((layer) => {
             if (layer.kind === "text") {
               if (!layer.text) return;
               const fs = (layer.size / 100) * aW;
               ctx.save();
-              ctx.translate(aX + (layer.x / 100) * aW, aY + (layer.y / 100) * aH);
+              ctx.translate(aX + ox + (layer.x / 100) * aW, aY + oy + (layer.y / 100) * aH);
               ctx.rotate((layer.rotate || 0) * Math.PI / 180);
               ctx.font = "600 " + fs + "px 'DynEmoji', " + (layer.font || "sans-serif");
               ctx.fillStyle = layer.color || "#1d1d1f";
@@ -2484,14 +2484,30 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
               try {
                 const w = aW * (layer.scale / 100), h = w * ((des.naturalHeight || 1) / (des.naturalWidth || 1));
                 ctx.save();
-                ctx.translate(aX + (layer.x / 100) * aW, aY + (layer.y / 100) * aH);
+                ctx.translate(aX + ox + (layer.x / 100) * aW, aY + oy + (layer.y / 100) * aH);
                 ctx.rotate((layer.rotate || 0) * Math.PI / 180);
                 ctx.drawImage(des, -w / 2, -h / 2, w, h);
                 ctx.restore();
               } catch (_) {}
             }
           });
+        };
+        const paint = () => {
+          drawAll(0, 0);
           try { ctx.restore(); } catch (_) {}
+          // Echo pad: repeat the design at the configured offset, clipped to
+          // its own pad, so the composed preview matches the designer stage.
+          const MS = window.DYN_SETTINGS || {};
+          const mdx = ((+MS.mirrorDX || 0) / 100) * W, mdy = ((+MS.mirrorDY || 0) / 100) * H;
+          if (mdx || mdy) {
+            ctx.save();
+            ctx.beginPath();
+            if (P.shape === "circle") ctx.ellipse(aX + mdx + aW / 2, aY + mdy + aH / 2, aW / 2, aH / 2, 0, 0, Math.PI * 2);
+            else ctx.rect(aX + mdx, aY + mdy, aW, aH);
+            ctx.clip();
+            drawAll(mdx, mdy);
+            ctx.restore();
+          }
           try { resolve(c.toDataURL("image/jpeg", 0.85)); } catch (e) { resolve(null); }
         };
         if (!pending) { paint(); return; }
