@@ -1158,14 +1158,6 @@ button { font-family: inherit; cursor: pointer; }
   transition: background .15s ease; }
 .print-hint:hover { background: rgba(0,113,227,0.1); }
 .print-hint svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-/* empty area offering both ways in: upload a design, or start typing */
-.print-hint.is-choice { flex-direction: row; flex-wrap: wrap; gap: 10px; cursor: default; }
-.ph-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 14px;
-  border: 1.6px dashed rgba(0,113,227,0.55); border-radius: 6px; background: rgba(255,255,255,0.78);
-  color: var(--accent); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
-.ph-opt:hover { background: #fff; border-style: solid; }
-.ph-opt svg { width: 22px; height: 22px; }
-.ph-or { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(0,0,0,0.4); }
 /* merchant-supplied upload art replaces the box entirely */
 .print-hint.has-img, .print-hint.has-img:hover, #dynInlineStage .print-hint.has-img { background: none; border: 0; padding: 0; }
 .print-hint.has-img .print-hint-art { max-width: 80%; max-height: 80%; object-fit: contain;

@@ -2795,6 +2795,25 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const eRaw = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupButtonLabel) || "";
     const eBtn = (eRaw && eRaw !== "Add to Bag" && eRaw !== "Save design") ? eRaw : "Add design";
     const ePlaceholder = (window.DYN_SETTINGS && window.DYN_SETTINGS.popupPlaceholder) || "Add your text";
+    if (showHint && showCompose && !upImg && !document.getElementById("dynPhChoiceCss")) {
+      /* compact stacked pills so the choice fits small or round print areas */
+      var phcss = document.createElement("style"); phcss.id = "dynPhChoiceCss";
+      phcss.textContent =
+        ".print-hint.is-choice{flex-direction:column;gap:6px;padding:10px;cursor:default}" +
+        ".print-hint.is-choice:hover{background:rgba(0,113,227,0.05)}" +
+        ".ph-opt{display:flex;flex-direction:row;align-items:center;gap:7px;padding:7px 13px;border:1.6px dashed rgba(0,113,227,0.55);" +
+          "border-radius:999px;background:rgba(255,255,255,0.88);color:var(--accent,#0071e3);font:inherit;font-size:11.5px;" +
+          "font-weight:600;cursor:pointer;white-space:nowrap;max-width:94%}" +
+        ".ph-opt:hover{background:#fff;border-style:solid}" +
+        ".ph-opt svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}" +
+        ".ph-or{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(0,0,0,0.55);background:rgba(255,255,255,0.85);padding:2px 8px;border-radius:999px}" +
+        "#dynInlineStage .ph-opt{background:transparent;border-color:rgba(23,19,15,0.5);color:#17130f}" +
+        "#dynInlineStage .ph-opt:hover{background:rgba(23,19,15,0.07)}" +
+        "#dynInlineStage .ph-opt svg{width:14px;height:14px;stroke:#17130f}" +
+        "#dynInlineStage .print-hint.is-choice span{font-size:10px;letter-spacing:0.1em;max-width:none}" +
+        "#dynInlineStage .ph-or{color:rgba(23,19,15,0.5);background:none;padding:0}";
+      (document.head || document.documentElement).appendChild(phcss);
+    }
     const html =
       '<div class="modal-scrim" data-close></div>' +
       '<div class="modal-sheet engrave-sheet" role="dialog" aria-modal="true" aria-labelledby="engraveTitle">' +
