@@ -2961,7 +2961,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (!document.getElementById("dynMirCss")) {
         var mcs = document.createElement("style"); mcs.id = "dynMirCss";
         mcs.textContent =
-          ".print-mirror{position:absolute;z-index:3;pointer-events:none;opacity:0.55}" +
+          ".print-mirror{position:absolute;z-index:3;pointer-events:none}" +
           ".print-mirror.circle{border-radius:50%}" +
           ".print-mirror .up-el{pointer-events:none!important;outline:none!important;border:none!important;box-shadow:none!important}" +
           ".print-mirror .rotate-handle,.print-mirror .upload-handle,.print-mirror .up-remove{display:none!important}";
