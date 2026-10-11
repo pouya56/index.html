@@ -3138,8 +3138,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (txChip) txChip.onclick = () => { const b = q2("#addTextBtn"); if (b) b.click(); };
     // Font picker: a FONT chip under the stage chips toggles a row of six
     // typeface chips; picks apply to the selected (or latest) text box.
+    // NOTE: showCompose is out of scope in this function (it caused a
+    // ReferenceError that killed the rest of this init) — the compose bar's
+    // presence in the DOM says whether typing is on.
     const frame0 = q2(".engrave-frame");
-    if (showCompose && frame0 && !frame0.querySelector("#fontChips")) {
+    if (q2("#addTextBtn") && frame0 && !frame0.querySelector("#fontChips")) {
       const ft = document.createElement("button");
       ft.type = "button"; ft.className = "print-hint-chip"; ft.id = "fontChip"; ft.hidden = true;
       ft.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="M5 19 11 5l6 14M7.4 14h7.2"/></svg><span>Font</span>';
