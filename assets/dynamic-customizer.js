@@ -2343,6 +2343,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // Order buttons only matter with 2+ layers.
     const pa2 = q2("#printArea");
     if (pa2) pa2.classList.toggle("multi", layers.length > 1);
+    // The artwork panel stays lean — Front/Back and the footer only. The
+    // typing field and its font/emoji tools appear just while a text box is
+    // selected (the stage chips handle adding text).
+    const composeWrap = q2(".ios-compose"), toolsWrap = q2(".engrave-tools");
+    const showTyping = !!activeTextLayer();
+    if (composeWrap) composeWrap.style.display = showTyping ? "" : "none";
+    if (toolsWrap) toolsWrap.style.display = showTyping ? "" : "none";
     // FONT chip shows once any text box exists; the row only when toggled open.
     const fcT = q2("#fontChip"), fc = q2("#fontChips");
     const hasText = layers.some(function (x) { return x.kind === "text"; });
