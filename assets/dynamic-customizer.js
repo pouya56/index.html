@@ -3200,6 +3200,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         /* second row: font chips — each label in its own typeface, black fill when active */
         "#fontChips{position:absolute;display:flex;gap:8px;flex-wrap:wrap;z-index:6;pointer-events:auto}" +
         "#fontChips[hidden]{display:none}" +
+        /* the theme's base chip rule is position:absolute — inside the flex row
+           that stacks every font chip on one spot */
+        "#fontChips .print-hint-chip{position:static!important}" +
         ".print-hint-chip.font-chip{text-transform:none;font-size:12.5px!important;letter-spacing:0.01em!important;padding:7px 15px!important}" +
         ".print-hint-chip.on{background:" +
           "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' preserveAspectRatio='none'><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 83 5z' fill='%23141311'/><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 85 5c31-1 57 6 60 16' fill='none' stroke='%23141311' stroke-width='2.4' stroke-linecap='round' vector-effect='non-scaling-stroke'/></svg>\")" +
@@ -3240,7 +3243,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (frame) frame.addEventListener("pointerdown", (e) => {
       // Deselecting also drops never-typed text boxes — an invisible empty
       // layer would otherwise keep the upload/add-text prompt hidden.
-      if (!e.target.closest(".up-el")) { activeLayerId = null; pruneEmptyText(); if (txt) txt.value = ""; renderUpEls(); }
+      // Chips live inside the frame too: clicking one must not deselect first,
+      // or a font pick lands on nothing.
+      if (!e.target.closest(".up-el") && !e.target.closest(".print-hint-chip") && !e.target.closest("#fontChips")) {
+        activeLayerId = null; pruneEmptyText(); if (txt) txt.value = ""; renderUpEls();
+      }
     });
     const pvChip = q2("#previewChip");
     if (pvChip) pvChip.onclick = () => openDesignPreview();
