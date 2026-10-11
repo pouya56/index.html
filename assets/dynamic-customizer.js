@@ -2174,8 +2174,34 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     load(idx);
   }
 
+  // Layer stacking order = array order = DOM order; the composite and the echo
+  // pad both follow it, so reordering here reorders everywhere.
+  function moveLayer(id, dir) {
+    const i = layers.findIndex(function (l) { return l.id === id; });
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= layers.length) return;
+    const mv = layers.splice(i, 1)[0];
+    layers.splice(j, 0, mv);
+    const pa = q2("#printArea");
+    if (pa) layers.forEach(function (l) { const el = layerEl(l.id); if (el) pa.appendChild(el); });
+    renderUpEls();
+  }
+  const ORDER_BTNS =
+    '<button class="up-order up-back" type="button" title="Send backward" aria-label="Send backward">▼</button>' +
+    '<button class="up-order up-fwd" type="button" title="Bring forward" aria-label="Bring forward">▲</button>';
   function createLayerEl(layer) {
     const pa = q2("#printArea"); if (!pa) return null;
+    if (!document.getElementById("dynOrderCss")) {
+      var ocs = document.createElement("style"); ocs.id = "dynOrderCss";
+      ocs.textContent =
+        ".up-order{position:absolute;bottom:-11px;width:22px;height:22px;border-radius:50%;background:#fff;color:#17130f;" +
+          "border:2px solid var(--accent,#0071e3);font-size:9px;line-height:1;cursor:pointer;display:none;" +
+          "place-items:center;padding:0;box-shadow:0 1px 5px rgba(0,0,0,0.35)}" +
+        ".up-back{left:-11px}.up-fwd{left:15px}" +
+        "#printArea.multi .up-el:hover .up-order,#printArea.multi .up-el.selected .up-order{display:grid}" +
+        ".print-mirror .up-order{display:none!important}";
+      (document.head || document.documentElement).appendChild(ocs);
+    }
     const el = document.createElement("div");
     el.className = "up-el " + (layer.kind === "img" ? "up-img" : "up-txt");
     el.setAttribute("data-lid", layer.id);
@@ -2183,19 +2209,26 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       el.innerHTML = '<img alt="">' +
         '<span class="rotate-handle" title="Rotate"></span>' +
         '<span class="upload-handle"></span>' +
-        '<button class="up-remove" type="button" aria-label="Remove image">×</button>';
+        '<button class="up-remove" type="button" aria-label="Remove image">×</button>' + ORDER_BTNS;
       const im = el.querySelector("img"); if (im) { im.crossOrigin = "anonymous"; if (layer.url) im.src = layer.url; }
       el.addEventListener("dblclick", (e) => { e.stopPropagation(); openDesignPreview(); });
     } else {
       el.innerHTML = '<span class="up-txt-content"></span>' +
         '<span class="rotate-handle" title="Rotate"></span>' +
         '<span class="upload-handle"></span>' +
-        '<button class="up-remove" type="button" aria-label="Remove text">×</button>';
+        '<button class="up-remove" type="button" aria-label="Remove text">×</button>' + ORDER_BTNS;
     }
     pa.appendChild(el);
     makeUpInteractive(el, layer);
     const rm = el.querySelector(".up-remove");
     if (rm) rm.onclick = function (e) { e.stopPropagation(); removeLayer(layer.id); };
+    el.querySelectorAll(".up-order").forEach(function (b) {
+      b.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+      b.onclick = function (e) {
+        e.stopPropagation();
+        moveLayer(layer.id, b.classList.contains("up-fwd") ? 1 : -1);
+      };
+    });
     return el;
   }
 
@@ -2292,6 +2325,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const chipTx = q2("#textChip");
     if (chipTx) chipTx.hidden = !(layers.length && countKind("text") < MAX_TXT);
     placeChips(sidePrint(currentSide));
+    // Order buttons only matter with 2+ layers.
+    const pa2 = q2("#printArea");
+    if (pa2) pa2.classList.toggle("multi", layers.length > 1);
     // Example placeholder: hide as soon as the customer adds any design.
     const example = q2("#upExample");
     if (example) example.style.display = (layers && layers.length) ? "none" : "";
