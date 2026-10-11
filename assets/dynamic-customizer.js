@@ -2288,6 +2288,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // The composed-preview chip appears as soon as anything is on this side.
     const chipPv = q2("#previewChip");
     if (chipPv) chipPv.hidden = !layers.length;
+    // Add-text chip: alongside Upload once something is placed, until the limit.
+    const chipTx = q2("#textChip");
+    if (chipTx) chipTx.hidden = !(layers.length && countKind("text") < MAX_TXT);
     placeChips(sidePrint(currentSide));
     // Example placeholder: hide as soon as the customer adds any design.
     const example = q2("#upExample");
@@ -2357,13 +2360,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   // Upload/Preview chips sit in a row just under the print area, wherever
   // that area is configured for the product.
   function placeChips(P) {
-    const upC = q2("#printChip"), pvC = q2("#previewChip");
-    if (!upC && !pvC) return;
+    const upC = q2("#printChip"), txC = q2("#textChip"), pvC = q2("#previewChip");
+    if (!upC && !txC && !pvC) return;
     P = P || {};
     const px2 = (P.x != null ? P.x : 22), py2 = (P.y != null ? P.y : 30), ph2 = (P.h > 0 ? P.h : 40);
     const topv = "calc(" + Math.min(py2 + ph2, 92) + "% + 8px)";
     let off = 0;
-    [upC, pvC].forEach(function (c) {
+    [upC, txC, pvC].forEach(function (c) {
       if (!c) return;
       c.style.top = topv; c.style.bottom = "auto"; c.style.right = "auto";
       c.style.left = "calc(" + px2 + "% + " + off + "px)";
@@ -2978,6 +2981,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             (showHint ? '<button type="button" class="print-hint-chip" id="printChip" data-drop="design" hidden>' +
               '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
               '<span>Upload</span></button>' : '') +
+            (showCompose ? '<button type="button" class="print-hint-chip" id="textChip" hidden>' +
+              '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7V5h14v2M12 5v14M9 19h6"/></svg>' +
+              '<span>Add text</span></button>' : '') +
             // Composed preview: the design ON the product, big and zoomable.
             '<button type="button" class="print-hint-chip dpv-chip" id="previewChip" hidden>' +
               '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>' +
@@ -3063,6 +3069,30 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
     const phText = q2("#phTextOpt");
     if (phText) phText.onclick = () => { const b = q2("#addTextBtn"); if (b) b.click(); };
+    const txChip = q2("#textChip");
+    if (txChip) txChip.onclick = () => { const b = q2("#addTextBtn"); if (b) b.click(); };
+    if (!document.getElementById("dynChipCss")) {
+      /* stage chips (Upload / Add text / Preview) in the hand-drawn ink style:
+         marker caps inside a sketched loop, white halo for dark products */
+      if (!document.getElementById("dynMarkerFont")) {
+        var mfl2 = document.createElement("link"); mfl2.id = "dynMarkerFont"; mfl2.rel = "stylesheet";
+        mfl2.href = "https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap";
+        (document.head || document.documentElement).appendChild(mfl2);
+      }
+      var ccs = document.createElement("style"); ccs.id = "dynChipCss";
+      ccs.textContent =
+        ".print-hint-chip{border:0!important;border-radius:0!important;background:" +
+          "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' preserveAspectRatio='none'><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 85 5c31-1 57 6 60 16' fill='none' stroke='%23141311' stroke-width='2.4' stroke-linecap='round' opacity='.9' vector-effect='non-scaling-stroke'/></svg>\")" +
+          " center/100% 100% no-repeat!important;" +
+          "-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;" +
+          "color:#141311!important;font-family:'Permanent Marker',cursive!important;font-size:11.5px!important;" +
+          "font-weight:400!important;letter-spacing:0.05em!important;text-transform:uppercase;padding:8px 16px!important;" +
+          "filter:drop-shadow(0 0 1px rgba(255,255,255,1)) drop-shadow(0 0 3px rgba(255,255,255,0.95)) drop-shadow(0 0 6px rgba(255,255,255,0.7));" +
+          "transition:transform .14s ease!important}" +
+        ".print-hint-chip:hover{transform:rotate(-2deg) scale(1.06)}" +
+        ".print-hint-chip svg{stroke:#141311!important;stroke-width:2.3!important;width:14px!important;height:14px!important}";
+      (document.head || document.documentElement).appendChild(ccs);
+    }
     // echo pad: mirror every layer as a non-interactive shadow copy
     const mirEl = q2("#printMirror"), paEl = q2("#printArea");
     if (mirEl && paEl) {
