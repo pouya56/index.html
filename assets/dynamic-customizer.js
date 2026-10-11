@@ -2015,6 +2015,25 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '<button type="button" class="dpv-nav dpv-next" aria-label="Next design"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>' +
       '<div class="dpv-hint">Scroll or pinch to zoom · drag to move · double-click for 100%</div>' +
       '<div class="dpv-hud"><span class="dpv-zoom">100%</span><span class="dpv-badge" hidden></span></div>';
+    if (!document.getElementById("dynDpvCss")) {
+      /* zine-style close: chunky hand-drawn X on a torn paper circle, ink dots */
+      var dcs = document.createElement("style"); dcs.id = "dynDpvCss";
+      var dpvX = "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'>" +
+        "<path fill='%23f6f3ec' d='M24 2c7-1 14 2 18 8 3 5 4 12 1 18-3 7-10 12-18 12-7 0-14-4-17-10C4 24 4 15 9 9c4-5 9-6 15-7z'/>" +
+        "<g transform='rotate(-6 24 23)'>" +
+        "<path fill='%23141311' d='M14 11 L20 8 L34 34 L28 37 Z'/>" +
+        "<path fill='%23141311' d='M34 11 L28 8 L14 34 L20 37 Z'/>" +
+        "<circle cx='9' cy='16' r='1.5' fill='%23141311'/><circle cx='39' cy='15' r='1.3' fill='%23141311'/>" +
+        "<circle cx='8' cy='30' r='1.3' fill='%23141311'/><circle cx='40' cy='31' r='1.5' fill='%23141311'/>" +
+        "<circle cx='24' cy='5' r='1.2' fill='%23141311'/><circle cx='23' cy='41' r='1.4' fill='%23141311'/>" +
+        "</g></svg>\")";
+      dcs.textContent =
+        ".dpv-close{width:46px;height:46px;border:0;border-radius:0;color:transparent;font-size:0;" +
+          "background:" + dpvX + " center/contain no-repeat!important;" +
+          "filter:drop-shadow(0 3px 7px rgba(0,0,0,0.5));transition:transform .14s ease}" +
+        ".dpv-close:hover{background:" + dpvX + " center/contain no-repeat!important;transform:scale(1.1) rotate(-5deg)}";
+      (document.head || document.documentElement).appendChild(dcs);
+    }
     document.body.appendChild(d);
     d.addEventListener("click", (e) => {
       e.stopPropagation();
