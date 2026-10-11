@@ -2016,7 +2016,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       '<div class="dpv-hint">Scroll or pinch to zoom · drag to move · double-click for 100%</div>' +
       '<div class="dpv-hud"><span class="dpv-zoom">100%</span><span class="dpv-badge" hidden></span></div>';
     document.body.appendChild(d);
-    d.addEventListener("click", (e) => e.stopPropagation());
+    d.addEventListener("click", (e) => {
+      e.stopPropagation();
+      // A click on the dark backdrop closes — but not the tail of a pan/pinch.
+      if (e.target === d && !d._moved) dpvClose();
+    });
     d.querySelector(".dpv-close").onclick = dpvClose;
     // Capture-phase so Escape closes the preview, not the design popup behind it.
     document.addEventListener("keydown", (e) => {
@@ -2041,6 +2045,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     function apply() {
       img.style.transform = "translate(-50%, -50%) translate(" + x + "px," + y + "px) scale(" + scale + ")";
       zoomEl.textContent = Math.round(scale * 100) + "%"; // 100% = the file's real pixels
+      // Keep the close button riding the image's top-right corner (clamped on-screen).
+      const cb = d.querySelector(".dpv-close");
+      if (cb && img.naturalWidth) {
+        const cxp = d.clientWidth / 2 + x + (img.naturalWidth * scale) / 2;
+        const cyp = d.clientHeight / 2 + y - (img.naturalHeight * scale) / 2;
+        cb.style.right = "auto";
+        cb.style.left = Math.min(d.clientWidth - 48, Math.max(8, cxp - 20)) + "px";
+        cb.style.top = Math.min(d.clientHeight - 48, Math.max(8, cyp - 20)) + "px";
+      }
     }
     function setScale(s2, px, py) {
       s2 = Math.max(fit * 0.5, Math.min(6, s2));
@@ -2096,8 +2109,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       if (e.target.closest("button")) return;
       ptrs.set(e.pointerId, e);
       try { d.setPointerCapture(e.pointerId); } catch (err) {}
-      if (ptrs.size === 1) { dragging = true; sx = e.clientX - x; sy = e.clientY - y; d.classList.add("drag"); }
-      else if (ptrs.size === 2) { dragging = false; const a = Array.from(ptrs.values()); lastDist = Math.hypot(a[0].clientX - a[1].clientX, a[0].clientY - a[1].clientY); }
+      if (ptrs.size === 1) { dragging = true; sx = e.clientX - x; sy = e.clientY - y; d.classList.add("drag"); d._moved = false; d._csx = e.clientX; d._csy = e.clientY; }
+      else if (ptrs.size === 2) { d._moved = true; dragging = false; const a = Array.from(ptrs.values()); lastDist = Math.hypot(a[0].clientX - a[1].clientX, a[0].clientY - a[1].clientY); }
     };
     d.onpointermove = (e) => {
       if (!ptrs.has(e.pointerId)) return;
@@ -2114,7 +2127,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         lastDist = dist;
       } else if (dragging) { x = e.clientX - sx; y = e.clientY - sy; apply(); }
     };
-    d.onpointerup = d.onpointercancel = (e) => { ptrs.delete(e.pointerId); dragging = false; lastDist = 0; d.classList.remove("drag"); };
+    d.onpointerup = d.onpointercancel = (e) => {
+      if (Math.hypot(e.clientX - (d._csx || 0), e.clientY - (d._csy || 0)) > 6) d._moved = true;
+      ptrs.delete(e.pointerId); dragging = false; lastDist = 0; d.classList.remove("drag");
+    };
     d.ondblclick = (e) => {
       if (e.target.closest("button")) return;
       const r = d.getBoundingClientRect();
