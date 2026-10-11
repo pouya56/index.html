@@ -2027,7 +2027,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       /* zine-style close: chunky hand-drawn X on a torn paper circle, ink dots */
       var dcs = document.createElement("style"); dcs.id = "dynDpvCss";
       var dpvX = "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'>" +
-        "<g transform='rotate(-6 24 23)' fill='%23141311'>" +
+        "<g transform='rotate(-6 24 23)' fill='%23c81e1e'>" +
         "<path d='M14 11 L20 8 L34 34 L28 37 Z'/>" +
         "<path d='M34 11 L28 8 L14 34 L20 37 Z'/>" +
         "<circle cx='9' cy='16' r='1.5'/><circle cx='39' cy='15' r='1.3'/>" +
@@ -2039,6 +2039,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
            in the body and would otherwise win, leaving the white ✕ glyph visible
            on top of the artwork — which reads as two crosses stacked. */
         ".dpv-close{width:46px!important;height:46px!important;border:0!important;border-radius:0!important;" +
+          "left:18px!important;right:auto!important;" +
           "color:transparent!important;font-size:0!important;line-height:0!important;text-shadow:none!important;" +
           "background:" + dpvX + " center/contain no-repeat!important;" +
           "filter:drop-shadow(0 0 1px rgba(255,255,255,1)) drop-shadow(0 0 3px rgba(255,255,255,1)) drop-shadow(0 0 6px rgba(255,255,255,0.8));transition:transform .14s ease}" +
@@ -2075,14 +2076,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     function apply() {
       img.style.transform = "translate(-50%, -50%) translate(" + x + "px," + y + "px) scale(" + scale + ")";
       zoomEl.textContent = Math.round(scale * 100) + "%"; // 100% = the file's real pixels
-      // Keep the close button riding the image's top-right corner (clamped on-screen).
+      // Keep the close button riding the image's top-left corner (clamped on-screen).
       const cb = d.querySelector(".dpv-close");
       if (cb && img.naturalWidth) {
-        const cxp = d.clientWidth / 2 + x + (img.naturalWidth * scale) / 2;
+        const cxp = d.clientWidth / 2 + x - (img.naturalWidth * scale) / 2;
         const cyp = d.clientHeight / 2 + y - (img.naturalHeight * scale) / 2;
-        cb.style.right = "auto";
-        cb.style.left = Math.min(d.clientWidth - 48, Math.max(8, cxp - 20)) + "px";
-        cb.style.top = Math.min(d.clientHeight - 48, Math.max(8, cyp - 20)) + "px";
+        // setProperty important: the injected default position is !important too.
+        cb.style.setProperty("left", Math.min(d.clientWidth - 48, Math.max(8, cxp - 20)) + "px", "important");
+        cb.style.setProperty("top", Math.min(d.clientHeight - 48, Math.max(8, cyp - 20)) + "px", "important");
       }
     }
     function setScale(s2, px, py) {
