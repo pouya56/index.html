@@ -2312,7 +2312,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       } else {
         el.style.fontSize = layer.size + "cqw";
         const c = el.querySelector(".up-txt-content");
-        if (c) { c.textContent = layer.text; c.style.fontFamily = "'DynEmoji', " + layer.font; c.style.color = layer.color; }
+        if (c) {
+          c.textContent = layer.text;
+          // "important" priority: the chip labels set their fonts this way and
+          // render correctly on pages where a plain inline style loses to some
+          // !important font rule — the stage text must win the same way.
+          c.style.setProperty("font-family", "'DynEmoji', " + layer.font, "important");
+          c.style.color = layer.color;
+        }
       }
     });
     const apply = q2("#uploadApply");
@@ -2416,32 +2423,22 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const halfW = r.width ? (er.width / r.width) * 50 : 0, halfH = r.height ? (er.height / r.height) * 50 : 0;
     state.x = clampIn(state.x, halfW); state.y = clampIn(state.y, halfH);
   }
-  // Upload/Preview chips sit in a row just under the print area, wherever
-  // that area is configured for the product.
+  // The chips stack in one column down the stage's left side:
+  // Upload, Add text, Preview, Font, then the open font list.
   function placeChips(P) {
-    const upC = q2("#printChip"), txC = q2("#textChip"), pvC = q2("#previewChip");
-    if (!upC && !txC && !pvC) return;
-    P = P || {};
-    const px2 = (P.x != null ? P.x : 22), py2 = (P.y != null ? P.y : 30), ph2 = (P.h > 0 ? P.h : 40);
-    const topv = "calc(" + Math.min(py2 + ph2, 92) + "% + 8px)";
-    let off = 0;
-    [upC, txC, pvC].forEach(function (c) {
-      if (!c) return;
-      c.style.top = topv; c.style.bottom = "auto"; c.style.right = "auto";
-      c.style.left = "calc(" + px2 + "% + " + off + "px)";
-      if (!c.hidden && c.offsetWidth) off += c.offsetWidth + 8;
-    });
-    const ftC = q2("#fontChip");
-    if (ftC) {
-      ftC.style.top = "calc(" + Math.min(py2 + ph2, 92) + "% + 48px)";
-      ftC.style.left = px2 + "%";
-      ftC.style.bottom = "auto"; ftC.style.right = "auto";
-    }
+    const seq = [q2("#printChip"), q2("#textChip"), q2("#previewChip"), q2("#fontChip")];
     const fr2 = q2("#fontChips");
+    if (!seq.some(Boolean) && !fr2) return;
+    let y = 10;
+    seq.forEach(function (c) {
+      if (!c) return;
+      c.style.left = "10px"; c.style.right = "auto"; c.style.bottom = "auto";
+      c.style.top = y + "px";
+      if (!c.hidden && c.offsetHeight) y += c.offsetHeight + 8;
+    });
     if (fr2) {
-      fr2.style.top = "calc(" + Math.min(py2 + ph2, 92) + "% + 88px)";
-      fr2.style.left = px2 + "%";
-      fr2.style.right = "8px";
+      fr2.style.left = "10px"; fr2.style.right = "auto";
+      fr2.style.top = y + "px";
     }
   }
   function fitInArea(ov, area, state, kind) {
@@ -3204,7 +3201,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         ".print-hint-chip:hover{transform:rotate(-2deg) scale(1.06)}" +
         ".print-hint-chip svg{stroke:#f6f3ec!important;stroke-width:2.3!important;width:14px!important;height:14px!important}" +
         /* second row: font chips — each label in its own typeface, black fill when active */
-        "#fontChips{position:absolute;display:flex;gap:8px;flex-wrap:wrap;z-index:6;pointer-events:auto}" +
+        "#fontChips{position:absolute;display:flex;flex-direction:column;align-items:flex-start;gap:8px;z-index:6;pointer-events:auto}" +
         "#fontChips[hidden]{display:none}" +
         /* the theme's base chip rule is position:absolute — inside the flex row
            that stacks every font chip on one spot */
