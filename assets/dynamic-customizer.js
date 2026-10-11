@@ -2964,9 +2964,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           ".print-mirror{position:absolute;z-index:3;pointer-events:none}" +
           ".print-mirror.circle{border-radius:50%}" +
           ".print-mirror .up-el{pointer-events:none!important;outline:none!important;border:none!important;box-shadow:none!important}" +
-          ".print-mirror .rotate-handle,.print-mirror .upload-handle,.print-mirror .up-remove{display:none!important}";
+          ".print-mirror .rotate-handle,.print-mirror .upload-handle,.print-mirror .up-remove{display:none!important}" +
+          ".print-mirror.dyn-edit{outline:2px dashed rgba(200,30,30,.55)}" +
+          ".print-mirror.dyn-edit::after{content:\"ECHO\";position:absolute;top:4px;left:6px;font:700 10px/1 Arial,sans-serif;color:rgba(200,30,30,.75);letter-spacing:.12em}";
         (document.head || document.documentElement).appendChild(mcs);
       }
+      // Theme editor only: show the empty echo area so the merchant can aim it.
+      if (window.Shopify && window.Shopify.designMode) mirEl.classList.add("dyn-edit");
       const syncMir = () => {
         mirEl.innerHTML = "";
         paEl.querySelectorAll(".up-el").forEach((el) => {
