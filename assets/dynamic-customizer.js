@@ -2836,8 +2836,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         ".ph-opt:hover{background:rgba(255,255,255,0.38)}" +
         ".ph-opt svg{width:17px;height:17px;flex:none;fill:none;stroke:#17130f;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;" +
           "filter:drop-shadow(0 0 2px rgba(255,255,255,0.85))}" +
-        ".print-hint.is-choice .ph-opt:last-of-type::after{content:\"\";position:absolute;left:14%;right:8%;bottom:-3px;height:7px;" +
-          "background:url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10' preserveAspectRatio='none'><path d='M4 5c22-4 44-4 62-2 18 1 34 1 50 0M16 8c30-3 62-3 92-2' fill='none' stroke='%2317130f' stroke-width='2' stroke-linecap='round'/></svg>\") center/100% 100% no-repeat}" +
+        /* hand-drawn marker loop circling both options */
+        ".print-hint.is-choice::after{content:\"\";position:absolute;inset:-3px -6px;pointer-events:none;" +
+          "background:url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120' preserveAspectRatio='none'><path d='M103 7C154 5 193 27 194 58c1 33-43 55-93 55C53 113 7 95 6 61 5 29 47 10 104 8c42-1 80 13 84 38' fill='none' stroke='%2317130f' stroke-width='2.4' stroke-linecap='round' opacity='.9' vector-effect='non-scaling-stroke'/></svg>\") center/100% 100% no-repeat;" +
+          "filter:drop-shadow(0 0 2px rgba(255,255,255,0.7))}" +
         ".ph-or{font-family:Caveat,cursive;font-size:15px;font-weight:600;color:#17130f;background:none;padding:0;line-height:1;" +
           "text-shadow:0 0 6px rgba(255,255,255,0.8)}" +
         /* inline stage: its ID-prefixed paper skin outranks the classes above,
