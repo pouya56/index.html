@@ -2840,8 +2840,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           "background:url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10' preserveAspectRatio='none'><path d='M4 5c22-4 44-4 62-2 18 1 34 1 50 0M16 8c30-3 62-3 92-2' fill='none' stroke='%2317130f' stroke-width='2' stroke-linecap='round'/></svg>\") center/100% 100% no-repeat}" +
         ".ph-or{font-family:Caveat,cursive;font-size:15px;font-weight:600;color:#17130f;background:none;padding:0;line-height:1;" +
           "text-shadow:0 0 6px rgba(255,255,255,0.8)}" +
-        "#dynInlineStage .ph-opt{font-size:12px}" +
-        "#dynInlineStage .ph-opt svg{width:14px;height:14px}";
+        /* inline stage: its ID-prefixed paper skin outranks the classes above,
+           so repeat the glass look with the ID — and drop its white backing box */
+        "#dynInlineStage .print-hint.is-choice::before{content:none}" +
+        "#dynInlineStage .print-hint.is-choice,#dynInlineStage .print-hint.is-choice:hover{" +
+          "background:rgba(255,255,255,0.26);-webkit-backdrop-filter:blur(7px) saturate(1.15);backdrop-filter:blur(7px) saturate(1.15);" +
+          "border:1.5px solid rgba(255,255,255,0.55);border-radius:14px 10px 15px 9px/10px 15px 9px 14px;" +
+          "box-shadow:0 4px 16px rgba(0,0,0,0.18),inset 0 1px 0 rgba(255,255,255,0.45)}" +
+        "#dynInlineStage .print-hint.is-choice .ph-opt{font-size:12px}" +
+        "#dynInlineStage .print-hint.is-choice span{font-family:'Permanent Marker',cursive;font-size:12px;font-weight:400;" +
+          "letter-spacing:0.04em;text-transform:uppercase;color:#17130f;max-width:none}" +
+        "#dynInlineStage .print-hint.is-choice svg{width:14px;height:14px;stroke:#17130f;stroke-width:2.4}" +
+        "#dynInlineStage .print-hint.is-choice .ph-or{font-family:Caveat,cursive;font-size:14px;font-weight:600;letter-spacing:0;text-transform:none}";
       (document.head || document.documentElement).appendChild(phcss);
     }
     const html =
