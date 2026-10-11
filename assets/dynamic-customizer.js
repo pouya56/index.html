@@ -1280,6 +1280,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let sideActive = { front: null, back: null };
   let currentSide = "front";
   let curVariantOpts = [];   // option values of the currently-selected variant (for per-variant back image)
+  let curVariantImage = "";  // the selected variant's own photo — the design surface follows the chosen colour
   let _sidesResolve = null;  // (hasBack) => variant matching current options with the "sides" option forced; set by the variant picker
   let _giftVariantActive = false;  // true when gift wrapping rides on a product option/variant (so we skip the legacy fee line)
   let layers = sideLayers.front;   // alias to the current side's layer array
@@ -1523,6 +1524,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         [cta, add].forEach((btn) => { if (btn) { btn.disabled = !orderable; btn.style.opacity = orderable ? "" : "0.5"; } });
         let img = v.image;
         if (!img) { const alt = variants.find((vv) => vv.image && (vv.options || [])[0] === (v.options || [])[0]); if (alt) img = alt.image; }
+        curVariantImage = img || "";
         if (img && img !== product.image) {
           product.image = img;
           galIndex = 0;
@@ -1533,6 +1535,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             const st = document.querySelector("#stageProduct img, .up-stage img");
             if (st) st.src = img;
           }
+        }
+        // Keep the open designer's surface in step even when the new variant
+        // has no photo of its own (falls back to the configured front image).
+        if (modalOpen) {
+          const ef2 = document.querySelector(".engrave-frame > img");
+          const fi2 = sideImage(currentSide || "front");
+          if (ef2 && fi2 && ef2.getAttribute("src") !== fi2) ef2.src = fi2;
         }
       }
       return v;
@@ -1892,7 +1901,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   function sideImage(side) {
     const S = window.DYN_SETTINGS || {};
     if (side === "back") return variantBackImage() || S.backImage || S.frontImage || product.image;
-    return S.frontImage || product.image;
+    return curVariantImage || S.frontImage || product.image;
   }
   // Merchant-configurable property labels shown on the order.
   function labels() {
