@@ -3054,21 +3054,6 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       txt.oninput = upSync;
       wireKbd(txt, upSync, (f) => { const l = activeTextLayer(); if (l) { l.font = f.stack; renderUpEls(); } });
       setKbdFont(UPLOAD_FONTS[0].stack);
-      if (!document.getElementById("dynPlusCss")) {
-        /* add-text plus in the same hand-drawn ink style as the close X */
-        var pcs = document.createElement("style"); pcs.id = "dynPlusCss";
-        var plusArt = "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'>" +
-          "<g transform='rotate(-5 24 24)' fill='%23141311'>" +
-          "<path d='M21 8 L27 7 L27 20 L40 19 L40 26 L27 26 L28 40 L21 40 L21 27 L8 28 L8 21 L21 21 Z'/>" +
-          "<circle cx='10' cy='12' r='1.3'/><circle cx='38' cy='10' r='1.2'/>" +
-          "<circle cx='39' cy='37' r='1.4'/><circle cx='9' cy='38' r='1.2'/>" +
-          "</g></svg>\")";
-        pcs.textContent =
-          ".ios-plus{background:" + plusArt + " center/82% no-repeat!important;border-radius:0!important;transition:transform .14s ease!important}" +
-          ".ios-plus:hover{background:" + plusArt + " center/82% no-repeat!important;transform:rotate(-6deg) scale(1.1)}" +
-          ".ios-plus svg{display:none!important}";
-        (document.head || document.documentElement).appendChild(pcs);
-      }
       const addTextBtn = q2("#addTextBtn");
       if (addTextBtn) addTextBtn.onclick = () => {
         if (countKind("text") >= MAX_TXT) return toast("Up to " + MAX_TXT + " text boxes");
