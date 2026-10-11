@@ -1942,6 +1942,16 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       pa.style.height = (P.h > 0 ? P.h : 40) + "%";
       pa.classList.toggle("outline", P.show !== false);
       pa.classList.toggle("circle", P.shape === "circle");
+      // echo pad: same box shifted by the configured offsets
+      const mir = q2("#printMirror");
+      if (mir) {
+        const MS = window.DYN_SETTINGS || {};
+        mir.style.left = ((P.x != null ? P.x : 22) + (+MS.mirrorDX || 0)) + "%";
+        mir.style.top = ((P.y != null ? P.y : 30) + (+MS.mirrorDY || 0)) + "%";
+        mir.style.width = (P.w > 0 ? P.w : 56) + "%";
+        mir.style.height = (P.h > 0 ? P.h : 40) + "%";
+        mir.classList.toggle("circle", P.shape === "circle");
+      }
     }
     const img = q2(".engrave-frame > img"); if (img) img.src = sideImage(side) || "";
   }
@@ -2854,6 +2864,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                       '<span>Add text</span></button>' +
                   '</div>') : '') +
             '</div>' +
+            (((+S.mirrorDX || 0) || (+S.mirrorDY || 0)) ? '<div class="print-mirror" id="printMirror"></div>' : '') +
             // Small upload chip pinned to the image's bottom-right corner; takes
             // over from the big box once something is on the print area.
             (showHint ? '<button type="button" class="print-hint-chip" id="printChip" data-drop="design" hidden>' +
@@ -2944,6 +2955,32 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
     const phText = q2("#phTextOpt");
     if (phText) phText.onclick = () => { const b = q2("#addTextBtn"); if (b) b.click(); };
+    // echo pad: mirror every layer as a non-interactive shadow copy
+    const mirEl = q2("#printMirror"), paEl = q2("#printArea");
+    if (mirEl && paEl) {
+      if (!document.getElementById("dynMirCss")) {
+        var mcs = document.createElement("style"); mcs.id = "dynMirCss";
+        mcs.textContent =
+          ".print-mirror{position:absolute;z-index:3;pointer-events:none;opacity:0.55}" +
+          ".print-mirror.circle{border-radius:50%}" +
+          ".print-mirror .up-el{pointer-events:none!important;outline:none!important;border:none!important;box-shadow:none!important}" +
+          ".print-mirror .rotate-handle,.print-mirror .upload-handle,.print-mirror .up-remove{display:none!important}";
+        (document.head || document.documentElement).appendChild(mcs);
+      }
+      const syncMir = () => {
+        mirEl.innerHTML = "";
+        paEl.querySelectorAll(".up-el").forEach((el) => {
+          const c = el.cloneNode(true);
+          c.removeAttribute("data-lid");
+          c.classList.remove("active");
+          mirEl.appendChild(c);
+        });
+      };
+      let mRaf = 0;
+      const kickMir = () => { if (!mRaf) { mRaf = requestAnimationFrame(() => { mRaf = 0; syncMir(); }); } };
+      new MutationObserver(kickMir).observe(paEl, { childList: true, subtree: true, attributes: true, characterData: true });
+      syncMir();
+    }
     const frame = q2(".engrave-frame");
     if (frame) frame.addEventListener("pointerdown", (e) => {
       if (!e.target.closest(".up-el")) { activeLayerId = null; if (txt) txt.value = ""; renderUpEls(); }
