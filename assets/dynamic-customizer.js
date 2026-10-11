@@ -2423,22 +2423,27 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const halfW = r.width ? (er.width / r.width) * 50 : 0, halfH = r.height ? (er.height / r.height) * 50 : 0;
     state.x = clampIn(state.x, halfW); state.y = clampIn(state.y, halfH);
   }
-  // The chips stack in one column down the stage's left side:
-  // Upload, Add text, Preview, Font, then the open font list.
+  // The chips stack in one column hugging the print area's LEFT edge,
+  // tops aligned with the area: Upload, Add text, Preview, Font, font list.
   function placeChips(P) {
     const seq = [q2("#printChip"), q2("#textChip"), q2("#previewChip"), q2("#fontChip")];
     const fr2 = q2("#fontChips");
     if (!seq.some(Boolean) && !fr2) return;
-    let y = 10;
+    P = P || {};
+    const px2 = (P.x != null ? P.x : 22), py2 = (P.y != null ? P.y : 30);
+    // right-align every chip to the area's left edge so the column lines up
+    const rightv = "calc(100% - " + px2 + "% + 10px)";
+    let y = 0;
     seq.forEach(function (c) {
       if (!c) return;
-      c.style.left = "10px"; c.style.right = "auto"; c.style.bottom = "auto";
-      c.style.top = y + "px";
+      c.style.left = "auto"; c.style.bottom = "auto";
+      c.style.right = rightv;
+      c.style.top = "calc(" + py2 + "% + " + y + "px)";
       if (!c.hidden && c.offsetHeight) y += c.offsetHeight + 8;
     });
     if (fr2) {
-      fr2.style.left = "10px"; fr2.style.right = "auto";
-      fr2.style.top = y + "px";
+      fr2.style.left = "auto"; fr2.style.right = rightv;
+      fr2.style.top = "calc(" + py2 + "% + " + y + "px)";
     }
   }
   function fitInArea(ov, area, state, kind) {
@@ -3201,13 +3206,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         ".print-hint-chip:hover{transform:rotate(-2deg) scale(1.06)}" +
         ".print-hint-chip svg{stroke:#f6f3ec!important;stroke-width:2.3!important;width:14px!important;height:14px!important}" +
         /* second row: font chips — each label in its own typeface, black fill when active */
-        "#fontChips{position:absolute;display:flex;flex-direction:column;align-items:flex-start;gap:8px;z-index:6;pointer-events:auto}" +
+        "#fontChips{position:absolute;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:6;pointer-events:auto}" +
         "#fontChips[hidden]{display:none}" +
-        /* the theme's base chip rule is position:absolute — inside the flex row
+        /* the theme's base chip rule is position:absolute — inside the flex column
            that stacks every font chip on one spot */
         "#fontChips .print-hint-chip{position:static!important}" +
-        ".print-hint-chip.font-chip{text-transform:none;font-size:12.5px!important;letter-spacing:0.01em!important;padding:7px 15px!important}" +
-        ".print-hint-chip.on{background:" +
+        /* font options on yellow, ink text */
+        ".print-hint-chip.font-chip{text-transform:none;font-size:12.5px!important;letter-spacing:0.01em!important;padding:7px 15px!important;" +
+          "color:#141311!important;background:" +
+          "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' preserveAspectRatio='none'><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 83 5z' fill='%23e8b63a'/><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 85 5c31-1 57 6 60 16' fill='none' stroke='%23141311' stroke-width='2.4' stroke-linecap='round' opacity='.9' vector-effect='non-scaling-stroke'/></svg>\")" +
+          " center/100% 100% no-repeat!important}" +
+        ".print-hint-chip.on{color:#f6f3ec!important;background:" +
           "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' preserveAspectRatio='none'><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 83 5z' fill='%23141311'/><path d='M83 5c40-1 70 8 71 20 1 13-34 21-74 21C40 46 7 38 6 25 5 13 39 6 85 5c31-1 57 6 60 16' fill='none' stroke='%23141311' stroke-width='2.4' stroke-linecap='round' vector-effect='non-scaling-stroke'/></svg>\")" +
           " center/100% 100% no-repeat!important}";
       (document.head || document.documentElement).appendChild(ccs);
