@@ -306,7 +306,7 @@
 
 {% raw %}
 
-{{ 'dyn-dcu.css' | asset_url | stylesheet_tag }}
+{% endraw %}{{ 'dyn-dcu.css' | asset_url | stylesheet_tag }}{% raw %}
 <style>
 
 {%- if section.settings.popup_ticket_image != blank -%}
