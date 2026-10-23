@@ -2093,6 +2093,18 @@
   // Initial load: reveal the active tab's products (works whether or not the All tab exists).
   var activeBtn = tabs ? tabs.querySelector(".dc-tab.is-active") : null;
   currentCat = activeBtn ? activeBtn.getAttribute("data-cat") : "__all";
+  // Deep link: /collections/shop?cat=<handle> opens straight on that tab
+  // (used by emails and anywhere else that links a category).
+  try {
+    var dlCat = new URLSearchParams(location.search).get("cat");
+    if (dlCat && tabs) {
+      var dlBtn = tabs.querySelector('.dc-tab[data-cat="' + dlCat.replace(/"/g, "") + '"]');
+      if (dlBtn) {
+        tabs.querySelectorAll(".dc-tab").forEach(function (b) { b.classList.toggle("is-active", b === dlBtn); });
+        currentCat = dlCat;
+      }
+    }
+  } catch (e) {}
   applyFilters();
   // Arrived from the hero with ?q= (their Enter) — land on the results/message
   // immediately, so the top of the shop page never flashes into view first.
