@@ -58,11 +58,33 @@ animation: dhShimmer 1.7s linear infinite; }
 
 @media (prefers-reduced-motion: reduce) { .dh-finding-txt { animation: none; color: {{ section.settings.finding_ink | default: '#1d1d1f' }}; -webkit-text-fill-color: currentColor; } }
 
+@media (prefers-reduced-motion: reduce) { #dhSlide.dh-slide-half.is-open .dh-slide-panel { animation: none; } }
+
 {%- if section.settings.popup_bg_image != blank %}
 #dhSlide.dh-slide-half .dh-slide-panel { background: url('{{ section.settings.popup_bg_image | image_url: width: 1400 }}') center / 100% 100% no-repeat; }
 
 {%- endif %}
 .dyn-hero .dh-goo-wrap { position: relative; display: inline-flex; }
+
+@media (prefers-reduced-motion: reduce) { .dyn-hero .dh-goo-follow { transition: transform .05s linear; } }
+
+@media (prefers-reduced-motion: reduce) { .dyn-hero #dhBtnRandom::before { animation: none; } }
+
+@media (prefers-reduced-motion: reduce) { .dyn-hero .dh-gbtn::after { filter: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+.dyn-hero .dh-grid .dh-card { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) { .dyn-hero .dh-nr-face, .dyn-hero .dh-nr-mouth { animation: none; } }
+
+@media (prefers-reduced-motion: reduce) { .dyn-hero .dh-sbtn::before { animation: none; } }
+
+#dhSlide.dh-slide-half .dh-slide-panel { inset: auto; top: 50%; left: 50%; width: 50vw; height: 86vh; transform: translate(-50%, -50%); border-radius: 26px;
+border: 1px solid rgba(255,255,255,0.7);
+box-shadow: 0 6px 14px rgba(0,0,0,0.08), 0 80px 130px -28px rgba(29,29,31,0.55); }
+
+@media (prefers-reduced-motion: reduce) { #dhSlide .dh-slide-hint svg { animation: none; } }
 </style>
 
 {%- assign coll = section.settings.collection | default: collection -%}

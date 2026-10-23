@@ -10,8 +10,6 @@
 
   .dyn-col .dc-back svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-  .dyn-col, .dyn-col *, .dyn-col *::before, .dyn-col *::after { box-sizing: border-box; }
-
   .dyn-col .dc-wrap { max-width: 1280px; margin: 0 auto; padding: 31px 22px 63px; }
 
 
@@ -1055,12 +1053,6 @@
   @keyframes dcStickIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
 
   @media (prefers-reduced-motion: reduce) { .dyn-col.dc-scrolled .dc-tabs-wrap { animation: none; } }
-
-  .dyn-col.dc-scrolled .dc-tabs-wrap::before, .dyn-col.dc-scrolled .dc-tabs.is-pills::before {
-    background: rgba(246, 245, 241, 0.93) !important;
-    -webkit-backdrop-filter: blur(10px) saturate(1.05); backdrop-filter: blur(10px) saturate(1.05);
-    border-bottom: 1px solid rgba(20, 17, 16, 0.12);
-    box-shadow: 0 12px 26px -20px rgba(20, 17, 16, 0.4); }
 
   .dyn-col.dc-scrolled .dc-tabs.is-images { justify-content: flex-start; }
 

@@ -456,8 +456,6 @@ clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 50%, 0 25%); }
 clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 50%, 0 25%); }
 }
 
-@media (prefers-reduced-motion: reduce) { #dhSlide.dh-slide-half.is-open .dh-slide-panel { animation: none; } }
-
 .dyn-hero .dh-goo { position: absolute; inset: 0; z-index: 0; pointer-events: none; filter: url(#dhGooey); opacity: 0; transition: opacity .3s ease; }
 
 .dyn-hero .dh-goo-wrap:hover .dh-goo { opacity: 1; }
@@ -467,8 +465,6 @@ clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 50%, 0 25%); }
 .dyn-hero .dh-goo-follow { position: absolute; top: 0; left: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; background: var(--accent);
 transform: translate(var(--gx, 0px), var(--gy, 0px)) scale(var(--gs, 0)); transition: transform .16s ease-out; will-change: transform; }
 
-@media (prefers-reduced-motion: reduce) { .dyn-hero .dh-goo-follow { transition: transform .05s linear; } }
-
 .dyn-hero #dhBtnRandom { overflow: visible; position: relative; z-index: 1; }
 
 .dyn-hero #dhBtnRandom::before { content: ""; position: absolute; inset: -4px; border-radius: 22px; z-index: -1; pointer-events: none;
@@ -477,11 +473,7 @@ animation: dhSiri 6s linear infinite; filter: blur(7px); opacity: 0; transition:
 
 .dyn-hero #dhBtnRandom:hover::before { opacity: 0.7; }
 
-@media (prefers-reduced-motion: reduce) { .dyn-hero #dhBtnRandom::before { animation: none; } }
-
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dyn-hero .dh-gbtn { background: #fff; border-color: var(--line); } }
-
-@media (prefers-reduced-motion: reduce) { .dyn-hero .dh-gbtn::after { filter: none; } }
 
 
 .dyn-hero .dh-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 28px auto 32px; max-width: 1040px; }
@@ -570,10 +562,6 @@ box-shadow: 0 4px 16px rgba(0,0,0,0.12); transition: background .16s, transform 
 
 .dyn-hero .dh-grid .dh-card.in { opacity: 1; transform: none;
 transition: opacity .5s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
-
-@media (prefers-reduced-motion: reduce) {
-.dyn-hero .dh-grid .dh-card { opacity: 1 !important; transform: none !important; transition: none !important; }
-}
 
 
 .dyn-hero .dh-card { background: var(--bg); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;
@@ -708,8 +696,6 @@ animation: dhNrWiggle 3.4s ease-in-out infinite; }
 
 @keyframes dhNrTurn { 0%, 34% { transform: rotate(0deg); } 54%, 84% { transform: rotate(180deg); } 100% { transform: rotate(0deg); } }
 
-@media (prefers-reduced-motion: reduce) { .dyn-hero .dh-nr-face, .dyn-hero .dh-nr-mouth { animation: none; } }
-
 .dyn-hero .dh-nr-title { font-size: 20px; font-weight: 600; color: var(--ink); margin: 0 0 8px; }
 
 .dyn-hero .dh-nr-msg { font-size: 15.5px; line-height: 1.55; margin: 0 auto 20px; max-width: 420px; }
@@ -767,8 +753,6 @@ transition: max-width .38s cubic-bezier(.22,1,.36,1), opacity .3s, margin-left .
 
 @keyframes dhPulse { 0% { box-shadow: 0 0 0 0 rgba(140,140,150,.55); } 70% { box-shadow: 0 0 0 14px rgba(140,140,150,0); } 100% { box-shadow: 0 0 0 0 rgba(140,140,150,0); } }
 
-@media (prefers-reduced-motion: reduce) { .dyn-hero .dh-sbtn::before { animation: none; } }
-
 @media (max-width: 700px) { .dyn-hero .dh-sbtns { left: 14px; } .dyn-hero .dh-sbtn { padding: 10px; } .dyn-hero .dh-sbtn-ic svg { width: 22px; height: 22px; } }
 
 
@@ -805,10 +789,6 @@ height: auto; max-height: none; width: min(100%, 520px); margin: 0 auto; }
 
 #dhSlide.is-open .dh-slide-panel { opacity: 1; }
 
-#dhSlide.dh-slide-half .dh-slide-panel { inset: auto; top: 50%; left: 50%; width: 50vw; height: 86vh; transform: translate(-50%, -50%); border-radius: 26px;
-border: 1px solid rgba(255,255,255,0.7);
-box-shadow: 0 6px 14px rgba(0,0,0,0.08), 0 80px 130px -28px rgba(29,29,31,0.55); }
-
 @media (max-width: 800px) { #dhSlide.dh-slide-half .dh-slide-panel { width: 94vw; height: 90vh; border-radius: 20px; } }
 
 #dhSlide .dh-slide-body { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; background: transparent;
@@ -838,8 +818,6 @@ animation: dhHintBob 1.6s ease-in-out infinite; }
 }
 
 #dhSlide .dh-slide-panel.has-more.dh-hint-on .dh-slide-hint { opacity: 1; }
-
-@media (prefers-reduced-motion: reduce) { #dhSlide .dh-slide-hint svg { animation: none; } }
 
 #dhSlide .dh-slide-inject { padding-top: 0; }
 

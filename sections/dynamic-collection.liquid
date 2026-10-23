@@ -36,6 +36,8 @@
     position: relative;
   }
 
+  .dyn-col, .dyn-col *, .dyn-col *::before, .dyn-col *::after { box-sizing: border-box; }
+
   /* Paint the whole page the same soft grey so there's no white strip below the grid.
      (This style only loads on pages that use this section.) */
   html, body { background: {{ section.settings.page_bg | default: '#f5f5f7' }}; }
@@ -112,6 +114,12 @@
     margin: -1px !important; padding: 0 !important; border: 0 !important;
     clip: rect(0 0 0 0) !important; overflow: hidden !important; white-space: nowrap !important;
     background: none !important; box-shadow: none !important; text-shadow: none !important; }
+
+  .dyn-col.dc-scrolled .dc-tabs-wrap::before, .dyn-col.dc-scrolled .dc-tabs.is-pills::before {
+    background: rgba(246, 245, 241, 0.93) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(1.05); backdrop-filter: blur(10px) saturate(1.05);
+    border-bottom: 1px solid rgba(20, 17, 16, 0.12);
+    box-shadow: 0 12px 26px -20px rgba(20, 17, 16, 0.4); }
 </style>
 
 {%- comment -%} Match the store theme's heading font when it exposes one (Dawn & most modern themes). {%- endcomment -%}
