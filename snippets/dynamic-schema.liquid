@@ -1,0 +1,64 @@
+{%- comment -%}
+  dynamic-schema — JSON-LD structured data for search engines.
+  Product schema on product pages (price, availability, brand → rich
+  results), Organization + WebSite (with sitelinks search box) on home.
+  Rendered by the dynamic-customizer and dynamic-hero sections.
+{%- endcomment -%}
+{%- if request.page_type == 'product' and product -%}
+  {%- capture sd_imgs -%}
+    {%- for im in product.images limit: 3 -%}
+      {%- assign sd_u = im | image_url: width: 1200 -%}
+      {%- unless sd_u contains '://' -%}{%- assign sd_u = sd_u | prepend: 'https:' -%}{%- endunless -%}
+      {{ sd_u | json }}{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": {{ product.title | json }},
+  "description": {{ product.description | strip_html | truncate: 500 | json }},
+  "url": {{ request.origin | append: product.url | json }},
+  {%- if product.images.size > 0 %}
+  "image": [{{ sd_imgs | strip }}],
+  {%- endif %}
+  {%- if product.selected_or_first_available_variant.sku != blank %}
+  "sku": {{ product.selected_or_first_available_variant.sku | json }},
+  {%- endif %}
+  "brand": { "@type": "Brand", "name": {{ shop.name | json }} },
+  "offers": {
+    "@type": "AggregateOffer",
+    "priceCurrency": {{ cart.currency.iso_code | json }},
+    "lowPrice": "{{ product.price_min | divided_by: 100.0 }}",
+    "highPrice": "{{ product.price_max | divided_by: 100.0 }}",
+    "offerCount": {{ product.variants.size }},
+    "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "url": {{ request.origin | append: product.url | json }}
+  }
+}
+</script>
+{%- elsif request.page_type == 'index' -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": {{ shop.name | json }},
+  "url": {{ request.origin | json }},
+  "logo": "https://cdn.shopify.com/s/files/1/0726/7516/4202/files/new_-_logo.png",
+  "sameAs": ["https://instagram.com/dynaeimic"]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": {{ shop.name | json }},
+  "url": {{ request.origin | json }},
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "{{ request.origin }}/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+{%- endif -%}
