@@ -400,7 +400,7 @@
         <span style="font:800 19px Georgia,'Times New Roman',serif;letter-spacing:.14em;text-transform:uppercase;color:#17130f;border-bottom:2px solid #17130f;padding-bottom:7px;white-space:nowrap;">Open Product</span>
         <span style="font:600 10.5px Georgia,'Times New Roman',serif;letter-spacing:.3em;text-transform:uppercase;color:rgba(23,19,15,0.72);white-space:nowrap;">Start customizing</span>
       </a>
-      <script src="{{ 'dyn-dcu-1.js' | asset_url }}"></script>
+      {% endraw %}<script src="{{ 'dyn-dcu-1.js' | asset_url }}"></script>{% raw %}
 
       <div class="opt-group" id="pSizeGroup">
         <div class="opt-label">Size</div>
@@ -526,12 +526,12 @@
   <!-- Fullscreen customization modal (populated by app.js) -->
   <div class="modal-root" id="modalRoot" aria-hidden="true"></div>
 
-  <script src="{{ 'dyn-dcu-2.js' | asset_url }}"></script>
+  {% endraw %}<script src="{{ 'dyn-dcu-2.js' | asset_url }}"></script>{% raw %}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 
-<script src="{{ 'dyn-dcu-3.js' | asset_url }}"></script>
+{% endraw %}<script src="{{ 'dyn-dcu-3.js' | asset_url }}"></script>{% raw %}
 <style>
   /* Self-contained swipeable card-stack deck — no external library. */
   .dyn-cards { position: relative; width: 74%; height: 88%; margin: auto; touch-action: pan-y; }
@@ -546,9 +546,9 @@
   #galleryStage:not([hidden]) { display: grid; }
 </style>
 
-<script src="{{ 'dyn-dcu-4.js' | asset_url }}"></script>
+{% endraw %}<script src="{{ 'dyn-dcu-4.js' | asset_url }}"></script>{% raw %}
 
-<script src="{{ 'dyn-dcu-5.js' | asset_url }}"></script>
+{% endraw %}<script src="{{ 'dyn-dcu-5.js' | asset_url }}"></script>{% raw %}
 
 {% endraw %}
 {%- comment -%} Button skins & effects resolve from THIS section first, then from
