@@ -1,9 +1,19 @@
 {% comment %}
-  DYNAEIMIC — Order confirmation email
-  Paste into: Shopify admin → Settings → Notifications → Customer notifications
-  → Order confirmation → Edit code (replace everything, Save).
-  Email clients are strict: tables + inline styles only, system fonts.
+  DYNAEIMIC — Order confirmation email (collage edition)
+
+  SET-UP (one time):
+  1) In Shopify admin go to Content → Files and upload the 5 images I sent:
+     paper-tex.jpg, brush-red.png, tear-red-cream.png, tear-red-black.png, tape.png
+  2) For each file click the link icon (Copy link) and paste the URL below,
+     replacing PASTE-URL-HERE between the quotes. Keep the quotes.
+  3) Paste this whole file into Settings → Notifications → Customer
+     notifications → Order confirmation → Edit code. Save, then Send test.
 {% endcomment %}
+{%- assign img_paper = "PASTE-URL-HERE-paper-tex.jpg" -%}
+{%- assign img_brush = "PASTE-URL-HERE-brush-red.png" -%}
+{%- assign img_tear_cream = "PASTE-URL-HERE-tear-red-cream.png" -%}
+{%- assign img_tear_black = "PASTE-URL-HERE-tear-red-black.png" -%}
+{%- assign img_tape = "PASTE-URL-HERE-tape.png" -%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,86 +22,158 @@
   <title>Order {{ order_name }}</title>
 </head>
 <body style="margin:0;padding:0;background:#b3242a;">
-  <!-- word-wall top band -->
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#b3242a;">
+
+    <!-- word wall -->
     <tr>
-      <td align="center" style="padding:18px 10px 6px;font-family:Arial Black,Arial,sans-serif;font-size:11px;font-weight:900;letter-spacing:2px;color:#8f1d22;line-height:1.9;">
-        &ldquo;MUG&rdquo;&nbsp;&nbsp;&ldquo;PEN&rdquo;&nbsp;&nbsp;&ldquo;WALLET&rdquo;&nbsp;&nbsp;&ldquo;TUMBLER&rdquo;&nbsp;&nbsp;&ldquo;BOOKMARK&rdquo;&nbsp;&nbsp;&ldquo;T-SHIRT&rdquo;&nbsp;&nbsp;&ldquo;TROPHY&rdquo;&nbsp;&nbsp;&ldquo;NOTE BOOK&rdquo;
+      <td align="center" style="padding:20px 8px 2px;font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;letter-spacing:2px;color:#8f1d22;line-height:1.8;white-space:nowrap;overflow:hidden;">
+        &ldquo;MUG&rdquo;&nbsp;&nbsp;&ldquo;PEN&rdquo;&nbsp;&nbsp;&ldquo;WALLET&rdquo;&nbsp;&nbsp;&ldquo;TUMBLER&rdquo;&nbsp;&nbsp;&ldquo;BOOKMARK&rdquo;&nbsp;&nbsp;&ldquo;T-SHIRT&rdquo;&nbsp;&nbsp;&ldquo;TROPHY&rdquo;
       </td>
     </tr>
     <tr>
-      <td align="center" style="padding:6px 16px 0;">
-        <!-- logo -->
-        <div style="display:inline-block;background:#111010;color:#f4efe3;font-family:Arial Black,Arial,sans-serif;font-size:26px;font-weight:900;letter-spacing:6px;padding:10px 22px;border:3px solid #f4efe3;">
+      <td align="center" style="padding:0 8px;font-family:Arial Black,Arial,sans-serif;font-size:10px;font-weight:900;letter-spacing:3px;color:#7c161b;line-height:1.8;white-space:nowrap;overflow:hidden;">
+        &ldquo;NOTE BOOK&rdquo;&nbsp;&nbsp;&ldquo;CRYSTAL BALL&rdquo;&nbsp;&nbsp;&ldquo;KEYCHAIN&rdquo;&nbsp;&nbsp;&ldquo;COASTER&rdquo;&nbsp;&nbsp;&ldquo;PET TAG&rdquo;&nbsp;&nbsp;&ldquo;MUG&rdquo;
+      </td>
+    </tr>
+
+    <!-- logo sticker -->
+    <tr>
+      <td align="center" style="padding:16px 16px 0;">
+        <div style="display:inline-block;background:#111010;color:#f4efe3;font-family:Arial Black,Arial,sans-serif;font-size:28px;font-weight:900;letter-spacing:7px;padding:12px 26px;border:3px solid #f4efe3;box-shadow:7px 7px 0 #6e1217;">
           DYNAEIMIC
         </div>
       </td>
     </tr>
+
+    <!-- tape, overlapping the card below -->
     <tr>
-      <td align="center" style="padding:22px 12px 34px;">
-        <!-- cream card -->
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:94%;background:#f4efe3;border:3px solid #111010;">
+      <td align="center" style="padding:26px 14px 0;">
+        <img src="{{ img_tape }}" alt="" width="240" style="display:block;margin:0 auto -34px;position:relative;">
+      </td>
+    </tr>
+
+    <tr>
+      <td align="center" style="padding:0 14px 44px;">
+        <!-- the collage card: cream paper with real grain -->
+        <table role="presentation" width="620" cellpadding="0" cellspacing="0"
+               style="width:620px;max-width:96%;background-color:#f4efe3;background-image:url('{{ img_paper }}');border:3px solid #111010;box-shadow:12px 12px 0 rgba(17,16,16,0.85);">
+
+          <!-- collage masthead: BE / YOUR OWN / MUSE composition -->
           <tr>
-            <td style="padding:30px 30px 10px;">
-              <div style="font-family:Arial Black,Arial,sans-serif;font-size:24px;font-weight:900;letter-spacing:2px;color:#111010;text-transform:uppercase;">
-                Order confirmed
+            <td style="padding:34px 30px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="font-family:Arial Black,Arial,sans-serif;font-size:10px;font-weight:900;letter-spacing:4px;color:#111010;text-transform:uppercase;">
+                    DYNAEIMIC ORIGINAL &#10005; MADE TO ORDER
+                  </td>
+                  <td align="right">
+                    <div style="display:inline-block;border:2px dashed #b3242a;padding:5px 9px;font-size:14px;color:#b3242a;">&#9829;</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:14px 20px 0;font-family:Arial Black,Arial,sans-serif;font-size:52px;font-weight:900;letter-spacing:1px;color:#111010;text-transform:uppercase;line-height:0.95;">
+              Your order
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:6px 20px 0;">
+              <!-- cream type knocked into the red brush stroke -->
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" background="{{ img_brush }}"
+                      style="background-image:url('{{ img_brush }}');background-color:#b3242a;background-size:100% 100%;background-repeat:no-repeat;padding:16px 46px;font-family:Arial Black,Arial,sans-serif;font-size:26px;font-weight:900;letter-spacing:5px;color:#f4efe3;text-transform:uppercase;">
+                    is confirmed &#10003;
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:16px 20px 6px;">
+              <div style="display:inline-block;background:#111010;color:#f4efe3;font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;letter-spacing:3px;padding:7px 14px;box-shadow:4px 4px 0 #b3242a;">
+                ORDER {{ order_name }}
               </div>
-              <div style="width:120px;height:4px;background:#b3242a;margin:10px 0 18px;"></div>
-              <div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;color:#111010;line-height:1.6;">
-                {% if customer.first_name %}Hey {{ customer.first_name }},{% else %}Hey,{% endif %}
-                thanks for your order <strong>{{ order_name }}</strong>!
-                We&rsquo;re prepping your custom pieces — made to order in 3&ndash;5 days.
+            </td>
+          </tr>
+
+          <!-- greeting + CTA -->
+          <tr>
+            <td style="padding:16px 34px 6px;">
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:15.5px;color:#111010;line-height:1.65;text-align:center;">
+                {% if customer.first_name %}Hey {{ customer.first_name }} &mdash;{% else %}Hey &mdash;{% endif %}
+                your custom pieces go into production now.<br>
+                <strong>Made to order in 3&ndash;5 days</strong>, then shipped your way.
               </div>
             </td>
           </tr>
           <tr>
-            <td align="left" style="padding:8px 30px 24px;">
+            <td align="center" style="padding:16px 30px 10px;">
               <a href="{{ order_status_url }}"
-                 style="display:inline-block;background:#111010;color:#f4efe3;font-family:Arial Black,Arial,sans-serif;font-size:13px;font-weight:900;letter-spacing:3px;text-transform:uppercase;text-decoration:none;padding:13px 26px;border:2px solid #111010;">
+                 style="display:inline-block;background:#111010;color:#f4efe3;font-family:Arial Black,Arial,sans-serif;font-size:13px;font-weight:900;letter-spacing:3px;text-transform:uppercase;text-decoration:none;padding:14px 28px;border:2px solid #111010;box-shadow:5px 5px 0 #b3242a;">
                 View your order &rarr;
               </a>
             </td>
           </tr>
 
+          <!-- red band with torn bottom edge -->
+          <tr><td style="height:26px;background:#b3242a;border-top:3px solid #111010;font-size:0;line-height:0;">&nbsp;</td></tr>
+          <tr>
+            <td style="padding:0;font-size:0;line-height:0;">
+              <img src="{{ img_tear_cream }}" alt="" width="620" style="display:block;width:100%;height:auto;">
+            </td>
+          </tr>
+
           <!-- items -->
           <tr>
-            <td style="padding:0 30px;">
-              <div style="font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;letter-spacing:3px;color:#b3242a;text-transform:uppercase;border-bottom:2px solid #111010;padding-bottom:8px;">
-                Your items
-              </div>
+            <td style="padding:18px 30px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="font-family:Arial Black,Arial,sans-serif;font-size:13px;font-weight:900;letter-spacing:4px;color:#111010;text-transform:uppercase;padding-bottom:4px;">
+                    Your items
+                  </td>
+                  <td align="right" style="font-family:Arial,sans-serif;font-size:13px;color:#b3242a;letter-spacing:2px;white-space:nowrap;">&#10005;&#10005;&#10005;</td>
+                </tr>
+              </table>
             </td>
           </tr>
           {% for line in subtotal_line_items %}
           <tr>
             <td style="padding:16px 30px 0;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-bottom:2px dashed #b9ad99;">
                 <tr>
+                  <td width="34" valign="top" style="padding:0 10px 16px 0;">
+                    <div style="width:30px;height:30px;background:#b3242a;color:#f4efe3;font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;text-align:center;line-height:30px;box-shadow:3px 3px 0 #111010;">0{{ forloop.index }}</div>
+                  </td>
                   {% if line.image %}
-                  <td width="72" valign="top" style="padding-right:14px;">
-                    <img src="{{ line | img_url: 'compact_cropped' }}" alt="" width="72" style="display:block;border:2px solid #111010;background:#ffffff;">
+                  <td width="78" valign="top" style="padding:0 14px 16px 0;">
+                    <img src="{{ line | img_url: 'compact_cropped' }}" alt="" width="72" style="display:block;border:2px solid #111010;background:#ffffff;box-shadow:4px 4px 0 rgba(17,16,16,0.25);">
                   </td>
                   {% endif %}
-                  <td valign="top" style="font-family:Georgia,'Times New Roman',serif;font-size:14px;color:#111010;line-height:1.5;">
-                    <strong>{{ line.title }}</strong> &times; {{ line.quantity }}
+                  <td valign="top" style="font-family:Georgia,'Times New Roman',serif;font-size:14.5px;color:#111010;line-height:1.5;padding-bottom:16px;">
+                    <strong>{{ line.title }}</strong>
+                    <span style="color:#b3242a;font-weight:bold;">&nbsp;&times;{{ line.quantity }}</span>
                     {% if line.properties.size > 0 %}
-                      <div style="font-size:12.5px;color:#4a4540;padding-top:4px;">
+                      <div style="font-size:12.5px;color:#4a4540;padding-top:5px;line-height:1.7;">
                       {% for p in line.properties %}
                         {% assign pfx = p.first | slice: 0, 1 %}
                         {% if p.last != blank and pfx != '_' %}
                           {% if p.last contains 'http' %}
-                            {{ p.first }}: <a href="{{ p.last }}" style="color:#b3242a;">view file</a><br>
+                            <span style="color:#111010;font-weight:bold;">{{ p.first }}:</span> <a href="{{ p.last }}" style="color:#b3242a;">view file</a><br>
                             {% if p.last contains '.png' or p.last contains '.jpg' or p.last contains '.jpeg' %}
-                              <img src="{{ p.last }}" alt="{{ p.first }}" width="180" style="display:block;max-width:180px;border:2px solid #111010;margin:6px 0;background:#ffffff;">
+                              <img src="{{ p.last }}" alt="{{ p.first }}" width="190" style="display:block;max-width:190px;border:2px solid #111010;margin:7px 0;background:#ffffff;box-shadow:4px 4px 0 rgba(17,16,16,0.25);">
                             {% endif %}
                           {% else %}
-                            {{ p.first }}: {{ p.last }}<br>
+                            <span style="color:#111010;font-weight:bold;">{{ p.first }}:</span> {{ p.last }}<br>
                           {% endif %}
                         {% endif %}
                       {% endfor %}
                       </div>
                     {% endif %}
                   </td>
-                  <td valign="top" align="right" style="font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#111010;white-space:nowrap;padding-left:10px;">
+                  <td valign="top" align="right" style="font-family:Arial Black,Arial,sans-serif;font-size:15px;font-weight:900;color:#111010;white-space:nowrap;padding:0 0 16px 10px;">
                     {{ line.final_line_price | money }}
                   </td>
                 </tr>
@@ -100,50 +182,65 @@
           </tr>
           {% endfor %}
 
-          <!-- totals -->
+          <!-- receipt box -->
           <tr>
-            <td style="padding:22px 30px 0;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:2px solid #111010;">
+            <td style="padding:24px 30px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:2px dashed #111010;background:#efe8d6;">
                 <tr>
-                  <td style="font-family:Georgia,serif;font-size:14px;color:#111010;padding-top:12px;">Subtotal</td>
-                  <td align="right" style="font-family:Arial,sans-serif;font-size:14px;color:#111010;padding-top:12px;">{{ subtotal_price | money }}</td>
+                  <td colspan="2" align="center" style="font-family:Arial,sans-serif;font-size:17px;letter-spacing:1px;color:#111010;padding:12px 20px 0;white-space:nowrap;overflow:hidden;" aria-hidden="true">
+                    ||&nbsp;|||&nbsp;|&nbsp;||||&nbsp;||&nbsp;|&nbsp;|||&nbsp;||||&nbsp;|&nbsp;||&nbsp;|||||&nbsp;|&nbsp;|||&nbsp;||
+                  </td>
+                </tr>
+                <tr>
+                  <td style="font-family:Georgia,serif;font-size:14px;color:#111010;padding:10px 20px 0;">Subtotal</td>
+                  <td align="right" style="font-family:Arial,sans-serif;font-size:14px;color:#111010;padding:10px 20px 0;">{{ subtotal_price | money }}</td>
                 </tr>
                 {% if discounts %}
                 <tr>
-                  <td style="font-family:Georgia,serif;font-size:14px;color:#b3242a;padding-top:6px;">Discount</td>
-                  <td align="right" style="font-family:Arial,sans-serif;font-size:14px;color:#b3242a;padding-top:6px;">&minus;{{ discounts_amount | money }}</td>
+                  <td style="font-family:Georgia,serif;font-size:14px;color:#b3242a;padding:6px 20px 0;">Discount</td>
+                  <td align="right" style="font-family:Arial,sans-serif;font-size:14px;color:#b3242a;padding:6px 20px 0;">&minus;{{ discounts_amount | money }}</td>
                 </tr>
                 {% endif %}
                 {% for shipping_line in shipping_lines %}
                 <tr>
-                  <td style="font-family:Georgia,serif;font-size:14px;color:#111010;padding-top:6px;">Shipping ({{ shipping_line.title }})</td>
-                  <td align="right" style="font-family:Arial,sans-serif;font-size:14px;color:#111010;padding-top:6px;">{{ shipping_line.price | money }}</td>
+                  <td style="font-family:Georgia,serif;font-size:14px;color:#111010;padding:6px 20px 0;">Shipping &mdash; {{ shipping_line.title }}</td>
+                  <td align="right" style="font-family:Arial,sans-serif;font-size:14px;color:#111010;padding:6px 20px 0;">{{ shipping_line.price | money }}</td>
                 </tr>
                 {% endfor %}
                 {% if tax_price > 0 %}
                 <tr>
-                  <td style="font-family:Georgia,serif;font-size:14px;color:#111010;padding-top:6px;">Tax</td>
-                  <td align="right" style="font-family:Arial,sans-serif;font-size:14px;color:#111010;padding-top:6px;">{{ tax_price | money }}</td>
+                  <td style="font-family:Georgia,serif;font-size:14px;color:#111010;padding:6px 20px 0;">Tax</td>
+                  <td align="right" style="font-family:Arial,sans-serif;font-size:14px;color:#111010;padding:6px 20px 0;">{{ tax_price | money }}</td>
                 </tr>
                 {% endif %}
+                <tr><td colspan="2" style="padding:12px 0 0;"></td></tr>
                 <tr>
-                  <td style="font-family:Arial Black,Arial,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;color:#111010;padding-top:12px;text-transform:uppercase;">Total</td>
-                  <td align="right" style="font-family:Arial Black,Arial,sans-serif;font-size:16px;font-weight:900;color:#111010;padding-top:12px;">{{ total_price | money }}</td>
+                  <td style="background:#111010;font-family:Arial Black,Arial,sans-serif;font-size:16px;font-weight:900;letter-spacing:3px;color:#f4efe3;text-transform:uppercase;padding:13px 20px;">Total</td>
+                  <td align="right" style="background:#111010;font-family:Arial Black,Arial,sans-serif;font-size:18px;font-weight:900;color:#f4efe3;padding:13px 20px;">{{ total_price | money }}</td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- shipping address -->
+          <!-- shipping stamp box -->
           {% if shipping_address %}
           <tr>
-            <td style="padding:26px 30px 30px;">
-              <div style="font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;letter-spacing:3px;color:#b3242a;text-transform:uppercase;border-bottom:2px solid #111010;padding-bottom:8px;margin-bottom:10px;">
-                Shipping to
-              </div>
-              <div style="font-family:Georgia,serif;font-size:14px;color:#111010;line-height:1.6;">
-                {{ shipping_address | format_address }}
-              </div>
+            <td style="padding:26px 30px 34px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:2px dashed #111010;">
+                <tr>
+                  <td style="padding:0 20px 16px;">
+                    <div style="display:inline-block;background:#b3242a;color:#f4efe3;font-family:Arial Black,Arial,sans-serif;font-size:11px;font-weight:900;letter-spacing:3px;text-transform:uppercase;padding:6px 12px;box-shadow:3px 3px 0 #111010;">
+                      Shipping to
+                    </div>
+                    <div style="font-family:Georgia,serif;font-size:14.5px;color:#111010;line-height:1.7;padding-top:12px;">
+                      {{ shipping_address | format_address }}
+                    </div>
+                  </td>
+                  <td width="56" valign="top" align="right" style="padding:14px 14px 0 0;">
+                    <div style="display:inline-block;border:2px dashed #b3242a;padding:8px 10px;font-size:16px;color:#b3242a;">&#9992;</div>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           {% endif %}
@@ -151,21 +248,31 @@
       </td>
     </tr>
 
-    <!-- footer band -->
+    <!-- page: red tears into the black footer -->
     <tr>
-      <td align="center" style="background:#111010;padding:20px 12px 8px;">
-        <div style="font-family:Arial Black,Arial,sans-serif;font-size:10px;font-weight:900;letter-spacing:2px;color:#3b3734;line-height:1.9;">
-          &ldquo;CRYSTAL BALL&rdquo;&nbsp;&nbsp;&ldquo;TROPHY&rdquo;&nbsp;&nbsp;&ldquo;MUG&rdquo;&nbsp;&nbsp;&ldquo;BOOKMARK&rdquo;&nbsp;&nbsp;&ldquo;PEN&rdquo;&nbsp;&nbsp;&ldquo;WALLET&rdquo;&nbsp;&nbsp;&ldquo;T-SHIRT&rdquo;
-        </div>
+      <td style="padding:0;font-size:0;line-height:0;">
+        <img src="{{ img_tear_black }}" alt="" width="1600" style="display:block;width:100%;height:auto;">
+      </td>
+    </tr>
+
+    <!-- footer -->
+    <tr>
+      <td align="center" style="background:#111010;padding:18px 12px 6px;">
+        <div style="font-family:Arial,sans-serif;font-size:13px;letter-spacing:5px;color:#3b3734;">&#9986; &mdash; &mdash; &mdash; &mdash; &mdash; &mdash; &mdash; &mdash; &mdash; &mdash; &#9986;</div>
       </td>
     </tr>
     <tr>
-      <td align="center" style="background:#111010;padding:4px 12px 26px;">
-        <div style="font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;letter-spacing:4px;color:#f4efe3;text-transform:uppercase;">
+      <td align="center" style="background:#111010;padding:10px 12px 4px;font-family:Arial Black,Arial,sans-serif;font-size:10px;font-weight:900;letter-spacing:2px;color:#3b3734;line-height:1.9;white-space:nowrap;overflow:hidden;">
+        &ldquo;CRYSTAL BALL&rdquo;&nbsp;&nbsp;&ldquo;TROPHY&rdquo;&nbsp;&nbsp;&ldquo;MUG&rdquo;&nbsp;&nbsp;&ldquo;BOOKMARK&rdquo;&nbsp;&nbsp;&ldquo;PEN&rdquo;&nbsp;&nbsp;&ldquo;WALLET&rdquo;
+      </td>
+    </tr>
+    <tr>
+      <td align="center" style="background:#111010;padding:8px 12px 30px;">
+        <div style="display:inline-block;background:#f4efe3;color:#111010;font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;letter-spacing:4px;text-transform:uppercase;padding:8px 16px;box-shadow:4px 4px 0 #b3242a;">
           DYNAEIMIC &mdash; design your own
         </div>
-        <div style="font-family:Georgia,serif;font-size:12px;color:#8a837c;padding-top:6px;">
-          Questions? Just reply to this email.
+        <div style="font-family:Georgia,serif;font-size:12.5px;color:#8a837c;padding-top:14px;">
+          Questions? Just reply to this email &mdash; a human answers.
         </div>
       </td>
     </tr>
