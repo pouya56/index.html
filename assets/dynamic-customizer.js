@@ -3066,9 +3066,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                 '<div class="ploc-label">Print location</div>' +
                 '<div class="ploc-chips">' +
                   '<button type="button" class="ploc-chip on" data-loc="front" role="radio" aria-checked="true">' + escapeHtml(S.frontTabLabel || "Front") + '</button>' +
-                  '<button type="button" class="ploc-chip" data-loc="back" role="radio" aria-checked="false">' + escapeHtml(S.backTabLabel || "Back") +
-                    (feeMoney ? '<span class="side-fee">+' + escapeHtml(feeMoney) + '</span>' : '') +
-                  '</button>' +
+                  '<button type="button" class="ploc-chip" data-loc="back" role="radio" aria-checked="false">' + escapeHtml(S.backTabLabel || "Back") + '</button>' +
                   '<button type="button" class="ploc-chip" data-loc="both" role="radio" aria-checked="false">Front + Back' +
                     (feeMoney ? '<span class="side-fee">+' + escapeHtml(feeMoney) + '</span>' : '') +
                   '</button>' +
