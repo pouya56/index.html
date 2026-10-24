@@ -638,3 +638,77 @@ aside.dyn-cart {
     padding: 14px 10px !important; border: 2px solid #0a0a0a !important;
   }
 }
+
+/* ------------------------------------------------------------------
+   Desktop step flow (mock): the step strip is a full-width band above
+   the product columns, the right column leads with a numbered step
+   heading, a vertical thumbnail rail sits beside the photo, and the
+   order review renders in the right column. Phones keep their layout.
+   ------------------------------------------------------------------ */
+#dynStepsBand, #dynStepHead { display: none; }
+@media (min-width: 861px) {
+  #dynStepsBand { display: block; max-width: 1160px; margin: 6px auto 0; padding: 0 24px; }
+  #dynStepsBand .dyn-steps { margin: 10px 0 2px !important; }
+  #dynStepHead { display: block; margin: 0 0 14px; }
+  #dynStepHead .dsh-row { display: flex; align-items: baseline; gap: 10px; }
+  #dynStepHead .dsh-num { color: #c81a1a; font-weight: 800; font-size: 20px; letter-spacing: 0.06em; }
+  #dynStepHead .dsh-t { font-weight: 800; font-size: 22px; letter-spacing: 0.06em; text-transform: uppercase; color: #17130f; }
+  #dynStepHead .dsh-sub { font-size: 13.5px; color: #5f5a55; margin-top: 4px; }
+
+  /* vertical thumbnail rail beside the photo (plain product state only) */
+  .gallery { position: relative; }
+  .dyn-thumbs {
+    display: flex; flex-direction: column; gap: 10px;
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    width: 64px; z-index: 6; max-height: 80%; overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .dyn-thumbs::-webkit-scrollbar { display: none; }
+  .dyn-thumb { border: 0; padding: 0; background: none; cursor: pointer; font: inherit; }
+  .dyn-thumb img {
+    display: block; width: 60px; height: 60px; object-fit: cover;
+    border-radius: 10px; border: 2px solid rgba(23, 19, 15, 0.14); background: #fff;
+    transition: border-color 0.2s;
+  }
+  .dyn-thumb.is-on img { border-color: #c81a1a; }
+  .dyn-thumb-cap { display: none; }
+  html.dyn-designing .dyn-thumbs, html.dyn-review .dyn-thumbs { display: none; }
+
+  /* while designing or reviewing, the right column is the step panel */
+  html.dyn-designing #buyBox > .price-row,
+  html.dyn-designing #buyBox > .opt-group,
+  html.dyn-designing #buyBox > details,
+  html.dyn-review #buyBox > .price-row,
+  html.dyn-review #buyBox > .opt-group,
+  html.dyn-review #buyBox > details { display: none !important; }
+
+  /* order review on desktop: Front/Back preview toggle over the photo,
+     summary card with Edit rows in the right column */
+  #dynReviewTop { text-align: center; margin: 0 0 8px; }
+  #dynReviewTop .rv-title, #dynReviewTop .rv-sub { display: none; }
+  #dynReviewTop .rv-sides { display: flex; justify-content: center; gap: 10px; }
+  #dynReviewTop .rv-side {
+    min-width: 110px; cursor: pointer; font: inherit; font-size: 12px; font-weight: 800;
+    letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 18px;
+    border: 2px solid #17130f; border-radius: 6px; background: #fff; color: #17130f;
+  }
+  #dynReviewTop .rv-side.on { background: #0a0a0a; color: #fff; }
+  html.dyn-review #dynReviewCard:not([hidden]) {
+    display: block; background: #fff; border: 1px solid rgba(23, 19, 15, 0.12);
+    border-radius: 16px; padding: 6px 16px 8px; margin: 0 0 14px;
+    box-shadow: 0 12px 28px -20px rgba(23, 19, 15, 0.5);
+  }
+  #dynReviewCard .rv-chead { display: flex; align-items: center; gap: 12px; padding: 10px 0 12px; border-bottom: 1px solid rgba(23, 19, 15, 0.1); }
+  #dynReviewCard .rv-thumb { width: 58px; height: 58px; object-fit: contain; background: #f4f3f0; border-radius: 10px; flex: none; }
+  #dynReviewCard .rv-main { flex: 1 1 auto; min-width: 0; }
+  #dynReviewCard .rv-name { font-weight: 800; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #17130f; }
+  #dynReviewCard .rv-opts { font-size: 12px; color: #5f5a55; margin-top: 3px; line-height: 1.45; }
+  #dynReviewCard .rv-price { font-weight: 800; font-size: 17px; color: #17130f; flex: none; }
+  #dynReviewCard .rv-row {
+    display: block; width: 100%; text-align: left; cursor: pointer; font: inherit;
+    font-size: 13.5px; font-weight: 600; color: #17130f; background: none; border: 0;
+    padding: 13px 2px; border-bottom: 1px solid rgba(23, 19, 15, 0.08); position: relative;
+  }
+  #dynReviewCard .rv-row:last-child { border-bottom: 0; }
+  #dynReviewCard .rv-row::after { content: "›"; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #8a847e; }
+}

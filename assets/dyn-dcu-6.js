@@ -31,10 +31,47 @@
     function moveStepsUp() { moveStepsInto(topHolder); }
     function restoreSteps() {
       var steps = document.getElementById("dynSteps");
+      if (!steps) return;
+      if (!isPhone() && stepsBand) { moveStepsInto(stepsBand); return; }
       var bar = document.getElementById("dynActionBar");
-      if (steps && bar && bar.parentNode && steps.parentNode !== bar.parentNode) {
+      if (bar && bar.parentNode && steps.parentNode !== bar.parentNode) {
         bar.parentNode.insertBefore(steps, bar);
       }
+    }
+
+    /* Desktop: the step strip reads as a full-width band above the product
+       columns, and the right column leads with a numbered step heading that
+       follows the state (01 Product / 02 Artwork / 04 Order). */
+    var stepsBand = null, stepHead = null;
+    function ensureDesktopChrome() {
+      if (isPhone()) return;
+      var buyBox = document.getElementById("buyBox");
+      var prod = document.querySelector("main.product") || document.querySelector(".product");
+      if (!buyBox || !prod || !prod.parentNode) return;
+      if (!stepHead) {
+        stepHead = document.createElement("div");
+        stepHead.id = "dynStepHead";
+        stepHead.innerHTML = '<div class="dsh-row"><span class="dsh-num"></span><span class="dsh-t"></span></div><div class="dsh-sub"></div>';
+        buyBox.insertBefore(stepHead, buyBox.firstChild);
+      }
+      if (!stepsBand) {
+        stepsBand = document.createElement("div");
+        stepsBand.id = "dynStepsBand";
+        prod.parentNode.insertBefore(stepsBand, prod);
+      }
+      moveStepsInto(stepsBand);
+      updateStepHead();
+    }
+    function updateStepHead() {
+      if (!stepHead) return;
+      var designing = document.documentElement.classList.contains("dyn-designing");
+      var review = document.documentElement.classList.contains("dyn-review");
+      var s = designing ? ["02", "Artwork", "Upload and position your design."]
+            : review ? ["04", "Order", "Review your order before adding to cart."]
+            : ["01", "Product", "Choose your product, color and size."];
+      stepHead.querySelector(".dsh-num").textContent = s[0];
+      stepHead.querySelector(".dsh-t").textContent = s[1];
+      stepHead.querySelector(".dsh-sub").textContent = s[2];
     }
 
     /* Order summary card (phones): thumbnail, name + price, the chosen
@@ -215,7 +252,7 @@
         reviewTop.appendChild(tg);
       }
       galWrap.parentNode.insertBefore(reviewTop, galWrap);
-      moveStepsInto(reviewTop);
+      if (isPhone()) moveStepsInto(reviewTop);
 
       reviewCard = document.createElement("div");
       reviewCard.id = "dynReviewCard";
@@ -229,7 +266,9 @@
       var vals = Array.prototype.map.call(document.querySelectorAll("#buyBox .opt-val"), function (v) {
         return (v.textContent || "").trim();
       }).filter(Boolean);
-      opts.textContent = vals.join(" · ") + (pv.back ? " · Front + Back print" : " · Front print");
+      var qn = (document.getElementById("qtyInput") || {}).value;
+      opts.textContent = vals.join(" · ") + (pv.back ? " · Front + Back print" : " · Front print") +
+        (qn && qn !== "1" ? " · Qty: " + qn : "");
       main.appendChild(nm); main.appendChild(opts);
       var pr = document.createElement("div"); pr.className = "rv-price";
       pr.textContent = ((document.getElementById("pPrice") || {}).textContent || "").trim();
@@ -264,14 +303,15 @@
       var pv = window.DYN_DESIGN_PREVIEWS || {};
       /* a back preview that landed after the first build earns the toggle */
       if (reviewCard && pv.back && reviewTop && !reviewTop.querySelector(".rv-sides")) removeReview();
-      var on = isPhone() && designReadyNow() && !reviewDismissed &&
+      var on = designReadyNow() && !reviewDismissed &&
                !document.documentElement.classList.contains("dyn-designing");
       if (on && !reviewCard) buildReview();
       document.documentElement.classList.toggle("dyn-review", on && !!reviewCard);
       if (reviewTop) reviewTop.hidden = !on;
       if (reviewCard) reviewCard.hidden = !on;
-      if (on) moveStepsInto(reviewTop);
-      else if (!document.documentElement.classList.contains("dyn-designing")) restoreSteps();
+      if (on && isPhone()) moveStepsInto(reviewTop);
+      else if (!on && !document.documentElement.classList.contains("dyn-designing")) restoreSteps();
+      updateStepHead();
     }
     (function () {
       var addBtn = document.getElementById("pageAddCart");
@@ -304,6 +344,7 @@
           }
         }
       }
+      updateStepHead();
       wasOpen = open;
       if (!open) {
         if (stageHolder) stageHolder.hidden = true;
@@ -320,5 +361,7 @@
       syncReview();
     }
     new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ["class"], childList: true });
+    ensureDesktopChrome();
+    [300, 1000, 2500].forEach(function (ms) { setTimeout(ensureDesktopChrome, ms); });
   });
 })();
