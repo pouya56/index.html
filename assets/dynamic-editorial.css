@@ -507,3 +507,53 @@ aside.dyn-cart {
   #buyBox .price { font-size: 26px; }
   #buyBox .swatch { width: 26px; height: 26px; }
 }
+
+/* ------------------------------------------------------------------
+   Design step on phones (artwork-step mock): step strip + print
+   location lead above the photo, then the editing controls, the
+   benefits strip, Cancel / Continue side by side, and an order
+   summary card. Shopping controls hide while designing.
+   ------------------------------------------------------------------ */
+@media (max-width: 860px) {
+  #dynDesignTop { order: -2; margin: 2px 0 6px; }
+  #dynDesignTop .dyn-steps { margin: 0 0 14px !important; }
+  html.dyn-designing #dynInlineTools:not([hidden]) { display: contents; }
+  html.dyn-designing #dynInlineTools .side-tabs,
+  html.dyn-designing #dynInlineTools .up-controls { order: 3; flex: 1 1 100%; min-width: 0; }
+  html.dyn-designing #buyBox > .reassure {
+    order: 4; flex: 1 1 100%; display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; background: rgba(23, 19, 15, 0.05); border-radius: 12px;
+    padding: 12px 8px; margin: 2px 0 4px;
+  }
+  html.dyn-designing #dynInlineTools .modal-foot { order: 5; flex: 1 1 100%; margin: 4px 0 0; }
+  html.dyn-designing #dynInlineTools .modal-foot .price-breakdown-toggle { display: none; }
+  html.dyn-designing #dynInlineTools .modal-foot .foot-actions {
+    display: grid; grid-template-columns: 1fr 1.25fr; gap: 12px;
+  }
+  html.dyn-designing #dynInlineTools .modal-foot .foot-actions .btn { width: 100%; }
+  html.dyn-designing #dynDesignSummary {
+    order: 6; flex: 1 1 100%; display: flex; align-items: center; gap: 12px;
+    background: #fff; border: 1px solid rgba(23, 19, 15, 0.12); border-radius: 14px;
+    padding: 10px 14px; margin: 10px 0 14px;
+    box-shadow: 0 10px 24px -18px rgba(23, 19, 15, 0.5);
+  }
+  #dynDesignSummary .dds-thumb { width: 54px; height: 54px; object-fit: contain; background: #f4f3f0; border-radius: 10px; flex: none; }
+  #dynDesignSummary .dds-main { min-width: 0; flex: none; }
+  #dynDesignSummary .dds-name { font-weight: 800; font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #17130f; }
+  #dynDesignSummary .dds-price { font-weight: 800; font-size: 16px; margin-top: 2px; color: #17130f; }
+  #dynDesignSummary .dds-opts {
+    flex: 1 1 auto; min-width: 0; font-size: 12px; line-height: 1.5; color: #4f4a45;
+    border-left: 1px solid rgba(23, 19, 15, 0.12); padding-left: 12px;
+  }
+  #dynDesignSummary .dds-edit {
+    border: 0; background: none; cursor: pointer; font: inherit; font-size: 11px;
+    font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #17130f;
+    text-decoration: underline; text-underline-offset: 3px; padding: 6px; flex: none;
+  }
+  /* shopping controls step aside while designing */
+  html.dyn-designing #buyBox > .price-row,
+  html.dyn-designing #buyBox > .opt-group > *,
+  html.dyn-designing #buyBox > details,
+  html.dyn-designing #buyBox > hr { display: none !important; }
+  html.dyn-designing .dyn-thumbs { display: none; }
+}

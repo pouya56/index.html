@@ -3062,7 +3062,19 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           '<div class="engrave-head"><h2 id="engraveTitle">' + escapeHtml(eTitle) + '</h2>' +
             '<p>' + escapeHtml(eSub) + '</p></div>' +
           (hasBack
-            ? '<div class="side-tabs" role="tablist">' +
+            ? '<div class="ploc-row" role="radiogroup" aria-label="Print location">' +
+                '<div class="ploc-label">Print location</div>' +
+                '<div class="ploc-chips">' +
+                  '<button type="button" class="ploc-chip on" data-loc="front" role="radio" aria-checked="true">' + escapeHtml(S.frontTabLabel || "Front") + '</button>' +
+                  '<button type="button" class="ploc-chip" data-loc="back" role="radio" aria-checked="false">' + escapeHtml(S.backTabLabel || "Back") +
+                    (feeMoney ? '<span class="side-fee">+' + escapeHtml(feeMoney) + '</span>' : '') +
+                  '</button>' +
+                  '<button type="button" class="ploc-chip" data-loc="both" role="radio" aria-checked="false">Front + Back' +
+                    (feeMoney ? '<span class="side-fee">+' + escapeHtml(feeMoney) + '</span>' : '') +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="side-tabs" role="tablist" hidden>' +
                 '<button type="button" class="side-tab on" data-side="front" role="tab" aria-selected="true">' + escapeHtml(S.frontTabLabel || "Front") + '</button>' +
                 '<button type="button" class="side-tab" data-side="back" role="tab" aria-selected="false">' + escapeHtml(S.backTabLabel || "Back") +
                   (feeMoney ? '<span class="side-fee">+' + escapeHtml(feeMoney) + '</span>' : '') +
@@ -3139,6 +3151,55 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
     document.querySelectorAll(".side-tab").forEach((t) => {
       t.onclick = () => switchSide(t.dataset.side);
+    });
+    // Print location: Front / Back / Front + Back. Front and Back design one
+    // side only (the other side's work is cleared, with a heads-up); Front +
+    // Back reveals the side tabs for flipping between the two surfaces.
+    if (!document.getElementById("dynPlocCss")) {
+      const pcss = document.createElement("style");
+      pcss.id = "dynPlocCss";
+      pcss.textContent =
+        ".ploc-row{margin:4px 0 14px}" +
+        ".ploc-label{font-size:11px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#17130f;margin:0 0 8px}" +
+        ".ploc-chips{display:flex;gap:10px}" +
+        ".ploc-chip{flex:1 1 0;min-width:0;cursor:pointer;font:inherit;font-size:12px;font-weight:800;letter-spacing:0.08em;" +
+          "text-transform:uppercase;padding:13px 6px;border:2px solid #17130f;border-radius:6px;background:#fff;color:#17130f;" +
+          "transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}" +
+        ".ploc-chip.on{background:#0a0a0a;color:#fff}" +
+        ".ploc-chip .side-fee{display:block;font-size:10px;font-weight:600;letter-spacing:0.04em;opacity:0.75;margin-top:2px}" +
+        /* theme's .side-tabs display rule would beat the hidden attribute */
+        ".side-tabs[hidden]{display:none!important}";
+      (document.head || document.documentElement).appendChild(pcss);
+    }
+    function clearSide(side) {
+      if (!(sideLayers[side] || []).length) return false;
+      if (side === currentSide) {
+        layers.slice().forEach(function (l) { removeLayer(l.id); });
+      } else {
+        sideLayers[side] = [];
+        sideActive[side] = null;
+      }
+      publishDesignUrls();
+      return true;
+    }
+    function setPrintLoc(loc) {
+      document.querySelectorAll(".ploc-chip").forEach(function (c) {
+        const on = c.dataset.loc === loc;
+        c.classList.toggle("on", on);
+        c.setAttribute("aria-checked", String(on));
+      });
+      const tabs = document.querySelector(".side-tabs");
+      if (tabs) tabs.hidden = loc !== "both";
+      if (loc === "front") {
+        if (clearSide("back")) toast("Back design removed");
+        switchSide("front");
+      } else if (loc === "back") {
+        if (clearSide("front")) toast("Front design removed");
+        switchSide("back");
+      }
+    }
+    document.querySelectorAll(".ploc-chip").forEach(function (c) {
+      c.onclick = function () { setPrintLoc(c.dataset.loc); };
     });
     const drop = q2('[data-drop="design"]'), input = q2('[data-file="design"]');
     async function accept(file) {

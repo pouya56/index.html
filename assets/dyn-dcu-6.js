@@ -17,8 +17,65 @@
       sub.textContent = title;
       tb.appendChild(sub);
     })();
-    var stageHolder = null, toolsHolder = null;
+    var stageHolder = null, toolsHolder = null, topHolder = null;
     var appliedOrig = null; /* the untouched product photo, kept while a design preview is painted over it */
+    function isPhone() { return !!(window.matchMedia && window.matchMedia("(max-width: 860px)").matches); }
+
+    /* Phones: the step strip (and the print-location chips) lead the design
+       step, above the photo — like the artwork-step mock. The strip goes
+       back to its home before the action bar when designing ends. */
+    function moveStepsUp() {
+      var steps = document.getElementById("dynSteps");
+      if (steps && topHolder && steps.parentNode !== topHolder) topHolder.insertBefore(steps, topHolder.firstChild);
+    }
+    function restoreSteps() {
+      var steps = document.getElementById("dynSteps");
+      var bar = document.getElementById("dynActionBar");
+      if (steps && bar && bar.parentNode && steps.parentNode !== bar.parentNode) {
+        bar.parentNode.insertBefore(steps, bar);
+      }
+    }
+
+    /* Order summary card (phones): thumbnail, name + price, the chosen
+       options, and an Edit button that leaves the design step. */
+    function buildSummary() {
+      var old = document.getElementById("dynDesignSummary");
+      if (old) old.remove();
+      if (!toolsHolder) return;
+      var card = document.createElement("div");
+      card.id = "dynDesignSummary";
+      var th = document.createElement("img");
+      th.className = "dds-thumb"; th.alt = "";
+      var pageImg = document.querySelector(".gallery-main .dyn-cards img") || document.querySelector("#galleryStage img");
+      th.src = appliedOrig || (pageImg && (pageImg.currentSrc || pageImg.src)) || "";
+      var main = document.createElement("div");
+      main.className = "dds-main";
+      var nm = document.createElement("div");
+      nm.className = "dds-name";
+      nm.textContent = (window.DYN_SHOPIFY || {}).productTitle || "";
+      var pr = document.createElement("div");
+      pr.className = "dds-price";
+      pr.textContent = ((document.getElementById("pPrice") || {}).textContent || "").trim();
+      main.appendChild(nm); main.appendChild(pr);
+      var opts = document.createElement("div");
+      opts.className = "dds-opts";
+      Array.prototype.forEach.call(document.querySelectorAll("#buyBox .opt-val"), function (v) {
+        var t = (v.textContent || "").trim();
+        if (!t) return;
+        var d = document.createElement("div");
+        d.textContent = t;
+        opts.appendChild(d);
+      });
+      var edit = document.createElement("button");
+      edit.type = "button"; edit.className = "dds-edit";
+      edit.textContent = "Edit";
+      edit.addEventListener("click", function () {
+        var x = root.querySelector(".modal-close") || root.querySelector("[data-close]");
+        if (x) x.click();
+      });
+      card.appendChild(th); card.appendChild(main); card.appendChild(opts); card.appendChild(edit);
+      toolsHolder.appendChild(card);
+    }
 
     /* After Add design, the page photo shows the customer's design in place
        (the same composited preview the bulk request attaches). Removing the
@@ -41,9 +98,11 @@
     }
 
     function cleanup() {
+      restoreSteps();
       if (stageHolder && stageHolder.parentNode) stageHolder.parentNode.removeChild(stageHolder);
       if (toolsHolder && toolsHolder.parentNode) toolsHolder.parentNode.removeChild(toolsHolder);
-      stageHolder = toolsHolder = null;
+      if (topHolder && topHolder.parentNode) topHolder.parentNode.removeChild(topHolder);
+      stageHolder = toolsHolder = topHolder = null;
     }
     /* Adopt the designer's live nodes into the page (listeners ride along):
        the stage onto the product image, tabs/controls/footer under the
@@ -63,13 +122,26 @@
         gal.appendChild(stageHolder);
         toolsHolder = document.createElement("div");
         toolsHolder.id = "dynInlineTools";
+        var ploc = root.querySelector(".ploc-row");
         var tabs = root.querySelector(".side-tabs");
-        if (tabs) toolsHolder.appendChild(tabs);
         var ctr = root.querySelector(".up-controls");
-        if (ctr) toolsHolder.appendChild(ctr);
         var foot = root.querySelector(".modal-foot");
+        if (isPhone()) {
+          /* print location leads the step, above the photo */
+          topHolder = document.createElement("div");
+          topHolder.id = "dynDesignTop";
+          if (ploc) topHolder.appendChild(ploc);
+          var galWrap = gal.closest(".gallery") || gal;
+          galWrap.parentNode.insertBefore(topHolder, galWrap);
+          if (tabs) toolsHolder.appendChild(tabs);
+        } else {
+          if (ploc) toolsHolder.appendChild(ploc);
+          if (tabs) toolsHolder.appendChild(tabs);
+        }
+        if (ctr) toolsHolder.appendChild(ctr);
         if (foot) toolsHolder.appendChild(foot);
         bar.parentNode.insertBefore(toolsHolder, bar.nextSibling);
+        if (isPhone()) buildSummary();
         /* same image as the page: the front view shows the photo the
            customer was just looking at, not the designer's own mock */
         var applyPageImage = function () {
@@ -82,15 +154,20 @@
           if (frameImg && src) frameImg.src = src;
         };
         applyPageImage();
-        toolsHolder.addEventListener("click", function (e) {
+        var onSideClick = function (e) {
           var t = e.target.closest(".side-tab");
-          /* switching back to Front restores the designer mock - re-apply */
-          if (t && t.getAttribute("data-side") === "front") setTimeout(applyPageImage, 0);
-        });
+          var p = e.target.closest(".ploc-chip");
+          /* switching back to a front view restores the page photo - re-apply */
+          var side = t ? t.getAttribute("data-side") : (p ? p.getAttribute("data-loc") : null);
+          if (side === "front" || side === "both") setTimeout(applyPageImage, 0);
+        };
+        toolsHolder.addEventListener("click", onSideClick);
+        if (topHolder) topHolder.addEventListener("click", onSideClick);
       }
       if (!stageHolder || !toolsHolder) return false;
       stageHolder.hidden = false;
       toolsHolder.hidden = false;
+      if (topHolder) { topHolder.hidden = false; moveStepsUp(); }
       /* re-opening an existing design: the primary reads Update, not Add */
       var applyBtn = toolsHolder.querySelector("#uploadApply");
       var pageAdd = document.getElementById("pageAddCart");
@@ -122,6 +199,7 @@
       if (!open) {
         if (stageHolder) stageHolder.hidden = true;
         if (toolsHolder) toolsHolder.hidden = true;
+        if (topHolder) { topHolder.hidden = true; restoreSteps(); }
         /* the composite renders just after apply - retry briefly until it lands */
         var tries = 0;
         (function poll() {
