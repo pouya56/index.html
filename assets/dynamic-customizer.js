@@ -3162,7 +3162,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         ".ploc-chips{display:flex;gap:10px}" +
         ".ploc-chip{flex:1 1 0;min-width:0;cursor:pointer;font:inherit;font-size:12px;font-weight:800;letter-spacing:0.08em;" +
           "text-transform:uppercase;padding:13px 6px;border:2px solid #17130f;border-radius:6px;background:#fff;color:#17130f;" +
-          "transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}" +
+          "position:relative;overflow:hidden;z-index:0;" +
+          "transition:background .15s,color .3s ease;-webkit-tap-highlight-color:transparent}" +
+        /* the Start Designing circle-fill: a red circle grows from where the
+           pointer enters (--mx/--my set by the script) and the text flips white */
+        ".ploc-chip::after{content:'';position:absolute;left:var(--mx,50%);top:var(--my,50%);width:16px;height:16px;z-index:-1;" +
+          "border-radius:50%;background:#b3242a;pointer-events:none;display:block;" +
+          "transform:translate(-50%,-50%) scale(0);transform-origin:center;" +
+          "transition:transform .8s cubic-bezier(0.4,0,0.2,1)}" +
+        ".ploc-chip:hover{color:#fff}" +
+        ".ploc-chip:hover::after{transform:translate(-50%,-50%) scale(60)}" +
+        "@media (prefers-reduced-motion: reduce){.ploc-chip::after{transition:none}}" +
         ".ploc-chip.on{background:#0a0a0a;color:#fff}" +
         ".ploc-chip .side-fee{display:block;font-size:10px;font-weight:600;letter-spacing:0.04em;opacity:0.75;margin-top:2px}" +
         /* theme's .side-tabs display rule would beat the hidden attribute */
@@ -3198,6 +3208,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
     document.querySelectorAll(".ploc-chip").forEach(function (c) {
       c.onclick = function () { setPrintLoc(c.dataset.loc); };
+      // circle-fill origin follows the pointer, like Start Designing
+      function plocOrigin(e) {
+        const r = c.getBoundingClientRect();
+        c.style.setProperty("--mx", (e.clientX - r.left) + "px");
+        c.style.setProperty("--my", (e.clientY - r.top) + "px");
+      }
+      c.addEventListener("pointerenter", plocOrigin);
+      c.addEventListener("pointerleave", plocOrigin);
     });
     const drop = q2('[data-drop="design"]'), input = q2('[data-file="design"]');
     async function accept(file) {
