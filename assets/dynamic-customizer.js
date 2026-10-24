@@ -3181,6 +3181,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         "@media (prefers-reduced-motion: reduce){.ploc-chip::after{transition:none}}" +
         ".ploc-chip.on{background:#0a0a0a;color:#fff}" +
         ".ploc-chip .side-fee{display:block;font-size:10px;font-weight:600;letter-spacing:0.04em;opacity:0.75;margin-top:2px}" +
+        /* the two design tabs match the chips row: full width, equal halves */
+        ".side-tabs{display:flex!important;gap:10px!important;width:100%;margin:0 0 10px!important;justify-content:stretch!important}" +
+        ".side-tab{flex:1 1 0!important;min-width:0;justify-content:center!important;text-align:center}" +
         /* theme's .side-tabs display rule would beat the hidden attribute */
         ".side-tabs[hidden]{display:none!important}";
       (document.head || document.documentElement).appendChild(pcss);
@@ -3211,6 +3214,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       } else if (loc === "back") {
         if (clearSide("front")) toast("Front design removed");
         switchSide("back");
+      } else {
+        // Front + Back starts on the front design
+        switchSide("front");
+        document.querySelectorAll(".side-tab").forEach(function (t) {
+          const on = t.dataset.side === "front";
+          t.classList.toggle("on", on);
+          t.setAttribute("aria-selected", String(on));
+        });
       }
     }
     document.querySelectorAll(".ploc-chip").forEach(function (c) {
