@@ -451,26 +451,59 @@ aside.dyn-cart {
 .dyn-cart-foot .btn-ghost:hover { border-color: #17130f; background: rgba(23, 19, 15, 0.04); }
 
 /* ------------------------------------------------------------------
-   Phone buy box: everything on one screen. The design step (step strip
-   + Start Designing) sits right under the photo, then price, colour
-   and size share one compact wrapping row. The title moves below the
-   controls. Desktop keeps the normal column.
+   Phone product layout (mock: photo → labelled thumbnails → step strip
+   → Start Designing → bulk pricing → price + colour row → sizes).
+   The product name reads as a subtitle under the logo masthead, so the
+   buy box hides its own title. Desktop keeps the normal column, and
+   the thumbnail strip only exists on phones.
    ------------------------------------------------------------------ */
+.dyn-thumbs { display: none; }
+.dyn-topbar-sub { display: none; }
 @media (max-width: 860px) {
+  /* subtitle under the logo */
+  .dyn-topbar { flex-wrap: wrap; }
+  .dyn-topbar-sub {
+    display: block; width: 100%; text-align: center;
+    margin-top: 4px; font-size: 11.5px; font-weight: 700;
+    letter-spacing: 0.3em; text-transform: uppercase; color: #17130f;
+  }
+  /* labelled thumbnail strip under the photo */
+  .dyn-thumbs {
+    display: flex; gap: 10px; overflow-x: auto; padding: 10px 4px 2px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .dyn-thumbs::-webkit-scrollbar { display: none; }
+  .dyn-thumb {
+    flex: 0 0 auto; width: 64px; border: 0; padding: 0; background: none;
+    cursor: pointer; font: inherit; -webkit-tap-highlight-color: transparent;
+  }
+  .dyn-thumb img {
+    display: block; width: 64px; height: 64px; object-fit: cover;
+    border-radius: 10px; border: 2px solid rgba(23, 19, 15, 0.12);
+    background: #fff; transition: border-color 0.2s;
+  }
+  .dyn-thumb.is-on img { border-color: #c81a1a; }
+  .dyn-thumb-cap {
+    display: block; margin-top: 4px; font-size: 9.5px; font-weight: 600;
+    color: #5f5a55; line-height: 1.25; text-align: center;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  /* buy box: steps, CTA (+ bulk link/note inside the action bar),
+     then price beside the colour picker, then sizes full width */
   #buyBox { display: flex; flex-wrap: wrap; align-items: center; }
   #buyBox > * { order: 10; flex: 1 1 100%; min-width: 0; }
-  #buyBox > #dynSteps { order: 1; margin: 2px 0 4px; }
-  #buyBox > .dyn-actionbar { order: 2; margin: 0 0 10px; }
-  #buyBox > .price-row { order: 3; flex: 0 1 auto; margin: 0 14px 0 0; }
-  #buyBox > .opt-group:not([hidden]) {
-    order: 4; flex: 1 1 0; min-width: 0; margin: 0;
-    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
-  }
-  #buyBox > .opt-group .opt-label { margin: 0 !important; width: auto; }
-  #buyBox > #pName { order: 5; margin: 12px 0 0; font-size: 20px; }
-  #buyBox > .eyebrow { order: 6; margin: 0 0 6px; }
-  /* compact controls so the row fits a phone width */
-  #buyBox .price { font-size: 22px; }
-  #buyBox .swatch { width: 24px; height: 24px; }
-  #buyBox .pill { min-width: 30px; padding: 5px 9px; font-size: 10.5px; }
+  #buyBox > #dynSteps { order: 1; margin: 2px 0 6px; }
+  #buyBox > .dyn-actionbar { order: 2; margin: 0 0 12px; }
+  #buyBox > .price-row { order: 3; flex: 0 1 auto; margin: 0 16px 0 0; }
+  /* the option group dissolves so its rows join the buy-box flex flow */
+  #buyBox > .opt-group:not(#pSizeGroup):not(#pQtyGroup) { display: contents; }
+  #buyBox > .opt-group > .opt-label { order: 4; flex: 0 0 auto; margin: 0 !important; width: auto; }
+  #buyBox > .opt-group > .swatches { order: 5; flex: 1 1 auto; margin: 0; }
+  #buyBox > .opt-group > .opt-label ~ .opt-label { order: 6; flex: 1 1 100%; margin: 12px 0 0 !important; }
+  #buyBox > .opt-group > .pills { order: 7; flex: 1 1 100%; margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  #buyBox > .opt-group > .pills .pill { flex: 1 1 0; min-width: 40px; }
+  /* title lives under the logo masthead instead */
+  #buyBox > #pName, #buyBox > .eyebrow { display: none; }
+  #buyBox .price { font-size: 26px; }
+  #buyBox .swatch { width: 26px; height: 26px; }
 }

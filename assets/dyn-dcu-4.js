@@ -64,11 +64,52 @@
     }
     layout();
 
-    function advance() { order.push(order.shift()); layout(); }
-    function retreat() { order.unshift(order.pop()); layout(); }
+    function advance() { order.push(order.shift()); layout(); markThumb(); }
+    function retreat() { order.unshift(order.pop()); layout(); markThumb(); }
 
     if (next) next.addEventListener("click", advance);
     if (prev) prev.addEventListener("click", retreat);
+
+    /* Labelled thumbnail strip under the photo (phones — CSS hides it on
+       desktop). Captions come from each product image's alt text: the part
+       after the last comma, so "Custom printed t-shirt, front view" reads
+       "front view" and "Black back" stays as is. */
+    var thumbs = document.createElement("div");
+    thumbs.className = "dyn-thumbs";
+    (function () {
+      var meta = {};
+      (((window.DYN_SHOPIFY || {}).productImagesData) || []).forEach(function (im) {
+        if (im && im.url) meta[String(im.url).split("?")[0]] = im.alt || "";
+      });
+      imgs.forEach(function (u, i) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "dyn-thumb" + (i === 0 ? " is-on" : "");
+        var im = document.createElement("img");
+        im.src = u; im.alt = ""; im.loading = "lazy"; im.draggable = false;
+        b.appendChild(im);
+        var cap = (meta[String(u).split("?")[0]] || "").split(",").pop().trim();
+        if (cap) {
+          var c = document.createElement("span");
+          c.className = "dyn-thumb-cap";
+          c.textContent = cap.charAt(0).toUpperCase() + cap.slice(1);
+          b.appendChild(c);
+        }
+        b.addEventListener("click", function () {
+          var at = order.indexOf(i);
+          if (at > 0) { order = order.slice(at).concat(order.slice(0, at)); layout(); }
+          markThumb();
+        });
+        thumbs.appendChild(b);
+      });
+      var main = host.closest(".gallery-main") || host.parentNode;
+      if (main && main.parentNode) main.parentNode.insertBefore(thumbs, main.nextSibling);
+    })();
+    function markThumb() {
+      Array.prototype.forEach.call(thumbs.children, function (t, i) {
+        t.classList.toggle("is-on", order[0] === i);
+      });
+    }
 
     /* Drag the front card to flip through. */
     var startX = 0, dx = 0, dragging = false, frontEl = null;

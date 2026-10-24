@@ -4,6 +4,19 @@
   ready(function () {
     var root = document.getElementById("modalRoot");
     if (!root || !window.MutationObserver) return;
+
+    /* Product pages, phones: the product name reads as a subtitle under the
+       logo masthead (the buy box hides its own title there — see the
+       mobile CSS in dynamic-editorial.css). */
+    (function () {
+      var tb = document.getElementById("dynTopbar");
+      var title = (window.DYN_SHOPIFY || {}).productTitle;
+      if (!tb || !title || !document.getElementById("buyBox")) return;
+      var sub = document.createElement("div");
+      sub.className = "dyn-topbar-sub";
+      sub.textContent = title;
+      tb.appendChild(sub);
+    })();
     var stageHolder = null, toolsHolder = null;
     var appliedOrig = null; /* the untouched product photo, kept while a design preview is painted over it */
 
