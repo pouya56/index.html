@@ -1283,6 +1283,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let editingGrp = null;     // the edited item's group token (links it to its back-fee line)
   const MAX_IMG = 3, MAX_TXT = 3;
   let sideLayers = { front: [], back: [] };
+  let sideStash = { front: null, back: null };  // designs set aside when the print location excludes their side
   let sideActive = { front: null, back: null };
   let currentSide = "front";
   let currentPrintLoc = "front"; // front | back | both — chosen on the Print location chips
@@ -2960,6 +2961,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
   function buildUploadModal() {
     sideLayers = { front: [], back: [] };
+    sideStash = { front: null, back: null };
     sideActive = { front: null, back: null };
     currentSide = "front";
     currentPrintLoc = "front";
@@ -3188,13 +3190,30 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         ".side-tabs[hidden]{display:none!important}";
       (document.head || document.documentElement).appendChild(pcss);
     }
-    function clearSide(side) {
+    function stashSide(side) {
       if (!(sideLayers[side] || []).length) return false;
+      sideStash[side] = sideLayers[side];
+      sideLayers[side] = [];
+      sideActive[side] = null;
       if (side === currentSide) {
-        layers.slice().forEach(function (l) { removeLayer(l.id); });
-      } else {
-        sideLayers[side] = [];
-        sideActive[side] = null;
+        layers = sideLayers[side];
+        activeLayerId = null;
+        const pa = q2("#printArea");
+        if (pa) pa.querySelectorAll(".up-el").forEach(function (e) { e.remove(); });
+        renderUpEls();
+      }
+      publishDesignUrls();
+      return true;
+    }
+    function unstashSide(side) {
+      const kept = sideStash[side];
+      sideStash[side] = null;
+      if (!kept || !kept.length || (sideLayers[side] || []).length) return false;
+      sideLayers[side] = kept;
+      if (side === currentSide) {
+        layers = sideLayers[side];
+        kept.forEach(function (l) { createLayerEl(l); });
+        renderUpEls();
       }
       publishDesignUrls();
       return true;
@@ -3209,12 +3228,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       const tabs = document.querySelector(".side-tabs");
       if (tabs) tabs.hidden = loc !== "both";
       if (loc === "front") {
-        if (clearSide("back")) toast("Back design removed");
+        if (stashSide("back")) toast("Back design set aside — it returns if you add the back again");
+        unstashSide("front");
         switchSide("front");
       } else if (loc === "back") {
-        if (clearSide("front")) toast("Front design removed");
+        if (stashSide("front")) toast("Front design set aside — it returns if you add the front again");
+        unstashSide("back");
         switchSide("back");
       } else {
+        if (unstashSide("front") | unstashSide("back")) toast("Your earlier design is back");
         // Front + Back starts on the front design
         switchSide("front");
         document.querySelectorAll(".side-tab").forEach(function (t) {
@@ -3638,6 +3660,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   // Called after Add to Bag so the next open starts fresh for a new design.
   function resetUploadDesign() {
     sideLayers = { front: [], back: [] };
+    sideStash = { front: null, back: null };
     sideActive = { front: null, back: null };
     currentSide = "front";
     currentPrintLoc = "front";
