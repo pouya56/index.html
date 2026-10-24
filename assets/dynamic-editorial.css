@@ -583,6 +583,7 @@ aside.dyn-cart {
     box-shadow: 0 12px 28px -20px rgba(23, 19, 15, 0.5);
   }
   #dynReviewCard .rv-chead { display: flex; align-items: center; gap: 12px; padding: 10px 0 12px; border-bottom: 1px solid rgba(23, 19, 15, 0.1); }
+  #dynReviewCard .rv-thumbs { display: flex; gap: 6px; flex: none; }
   #dynReviewCard .rv-thumb { width: 58px; height: 58px; object-fit: contain; background: #f4f3f0; border-radius: 10px; flex: none; }
   #dynReviewCard .rv-main { flex: 1 1 auto; min-width: 0; }
   #dynReviewCard .rv-name { font-weight: 800; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #17130f; }
@@ -699,6 +700,7 @@ aside.dyn-cart {
     box-shadow: 0 12px 28px -20px rgba(23, 19, 15, 0.5);
   }
   #dynReviewCard .rv-chead { display: flex; align-items: center; gap: 12px; padding: 10px 0 12px; border-bottom: 1px solid rgba(23, 19, 15, 0.1); }
+  #dynReviewCard .rv-thumbs { display: flex; gap: 6px; flex: none; }
   #dynReviewCard .rv-thumb { width: 58px; height: 58px; object-fit: contain; background: #f4f3f0; border-radius: 10px; flex: none; }
   #dynReviewCard .rv-main { flex: 1 1 auto; min-width: 0; }
   #dynReviewCard .rv-name { font-weight: 800; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #17130f; }

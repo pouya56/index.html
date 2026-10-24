@@ -257,8 +257,14 @@
       reviewCard = document.createElement("div");
       reviewCard.id = "dynReviewCard";
       var head = document.createElement("div"); head.className = "rv-chead";
-      var th = document.createElement("img"); th.className = "rv-thumb"; th.alt = "";
-      th.src = pv.front || "";
+      /* both sides preview in the summary when a back design exists */
+      var th = document.createElement("div"); th.className = "rv-thumbs";
+      ["front", "back"].forEach(function (side) {
+        if (!pv[side]) return;
+        var im = document.createElement("img");
+        im.className = "rv-thumb"; im.alt = ""; im.src = pv[side];
+        th.appendChild(im);
+      });
       var main = document.createElement("div"); main.className = "rv-main";
       var nm = document.createElement("div"); nm.className = "rv-name";
       nm.textContent = (window.DYN_SHOPIFY || {}).productTitle || "";
