@@ -714,3 +714,26 @@ aside.dyn-cart {
   #dynReviewCard .rv-row:last-child { border-bottom: 0; }
   #dynReviewCard .rv-row::after { content: "›"; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #8a847e; }
 }
+
+/* ------------------------------------------------------------------
+   Step 2 polish: the Update button is straight-cornered, and on
+   desktop the design tools shed the "Design Studio" archive card so
+   the artwork step reads like the other steps - flat panel, numbered
+   heading above, full-width Cancel/Continue pair. The product title
+   steps aside during design and review (the heading names the step).
+   ------------------------------------------------------------------ */
+#dynUpdateBtn { border-radius: 0 !important; }
+@media (min-width: 861px) {
+  html.dyn-designing #dynInlineTools {
+    background: none; border: 0; box-shadow: none; padding: 0; border-radius: 0;
+  }
+  html.dyn-designing #dynInlineTools::before { content: none; }
+  html.dyn-designing #buyBox > #pName,
+  html.dyn-designing #buyBox > .eyebrow,
+  html.dyn-review #buyBox > #pName,
+  html.dyn-review #buyBox > .eyebrow { display: none !important; }
+  html.dyn-designing #dynInlineTools .modal-foot .foot-actions {
+    display: grid; grid-template-columns: 1fr 1.25fr; gap: 12px;
+  }
+  html.dyn-designing #dynInlineTools .modal-foot .foot-actions .btn { width: 100%; }
+}
