@@ -24,10 +24,11 @@
     /* Phones: the step strip (and the print-location chips) lead the design
        step, above the photo — like the artwork-step mock. The strip goes
        back to its home before the action bar when designing ends. */
-    function moveStepsUp() {
+    function moveStepsInto(holder) {
       var steps = document.getElementById("dynSteps");
-      if (steps && topHolder && steps.parentNode !== topHolder) topHolder.insertBefore(steps, topHolder.firstChild);
+      if (steps && holder && steps.parentNode !== holder) holder.insertBefore(steps, holder.firstChild);
     }
+    function moveStepsUp() { moveStepsInto(topHolder); }
     function restoreSteps() {
       var steps = document.getElementById("dynSteps");
       var bar = document.getElementById("dynActionBar");
@@ -174,6 +175,114 @@
       if (applyBtn && pageAdd && !pageAdd.hidden) applyBtn.textContent = "Update design";
       return true;
     }
+    /* Step 4 on phones: once the design is saved, the page reads as an order
+       review — headline + Front/Back preview toggle above the photo, and a
+       summary card with Edit rows above Add to Cart. "Edit Product" returns
+       to the plain product page until the design is saved again. */
+    var reviewTop = null, reviewCard = null, reviewDismissed = false;
+    function designReadyNow() {
+      var b = document.getElementById("pageAddCart");
+      return !!(b && !b.hidden);
+    }
+    function removeReview() {
+      if (reviewTop) reviewTop.remove();
+      if (reviewCard) reviewCard.remove();
+      reviewTop = reviewCard = null;
+    }
+    function buildReview() {
+      removeReview();
+      var pv = window.DYN_DESIGN_PREVIEWS || {};
+      var galWrap = document.querySelector(".gallery");
+      var bar = document.getElementById("dynActionBar");
+      if (!galWrap || !galWrap.parentNode || !bar || !bar.parentNode) return;
+      reviewTop = document.createElement("div");
+      reviewTop.id = "dynReviewTop";
+      var t = document.createElement("div"); t.className = "rv-title"; t.textContent = "Review your order";
+      var s = document.createElement("div"); s.className = "rv-sub"; s.textContent = "Everything look good? Add to cart to continue.";
+      reviewTop.appendChild(t); reviewTop.appendChild(s);
+      if (pv.front && pv.back) {
+        var tg = document.createElement("div"); tg.className = "rv-sides";
+        ["front", "back"].forEach(function (side, i) {
+          var b = document.createElement("button"); b.type = "button";
+          b.className = "rv-side" + (i === 0 ? " on" : "");
+          b.textContent = side === "front" ? "Front" : "Back";
+          b.addEventListener("click", function () {
+            Array.prototype.forEach.call(tg.children, function (x) { x.classList.toggle("on", x === b); });
+            pageImgs().forEach(function (im) { im.removeAttribute("srcset"); im.src = pv[side]; });
+          });
+          tg.appendChild(b);
+        });
+        reviewTop.appendChild(tg);
+      }
+      galWrap.parentNode.insertBefore(reviewTop, galWrap);
+      moveStepsInto(reviewTop);
+
+      reviewCard = document.createElement("div");
+      reviewCard.id = "dynReviewCard";
+      var head = document.createElement("div"); head.className = "rv-chead";
+      var th = document.createElement("img"); th.className = "rv-thumb"; th.alt = "";
+      th.src = pv.front || "";
+      var main = document.createElement("div"); main.className = "rv-main";
+      var nm = document.createElement("div"); nm.className = "rv-name";
+      nm.textContent = (window.DYN_SHOPIFY || {}).productTitle || "";
+      var opts = document.createElement("div"); opts.className = "rv-opts";
+      var vals = Array.prototype.map.call(document.querySelectorAll("#buyBox .opt-val"), function (v) {
+        return (v.textContent || "").trim();
+      }).filter(Boolean);
+      opts.textContent = vals.join(" · ") + (pv.back ? " · Front + Back print" : " · Front print");
+      main.appendChild(nm); main.appendChild(opts);
+      var pr = document.createElement("div"); pr.className = "rv-price";
+      pr.textContent = ((document.getElementById("pPrice") || {}).textContent || "").trim();
+      head.appendChild(th); head.appendChild(main); head.appendChild(pr);
+      reviewCard.appendChild(head);
+      var rows = [
+        ["Edit product", function () {
+          reviewDismissed = true; syncReview();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }],
+        ["Edit artwork", function () {
+          var st = document.querySelector(".dyn-step.is-link");
+          if (st) st.click();
+        }]
+      ];
+      if (document.getElementById("giftOpenBtn")) {
+        rows.push(["Edit gift options", function () {
+          var g = document.getElementById("giftOpenBtn");
+          if (g) g.click();
+        }]);
+      }
+      rows.forEach(function (r) {
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "rv-row";
+        b.textContent = r[0];
+        b.addEventListener("click", r[1]);
+        reviewCard.appendChild(b);
+      });
+      bar.parentNode.insertBefore(reviewCard, bar);
+    }
+    function syncReview() {
+      var pv = window.DYN_DESIGN_PREVIEWS || {};
+      /* a back preview that landed after the first build earns the toggle */
+      if (reviewCard && pv.back && reviewTop && !reviewTop.querySelector(".rv-sides")) removeReview();
+      var on = isPhone() && designReadyNow() && !reviewDismissed &&
+               !document.documentElement.classList.contains("dyn-designing");
+      if (on && !reviewCard) buildReview();
+      document.documentElement.classList.toggle("dyn-review", on && !!reviewCard);
+      if (reviewTop) reviewTop.hidden = !on;
+      if (reviewCard) reviewCard.hidden = !on;
+      if (on) moveStepsInto(reviewTop);
+      else if (!document.documentElement.classList.contains("dyn-designing")) restoreSteps();
+    }
+    (function () {
+      var addBtn = document.getElementById("pageAddCart");
+      if (addBtn) new MutationObserver(syncReview).observe(addBtn, { attributes: true, attributeFilter: ["hidden"] });
+      window.addEventListener("dyn-design-added", function () {
+        reviewDismissed = false;
+        removeReview();           /* previews changed - rebuild fresh */
+        setTimeout(syncReview, 400);
+      });
+    })();
+
     var wasOpen = false;
     function sync() {
       var open = root.classList.contains("open");
@@ -204,9 +313,11 @@
         var tries = 0;
         (function poll() {
           paintAppliedPreview();
+          syncReview();
           if (++tries < 8 && !(window.DYN_DESIGN_PREVIEWS || {}).front) setTimeout(poll, 150);
         })();
       }
+      syncReview();
     }
     new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ["class"], childList: true });
   });

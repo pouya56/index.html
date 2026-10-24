@@ -557,3 +557,84 @@ aside.dyn-cart {
   html.dyn-designing #buyBox > hr { display: none !important; }
   html.dyn-designing .dyn-thumbs { display: none; }
 }
+
+/* ------------------------------------------------------------------
+   Step 4 on phones: order review. Headline + Front/Back preview
+   toggle above the photo, summary card with Edit rows above Add to
+   Cart; shopping pickers step aside while reviewing.
+   ------------------------------------------------------------------ */
+#dynReviewTop, #dynReviewCard { display: none; }
+@media (max-width: 860px) {
+  html.dyn-review #dynReviewTop:not([hidden]) { display: block; order: -2; margin: 4px 0 8px; text-align: center; }
+  #dynReviewTop .dyn-steps { margin: 0 0 14px !important; }
+  #dynReviewTop .rv-title { font-size: 22px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #17130f; }
+  #dynReviewTop .rv-sub { font-size: 13px; color: #5f5a55; margin-top: 4px; }
+  #dynReviewTop .rv-sides { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
+  #dynReviewTop .rv-side {
+    min-width: 110px; cursor: pointer; font: inherit; font-size: 12px; font-weight: 800;
+    letter-spacing: 0.1em; text-transform: uppercase; padding: 11px 18px;
+    border: 2px solid #17130f; border-radius: 6px; background: #fff; color: #17130f;
+  }
+  #dynReviewTop .rv-side.on { background: #0a0a0a; color: #fff; }
+  html.dyn-review #dynReviewCard:not([hidden]) {
+    display: block; order: 2; flex: 1 1 100%;
+    background: #fff; border: 1px solid rgba(23, 19, 15, 0.12); border-radius: 16px;
+    padding: 6px 16px 8px; margin: 2px 0 12px;
+    box-shadow: 0 12px 28px -20px rgba(23, 19, 15, 0.5);
+  }
+  #dynReviewCard .rv-chead { display: flex; align-items: center; gap: 12px; padding: 10px 0 12px; border-bottom: 1px solid rgba(23, 19, 15, 0.1); }
+  #dynReviewCard .rv-thumb { width: 58px; height: 58px; object-fit: contain; background: #f4f3f0; border-radius: 10px; flex: none; }
+  #dynReviewCard .rv-main { flex: 1 1 auto; min-width: 0; }
+  #dynReviewCard .rv-name { font-weight: 800; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #17130f; }
+  #dynReviewCard .rv-opts { font-size: 12px; color: #5f5a55; margin-top: 3px; line-height: 1.45; }
+  #dynReviewCard .rv-price { font-weight: 800; font-size: 17px; color: #17130f; flex: none; }
+  #dynReviewCard .rv-row {
+    display: block; width: 100%; text-align: left; cursor: pointer; font: inherit;
+    font-size: 13.5px; font-weight: 600; color: #17130f; background: none; border: 0;
+    padding: 13px 2px; border-bottom: 1px solid rgba(23, 19, 15, 0.08); position: relative;
+  }
+  #dynReviewCard .rv-row:last-child { border-bottom: 0; }
+  #dynReviewCard .rv-row::after { content: "›"; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #8a847e; }
+  /* while reviewing, the page is the order summary */
+  html.dyn-review #buyBox > .price-row,
+  html.dyn-review #buyBox > .opt-group > *,
+  html.dyn-review #buyBox > details { display: none !important; }
+  html.dyn-review .dyn-thumbs { display: none; }
+  html.dyn-review #buyBox > #dynSteps { order: -3; }
+}
+
+/* ------------------------------------------------------------------
+   Step 3 on phones: the gift details dialog reads as a full gift
+   page — headline centred, each section a white card, Save/Remove as
+   a Continue/Back pair.
+   ------------------------------------------------------------------ */
+@media (max-width: 860px) {
+  .dc-giftm.is-open { display: block !important; overflow: auto; background: #f0efec !important; }
+  .dc-giftm .dc-giftm-card {
+    width: auto !important; max-width: none !important; max-height: none !important;
+    min-height: 100%; margin: 0; border-radius: 0 !important; box-shadow: none !important;
+    background: transparent !important; padding: 26px 16px 30px !important;
+  }
+  .dc-giftm .dc-giftm-title {
+    text-align: center; font-size: 24px !important; font-weight: 800 !important;
+    letter-spacing: 0.04em; text-transform: uppercase; color: #17130f;
+  }
+  .dc-giftm .dc-giftm-sub { text-align: center; margin-bottom: 6px !important; }
+  .dc-giftm .dc-giftm-sec {
+    background: #fff; border: 1px solid rgba(23, 19, 15, 0.1) !important; border-radius: 14px;
+    padding: 16px !important; margin-top: 14px !important; border-top: 1px solid rgba(23, 19, 15, 0.1) !important;
+  }
+  .dc-giftm .dc-giftm-greet { flex-direction: column; }
+  .dc-giftm .dc-giftm-greet-r { flex: 1 1 auto; width: 100%; flex-direction: row; align-items: center; }
+  .dc-giftm .dc-giftm-foot { display: grid; grid-template-columns: 1fr 1.25fr; gap: 12px; margin-top: 18px; }
+  .dc-giftm .dc-giftm-clear {
+    font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    border: 2px solid #17130f !important; border-radius: 8px; background: #fff !important;
+    color: #17130f !important; padding: 14px 10px !important;
+  }
+  .dc-giftm .dc-gift-save {
+    font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    background: #0a0a0a !important; color: #fff !important; border-radius: 8px !important;
+    padding: 14px 10px !important; border: 2px solid #0a0a0a !important;
+  }
+}
