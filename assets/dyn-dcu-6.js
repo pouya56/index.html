@@ -281,10 +281,7 @@
       head.appendChild(th); head.appendChild(main); head.appendChild(pr);
       reviewCard.appendChild(head);
       var rows = [
-        ["Edit product", function () {
-          reviewDismissed = true; syncReview();
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }],
+        ["Edit product", function () { enterProductEdit(); }],
         ["Edit artwork", function () {
           var st = document.querySelector(".dyn-step.is-link");
           if (st) st.click();
@@ -315,32 +312,50 @@
       document.documentElement.classList.toggle("dyn-review", on && !!reviewCard);
       if (reviewTop) reviewTop.hidden = !on;
       if (reviewCard) reviewCard.hidden = !on;
+      if (on) exitProductEdit(false);
       if (on && isPhone()) moveStepsInto(reviewTop);
       else if (!on && !document.documentElement.classList.contains("dyn-designing")) restoreSteps();
       updateStepHead();
     }
-    /* After Edit product, changing colour / size / quantity brings the
-       customer back to the review step once they settle (same as the other
-       Edit rows, which return on their own). */
-    var backTimer = null;
-    function armReturnToReview() {
-      if (!reviewDismissed || !designReadyNow()) return;
-      if (backTimer) clearTimeout(backTimer);
-      backTimer = setTimeout(function () {
-        if (!reviewDismissed || !designReadyNow()) return;
+    /* Edit product swaps Add to Cart for an Update button: the customer
+       changes colour / size / quantity, then Update confirms and returns
+       to the review step with the summary rebuilt. */
+    var updBtn = null;
+    function ensureUpdateBtn() {
+      if (updBtn) return updBtn;
+      var add = document.getElementById("pageAddCart");
+      if (!add || !add.parentNode) return null;
+      updBtn = document.createElement("button");
+      updBtn.type = "button";
+      updBtn.id = "dynUpdateBtn";
+      updBtn.className = add.className;
+      updBtn.textContent = "Update";
+      updBtn.hidden = true;
+      add.parentNode.insertBefore(updBtn, add.nextSibling);
+      updBtn.addEventListener("click", function () { exitProductEdit(true); });
+      return updBtn;
+    }
+    function enterProductEdit() {
+      reviewDismissed = true;
+      syncReview();
+      var b = ensureUpdateBtn();
+      var add = document.getElementById("pageAddCart");
+      if (b) b.hidden = false;
+      if (add) add.style.display = "none";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    function exitProductEdit(toReview) {
+      var add = document.getElementById("pageAddCart");
+      if (updBtn) updBtn.hidden = true;
+      if (add) add.style.display = "";
+      if (toReview) {
         reviewDismissed = false;
         removeReview();          /* rebuild with the new options and price */
         syncReview();
         var top = document.getElementById("dynReviewTop");
         if (top) top.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 1500);
+      }
     }
-    document.addEventListener("click", function (e) {
-      if (e.target.closest && e.target.closest("#buyBox .swatch, #buyBox .pill")) armReturnToReview();
-    });
-    document.addEventListener("input", function (e) {
-      if (e.target && e.target.id === "qtyInput") armReturnToReview();
-    });
 
     (function () {
       var addBtn = document.getElementById("pageAddCart");
