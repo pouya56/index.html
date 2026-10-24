@@ -1285,6 +1285,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let sideLayers = { front: [], back: [] };
   let sideActive = { front: null, back: null };
   let currentSide = "front";
+  let currentPrintLoc = "front"; // front | back | both — chosen on the Print location chips
   let fontRowOpen = false;   // FONT chip toggles the typeface row
   let curVariantOpts = [];   // option values of the currently-selected variant (for per-variant back image)
   let curVariantImage = "";  // the selected variant's own photo — the design surface follows the chosen colour
@@ -2363,9 +2364,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       }
     });
     const apply = q2("#uploadApply");
-    if (apply) apply.disabled = !layers.some(function (l) {
-      return (l.kind === "img" && l.url) || (l.kind === "text" && l.text);
-    });
+    if (apply) {
+      const hasCur = layers.some(function (l) {
+        return (l.kind === "img" && l.url) || (l.kind === "text" && l.text);
+      });
+      // Front + Back: Continue stays off until BOTH surfaces carry a design.
+      apply.disabled = currentPrintLoc === "both"
+        ? !(sideHasContent("front") && sideHasContent("back"))
+        : !hasCur;
+    }
     // Click-to-upload: the big box while the print area is empty, then the small
     // chip at the image's bottom-right corner — the design/text is never covered.
     // Both hide on a side where uploading is off, or once the image limit is hit.
@@ -2955,6 +2962,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     sideLayers = { front: [], back: [] };
     sideActive = { front: null, back: null };
     currentSide = "front";
+    currentPrintLoc = "front";
     layers = sideLayers.front; activeLayerId = null; layerSeq = 0;
     const S = window.DYN_SETTINGS || {};
     const hasBack = backEnabled();
@@ -3073,10 +3081,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
                 '</div>' +
               '</div>' +
               '<div class="side-tabs" role="tablist" hidden>' +
-                '<button type="button" class="side-tab on" data-side="front" role="tab" aria-selected="true">' + escapeHtml(S.frontTabLabel || "Front") + '</button>' +
-                '<button type="button" class="side-tab" data-side="back" role="tab" aria-selected="false">' + escapeHtml(S.backTabLabel || "Back") +
-                  (feeMoney ? '<span class="side-fee">+' + escapeHtml(feeMoney) + '</span>' : '') +
-                '</button>' +
+                '<button type="button" class="side-tab on" data-side="front" role="tab" aria-selected="true">Front design</button>' +
+                '<button type="button" class="side-tab" data-side="back" role="tab" aria-selected="false">Back design</button>' +
               '</div>'
             : '') +
           '<div class="engrave-stage"><div class="engrave-frame">' +
@@ -3191,6 +3197,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       return true;
     }
     function setPrintLoc(loc) {
+      currentPrintLoc = loc;
       document.querySelectorAll(".ploc-chip").forEach(function (c) {
         const on = c.dataset.loc === loc;
         c.classList.toggle("on", on);
@@ -3622,6 +3629,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     sideLayers = { front: [], back: [] };
     sideActive = { front: null, back: null };
     currentSide = "front";
+    currentPrintLoc = "front";
+    document.querySelectorAll(".ploc-chip").forEach(function (c) {
+      var on = c.dataset.loc === "front";
+      c.classList.toggle("on", on); c.setAttribute("aria-checked", String(on));
+    });
+    const tabsEl = document.querySelector(".side-tabs"); if (tabsEl) tabsEl.hidden = true;
     layers = sideLayers.front; activeLayerId = null;
     const pa = q2("#printArea"); if (pa) pa.querySelectorAll(".up-el").forEach((e) => e.remove());
     const t = q2("#upText"); if (t) t.value = "";
