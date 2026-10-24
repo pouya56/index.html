@@ -1897,10 +1897,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (!imgs.length || !curVariantOpts.length) return "";
     for (let i = 0; i < curVariantOpts.length; i++) {
       const val = String(curVariantOpts[i] || "").toLowerCase().trim();
-      if (!val) continue;
+      // Whole words only: size values like "S" otherwise match the "s" inside
+      // any alt text and hijack the merchant's configured back image.
+      if (val.length < 3) continue;
+      const valRe = new RegExp("\\b" + val.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b");
       const hit = imgs.find(function (im) {
         const a = String(im.alt || "").toLowerCase();
-        return a.indexOf("back") > -1 && a.indexOf(val) > -1;
+        return /\bback\b/.test(a) && valRe.test(a);
       });
       if (hit && hit.url) return hit.url;
     }
