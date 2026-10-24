@@ -319,6 +319,29 @@
       else if (!on && !document.documentElement.classList.contains("dyn-designing")) restoreSteps();
       updateStepHead();
     }
+    /* After Edit product, changing colour / size / quantity brings the
+       customer back to the review step once they settle (same as the other
+       Edit rows, which return on their own). */
+    var backTimer = null;
+    function armReturnToReview() {
+      if (!reviewDismissed || !designReadyNow()) return;
+      if (backTimer) clearTimeout(backTimer);
+      backTimer = setTimeout(function () {
+        if (!reviewDismissed || !designReadyNow()) return;
+        reviewDismissed = false;
+        removeReview();          /* rebuild with the new options and price */
+        syncReview();
+        var top = document.getElementById("dynReviewTop");
+        if (top) top.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 1500);
+    }
+    document.addEventListener("click", function (e) {
+      if (e.target.closest && e.target.closest("#buyBox .swatch, #buyBox .pill")) armReturnToReview();
+    });
+    document.addEventListener("input", function (e) {
+      if (e.target && e.target.id === "qtyInput") armReturnToReview();
+    });
+
     (function () {
       var addBtn = document.getElementById("pageAddCart");
       if (addBtn) new MutationObserver(syncReview).observe(addBtn, { attributes: true, attributeFilter: ["hidden"] });
