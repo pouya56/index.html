@@ -84,11 +84,28 @@
       if (applyBtn && pageAdd && !pageAdd.hidden) applyBtn.textContent = "Update design";
       return true;
     }
+    var wasOpen = false;
     function sync() {
       var open = root.classList.contains("open");
       var inline = open && engage();
       document.documentElement.classList.toggle("dyn-designing", inline);
-      if (inline) document.body.style.overflow = ""; /* page stays scrollable */
+      if (inline) {
+        /* page stays scrollable: openModal also sets the no-scroll CLASS,
+           which otherwise keeps the body locked on phones */
+        document.body.style.overflow = "";
+        document.body.classList.remove("no-scroll");
+        /* designing starts from buttons far below the gallery on phones -
+           bring the photo (now the design surface) into view, once per open */
+        if (!wasOpen && stageHolder) {
+          var r = stageHolder.getBoundingClientRect();
+          var vh = window.innerHeight || 0;
+          var visible = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+          if (visible < Math.min(r.height, vh) * 0.6) {
+            stageHolder.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }
+      }
+      wasOpen = open;
       if (!open) {
         if (stageHolder) stageHolder.hidden = true;
         if (toolsHolder) toolsHolder.hidden = true;
