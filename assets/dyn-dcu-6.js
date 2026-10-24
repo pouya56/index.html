@@ -298,6 +298,14 @@
         b.type = "button"; b.className = "rv-row";
         b.textContent = r[0];
         b.addEventListener("click", r[1]);
+        /* circle-fill origin follows the pointer, like Start Designing */
+        function rvOrigin(e) {
+          var rr = b.getBoundingClientRect();
+          b.style.setProperty("--mx", (e.clientX - rr.left) + "px");
+          b.style.setProperty("--my", (e.clientY - rr.top) + "px");
+        }
+        b.addEventListener("pointerenter", rvOrigin);
+        b.addEventListener("pointerleave", rvOrigin);
         reviewCard.appendChild(b);
       });
       bar.parentNode.insertBefore(reviewCard, bar);

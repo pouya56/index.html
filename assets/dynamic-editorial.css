@@ -578,7 +578,7 @@ aside.dyn-cart {
   #dynReviewTop .rv-side.on { background: #0a0a0a; color: #fff; }
   html.dyn-review #dynReviewCard:not([hidden]) {
     display: block; order: 2; flex: 1 1 100%;
-    background: #fff; border: 1px solid rgba(23, 19, 15, 0.12); border-radius: 16px;
+    background: #fff; border: 1px solid rgba(23, 19, 15, 0.12); border-radius: 0;
     padding: 6px 16px 8px; margin: 2px 0 12px;
     box-shadow: 0 12px 28px -20px rgba(23, 19, 15, 0.5);
   }
@@ -696,7 +696,7 @@ aside.dyn-cart {
   #dynReviewTop .rv-side.on { background: #0a0a0a; color: #fff; }
   html.dyn-review #dynReviewCard:not([hidden]) {
     display: block; background: #fff; border: 1px solid rgba(23, 19, 15, 0.12);
-    border-radius: 16px; padding: 6px 16px 8px; margin: 0 0 14px;
+    border-radius: 0; padding: 6px 16px 8px; margin: 0 0 14px;
     box-shadow: 0 12px 28px -20px rgba(23, 19, 15, 0.5);
   }
   #dynReviewCard .rv-chead { display: flex; align-items: center; gap: 12px; padding: 10px 0 12px; border-bottom: 1px solid rgba(23, 19, 15, 0.1); }
@@ -736,4 +736,27 @@ aside.dyn-cart {
     display: grid; grid-template-columns: 1fr 1.25fr; gap: 12px;
   }
   html.dyn-designing #dynInlineTools .modal-foot .foot-actions .btn { width: 100%; }
+}
+
+
+/* ------------------------------------------------------------------
+   Review card Edit rows: the Start-Designing circle-fill, red from
+   wherever the pointer enters, text and chevron flip white.
+   ------------------------------------------------------------------ */
+#dynReviewCard .rv-row {
+  position: relative; overflow: hidden; z-index: 0;
+  transition: color 0.3s ease;
+}
+#dynReviewCard .rv-row::before {
+  content: ""; position: absolute; left: var(--mx, 50%); top: var(--my, 50%);
+  width: 16px; height: 16px; z-index: -1; border-radius: 50%;
+  background: #b3242a; pointer-events: none;
+  transform: translate(-50%, -50%) scale(0); transform-origin: center;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#dynReviewCard .rv-row:hover { color: #fff; }
+#dynReviewCard .rv-row:hover::before { transform: translate(-50%, -50%) scale(110); }
+#dynReviewCard .rv-row:hover::after { color: #fff; }
+@media (prefers-reduced-motion: reduce) {
+  #dynReviewCard .rv-row::before { transition: none; }
 }
