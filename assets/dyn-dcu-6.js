@@ -66,8 +66,10 @@
       if (!stepHead) return;
       var designing = document.documentElement.classList.contains("dyn-designing");
       var review = document.documentElement.classList.contains("dyn-review");
+      var gift = !!window.__dynGiftGate;   // design saved, gift decision pending
       var s = designing ? ["02", "Artwork", "Upload and position your design."]
             : review ? ["04", "Order", "Review your order before adding to cart."]
+            : gift ? ["03", "Gift", "Optional — add a personal touch to your order."]
             : ["01", "Product", "Choose your product, color and size."];
       stepHead.querySelector(".dsh-num").textContent = s[0];
       stepHead.querySelector(".dsh-t").textContent = s[1];
