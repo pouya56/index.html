@@ -770,11 +770,10 @@ aside.dyn-cart {
 }
 
 /* ------------------------------------------------------------------
-   Desktop: the right column centres vertically by default, which
-   leaves the short Artwork / Order panels floating mid-page - during
-   design and review the step panel anchors to the top like step 1.
+   Desktop: the right column always anchors to the top, so every
+   step's heading starts at the same height - no drifting up and down
+   between steps.
    ------------------------------------------------------------------ */
 @media (min-width: 1041px) {
-  html.dyn-designing #buyBox.col-right,
-  html.dyn-review #buyBox.col-right { align-self: start; }
+  #buyBox.col-right { align-self: start; }
 }
