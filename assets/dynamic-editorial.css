@@ -517,6 +517,9 @@ aside.dyn-cart {
 @media (max-width: 860px) {
   #dynDesignTop { order: -2; margin: 2px 0 6px; }
   #dynDesignTop .dyn-steps { margin: 0 0 14px !important; }
+  /* the step strip's one phone home: right under the photo */
+  #dynStepsUnder { padding: 0 20px; }
+  #dynStepsUnder .dyn-steps { margin: 10px 0 6px !important; }
   html.dyn-designing #dynInlineTools:not([hidden]) { display: contents; }
   html.dyn-designing #dynInlineTools .side-tabs,
   html.dyn-designing #dynInlineTools .up-controls { order: 3; flex: 1 1 100%; min-width: 0; }

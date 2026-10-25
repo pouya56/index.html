@@ -22,23 +22,34 @@
     var reapplyPageImage = null; /* re-seeds the stage photo on every re-engagement, not just the first build */
     function isPhone() { return !!(window.matchMedia && window.matchMedia("(max-width: 860px)").matches); }
 
-    /* Phones: the step strip (and the print-location chips) lead the design
-       step, above the photo — like the artwork-step mock. The strip goes
-       back to its home before the action bar when designing ends. */
+    /* Phones: the step strip lives in ONE place — right under the photo —
+       whatever the step. Desktop keeps the full-width band above the page. */
     function moveStepsInto(holder) {
       var steps = document.getElementById("dynSteps");
       if (steps && holder && steps.parentNode !== holder) holder.insertBefore(steps, holder.firstChild);
     }
-    function moveStepsUp() { moveStepsInto(topHolder); }
+    var stepsUnder = null;
+    function phoneStepsHome() {
+      if (stepsUnder && document.contains(stepsUnder)) return stepsUnder;
+      var gal = document.querySelector("main.product .gallery") || document.querySelector(".product .gallery");
+      if (!gal || !gal.parentNode) return null;
+      stepsUnder = document.createElement("div");
+      stepsUnder.id = "dynStepsUnder";
+      gal.parentNode.insertBefore(stepsUnder, gal.nextSibling);
+      return stepsUnder;
+    }
     function restoreSteps() {
       var steps = document.getElementById("dynSteps");
       if (!steps) return;
       if (!isPhone() && stepsBand) { moveStepsInto(stepsBand); return; }
+      var home = isPhone() && phoneStepsHome();
+      if (home) { moveStepsInto(home); return; }
       var bar = document.getElementById("dynActionBar");
       if (bar && bar.parentNode && steps.parentNode !== bar.parentNode) {
         bar.parentNode.insertBefore(steps, bar);
       }
     }
+    function moveStepsUp() { restoreSteps(); }
 
     /* Desktop: the step strip reads as a full-width band above the product
        columns, and the right column leads with a numbered step heading that
@@ -67,10 +78,13 @@
       updateStepHead();
     }
     function updateStepHead() {
-      if (!stepHead) return;
       var designing = document.documentElement.classList.contains("dyn-designing");
       var review = document.documentElement.classList.contains("dyn-review");
       var gift = !!window.__dynGiftGate;   // design saved, gift decision pending
+      /* the gifting state hides the shopping info on EVERY breakpoint, so it
+         is set before the desktop-only heading below */
+      document.documentElement.classList.toggle("dyn-gifting", gift && !designing && !review);
+      if (!stepHead) return;
       var s = designing ? ["02", "Artwork", "Upload and position your design."]
             : review ? ["04", "Order", "Review your order before adding to cart."]
             : gift ? ["03", "Gift", "Optional — add a personal touch to your order."]
@@ -78,7 +92,6 @@
       stepHead.querySelector(".dsh-num").textContent = s[0];
       stepHead.querySelector(".dsh-t").textContent = s[1];
       stepHead.querySelector(".dsh-sub").textContent = s[2];
-      document.documentElement.classList.toggle("dyn-gifting", gift && !designing && !review);
     }
 
     /* Order summary card (phones): thumbnail, name + price, the chosen
@@ -283,7 +296,6 @@
         reviewTop.appendChild(tg);
       }
       galWrap.parentNode.insertBefore(reviewTop, galWrap);
-      if (isPhone()) moveStepsInto(reviewTop);
 
       reviewCard = document.createElement("div");
       reviewCard.id = "dynReviewCard";
@@ -352,8 +364,7 @@
       if (reviewTop) reviewTop.hidden = !on;
       if (reviewCard) reviewCard.hidden = !on;
       if (on) exitProductEdit(false);
-      if (on && isPhone()) moveStepsInto(reviewTop);
-      else if (!on && !document.documentElement.classList.contains("dyn-designing")) restoreSteps();
+      restoreSteps();   /* phones: always under the photo; desktop: the band */
       updateStepHead();
     }
     /* Edit product swaps Add to Cart for an Update button: the customer
@@ -471,6 +482,9 @@
     }
     new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ["class"], childList: true });
     ensureDesktopChrome();
-    [300, 1000, 2500].forEach(function (ms) { setTimeout(ensureDesktopChrome, ms); });
+    restoreSteps();
+    [300, 1000, 2500].forEach(function (ms) {
+      setTimeout(function () { ensureDesktopChrome(); restoreSteps(); }, ms);
+    });
   });
 })();
