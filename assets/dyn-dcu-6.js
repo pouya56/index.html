@@ -19,6 +19,7 @@
     })();
     var stageHolder = null, toolsHolder = null, topHolder = null;
     var appliedOrig = null; /* the untouched product photo, kept while a design preview is painted over it */
+    var reapplyPageImage = null; /* re-seeds the stage photo on every re-engagement, not just the first build */
     function isPhone() { return !!(window.matchMedia && window.matchMedia("(max-width: 860px)").matches); }
 
     /* Phones: the step strip (and the print-location chips) lead the design
@@ -216,6 +217,7 @@
           if (frameImg && src) frameImg.src = src;
         };
         applyPageImage();
+        reapplyPageImage = applyPageImage;
         var onSideClick = function (e) {
           var t = e.target.closest(".side-tab");
           var p = e.target.closest(".ploc-chip");
@@ -229,6 +231,8 @@
       if (!stageHolder || !toolsHolder) return false;
       stageHolder.hidden = false;
       toolsHolder.hidden = false;
+      /* a colour picked since the last session must show on the surface */
+      if (reapplyPageImage) reapplyPageImage();
       if (topHolder) { topHolder.hidden = false; moveStepsUp(); }
       /* re-opening an existing design: the primary reads Update, not Add */
       var applyBtn = toolsHolder.querySelector("#uploadApply");

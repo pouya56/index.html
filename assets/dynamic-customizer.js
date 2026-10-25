@@ -4856,10 +4856,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     modalOpen = true;
     document.body.classList.add("no-scroll");
     // Show the currently-selected variant colour (in case it changed since the
-    // modal was built) — the editor image follows the chosen colour.
-    const efImg = rootEl.querySelector(".engrave-frame > img");
+    // modal was built) — the editor image follows the chosen colour. The inline
+    // flow adopts the stage OUT of the modal root, so fall back to a page-wide
+    // lookup or a re-opened designer keeps the previous colour's photo.
+    const efImg = rootEl.querySelector(".engrave-frame > img") || document.querySelector(".engrave-frame > img");
     if (efImg) { const fi = sideImage(currentSide || "front"); if (fi) efImg.src = fi; }
-    const stImg = rootEl.querySelector("#stageProduct img, .up-stage img");
+    const stImg = rootEl.querySelector("#stageProduct img, .up-stage img") || document.querySelector("#stageProduct img, .up-stage img");
     if (stImg && product && product.image) stImg.src = product.image;
     rootEl.onclick = (e) => { if (!e.target.closest(".modal-sheet")) closeModal(); };
     const sheet = $(".modal-sheet");
