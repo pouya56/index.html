@@ -425,6 +425,9 @@
         exitProductEdit(true);
       }, 350);
     });
+    document.addEventListener("dyn:step-gift", function () {
+      setTimeout(function () { exitProductEdit(false); }, 350);
+    });
 
     var wasOpen = false;
     function sync() {

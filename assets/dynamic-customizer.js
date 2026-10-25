@@ -3701,6 +3701,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (giftSave) giftSave.onclick = () => { decided = true; setOpen(false); sync(); };
     /* Skip next to the pill: counts as handling the gift step. */
     if (skipBtn) skipBtn.onclick = () => { decided = true; sync(); };
+    /* The step strip's Gift step: return to the gift STEP — the inline
+       Make-it-a-gift / Skip stage — not the pop-up. Re-opens the decision
+       even after it was skipped or saved. */
+    document.addEventListener("dyn:step-gift", () => {
+      if (!gateEnabled) { if (openBtn) openBtn.click(); return; }   // plain products: the button IS the step
+      if (!readySeen) return;                                       // needs a saved design
+      decided = false;
+      setOpen(false);
+      sync();
+      const row = openBtn && (openBtn.closest(".dc-gift-row") || openBtn);
+      if (row) setTimeout(() => { try { row.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {} }, 400);
+    });
     if (giftRemove) giftRemove.onclick = () => {
       fields.forEach((f) => { f.value = ""; });
       giftIsGift.checked = false;
@@ -5540,10 +5552,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             return;
           }
           if (!designReady()) return;      // Gift and Order need a saved design
-          if (!last) {                     // Gift options
+          if (!last) {                     // Gift step (the inline stage, not the pop-up)
             closeDesigner();
-            var g = document.getElementById("giftOpenBtn");
-            if (g) setTimeout(function () { g.click(); }, 60);
+            setTimeout(function () { document.dispatchEvent(new CustomEvent("dyn:step-gift")); }, 60);
             return;
           }
           closeDesigner();                 // Order: the review
