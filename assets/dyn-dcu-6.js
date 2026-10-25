@@ -311,8 +311,8 @@
       var rows = [
         ["Edit product", function () { enterProductEdit(); }],
         ["Edit artwork", function () {
-          var st = document.querySelector(".dyn-step.is-link");
-          if (st) st.click();
+          var cb = document.getElementById("customizeBtn");
+          if (cb) cb.click();
         }]
       ];
       if (document.getElementById("giftOpenBtn")) {
@@ -402,6 +402,29 @@
         setTimeout(syncReview, 400);
       });
     })();
+
+    /* Step-strip navigation. The strip closes the designer itself before
+       these fire; the short delay lets that close settle. */
+    function closeGiftModal() {
+      var gm = document.getElementById("giftModal");
+      if (gm && gm.classList.contains("is-open")) {
+        var gc = document.getElementById("giftClose");
+        if (gc) gc.click(); else gm.classList.remove("is-open");
+      }
+    }
+    document.addEventListener("dyn:step-product", function () {
+      setTimeout(function () {
+        closeGiftModal();
+        if (designReadyNow()) enterProductEdit();
+        else { reviewDismissed = true; syncReview(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+      }, 350);
+    });
+    document.addEventListener("dyn:step-order", function () {
+      setTimeout(function () {
+        closeGiftModal();
+        exitProductEdit(true);
+      }, 350);
+    });
 
     var wasOpen = false;
     function sync() {

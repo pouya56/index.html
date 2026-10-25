@@ -5515,20 +5515,41 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         stepEl.appendChild(li);
       });
       actionBar.parentNode.insertBefore(stepEl, actionBar);
-      /* Clickable steps replace the "Edit design" button: Customize and
-         Design reopen the designer, Gift reopens the gift details. The
-         final Add to cart step is a destination, not a link. */
+      /* Clickable steps: each one goes to its actual step. Product shows the
+         options page (any design is kept), Design opens the designer, Gift
+         opens the gift options, and the final step brings up the order
+         review (skipping an undecided gift gate on the way). */
+      var closeDesigner = function () {
+        if (!(modalRoot && modalRoot.classList.contains("open"))) return;
+        var c = document.querySelector(".modal-foot [data-close]") || document.querySelector("#modalRoot [data-close]");
+        if (c) c.click(); else modalRoot.classList.remove("open");
+      };
       Array.prototype.forEach.call(stepEl.querySelectorAll(".dyn-step"), function (li, idx) {
-        if (idx === stepLabels.length - 1) return;
+        var last = idx === stepLabels.length - 1;
         li.classList.add("is-link");
         li.setAttribute("role", "button");
         li.tabIndex = 0;
         var go = function () {
-          if (idx <= 1) { if (customizeBtn) customizeBtn.click(); return; }
-          if (giftStepOn && idx === 2 && designReady()) {
-            var g = document.getElementById("giftOpenBtn");
-            if (g) g.click();
+          if (idx === 0) {                 // Product: colour / size / quantity
+            closeDesigner();
+            document.dispatchEvent(new CustomEvent("dyn:step-product"));
+            return;
           }
+          if (idx === 1) {                 // Artwork: the designer
+            if (!(modalRoot && modalRoot.classList.contains("open")) && customizeBtn) customizeBtn.click();
+            return;
+          }
+          if (!designReady()) return;      // Gift and Order need a saved design
+          if (!last) {                     // Gift options
+            closeDesigner();
+            var g = document.getElementById("giftOpenBtn");
+            if (g) setTimeout(function () { g.click(); }, 60);
+            return;
+          }
+          closeDesigner();                 // Order: the review
+          var sk = document.getElementById("giftSkipBtn");
+          if (window.__dynGiftGate && sk) sk.click();
+          document.dispatchEvent(new CustomEvent("dyn:step-order"));
         };
         li.addEventListener("click", go);
         li.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
