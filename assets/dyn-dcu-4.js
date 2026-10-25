@@ -111,6 +111,20 @@
       });
     }
 
+    /* Choosing a colour variant brings that colour's photo to the front of the
+       deck (the app announces the variant's image; sizes differ only in the
+       query string, so cards match on pathname). */
+    document.addEventListener("dyn:variant-image", function (e) {
+      var u = e.detail && e.detail.url; if (!u) return;
+      var path = String(u).split("?")[0];
+      var at = -1;
+      imgs.forEach(function (x, i) { if (String(x).split("?")[0] === path) at = i; });
+      if (at < 0) return;
+      var pos = order.indexOf(at);
+      if (pos > 0) { order = order.slice(pos).concat(order.slice(0, pos)); layout(); }
+      markThumb();
+    });
+
     /* Drag the front card to flip through. */
     var startX = 0, dx = 0, dragging = false, frontEl = null;
     function onDown(e) {

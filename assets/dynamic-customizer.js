@@ -1536,6 +1536,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         if (!img) { const alt = variants.find((vv) => vv.image && (vv.options || [])[0] === (v.options || [])[0]); if (alt) img = alt.image; }
         curVariantImage = img || "";
         window.__dynVariantImage = curVariantImage;   // the flow module reads this when seeding the stage
+        // the card-deck gallery listens and brings this colour's photo to the front
+        if (img) { try { document.dispatchEvent(new CustomEvent("dyn:variant-image", { detail: { url: img } })); } catch (e) {} }
         if (img && img !== product.image) {
           product.image = img;
           galIndex = 0;
@@ -1965,18 +1967,24 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       try {
         const c = document.createElement("canvas"); c.width = 48; c.height = 48;
         const x = c.getContext("2d", { willReadFrequently: true });
+        // Composite over the stage's light backdrop first — that's what the
+        // customer sees behind a transparent cut-out, and it keeps a soft drop
+        // shadow from reading as "dark product".
+        x.fillStyle = "#edebe6"; x.fillRect(0, 0, 48, 48);
         const nw = im.naturalWidth || 1, nh = im.naturalHeight || 1;
         x.drawImage(im,
           (P.x != null ? P.x : 22) / 100 * nw, (P.y != null ? P.y : 30) / 100 * nh,
           (P.w > 0 ? P.w : 56) / 100 * nw, (P.h > 0 ? P.h : 40) / 100 * nh,
           0, 0, 48, 48);
         const d = x.getImageData(0, 0, 48, 48).data;
-        let sum = 0, n = 0;
+        const lum = [];
         for (let i = 0; i < d.length; i += 4) {
-          if (d[i + 3] < 40) continue;       // transparent background around a cut-out
-          sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; n++;
+          lum.push(0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]);
         }
-        dark = n > 50 && sum / n < 112;
+        // Median, not mean: the dominant surface decides, so a shadow or dark
+        // trim covering a minority of the patch can't flip the ink.
+        lum.sort(function (a, b) { return a - b; });
+        dark = lum[Math.floor(lum.length / 2)] < 120;
         _lumDark[key] = dark;
       } catch (e) {}                         // tainted canvas etc — keep the dark default
       cb(dark);
