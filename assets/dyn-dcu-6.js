@@ -49,6 +49,9 @@
       var buyBox = document.getElementById("buyBox");
       var prod = document.querySelector("main.product") || document.querySelector(".product");
       if (!buyBox || !prod || !prod.parentNode) return;
+      /* the surprise-me popup injects the product page - it's a quick
+         preview, so no steps band or numbered heading there */
+      if (buyBox.closest(".dh-slide-inject")) return;
       if (!stepHead) {
         stepHead = document.createElement("div");
         stepHead.id = "dynStepHead";

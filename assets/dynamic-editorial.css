@@ -800,3 +800,9 @@ html.dyn-gifting #buyBox > details { display: none !important; }
   html.dyn-designing #buyBox > .reassure,
   html.dyn-gifting #buyBox > .reassure { display: none !important; }
 }
+
+/* The surprise-me popup is a quick product preview — the purchase-flow
+   step strip and numbered heading stay off inside it. */
+.dh-slide-inject .dyn-steps,
+.dh-slide-inject #dynStepsBand,
+.dh-slide-inject #dynStepHead { display: none !important; }
