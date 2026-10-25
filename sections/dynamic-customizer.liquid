@@ -1103,7 +1103,7 @@
     a.appendChild(document.createTextNode(dyxLbl));
     slot.appendChild(a);
     var dyxNote = {{ blk_bulk.settings.bulk_link_note | json }};
-    if (!dyxNote || /volume pricing from 10/i.test(dyxNote)) dyxNote = "Ordering 25 or more? We’ll prepare custom pricing and production options.";
+    if (!dyxNote || /volume pricing from 10/i.test(dyxNote)) dyxNote = "Ordering 12 or more? We’ll prepare custom pricing and production options.";
     if (dyxNote !== "hide") {
       var note = document.createElement("div");
       note.className = "bulk-note";
@@ -1986,7 +1986,7 @@
           "type": "text",
           "id": "bulk_link_note",
           "label": "Small note under the button",
-          "default": "Ordering 25 or more? We'll prepare custom pricing and production options.",
+          "default": "Ordering 12 or more? We'll prepare custom pricing and production options.",
           "info": "Type hide to remove it."
         }
       ]
