@@ -530,7 +530,10 @@ aside.dyn-cart {
   html.dyn-designing #dynInlineTools .modal-foot .foot-actions {
     display: grid; grid-template-columns: 1fr 1.25fr; gap: 12px;
   }
-  html.dyn-designing #dynInlineTools .modal-foot .foot-actions .btn { width: 100%; }
+  html.dyn-designing #dynInlineTools .modal-foot .foot-actions .btn {
+    width: 100%; min-width: 0; padding-left: 8px; padding-right: 8px;
+    font-size: 13px; letter-spacing: 0.05em; white-space: nowrap;
+  }
   html.dyn-designing #dynDesignSummary {
     order: 6; flex: 1 1 100%; display: flex; align-items: center; gap: 12px;
     background: #fff; border: 1px solid rgba(23, 19, 15, 0.12); border-radius: 14px;
@@ -733,9 +736,12 @@ aside.dyn-cart {
   html.dyn-review #buyBox > #pName,
   html.dyn-review #buyBox > .eyebrow { display: none !important; }
   html.dyn-designing #dynInlineTools .modal-foot .foot-actions {
-    display: grid; grid-template-columns: 1fr 1.25fr; gap: 12px;
+    display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px;
   }
-  html.dyn-designing #dynInlineTools .modal-foot .foot-actions .btn { width: 100%; }
+  html.dyn-designing #dynInlineTools .modal-foot .foot-actions .btn {
+    width: 100%; min-width: 0; padding-left: 10px; padding-right: 10px;
+    font-size: 13px; letter-spacing: 0.05em; white-space: nowrap;
+  }
 }
 
 
