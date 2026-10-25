@@ -317,8 +317,8 @@
       ];
       if (document.getElementById("giftOpenBtn")) {
         rows.push(["Edit gift options", function () {
-          var g = document.getElementById("giftOpenBtn");
-          if (g) g.click();
+          /* same destination as the step strip: the inline gift step */
+          document.dispatchEvent(new CustomEvent("dyn:step-gift"));
         }]);
       }
       rows.forEach(function (r) {
