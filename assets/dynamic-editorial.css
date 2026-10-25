@@ -768,3 +768,13 @@ aside.dyn-cart {
 @media (prefers-reduced-motion: reduce) {
   #dynReviewCard .rv-row::before { transition: none; }
 }
+
+/* ------------------------------------------------------------------
+   Desktop: the right column centres vertically by default, which
+   leaves the short Artwork / Order panels floating mid-page - during
+   design and review the step panel anchors to the top like step 1.
+   ------------------------------------------------------------------ */
+@media (min-width: 1041px) {
+  html.dyn-designing #buyBox.col-right,
+  html.dyn-review #buyBox.col-right { align-self: start; }
+}
