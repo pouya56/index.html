@@ -4947,7 +4947,8 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     tag: '<path d="M4 12V5a1 1 0 0 1 1-1h7l8 8-8 8-8-8Z" stroke-width="1.5"></path><circle cx="8.5" cy="8.5" r="1.2" stroke-width="1.5"></circle>',
     leaf: '<path d="M5 19C5 11 11 5 19 5c0 8-6 14-14 14Z" stroke-width="1.5"></path><path d="M5 19c3-5 7-7 10-8" stroke-width="1.5"></path>',
     lock: '<rect x="5" y="11" width="14" height="9" rx="1.5" stroke-width="1.5"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke-width="1.5"></path>',
-    badge: '<circle cx="12" cy="9" r="5" stroke-width="1.5"></circle><path d="M9 13.2 7.5 21l4.5-2.6L16.5 21 15 13.2" stroke-width="1.5"></path>'
+    badge: '<circle cx="12" cy="9" r="5" stroke-width="1.5"></circle><path d="M9 13.2 7.5 21l4.5-2.6L16.5 21 15 13.2" stroke-width="1.5"></path>',
+    liberty: '<circle cx="10.5" cy="8.7" r="1.8" stroke-width="1.5"></circle><path d="M8.8 7 7.9 4.8M10.5 6.5V4.1M12.2 7l.9-2.2" stroke-width="1.5"></path><path d="M12 10.5l4.6-4.5" stroke-width="1.5"></path><circle cx="17.6" cy="4.9" r="1" stroke-width="1.5"></circle><path d="M8.9 10.8 7.4 19.6h7.4l-1.4-7.3" stroke-width="1.5"></path>'
   };
 
   // Finished-product sample button + popup — injected into whichever modal is
