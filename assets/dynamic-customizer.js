@@ -2287,10 +2287,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (!c.__dynEdit) {
       c.__dynEdit = true;
       c.addEventListener("pointerdown", function (ev) { ev.stopPropagation(); });
-      c.addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); c.blur(); } });
+      // Enter adds a line (the box auto-shrinks to stay in the print area);
+      // Escape or clicking elsewhere commits.
+      c.addEventListener("keydown", function (ev) {
+        if (ev.key === "Escape") { ev.preventDefault(); c.blur(); }
+      });
       c.addEventListener("input", function () {
-        let v = (c.textContent || "").replace(/\n/g, "").slice(0, 60);
-        if (v !== c.textContent) c.textContent = v;
+        // innerText keeps line breaks even when the browser falls back to
+        // full contenteditable (where Enter makes <br>, not \n).
+        let v = (c.innerText != null ? c.innerText : c.textContent || "").slice(0, 120);
         layer.text = v;
         renderUpEls();
         const area = q2("#printArea");
@@ -2298,7 +2303,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       });
       c.addEventListener("blur", function () {
         c.contentEditable = "false"; c.style.pointerEvents = "";
-        layer.text = (c.textContent || "").trim();
+        layer.text = (c.innerText != null ? c.innerText : c.textContent || "").replace(/\n+$/, "").trim();
         if (!layer.text) removeLayer(layer.id); else renderUpEls();
       });
     }
@@ -2685,8 +2690,18 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
             }
           });
         };
+        // Oval print areas crop the design to the ellipse, matching the
+        // engraving; rectangles stay uncropped (designs may poke past).
+        const oval = P.shape === "circle";
+        const clipOval = (ox, oy) => {
+          ctx.beginPath();
+          ctx.ellipse(aX + ox + aW / 2, aY + oy + aH / 2, aW / 2, aH / 2, 0, 0, Math.PI * 2);
+          ctx.clip();
+        };
         const paint = () => {
+          if (oval) { ctx.save(); clipOval(0, 0); }
           drawAll(0, 0);
+          if (oval) { try { ctx.restore(); } catch (_) {} }
           try { ctx.restore(); } catch (_) {}
           // Echo pad: repeat the design at the configured offset, clipped to
           // its own pad, so the composed preview matches the designer stage.
@@ -2694,6 +2709,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           const mdx = ((+MS.mirrorDX || 0) / 100) * W, mdy = ((+MS.mirrorDY || 0) / 100) * H;
           if (mdx || mdy) {
             ctx.save();
+            if (oval) clipOval(mdx, mdy);
             drawAll(mdx, mdy);
             ctx.restore();
           }
