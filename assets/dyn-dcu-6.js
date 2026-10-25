@@ -183,6 +183,12 @@
         /* same image as the page: the front view shows the photo the
            customer was just looking at, not the designer's own mock */
         var applyPageImage = function () {
+          /* A configured Front image is a calibrated mock - the print-area
+             coordinates were set against it (e.g. the mug's wrap template),
+             so never swap it for an arbitrary gallery photo. The designer
+             already picks the right surface (variant photo, then the
+             configured front image) on its own. */
+          if ((window.DYN_SETTINGS || {}).frontImage) return;
           var pageImg = document.querySelector(".gallery-main .dyn-cards img") ||
                         document.querySelector("#galleryStage img");
           var frameImg = stageHolder && stageHolder.querySelector(".engrave-frame > img");
