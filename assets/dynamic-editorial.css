@@ -520,11 +520,7 @@ aside.dyn-cart {
   html.dyn-designing #dynInlineTools:not([hidden]) { display: contents; }
   html.dyn-designing #dynInlineTools .side-tabs,
   html.dyn-designing #dynInlineTools .up-controls { order: 3; flex: 1 1 100%; min-width: 0; }
-  html.dyn-designing #buyBox > .reassure {
-    order: 4; flex: 1 1 100%; display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 8px; background: rgba(23, 19, 15, 0.05); border-radius: 12px;
-    padding: 12px 8px; margin: 2px 0 4px;
-  }
+  /* the trust row steps aside with the other shopping info on steps 2-3 */
   html.dyn-designing #dynInlineTools .modal-foot { order: 5; flex: 1 1 100%; margin: 4px 0 0; }
   html.dyn-designing #dynInlineTools .modal-foot .price-breakdown-toggle { display: none; }
   html.dyn-designing #dynInlineTools .modal-foot .foot-actions {
@@ -796,10 +792,8 @@ html.dyn-gifting #buyBox > .price-row,
 html.dyn-gifting #buyBox > .opt-group,
 html.dyn-gifting #buyBox > .opt-group > *,
 html.dyn-gifting #buyBox > details { display: none !important; }
-@media (min-width: 861px) {
-  html.dyn-designing #buyBox > .reassure,
-  html.dyn-gifting #buyBox > .reassure { display: none !important; }
-}
+html.dyn-designing #buyBox > .reassure,
+html.dyn-gifting #buyBox > .reassure { display: none !important; }
 
 /* The surprise-me popup is a quick product preview — the purchase-flow
    step strip and numbered heading stay off inside it. */
