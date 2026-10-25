@@ -195,9 +195,11 @@
           var pageImg = document.querySelector(".gallery-main .dyn-cards img") ||
                         document.querySelector("#galleryStage img");
           var frameImg = stageHolder && stageHolder.querySelector(".engrave-frame > img");
-          /* never seed the designer with an already-composited preview - the
+          /* the chosen colour's own photo wins (white pen vs black pen);
+             never seed the designer with an already-composited preview - the
              live layers would print on top of themselves */
-          var src = appliedOrig || (pageImg && (pageImg.currentSrc || pageImg.src));
+          var src = window.__dynVariantImage || appliedOrig ||
+                    (pageImg && (pageImg.currentSrc || pageImg.src));
           if (frameImg && src) frameImg.src = src;
         };
         applyPageImage();

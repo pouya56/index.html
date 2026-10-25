@@ -1535,6 +1535,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         let img = v.image;
         if (!img) { const alt = variants.find((vv) => vv.image && (vv.options || [])[0] === (v.options || [])[0]); if (alt) img = alt.image; }
         curVariantImage = img || "";
+        window.__dynVariantImage = curVariantImage;   // the flow module reads this when seeding the stage
         if (img && img !== product.image) {
           product.image = img;
           galIndex = 0;
@@ -1553,6 +1554,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           const fi2 = sideImage(currentSide || "front");
           if (ef2 && fi2 && ef2.getAttribute("src") !== fi2) ef2.src = fi2;
         }
+        refreshAutoInk();   // dark pen ↔ light pen: default text colour follows the surface
       }
       return v;
     }
@@ -1940,6 +1942,64 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const S = window.DYN_SETTINGS || {};
     return (side === "back" ? S.printBack : S.print) || {};
   }
+
+  // ---- Adaptive engraving ink: light text on a dark product, dark on a light one.
+  // The print-area patch of the surface photo is sampled once per image and cached.
+  const _lumDark = {};                       // image url (sans query) -> true when dark
+  function inkFor(dark) { return dark ? "#ffffff" : "#1d1d1f"; }
+  function customInkSet() {
+    // A merchant-chosen engrave colour (anything but the two defaults) always wins.
+    const eg = (window.DYN_SETTINGS && window.DYN_SETTINGS.engrave) || {};
+    const c = String(eg.color || "").toLowerCase();
+    return !!(c && c !== "#9a9ba2" && c !== "#1d1d1f");
+  }
+  function surfaceIsDark(side, cb) {
+    const url = sideImage(side || "front");
+    if (!url) { cb(false); return; }
+    const key = String(url).split("?")[0];
+    if (key in _lumDark) { cb(_lumDark[key]); return; }
+    const P = sidePrint(side || "front") || {};
+    const im = new Image(); im.crossOrigin = "anonymous";
+    im.onload = function () {
+      let dark = false;
+      try {
+        const c = document.createElement("canvas"); c.width = 48; c.height = 48;
+        const x = c.getContext("2d", { willReadFrequently: true });
+        const nw = im.naturalWidth || 1, nh = im.naturalHeight || 1;
+        x.drawImage(im,
+          (P.x != null ? P.x : 22) / 100 * nw, (P.y != null ? P.y : 30) / 100 * nh,
+          (P.w > 0 ? P.w : 56) / 100 * nw, (P.h > 0 ? P.h : 40) / 100 * nh,
+          0, 0, 48, 48);
+        const d = x.getImageData(0, 0, 48, 48).data;
+        let sum = 0, n = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i + 3] < 40) continue;       // transparent background around a cut-out
+          sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; n++;
+        }
+        dark = n > 50 && sum / n < 112;
+        _lumDark[key] = dark;
+      } catch (e) {}                         // tainted canvas etc — keep the dark default
+      cb(dark);
+    };
+    im.onerror = function () { cb(false); };
+    im.src = url;
+  }
+  // Re-colours every auto-inked text layer to suit its side's current surface
+  // (new text, a colour-variant switch, a side switch).
+  function refreshAutoInk() {
+    ["front", "back"].forEach(function (sd) {
+      const arr = (sideLayers && sideLayers[sd]) || [];
+      if (!arr.some(function (l) { return l.kind === "text" && l.autoInk; })) return;
+      surfaceIsDark(sd, function (dark) {
+        const ink = inkFor(dark);
+        let changed = false;
+        arr.forEach(function (l) {
+          if (l.kind === "text" && l.autoInk && l.color !== ink) { l.color = ink; changed = true; }
+        });
+        if (changed) renderUpEls();
+      });
+    });
+  }
   function sideHasContent(side) {
     return (sideLayers[side] || []).some(function (l) {
       return (l.kind === "img" && l.url) || (l.kind === "text" && l.text);
@@ -2262,15 +2322,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     pruneEmptyText();
     if (countKind("text") >= MAX_TXT) { toast("Up to " + MAX_TXT + " text boxes"); return null; }
     const eg = (window.DYN_SETTINGS && window.DYN_SETTINGS.engrave) || {};
+    const custom = customInkSet();
+    const key = String(sideImage(currentSide || "front") || "").split("?")[0];
     const layer = Object.assign({
       id: ++layerSeq, kind: "text", x: 50, y: freeTextY(), size: 12, rotate: 0,
       font: UPLOAD_FONTS[0].stack,
-      color: (eg.color && eg.color !== "#9a9ba2" ? eg.color : "#1d1d1f"), text: ""
+      color: custom ? eg.color : inkFor(!!_lumDark[key]), text: ""
     }, geom || {});
+    // No merchant-set ink and no restored colour: follow the surface brightness.
+    if (!custom && !(geom && geom.color)) layer.autoInk = true;
     layers.push(layer);
     createLayerEl(layer);
     activeLayerId = layer.id;
     renderUpEls();
+    if (layer.autoInk) refreshAutoInk();   // corrects async once the photo is sampled
     return layer;
   }
 
