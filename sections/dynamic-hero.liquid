@@ -84,6 +84,11 @@ animation: dhShimmer 1.7s linear infinite; }
 border: 1px solid rgba(255,255,255,0.7);
 box-shadow: 0 6px 14px rgba(0,0,0,0.08), 0 80px 130px -28px rgba(29,29,31,0.55); }
 
+/* phones: the surprise window fills the screen — 50vw is a sliver there */
+@media (max-width: 700px) {
+  #dhSlide.dh-slide-half .dh-slide-panel { width: calc(100vw - 16px); height: 94vh; border-radius: 18px; }
+}
+
 @media (prefers-reduced-motion: reduce) { #dhSlide .dh-slide-hint svg { animation: none; } }
 </style>
 
