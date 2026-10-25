@@ -212,7 +212,10 @@
         if (ctr) toolsHolder.appendChild(ctr);
         if (foot) toolsHolder.appendChild(foot);
         bar.parentNode.insertBefore(toolsHolder, bar.nextSibling);
-        if (isPhone()) buildSummary();
+        /* summary card removed from the phone design step per request -
+           the review step carries the order details instead */
+        var oldSum = document.getElementById("dynDesignSummary");
+        if (oldSum) oldSum.remove();
         /* same image as the page: the front view shows the photo the
            customer was just looking at, not the designer's own mock */
         var applyPageImage = function () {
