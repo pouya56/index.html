@@ -408,7 +408,7 @@
       </div>
 
       <div class="opt-group">
-        <div class="opt-label">Model <span id="colorName">AirPods Pro 3</span></div>
+        <div class="opt-label">Model <span id="colorName">{% endraw %}{% if dyn_product %}{{ dyn_product.title | escape }}{% endif %}{% raw %}</span></div>
         <div class="swatches" id="pColors"></div>
       </div>
 
@@ -1266,7 +1266,7 @@
       "type": "text",
       "id": "engrave_title",
       "label": "Popup title",
-      "default": "Personalize your AirPods."
+      "default": "Personalize your product."
     },
     {
       "type": "textarea",
