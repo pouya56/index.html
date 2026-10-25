@@ -186,6 +186,8 @@
        bulb rests dark; while the window is open it lights up (second
        image) with a warm glow, and switches off when it closes. */
     .dyn-abar .dh-has-bulb { width: 80px; height: 120px; }
+    /* phones: the bulb reads 30% smaller */
+    @media (max-width: 860px) { .dyn-abar .dh-has-bulb { width: 56px; height: 84px; } }
     .dyn-abar .dh-has-bulb .dh-orb-shape, .dyn-abar .dh-has-bulb .dh-orb-eyes { display: none; }
     /* the bulb has no moods: every emotion animation, wobble, bounce,
        sleep-breathing and doodad is switched off in bulb mode */
