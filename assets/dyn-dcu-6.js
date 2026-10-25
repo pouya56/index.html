@@ -138,6 +138,19 @@
       }
     }
 
+    /* A colour switch re-composites the applied previews on the new photo
+       (the app republishes them async). Keep the restore point on the new
+       colour and repaint the page cards as the fresh composite lands. */
+    document.addEventListener("dyn:variant-image", function (e) {
+      var u = e.detail && e.detail.url; if (!u) return;
+      if (appliedOrig !== null) appliedOrig = u;
+      var tries = 0;
+      (function poll() {
+        paintAppliedPreview();
+        if (++tries < 10) setTimeout(poll, 250);
+      })();
+    });
+
     function cleanup() {
       restoreSteps();
       if (stageHolder && stageHolder.parentNode) stageHolder.parentNode.removeChild(stageHolder);

@@ -1556,7 +1556,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           const fi2 = sideImage(currentSide || "front");
           if (ef2 && fi2 && ef2.getAttribute("src") !== fi2) ef2.src = fi2;
         }
-        refreshAutoInk();   // dark pen ↔ light pen: default text colour follows the surface
+        // dark pen ↔ light pen: default text colour follows the surface; once
+        // the inks settle, re-composite any applied previews on the new photo
+        // so the page gallery doesn't keep showing the previous colour.
+        refreshAutoInk(function () {
+          if (window.DYN_DESIGN_PREVIEWS && (sideHasContent("front") || sideHasContent("back"))) publishDesignUrls();
+        });
       }
       return v;
     }
@@ -1993,18 +1998,24 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     im.src = url;
   }
   // Re-colours every auto-inked text layer to suit its side's current surface
-  // (new text, a colour-variant switch, a side switch).
-  function refreshAutoInk() {
-    ["front", "back"].forEach(function (sd) {
+  // (new text, a colour-variant switch, a side switch). `done` fires once both
+  // sides have settled, so callers can re-composite previews with final inks.
+  function refreshAutoInk(done) {
+    const sides = ["front", "back"].filter(function (sd) {
       const arr = (sideLayers && sideLayers[sd]) || [];
-      if (!arr.some(function (l) { return l.kind === "text" && l.autoInk; })) return;
+      return arr.some(function (l) { return l.kind === "text" && l.autoInk; });
+    });
+    let waiting = sides.length;
+    if (!waiting) { if (done) done(); return; }
+    sides.forEach(function (sd) {
       surfaceIsDark(sd, function (dark) {
         const ink = inkFor(dark);
         let changed = false;
-        arr.forEach(function (l) {
+        ((sideLayers && sideLayers[sd]) || []).forEach(function (l) {
           if (l.kind === "text" && l.autoInk && l.color !== ink) { l.color = ink; changed = true; }
         });
         if (changed) renderUpEls();
+        if (--waiting === 0 && done) done();
       });
     });
   }
