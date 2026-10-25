@@ -74,6 +74,7 @@
       stepHead.querySelector(".dsh-num").textContent = s[0];
       stepHead.querySelector(".dsh-t").textContent = s[1];
       stepHead.querySelector(".dsh-sub").textContent = s[2];
+      document.documentElement.classList.toggle("dyn-gifting", gift && !designing && !review);
     }
 
     /* Order summary card (phones): thumbnail, name + price, the chosen

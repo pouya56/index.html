@@ -777,3 +777,26 @@ aside.dyn-cart {
 @media (min-width: 1041px) {
   #buyBox.col-right { align-self: start; }
 }
+
+/* ------------------------------------------------------------------
+   Steps 2 and 3 show only the step's own controls: the social/review
+   row, bulk pricing and the info accordions step aside, and the gift
+   step also hides the name, price and pickers like the artwork step.
+   The benefits row stays on phones (part of the phone artwork mock).
+   ------------------------------------------------------------------ */
+html.dyn-designing .ig-social,
+html.dyn-gifting .ig-social,
+html.dyn-designing .bulk-link,
+html.dyn-designing .bulk-note,
+html.dyn-gifting .bulk-link,
+html.dyn-gifting .bulk-note { display: none !important; }
+html.dyn-gifting #buyBox > #pName,
+html.dyn-gifting #buyBox > .eyebrow,
+html.dyn-gifting #buyBox > .price-row,
+html.dyn-gifting #buyBox > .opt-group,
+html.dyn-gifting #buyBox > .opt-group > *,
+html.dyn-gifting #buyBox > details { display: none !important; }
+@media (min-width: 861px) {
+  html.dyn-designing #buyBox > .reassure,
+  html.dyn-gifting #buyBox > .reassure { display: none !important; }
+}
