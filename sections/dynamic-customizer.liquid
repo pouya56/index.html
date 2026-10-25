@@ -233,14 +233,14 @@
     "addcartLabel": {{ 'Add to Cart' | json }},
     "customPrintLabel": {{ 'Custom print' | json }},
     "reassure": [
-      {{ section.settings.reassure_1 | default: 'Free delivery' | json }},
-      {{ section.settings.reassure_2 | default: 'Made in 3–5 days' | json }},
-      {{ section.settings.reassure_3 | default: 'Free & easy returns' | json }}
+      {{ section.settings.reassure_1 | default: 'Made in 3–5 days' | json }},
+      {{ section.settings.reassure_2 | default: 'Quality checked' | json }},
+      {{ section.settings.reassure_3 | default: 'Customized in NYC' | json }}
     ],
     "reassureIcons": [
-      {{ section.settings.reassure_1_icon | default: 'truck' | json }},
-      {{ section.settings.reassure_2_icon | default: 'clock' | json }},
-      {{ section.settings.reassure_3_icon | default: 'check' | json }}
+      {{ section.settings.reassure_1_icon | default: 'clock' | json }},
+      {{ section.settings.reassure_2_icon | default: 'check' | json }},
+      {{ section.settings.reassure_3_icon | default: 'liberty' | json }}
     ],
     "engraveTitle": {{ blk_m.settings.popup_title | default: section.settings.engrave_title | default: '' | json }},
     "engraveSub": {{ blk_m.settings.popup_sub | default: section.settings.engrave_sub | default: '' | json }},
@@ -458,16 +458,16 @@
 
       <div class="reassure">
         <div class="reassure-item" data-reassure-item="0">
-          <span class="reassure-ic" data-reassure-ic="0"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7h13v8H3z" stroke-width="1.5"></path><path d="M16 10h3l2 3v2h-5" stroke-width="1.5"></path><circle cx="7" cy="17" r="1.6" stroke-width="1.5"></circle><circle cx="17" cy="17" r="1.6" stroke-width="1.5"></circle></svg></span>
-          <span data-reassure="0">Free delivery</span>
+          <span class="reassure-ic" data-reassure-ic="0"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 1 8 8" stroke-width="1.5"></path><path d="M12 8v4l3 2" stroke-width="1.5"></path></svg></span>
+          <span data-reassure="0">Made in 3–5 days</span>
         </div>
         <div class="reassure-item" data-reassure-item="1">
-          <span class="reassure-ic" data-reassure-ic="1"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 1 8 8" stroke-width="1.5"></path><path d="M12 8v4l3 2" stroke-width="1.5"></path></svg></span>
-          <span data-reassure="1">Made in 3–5 days</span>
+          <span class="reassure-ic" data-reassure-ic="1"><svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke-width="1.5"></path></svg></span>
+          <span data-reassure="1">Quality checked</span>
         </div>
         <div class="reassure-item" data-reassure-item="2">
-          <span class="reassure-ic" data-reassure-ic="2"><svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke-width="1.5"></path></svg></span>
-          <span data-reassure="2">Free &amp; easy returns</span>
+          <span class="reassure-ic" data-reassure-ic="2"><svg viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="8.7" r="1.8" stroke-width="1.5"></circle><path d="M8.8 7 7.9 4.8M10.5 6.5V4.1M12.2 7l.9-2.2" stroke-width="1.5"></path><path d="M12 10.5l4.6-4.5" stroke-width="1.5"></path><circle cx="17.6" cy="4.9" r="1" stroke-width="1.5"></circle><path d="M8.9 10.8 7.4 19.6h7.4l-1.4-7.3" stroke-width="1.5"></path></svg></span>
+          <span data-reassure="2">Customized in NYC</span>
         </div>
       </div>
 
@@ -1300,13 +1300,13 @@
       "type": "text",
       "id": "reassure_1",
       "label": "Trust item 1",
-      "default": "Free delivery"
+      "default": "Made in 3–5 days"
     },
     {
       "type": "select",
       "id": "reassure_1_icon",
       "label": "Trust item 1 icon",
-      "default": "truck",
+      "default": "clock",
       "options": [
         {
           "value": "truck",
@@ -1366,13 +1366,13 @@
       "type": "text",
       "id": "reassure_2",
       "label": "Trust item 2",
-      "default": "Made in 3–5 days"
+      "default": "Quality checked"
     },
     {
       "type": "select",
       "id": "reassure_2_icon",
       "label": "Trust item 2 icon",
-      "default": "clock",
+      "default": "check",
       "options": [
         {
           "value": "truck",
@@ -1432,13 +1432,13 @@
       "type": "text",
       "id": "reassure_3",
       "label": "Trust item 3",
-      "default": "Free & easy returns"
+      "default": "Customized in NYC"
     },
     {
       "type": "select",
       "id": "reassure_3_icon",
       "label": "Trust item 3 icon",
-      "default": "check",
+      "default": "liberty",
       "options": [
         {
           "value": "truck",
