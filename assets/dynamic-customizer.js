@@ -1623,13 +1623,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   const COLOR_NAMES = {
     white: "#ffffff", black: "#111111", silver: "#c9ccce", gray: "#8e8e93", grey: "#8e8e93",
     "space gray": "#4b4e52", "space grey": "#4b4e52", graphite: "#3b3b3d", charcoal: "#36454f",
-    red: "#e0233b", "product red": "#e0233b", crimson: "#b81d24", maroon: "#7b1e28",
+    red: "#e0233b", "product red": "#e0233b", crimson: "#b81d24", maroon: "#7b1e28", burgundy: "#6e1423",
     orange: "#f56300", coral: "#ff6f61", peach: "#ffc1a6", gold: "#f3d9a1", "rose gold": "#e8c3b0",
-    yellow: "#ffcf1a", cream: "#f5efe0", beige: "#e4d5b7", ivory: "#fffff0", tan: "#d2b48c",
-    green: "#1f9e46", "midnight green": "#1c3b34", olive: "#708238", mint: "#a8e6cf", teal: "#009999", sage: "#9caf88",
-    blue: "#0a63c9", navy: "#1c2b4a", "sky blue": "#87c5f0", "sierra blue": "#a3c4dc", "pacific blue": "#1a5f8a", turquoise: "#40c4b4", cyan: "#22b8cf",
+    yellow: "#ffcf1a", cream: "#f5efe0", beige: "#e4d5b7", ivory: "#fffff0", tan: "#d2b48c", champagne: "#f1e3c8",
+    green: "#1f9e46", "midnight green": "#1c3b34", olive: "#708238", mint: "#a8e6cf", teal: "#009999", sage: "#9caf88", "sage green": "#9caf88", emerald: "#0f8a5f",
+    blue: "#0a63c9", navy: "#1c2b4a", "sky blue": "#87c5f0", "light blue": "#a8cfe6", "sierra blue": "#a3c4dc", "pacific blue": "#1a5f8a", turquoise: "#40c4b4", cyan: "#22b8cf",
     purple: "#7b2fbe", violet: "#8f5bd6", lavender: "#c9a7eb", indigo: "#4b3b8f", plum: "#7a3b5d",
-    pink: "#ff5c8a", "hot pink": "#ff2d78", magenta: "#d6249f", fuchsia: "#e84393", "rose": "#e8b0c0",
+    pink: "#ff5c8a", "hot pink": "#ff2d78", magenta: "#d6249f", fuchsia: "#e84393", "rose": "#e8b0c0", blush: "#f4c6c3", "dusty rose": "#c98e8e",
     brown: "#6b4a2b", chocolate: "#4b3320", coffee: "#5c4433", khaki: "#bdb290",
     midnight: "#1a1a2e", starlight: "#f0ead6", natural: "#e8ded0", clear: "#e8f0f2", transparent: "#e8f0f2",
   };
