@@ -121,6 +121,7 @@
     "methodUploadBack": {% if blk_m != blank %}{% if blk_m.settings.allow_upload_back %}true{% else %}false{% endif %}{% else %}null{% endif %},
     "methodText": {% if blk_m != blank %}{% if blk_m.settings.allow_text %}true{% else %}false{% endif %}{% else %}null{% endif %},
     "madeToOrder": {% if dyn_product.tags contains 'made-to-order' or dyn_product.tags contains 'made_to_order' %}true{% else %}false{% endif %},
+    "fxUnroll": {% if section.settings.fx_unroll or settings.fx_unroll %}true{% else %}false{% endif %},
     {%- assign gw_vid = blk_gift.settings.gift_wrap_variant_id -%}
     {%- assign gw_money = blk_gift.settings.gift_wrap_money -%}
     {%- if blk_gift.settings.gift_wrap_product != blank -%}
@@ -1657,6 +1658,13 @@
       "label": "Confetti when added to cart",
       "default": false,
       "info": "A small burst from the button the moment the item lands in the cart."
+    },
+    {
+      "type": "checkbox",
+      "id": "fx_unroll",
+      "label": "Unroll intro on the design step",
+      "default": false,
+      "info": "The product photo sweeps in like ribbon pulling off a spool the first time the designer opens. Ribbon products get it automatically."
     }
   ],
   "max_blocks": 6,

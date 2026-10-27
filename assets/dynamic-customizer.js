@@ -4857,6 +4857,50 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
   }
 
+  // ---- Unroll intro: the surface sweeps in like ribbon pulling off a spool
+  // the first time the designer opens (per page visit). On for products with
+  // the fx_unroll setting, and automatically for anything named "ribbon".
+  let _unrollPlayed = false;
+  function unrollEnabled() {
+    if ((window.DYN_SETTINGS || {}).fxUnroll === true) return true;
+    return /\bribbon\b/i.test(String((window.DYN_SHOPIFY || {}).productTitle || ""));
+  }
+  function maybeUnrollIntro() {
+    if (_unrollPlayed || !unrollEnabled()) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) { _unrollPlayed = true; return; }
+    const frame = document.querySelector(".engrave-frame");
+    if (!frame) return;
+    _unrollPlayed = true;
+    if (!document.getElementById("dynUnrollCss")) {
+      const st = el("style"); st.id = "dynUnrollCss";
+      st.textContent =
+        ".engrave-frame.dyn-unroll{animation:dynUnrollWipe 1.2s cubic-bezier(.3,.75,.3,1) both}" +
+        "@keyframes dynUnrollWipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}" +
+        ".dyn-spool{position:absolute;top:50%;left:0;width:54px;height:54px;margin:-27px 0 0 -27px;z-index:60;pointer-events:none;" +
+          "filter:drop-shadow(0 6px 10px rgba(23,19,15,0.3));animation:dynSpoolRoll 1.2s cubic-bezier(.3,.75,.3,1) both}" +
+        "@keyframes dynSpoolRoll{0%{left:0;transform:rotate(0);opacity:1}86%{opacity:1}100%{left:100%;transform:rotate(540deg);opacity:0}}";
+      document.head.appendChild(st);
+    }
+    // the spool rides the reveal edge, outside the clipped frame
+    const host = frame.parentNode;
+    if (host && getComputedStyle(host).position === "static") host.style.position = "relative";
+    const spool = el("div", "dyn-spool",
+      '<svg viewBox="0 0 54 54" aria-hidden="true">' +
+        '<circle cx="27" cy="27" r="24" fill="#f2efe9" stroke="#17130f" stroke-width="3"/>' +
+        '<circle cx="27" cy="27" r="17" fill="none" stroke="#17130f" stroke-width="1.6" opacity="0.5"/>' +
+        '<circle cx="27" cy="27" r="11" fill="none" stroke="#17130f" stroke-width="1.6" opacity="0.38"/>' +
+        '<circle cx="27" cy="27" r="5" fill="#b3242a" stroke="#17130f" stroke-width="1.6"/>' +
+      "</svg>");
+    // align the spool's track vertically with the frame inside its host
+    const fr = frame.getBoundingClientRect(), hr = host ? host.getBoundingClientRect() : fr;
+    spool.style.top = (fr.top - hr.top + fr.height / 2) + "px";
+    (host || frame).appendChild(spool);
+    frame.classList.add("dyn-unroll");
+    const done = () => { frame.classList.remove("dyn-unroll"); spool.remove(); };
+    frame.addEventListener("animationend", done, { once: true });
+    setTimeout(done, 1600);   // belt: never leave the frame clipped
+  }
+
   function openModal() {
     const rootEl = $("#modalRoot");
     // Reset the "Add design" button back to its orange (un-flipped) state before
@@ -4875,6 +4919,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (efImg) { const fi = sideImage(currentSide || "front"); if (fi) efImg.src = fi; }
     const stImg = rootEl.querySelector("#stageProduct img, .up-stage img") || document.querySelector("#stageProduct img, .up-stage img");
     if (stImg && product && product.image) stImg.src = product.image;
+    setTimeout(maybeUnrollIntro, 150);   // after the inline flow adopts the stage
     rootEl.onclick = (e) => { if (!e.target.closest(".modal-sheet")) closeModal(); };
     const sheet = $(".modal-sheet");
     const scrim = $(".modal-scrim");
