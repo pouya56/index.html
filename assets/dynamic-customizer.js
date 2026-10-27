@@ -2677,6 +2677,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const fr2 = q2("#fontChips");
     const fl2 = q2("#foilChips");
     if (!seq.some(Boolean) && !fr2 && !fl2) return;
+    // Inline flow (step 2): the chips dock in the right panel, under the
+    // Cancel / Add design buttons, instead of floating over the photo.
+    const tools = document.getElementById("dynInlineTools");
+    if (tools && !tools.hidden) {
+      let dock = document.getElementById("dynChipDock");
+      if (!dock) { dock = document.createElement("div"); dock.id = "dynChipDock"; }
+      if (dock.parentNode !== tools) tools.appendChild(dock);
+      seq.concat([fr2, fl2]).forEach(function (c) {
+        if (!c) return;
+        c.style.left = c.style.right = c.style.top = c.style.bottom = "";
+        if (c.parentNode !== dock) dock.appendChild(c);
+      });
+      return;
+    }
     P = P || {};
     const px2 = (P.x != null ? P.x : 22), py2 = (P.y != null ? P.y : 30);
     // right-align every chip to the area's left edge so the column lines up
@@ -3614,6 +3628,11 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         /* second row: font chips — each label in its own typeface, black fill when active */
         "#fontChips,#foilChips{position:absolute;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:6;pointer-events:auto}" +
         "#fontChips[hidden],#foilChips[hidden]{display:none}" +
+        /* docked in the step-2 panel: a wrapping row under Cancel / Add design */
+        "#dynChipDock{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}" +
+        "#dynChipDock .print-hint-chip{position:static!important}" +
+        "#dynChipDock #fontChips,#dynChipDock #foilChips{position:static;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:8px;flex-basis:100%}" +
+        "#dynChipDock #fontChips[hidden],#dynChipDock #foilChips[hidden]{display:none}" +
         "#foilChips .print-hint-chip{position:static!important}" +
         ".foil-dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:-1px;border:1px solid rgba(20,19,17,.45)}" +
         /* the theme's base chip rule is position:absolute — inside the flex column
