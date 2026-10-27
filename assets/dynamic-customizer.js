@@ -1436,6 +1436,43 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const firstAvail = variants.find((v) => v.available) || variants[0];
     const selected = (firstAvail.options || []).slice();
 
+    // Liquid serializes at most 250 variants. Bigger products (e.g. ribbon's
+    // colour × width × length = 450) resolve combos past the cap on demand:
+    // the section is re-fetched with ?option_values=… and the exact variant
+    // read from the #dynSelVariant island it renders.
+    const variantsTruncated = (shop.variantsCount || 0) > variants.length;
+    const _fetched = {};
+    let _fetchSeq = 0;
+    function ovidsFor(sel) {
+      const ids = sel.map(function (val, oi) {
+        const o = options[oi] || {};
+        const sw = (o.swatches || []).find(function (s) { return s.value === val; });
+        return (sw && sw.ovid) || null;
+      });
+      return ids.every(Boolean) ? ids : null;
+    }
+    function fetchVariantByOptions(sel, done) {
+      const ids = shop.sectionId ? ovidsFor(sel) : null;
+      if (!ids) { done(null); return; }
+      const key = ids.join(",");
+      if (_fetched[key]) { done(_fetched[key]); return; }
+      fetch(location.pathname + "?section_id=" + encodeURIComponent(shop.sectionId) + "&option_values=" + key)
+        .then(function (r) { return r.text(); })
+        .then(function (t) {
+          const doc = new DOMParser().parseFromString(t, "text/html");
+          const isl = doc.getElementById("dynSelVariant");
+          const fv = isl ? JSON.parse(isl.textContent) : null;
+          // The island echoes selected_or_first_available_variant, which falls
+          // back on partial matches — accept only the exact combo asked for.
+          if (fv && fv.id && (fv.options || []).join("~~") === sel.join("~~")) {
+            _fetched[key] = fv;
+            variants.push(fv);
+            done(fv);
+          } else done(null);
+        })
+        .catch(function () { done(null); });
+    }
+
     // Single-line-item back charge: if the product has a "Print sides" option
     // (front-only vs front+back at a higher price), we drive it automatically
     // from whether the customer adds a back design — no separate fee line.
@@ -1514,8 +1551,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     };
 
     function valueInStock(oi, val) {
-      return variants.some((vv) => vv.available && (vv.options || [])[oi] === val &&
-        options.every((_, j) => j === oi || (vv.options || [])[j] === selected[j]));
+      let any = false, avail = false;
+      variants.forEach((vv) => {
+        if ((vv.options || [])[oi] === val && options.every((_, j) => j === oi || (vv.options || [])[j] === selected[j])) {
+          any = true;
+          if (vv.available) avail = true;
+        }
+      });
+      // A combo past the serialized 250 isn't in the list at all — assume it's
+      // stocked; resolve() verifies the exact variant if it gets picked.
+      if (!any && variantsTruncated) return true;
+      return avail;
     }
     function refreshAvail() {
       modelGroup.querySelectorAll(".pill, .swatch").forEach((b) => {
@@ -1529,7 +1575,24 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
 
     function resolve() {
       const v = variants.find((vv) => (vv.options || []).join("~~") === selected.join("~~"));
+      if (!v && variantsTruncated) {
+        // Combo lives past Liquid's 250-variant cap: fetch it, holding the
+        // buttons meanwhile so the stale variant can't be carted.
+        const cta0 = document.querySelector("#customizeBtn"), add0 = document.querySelector("#pageAddCart");
+        [cta0, add0].forEach((btn) => { if (btn) { btn.disabled = true; btn.style.opacity = "0.5"; } });
+        const seq = ++_fetchSeq;
+        fetchVariantByOptions(selected.slice(), function (fv) {
+          if (seq !== _fetchSeq) return;      // superseded by a newer pick
+          if (fv) { resolve(); refreshAvail(); }
+          else {
+            const st0 = modelGroup.querySelector("#variantStatus");
+            if (st0) { st0.hidden = false; st0.textContent = "Out of stock"; }
+          }
+        });
+        return null;
+      }
       if (v) {
+        _fetchSeq++;                          // retire any in-flight lookup
         shop.variantId = v.id;
         curVariantOpts = v.options || [];   // track colour for per-variant back image
         const pr = document.querySelector("#pPrice"); if (pr && v.price) pr.textContent = v.price;

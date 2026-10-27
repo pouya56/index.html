@@ -102,8 +102,10 @@
     "rootUrl": {{ routes.root_url | default: '/' | json }},
     "productUrl": {% if dyn_product %}{{ dyn_product.url | json }}{% else %}""{% endif %},
     "productHandle": {% if dyn_product %}{{ dyn_product.handle | json }}{% else %}""{% endif %},
+    "sectionId": {{ section.id | json }},
+    "variantsCount": {% if dyn_product %}{{ dyn_product.variants_count | default: 0 }}{% else %}0{% endif %},
     "variants": [{% if dyn_product %}{% for v in dyn_product.variants %}{ "id": {{ v.id }}, "title": {{ v.title | json }}, "available": {{ v.available }}, "price": {{ v.price | money | json }}, "options": {{ v.options | json }}, "image": {% if v.featured_image %}{{ v.featured_image | image_url: width: 1400 | json }}{% else %}null{% endif %} }{% unless forloop.last %},{% endunless %}{% endfor %}{% endif %}],
-    "options": [{% if dyn_product %}{% for o in dyn_product.options_with_values %}{ "name": {{ o.name | json }}, "values": {{ o.values | json }}, "swatches": [{% for v in o.values %}{ "value": {{ v | json }}, "color": {% if v.swatch and v.swatch.color %}{{ v.swatch.color | json }}{% else %}null{% endif %}, "image": {% if v.swatch and v.swatch.image %}{{ v.swatch.image | image_url: width: 80 | json }}{% else %}null{% endif %} }{% unless forloop.last %},{% endunless %}{% endfor %}] }{% unless forloop.last %},{% endunless %}{% endfor %}{% endif %}],
+    "options": [{% if dyn_product %}{% for o in dyn_product.options_with_values %}{ "name": {{ o.name | json }}, "values": {{ o.values | json }}, "swatches": [{% for v in o.values %}{ "value": {{ v | json }}, "ovid": {{ v.id | default: 0 }}, "color": {% if v.swatch and v.swatch.color %}{{ v.swatch.color | json }}{% else %}null{% endif %}, "image": {% if v.swatch and v.swatch.image %}{{ v.swatch.image | image_url: width: 80 | json }}{% else %}null{% endif %} }{% unless forloop.last %},{% endunless %}{% endfor %}] }{% unless forloop.last %},{% endunless %}{% endfor %}{% endif %}],
     "cartUrl": {{ routes.cart_url | default: '/cart' | json }},
     "cartCount": {{ cart.item_count | default: 0 }},
     "accountUrl": {{ routes.account_url | default: '/account' | json }},
@@ -264,6 +266,14 @@
     ]
   }
 }
+</script>
+{%- comment -%} Liquid serializes at most 250 variants. For bigger products the
+   app re-fetches this section with ?option_values=… and reads the resolved
+   variant from this island (it echoes selected_or_first_available_variant). {%- endcomment -%}
+<script type="application/json" id="dynSelVariant">
+{%- if dyn_product -%}{%- assign dyn_sv = dyn_product.selected_or_first_available_variant -%}
+{ "id": {{ dyn_sv.id }}, "title": {{ dyn_sv.title | json }}, "available": {{ dyn_sv.available }}, "price": {{ dyn_sv.price | money | json }}, "options": {{ dyn_sv.options | json }}, "image": {% if dyn_sv.featured_image %}{{ dyn_sv.featured_image | image_url: width: 1400 | json }}{% else %}null{% endif %} }
+{%- else -%}null{%- endif -%}
 </script>
 
 {%- comment -%} Verified buyer check: has the logged-in customer ordered this product? {%- endcomment -%}
