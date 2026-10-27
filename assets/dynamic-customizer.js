@@ -1556,11 +1556,30 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           const fi2 = sideImage(currentSide || "front");
           if (ef2 && fi2 && ef2.getAttribute("src") !== fi2) ef2.src = fi2;
         }
-        // dark pen ↔ light pen: default text colour follows the surface; once
-        // the inks settle, re-composite any applied previews on the new photo
-        // so the page gallery doesn't keep showing the previous colour.
-        refreshAutoInk(function () {
-          if (window.DYN_DESIGN_PREVIEWS && (sideHasContent("front") || sideHasContent("back"))) publishDesignUrls();
+        // Ribbon products: the surface photo re-tints to the chosen colour and
+        // text layers take the chosen foil colour.
+        tintRibbon(function (tinted) {
+          if (tinted) {
+            curVariantImage = tinted;
+            window.__dynVariantImage = tinted;
+            const ef3 = document.querySelector(".engrave-frame > img");
+            const fi3 = sideImage(currentSide || "front");
+            if (ef3 && fi3 && ef3.getAttribute("src") !== fi3) ef3.src = fi3;
+          }
+          const fx = foilHex();
+          if (fx) {
+            ["front", "back"].forEach(function (sd) {
+              (sideLayers[sd] || []).forEach(function (l) {
+                if (l.kind === "text") { l.color = fx; l.autoInk = false; }
+              });
+            });
+            renderUpEls();
+          }
+          // dark ↔ light surface: default text colour follows it; once the
+          // inks settle, re-composite any applied previews on the new photo.
+          refreshAutoInk(function () {
+            if (window.DYN_DESIGN_PREVIEWS && (sideHasContent("front") || sideHasContent("back"))) publishDesignUrls();
+          });
         });
       }
       return v;
@@ -2342,14 +2361,15 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     if (countKind("text") >= MAX_TXT) { toast("Up to " + MAX_TXT + " text boxes"); return null; }
     const eg = (window.DYN_SETTINGS && window.DYN_SETTINGS.engrave) || {};
     const custom = customInkSet();
+    const foil = foilHex();            // ribbon: text starts in the chosen foil colour
     const key = String(sideImage(currentSide || "front") || "").split("?")[0];
     const layer = Object.assign({
       id: ++layerSeq, kind: "text", x: 50, y: freeTextY(), size: 12, rotate: 0,
       font: UPLOAD_FONTS[0].stack,
-      color: custom ? eg.color : inkFor(!!_lumDark[key]), text: ""
+      color: custom ? eg.color : (foil || inkFor(!!_lumDark[key])), text: ""
     }, geom || {});
-    // No merchant-set ink and no restored colour: follow the surface brightness.
-    if (!custom && !(geom && geom.color)) layer.autoInk = true;
+    // No merchant-set ink, no foil and no restored colour: follow the surface brightness.
+    if (!custom && !foil && !(geom && geom.color)) layer.autoInk = true;
     layers.push(layer);
     createLayerEl(layer);
     activeLayerId = layer.id;
@@ -4857,6 +4877,82 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     }
   }
 
+  // ---- Ribbon auto-tint: ONE neutral photo serves every colour variant.
+  // The selected Ribbon-colour value is matched against the swatch colour map
+  // and the surface photo is re-tinted on a canvas (satin sheen preserved).
+  // The selected Foil colour drives the text layers' ink.
+  const _tintCache = {};     // hex -> tinted data URL
+  let _tintBase = null;      // the untinted surface photo
+  function ribbonProduct() {
+    return /\bribbon\b/i.test(String((window.DYN_SHOPIFY || {}).productTitle || ""));
+  }
+  function selectedOptValue(re) {
+    const opts = (window.DYN_SHOPIFY || {}).options || [];
+    const oi = opts.findIndex((o) => re.test(String(o.name || "")));
+    if (oi < 0) return null;
+    return (curVariantOpts || [])[oi] || null;
+  }
+  function foilHex() {
+    if (!ribbonProduct()) return null;
+    const v = selectedOptValue(/foil/i);
+    return (v && COLOR_NAMES[String(v).toLowerCase().trim()]) || null;
+  }
+  function tintRibbon(cb) {
+    if (!ribbonProduct()) { cb(null); return; }
+    const cname = selectedOptValue(/ribbon.*colou?r|^colou?r$/i);
+    const hex = cname && COLOR_NAMES[String(cname).toLowerCase().trim()];
+    if (!hex) { cb(null); return; }
+    const S = window.DYN_SETTINGS || {};
+    const base = _tintBase || S.frontImage || (product && product.image);
+    if (!base) { cb(null); return; }
+    _tintBase = base;
+    window.__dynTintHex = hex;   // the unroll spool matches the chosen colour
+    if (_tintCache[hex]) { cb(_tintCache[hex]); return; }
+    const im = new Image(); im.crossOrigin = "anonymous";
+    im.onload = function () {
+      try {
+        const nw = im.naturalWidth || 1, nh = im.naturalHeight || 1;
+        const sc = Math.min(1, 1400 / Math.max(nw, nh));
+        const c = document.createElement("canvas");
+        c.width = Math.round(nw * sc); c.height = Math.round(nh * sc);
+        const x = c.getContext("2d");
+        x.drawImage(im, 0, 0, c.width, c.height);
+        // the base's brightness picks the recipe: light satin multiplies,
+        // a dark base colourizes (luminosity-preserving)
+        let lightBase = true;
+        try {
+          const s = document.createElement("canvas"); s.width = 32; s.height = 32;
+          const sx = s.getContext("2d", { willReadFrequently: true });
+          sx.drawImage(im, 0, 0, 32, 32);
+          const d = sx.getImageData(0, 0, 32, 32).data, lum = [];
+          for (let i = 0; i < d.length; i += 4) {
+            if (d[i + 3] > 60) lum.push(0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]);
+          }
+          lum.sort(function (a, b) { return a - b; });
+          lightBase = !lum.length || lum[Math.floor(lum.length / 2)] > 140;
+        } catch (e) {}
+        if (lightBase) {
+          x.globalCompositeOperation = "multiply";
+          x.fillStyle = hex; x.fillRect(0, 0, c.width, c.height);
+          // the satin sparkle: the original highlights screened softly back in
+          x.globalCompositeOperation = "screen"; x.globalAlpha = 0.18;
+          x.drawImage(im, 0, 0, c.width, c.height);
+          x.globalAlpha = 1;
+        } else {
+          x.globalCompositeOperation = "color";
+          x.fillStyle = hex; x.fillRect(0, 0, c.width, c.height);
+        }
+        x.globalCompositeOperation = "destination-in";
+        x.drawImage(im, 0, 0, c.width, c.height);
+        x.globalCompositeOperation = "source-over";
+        const u = c.toDataURL("image/png");
+        _tintCache[hex] = u; cb(u);
+      } catch (e) { cb(null); }      // tainted canvas — keep the plain photo
+    };
+    im.onerror = function () { cb(null); };
+    im.src = base;
+  }
+
   // ---- Unroll intro: the surface sweeps in like ribbon pulling off a spool
   // the first time the designer opens (per page visit). On for products with
   // the fx_unroll setting, and automatically for anything named "ribbon".
@@ -4889,7 +4985,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         '<circle cx="27" cy="27" r="24" fill="#f2efe9" stroke="#17130f" stroke-width="3"/>' +
         '<circle cx="27" cy="27" r="17" fill="none" stroke="#17130f" stroke-width="1.6" opacity="0.5"/>' +
         '<circle cx="27" cy="27" r="11" fill="none" stroke="#17130f" stroke-width="1.6" opacity="0.38"/>' +
-        '<circle cx="27" cy="27" r="5" fill="#b3242a" stroke="#17130f" stroke-width="1.6"/>' +
+        '<circle cx="27" cy="27" r="5" fill="' + (window.__dynTintHex || "#b3242a") + '" stroke="#17130f" stroke-width="1.6"/>' +
       "</svg>");
     // align the spool's track vertically with the frame inside its host
     const fr = frame.getBoundingClientRect(), hr = host ? host.getBoundingClientRect() : fr;
