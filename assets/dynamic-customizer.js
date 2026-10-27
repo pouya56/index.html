@@ -2682,7 +2682,14 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const tools = document.getElementById("dynInlineTools");
     if (tools && !tools.hidden) {
       let dock = document.getElementById("dynChipDock");
-      if (!dock) { dock = document.createElement("div"); dock.id = "dynChipDock"; }
+      if (!dock) {
+        dock = document.createElement("div"); dock.id = "dynChipDock";
+        // A labelled tray: the tools read as one group, so the black
+        // Add design button above stays the unmistakable finish step.
+        const lab = document.createElement("div");
+        lab.className = "dyn-dock-label"; lab.textContent = "Design tools";
+        dock.appendChild(lab);
+      }
       if (dock.parentNode !== tools) tools.appendChild(dock);
       seq.concat([fr2, fl2]).forEach(function (c) {
         if (!c) return;
@@ -3631,7 +3638,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         /* docked in the step-2 panel: a wrapping row under Cancel / Add design.
            There the chips drop the hand-drawn marker look and match the
            Add design button family: ghost rectangles, black fill when active. */
-        "#dynChipDock{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}" +
+        "#dynChipDock{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px;" +
+          "padding:14px;border:1px solid rgba(23,19,15,0.25);border-radius:2px}" +
+        ".dyn-dock-label{flex-basis:100%;font-size:10px;font-weight:700;letter-spacing:0.28em;" +
+          "text-transform:uppercase;color:rgba(23,19,15,0.55)}" +
         "#dynChipDock .print-hint-chip{position:static!important;background:transparent!important;" +
           "border:1px solid rgba(23,19,15,0.4)!important;border-radius:2px!important;color:#17130f!important;" +
           "font-family:inherit!important;font-size:11.5px!important;font-weight:700!important;" +
