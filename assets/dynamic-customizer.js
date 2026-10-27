@@ -3628,9 +3628,21 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         /* second row: font chips — each label in its own typeface, black fill when active */
         "#fontChips,#foilChips{position:absolute;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:6;pointer-events:auto}" +
         "#fontChips[hidden],#foilChips[hidden]{display:none}" +
-        /* docked in the step-2 panel: a wrapping row under Cancel / Add design */
+        /* docked in the step-2 panel: a wrapping row under Cancel / Add design.
+           There the chips drop the hand-drawn marker look and match the
+           Add design button family: ghost rectangles, black fill when active. */
         "#dynChipDock{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}" +
-        "#dynChipDock .print-hint-chip{position:static!important}" +
+        "#dynChipDock .print-hint-chip{position:static!important;background:transparent!important;" +
+          "border:1px solid rgba(23,19,15,0.4)!important;border-radius:2px!important;color:#17130f!important;" +
+          "font-family:inherit!important;font-size:11.5px!important;font-weight:700!important;" +
+          "letter-spacing:0.14em!important;text-transform:uppercase;padding:10px 16px!important;" +
+          "filter:none;display:inline-flex;align-items:center;gap:7px}" +
+        "#dynChipDock .print-hint-chip:hover{transform:none;border-color:#17130f!important;background:rgba(23,19,15,0.04)!important}" +
+        "#dynChipDock .print-hint-chip svg{stroke:#17130f!important}" +
+        "#dynChipDock .print-hint-chip.on{background:#17130f!important;color:#fff!important;border-color:#17130f!important}" +
+        "#dynChipDock .print-hint-chip.on svg{stroke:#fff!important}" +
+        "#dynChipDock .print-hint-chip.font-chip{text-transform:none;font-size:12.5px!important;letter-spacing:0.02em!important}" +
+        "#dynChipDock .print-hint-chip.on .foil-dot{border-color:rgba(255,255,255,0.7)}" +
         "#dynChipDock #fontChips,#dynChipDock #foilChips{position:static;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:8px;flex-basis:100%}" +
         "#dynChipDock #fontChips[hidden],#dynChipDock #foilChips[hidden]{display:none}" +
         "#foilChips .print-hint-chip{position:static!important}" +
