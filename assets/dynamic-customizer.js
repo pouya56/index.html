@@ -2558,14 +2558,17 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     // Both hide on a side where uploading is off, or once the image limit is hit.
     const hint = q2("#printHint"), chipUp = q2("#printChip");
     const showUp = sideUploadAllowed(currentSide) && countKind("img") < maxImages();
+    const docked = dockActive();
     if (hint) hint.style.display = (showUp && !layers.length) ? "" : "none";
-    if (chipUp) chipUp.hidden = !(showUp && layers.length > 0);
+    // Docked cards keep every section on show; the stage chips only appear
+    // once something is placed (so they never cover an empty print area).
+    if (chipUp) chipUp.hidden = docked ? !showUp : !(showUp && layers.length > 0);
     // The composed-preview chip appears as soon as anything is on this side.
     const chipPv = q2("#previewChip");
-    if (chipPv) chipPv.hidden = !layers.length;
+    if (chipPv) chipPv.hidden = docked ? false : !layers.length;
     // Add-text chip: alongside Upload once something is placed, until the limit.
     const chipTx = q2("#textChip");
-    if (chipTx) chipTx.hidden = !(layers.length && countKind("text") < MAX_TXT);
+    if (chipTx) chipTx.hidden = docked ? !(countKind("text") < MAX_TXT) : !(layers.length && countKind("text") < MAX_TXT);
     placeChips(sidePrint(currentSide));
     // Order buttons only matter with 2+ layers.
     const pa2 = q2("#printArea");
@@ -2576,30 +2579,33 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const composeWrap = q2(".ios-compose"), toolsWrap = q2(".engrave-tools");
     if (composeWrap) composeWrap.style.display = "none";
     if (toolsWrap) toolsWrap.style.display = "none";
-    // FONT chip shows once any text box exists; the row only when toggled open.
+    // FONT chip shows once any text box exists; the row only when toggled
+    // open — except in the dock, where the row lives open in its own card
+    // and the toggle retires.
     const fcT = q2("#fontChip"), fc = q2("#fontChips");
     const hasText = layers.some(function (x) { return x.kind === "text"; });
     if (!hasText) fontRowOpen = false;
     if (fcT) {
-      fcT.hidden = !hasText;
+      fcT.hidden = docked ? true : !hasText;
       fcT.classList.toggle("on", fontRowOpen);
     }
     if (fc) {
-      fc.hidden = !(fontRowOpen && hasText);
+      fc.hidden = docked ? false : !(fontRowOpen && hasText);
       const refT = activeTextLayer() || layers.filter(function (x) { return x.kind === "text"; }).pop();
-      if (!fc.hidden && refT) fc.querySelectorAll(".font-chip").forEach(function (b) {
-        b.classList.toggle("on", b.dataset.stack === refT.font);
+      const curStack = refT ? refT.font : UPLOAD_FONTS[0].stack;
+      if (!fc.hidden) fc.querySelectorAll(".font-chip").forEach(function (b) {
+        b.classList.toggle("on", b.dataset.stack === curStack);
       });
     }
-    // FOIL chip (ribbon): shows with any text box; the row only when toggled.
+    // FOIL chips (ribbon): same — toggled row on the stage, open card in the dock.
     const flT = q2("#foilChip"), fl = q2("#foilChips");
     if (!hasText) foilRowOpen = false;
     if (flT) {
-      flT.hidden = !hasText;
+      flT.hidden = docked ? true : !hasText;
       flT.classList.toggle("on", foilRowOpen);
     }
     if (fl) {
-      fl.hidden = !(foilRowOpen && hasText);
+      fl.hidden = docked ? false : !(foilRowOpen && hasText);
       const pickHex = (_foilPick || FOIL_COLORS[0]).hex;
       if (!fl.hidden) fl.querySelectorAll(".foil-chip").forEach(function (b) {
         b.classList.toggle("on", b.dataset.hex === pickHex);
@@ -2672,30 +2678,64 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   }
   // The chips stack in one column hugging the print area's LEFT edge,
   // tops aligned with the area: Upload, Add text, Preview, Font, font list.
+  // True while the inline step-2 panel is up: the tools then live in the
+  // numbered-card dock and every section stays visible.
+  function dockActive() {
+    const t = document.getElementById("dynInlineTools");
+    return !!(t && !t.hidden);
+  }
   function placeChips(P) {
     const seq = [q2("#printChip"), q2("#textChip"), q2("#previewChip"), q2("#fontChip"), q2("#foilChip")];
     const fr2 = q2("#fontChips");
     const fl2 = q2("#foilChips");
     if (!seq.some(Boolean) && !fr2 && !fl2) return;
-    // Inline flow (step 2): the chips dock in the right panel, under the
-    // Cancel / Add design buttons, instead of floating over the photo.
+    // Inline flow (step 2): the tools dock in the right panel as numbered
+    // cards — 1 Your design, 2 Text style, 3 Foil color (ribbon), 4 Preview —
+    // instead of floating over the photo. The font/foil rows stay open in
+    // their cards, so the toggle chips retire here.
     const tools = document.getElementById("dynInlineTools");
     if (tools && !tools.hidden) {
       let dock = document.getElementById("dynChipDock");
-      if (!dock) {
-        dock = document.createElement("div"); dock.id = "dynChipDock";
-        // A labelled tray: the tools read as one group, so the black
-        // Add design button above stays the unmistakable finish step.
-        const lab = document.createElement("div");
-        lab.className = "dyn-dock-label"; lab.textContent = "Design tools";
-        dock.appendChild(lab);
-      }
+      if (!dock) { dock = document.createElement("div"); dock.id = "dynChipDock"; }
       if (dock.parentNode !== tools) tools.appendChild(dock);
-      seq.concat([fr2, fl2]).forEach(function (c) {
-        if (!c) return;
-        c.style.left = c.style.right = c.style.top = c.style.bottom = "";
-        if (c.parentNode !== dock) dock.appendChild(c);
-      });
+      if (!dock.__cards) {
+        dock.__cards = true;
+        dock.innerHTML = "";
+        const t0 = String((window.DYN_SHOPIFY || {}).productTitle || "").trim();
+        const noun = (t0 && t0.length <= 12 && t0.indexOf(" ") < 0) ? t0.toLowerCase() : "design";
+        let n = 0;
+        const card = function (title, sub) {
+          n++;
+          const c = document.createElement("div"); c.className = "dock-card";
+          c.innerHTML = '<div class="dock-chead"><span class="dock-num">' + n + '</span>' +
+            '<div><div class="dock-title">' + title + '</div><div class="dock-sub">' + sub + '</div></div></div>' +
+            '<div class="dock-body"></div>';
+          dock.appendChild(c);
+          return c.querySelector(".dock-body");
+        };
+        dock.__b1 = card("Your design", "Upload a logo or add custom text.");
+        dock.__b2 = card("Text style", "Choose a font for your text.");
+        dock.__b3 = q2("#foilChips") ? card("Foil color", "Select a foil color for your design.") : null;
+        dock.__b4 = card("Preview", "See your design on the " + noun + ".");
+        const upSpan = q2("#printChip span"); if (upSpan) upSpan.textContent = "Upload logo";
+        const pvSpan = q2("#previewChip span"); if (pvSpan) pvSpan.textContent = "Preview " + noun;
+      }
+      const put = function (el, body) {
+        if (!el || !body) return;
+        el.style.left = el.style.right = el.style.top = el.style.bottom = "";
+        if (el.parentNode !== body) body.appendChild(el);
+      };
+      put(q2("#printChip"), dock.__b1);
+      put(q2("#textChip"), dock.__b1);
+      put(fr2, dock.__b2);
+      put(fl2, dock.__b3);
+      put(q2("#previewChip"), dock.__b4);
+      [q2("#fontChip"), q2("#foilChip")].forEach(function (c) { if (c) c.hidden = true; });
+      // Footer buttons in the step flow's wording.
+      const bk = document.querySelector("#dynInlineTools .modal-foot .foot-actions [data-close]");
+      if (bk) bk.innerHTML = "&#8592; Back";
+      const ap = document.getElementById("uploadApply");
+      if (ap && !/update/i.test(ap.textContent || "")) ap.innerHTML = "Save & continue &#8594;";
       return;
     }
     P = P || {};
@@ -3557,7 +3597,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         fb.style.setProperty("font-family", f.stack, "important");
         fb.onclick = function (e) {
           e.stopPropagation();
-          const l = activeTextLayer() || layers.filter(function (x) { return x.kind === "text"; }).pop();
+          let l = activeTextLayer() || layers.filter(function (x) { return x.kind === "text"; }).pop();
+          // Docked card: the font row is always on show, so a pick with no
+          // text box yet starts one, exactly like clicking Add text.
+          if (!l) {
+            const ab = q2("#addTextBtn"); if (ab) ab.click();
+            l = activeTextLayer() || layers.filter(function (x) { return x.kind === "text"; }).pop();
+          }
           if (!l) return;
           if (activeLayerId !== l.id) selectLayer(l.id);
           l.font = f.stack;
@@ -3635,26 +3681,34 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         /* second row: font chips — each label in its own typeface, black fill when active */
         "#fontChips,#foilChips{position:absolute;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:6;pointer-events:auto}" +
         "#fontChips[hidden],#foilChips[hidden]{display:none}" +
-        /* docked in the step-2 panel: a wrapping row under Cancel / Add design.
-           There the chips drop the hand-drawn marker look and match the
-           Add design button family: ghost rectangles, black fill when active. */
-        "#dynChipDock{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px;" +
-          "padding:14px;border:1px solid rgba(23,19,15,0.25);border-radius:2px}" +
-        ".dyn-dock-label{flex-basis:100%;font-size:10px;font-weight:700;letter-spacing:0.28em;" +
-          "text-transform:uppercase;color:rgba(23,19,15,0.55)}" +
+        /* docked in the step-2 panel: numbered cards (Your design / Text
+           style / Foil color / Preview). The chips drop the hand-drawn
+           marker look and match the button family: ghost rectangles with a
+           black fill when active. */
+        "#dynChipDock{display:block;margin-top:18px}" +
+        "#dynChipDock .dock-card{border:1px solid rgba(23,19,15,0.18);border-radius:10px;" +
+          "padding:16px;margin-bottom:12px;background:rgba(255,255,255,0.35)}" +
+        "#dynChipDock .dock-chead{display:flex;align-items:flex-start;gap:12px;margin-bottom:13px}" +
+        "#dynChipDock .dock-num{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#e9e2d4;" +
+          "color:#17130f;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}" +
+        "#dynChipDock .dock-title{font-size:12.5px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#17130f}" +
+        "#dynChipDock .dock-sub{font-size:13px;color:rgba(23,19,15,0.6);margin-top:3px}" +
+        "#dynChipDock .dock-body{display:grid;grid-template-columns:1fr 1fr;gap:10px}" +
         "#dynChipDock .print-hint-chip{position:static!important;background:transparent!important;" +
-          "border:1px solid rgba(23,19,15,0.4)!important;border-radius:2px!important;color:#17130f!important;" +
+          "border:1px solid rgba(23,19,15,0.4)!important;border-radius:6px!important;color:#17130f!important;" +
           "font-family:inherit!important;font-size:11.5px!important;font-weight:700!important;" +
-          "letter-spacing:0.14em!important;text-transform:uppercase;padding:10px 16px!important;" +
-          "filter:none;display:inline-flex;align-items:center;gap:7px}" +
+          "letter-spacing:0.14em!important;text-transform:uppercase;padding:13px 14px!important;" +
+          "filter:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%}" +
         "#dynChipDock .print-hint-chip:hover{transform:none;border-color:#17130f!important;background:rgba(23,19,15,0.04)!important}" +
         "#dynChipDock .print-hint-chip svg{stroke:#17130f!important}" +
         "#dynChipDock .print-hint-chip.on{background:#17130f!important;color:#fff!important;border-color:#17130f!important}" +
         "#dynChipDock .print-hint-chip.on svg{stroke:#fff!important}" +
-        "#dynChipDock .print-hint-chip.font-chip{text-transform:none;font-size:12.5px!important;letter-spacing:0.02em!important}" +
+        "#dynChipDock .print-hint-chip.font-chip{text-transform:none;font-size:13px!important;letter-spacing:0.02em!important}" +
         "#dynChipDock .print-hint-chip.on .foil-dot{border-color:rgba(255,255,255,0.7)}" +
-        "#dynChipDock #fontChips,#dynChipDock #foilChips{position:static;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:8px;flex-basis:100%}" +
-        "#dynChipDock #fontChips[hidden],#dynChipDock #foilChips[hidden]{display:none}" +
+        "#dynChipDock #fontChips,#dynChipDock #foilChips{position:static;display:grid!important;" +
+          "grid-template-columns:1fr 1fr 1fr;gap:10px;grid-column:1 / -1}" +
+        "#dynChipDock #fontChips[hidden],#dynChipDock #foilChips[hidden]{display:none!important}" +
+        "#dynChipDock #previewChip{grid-column:1 / -1}" +
         "#foilChips .print-hint-chip{position:static!important}" +
         ".foil-dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:-1px;border:1px solid rgba(20,19,17,.45)}" +
         /* the theme's base chip rule is position:absolute — inside the flex column
@@ -5191,6 +5245,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const stImg = rootEl.querySelector("#stageProduct img, .up-stage img") || document.querySelector("#stageProduct img, .up-stage img");
     if (stImg && product && product.image) stImg.src = product.image;
     setTimeout(maybeUnrollIntro, 150);   // after the inline flow adopts the stage
+    // The inline flow engages right after this open: once its panel is up,
+    // re-render so the docked cards build without waiting for a click.
+    [120, 500].forEach(function (ms) {
+      setTimeout(function () {
+        if (dockActive() && !document.querySelector("#dynChipDock .dock-card")) renderUpEls();
+      }, ms);
+    });
     rootEl.onclick = (e) => { if (!e.target.closest(".modal-sheet")) closeModal(); };
     const sheet = $(".modal-sheet");
     const scrim = $(".modal-scrim");
