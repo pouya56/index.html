@@ -1288,6 +1288,13 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   let currentSide = "front";
   let currentPrintLoc = "front"; // front | back | both — chosen on the Print location chips
   let fontRowOpen = false;   // FONT chip toggles the typeface row
+  let foilRowOpen = false;   // FOIL chip toggles the foil-colour row (ribbon)
+  const FOIL_COLORS = [
+    { name: "Gold", hex: "#f3d9a1" }, { name: "Silver", hex: "#c9ccce" },
+    { name: "Black", hex: "#111111" }, { name: "White", hex: "#ffffff" },
+    { name: "Red", hex: "#e0233b" }, { name: "Blue", hex: "#0a63c9" }
+  ];
+  let _foilPick = null;      // the customer's foil choice; Gold until picked
   let curVariantOpts = [];   // option values of the currently-selected variant (for per-variant back image)
   let curVariantImage = "";  // the selected variant's own photo — the design surface follows the chosen colour
   let _sidesResolve = null;  // (hasBack) => variant matching current options with the "sides" option forced; set by the variant picker
@@ -2521,6 +2528,20 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         b.classList.toggle("on", b.dataset.stack === refT.font);
       });
     }
+    // FOIL chip (ribbon): shows with any text box; the row only when toggled.
+    const flT = q2("#foilChip"), fl = q2("#foilChips");
+    if (!hasText) foilRowOpen = false;
+    if (flT) {
+      flT.hidden = !hasText;
+      flT.classList.toggle("on", foilRowOpen);
+    }
+    if (fl) {
+      fl.hidden = !(foilRowOpen && hasText);
+      const pickHex = (_foilPick || FOIL_COLORS[0]).hex;
+      if (!fl.hidden) fl.querySelectorAll(".foil-chip").forEach(function (b) {
+        b.classList.toggle("on", b.dataset.hex === pickHex);
+      });
+    }
     // Example placeholder: hide as soon as the customer adds any design.
     const example = q2("#upExample");
     if (example) example.style.display = (layers && layers.length) ? "none" : "";
@@ -2589,9 +2610,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
   // The chips stack in one column hugging the print area's LEFT edge,
   // tops aligned with the area: Upload, Add text, Preview, Font, font list.
   function placeChips(P) {
-    const seq = [q2("#printChip"), q2("#textChip"), q2("#previewChip"), q2("#fontChip")];
+    const seq = [q2("#printChip"), q2("#textChip"), q2("#previewChip"), q2("#fontChip"), q2("#foilChip")];
     const fr2 = q2("#fontChips");
-    if (!seq.some(Boolean) && !fr2) return;
+    const fl2 = q2("#foilChips");
+    if (!seq.some(Boolean) && !fr2 && !fl2) return;
     P = P || {};
     const px2 = (P.x != null ? P.x : 22), py2 = (P.y != null ? P.y : 30);
     // right-align every chip to the area's left edge so the column lines up
@@ -2604,10 +2626,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       c.style.top = "calc(" + py2 + "% + " + y + "px)";
       if (!c.hidden && c.offsetHeight) y += c.offsetHeight + 8;
     });
-    if (fr2) {
-      fr2.style.left = "auto"; fr2.style.right = rightv;
-      fr2.style.top = "calc(" + py2 + "% + " + y + "px)";
-    }
+    // Only one row (font or foil) is ever open, so both park at the column's end.
+    [fr2, fl2].forEach(function (row) {
+      if (!row) return;
+      row.style.left = "auto"; row.style.right = rightv;
+      row.style.top = "calc(" + py2 + "% + " + y + "px)";
+    });
   }
   function fitInArea(ov, area, state, kind) {
     const prop = kind === "text" ? "size" : "scale";
@@ -3462,10 +3486,45 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       ft.onclick = function (e) {
         e.stopPropagation();
         fontRowOpen = !fontRowOpen;
+        if (fontRowOpen) foilRowOpen = false;
         if (fontRowOpen && !activeTextLayer()) {
           const lt = layers.filter(function (x) { return x.kind === "text"; }).pop();
           if (lt) selectLayer(lt.id);
         }
+        renderUpEls();
+      };
+    }
+    // Foil picker (ribbon): a FOIL chip toggles six foil-colour chips. The
+    // pick recolours every text layer and rides to the cart as a property.
+    if (ribbonProduct() && q2("#addTextBtn") && frame0 && !frame0.querySelector("#foilChips")) {
+      const lt0 = document.createElement("button");
+      lt0.type = "button"; lt0.className = "print-hint-chip"; lt0.id = "foilChip"; lt0.hidden = true;
+      lt0.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="12" r="7"/><path d="M8.5 10.5c1-1.6 2.3-2.4 4-2.3"/></svg><span>Foil</span>';
+      frame0.appendChild(lt0);
+      const lr = document.createElement("div");
+      lr.id = "foilChips"; lr.hidden = true;
+      FOIL_COLORS.forEach(function (f) {
+        const fb = document.createElement("button");
+        fb.type = "button"; fb.className = "print-hint-chip font-chip foil-chip";
+        fb.dataset.hex = f.hex;
+        fb.innerHTML = '<span class="foil-dot" style="background:' + f.hex + '"></span>' + f.name;
+        fb.onclick = function (e) {
+          e.stopPropagation();
+          _foilPick = f;
+          ["front", "back"].forEach(function (sd) {
+            (sideLayers[sd] || []).forEach(function (l) {
+              if (l.kind === "text") { l.color = f.hex; l.autoInk = false; }
+            });
+          });
+          renderUpEls();
+        };
+        lr.appendChild(fb);
+      });
+      frame0.appendChild(lr);
+      lt0.onclick = function (e) {
+        e.stopPropagation();
+        foilRowOpen = !foilRowOpen;
+        if (foilRowOpen) fontRowOpen = false;
         renderUpEls();
       };
     }
@@ -3490,8 +3549,10 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         ".print-hint-chip:hover{transform:rotate(-2deg) scale(1.06)}" +
         ".print-hint-chip svg{stroke:#f6f3ec!important;stroke-width:2.3!important;width:14px!important;height:14px!important}" +
         /* second row: font chips — each label in its own typeface, black fill when active */
-        "#fontChips{position:absolute;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:6;pointer-events:auto}" +
-        "#fontChips[hidden]{display:none}" +
+        "#fontChips,#foilChips{position:absolute;display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:6;pointer-events:auto}" +
+        "#fontChips[hidden],#foilChips[hidden]{display:none}" +
+        "#foilChips .print-hint-chip{position:static!important}" +
+        ".foil-dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:-1px;border:1px solid rgba(20,19,17,.45)}" +
         /* the theme's base chip rule is position:absolute — inside the flex column
            that stacks every font chip on one spot */
         "#fontChips .print-hint-chip{position:static!important}" +
@@ -3541,7 +3602,7 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
       // layer would otherwise keep the upload/add-text prompt hidden.
       // Chips live inside the frame too: clicking one must not deselect first,
       // or a font pick lands on nothing.
-      if (!e.target.closest(".up-el") && !e.target.closest(".print-hint-chip") && !e.target.closest("#fontChips")) {
+      if (!e.target.closest(".up-el") && !e.target.closest(".print-hint-chip") && !e.target.closest("#fontChips") && !e.target.closest("#foilChips")) {
         activeLayerId = null; pruneEmptyText(); if (txt) txt.value = ""; renderUpEls();
       }
     });
@@ -4859,6 +4920,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
         .filter((a) => { const st = store.get().areas[a.id]; return st && st.objectCount > 0; })
         .map((a) => a.label);
       props["Customized"] = decorated.join(", ") || "None";
+      // Ribbon: the foil colour travels with the order (only when text exists).
+      const foilN = foilName();
+      if (foilN) props["Foil color"] = foilN;
 
       root.Dynamic.lastOrder = { properties: props };
       console.groupCollapsed("%c[Dynamic] Add to Cart", "color:#0071e3;font-weight:600");
@@ -4893,9 +4957,16 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     return (curVariantOpts || [])[oi] || null;
   }
   function foilHex() {
+    // The foil moved off the variants into the designer's own picker.
     if (!ribbonProduct()) return null;
-    const v = selectedOptValue(/foil/i);
-    return (v && COLOR_NAMES[String(v).toLowerCase().trim()]) || null;
+    return (_foilPick || FOIL_COLORS[0]).hex;
+  }
+  function foilName() {
+    if (!ribbonProduct()) return null;
+    const hasTxt = ["front", "back"].some(function (s) {
+      return (sideLayers[s] || []).some(function (l) { return l.kind === "text" && l.text; });
+    });
+    return hasTxt ? (_foilPick || FOIL_COLORS[0]).name : null;
   }
   function tintRibbon(cb) {
     if (!ribbonProduct()) { cb(null); return; }
