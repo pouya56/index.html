@@ -2559,7 +2559,9 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const hint = q2("#printHint"), chipUp = q2("#printChip");
     const showUp = sideUploadAllowed(currentSide) && countKind("img") < maxImages();
     const docked = dockActive();
-    if (hint) hint.style.display = (showUp && !layers.length) ? "" : "none";
+    // The on-photo "Upload design / Add text" prompt is redundant once the
+    // docked cards carry those buttons — the print area stays clean.
+    if (hint) hint.style.display = (showUp && !layers.length && !docked) ? "" : "none";
     // Docked cards keep every section on show; the stage chips only appear
     // once something is placed (so they never cover an empty print area).
     if (chipUp) chipUp.hidden = docked ? !showUp : !(showUp && layers.length > 0);
