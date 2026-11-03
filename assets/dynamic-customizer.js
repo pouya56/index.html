@@ -5251,13 +5251,16 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
     const stImg = rootEl.querySelector("#stageProduct img, .up-stage img") || document.querySelector("#stageProduct img, .up-stage img");
     if (stImg && product && product.image) stImg.src = product.image;
     setTimeout(maybeUnrollIntro, 150);   // after the inline flow adopts the stage
-    // The inline flow engages right after this open: once its panel is up,
-    // re-render so the docked cards build without waiting for a click.
-    [120, 500].forEach(function (ms) {
-      setTimeout(function () {
-        if (dockActive() && !document.querySelector("#dynChipDock .dock-card")) renderUpEls();
-      }, ms);
-    });
+    // The inline flow engages in a microtask right after the class flip
+    // above (its MutationObserver). Re-render in a later microtask — before
+    // the first paint — so the docked cards build and the on-photo prompt
+    // never flashes; the timeouts are only a safety net.
+    const settleDock = function () {
+      if (dockActive() && !document.querySelector("#dynChipDock .dock-card")) renderUpEls();
+    };
+    Promise.resolve().then(settleDock);
+    if (window.requestAnimationFrame) requestAnimationFrame(settleDock);
+    [120, 500].forEach(function (ms) { setTimeout(settleDock, ms); });
     rootEl.onclick = (e) => { if (!e.target.closest(".modal-sheet")) closeModal(); };
     const sheet = $(".modal-sheet");
     const scrim = $(".modal-scrim");
