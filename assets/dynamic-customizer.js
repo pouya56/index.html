@@ -2715,8 +2715,12 @@ function DYNasset(n){ return (window.DYN_ASSETS && window.DYN_ASSETS[n]) || n; }
           dock.appendChild(c);
           return c.querySelector(".dock-body");
         };
-        dock.__b1 = card("Your design", "Upload a logo or add custom text.");
-        dock.__b2 = card("Text style", "Choose a font for your text.");
+        // Cards follow what the product offers: upload-only products (the
+        // t-shirt) get no Text style card, text-only ones no upload wording.
+        const hasUp = !!q2("#printChip"), hasTx = !!q2("#textChip");
+        dock.__b1 = card("Your design", hasUp && hasTx ? "Upload a logo or add custom text."
+          : hasUp ? "Upload your logo or artwork." : "Add your custom text.");
+        dock.__b2 = q2("#fontChips") ? card("Text style", "Choose a font for your text.") : null;
         dock.__b3 = q2("#foilChips") ? card("Foil color", "Select a foil color for your design.") : null;
         dock.__b4 = card("Preview", "See your design on the " + noun + ".");
         const upSpan = q2("#printChip span"); if (upSpan) upSpan.textContent = "Upload logo";
